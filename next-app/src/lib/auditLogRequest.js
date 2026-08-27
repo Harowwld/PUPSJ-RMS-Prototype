@@ -1,5 +1,5 @@
 import { cookies } from "next/headers";
-import { createAuditLog } from "./auditLogsRepo";
+import { createAuditLog, createGlobalAuditLog } from "./auditLogsRepo";
 import { getSessionCookieName, verifySessionToken } from "./jwt";
 import { getStaffById, getStaffDisplayName } from "./staffRepo";
 
@@ -33,7 +33,9 @@ export async function writeAuditLog(req, action, overrides = {}) {
   try {
     const base = await resolveActor();
     const userAgent = req?.headers?.get?.("user-agent") || "";
+    const officeId = req?.headers?.get?.("x-office-id") || overrides.officeId || overrides.office_id || null;
 
+    // 1. Write to local office database
     await createAuditLog({
       actor: overrides.actor || base.actor,
       role: overrides.role || base.role,
@@ -43,6 +45,17 @@ export async function writeAuditLog(req, action, overrides = {}) {
       user_agent: userAgent,
       entity_type: overrides.entity_type || "",
       entity_id: overrides.entity_id || "",
+      ip: overrides.ip || extractIp(req),
+    });
+
+    // 2. Write to system-wide global database
+    await createGlobalAuditLog({
+      actor: overrides.actor || base.actor,
+      role: overrides.role || base.role,
+      officeId: officeId,
+      action: String(action || "").trim(),
+      details: overrides.details || "",
+      severity: overrides.severity || "INFO",
       ip: overrides.ip || extractIp(req),
     });
   } catch (err) {

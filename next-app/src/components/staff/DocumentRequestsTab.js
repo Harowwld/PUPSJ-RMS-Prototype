@@ -132,6 +132,17 @@ export default function DocumentRequestsTab({
     }
   }, [createOpen]);
 
+  const studentMap = useMemo(() => {
+    const map = new Map()
+    if (Array.isArray(students)) {
+      students.forEach((s) => {
+        const key = String(s.studentNo || s.student_no || "").toUpperCase()
+        if (key) map.set(key, s)
+      })
+    }
+    return map
+  }, [students])
+
   const studentSuggestions = useMemo(() => {
     const val = studentSearch.trim().toLowerCase();
     if (val.length < 2) return [];
@@ -714,9 +725,7 @@ export default function DocumentRequestsTab({
                               <div className="flex flex-wrap items-center gap-2 mt-[2px] truncate text-[12px] font-normal text-[#8E8E93] dark:text-zinc-500">
                                 <span>{r.student_no}</span>
                                 {(() => {
-                                  const student = students?.find(
-                                    (s) => String(s.studentNo || s.student_no || "").toUpperCase() === String(r.student_no).toUpperCase()
-                                  );
+                                  const student = studentMap.get(String(r.student_no).toUpperCase());
                                   if (!student) return null;
                                   return (
                                     <button

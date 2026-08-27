@@ -1,5 +1,5 @@
-import { dbAll, dbGet } from "./sqlite";
-import { writeAuditLog } from "./auditLogRequest";
+import { sysDbAll as dbAll, sysDbGet as dbGet } from "./sqlite";
+import { createGlobalAuditLog } from "./auditLogsRepo";
 
 /**
  * Detect potential brute force attack patterns
@@ -13,7 +13,7 @@ export async function detectBruteForcePatterns(ipAddress, timeWindowMinutes = 60
       SELECT COUNT(*) as count, 
              MIN(created_at) as first_attempt,
              MAX(created_at) as last_attempt
-      FROM audit_logs 
+      FROM global_audit_logs 
       WHERE action LIKE '%Login attempt failed%' 
       AND ip = ? 
       AND created_at > ?
@@ -27,7 +27,7 @@ export async function detectBruteForcePatterns(ipAddress, timeWindowMinutes = 60
     // Check for attempts across multiple usernames (account enumeration)
     const uniqueUsers = await dbAll(`
       SELECT COUNT(DISTINCT actor) as unique_users
-      FROM audit_logs 
+      FROM global_audit_logs 
       WHERE action LIKE '%Login attempt failed%' 
       AND ip = ? 
       AND created_at > ?
@@ -37,7 +37,7 @@ export async function detectBruteForcePatterns(ipAddress, timeWindowMinutes = 60
     // Check for password reset attempts
     const passwordResetAttempts = await dbAll(`
       SELECT COUNT(*) as count
-      FROM audit_logs 
+      FROM global_audit_logs 
       WHERE action LIKE '%password%' 
       AND ip = ? 
       AND created_at > ?
@@ -128,7 +128,7 @@ export async function getSuspiciousIPs(limit = 50, timeWindowMinutes = 60) {
         COUNT(CASE WHEN action LIKE '%password%' THEN 1 END) as password_attempts,
         MIN(created_at) as first_seen,
         MAX(created_at) as last_seen
-      FROM audit_logs 
+      FROM global_audit_logs 
       WHERE ip IS NOT NULL 
       AND ip != ''
       AND created_at > ?
@@ -155,17 +155,24 @@ export async function getSuspiciousIPs(limit = 50, timeWindowMinutes = 60) {
  * Log brute force detection events
  */
 export async function logBruteForceDetection(req, pattern) {
-  await writeAuditLog(req, `Brute force pattern detected: ${pattern.riskLevel} risk`, {
+  const forwarded = req?.headers?.get?.("x-forwarded-for") || "";
+  const realIp = req?.headers?.get?.("x-real-ip") || "";
+  const ip = forwarded.split(",")[0].trim() || realIp || "127.0.0.1";
+
+  await createGlobalAuditLog({
     actor: 'System',
     role: 'Security',
-    details: {
+    action: `Brute force pattern detected: ${pattern.riskLevel} risk`,
+    details: JSON.stringify({
       ipAddress: pattern.ipAddress,
       riskLevel: pattern.riskLevel,
       failedLogins: pattern.failedLogins,
       uniqueUsers: pattern.uniqueUsers,
       passwordResetAttempts: pattern.passwordResetAttempts,
       timeWindow: pattern.timeWindowMinutes
-    }
+    }),
+    severity: 'WARNING',
+    ip
   });
 }
 
@@ -173,13 +180,20 @@ export async function logBruteForceDetection(req, pattern) {
  * Create security alert for admins
  */
 export async function createSecurityAlert(req, alertType, details) {
-  await writeAuditLog(req, `Security Alert: ${alertType}`, {
+  const forwarded = req?.headers?.get?.("x-forwarded-for") || "";
+  const realIp = req?.headers?.get?.("x-real-ip") || "";
+  const ip = forwarded.split(",")[0].trim() || realIp || "127.0.0.1";
+
+  await createGlobalAuditLog({
     actor: 'System',
     role: 'Security',
-    details: {
+    action: `Security Alert: ${alertType}`,
+    details: JSON.stringify({
       alertType,
       ...details,
       timestamp: new Date().toISOString()
-    }
+    }),
+    severity: 'CRITICAL',
+    ip
   });
 }

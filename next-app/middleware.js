@@ -79,11 +79,21 @@ export async function middleware(req) {
   }
 
   const role = String(payload?.role || "").toLowerCase().trim();
-  const isAdmin = ["admin", "administrator", "superadmin"].includes(role);
+  const isSystemAdmin = role === "systemadmin" || role === "superadmin";
+  const isAdmin = ["admin", "administrator"].includes(role);
 
   // 5. Role-based routing
+  if (pathname.startsWith("/systemadmin") || pathname.startsWith("/superadmin")) {
+    if (!isSystemAdmin) {
+      const url = req.nextUrl.clone();
+      url.pathname = isSystemAdmin || isAdmin ? "/admin" : "/staff";
+      if (!isAdmin && !isSystemAdmin) url.pathname = "/";
+      return addSecurityHeaders(NextResponse.redirect(url));
+    }
+  }
+
   if (pathname.startsWith("/admin")) {
-    if (!isAdmin) {
+    if (!isAdmin && !isSystemAdmin) {
       const url = req.nextUrl.clone();
       url.pathname = "/staff";
       return addSecurityHeaders(NextResponse.redirect(url));
@@ -98,12 +108,31 @@ export async function middleware(req) {
     }
   }
 
-  return addSecurityHeaders(NextResponse.next());
-}
+  // 6. Forward verified session payload in request headers to route handlers
+  const requestHeaders = new Headers(req.headers);
+  requestHeaders.set("x-office-id", payload?.office_id || "");
+  requestHeaders.set("x-user-role", payload?.role || "");
+  requestHeaders.set("x-user-id", payload?.sub || "");
 
+  if (payload?.role === "SystemAdmin" || payload?.role === "SuperAdmin") {
+    const { searchParams } = new URL(req.url);
+    const override = searchParams.get("officeId") || searchParams.get("office_id");
+    if (override) {
+      requestHeaders.set("x-office-override", override);
+    }
+  }
+
+  return addSecurityHeaders(NextResponse.next({
+    request: {
+      headers: requestHeaders,
+    }
+  }));
+}
 
 export const config = {
   matcher: [
+    "/systemadmin/:path*",
+    "/superadmin/:path*",
     "/admin/:path*", 
     "/staff/:path*", 
     "/api/:path*", 

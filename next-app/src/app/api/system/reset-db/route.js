@@ -1,119 +1,101 @@
 import { NextResponse } from "next/server";
-import { getDb, DEFAULT_SECURITY_QUESTIONS } from "../../../../lib/sqlite";
 import fs from "node:fs";
 import path from "node:path";
-import { hashPasswordForStorage } from "../../../../lib/staffRepo";
+import { closeAllOfficeDbs, getOfficeDb } from "@/lib/officeDb";
+import { reloadSystemDb, getSystemDb } from "@/lib/systemDb";
 
 export const runtime = "nodejs";
 
+function getLocalDataRoot() {
+  return process.env.LOCAL_DATA_DIR
+    ? process.env.LOCAL_DATA_DIR
+    : path.join(process.cwd(), ".local");
+}
+
+function deleteIfExists(filePath) {
+  if (fs.existsSync(filePath)) {
+    try {
+      fs.unlinkSync(filePath);
+      console.log(`[reset-db] Deleted: ${filePath}`);
+    } catch (e) {
+      console.warn(`[reset-db] Failed to delete: ${filePath}`, e.message);
+    }
+  }
+}
+
+function clearDir(dirPath) {
+  if (fs.existsSync(dirPath)) {
+    try {
+      const files = fs.readdirSync(dirPath);
+      for (const file of files) {
+        fs.rmSync(path.join(dirPath, file), { recursive: true, force: true });
+      }
+      console.log(`[reset-db] Cleared directory: ${dirPath}`);
+    } catch (e) {
+      console.warn(`[reset-db] Failed to clear directory: ${dirPath}`, e.message);
+    }
+  }
+}
+
 export async function GET(req) {
   try {
-    const db = await getDb();
+    console.log("[reset-db] Starting database reset protocol...");
 
-    // Disable foreign keys for bulk deletion
-    db.exec("PRAGMA foreign_keys = OFF;");
+    // 1. Close all database connections
+    closeAllOfficeDbs();
+    reloadSystemDb();
 
-    const tables = [
-      "documents",
-      "students",
-      "staff",
-      "audit_logs",
-      "backups",
-      "settings",
-      "document_types",
-      "courses",
-      "sections",
-      "document_requests",
-      "staff_security_answers",
-      "security_questions",
-      "rate_limit_hits",
-      "rate_limit_violations"
-    ];
+    // 2. Resolve paths
+    const localRoot = getLocalDataRoot();
+    const systemDbPath = path.join(localRoot, "system.sqlite");
 
-    for (const table of tables) {
-      try {
-        db.exec(`DELETE FROM ${table};`);
-        db.exec(`DELETE FROM sqlite_sequence WHERE name = '${table}';`);
-      } catch (e) {
-        console.error(`Error clearing table ${table}:`, e);
-      }
+    // 3. Delete database files
+    deleteIfExists(systemDbPath);
+    deleteIfExists(`${systemDbPath}-wal`);
+    deleteIfExists(`${systemDbPath}-shm`);
+
+    const offices = ["registrar", "osas"];
+    for (const office of offices) {
+      const officeDbPath = path.join(localRoot, office, "db.sqlite");
+      deleteIfExists(officeDbPath);
+      deleteIfExists(`${officeDbPath}-wal`);
+      deleteIfExists(`${officeDbPath}-shm`);
+
+      // Clear uploads & backups
+      clearDir(path.join(localRoot, office, "uploads"));
+      clearDir(path.join(localRoot, office, "backups"));
     }
 
-    // Reset the in-memory rate limiter cache
+    // Clear legacy database if present
+    deleteIfExists(path.join(localRoot, "db.sqlite"));
+    deleteIfExists(path.join(localRoot, "db.sqlite-wal"));
+    deleteIfExists(path.join(localRoot, "db.sqlite-shm"));
+    clearDir(path.join(localRoot, "uploads"));
+
+    // Reset rate limiter cache
     try {
-      const { destroyRateLimiter } = await import("../../../../lib/rateLimiter");
+      const { destroyRateLimiter } = await import("@/lib/rateLimiter");
       destroyRateLimiter();
-    } catch (limiterErr) {
-      console.error("Failed to destroy rate limiter:", limiterErr);
-    }
-
-    // Set schema version back to current (14) so migrations don't re-run and cause double seeding
-    db.exec("INSERT OR REPLACE INTO settings (key, value) VALUES ('schema_version', '14')");
-
-    // Seed default Admin staff account (bootstrap)
-    try {
-      const id = "PUPREGISTRAR-001";
-      const fname = "Elias";
-      const lname = "Austria";
-      const role = "Admin";
-      const section = "Administrative";
-      const status = "Active";
-      const email = "admin.default@pup.local";
-      const defaultPassword = process.env.DEFAULT_STAFF_PASSWORD || "pupstaff";
-      const passwordHash = hashPasswordForStorage(defaultPassword).replace(/'/g, "''");
-      const idEsc = id.replace(/'/g, "''");
-      const fnameEsc = fname.replace(/'/g, "''");
-      const lnameEsc = lname.replace(/'/g, "''");
-      const roleEsc = role.replace(/'/g, "''");
-      const sectionEsc = section.replace(/'/g, "''");
-      const statusEsc = status.replace(/'/g, "''");
-      const emailEsc = email.replace(/'/g, "''");
-
-      db.exec(`
-        INSERT INTO staff (
-          id, fname, lname, role, section, status, email, last_active, password_hash, updated_at
-        ) VALUES (
-          '${idEsc}',
-          '${fnameEsc}',
-          '${lnameEsc}',
-          '${roleEsc}',
-          '${sectionEsc}',
-          '${statusEsc}',
-          '${emailEsc}',
-          datetime('now'),
-          '${passwordHash}',
-          datetime('now')
-        );
-      `);
     } catch (e) {
-      console.error("Failed to seed admin staff account:", e?.message || e);
+      console.warn("[reset-db] Rate limiter reset skipped:", e.message);
     }
 
-    // Seed default security questions
-    try {
-      DEFAULT_SECURITY_QUESTIONS.forEach((q, i) => {
-        const isRequired = i < 2 ? 1 : 0;
-        db.exec(`INSERT INTO security_questions (question, is_required) VALUES ('${q.replace(/'/g, "''")}', ${isRequired})`);
-      });
-    } catch (e) {
-      console.error("Failed to seed default security questions:", e?.message || e);
-    }
+    // 4. Bootstrap databases fresh
+    console.log("[reset-db] Bootstrapping system database...");
+    await getSystemDb();
 
-    // Clear physical files again just in case
-    const uploadsDir = path.join(process.cwd(), ".local", "uploads");
-    if (fs.existsSync(uploadsDir)) {
-      const files = fs.readdirSync(uploadsDir);
-      for (const file of files) {
-        fs.rmSync(path.join(uploadsDir, file), { recursive: true, force: true });
-      }
-    }
+    console.log("[reset-db] Bootstrapping office databases...");
+    await getOfficeDb("registrar");
+    await getOfficeDb("osas");
 
     const defaultPasswordForMessage = process.env.DEFAULT_STAFF_PASSWORD || "pupstaff";
+    
     return NextResponse.json({
       ok: true,
-      message: `Database wiped and physical uploads cleared successfully. Please RESTART your Next.js server now. The default admin account is: admin.default@pup.local / ${defaultPasswordForMessage}`
+      message: `All databases wiped, files cleared, and tables re-bootstrapped successfully. The default SystemAdmin account is: admin.default@pup.local / ${defaultPasswordForMessage}`
     });
   } catch (error) {
+    console.error("[reset-db] Reset failed:", error);
     return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
   }
 }

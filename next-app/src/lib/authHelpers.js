@@ -44,6 +44,7 @@ export async function validateSession(req) {
     const user = {
       id: staff.id,
       role: staff.role || payload.role,
+      office_id: staff.office_id || null,
       email: staff.email,
       fname: staff.fname,
       lname: staff.lname,
@@ -67,7 +68,7 @@ export async function validateSession(req) {
 export function isAdmin(user) {
   if (!user) return false;
   const role = String(user.role || "").toLowerCase();
-  return ["admin", "administrator", "superadmin"].includes(role);
+  return ["admin", "administrator", "superadmin", "systemadmin"].includes(role);
 }
 
 /**
@@ -95,7 +96,7 @@ export async function requireAuth(req, allowedRoles = []) {
 
   if (allowedRoles.length > 0) {
       const userRole = String(user.role || "").toLowerCase();
-      const hasRequiredRole = allowedRoles.some(role => 
+      const hasRequiredRole = userRole === "superadmin" || userRole === "systemadmin" || allowedRoles.some(role => 
         String(role).toLowerCase() === userRole
       );
       
@@ -118,6 +119,24 @@ export async function requireAuth(req, allowedRoles = []) {
  */
 export async function requireAdmin(req) {
   return requireAuth(req, ["Admin"]);
+}
+
+/**
+ * Middleware function for systemadmin-only routes
+ * @param {Request} req - The request object
+ * @returns {Promise<{user: object, error: string|null}>}
+ */
+export async function requireSystemAdmin(req) {
+  return requireAuth(req, ["SystemAdmin", "SuperAdmin"]);
+}
+
+/**
+ * Middleware function for superadmin-only routes
+ * @param {Request} req - The request object
+ * @returns {Promise<{user: object, error: string|null}>}
+ */
+export async function requireSuperAdmin(req) {
+  return requireAuth(req, ["SystemAdmin", "SuperAdmin"]);
 }
 
 /**

@@ -54,6 +54,7 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "babel-plugin-react-compiler": "^1.0.0",
     "concurrently": "^9.1.2",
     "dotenv": "^16.4.7",
     "eslint": "^9",

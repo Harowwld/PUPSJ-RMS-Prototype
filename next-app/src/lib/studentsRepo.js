@@ -1,6 +1,13 @@
 import { dbAll, dbGet, dbRun } from "./sqlite.js";
 import { canonicalizeCabinetId } from "./storageLayoutUtils.js";
 
+async function hasPhysicalStorage() {
+  const row = await dbGet(
+    "SELECT 1 FROM sqlite_master WHERE type='table' AND name='students' AND sql LIKE '%room%'"
+  );
+  return !!row;
+}
+
 function normalizeStudentName(name) {
   return String(name || "")
     .trim()
@@ -60,34 +67,59 @@ export async function createStudent({
   const normalizedSection = String(section || "").trim();
   await ensureCourseSectionMapping(normalizedCourseCode, normalizedSection);
 
-  const normalizedCabinet = canonicalizeCabinetId(cabinet);
   const academicYear = parseInt(yearLevel);
-  await dbRun(
-    `
-    INSERT INTO students (
-      student_no,
-      name,
-      course_code,
-      year_level,
-      section,
-      room,
-      cabinet,
-      drawer,
-      status
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `,
-    [
-      studentNo,
-      normalizedName,
-      normalizedCourseCode,
-      academicYear,
-      normalizedSection,
-      room,
-      normalizedCabinet,
-      drawer,
-      status || "Active",
-    ]
-  );
+
+  const hasStorage = await hasPhysicalStorage();
+  if (hasStorage) {
+    const normalizedCabinet = canonicalizeCabinetId(cabinet);
+    await dbRun(
+      `
+      INSERT INTO students (
+        student_no,
+        name,
+        course_code,
+        year_level,
+        section,
+        room,
+        cabinet,
+        drawer,
+        status
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `,
+      [
+        studentNo,
+        normalizedName,
+        normalizedCourseCode,
+        academicYear,
+        normalizedSection,
+        room,
+        normalizedCabinet,
+        drawer,
+        status || "Active",
+      ]
+    );
+  } else {
+    await dbRun(
+      `
+      INSERT INTO students (
+        student_no,
+        name,
+        course_code,
+        year_level,
+        section,
+        status
+      ) VALUES (?, ?, ?, ?, ?, ?)
+    `,
+      [
+        studentNo,
+        normalizedName,
+        normalizedCourseCode,
+        academicYear,
+        normalizedSection,
+        status || "Active",
+      ]
+    );
+  }
 
   return await getStudentByStudentNo(studentNo);
 }
@@ -192,32 +224,52 @@ export async function updateStudent(studentNo, patch) {
     year_level:
       patch.yearLevel === undefined ? existing.year_level : parseInt(patch.yearLevel),
     section: String(patch.section ?? existing.section).trim(),
-    room: patch.room === undefined ? existing.room : parseInt(patch.room),
-    cabinet: canonicalizeCabinetId(patch.cabinet ?? existing.cabinet),
-    drawer: patch.drawer === undefined ? existing.drawer : parseInt(patch.drawer),
     status: patch.status ?? existing.status,
   };
 
   await ensureCourseSectionMapping(next.course_code, next.section);
 
-  await dbRun(
-    `
-    UPDATE students
-    SET name = ?, course_code = ?, year_level = ?, section = ?, room = ?, cabinet = ?, drawer = ?, status = ?
-    WHERE student_no = ?
-  `,
-    [
-      next.name,
-      next.course_code,
-      next.year_level,
-      next.section,
-      next.room,
-      next.cabinet,
-      next.drawer,
-      next.status,
-      studentNo,
-    ]
-  );
+  const hasStorage = await hasPhysicalStorage();
+  if (hasStorage) {
+    const room = patch.room === undefined ? existing.room : parseInt(patch.room);
+    const cabinet = canonicalizeCabinetId(patch.cabinet ?? existing.cabinet);
+    const drawer = patch.drawer === undefined ? existing.drawer : parseInt(patch.drawer);
+
+    await dbRun(
+      `
+      UPDATE students
+      SET name = ?, course_code = ?, year_level = ?, section = ?, room = ?, cabinet = ?, drawer = ?, status = ?
+      WHERE student_no = ?
+    `,
+      [
+        next.name,
+        next.course_code,
+        next.year_level,
+        next.section,
+        room,
+        cabinet,
+        drawer,
+        next.status,
+        studentNo,
+      ]
+    );
+  } else {
+    await dbRun(
+      `
+      UPDATE students
+      SET name = ?, course_code = ?, year_level = ?, section = ?, status = ?
+      WHERE student_no = ?
+    `,
+      [
+        next.name,
+        next.course_code,
+        next.year_level,
+        next.section,
+        next.status,
+        studentNo,
+      ]
+    );
+  }
 
   return await getStudentByStudentNo(studentNo);
 }
@@ -244,6 +296,9 @@ export async function deleteStudent(studentNo) {
 }
 
 export async function listStudentLocationUsage() {
+  const hasStorage = await hasPhysicalStorage();
+  if (!hasStorage) return [];
+
   return await dbAll(
     `
       SELECT room, cabinet, drawer, COUNT(*) as count
@@ -260,6 +315,11 @@ export async function reassignStudentsByLocationMappings(mappings = []) {
   if (!Array.isArray(mappings) || mappings.length === 0) {
     return { moved: 0, breakdown: [] };
   }
+  const hasStorage = await hasPhysicalStorage();
+  if (!hasStorage) {
+    return { moved: 0, breakdown: [] };
+  }
+
   let moved = 0;
   const breakdown = [];
   for (const m of mappings) {

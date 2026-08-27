@@ -95,7 +95,8 @@ const LogRow = React.memo(function LogRow({
         <td className="py-0 px-4 align-middle text-center" onClick={(e) => e.stopPropagation()}>
           <button
             onClick={() => toggleRow(log.id)}
-            className="mx-auto flex h-7 w-7 items-center justify-center bg-transparent border-none text-[#8E8E93] hover:text-[#111111] dark:hover:text-zinc-200 cursor-pointer transition-transform duration-fast"
+            title={isExpanded ? "Collapse Details" : "Expand Details"}
+            className="mx-auto flex h-7 w-7 items-center justify-center bg-transparent border-none text-[#8E8E93] hover:text-[#111111] dark:hover:text-zinc-200 cursor-pointer transition-transform duration-200"
             style={{ transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}
           >
             <i className="ti ti-chevron-down text-[14px]" style={{ fontSize: '14px' }}></i>
@@ -153,10 +154,7 @@ const LogRow = React.memo(function LogRow({
                   <i className="ti ti-eye text-[16px]"></i>
                 </button>
               </TooltipTrigger>
-              <TooltipContent className="bg-zinc-900 text-white border-zinc-800">
-                <p className="text-[10px] font-semibold">View Detail</p>
-                <p className="text-[9px] opacity-80">Open full metadata details</p>
-              </TooltipContent>
+              <TooltipContent>View Details</TooltipContent>
             </Tooltip>
           </div>
         </td>

@@ -1,5 +1,5 @@
 import crypto from "node:crypto";
-import { dbAll, dbGet, dbRun } from "./sqlite.js";
+import { sysDbAll as dbAll, sysDbGet as dbGet, sysDbRun as dbRun } from "./sqlite.js";
 
 function hashPassword(password) {
   return crypto.createHash("sha256").update(String(password)).digest("hex");
@@ -32,6 +32,7 @@ export async function verifyStaffPasswordById(id, password) {
 
 export async function createStaff({
   id,
+  officeId,
   fname,
   lname,
   role,
@@ -45,6 +46,7 @@ export async function createStaff({
     `
     INSERT INTO staff (
       id,
+      office_id,
       fname,
       lname,
       role,
@@ -55,10 +57,11 @@ export async function createStaff({
       password_hash,
       password_last_changed,
       updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
   `,
     [
       id,
+      officeId || null,
       fname,
       lname,
       role,
@@ -74,6 +77,7 @@ export async function createStaff({
 }
 
 export async function listStaff({
+  officeId,
   q,
   role,
   status,
@@ -82,6 +86,15 @@ export async function listStaff({
 } = {}) {
   const filters = [];
   const params = [];
+
+  if (officeId !== undefined) {
+    if (officeId === null) {
+      filters.push("office_id IS NULL");
+    } else {
+      filters.push("office_id = ?");
+      params.push(officeId);
+    }
+  }
 
   if (role) {
     filters.push("role = ?");
@@ -134,6 +147,7 @@ export async function updateStaff(originalId, patch) {
   const nextId = patch.id ?? existing.id;
   const next = {
     id: nextId,
+    office_id: patch.officeId !== undefined ? patch.officeId : (patch.office_id !== undefined ? patch.office_id : existing.office_id),
     fname: patch.fname ?? existing.fname,
     lname: patch.lname ?? existing.lname,
     role: patch.role ?? existing.role,
@@ -153,11 +167,12 @@ export async function updateStaff(originalId, patch) {
   await dbRun(
     `
     UPDATE staff
-    SET id = ?, fname = ?, lname = ?, role = ?, section = ?, status = ?, email = ?, last_active = ?, avatar_filename = ?, updated_at = datetime('now')
+    SET id = ?, office_id = ?, fname = ?, lname = ?, role = ?, section = ?, status = ?, email = ?, last_active = ?, avatar_filename = ?, updated_at = datetime('now')
     WHERE id = ?
   `,
     [
       next.id,
+      next.office_id,
       next.fname,
       next.lname,
       next.role,

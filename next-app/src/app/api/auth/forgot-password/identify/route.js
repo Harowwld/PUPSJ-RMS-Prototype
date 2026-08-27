@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { dbGet, dbAll } from "@/lib/sqlite";
+import { sysDbGet, sysDbAll } from "@/lib/sqlite";
 import { ForgotPasswordIdentifySchema } from "@/lib/authSchemas";
 import { checkAuthForgotPasswordRateLimit } from "@/lib/rateLimiter";
 
@@ -59,7 +59,7 @@ export async function POST(req) {
     const { identifier } = validation.data;
 
     // 2. Identify Staff
-    const staff = await dbGet(
+    const staff = await sysDbGet(
       "SELECT id, fname, lname, email FROM staff WHERE id = ? OR email = ?",
       [identifier, identifier]
     );
@@ -71,7 +71,7 @@ export async function POST(req) {
       return addSecurityHeaders(NextResponse.json({ ok: false, error: "If an account exists, a security question would be displayed." }, { status: 404 }));
     }
 
-    const res = await dbAll(`
+    const res = await sysDbAll(`
       SELECT q.id, q.question 
       FROM staff_security_answers ssa
       JOIN security_questions q ON ssa.question_id = q.id

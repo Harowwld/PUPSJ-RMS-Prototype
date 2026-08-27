@@ -125,6 +125,7 @@ export async function POST(req) {
       sub: touched.id,
       purpose: "2fa",
       role: touched.role || "Staff",
+      office_id: touched.office_id || null,
       username: touched.email,
     };
     // Sign with a short expiry (e.g., 5 minutes)
@@ -147,6 +148,7 @@ export async function POST(req) {
   const sessionPayload = {
     sub: touched.id,
     role: touched.role || "Staff",
+    office_id: touched.office_id || null,
     username: touched.email,
     last_active: touched.last_active,
     mustChangePassword,
@@ -170,6 +172,7 @@ export async function POST(req) {
     data: {
       role: touched.role || "Staff",
       id: touched.id,
+      office_id: touched.office_id || null,
       username: touched.email,
       last_active: touched.last_active,
       mustChangePassword,

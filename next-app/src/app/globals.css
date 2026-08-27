@@ -6,7 +6,7 @@
 @theme {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-sans), ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
   --radius-brand: var(--radius);
 
   --color-pup-maroon: #ad2f2f;
@@ -14,7 +14,7 @@
   --color-pup-gray: #f5f5f5;
   --color-pup-text: #1f1f1f;
   --color-pup-border: #d1d5db;
-  --font-heading: var(--font-sans), ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --font-heading: var(--font-inter), ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
   
   /* Font size scale overrides */
   --font-size-micro: 10px;
@@ -856,6 +856,7 @@ i[data-lucide-translated="true"]::after {
 }
 
 .liquid-container {
+  display: none !important;
   position: absolute;
   inset: 0;
   overflow: hidden;
@@ -918,16 +919,14 @@ i[data-lucide-translated="true"]::after {
   backface-visibility: hidden;
   z-index: 1;
   box-shadow: 
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.4), 
-    0 8px 32px 0 rgba(0, 0, 0, 0.06);
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.4);
 }
 
 .dark .glass-panel {
   background: rgba(15, 15, 15, 0.45);
   border: 1px solid rgba(255, 255, 255, 0.18);
   box-shadow: 
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.12), 
-    0 8px 32px 0 rgba(0, 0, 0, 0.25);
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.12);
 }
 
 /* --- High-Performance Liquid Glass Styling --- */
@@ -938,8 +937,7 @@ i[data-lucide-translated="true"]::after {
   backdrop-filter: blur(28px) saturate(170%) !important;
   -webkit-backdrop-filter: blur(28px) saturate(170%) !important;
   box-shadow: 
-    inset 0 1px 1px 0 rgba(255, 255, 255, 0.25),
-    0 8px 32px 0 rgba(0, 0, 0, 0.04) !important;
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.25) !important;
   z-index: 1;
 }
 
@@ -947,8 +945,7 @@ i[data-lucide-translated="true"]::after {
   background: rgba(15, 15, 15, 0.35) !important;
   border: 1px solid rgba(255, 255, 255, 0.12) !important;
   box-shadow: 
-    inset 0 1px 1px 0 rgba(255, 255, 255, 0.15),
-    0 8px 32px 0 rgba(0, 0, 0, 0.25) !important;
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.15) !important;
 }
 
 /* Music Player Style Vibrant Blue/Cyan Translucent Glass */
@@ -1036,36 +1033,68 @@ i[data-lucide-translated="true"]::after {
 
 /* Base floating outer shadow configurations */
 .glass-stat-card-blue {
-  box-shadow: 0 8px 20px rgba(10, 132, 255, 0.25) !important;
+  box-shadow: none !important;
 }
 
 .glass-stat-card-green {
-  box-shadow: 0 8px 20px rgba(34, 197, 94, 0.25) !important;
+  box-shadow: none !important;
 }
 
 .glass-stat-card-red {
-  box-shadow: 0 8px 20px rgba(239, 68, 68, 0.25) !important;
+  box-shadow: none !important;
 }
 
 .glass-stat-card-orange {
-  box-shadow: 0 8px 20px rgba(249, 115, 22, 0.25) !important;
+  box-shadow: none !important;
 }
 
 /* Dark mode overrides for outer floating shadow */
 .dark .glass-stat-card-blue {
-  box-shadow: 0 8px 20px rgba(10, 132, 255, 0.3) !important;
+  box-shadow: none !important;
 }
 
 .dark .glass-stat-card-green {
-  box-shadow: 0 8px 20px rgba(34, 197, 94, 0.3) !important;
+  box-shadow: none !important;
 }
 
 .dark .glass-stat-card-red {
-  box-shadow: 0 8px 20px rgba(239, 68, 68, 0.3) !important;
+  box-shadow: none !important;
 }
 
 .dark .glass-stat-card-orange {
-  box-shadow: 0 8px 20px rgba(249, 115, 22, 0.3) !important;
+  box-shadow: none !important;
 }
+
+/* Apple styled premium shimmer loading skeleton */
+@utility animate-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(229, 229, 234, 0.4) 25%,
+    rgba(242, 242, 247, 0.7) 50%,
+    rgba(229, 229, 234, 0.4) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.6s infinite linear;
+}
+
+:is(.dark *) .animate-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(44, 44, 46, 0.4) 25%,
+    rgba(58, 58, 60, 0.7) 50%,
+    rgba(44, 44, 46, 0.4) 75%
+  );
+  background-size: 200% 100%;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
 
 

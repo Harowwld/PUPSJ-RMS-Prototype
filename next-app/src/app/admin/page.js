@@ -86,6 +86,20 @@ function AdminPageContent() {
   }, [])
 
   useEffect(() => {
+    const handleSwitch = (e) => {
+      const { view: targetView } = e.detail
+      if (targetView) {
+        setView(targetView)
+        const params = new URLSearchParams(window.location.search)
+        params.set("view", targetView)
+        router.replace(`${window.location.pathname}?${params.toString()}`, { scroll: false })
+      }
+    }
+    window.addEventListener("switch-view", handleSwitch)
+    return () => window.removeEventListener("switch-view", handleSwitch)
+  }, [router])
+
+  useEffect(() => {
     // Dynamic favicon swap for admin page
     const updateFavicon = () => {
       const links = document.querySelectorAll("link[rel*='icon']");
@@ -252,6 +266,97 @@ function AdminPageContent() {
   )
 
   const [authUser, setAuthUser] = useState(null)
+
+  const sidebarItems = useMemo(() => {
+    if (!authUser?.enabled_modules) return []
+    const enabled = new Set(authUser.enabled_modules)
+    
+    const MODULE_KEY_MAP = {
+      review: "records_review",
+      digitization: "compliance_analytics",
+      request_analytics: "request_analytics",
+      directory: "staff_directory",
+      storage_layout: "storage_layout",
+      system_data: "system_config",
+      system: "backup",
+      logs: "audit_logs",
+    }
+
+    const groups = [
+      {
+        type: "group",
+        label: "Operations & Analytics",
+        children: [
+          {
+            key: "review",
+            label: "Records Review",
+            iconClass: "ph-bold ph-seal-check",
+            badge: pendingReviewCount,
+          },
+          {
+            key: "digitization",
+            label: "Compliance",
+            iconClass: "ph-bold ph-chart-bar",
+          },
+          {
+            key: "request_analytics",
+            label: "Requests",
+            iconClass: "ph-bold ph-trend-up",
+          },
+        ]
+      },
+      {
+        type: "group",
+        label: "User Management",
+        children: [
+          {
+            key: "directory",
+            label: "Directory",
+            iconClass: "ph-bold ph-users",
+          },
+        ]
+      },
+      {
+        type: "group",
+        label: "System Configuration",
+        children: [
+          {
+            key: "storage_layout",
+            label: "Storage",
+            iconClass: "ph-bold ph-warehouse",
+          },
+          {
+            key: "system_data",
+            label: "Data",
+            iconClass: "ph-bold ph-gear",
+          },
+          {
+            key: "system",
+            label: "Backup",
+            iconClass: "ph-bold ph-database-backup",
+          },
+          {
+            key: "logs",
+            label: "Audit Log",
+            iconClass: "ti ti-history",
+          },
+        ]
+      }
+    ]
+
+    const result = []
+    for (const group of groups) {
+      const activeChildren = group.children.filter(child => {
+        const requiredModule = MODULE_KEY_MAP[child.key]
+        return !requiredModule || enabled.has(requiredModule)
+      })
+      if (activeChildren.length > 0) {
+        result.push({ type: "header", label: group.label })
+        result.push(...activeChildren)
+      }
+    }
+    return result
+  }, [authUser?.enabled_modules, pendingReviewCount])
 
   const [defaultPwOpen, setDefaultPwOpen] = useState(false)
   const [defaultPwUserLabel, setDefaultPwUserLabel] = useState("")
@@ -541,6 +646,67 @@ function AdminPageContent() {
     }
   }, [reviewStatusFilter, showToast, fetchPendingReviewCount])
 
+  const performSwitchView = useCallback(
+    (nextView) => {
+      if (nextView === "storage_layout") {
+        setIsStorageDirty(false)
+      }
+      setView(nextView)
+      // Update URL without a full refresh
+      const params = new URLSearchParams(window.location.search)
+      params.set("view", nextView)
+      router.replace(`${window.location.pathname}?${params.toString()}`, {
+        scroll: false,
+      })
+
+      if (nextView === "directory" && !loadedViewsRef.current.directory) {
+        setTimeout(() => {
+          refreshStaff()
+        }, 0)
+      }
+      if (nextView === "logs" && !loadedViewsRef.current.logs) {
+        setTimeout(() => {
+          refreshAuditLogs()
+        }, 0)
+      }
+      if (
+        (nextView === "system" || nextView === "backup") &&
+        !loadedViewsRef.current.system
+      ) {
+        setTimeout(() => {
+          refreshBackups()
+        }, 0)
+      }
+      if (nextView === "review" && !loadedViewsRef.current.review) {
+        setTimeout(() => {
+          refreshReviewRecords()
+        }, 0)
+      }
+    },
+    [refreshAuditLogs, refreshBackups, refreshStaff, refreshReviewRecords, router]
+  )
+
+  const switchView = useCallback(
+    (nextView) => {
+      if (isStorageDirty && view === "storage_layout") {
+        setPendingView(nextView)
+        setDiscardConfirmOpen(true)
+        return
+      }
+      performSwitchView(nextView)
+    },
+    [isStorageDirty, view, performSwitchView]
+  )
+
+  const confirmDiscardChanges = useCallback(() => {
+    setIsStorageDirty(false)
+    setDiscardConfirmOpen(false)
+    if (pendingView) {
+      performSwitchView(pendingView)
+      setPendingView(null)
+    }
+  }, [pendingView, performSwitchView])
+
   const logAdminAction = useCallback(
     async (input, detailsInput = "") => {
       // Support legacy (action, details) and new { action, details, severity, ... } patterns
@@ -629,6 +795,28 @@ function AdminPageContent() {
       }
     })()
   }, [router, refreshStaff, refreshAuditLogs, refreshSystemHealth, fetchPendingReviewCount])
+
+  useEffect(() => {
+    if (!authUser) return
+    const enabled = new Set(authUser.enabled_modules || [])
+    const MODULE_KEY_MAP = {
+      review: "records_review",
+      digitization: "compliance_analytics",
+      request_analytics: "request_analytics",
+      directory: "staff_directory",
+      storage_layout: "storage_layout",
+      system_data: "system_config",
+      system: "backup",
+      logs: "audit_logs",
+    }
+    const requiredModule = MODULE_KEY_MAP[view]
+    if (requiredModule && !enabled.has(requiredModule)) {
+      const firstEnabled = sidebarItems.find(item => item.key)
+      if (firstEnabled) {
+        performSwitchView(firstEnabled.key)
+      }
+    }
+  }, [authUser, view, sidebarItems, performSwitchView])
 
   useEffect(() => {
     const timer = setInterval(refreshSystemHealth, 10000)
@@ -745,66 +933,7 @@ function AdminPageContent() {
     }
   }, [view, refreshReviewRecords])
 
-  const performSwitchView = useCallback(
-    (nextView) => {
-      if (nextView === "storage_layout") {
-        setIsStorageDirty(false)
-      }
-      setView(nextView)
-      // Update URL without a full refresh
-      const params = new URLSearchParams(window.location.search)
-      params.set("view", nextView)
-      router.replace(`${window.location.pathname}?${params.toString()}`, {
-        scroll: false,
-      })
 
-      if (nextView === "directory" && !loadedViewsRef.current.directory) {
-        setTimeout(() => {
-          refreshStaff()
-        }, 0)
-      }
-      if (nextView === "logs" && !loadedViewsRef.current.logs) {
-        setTimeout(() => {
-          refreshAuditLogs()
-        }, 0)
-      }
-      if (
-        (nextView === "system" || nextView === "backup") &&
-        !loadedViewsRef.current.system
-      ) {
-        setTimeout(() => {
-          refreshBackups()
-        }, 0)
-      }
-      if (nextView === "review" && !loadedViewsRef.current.review) {
-        setTimeout(() => {
-          refreshReviewRecords()
-        }, 0)
-      }
-    },
-    [refreshAuditLogs, refreshBackups, refreshStaff, refreshReviewRecords, router]
-  )
-
-  const switchView = useCallback(
-    (nextView) => {
-      if (isStorageDirty && view === "storage_layout") {
-        setPendingView(nextView)
-        setDiscardConfirmOpen(true)
-        return
-      }
-      performSwitchView(nextView)
-    },
-    [isStorageDirty, view, performSwitchView]
-  )
-
-  const confirmDiscardChanges = useCallback(() => {
-    setIsStorageDirty(false)
-    setDiscardConfirmOpen(false)
-    if (pendingView) {
-      performSwitchView(pendingView)
-      setPendingView(null)
-    }
-  }, [pendingView, performSwitchView])
 
   const reviewDocumentStatus = useCallback(
     async (id, approvalStatus, reviewNote = "", suppressToast = false) => {
@@ -1521,42 +1650,7 @@ function AdminPageContent() {
     }
   }
 
-  const sidebarItems = [
-    { type: "header", label: "Operations & Analytics" },
-    {
-      key: "review",
-      label: "Records Review",
-      iconClass: "ph-bold ph-seal-check",
-      badge: pendingReviewCount,
-    },
-    {
-      key: "digitization",
-      label: "Compliance",
-      iconClass: "ph-bold ph-chart-bar",
-    },
-    {
-      key: "request_analytics",
-      label: "Requests",
-      iconClass: "ph-bold ph-trend-up",
-    },
 
-    { type: "header", label: "User Management" },
-    {
-      key: "directory",
-      label: "Directory",
-      iconClass: "ph-bold ph-users",
-    },
-
-    { type: "header", label: "System Configuration" },
-    {
-      key: "storage_layout",
-      label: "Storage",
-      iconClass: "ph-bold ph-warehouse",
-    },
-    { key: "system_data", label: "Data", iconClass: "ph-bold ph-gear" },
-    { key: "system", label: "Backup", iconClass: "ph-bold ph-database-backup" },
-    { key: "logs", label: "Audit Log", iconClass: "ti ti-history" },
-  ]
   const sidebarActiveKey = view === "backup" ? "system" : view
 
   if (loading) {
@@ -1579,65 +1673,7 @@ function AdminPageContent() {
         <div className="liquid-blob liquid-blob-2"></div>
         <div className="liquid-blob liquid-blob-3"></div>
       </div>
-
-
-      <Header authUser={authUser} onLogout={handleLogout}>
-        {authUser?.preferences?.navigation_layout !== "topbar" && !sidebarOpen && (
-          <div className="flex items-center gap-3.5 pl-1.5">
-            <button
-              type="button"
-              onClick={() => {
-                if (typeof window !== "undefined") {
-                  window.dispatchEvent(new CustomEvent("toggle-sidebar"))
-                }
-              }}
-              className="flex items-center justify-center border-0 rounded-brand hover:bg-gray-100 dark:hover:bg-white/5 text-gray-700 cursor-pointer bg-transparent h-9 w-9"
-            >
-              <i className="ti ti-panel-left text-[21px]" style={{ color: "#E5484D" }}></i>
-            </button>
-
-            {/* Apple Photos Style Zoom Control */}
-            <div className="flex items-center gap-1.5 select-none pr-2">
-              <button
-                type="button"
-                onClick={() => setZoomNode(prev => Math.max(0, prev - 1))}
-                className="group flex items-center justify-center border-0 rounded-brand hover:bg-gray-100 dark:hover:bg-white/5 text-gray-500 hover:text-gray-700 dark:text-zinc-400 dark:hover:text-zinc-200 cursor-pointer bg-transparent h-9 w-9 transition-colors duration-75"
-              >
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M2.5 7H11.5" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/>
-                </svg>
-              </button>
-              <div 
-                onMouseDown={handleZoomMouseDown}
-                onTouchStart={handleZoomMouseDown}
-                className="relative w-[80px] h-[18px] flex items-center group cursor-pointer"
-              >
-                {/* Track */}
-                <div className="absolute left-0 right-0 h-[3px] bg-[#D1D1D6] dark:bg-zinc-700 rounded-full"></div>
-                {/* Active Track */}
-                <div 
-                  className="absolute left-0 h-[3px] bg-[#007AFF] rounded-full"
-                  style={{ width: `${(zoomNode / 6) * 100}%` }}
-                ></div>
-                {/* Handle */}
-                <div 
-                  className="absolute -translate-x-1/2 w-[16px] h-[16px] rounded-full bg-white dark:bg-zinc-900 border-[3px] border-[#007AFF] shadow-xs"
-                  style={{ left: `${(zoomNode / 6) * 100}%` }}
-                ></div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setZoomNode(prev => Math.min(6, prev + 1))}
-                className="group flex items-center justify-center border-0 rounded-brand hover:bg-gray-100 dark:hover:bg-white/5 text-gray-500 hover:text-gray-700 dark:text-zinc-400 dark:hover:text-zinc-200 cursor-pointer bg-transparent h-9 w-9 transition-colors duration-75"
-              >
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M7 2.5V11.5M2.5 7H11.5" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/>
-                </svg>
-              </button>
-            </div>
-          </div>
-        )}
-      </Header>
+      <Header authUser={authUser} onLogout={handleLogout} />
 
       {authUser?.preferences?.navigation_layout === "topbar" && (
         <div className="w-full bg-white dark:bg-zinc-900 border-b border-gray-200 dark:border-white/5 py-2.5 px-4 flex items-center justify-center gap-2 overflow-x-auto shadow-xs select-none shrink-0 scrollbar-none">
@@ -1685,6 +1721,8 @@ function AdminPageContent() {
             zoomNode={zoomNode}
             setZoomNode={setZoomNode}
             handleZoomMouseDown={handleZoomMouseDown}
+            accentColor={authUser?.accent_color}
+            officeName={authUser?.office_name}
           />
         )}
         <main className="relative w-full min-w-0 min-h-0 flex-1 bg-white/25 dark:bg-zinc-950/25 overflow-y-auto backdrop-blur-xs">

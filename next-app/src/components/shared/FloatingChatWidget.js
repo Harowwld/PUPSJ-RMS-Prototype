@@ -598,7 +598,7 @@ export default function FloatingChatWidget() {
                       {activeRecipient.avatar_filename ? (
                         <img 
                           src={`/api/account/avatar?id=${activeRecipient.id}&t=${activeRecipient.updated_at || Date.now()}`}
-                          alt="Avatar"
+                          alt=""
                           className="w-full h-full object-cover rounded-full"
                         />
                       ) : (
@@ -714,7 +714,7 @@ export default function FloatingChatWidget() {
                             {staff.avatar_filename ? (
                               <img 
                                 src={`/api/account/avatar?id=${staff.id}&t=${staff.updated_at || Date.now()}`}
-                                alt="Avatar"
+                                alt=""
                                 className="w-full h-full object-cover rounded-full"
                               />
                             ) : (
@@ -919,7 +919,7 @@ export default function FloatingChatWidget() {
                                   {msg.sender_avatar ? (
                                     <img 
                                       src={`/api/account/avatar?id=${msg.sender_id}&t=${msg.sender_updated_at || ""}`}
-                                      alt="Avatar"
+                                      alt=""
                                       className="w-full h-full object-cover rounded-full"
                                     />
                                   ) : (

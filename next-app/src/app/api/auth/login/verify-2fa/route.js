@@ -121,6 +121,7 @@ export async function POST(req) {
   const sessionPayload = {
     sub: staff.id,
     role: staff.role || "Staff",
+    office_id: staff.office_id || null,
     username: staff.email,
     last_active: staff.last_active,
     mustChangePassword,
@@ -144,6 +145,7 @@ export async function POST(req) {
     data: {
       role: staff.role || "Staff",
       id: staff.id,
+      office_id: staff.office_id || null,
       username: staff.email,
       last_active: staff.last_active,
       mustChangePassword,

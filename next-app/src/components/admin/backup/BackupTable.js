@@ -302,12 +302,14 @@ export default function BackupTable({
                       <div className="inline-flex items-center justify-end gap-1.5" onClick={e => e.stopPropagation()}>
                         <button
                           onClick={() => onDownloadBackup(b.id, b.filename)}
+                          title="Download Backup"
                           className="w-7 h-7 rounded-[6px] hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/10 border-0 bg-transparent text-[#C7C7CC] dark:text-zinc-650 transition-colors hover:text-blue-500 dark:hover:text-blue-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
                         >
                           <i className="ph-bold ph-download-simple text-[16px]"></i>
                         </button>
                         <button
                           onClick={() => onDeleteBackup(b.id)}
+                          title="Delete Backup"
                           className="w-7 h-7 rounded-[6px] hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/10 border-0 bg-transparent text-[#C7C7CC] dark:text-zinc-650 transition-colors hover:text-red-600 dark:hover:text-red-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
                         >
                           <i className="ph-bold ph-trash text-[16px]"></i>

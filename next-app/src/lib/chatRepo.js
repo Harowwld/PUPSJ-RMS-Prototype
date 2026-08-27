@@ -1,4 +1,4 @@
-import { dbAll, dbRun, dbGet } from "./sqlite";
+import { sysDbAll as dbAll, sysDbRun as dbRun, sysDbGet as dbGet } from "./sqlite";
 
 export async function sendChatMessage(senderId, recipientId, message, imageFilename = null, mimeType = null) {
   const msg = String(message || "").trim();

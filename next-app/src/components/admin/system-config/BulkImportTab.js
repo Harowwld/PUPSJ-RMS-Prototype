@@ -165,7 +165,7 @@ export default function BulkImportTab({
             <div className="flex flex-col flex-1 items-center justify-center min-h-0 w-full">
               <div
                 className={cn(
-                  "group relative flex flex-1 h-full w-full cursor-pointer flex-col items-center justify-center rounded-[12px] border-[0.5px] border-black/12 bg-[#FAFAFA] dark:border-white/12 dark:bg-zinc-900/50 p-[40px] text-center transition-all duration-fast ease-standard min-h-[570px]",
+                  "group relative flex flex-1 h-full w-full cursor-pointer flex-col items-center justify-center rounded-[12px] border-[0.5px] border-black/12 bg-[#FAFAFA] dark:border-white/12 dark:bg-zinc-900/50 p-[40px] text-center transition-all duration-150 ease-out min-h-[745px]",
                   importDropActive && "border-[#E5484D] border bg-[#FFF5F5] dark:bg-red-950/20"
                 )}
                 onDragOver={(e) => {

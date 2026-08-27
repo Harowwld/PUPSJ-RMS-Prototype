@@ -1,4 +1,4 @@
-import { dbGet, dbAll, dbRun } from "./sqlite";
+import { sysDbGet as dbGet, sysDbAll as dbAll, sysDbRun as dbRun } from "./sqlite";
 
 export async function getRateLimitConfig(endpointType, identifier = "default") {
   return await dbGet(

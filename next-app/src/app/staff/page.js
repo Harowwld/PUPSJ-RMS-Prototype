@@ -69,6 +69,7 @@ function StaffPageContent() {
   const coreDataLoadedRef = useRef(false);
   const docsLoadedRef = useRef(false);
   const locateTimeoutRef = useRef(null);
+  const processedLocateRef = useRef(null);
 
   const validViews = ["requests", "upload", "documents", "notifications", "search", "storage"];
   const initialView = validViews.includes(searchParams?.get("view"))
@@ -137,6 +138,54 @@ function StaffPageContent() {
   };
 
   const [notificationsUnread, setNotificationsUnread] = useState(0);
+
+  const sidebarItems = useMemo(() => {
+    if (!authUser?.enabled_modules) return []
+    const enabled = new Set(authUser.enabled_modules)
+    
+    const MODULE_KEY_MAP = {
+      requests: "alumni_requests",
+      upload: "scan_upload",
+      documents: "documents",
+      notifications: "notifications",
+      search: "records_archive",
+      storage: "storage_explorer",
+    }
+
+    const groups = [
+      {
+        type: "group",
+        label: "Operations",
+        children: [
+          { key: "requests", label: "Alumni Requests", iconClass: "ph-bold ph-tray-arrow-up" },
+          { key: "upload", label: "Scan & Upload", iconClass: "ph-bold ph-scan" },
+          { key: "documents", label: "Documents", iconClass: "ph-bold ph-file-text" },
+          { key: "notifications", label: "Notifications", iconClass: "ph-bold ph-bell", badge: notificationsUnread },
+        ]
+      },
+      {
+        type: "group",
+        label: "Records Archive",
+        children: [
+          { key: "search", label: "Records & Archive", iconClass: "ph-bold ph-archive-box" },
+          { key: "storage", label: "Storage Explorer", iconClass: "ph-bold ph-folder-open" },
+        ]
+      }
+    ]
+
+    const result = []
+    for (const group of groups) {
+      const activeChildren = group.children.filter(child => {
+        const requiredModule = MODULE_KEY_MAP[child.key]
+        return !requiredModule || enabled.has(requiredModule)
+      })
+      if (activeChildren.length > 0) {
+        result.push({ type: "header", label: group.label })
+        result.push(...activeChildren)
+      }
+    }
+    return result
+  }, [authUser?.enabled_modules, notificationsUnread])
 
   const [students, setStudents] = useState([]);
   const [archivedStudents, setArchivedStudents] = useState([]);
@@ -405,6 +454,8 @@ function StaffPageContent() {
     }
   }, [view]);
 
+
+
   useEffect(() => {
     return () => {
       if (locateTimeoutRef.current) {
@@ -544,6 +595,7 @@ function StaffPageContent() {
         rooms: storageLayout.rooms.map((r) => ({
           room: r.id,
           occupiedCount: students.filter((s) => s.room === r.id).length,
+          cabinetsCount: r.cabinets?.length || 0,
           isTarget: activeStudent?.room === r.id,
         })),
       };
@@ -699,6 +751,44 @@ function StaffPageContent() {
     },
     [locateStudent],
   );
+
+  useEffect(() => {
+    const handleLocate = (e) => {
+      const { student } = e.detail;
+      if (student) {
+        locateStudent(student);
+      }
+    };
+    window.addEventListener("locate-student", handleLocate);
+    return () => window.removeEventListener("locate-student", handleLocate);
+  }, [locateStudent]);
+
+  useEffect(() => {
+    const handleSwitch = (e) => {
+      const { view: targetView } = e.detail;
+      if (targetView) {
+        switchView(targetView);
+      }
+    };
+    window.addEventListener("switch-view", handleSwitch);
+    return () => window.removeEventListener("switch-view", handleSwitch);
+  }, [switchView]);
+
+  useEffect(() => {
+    const locateNo = searchParams?.get("locate");
+    if (locateNo && students.length > 0 && processedLocateRef.current !== locateNo) {
+      processedLocateRef.current = locateNo;
+      const match = students.find(s => s.studentNo === locateNo) || archivedStudents.find(s => s.studentNo === locateNo);
+      if (match) {
+        // Clear parameter from URL
+        const params = new URLSearchParams(window.location.search);
+        params.delete("locate");
+        router.replace(`${window.location.pathname}?${params.toString()}`, { scroll: false });
+        
+        locateStudent(match);
+      }
+    }
+  }, [searchParams, students, archivedStudents, locateStudent, router]);
 
   const applyStudentNoMask = (val) => {
     let clean = val.replace(/[^0-9A-Z]/g, "").toUpperCase();
@@ -934,6 +1024,26 @@ function StaffPageContent() {
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rotation, uploadedFile]);
+
+  useEffect(() => {
+    if (!authUser) return
+    const enabled = new Set(authUser.enabled_modules || [])
+    const MODULE_KEY_MAP = {
+      requests: "alumni_requests",
+      upload: "scan_upload",
+      documents: "documents",
+      notifications: "notifications",
+      search: "records_archive",
+      storage: "storage_explorer",
+    }
+    const requiredModule = MODULE_KEY_MAP[view]
+    if (requiredModule && !enabled.has(requiredModule)) {
+      const firstEnabled = sidebarItems.find(item => item.key)
+      if (firstEnabled) {
+        switchView(firstEnabled.key)
+      }
+    }
+  }, [authUser, view, sidebarItems, switchView])
 
   const checkDuplicate = useCallback((studentNo, docType) => {
     if (!studentNo || !docType) return;
@@ -1335,17 +1445,7 @@ function StaffPageContent() {
     }
   };
 
-  const sidebarItems = [
-    { type: "header", label: "Operations" },
-    { key: "requests", label: "Alumni Requests", iconClass: "ph-bold ph-tray-arrow-up" },
-    { key: "upload", label: "Scan & Upload", iconClass: "ph-bold ph-scan" },
-    { key: "documents", label: "Documents", iconClass: "ph-bold ph-file-text" },
-    { key: "notifications", label: "Notifications", iconClass: "ph-bold ph-bell", badge: notificationsUnread },
 
-    { type: "header", label: "Records Archive" },
-    { key: "search", label: "Records & Archive", iconClass: "ph-bold ph-archive-box" },
-    { key: "storage", label: "Storage Explorer", iconClass: "ph-bold ph-folder-open" },
-  ];
 
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
@@ -1396,63 +1496,7 @@ function StaffPageContent() {
         <div className="liquid-blob liquid-blob-2"></div>
         <div className="liquid-blob liquid-blob-3"></div>
       </div>
-      <Header authUser={authUser} onLogout={handleLogout}>
-        {authUser?.preferences?.navigation_layout !== "topbar" && !sidebarOpen && (
-          <div className="flex items-center gap-3.5 pl-1.5">
-            <button
-              type="button"
-              onClick={() => {
-                if (typeof window !== "undefined") {
-                  window.dispatchEvent(new CustomEvent("toggle-sidebar"))
-                }
-              }}
-              className="flex items-center justify-center border-0 rounded-brand hover:bg-gray-100 dark:hover:bg-white/5 text-gray-700 cursor-pointer bg-transparent h-9 w-9"
-            >
-              <i className="ti ti-panel-left text-[21px]" style={{ color: "#ebb800" }}></i>
-            </button>
-
-            {/* Apple Photos Style Zoom Control */}
-            <div className="flex items-center gap-1.5 select-none pr-2">
-              <button
-                type="button"
-                onClick={() => setZoomNode(prev => Math.max(0, prev - 1))}
-                className="group flex items-center justify-center border-0 rounded-brand hover:bg-gray-100 dark:hover:bg-white/5 text-gray-500 hover:text-gray-700 dark:text-zinc-400 dark:hover:text-zinc-200 cursor-pointer bg-transparent h-9 w-9 transition-colors duration-75"
-              >
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M2.5 7H11.5" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/>
-                </svg>
-              </button>
-              <div 
-                onMouseDown={handleZoomMouseDown}
-                onTouchStart={handleZoomMouseDown}
-                className="relative w-[80px] h-[18px] flex items-center group cursor-pointer"
-              >
-                {/* Track */}
-                <div className="absolute left-0 right-0 h-[3px] bg-[#D1D1D6] dark:bg-zinc-700 rounded-full"></div>
-                {/* Active Track */}
-                <div 
-                  className="absolute left-0 h-[3px] bg-[#007AFF] rounded-full"
-                  style={{ width: `${(zoomNode / 6) * 100}%` }}
-                ></div>
-                {/* Handle */}
-                <div 
-                  className="absolute -translate-x-1/2 w-[16px] h-[16px] rounded-full bg-white dark:bg-zinc-900 border-[3px] border-[#007AFF] shadow-xs"
-                  style={{ left: `${(zoomNode / 6) * 100}%` }}
-                ></div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setZoomNode(prev => Math.min(6, prev + 1))}
-                className="group flex items-center justify-center border-0 rounded-brand hover:bg-gray-100 dark:hover:bg-white/5 text-gray-500 hover:text-gray-700 dark:text-zinc-400 dark:hover:text-zinc-200 cursor-pointer bg-transparent h-9 w-9 transition-colors duration-75"
-              >
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M7 2.5V11.5M2.5 7H11.5" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/>
-                </svg>
-              </button>
-            </div>
-          </div>
-        )}
-      </Header>
+      <Header authUser={authUser} onLogout={handleLogout} />
 
       <Tabs
         value={view}
@@ -1503,6 +1547,8 @@ function StaffPageContent() {
             zoomNode={zoomNode}
             setZoomNode={setZoomNode}
             handleZoomMouseDown={handleZoomMouseDown}
+            accentColor="#ebb800"
+            officeName={authUser?.office_name}
           />
         )}
         <main className="flex-1 relative w-full min-w-0 min-h-0 bg-white/25 dark:bg-zinc-950/25 overflow-y-auto backdrop-blur-xs">
