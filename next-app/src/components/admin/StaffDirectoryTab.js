@@ -122,11 +122,13 @@ const StaffTableRow = React.memo(({
       <td className="py-0 px-4 align-middle">
         <div className={cn(
           "inline-flex w-fit items-center justify-center rounded-[4px] px-[8px] py-[3px] text-[11px] font-medium tracking-[0.04em]",
-          s.role === "Admin" || s.role === "SuperAdmin"
-            ? "bg-[#FEE2E2] text-[#991B1B] dark:bg-red-950/40 dark:text-red-400"
-            : "bg-[#FEF3C7] text-[#92400E] dark:bg-amber-950/40 dark:text-amber-400"
+          s.role === "SystemAdmin" || s.role === "SuperAdmin"
+            ? "bg-gray-900 text-white dark:bg-zinc-100 dark:text-zinc-950"
+            : s.role === "Admin"
+              ? "bg-[#FEE2E2] text-[#991B1B] dark:bg-red-950/40 dark:text-red-400"
+              : "bg-[#FEF3C7] text-[#92400E] dark:bg-amber-950/40 dark:text-amber-400"
         )}>
-          {s.role}
+          {s.role === "SuperAdmin" || s.role === "SystemAdmin" ? "System Admin" : s.role}
         </div>
       </td>
       <td className="py-0 px-4 align-middle">
@@ -281,6 +283,9 @@ export default function StaffDirectoryTab({
   const filteredStaff = useMemo(() => {
     const q = search.toLowerCase()
     return staffData.filter((s) => {
+      // Exclude System Admin and Super Admin from admin-side staff directory
+      if (s.role === "SystemAdmin" || s.role === "SuperAdmin") return false
+
       const matchesSearch =
           `${s.fname} ${s.lname}`.toLowerCase().includes(q) ||
           s.id.toLowerCase().includes(q) ||
@@ -542,7 +547,7 @@ export default function StaffDirectoryTab({
                     : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
                 )}
               >
-                Active ({staffData.filter((s) => s.status !== "Archived").length})
+                Active ({staffData.filter((s) => s.status !== "Archived" && s.role !== "SystemAdmin" && s.role !== "SuperAdmin").length})
               </button>
               <button
                 type="button"
@@ -554,7 +559,7 @@ export default function StaffDirectoryTab({
                     : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
                 )}
               >
-                Archived ({staffData.filter((s) => s.status === "Archived").length})
+                Archived ({staffData.filter((s) => s.status === "Archived" && s.role !== "SystemAdmin" && s.role !== "SuperAdmin").length})
               </button>
             </div>
 

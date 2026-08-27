@@ -92,7 +92,7 @@ export async function GET(req) {
     
     return NextResponse.json({
       ok: true,
-      message: `All databases wiped, files cleared, and tables re-bootstrapped successfully. The default SuperAdmin account is: admin.default@pup.local / ${defaultPasswordForMessage}`
+      message: `All databases wiped, files cleared, and tables re-bootstrapped successfully. The default SystemAdmin account is: admin.default@pup.local / ${defaultPasswordForMessage}`
     });
   } catch (error) {
     console.error("[reset-db] Reset failed:", error);

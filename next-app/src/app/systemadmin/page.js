@@ -8,17 +8,17 @@ import Header from "@/components/layout/Header"
 import Footer from "@/components/layout/Footer"
 import Sidebar from "@/components/shared/Sidebar"
 import ConfirmModal from "@/components/shared/ConfirmModal"
-import { SuperAdminGuard } from "@/components/shared/AuthGuard"
+import { SystemAdminGuard } from "@/components/shared/AuthGuard"
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
 
-import OfficeManagementTab from "@/components/superadmin/OfficeManagementTab"
-import ModuleConfigTab from "@/components/superadmin/ModuleConfigTab"
-import GlobalStaffTab from "@/components/superadmin/GlobalStaffTab"
-import GlobalAuditLogsTab from "@/components/superadmin/GlobalAuditLogsTab"
-import SystemHealthTab from "@/components/superadmin/SystemHealthTab"
+import OfficeManagementTab from "@/components/systemadmin/OfficeManagementTab"
+import ModuleConfigTab from "@/components/systemadmin/ModuleConfigTab"
+import GlobalStaffTab from "@/components/systemadmin/GlobalStaffTab"
+import GlobalAuditLogsTab from "@/components/systemadmin/GlobalAuditLogsTab"
+import SystemHealthTab from "@/components/systemadmin/SystemHealthTab"
 
-function SuperAdminPageContent() {
+function SystemAdminPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [loading, setLoading] = useState(true)
@@ -38,6 +38,20 @@ function SuperAdminPageContent() {
     window.addEventListener("toggle-sidebar", handleToggle)
     return () => window.removeEventListener("toggle-sidebar", handleToggle)
   }, [])
+
+  useEffect(() => {
+    const handleSwitch = (e) => {
+      const { view: targetView } = e.detail
+      if (targetView) {
+        setView(targetView)
+        const params = new URLSearchParams(window.location.search)
+        params.set("view", targetView)
+        router.replace(`${window.location.pathname}?${params.toString()}`, { scroll: false })
+      }
+    }
+    window.addEventListener("switch-view", handleSwitch)
+    return () => window.removeEventListener("switch-view", handleSwitch)
+  }, [router])
 
   const handleZoomMouseDown = (e) => {
     e.preventDefault()
@@ -204,9 +218,9 @@ function SuperAdminPageContent() {
   )
 }
 
-export default function SuperAdminPage() {
+export default function SystemAdminPage() {
   return (
-    <SuperAdminGuard>
+    <SystemAdminGuard>
       <Suspense fallback={
         <div className="font-inter flex min-h-screen flex-col gap-4 bg-gray-50 p-4 dark:bg-background">
           <Skeleton className="h-16 w-full shrink-0 rounded-brand" />
@@ -216,8 +230,8 @@ export default function SuperAdminPage() {
           </div>
         </div>
       }>
-        <SuperAdminPageContent />
+        <SystemAdminPageContent />
       </Suspense>
-    </SuperAdminGuard>
+    </SystemAdminGuard>
   )
 }

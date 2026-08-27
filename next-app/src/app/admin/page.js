@@ -85,6 +85,20 @@ function AdminPageContent() {
   }, [])
 
   useEffect(() => {
+    const handleSwitch = (e) => {
+      const { view: targetView } = e.detail
+      if (targetView) {
+        setView(targetView)
+        const params = new URLSearchParams(window.location.search)
+        params.set("view", targetView)
+        router.replace(`${window.location.pathname}?${params.toString()}`, { scroll: false })
+      }
+    }
+    window.addEventListener("switch-view", handleSwitch)
+    return () => window.removeEventListener("switch-view", handleSwitch)
+  }, [router])
+
+  useEffect(() => {
     // Dynamic favicon swap for admin page
     const updateFavicon = () => {
       const links = document.querySelectorAll("link[rel*='icon']");

@@ -245,9 +245,9 @@ export async function getDb() {
       return getOfficeDb(officeId);
     }
 
-    // SuperAdmin context: they don't have a default office_id, so they default to 'registrar'
+    // SystemAdmin context: they don't have a default office_id, so they default to 'registrar'
     // but they can pass an override header (x-office-override)
-    if (userRole === "SuperAdmin") {
+    if (userRole === "SystemAdmin" || userRole === "SuperAdmin") {
       const overrideOfficeId = headersList.get("x-office-override");
       if (overrideOfficeId) {
         const { getOfficeDb } = await import("./officeDb.js");

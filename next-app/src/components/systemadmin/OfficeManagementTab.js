@@ -277,7 +277,7 @@ export default function OfficeManagementTab({ showToast }) {
                           <h3 className="font-bold text-gray-900 dark:text-zinc-50 leading-tight">
                             {office.short_name}
                           </h3>
-                          <span className="text-[10px] font-mono text-gray-400 dark:text-zinc-500 uppercase tracking-wider">
+                          <span className="text-[10px] text-gray-400 dark:text-zinc-500 uppercase tracking-wider">
                             ID: {office.id}
                           </span>
                         </div>
@@ -373,7 +373,7 @@ export default function OfficeManagementTab({ showToast }) {
                 />
                 {!isEditing && (
                   <span className="text-[10px] text-gray-400 mt-1 block">
-                    Letters/numbers only. Creates a separate database + a default admin (e.g. <span className="font-mono">PUP{(form.id || "OFFICE").trim().toUpperCase()}-001</span>).
+                    Letters/numbers only. Creates a separate database + a default admin (e.g. <span>PUP{(form.id || "OFFICE").trim().toUpperCase()}-001</span>).
                   </span>
                 )}
               </div>

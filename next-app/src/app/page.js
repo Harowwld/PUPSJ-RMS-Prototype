@@ -227,8 +227,8 @@ export default function Home() {
         localStorage.setItem("pup-session-recovered", Date.now().toString());
         localStorage.removeItem("pup-logout");
 
-        if (role === "SuperAdmin") {
-          router.push("/superadmin");
+        if (role === "SystemAdmin" || role === "SuperAdmin") {
+          router.push("/systemadmin");
           return;
         }
         if (role === "Admin") {
@@ -273,8 +273,8 @@ export default function Home() {
       localStorage.removeItem("pup-logout");
 
       const role = String(json?.data?.role || "");
-      if (role === "SuperAdmin") {
-        router.push("/superadmin");
+      if (role === "SystemAdmin" || role === "SuperAdmin") {
+        router.push("/systemadmin");
       } else if (role === "Admin") {
         router.push("/admin");
       } else {

@@ -382,12 +382,12 @@ export default function DigitizationComplianceTab({
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 relative z-20">
             {/* Completeness Card */}
             <div className={cn(
-              "relative group transition-all duration-300 hover:-translate-y-1 hover:shadow-lg rounded-xl",
+              "relative group rounded-xl",
               selectedKpi === "completeness" ? "z-30" : "z-10"
             )}>
               <div 
                 onClick={() => setSelectedKpi(selectedKpi === "completeness" ? null : "completeness")}
-                className="relative overflow-hidden rounded-xl border-none bg-gradient-to-br from-[#f87171] via-[#dc2626] to-[#b91c1c] dark:from-[#dc2626] dark:to-[#7f1d1d] p-5 active:scale-97 cursor-pointer glass-stat-card-red select-none"
+                className="relative overflow-hidden rounded-xl border-none bg-gradient-to-br from-[#f87171] via-[#dc2626] to-[#b91c1c] dark:from-[#dc2626] dark:to-[#7f1d1d] p-5 cursor-pointer glass-stat-card-red select-none"
               >
                   <div className="absolute inset-0 overflow-hidden rounded-xl pointer-events-none z-0">
                     <div className="absolute bottom-0 left-0 w-[70%] h-[80%] bg-gradient-to-tr from-[#b91c1c]/40 to-[#dc2626]/0 pointer-events-none" style={{ clipPath: 'polygon(0% 100%, 100% 100%, 0% 0%)' }} />
@@ -468,12 +468,12 @@ export default function DigitizationComplianceTab({
 
             {/* Students Card */}
             <div className={cn(
-              "relative group transition-all duration-300 hover:-translate-y-1 hover:shadow-lg rounded-xl",
+              "relative group rounded-xl",
               selectedKpi === "students" ? "z-30" : "z-10"
             )}>
               <div 
                 onClick={() => setSelectedKpi(selectedKpi === "students" ? null : "students")}
-                className="relative overflow-hidden rounded-xl border-none bg-gradient-to-br from-[#14C8FF] via-[#007AFF] to-[#0055FF] dark:from-[#007AFF] dark:to-[#0033aa] p-5 active:scale-97 cursor-pointer glass-stat-card-blue select-none"
+                className="relative overflow-hidden rounded-xl border-none bg-gradient-to-br from-[#14C8FF] via-[#007AFF] to-[#0055FF] dark:from-[#007AFF] dark:to-[#0033aa] p-5 cursor-pointer glass-stat-card-blue select-none"
               >
                   <div className="absolute inset-0 overflow-hidden rounded-xl pointer-events-none z-0">
                     <div className="absolute bottom-0 left-0 w-[70%] h-[80%] bg-gradient-to-tr from-[#0055FF]/40 to-[#007AFF]/0 pointer-events-none" style={{ clipPath: 'polygon(0% 100%, 100% 100%, 0% 0%)' }} />
@@ -523,12 +523,12 @@ export default function DigitizationComplianceTab({
 
             {/* Complete Card */}
             <div className={cn(
-              "relative group transition-all duration-300 hover:-translate-y-1 hover:shadow-lg rounded-xl",
+              "relative group rounded-xl",
               selectedKpi === "complete" ? "z-30" : "z-10"
             )}>
               <div 
                 onClick={() => setSelectedKpi(selectedKpi === "complete" ? null : "complete")}
-                className="relative overflow-hidden rounded-xl border-none bg-gradient-to-br from-[#34d399] via-[#059669] to-[#047857] dark:from-[#059669] dark:to-[#024e37] p-5 active:scale-97 cursor-pointer glass-stat-card-green select-none"
+                className="relative overflow-hidden rounded-xl border-none bg-gradient-to-br from-[#34d399] via-[#059669] to-[#047857] dark:from-[#059669] dark:to-[#024e37] p-5 cursor-pointer glass-stat-card-green select-none"
               >
                   <div className="absolute inset-0 overflow-hidden rounded-xl pointer-events-none z-0">
                     <div className="absolute bottom-0 left-0 w-[70%] h-[80%] bg-gradient-to-tr from-[#047857]/40 to-[#059669]/0 pointer-events-none" style={{ clipPath: 'polygon(0% 100%, 100% 100%, 0% 0%)' }} />

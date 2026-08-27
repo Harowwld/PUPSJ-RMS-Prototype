@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -22,7 +22,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import AccountSetupModal from "@/components/shared/AccountSetupModal";
-import { isAdminRole, getRoleLabel, isSuperAdminRole, hasAdminPrivileges } from "@/lib/roleUtils";
+import { isAdminRole, getRoleLabel, isSystemAdminRole, hasAdminPrivileges } from "@/lib/roleUtils";
 import { cn } from "@/lib/utils";
 
 export default function Header({ authUser, onLogout, children }) {
@@ -34,12 +34,47 @@ export default function Header({ authUser, onLogout, children }) {
   const [imageError, setImageError] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
 
+  const [searchQuery, setSearchQuery] = useState("");
+  const [studentSuggestions, setStudentSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [focusedIndex, setFocusedIndex] = useState(-1);
+  const searchContainerRef = useRef(null);
+
   useEffect(() => {
     setImageError(false);
     setImageLoaded(false);
   }, [authUser?.avatar_filename]);
 
-  const isSuperAdmin = isSuperAdminRole(authUser?.role);
+  useEffect(() => {
+    const handleOutsideClick = (e) => {
+      if (searchContainerRef.current && !searchContainerRef.current.contains(e.target)) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener("mousedown", handleOutsideClick);
+    return () => document.removeEventListener("mousedown", handleOutsideClick);
+  }, []);
+
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setStudentSuggestions([]);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/students?q=${encodeURIComponent(searchQuery)}&includeArchived=true&limit=8`);
+        const json = await res.json();
+        if (res.ok && json.ok) {
+          setStudentSuggestions(json.data || []);
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }, 200);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  const isSuperAdmin = isSystemAdminRole(authUser?.role);
   const isAdmin = isAdminRole(authUser?.role);
   const hasAdminRights = hasAdminPrivileges(authUser?.role);
 
@@ -47,8 +82,8 @@ export default function Header({ authUser, onLogout, children }) {
     // Only admins/superadmins have a choice of view
     if (hasAdminRights) {
       const stored = localStorage.getItem("pup_admin_view_pref");
-      const defaultView = isSuperAdmin ? "superadmin" : (isAdmin ? "admin" : "staff");
-      const target = stored || (pathname?.startsWith("/superadmin") ? "superadmin" : (pathname?.startsWith("/admin") ? "admin" : "staff"));
+      const defaultView = isSuperAdmin ? "systemadmin" : (isAdmin ? "admin" : "staff");
+      const target = stored || (pathname?.startsWith("/systemadmin") || pathname?.startsWith("/superadmin") ? "systemadmin" : (pathname?.startsWith("/admin") ? "admin" : "staff"));
       const timer = setTimeout(() => {
         setPreferredView(target);
       }, 0);
@@ -60,27 +95,27 @@ export default function Header({ authUser, onLogout, children }) {
     ? (authUser.fname[0] + authUser.lname[0]).toUpperCase()
     : "AD";
 
-  // If we're on /superadmin, /admin, or /staff, that IS our current view.
+  // If we're on /systemadmin, /superadmin, /admin, or /staff, that IS our current view.
   // If we're on /account, we use the preferredView state.
-  const activeView = (pathname?.startsWith("/superadmin"))
-    ? "superadmin"
+  const activeView = (pathname?.startsWith("/systemadmin") || pathname?.startsWith("/superadmin"))
+    ? "systemadmin"
     : (pathname?.startsWith("/admin"))
       ? "admin"
       : (pathname?.startsWith("/staff"))
         ? "staff"
-        : (preferredView || (isSuperAdmin ? "superadmin" : (isAdmin ? "admin" : "staff")));
+        : (preferredView || (isSuperAdmin ? "systemadmin" : (isAdmin ? "admin" : "staff")));
 
   const isAdminView = activeView === "admin";
 
   const handleViewSwitch = (viewKey) => {
     localStorage.setItem("pup_admin_view_pref", viewKey);
     setPreferredView(viewKey);
-    router.push(viewKey === "superadmin" ? "/superadmin" : (viewKey === "admin" ? "/admin" : "/staff"));
+    router.push(viewKey === "systemadmin" || viewKey === "superadmin" ? "/systemadmin" : (viewKey === "admin" ? "/admin" : "/staff"));
   };
 
   const handleMainDashboardClick = () => {
     if (isSuperAdmin) {
-      router.push(activeView === "superadmin" ? "/superadmin" : (activeView === "admin" ? "/admin" : "/staff"));
+      router.push(activeView === "systemadmin" || activeView === "superadmin" ? "/systemadmin" : (activeView === "admin" ? "/admin" : "/staff"));
     } else if (hasAdminRights) {
       router.push(activeView === "admin" ? "/admin" : "/staff");
     } else {
@@ -128,11 +163,11 @@ export default function Header({ authUser, onLogout, children }) {
             onDoubleClick={(e) => e.preventDefault()}
           >
             <img 
-              src={(activeView === "superadmin" || activeView === "admin") ? "/admin-logo.png" : "/staff-logo.png"} 
+              src={(activeView === "systemadmin" || activeView === "superadmin" || activeView === "admin") ? "/admin-logo.png" : "/staff-logo.png"} 
               alt="eManage Logo" 
               className={cn(
                 "h-8 w-8 object-contain",
-                activeView === "superadmin" && "brightness-0 dark:invert"
+                (activeView === "systemadmin" || activeView === "superadmin") && "brightness-0 dark:invert"
               )} 
             />
             <div className="flex items-center">
@@ -145,21 +180,266 @@ export default function Header({ authUser, onLogout, children }) {
             className="text-[26px] font-medium select-none leading-none tracking-tight transition-colors duration-300" 
             style={{ 
               color: 
-                String(authUser?.role || "").toLowerCase() === "superadmin" 
+                String(authUser?.role || "").toLowerCase() === "systemadmin" || String(authUser?.role || "").toLowerCase() === "superadmin"
                   ? "#0f172a" 
                   : String(authUser?.role || "").toLowerCase() === "admin" 
                     ? "#e30000" 
-                    : "#edbb00" 
-            }}
-          >
-            {getRoleLabel(authUser?.role)}
-          </span>
+                    : "#007AFF"
+              }}
+            >
+              {
+                String(authUser?.role || "").toLowerCase() === "systemadmin" || String(authUser?.role || "").toLowerCase() === "superadmin"
+                  ? " System Administrator"
+                  : String(authUser?.role || "").toLowerCase() === "admin" 
+                    ? " Admin" 
+                    : " Staff"
+              }
+            </span>
         </div>
 
         <div className="flex items-center gap-2">
           {children}
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-4">
+          {/* Global Search Component */}
+          {authUser && (
+            <div ref={searchContainerRef} className="relative z-50">
+              <div className="relative group w-64 md:w-80">
+                <i className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-zinc-300"></i>
+                <input
+                  type="text"
+                  placeholder="Search views or student cabinets..."
+                  value={searchQuery}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                    setShowSuggestions(true);
+                    setFocusedIndex(-1);
+                  }}
+                  onFocus={() => setShowSuggestions(true)}
+                  onKeyDown={(e) => {
+                    const viewSuggestions = (() => {
+                      const list = [];
+                      const q = searchQuery.toLowerCase();
+                      if (activeView === "systemadmin") {
+                        const views = [
+                          { label: "Offices & Tenants", view: "offices" },
+                          { label: "Module Config Matrix", view: "modules" },
+                          { label: "Global Staff Directory", view: "staff" },
+                          { label: "Platform Audit Trail", view: "logs" },
+                          { label: "System Health", view: "health" }
+                        ];
+                        views.forEach(v => {
+                          if (v.label.toLowerCase().includes(q)) list.push(v);
+                        });
+                      } else if (activeView === "admin") {
+                        const views = [
+                          { label: "Records Review", view: "review" },
+                          { label: "Compliance Dashboard", view: "digitization" },
+                          { label: "SLA Analytics & KPI", view: "request_analytics" },
+                          { label: "Staff Directory", view: "directory" },
+                          { label: "Storage Room Layout Editor", view: "storage_layout" },
+                          { label: "System Configuration", view: "system_data" },
+                          { label: "Backup Maintenance", view: "system" },
+                          { label: "Audit Logs", view: "logs" }
+                        ];
+                        views.forEach(v => {
+                          if (v.label.toLowerCase().includes(q)) list.push(v);
+                        });
+                      } else if (activeView === "staff") {
+                        const views = [
+                          { label: "Alumni Requests", view: "requests" },
+                          { label: "Scan & Upload", view: "upload" },
+                          { label: "Documents Matrix", view: "documents" },
+                          { label: "Notifications", view: "notifications" },
+                          { label: "Records Archive", view: "search" },
+                          { label: "Physical Archive Explorer", view: "storage" }
+                        ];
+                        views.forEach(v => {
+                          if (v.label.toLowerCase().includes(q)) list.push(v);
+                        });
+                      }
+                      return list;
+                    })();
+                    const allSuggestions = [...viewSuggestions, ...studentSuggestions];
+
+                    if (!showSuggestions || allSuggestions.length === 0) return;
+                    if (e.key === "ArrowDown") {
+                      e.preventDefault();
+                      setFocusedIndex(prev => (prev + 1) % allSuggestions.length);
+                    } else if (e.key === "ArrowUp") {
+                      e.preventDefault();
+                      setFocusedIndex(prev => (prev - 1 + allSuggestions.length) % allSuggestions.length);
+                    } else if (e.key === "Enter") {
+                      e.preventDefault();
+                      const targetItem = focusedIndex >= 0 && focusedIndex < allSuggestions.length ? allSuggestions[focusedIndex] : allSuggestions[0];
+                      if (targetItem) {
+                        setSearchQuery("");
+                        setShowSuggestions(false);
+                        setFocusedIndex(-1);
+                        const studentNo = targetItem.student_no || targetItem.studentNo;
+                        if (targetItem.view) {
+                          window.dispatchEvent(new CustomEvent("switch-view", { detail: { view: targetItem.view } }));
+                        } else if (studentNo) {
+                          if (pathname?.startsWith("/staff")) {
+                            window.dispatchEvent(new CustomEvent("locate-student", { detail: { student: targetItem } }));
+                          } else {
+                            router.push(`/staff?view=storage&locate=${studentNo}`);
+                          }
+                        }
+                      }
+                    } else if (e.key === "Escape") {
+                      setShowSuggestions(false);
+                      setFocusedIndex(-1);
+                    }
+                  }}
+                  className="w-full h-9 pl-9 pr-4 text-xs font-normal bg-gray-50/50 hover:bg-gray-100/50 focus:bg-white border border-gray-200 focus:border-pup-maroon/40 rounded-lg outline-none transition-all focus:ring-4 focus:ring-pup-maroon/5 dark:bg-zinc-800/40 dark:hover:bg-zinc-800/60 dark:focus:bg-zinc-900 dark:border-white/5 dark:text-zinc-200 dark:focus:border-white/20 dark:focus:ring-white/5"
+                />
+              </div>
+
+              {showSuggestions && searchQuery.trim() && (() => {
+                const viewSuggestions = (() => {
+                  const list = [];
+                  const q = searchQuery.toLowerCase();
+                  if (activeView === "systemadmin") {
+                    const views = [
+                      { label: "Offices & Tenants", view: "offices" },
+                      { label: "Module Config Matrix", view: "modules" },
+                      { label: "Global Staff Directory", view: "staff" },
+                      { label: "Platform Audit Trail", view: "logs" },
+                      { label: "System Health", view: "health" }
+                    ];
+                    views.forEach(v => {
+                      if (v.label.toLowerCase().includes(q)) list.push(v);
+                    });
+                  } else if (activeView === "admin") {
+                    const views = [
+                      { label: "Records Review", view: "review" },
+                      { label: "Compliance Dashboard", view: "digitization" },
+                      { label: "SLA Analytics & KPI", view: "request_analytics" },
+                      { label: "Staff Directory", view: "directory" },
+                      { label: "Storage Room Layout Editor", view: "storage_layout" },
+                      { label: "System Configuration", view: "system_data" },
+                      { label: "Backup Maintenance", view: "system" },
+                      { label: "Audit Logs", view: "logs" }
+                    ];
+                    views.forEach(v => {
+                      if (v.label.toLowerCase().includes(q)) list.push(v);
+                    });
+                  } else if (activeView === "staff") {
+                    const views = [
+                      { label: "Alumni Requests", view: "requests" },
+                      { label: "Scan & Upload", view: "upload" },
+                      { label: "Documents Matrix", view: "documents" },
+                      { label: "Notifications", view: "notifications" },
+                      { label: "Records Archive", view: "search" },
+                      { label: "Physical Archive Explorer", view: "storage" }
+                    ];
+                    views.forEach(v => {
+                      if (v.label.toLowerCase().includes(q)) list.push(v);
+                    });
+                  }
+                  return list;
+                })();
+
+                const handleSelectSuggestion = (item) => {
+                  setSearchQuery("");
+                  setShowSuggestions(false);
+                  setFocusedIndex(-1);
+                  const studentNo = item.student_no || item.studentNo;
+                  if (item.view) {
+                    window.dispatchEvent(new CustomEvent("switch-view", { detail: { view: item.view } }));
+                  } else if (studentNo) {
+                    if (pathname?.startsWith("/staff")) {
+                      window.dispatchEvent(new CustomEvent("locate-student", { detail: { student: item } }));
+                    } else {
+                      router.push(`/staff?view=storage&locate=${studentNo}`);
+                    }
+                  }
+                };
+
+                const allSuggestions = [...viewSuggestions, ...studentSuggestions];
+
+                return (
+                  <div className="absolute right-0 mt-1.5 w-[360px] max-h-[400px] overflow-y-auto rounded-xl border border-gray-200 bg-white p-2 shadow-2xl backdrop-blur-sm dark:border-white/10 dark:bg-zinc-900/95 dark:shadow-none animate-in fade-in slide-in-from-top-1 duration-150">
+                    {viewSuggestions.length > 0 && (
+                      <div className="mb-2">
+                        <div className="px-2.5 py-1.5 text-[10px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">
+                          Pages & Views
+                        </div>
+                        {viewSuggestions.map((item, idx) => {
+                          const globalIdx = idx;
+                          const isFocused = focusedIndex === globalIdx;
+                          return (
+                            <button
+                              key={item.view}
+                              type="button"
+                              onClick={() => handleSelectSuggestion(item)}
+                              className={cn(
+                                "w-full text-left flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-xs font-medium transition-colors cursor-pointer border-0 outline-none",
+                                isFocused 
+                                  ? "bg-pup-maroon/5 text-pup-maroon dark:bg-white/10 dark:text-zinc-50" 
+                                  : "text-gray-700 dark:text-zinc-300 hover:bg-gray-50 dark:hover:bg-white/5"
+                              )}
+                            >
+                              <i className="ti ti-layout-grid text-sm opacity-60"></i>
+                              <span>{item.label}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+
+                    {studentSuggestions.length > 0 && (
+                      <div>
+                        <div className="px-2.5 py-1.5 text-[10px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">
+                          Students & Cabinet Location
+                        </div>
+                        {studentSuggestions.map((student, idx) => {
+                          const globalIdx = viewSuggestions.length + idx;
+                          const isFocused = focusedIndex === globalIdx;
+                          const studentNo = student.student_no || student.studentNo;
+                          return (
+                            <button
+                              key={studentNo || idx}
+                              type="button"
+                              onClick={() => handleSelectSuggestion(student)}
+                              className={cn(
+                                "w-full text-left flex flex-col px-2.5 py-2 rounded-lg transition-colors cursor-pointer border-0 outline-none",
+                                isFocused 
+                                  ? "bg-pup-maroon/5 dark:bg-white/10" 
+                                  : "hover:bg-gray-50 dark:hover:bg-white/5"
+                              )}
+                            >
+                              <div className="flex items-center justify-between w-full">
+                                <span className={cn("text-xs font-semibold text-left", isFocused ? "text-pup-maroon dark:text-zinc-50" : "text-gray-900 dark:text-zinc-100")}>
+                                  {student.name}
+                                </span>
+                                <span className="text-[10px] text-gray-400 dark:text-zinc-500 font-mono text-right">
+                                  {studentNo}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-1.5 text-[10px] text-gray-500 dark:text-zinc-400 mt-1">
+                                <i className="ti ti-building text-[11px]"></i>
+                                <span>
+                                  Room {student.room} · Cab {student.cabinet} · Drawer {student.drawer}
+                                </span>
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+
+                    {allSuggestions.length === 0 && (
+                      <div className="p-4 text-center text-xs text-gray-400 dark:text-zinc-500 font-medium">
+                        No matching views or records found.
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
+            </div>
+          )}
           <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
             <DropdownMenuTrigger className="focus:outline-none select-none">
               <div className={cn(
@@ -229,13 +509,13 @@ export default function Header({ authUser, onLogout, children }) {
  
                   {isSuperAdmin && (
                     <>
-                      {activeView !== "superadmin" && (
+                      {activeView !== "systemadmin" && activeView !== "superadmin" && (
                         <DropdownMenuItem
-                          onClick={() => handleViewSwitch("superadmin")}
+                          onClick={() => handleViewSwitch("systemadmin")}
                           className="cursor-pointer rounded-[8px] flex items-center gap-3 font-normal text-[15px] py-2.5 px-3 hover:bg-gray-50 dark:hover:bg-white/5 text-gray-900 dark:text-zinc-100 transition-colors outline-none"
                         >
                           <i className="ti ti-shield text-[19px] shrink-0 flex items-center justify-center h-[19px] w-[19px] leading-none" style={{ color: "#0f172a" }}></i>
-                          <span>Switch to SuperAdmin View</span>
+                          <span>Switch to System Admin View</span>
                         </DropdownMenuItem>
                       )}
                       {activeView !== "admin" && (

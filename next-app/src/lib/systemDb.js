@@ -537,7 +537,7 @@ async function seedSystemDefaults(db) {
     console.log("[SystemDB] Seeded security questions.");
   }
 
-  // Seed default SuperAdmin if no staff exist
+  // Seed default SystemAdmin if no staff exist
   const staffCount = db.prepare("SELECT COUNT(*) as count FROM staff").get();
   if (staffCount.count === 0) {
     const defaultPassword = process.env.DEFAULT_STAFF_PASSWORD || "pupstaff";
@@ -550,13 +550,13 @@ async function seedSystemDefaults(db) {
       "PUPREGISTRAR-001",
       "Elias",
       "Austria",
-      "SuperAdmin",
+      "SystemAdmin",
       "Administrative",
       "Active",
       "admin.default@pup.local",
       passwordHash
     );
-    console.log("[SystemDB] Seeded default SuperAdmin account.");
+    console.log("[SystemDB] Seeded default SystemAdmin account.");
   }
 
   // Seed rate limits

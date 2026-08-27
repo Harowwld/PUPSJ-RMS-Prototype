@@ -148,14 +148,14 @@ function StatCards({ isLoading, stats }) {
         <div
           key={i}
           className={cn(
-            "relative group transition-all duration-300 hover:-translate-y-1 hover:shadow-lg rounded-xl",
+            "relative group rounded-xl",
             selectedKpi === stat.key ? "z-30" : "z-10"
           )}
         >
           <div 
             onClick={() => setSelectedKpi(selectedKpi === stat.key ? null : stat.key)}
             className={cn(
-              "relative overflow-hidden rounded-xl border-none p-5 active:scale-97 cursor-pointer bg-gradient-to-br select-none",
+              "relative overflow-hidden rounded-xl border-none p-5 cursor-pointer bg-gradient-to-br select-none",
               stat.bgClass,
               i === 0 ? "glass-stat-card-blue" :
               i === 1 ? "glass-stat-card-green" :

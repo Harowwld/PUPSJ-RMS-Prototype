@@ -276,7 +276,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
             className="h-9 px-3 text-xs bg-white/70 dark:bg-zinc-900/40 border border-gray-200 dark:border-white/5 rounded-xl outline-none focus:border-slate-900 dark:text-white cursor-pointer"
           >
             <option value="All">All Offices</option>
-            <option value="global">Super Administration (No Office)</option>
+            <option value="global">System Administration (No Office)</option>
             {offices.map(o => (
               <option key={o.id} value={o.id}>{o.short_name}</option>
             ))}
@@ -288,7 +288,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
             className="h-9 px-3 text-xs bg-white/70 dark:bg-zinc-900/40 border border-gray-200 dark:border-white/5 rounded-xl outline-none focus:border-slate-900 dark:text-white cursor-pointer"
           >
             <option value="All">All Roles</option>
-            <option value="SuperAdmin">Super Administrator</option>
+            <option value="SystemAdmin">System Administrator</option>
             <option value="Admin">Administrator</option>
             <option value="Staff">Records Staff</option>
           </select>
@@ -361,7 +361,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                           {office.short_name}
                         </div>
                       ) : (
-                        <span className="inline-flex w-fit items-center justify-center rounded-[4px] px-[8px] py-[3px] text-[11px] font-semibold tracking-[0.04em] bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400 select-none">
+                        <span className="inline-flex w-fit items-center justify-center rounded-[4px] px-[8px] py-[3px] text-[11px] font-semibold tracking-[0.04em] bg-gray-900 text-white dark:bg-zinc-100 dark:text-zinc-950 select-none">
                           Platform Level
                         </span>
                       )}
@@ -370,12 +370,14 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                       <div 
                         className={cn(
                           "inline-flex w-fit items-center justify-center rounded-[4px] px-[8px] py-[3px] text-[11px] font-medium tracking-[0.04em]",
-                          member.role === "SuperAdmin" || member.role === "Admin"
-                            ? "bg-[#FEE2E2] text-[#991B1B] dark:bg-red-950/40 dark:text-red-400"
-                            : "bg-[#FEF3C7] text-[#92400E] dark:bg-amber-950/40 dark:text-amber-400"
+                          member.role === "SystemAdmin" || member.role === "SuperAdmin"
+                            ? "bg-gray-900 text-white dark:bg-zinc-100 dark:text-zinc-950"
+                            : member.role === "Admin"
+                              ? "bg-[#FEE2E2] text-[#991B1B] dark:bg-red-950/40 dark:text-red-400"
+                              : "bg-[#FEF3C7] text-[#92400E] dark:bg-amber-950/40 dark:text-amber-400"
                         )}
                       >
-                        {member.role}
+                        {member.role === "SuperAdmin" || member.role === "SystemAdmin" ? "System Admin" : member.role}
                       </div>
                     </td>
                     <td className="py-2 px-4 align-middle text-[13px] font-normal text-[#111111] dark:text-zinc-300">
@@ -541,7 +543,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                   onChange={(e) => setForm(prev => ({ ...prev, office_id: e.target.value }))}
                   className="h-10 w-full px-3 text-xs bg-white dark:bg-zinc-950 border border-gray-200 dark:border-white/10 rounded-xl outline-none focus:border-slate-900 dark:text-white cursor-pointer"
                 >
-                  <option value="">SuperAdmin / Global (No Office Scope)</option>
+                  <option value="">SystemAdmin / Global (No Office Scope)</option>
                   {offices.map(o => (
                     <option key={o.id} value={o.id}>{o.name}</option>
                   ))}
@@ -559,7 +561,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                     onChange={(e) => setForm(prev => ({ ...prev, role: e.target.value }))}
                     className="h-10 w-full px-3 text-xs bg-white dark:bg-zinc-950 border border-gray-200 dark:border-white/10 rounded-xl outline-none focus:border-slate-900 dark:text-white cursor-pointer"
                   >
-                    <option value="SuperAdmin">SuperAdmin</option>
+                    <option value="SystemAdmin">System Admin</option>
                     <option value="Admin">Administrator</option>
                     <option value="Staff">Records Staff</option>
                   </select>
