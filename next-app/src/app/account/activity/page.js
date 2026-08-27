@@ -151,7 +151,7 @@ function StatCards({ isLoading, stats }) {
   ];
 
   return (
-    <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 items-start relative z-20 transition-all duration-500">
+    <StaggerContainer className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 items-start relative z-20 transition-all duration-500">
       {cards.map((stat, i) => (
         <StaggerItem
           key={i}
@@ -256,7 +256,7 @@ function StatCards({ isLoading, stats }) {
               )}
             </div>
           </div>
-        </div>
+        </StaggerItem>
       ))}
     </StaggerContainer>
   );
