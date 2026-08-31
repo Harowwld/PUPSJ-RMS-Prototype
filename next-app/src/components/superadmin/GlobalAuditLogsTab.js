@@ -15,8 +15,6 @@ import { Select } from "@/components/ui/select"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Calendar } from "@/components/ui/calendar"
 import { TooltipProvider } from "@/components/ui/tooltip"
-import { format } from "date-fns"
-import { RefreshButton } from "@/components/shared/RefreshButton"
 import LogDetailSheet from "../admin/audit-logs/LogDetailSheet"
 
 export default function GlobalAuditLogsTab({ showToast }) {
@@ -64,7 +62,6 @@ export default function GlobalAuditLogsTab({ showToast }) {
     try {
       const offset = (page - 1) * limit
       const officeQuery = officeFilter !== "All" ? `&officeId=${encodeURIComponent(officeFilter)}` : ""
-      const roleQuery = roleFilter !== "All" ? `&role=${encodeURIComponent(roleFilter)}` : ""
       const severityQuery = severityFilter !== "All" ? `&severity=${encodeURIComponent(severityFilter)}` : ""
       const searchQuery = search ? `&search=${encodeURIComponent(search)}` : ""
       const startQuery = startDate ? `&startDate=${encodeURIComponent(startDate)}` : ""
@@ -114,8 +111,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
 
   useEffect(() => {
     fetchLogs()
-    fetchStats()
-  }, [fetchLogs, fetchStats])
+  }, [fetchLogs])
 
   const handleRoleChange = (e) => {
     setOfficeFilter(e.target.value)
