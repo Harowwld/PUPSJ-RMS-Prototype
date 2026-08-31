@@ -16,6 +16,7 @@ import {
 import PageHeader from "@/components/shared/PageHeader"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
+import ConfirmModal from "@/components/shared/ConfirmModal"
 
 // Predefined icon palette so SuperAdmins can click an icon instead of typing a
 // raw class string. Values are full icon classes consumed by LucideIconTranslator
@@ -69,6 +70,11 @@ export default function OfficeManagementTab({ showToast }) {
   })
   
   const [submitLoading, setSubmitLoading] = useState(false)
+
+  // Status Confirmation State
+  const [statusConfirmOpen, setStatusConfirmOpen] = useState(false)
+  const [statusConfirmOffice, setStatusConfirmOffice] = useState(null)
+  const [statusConfirmLoading, setStatusConfirmLoading] = useState(false)
 
   const fetchOffices = useCallback(async () => {
     try {
@@ -172,8 +178,16 @@ export default function OfficeManagementTab({ showToast }) {
     }
   }
 
-  const handleToggleStatus = async (office) => {
+  const handleToggleStatusClick = (office) => {
+    setStatusConfirmOffice(office)
+    setStatusConfirmOpen(true)
+  }
+
+  const handleConfirmToggleStatus = async () => {
+    if (!statusConfirmOffice) return
+    const office = statusConfirmOffice
     const nextStatus = office.status === "Active" ? "Inactive" : "Active"
+    setStatusConfirmLoading(true)
     try {
       const res = await fetch(`/api/offices/${office.id}`, {
         method: "PATCH",
@@ -184,11 +198,14 @@ export default function OfficeManagementTab({ showToast }) {
       if (res.ok && json.ok) {
         showToast(`Office set to ${nextStatus}`)
         fetchOffices()
+        setStatusConfirmOpen(false)
       } else {
         showToast(json.error || "Failed to toggle status", true)
       }
     } catch (err) {
       showToast("Network error toggling status", true)
+    } finally {
+      setStatusConfirmLoading(false)
     }
   }
 
@@ -330,7 +347,7 @@ export default function OfficeManagementTab({ showToast }) {
                     </Button>
                     <Button 
                       variant="ghost" 
-                      onClick={() => handleToggleStatus(office)}
+                      onClick={() => handleToggleStatusClick(office)}
                       className={cn(
                         "h-8 px-3 rounded-lg text-xs font-medium cursor-pointer",
                         isActive 
@@ -350,7 +367,7 @@ export default function OfficeManagementTab({ showToast }) {
 
       {/* Create / Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-md rounded-2xl bg-white border border-gray-200 dark:bg-zinc-900 dark:border-white/10 p-0 shadow-2xl overflow-hidden">
+        <DialogContent className="sm:max-w-2xl rounded-2xl bg-white border border-gray-200 dark:bg-zinc-900 dark:border-white/10 p-0 shadow-2xl overflow-hidden">
           <form onSubmit={handleSubmit}>
             <DialogHeader className="p-6 pb-4 border-b border-gray-100 dark:border-white/5">
               <DialogTitle className="text-lg font-bold text-gray-900 dark:text-zinc-50">
@@ -361,39 +378,41 @@ export default function OfficeManagementTab({ showToast }) {
               </DialogDescription>
             </DialogHeader>
 
-            <div className="p-6 space-y-4 max-h-[65vh] overflow-y-auto">
-              {/* ID */}
-              <div>
-                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
-                  Office Identifier (Database Name) *
-                </label>
-                <Input
-                  value={form.id}
-                  onChange={(e) => setForm(prev => ({ ...prev, id: e.target.value }))}
-                  disabled={isEditing}
-                  placeholder="e.g. registrar, osas, coed"
-                  className="h-10 rounded-xl bg-white border border-gray-200 text-xs focus-visible:ring-pup-maroon dark:bg-zinc-950 dark:border-white/10 dark:text-white"
-                  required
-                />
-                {!isEditing && (
-                  <span className="text-[10px] text-gray-400 mt-1 block">
-                    Letters/numbers only. Creates a separate database + a default admin (e.g. <span className="font-mono">PUP{(form.id || "OFFICE").trim().toUpperCase()}-001</span>).
-                  </span>
-                )}
-              </div>
+            <div className="p-6 space-y-5 max-h-[70vh] overflow-y-auto">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* ID */}
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
+                    Office Identifier (Database Name) *
+                  </label>
+                  <Input
+                    value={form.id}
+                    onChange={(e) => setForm(prev => ({ ...prev, id: e.target.value }))}
+                    disabled={isEditing}
+                    placeholder="e.g. registrar, osas, coed"
+                    className="h-10 rounded-xl bg-white border border-gray-200 text-xs focus-visible:ring-pup-maroon dark:bg-zinc-950 dark:border-white/10 dark:text-white"
+                    required
+                  />
+                  {!isEditing && (
+                    <span className="text-[10px] text-gray-400 mt-1 block">
+                      Letters/numbers only. Creates a separate database + a default admin (e.g. <span className="font-mono">PUP{(form.id || "OFFICE").trim().toUpperCase()}-001</span>).
+                    </span>
+                  )}
+                </div>
 
-              {/* Short Name */}
-              <div>
-                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
-                  Short/Acronym Name *
-                </label>
-                <Input
-                  value={form.short_name}
-                  onChange={(e) => setForm(prev => ({ ...prev, short_name: e.target.value }))}
-                  placeholder="e.g. Registrar, OSAS"
-                  className="h-10 rounded-xl bg-white border border-gray-200 text-xs focus-visible:ring-pup-maroon dark:bg-zinc-950 dark:border-white/10 dark:text-white"
-                  required
-                />
+                {/* Short Name */}
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
+                    Short/Acronym Name *
+                  </label>
+                  <Input
+                    value={form.short_name}
+                    onChange={(e) => setForm(prev => ({ ...prev, short_name: e.target.value }))}
+                    placeholder="e.g. Registrar, OSAS"
+                    className="h-10 rounded-xl bg-white border border-gray-200 text-xs focus-visible:ring-pup-maroon dark:bg-zinc-950 dark:border-white/10 dark:text-white"
+                    required
+                  />
+                </div>
               </div>
 
               {/* Full Name */}
@@ -423,84 +442,86 @@ export default function OfficeManagementTab({ showToast }) {
                 />
               </div>
 
-              {/* Icon Picker */}
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider">
-                    Office Icon
-                  </label>
-                  <button
-                    type="button"
-                    onClick={() => setShowCustomIcon(v => !v)}
-                    className="text-[10px] font-semibold text-gray-400 hover:text-gray-600 dark:hover:text-zinc-200 cursor-pointer"
-                  >
-                    {showCustomIcon ? "Use picker" : "Custom class"}
-                  </button>
-                </div>
-
-                {!showCustomIcon ? (
-                  <div className="grid grid-cols-8 gap-1.5 p-2 rounded-xl border border-gray-200 bg-white dark:bg-zinc-950 dark:border-white/10">
-                    {PRESET_ICONS.map((opt) => {
-                      const selected = form.icon === opt.value
-                      return (
-                        <button
-                          key={opt.value}
-                          type="button"
-                          title={opt.label}
-                          onClick={() => setForm(prev => ({ ...prev, icon: opt.value }))}
-                          className={cn(
-                            "h-8 w-8 flex items-center justify-center rounded-lg border text-base transition-all cursor-pointer",
-                            selected
-                              ? "border-slate-900 bg-slate-900 text-white dark:border-zinc-100 dark:bg-zinc-100 dark:text-zinc-900"
-                              : "border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50 dark:border-white/10 dark:text-zinc-300 dark:hover:bg-white/5"
-                          )}
-                        >
-                          <i className={opt.value}></i>
-                        </button>
-                      )
-                    })}
-                  </div>
-                ) : (
-                  <Input
-                    value={form.icon}
-                    onChange={(e) => setForm(prev => ({ ...prev, icon: e.target.value }))}
-                    placeholder="e.g. ti ti-building, ph-bold ph-certificate"
-                    className="h-10 rounded-xl bg-white border border-gray-200 text-xs focus-visible:ring-pup-maroon dark:bg-zinc-950 dark:border-white/10 dark:text-white"
-                  />
-                )}
-                <span className="text-[10px] text-gray-400 mt-1 flex items-center gap-1.5">
-                  Selected: <i className={form.icon}></i> <span className="font-mono">{form.icon}</span>
-                </span>
-              </div>
-
-              {/* Accent Color */}
-              <div>
-                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
-                  Accent Color / Branding Theme
-                </label>
-                <div className="flex items-center gap-3">
-                  <input
-                    type="color"
-                    value={form.accent_color}
-                    onChange={(e) => setForm(prev => ({ ...prev, accent_color: e.target.value }))}
-                    className="w-10 h-10 border rounded-lg overflow-hidden cursor-pointer bg-transparent"
-                  />
-                  <Input
-                    value={form.accent_color}
-                    onChange={(e) => setForm(prev => ({ ...prev, accent_color: e.target.value }))}
-                    className="h-10 rounded-xl flex-1 bg-white border border-gray-200 text-xs focus-visible:ring-pup-maroon dark:bg-zinc-950 dark:border-white/10 dark:text-white"
-                  />
-                </div>
-                <div className="flex gap-2 mt-2">
-                  {PRESET_COLORS.map(c => (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-gray-100 dark:border-white/5">
+                {/* Icon Picker */}
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider">
+                      Office Icon
+                    </label>
                     <button
-                      key={c}
                       type="button"
-                      onClick={() => setForm(prev => ({ ...prev, accent_color: c }))}
-                      className="w-6 h-6 rounded-full border border-gray-300 dark:border-white/20 transition-transform hover:scale-110 cursor-pointer"
-                      style={{ backgroundColor: c }}
+                      onClick={() => setShowCustomIcon(v => !v)}
+                      className="text-[10px] font-semibold text-gray-400 hover:text-gray-600 dark:hover:text-zinc-200 cursor-pointer"
+                    >
+                      {showCustomIcon ? "Use picker" : "Custom class"}
+                    </button>
+                  </div>
+
+                  {!showCustomIcon ? (
+                    <div className="grid grid-cols-8 gap-1.5 p-2 rounded-xl border border-gray-200 bg-white dark:bg-zinc-950 dark:border-white/10">
+                      {PRESET_ICONS.map((opt) => {
+                        const selected = form.icon === opt.value
+                        return (
+                          <button
+                            key={opt.value}
+                            type="button"
+                            title={opt.label}
+                            onClick={() => setForm(prev => ({ ...prev, icon: opt.value }))}
+                            className={cn(
+                              "h-8 w-8 flex items-center justify-center rounded-lg border text-base transition-all cursor-pointer",
+                              selected
+                                ? "border-slate-900 bg-slate-900 text-white dark:border-zinc-100 dark:bg-zinc-100 dark:text-zinc-900"
+                                : "border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50 dark:border-white/10 dark:text-zinc-300 dark:hover:bg-white/5"
+                            )}
+                          >
+                            <i className={opt.value}></i>
+                          </button>
+                        )
+                      })}
+                    </div>
+                  ) : (
+                    <Input
+                      value={form.icon}
+                      onChange={(e) => setForm(prev => ({ ...prev, icon: e.target.value }))}
+                      placeholder="e.g. ti ti-building, ph-bold ph-certificate"
+                      className="h-10 rounded-xl bg-white border border-gray-200 text-xs focus-visible:ring-pup-maroon dark:bg-zinc-950 dark:border-white/10 dark:text-white"
                     />
-                  ))}
+                  )}
+                  <span className="text-[10px] text-gray-400 mt-1 flex items-center gap-1.5">
+                    Selected: <i className={form.icon}></i> <span className="font-mono">{form.icon}</span>
+                  </span>
+                </div>
+
+                {/* Accent Color */}
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
+                    Accent Color / Branding Theme
+                  </label>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="color"
+                      value={form.accent_color}
+                      onChange={(e) => setForm(prev => ({ ...prev, accent_color: e.target.value }))}
+                      className="w-10 h-10 border rounded-lg overflow-hidden cursor-pointer bg-transparent"
+                    />
+                    <Input
+                      value={form.accent_color}
+                      onChange={(e) => setForm(prev => ({ ...prev, accent_color: e.target.value }))}
+                      className="h-10 rounded-xl flex-1 bg-white border border-gray-200 text-xs focus-visible:ring-pup-maroon dark:bg-zinc-950 dark:border-white/10 dark:text-white"
+                    />
+                  </div>
+                  <div className="flex gap-2 mt-2">
+                    {PRESET_COLORS.map(c => (
+                      <button
+                        key={c}
+                        type="button"
+                        onClick={() => setForm(prev => ({ ...prev, accent_color: c }))}
+                        className="w-6 h-6 rounded-full border border-gray-300 dark:border-white/20 transition-transform hover:scale-110 cursor-pointer"
+                        style={{ backgroundColor: c }}
+                      />
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
@@ -525,6 +546,24 @@ export default function OfficeManagementTab({ showToast }) {
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* Status Toggle Confirmation Modal */}
+      {statusConfirmOffice && (
+        <ConfirmModal
+          open={statusConfirmOpen}
+          title={statusConfirmOffice.status === "Active" ? `Deactivate ${statusConfirmOffice.short_name}?` : `Activate ${statusConfirmOffice.short_name}?`}
+          message={
+            statusConfirmOffice.status === "Active"
+              ? `Deactivating this office will restrict all staff members of ${statusConfirmOffice.name} from logging in or performing actions, and suspended modules will be unavailable. Are you sure you want to proceed?`
+              : `Activating this office will restore access for all staff members of ${statusConfirmOffice.name} and resume office operations. Are you sure you want to proceed?`
+          }
+          confirmLabel={statusConfirmOffice.status === "Active" ? "Deactivate" : "Activate"}
+          variant={statusConfirmOffice.status === "Active" ? "danger" : "success"}
+          onConfirm={handleConfirmToggleStatus}
+          onCancel={() => setStatusConfirmOpen(false)}
+          isLoading={statusConfirmLoading}
+        />
+      )}
     </div>
   )
 }

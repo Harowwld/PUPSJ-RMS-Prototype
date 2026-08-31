@@ -234,9 +234,142 @@ export async function createGlobalAuditLog(data) {
   const details = data.details || "";
   const severity = data.severity || "INFO";
   const ip = data.ip || "localhost";
+  const userAgent = data.userAgent || data.user_agent || null;
+  const entityType = data.entityType || data.entity_type || null;
+  const entityId = data.entityId || data.entity_id || null;
 
-  const sql = "INSERT INTO global_audit_logs (actor, role, office_id, action, details, severity, ip) VALUES (?, ?, ?, ?, ?, ?, ?)";
-  await sysDbRun(sql, [actor, role, officeId, action, details, severity, ip]);
+  const sql = `
+    INSERT INTO global_audit_logs 
+    (actor, role, office_id, action, details, severity, ip, user_agent, entity_type, entity_id) 
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `;
+  await sysDbRun(sql, [
+    actor,
+    role,
+    officeId,
+    action,
+    details,
+    severity,
+    ip,
+    userAgent,
+    entityType,
+    entityId
+  ]);
+}
+
+/**
+ * Helper to fetch and filter combined system-level and office-specific logs.
+ */
+async function fetchAndFilterCombinedAuditLogs(options = {}) {
+  const search = options.search || "";
+  const officeId = options.officeId || options.office_id || "";
+  const severity = options.severity || "";
+  const role = options.role || "";
+  const startDate = options.startDate || "";
+  const endDate = options.endDate || "";
+  const sortBy = options.sortBy || "created_at";
+  const sortOrder = options.sortOrder || "DESC";
+
+  let allLogs = [];
+
+  const buildClausesAndParams = () => {
+    const clauses = [];
+    const params = [];
+
+    if (severity && severity !== "All") {
+      clauses.push("severity = ?");
+      params.push(severity);
+    }
+
+    if (role && role !== "All") {
+      clauses.push("role = ?");
+      params.push(role);
+    }
+
+    if (search) {
+      clauses.push("(actor LIKE ? OR action LIKE ? OR details LIKE ? OR ip LIKE ?)");
+      const term = "%" + search + "%";
+      params.push(term, term, term, term);
+    }
+
+    if (startDate) {
+      clauses.push("created_at >= ?");
+      params.push(startDate);
+    }
+
+    if (endDate) {
+      clauses.push("created_at <= ?");
+      params.push(endDate);
+    }
+
+    return { clauses, params };
+  };
+
+  // 1. Fetch from global_audit_logs (system database)
+  if (!officeId || officeId === "All" || officeId === "global" || officeId === "") {
+    const { clauses, params } = buildClausesAndParams();
+    if (officeId === "global") {
+      clauses.push("office_id IS NULL");
+    }
+    const where = clauses.length > 0 ? " WHERE " + clauses.join(" AND ") : "";
+    const query = `SELECT * FROM global_audit_logs ${where}`;
+    const rows = await sysDbAll(query, params);
+    allLogs.push(...rows.map(r => ({ ...r, office_id: r.office_id || null, log_source: "global" })));
+  } else {
+    // If filtering by a specific office, still check if there are global logs scoped to it
+    const { clauses, params } = buildClausesAndParams();
+    clauses.push("office_id = ?");
+    params.push(officeId);
+    const where = clauses.length > 0 ? " WHERE " + clauses.join(" AND ") : "";
+    const query = `SELECT * FROM global_audit_logs ${where}`;
+    const rows = await sysDbAll(query, params);
+    allLogs.push(...rows.map(r => ({ ...r, office_id: r.office_id || null, log_source: "global" })));
+  }
+
+  // 2. Fetch from office-specific databases
+  let officesToQuery = [];
+  if (!officeId || officeId === "All" || officeId === "") {
+    const offices = await sysDbAll("SELECT id FROM offices WHERE status = 'Active'");
+    officesToQuery = offices.map(o => o.id);
+  } else if (officeId !== "global") {
+    officesToQuery = [officeId];
+  }
+
+  for (const oid of officesToQuery) {
+    try {
+      const { clauses, params } = buildClausesAndParams();
+      const where = clauses.length > 0 ? " WHERE " + clauses.join(" AND ") : "";
+      const query = `SELECT *, ? as office_id FROM audit_logs ${where}`;
+      const { officeDbAll } = await import("./officeDb.js");
+      const rows = await officeDbAll(oid, query, [...params, oid]);
+      allLogs.push(...rows.map(r => ({ ...r, log_source: "office" })));
+    } catch (err) {
+      console.warn(`[CombinedAuditLogs] Failed to fetch logs for office ${oid}:`, err?.message);
+    }
+  }
+
+  // 3. Sort
+  allLogs.sort((a, b) => {
+    let valA = a[sortBy];
+    let valB = b[sortBy];
+
+    if (sortBy === "created_at") {
+      const timeA = new Date(valA || 0).getTime();
+      const timeB = new Date(valB || 0).getTime();
+      if (timeA !== timeB) {
+        return sortOrder === "ASC" ? timeA - timeB : timeB - timeA;
+      }
+      return sortOrder === "ASC" ? a.id - b.id : b.id - a.id;
+    }
+
+    valA = String(valA || "").toLowerCase();
+    valB = String(valB || "").toLowerCase();
+    if (valA < valB) return sortOrder === "ASC" ? -1 : 1;
+    if (valA > valB) return sortOrder === "ASC" ? 1 : -1;
+    return 0;
+  });
+
+  return allLogs;
 }
 
 /**
@@ -245,81 +378,85 @@ export async function createGlobalAuditLog(data) {
 export async function listGlobalAuditLogs(options = {}) {
   const limit = options.limit !== undefined ? options.limit : 50;
   const offset = options.offset !== undefined ? options.offset : 0;
-  const search = options.search || "";
-  const officeId = options.officeId || options.office_id || "";
-  const severity = options.severity || "";
-
-  let query = "SELECT * FROM global_audit_logs";
-  let params = [];
-  let whereClauses = [];
-
-  if (officeId && officeId !== "All") {
-    if (officeId === "global") {
-      whereClauses.push("office_id IS NULL");
-    } else {
-      whereClauses.push("office_id = ?");
-      params.push(officeId);
-    }
-  }
-
-  if (severity && severity !== "All") {
-    whereClauses.push("severity = ?");
-    params.push(severity);
-  }
-
-  if (search) {
-    whereClauses.push("(actor LIKE ? OR action LIKE ? OR details LIKE ? OR ip LIKE ?)");
-    const term = "%" + search + "%";
-    params.push(term, term, term, term);
-  }
-
-  if (whereClauses.length > 0) {
-    query += " WHERE " + whereClauses.join(" AND ");
-  }
-
-  query += " ORDER BY datetime(created_at) DESC, id DESC LIMIT ? OFFSET ?";
-  params.push(limit, offset);
-
-  return await sysDbAll(query, params);
+  
+  const allLogs = await fetchAndFilterCombinedAuditLogs(options);
+  return allLogs.slice(offset, offset + limit);
 }
 
 /**
  * Count global audit logs matching criteria.
  */
 export async function countGlobalAuditLogs(options = {}) {
-  const search = options.search || "";
-  const officeId = options.officeId || options.office_id || "";
-  const severity = options.severity || "";
+  const allLogs = await fetchAndFilterCombinedAuditLogs(options);
+  return allLogs.length;
+}
 
-  let query = "SELECT COUNT(*) as count FROM global_audit_logs";
-  let params = [];
-  let whereClauses = [];
+/**
+ * Get reactive log statistics for the global audit log view.
+ */
+export async function getGlobalAuditLogStats(options = {}) {
+  const allLogs = await fetchAndFilterCombinedAuditLogs({
+    ...options,
+    limit: 1000000,
+    offset: 0
+  });
 
-  if (officeId && officeId !== "All") {
-    if (officeId === "global") {
-      whereClauses.push("office_id IS NULL");
-    } else {
-      whereClauses.push("office_id = ?");
-      params.push(officeId);
+  const stats = {
+    totalLogs: allLogs.length,
+    logsToday: 0,
+    authEvents: 0,
+    systemChanges: 0,
+    criticalEvents: 0,
+    trends: []
+  };
+
+  const todayStr = new Date().toISOString().split('T')[0];
+  const trendCounts = {};
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const dayStr = d.toISOString().split('T')[0];
+    trendCounts[dayStr] = { total: 0, auth: 0, critical: 0 };
+  }
+
+  for (const log of allLogs) {
+    const logDateStr = log.created_at ? log.created_at.split('T')[0] : "";
+    const isToday = logDateStr === todayStr;
+
+    if (isToday) {
+      stats.logsToday++;
+    }
+
+    const actionLower = String(log.action || "").toLowerCase();
+    const isAuth = actionLower.includes("login") || actionLower.includes("logout");
+    if (isAuth) {
+      stats.authEvents++;
+    }
+
+    const isChange = actionLower.includes("delete") || actionLower.includes("remove") || actionLower.includes("archive") || actionLower.includes("update") || actionLower.includes("edit") || actionLower.includes("modify") || actionLower.includes("create");
+    if (isChange) {
+      stats.systemChanges++;
+    }
+
+    const isCritical = log.severity === "CRITICAL";
+    if (isCritical) {
+      stats.criticalEvents++;
+    }
+
+    if (trendCounts[logDateStr]) {
+      trendCounts[logDateStr].total++;
+      if (isAuth) trendCounts[logDateStr].auth++;
+      if (isCritical) trendCounts[logDateStr].critical++;
     }
   }
 
-  if (severity && severity !== "All") {
-    whereClauses.push("severity = ?");
-    params.push(severity);
-  }
+  stats.trends = Object.keys(trendCounts).sort().map(day => ({
+    day,
+    total: trendCounts[day].total,
+    auth: trendCounts[day].auth,
+    critical: trendCounts[day].critical
+  }));
 
-  if (search) {
-    whereClauses.push("(actor LIKE ? OR action LIKE ? OR details LIKE ? OR ip LIKE ?)");
-    const term = "%" + search + "%";
-    params.push(term, term, term, term);
-  }
-
-  if (whereClauses.length > 0) {
-    query += " WHERE " + whereClauses.join(" AND ");
-  }
-
-  const row = await sysDbGet(query, params);
-  return row ? (row.count || 0) : 0;
+  return stats;
 }
 
