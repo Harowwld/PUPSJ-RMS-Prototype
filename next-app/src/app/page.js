@@ -306,7 +306,7 @@ export default function Home() {
 
         <div className="w-full max-w-[550px] p-4 z-10">
           <div
-            className="glass-panel rounded-[20px] shadow-[0_8px_32px_rgba(0,0,0,0.06)] flex flex-col items-center w-full relative"
+            className="glass-panel rounded-[20px] flex flex-col items-center w-full relative"
             style={{ padding: "56px 52px", height: "630px" }}
           >
             {/* APP ICON WITH CONCENTRIC CIRCLES */}
@@ -788,16 +788,59 @@ export default function Home() {
 
         {/* Create Account Modal */}
         <Dialog open={showCreateAccountModal} onOpenChange={setShowCreateAccountModal}>
-          <DialogContent className="max-w-md rounded-[20px] border-gray-100 bg-white dark:border-zinc-800 dark:bg-zinc-900">
-            <DialogHeader>
+          <DialogContent className="max-w-md rounded-[20px] border border-gray-100 bg-white dark:border-zinc-800 dark:bg-zinc-900 p-6">
+            <DialogHeader className="pb-3 border-b border-gray-100 dark:border-zinc-800">
               <DialogTitle className="text-lg font-semibold text-gray-900 flex items-center gap-2 dark:text-zinc-50">
-                <i className="ph-fill ph-info text-[#E5484D]"></i>
+                <i className="ph-fill ph-user-plus text-[#E5484D]"></i>
                 Account Registration
               </DialogTitle>
-              <DialogDescription className="text-sm font-medium text-gray-600 dark:text-zinc-400 mt-2">
-                Contact your admin to create your account.
+              <DialogDescription className="text-xs text-gray-500 dark:text-zinc-400">
+                Guidelines for requesting a new system user account.
               </DialogDescription>
             </DialogHeader>
+            <div className="space-y-4 mt-3">
+              <p className="text-sm font-medium text-gray-700 dark:text-zinc-300">
+                To maintain the integrity of student records, self-registration is disabled. New accounts must be provisioned by the administrator.
+              </p>
+              
+              <div className="bg-slate-50 dark:bg-zinc-800/50 rounded-xl p-3.5 space-y-2 border border-slate-100 dark:border-zinc-800">
+                <h4 className="text-xs font-bold text-gray-800 dark:text-zinc-200 uppercase tracking-wider">Required Details</h4>
+                <ul className="text-xs text-gray-600 dark:text-zinc-400 space-y-1.5 list-disc pl-4">
+                  <li><strong>Full Name</strong> (First Name, Last Name)</li>
+                  <li><strong>Staff/Employee ID</strong> (e.g., PUPREGISTRAR-001)</li>
+                  <li><strong>Official Email</strong> Address</li>
+                  <li><strong>Assigned Section/Department</strong></li>
+                </ul>
+              </div>
+
+              <div className="space-y-3 text-xs text-gray-600 dark:text-zinc-400">
+                <div className="flex gap-2">
+                  <i className="ph-bold ph-envelope-simple text-base text-[#E5484D] mt-0.5"></i>
+                  <div>
+                    <span className="font-semibold block text-gray-800 dark:text-zinc-200">Email Submission</span>
+                    Submit requests to: <span className="font-mono text-[11px] bg-slate-100 dark:bg-zinc-800 px-1 py-0.5 rounded text-gray-850 dark:text-zinc-200">registrar.admin@pup.edu.ph</span>
+                  </div>
+                </div>
+
+                <div className="flex gap-2">
+                  <i className="ph-bold ph-map-pin text-base text-[#E5484D] mt-0.5"></i>
+                  <div>
+                    <span className="font-semibold block text-gray-800 dark:text-zinc-200">Office Location</span>
+                    Registrar's Office, Room 201, Main Academic Building
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-3 border-t border-gray-100 dark:border-zinc-800 flex justify-end">
+                <Button 
+                  type="button" 
+                  onClick={() => setShowCreateAccountModal(false)}
+                  className="h-9 px-4 text-xs font-semibold bg-[#E5484D] hover:bg-[#c93b40] text-white rounded-lg active:scale-95 transition-all"
+                >
+                  Got it, close
+                </Button>
+              </div>
+            </div>
           </DialogContent>
         </Dialog>
       </div>

@@ -171,17 +171,7 @@ function SuperAdminPageContent() {
         <div className="liquid-blob liquid-blob-3 bg-purple-400/20 dark:bg-purple-600/10"></div>
       </div>
 
-      <Header authUser={authUser} onLogout={handleLogout}>
-        {!sidebarOpen && (
-          <button
-            type="button"
-            onClick={() => window.dispatchEvent(new CustomEvent("toggle-sidebar"))}
-            className="flex items-center justify-center border-0 rounded-brand hover:bg-gray-100 dark:hover:bg-white/5 text-gray-700 cursor-pointer bg-transparent h-9 w-9"
-          >
-            <i className="ti ti-panel-left text-[21px]" style={{ color: "#1e293b" }}></i>
-          </button>
-        )}
-      </Header>
+      <Header authUser={authUser} onLogout={handleLogout} />
 
       <div className="flex w-full flex-1 min-h-0 overflow-hidden flex-row">
         <Sidebar
@@ -193,6 +183,7 @@ function SuperAdminPageContent() {
           zoomNode={zoomNode}
           setZoomNode={setZoomNode}
           handleZoomMouseDown={handleZoomMouseDown}
+          accentColor="#000000"
         />
         
         <main className="relative w-full min-w-0 min-h-0 flex-1 bg-white/25 dark:bg-zinc-950/25 overflow-y-auto backdrop-blur-xs">

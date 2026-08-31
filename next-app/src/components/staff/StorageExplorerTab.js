@@ -108,16 +108,7 @@ export default function StorageExplorerTab({
     setRoomsPage(1)
   }, [locatorModel, activeStudent, roomsPerPage])
 
-  if (loading) {
-    return (
-      <div className="flex h-[400px] items-center justify-center text-gray-500">
-        <div className="flex flex-col items-center gap-3">
-          <i className="ph-bold ph-spinner animate-spin text-3xl text-pup-maroon"></i>
-          <span className="text-sm font-semibold">Loading Storage Layout...</span>
-        </div>
-      </div>
-    )
-  }
+
 
   const mapWrap = "w-full aspect-[16/10] max-h-[600px] mx-auto max-w-4xl overflow-hidden"
   const rowClass = "flex flex-col w-full"
@@ -241,16 +232,31 @@ export default function StorageExplorerTab({
                         const isTarget = r.isTarget
                         const theme = FOLDER_COLORS[activeStudentColor] || FOLDER_COLORS["yellow"]
                         const isClickable = !hasActiveTarget
-                        
+                        const maxCapacity = Math.max((r.cabinetsCount || 4) * 20, 50);
+                        const occupancyRate = Math.min(Math.round((r.occupiedCount / maxCapacity) * 100), 100);
+                        let statusColor = "bg-[#8e8e93]/10 text-[#8e8e93] dark:bg-[#8e8e93]/20 dark:text-[#aeaeb2]";
+                        let statusLabel = "Empty";
+                        if (occupancyRate >= 90) {
+                          statusColor = "bg-[#ff3b30]/10 text-[#ff3b30] dark:bg-[#ff453a]/25 dark:text-[#ff453a]";
+                          statusLabel = "Near Capacity";
+                        } else if (occupancyRate >= 50) {
+                          statusColor = "bg-[#ff9500]/10 text-[#ff9500] dark:bg-[#ff9f0a]/25 dark:text-[#ff9f0a]";
+                          statusLabel = "Moderate";
+                        } else if (occupancyRate > 0) {
+                          statusColor = "bg-[#34c759]/10 text-[#34c759] dark:bg-[#30d158]/25 dark:text-[#30d158]";
+                          statusLabel = "Optimal";
+                        }
+
                         return (
                           <div
                             key={r.room}
                             className={cn(
-                              "group relative flex flex-col overflow-hidden rounded-[24px] border-none transition-all duration-300 bg-gradient-to-br shadow-sm dark:shadow-none",
-                              isClickable ? "cursor-pointer hover:shadow-md hover:-translate-y-0.5" : "pointer-events-none select-none",
-                              !isClickable && !isTarget && "opacity-30",
-                              isTarget ? "scale-[1.02] ring-2 ring-white/25 shadow-lg" : "",
-                              isTarget ? "" : "from-[#fbbf24] via-[#d97706] to-[#b45309] dark:from-[#d97706] dark:to-[#78350f] text-white"
+                              "group relative flex flex-col overflow-hidden rounded-2xl border transition-all duration-300 shadow-[0_2px_8px_rgba(0,0,0,0.03)] dark:shadow-none p-5 select-none",
+                              isClickable ? "cursor-pointer hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)] hover:-translate-y-0.5" : "pointer-events-none",
+                              !isClickable && !isTarget && "opacity-40",
+                              isTarget 
+                                ? "border-transparent text-white ring-2 ring-white/10 scale-[1.01] shadow-md" 
+                                : "border-[#e5e5ea] dark:border-[#3a3a3c] bg-white dark:bg-[#1c1c1e] text-gray-900 dark:text-zinc-100"
                             )}
                             style={isTarget ? {
                               background: `linear-gradient(135deg, ${theme.frontStart} 0%, ${theme.frontEnd} 100%)`,
@@ -263,26 +269,71 @@ export default function StorageExplorerTab({
                               }
                             }}
                           >
-                            {/* Diagonal clip-path overlay vectors styled like the image */}
-                            <div className="absolute inset-0 overflow-hidden rounded-[24px] pointer-events-none z-0">
-                              <div 
-                                className="absolute inset-0 bg-white/10 opacity-30 pointer-events-none" 
-                                style={{ clipPath: 'polygon(0% 18%, 100% 75%, 100% 100%, 0% 100%)' }} 
-                              />
-                              <div 
-                                className="absolute inset-0 bg-black/10 opacity-20 pointer-events-none" 
-                                style={{ clipPath: 'polygon(0% 0%, 100% 55%, 100% 75%, 0% 18%)' }} 
-                              />
-                            </div>
+                            {/* Target pulsing glow */}
+                            {isTarget && (
+                              <div className="absolute top-4 right-4 flex items-center gap-1.5 bg-white/20 backdrop-blur-md px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wide text-white animate-pulse">
+                                <span className="h-1.5 w-1.5 rounded-full bg-white animate-ping" />
+                                Target Room
+                              </div>
+                            )}
+                            {/* Non-target status badge */}
+                            {!isTarget && (
+                              <div className="absolute top-4 right-4">
+                                <Badge className={cn("border-0 text-[10px] font-bold px-2 py-0.5 rounded-full shadow-none", statusColor)}>
+                                  {statusLabel}
+                                </Badge>
+                              </div>
+                            )}
 
+                            <div className="relative z-10 flex flex-col flex-1 w-full">
+                              {/* Room Number */}
+                              <div className="mb-3">
+                                <h5 className={cn(
+                                  "text-[18px] font-bold tracking-tight font-inter leading-none",
+                                  isTarget ? "text-white" : "text-gray-900 dark:text-[#f2f2f7]"
+                                )}>
+                                  Room {r.room}
+                                </h5>
+                              </div>
 
+                              {/* Stats breakdown */}
+                              <div className="space-y-2 mt-1.5 flex-1">
+                                <div className={cn(
+                                  "flex items-center text-xs font-medium",
+                                  isTarget ? "text-white/80" : "text-gray-550 dark:text-zinc-400"
+                                )}>
+                                  <i className="ph-bold ph-warehouse text-sm mr-2 opacity-80" />
+                                  <span>{r.cabinetsCount} Cabinets installed</span>
+                                </div>
+                                <div className={cn(
+                                  "flex items-center text-xs font-medium",
+                                  isTarget ? "text-white/80" : "text-gray-550 dark:text-zinc-400"
+                                )}>
+                                  <i className="ph-bold ph-folder-open text-sm mr-2 opacity-80" />
+                                  <span>{r.occupiedCount} Archived student folders</span>
+                                </div>
+                              </div>
 
-                            <div className="p-6 relative z-10 flex flex-col flex-1 w-full text-white">
-                              <h5 className="text-[32px] font-bold tracking-tight font-inter text-white leading-none select-none">
-                                Room {r.room}
-                              </h5>
-                              <div className="text-[14px] opacity-90 font-medium font-inter text-white mt-1">
-                                {r.occupiedCount} archived records
+                              {/* Occupancy Rate Progress Bar */}
+                              <div className="mt-4 pt-3 border-t border-gray-100 dark:border-zinc-800">
+                                <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider mb-1.5">
+                                  <span className={isTarget ? "text-white/70" : "text-[#8e8e93] dark:text-[#8e8e93]"}>Occupancy</span>
+                                  <span className={isTarget ? "text-white font-mono" : "text-gray-700 dark:text-zinc-300 font-mono"}>{occupancyRate}%</span>
+                                </div>
+                                <div className={cn(
+                                  "h-1.5 w-full rounded-full overflow-hidden",
+                                  isTarget ? "bg-white/20" : "bg-[#f2f2f7] dark:bg-[#2c2c2e]"
+                                )}>
+                                  <div
+                                    className={cn(
+                                      "h-full rounded-full transition-all duration-500",
+                                      isTarget 
+                                        ? "bg-white" 
+                                        : occupancyRate >= 90 ? "bg-[#ff3b30]" : occupancyRate >= 50 ? "bg-[#ff9500]" : "bg-[#34c759]"
+                                    )}
+                                    style={{ width: `${occupancyRate}%` }}
+                                  />
+                                </div>
                               </div>
                             </div>
                           </div>

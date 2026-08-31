@@ -113,6 +113,71 @@ export default function DigitalRecordsReviewTab({
   const [isExporting, setIsExporting] = useState(false)
   const [selectedIds, setSelectedIds] = useState(new Set())
   const [lastSelectedId, setLastSelectedId] = useState(null)
+  const [selectedKpi, setSelectedKpi] = useState(null)
+
+  const cardDetailsData = useMemo(() => {
+    if (!selectedKpi || !records) return null
+
+    const pending = records.filter((r) => r.approval_status === "Pending")
+    const approved = records.filter((r) => r.approval_status === "Approved")
+    const declined = records.filter((r) => r.approval_status === "Declined")
+
+    if (selectedKpi === "pending") {
+      const breakdownObj = {}
+      pending.forEach((r) => {
+        breakdownObj[r.doc_type] = (breakdownObj[r.doc_type] || 0) + 1
+      })
+      const pendingBreakdown = Object.entries(breakdownObj).map(([type, count]) => ({ type, count }))
+
+      let oldestPendingAge = 0
+      if (pending.length > 0) {
+        const timestamps = pending.map((r) => new Date(r.created_at).getTime()).filter(t => !isNaN(t))
+        if (timestamps.length > 0) {
+          const oldestTime = Math.min(...timestamps)
+          oldestPendingAge = Math.round((Date.now() - oldestTime) / (3600 * 1000))
+        }
+      }
+
+      return { pendingBreakdown, oldestPendingAge }
+    }
+
+    if (selectedKpi === "approved") {
+      const breakdownObj = {}
+      approved.forEach((r) => {
+        breakdownObj[r.doc_type] = (breakdownObj[r.doc_type] || 0) + 1
+      })
+      const approvedBreakdown = Object.entries(breakdownObj).map(([type, count]) => ({ type, count }))
+
+      return { approvedBreakdown }
+    }
+
+    if (selectedKpi === "declined") {
+      const breakdownObj = {}
+      declined.forEach((r) => {
+        breakdownObj[r.doc_type] = (breakdownObj[r.doc_type] || 0) + 1
+      })
+      const declinedBreakdown = Object.entries(breakdownObj).map(([type, count]) => ({ type, count }))
+
+      const reasonsObj = {}
+      declined.forEach((r) => {
+        const reason = r.review_note || "No reason specified"
+        reasonsObj[reason] = (reasonsObj[reason] || 0) + 1
+      })
+      const declineReasons = Object.entries(reasonsObj).map(([reason, count]) => ({ reason, count }))
+        .sort((a, b) => b.count - a.count)
+
+      return { declinedBreakdown, declineReasons }
+    }
+
+    return null
+  }, [selectedKpi, records])
+
+  const [activeKpiDetails, setActiveKpiDetails] = useState(null)
+  useEffect(() => {
+    if (cardDetailsData) {
+      setActiveKpiDetails(cardDetailsData)
+    }
+  }, [cardDetailsData])
 
   const hasActiveFilters = localSearch !== "" || statusFilter !== "All" || docTypeFilter !== "All" || !!dateFrom || !!dateTo;
 
@@ -565,98 +630,250 @@ export default function DigitalRecordsReviewTab({
             ))}
           </div>
         ) : !error ? (
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-3 items-start relative z-20">
             {/* Stat Card 1: Pending Review */}
-            <div className="group relative overflow-hidden rounded-xl border-none bg-gradient-to-br from-[#14C8FF] via-[#007AFF] to-[#0055FF] dark:from-[#007AFF] dark:to-[#0033aa] p-5 transition-all duration-300 hover:-translate-y-0.5 glass-stat-card-blue">
-                <div className="absolute inset-0 overflow-hidden rounded-xl pointer-events-none z-0">
-                  <div className="absolute bottom-0 left-0 w-[70%] h-[80%] bg-gradient-to-tr from-[#0055FF]/40 to-[#007AFF]/0 pointer-events-none" style={{ clipPath: 'polygon(0% 100%, 100% 100%, 0% 0%)' }} />
-                  <div className="absolute bottom-0 left-0 w-[50%] h-[60%] bg-gradient-to-tr from-[#14C8FF]/30 to-[#007AFF]/0 pointer-events-none" style={{ clipPath: 'polygon(0% 100%, 100% 100%, 0% 25%)' }} />
-                </div>
-                <div className="relative z-10">
-                  <div className="flex items-end justify-between">
-                    <div className="w-full">
-                       <div className="mb-1 flex items-center justify-between">
-                        <div className="flex items-center gap-1.5 font-medium text-white animate-fade-in" style={{ fontSize: "14px", fontWeight: 500, color: "#ffffff" }}>
-                           Pending Review
+            <div className={cn(
+              "relative group transition-all duration-300 hover:-translate-y-1 hover:shadow-lg rounded-xl",
+              selectedKpi === "pending" ? "z-30" : "z-10"
+            )}>
+              <div 
+                onClick={() => setSelectedKpi(selectedKpi === "pending" ? null : "pending")}
+                className="relative overflow-hidden rounded-xl border-none bg-gradient-to-br from-[#14C8FF] via-[#007AFF] to-[#0055FF] dark:from-[#007AFF] dark:to-[#0033aa] p-5 active:scale-97 cursor-pointer glass-stat-card-blue select-none"
+              >
+                  <div className="absolute inset-0 overflow-hidden rounded-xl pointer-events-none z-0">
+                    <div className="absolute bottom-0 left-0 w-[70%] h-[80%] bg-gradient-to-tr from-[#0055FF]/40 to-[#007AFF]/0 pointer-events-none" style={{ clipPath: 'polygon(0% 100%, 100% 100%, 0% 0%)' }} />
+                    <div className="absolute bottom-0 left-0 w-[50%] h-[60%] bg-gradient-to-tr from-[#14C8FF]/30 to-[#007AFF]/0 pointer-events-none" style={{ clipPath: 'polygon(0% 100%, 100% 100%, 0% 25%)' }} />
+                  </div>
+                  <div className="relative z-10 flex flex-col justify-between h-full">
+                    <div>
+                      <div className="mb-1 flex items-center justify-between">
+                        <div className="flex items-center gap-1.5 font-medium text-white animate-fade-in text-[14px]">
+                          Pending Review
                         </div>
                         {stats.hasSlaBreach && !isLoading && (
-                           <div className="flex items-center gap-1.5">
-                             <span className="relative flex h-2 w-2">
-                                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                                 <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
-                             </span>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                   <Badge className="bg-red-500 text-white border-0 text-[8px] font-semibold px-1.5 py-0 h-4 tracking-tight cursor-help">
-                                      SLA Warning
-                                    </Badge>
-                                </TooltipTrigger>
-                                <TooltipContent side="top" className="bg-red-600 text-white border-red-500 max-w-[200px]">
-                                   <p className="font-semibold text-xs tracking-tight">SLA Breach Detected</p>
-                                   <p className="text-[10px] font-medium opacity-90 mt-0.5">
-                                      {stats.slaBreachCount} {stats.slaBreachCount === 1 ? "record has" : "records have"} been pending for more than 48 hours.
-                                    </p>
-                                </TooltipContent>
-                              </Tooltip>
-                           </div>
+                          <div className="flex items-center gap-1.5">
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Badge className="bg-[#FEE2E2] text-[#991B1B] hover:bg-[#FEE2E2] dark:bg-red-950/40 dark:text-red-400 dark:hover:bg-red-950/40 border border-red-200/50 dark:border-red-500/20 text-[10px] font-bold px-2 py-0.5 tracking-wide cursor-help rounded-[4px]">
+                                  SLA Warning
+                                </Badge>
+                              </TooltipTrigger>
+                              <TooltipContent side="top" className="bg-red-600 text-white border-red-500 max-w-[200px]">
+                                <p className="font-semibold text-xs tracking-tight">SLA Breach Detected</p>
+                                <p className="text-[10px] font-medium opacity-90 mt-0.5">
+                                  {stats.slaBreachCount} {stats.slaBreachCount === 1 ? "record has" : "records have"} been pending for more than 48 hours.
+                                </p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </div>
                         )}
                       </div>
-                      <div className="font-semibold text-white tracking-tight" style={{ fontSize: "48px", fontWeight: 600, color: "#ffffff" }}>
+                      <div className="font-semibold text-white tracking-tight text-[48px]">
                         {stats.pending.toLocaleString()}
                       </div>
-                      <div className="mt-1 font-normal text-white" style={{ fontSize: "13px", fontWeight: 400, color: "#ffffff" }}>
+                      <div className="mt-1 font-normal text-white text-[13px]">
                         Waiting to be checked
                       </div>
                     </div>
                   </div>
-                </div>
               </div>
 
-            {/* Stat Card 2: Approved Today */}
-            <div className="group relative overflow-hidden rounded-xl border-none bg-gradient-to-br from-[#34d399] via-[#059669] to-[#047857] dark:from-[#059669] dark:to-[#024e37] p-5 transition-all duration-300 hover:-translate-y-0.5 glass-stat-card-green">
-                <div className="absolute inset-0 overflow-hidden rounded-xl pointer-events-none z-0">
-                  <div className="absolute bottom-0 left-0 w-[70%] h-[80%] bg-gradient-to-tr from-[#047857]/40 to-[#059669]/0 pointer-events-none" style={{ clipPath: 'polygon(0% 100%, 100% 100%, 0% 0%)' }} />
-                  <div className="absolute bottom-0 left-0 w-[50%] h-[60%] bg-gradient-to-tr from-[#34d399]/30 to-[#059669]/0 pointer-events-none" style={{ clipPath: 'polygon(0% 100%, 100% 100%, 0% 25%)' }} />
+              {/* Absolute details container */}
+              <div className={cn(
+                "absolute top-full left-0 right-0 z-[100] mt-2 rounded-xl bg-gradient-to-br from-[#14C8FF] via-[#007AFF] to-[#0055FF] dark:from-[#007AFF] dark:to-[#0033aa] p-5 shadow-2xl transition-all duration-300 ease-in-out origin-top",
+                selectedKpi === "pending" ? "scale-y-100 opacity-100 translate-y-0" : "scale-y-95 opacity-0 -translate-y-2 pointer-events-none"
+              )} onClick={(e) => e.stopPropagation()}>
+                <div className="space-y-4">
+                  {activeKpiDetails && (
+                    <>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg text-white">
+                          <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Total Pending</span>
+                          <span className="text-lg font-black font-mono">{stats.pending}</span>
+                        </div>
+                        <div className="bg-[#b91c1c]/40 backdrop-blur-sm p-2.5 rounded-lg text-white">
+                          <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">SLA Warnings</span>
+                          <span className="text-lg font-black font-mono">{stats.slaBreachCount}</span>
+                        </div>
+                      </div>
+
+                      {activeKpiDetails.oldestPendingAge > 0 && (
+                        <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg flex items-center justify-between text-xs text-white">
+                          <span className="font-medium text-white/80">Oldest pending record</span>
+                          <span className="font-bold">{activeKpiDetails.oldestPendingAge} hours</span>
+                        </div>
+                      )}
+
+                      <div>
+                        <h4 className="text-[10px] font-bold text-white/80 mb-1.5 uppercase tracking-wide">Type Breakdown</h4>
+                        <div className="max-h-32 overflow-y-auto space-y-1 pr-1">
+                          {activeKpiDetails.pendingBreakdown && activeKpiDetails.pendingBreakdown.length === 0 ? (
+                            <p className="text-[11px] text-white/60 text-center py-2">No pending records</p>
+                          ) : (
+                            activeKpiDetails.pendingBreakdown && activeKpiDetails.pendingBreakdown.map(({ type, count }) => (
+                              <div key={type} className="flex justify-between items-center text-[11px] py-1 border-b border-white/10 text-white/95">
+                                <span className="truncate max-w-[150px]" title={type}>{type}</span>
+                                <span className="font-mono font-bold">{count}</span>
+                              </div>
+                            ))
+                          )}
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </div>
-                <div className="relative z-10">
-                  <div className="flex items-end justify-between">
-                    <div className="w-full">
-                      <div className="mb-1 flex items-center gap-1.5 font-medium text-white" style={{ fontSize: "14px", fontWeight: 500, color: "#ffffff" }}>
+              </div>
+            </div>
+
+            {/* Stat Card 2: Approved Today */}
+            <div className={cn(
+              "relative group transition-all duration-300 hover:-translate-y-1 hover:shadow-lg rounded-xl",
+              selectedKpi === "approved" ? "z-30" : "z-10"
+            )}>
+              <div 
+                onClick={() => setSelectedKpi(selectedKpi === "approved" ? null : "approved")}
+                className="relative overflow-hidden rounded-xl border-none bg-gradient-to-br from-[#34d399] via-[#059669] to-[#047857] dark:from-[#059669] dark:to-[#024e37] p-5 active:scale-97 cursor-pointer glass-stat-card-green select-none"
+              >
+                  <div className="absolute inset-0 overflow-hidden rounded-xl pointer-events-none z-0">
+                    <div className="absolute bottom-0 left-0 w-[70%] h-[80%] bg-gradient-to-tr from-[#047857]/40 to-[#059669]/0 pointer-events-none" style={{ clipPath: 'polygon(0% 100%, 100% 100%, 0% 0%)' }} />
+                    <div className="absolute bottom-0 left-0 w-[50%] h-[60%] bg-gradient-to-tr from-[#34d399]/30 to-[#059669]/0 pointer-events-none" style={{ clipPath: 'polygon(0% 100%, 100% 100%, 0% 25%)' }} />
+                  </div>
+                  <div className="relative z-10 flex flex-col justify-between h-full">
+                    <div>
+                      <div className="mb-1 flex items-center gap-1.5 font-medium text-white text-[14px]">
                         Approved Today
                       </div>
-                      <div className="font-semibold text-white tracking-tight" style={{ fontSize: "48px", fontWeight: 600, color: "#ffffff" }}>
+                      <div className="font-semibold text-white tracking-tight text-[48px]">
                         {stats.approvedToday.toLocaleString()}
                       </div>
-                      <div className="mt-1 font-normal text-white" style={{ fontSize: "13px", fontWeight: 400, color: "#ffffff" }}>
+                      <div className="mt-1 font-normal text-white text-[13px]">
                         Verified correct ({stats.totalApproved.toLocaleString()} total)
                       </div>
                     </div>
                   </div>
-                </div>
               </div>
 
-            {/* Stat Card 3: Returned Today */}
-            <div className="group relative overflow-hidden rounded-xl border-none bg-gradient-to-br from-[#f87171] via-[#dc2626] to-[#b91c1c] dark:from-[#dc2626] dark:to-[#7f1d1d] p-5 transition-all duration-300 hover:-translate-y-0.5 glass-stat-card-red">
-                <div className="absolute inset-0 overflow-hidden rounded-xl pointer-events-none z-0">
-                  <div className="absolute bottom-0 left-0 w-[70%] h-[80%] bg-gradient-to-tr from-[#b91c1c]/40 to-[#dc2626]/0 pointer-events-none" style={{ clipPath: 'polygon(0% 100%, 100% 100%, 0% 0%)' }} />
-                  <div className="absolute bottom-0 left-0 w-[50%] h-[60%] bg-gradient-to-tr from-[#f87171]/30 to-[#dc2626]/0 pointer-events-none" style={{ clipPath: 'polygon(0% 100%, 100% 100%, 0% 25%)' }} />
+              {/* Absolute details container */}
+              <div className={cn(
+                "absolute top-full left-0 right-0 z-[100] mt-2 rounded-xl bg-gradient-to-br from-[#34d399] via-[#059669] to-[#047857] dark:from-[#059669] dark:to-[#024e37] p-5 shadow-2xl transition-all duration-300 ease-in-out origin-top",
+                selectedKpi === "approved" ? "scale-y-100 opacity-100 translate-y-0" : "scale-y-95 opacity-0 -translate-y-2 pointer-events-none"
+              )} onClick={(e) => e.stopPropagation()}>
+                <div className="space-y-4">
+                  {activeKpiDetails && (
+                    <>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg text-white">
+                          <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Approved Today</span>
+                          <span className="text-lg font-black font-mono">{stats.approvedToday}</span>
+                        </div>
+                        <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg text-white">
+                          <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Total Approved</span>
+                          <span className="text-lg font-black font-mono">{stats.totalApproved}</span>
+                        </div>
+                      </div>
+
+                      <div>
+                        <h4 className="text-[10px] font-bold text-white/80 mb-1.5 uppercase tracking-wide">Type Breakdown</h4>
+                        <div className="max-h-32 overflow-y-auto space-y-1 pr-1">
+                          {activeKpiDetails.approvedBreakdown && activeKpiDetails.approvedBreakdown.length === 0 ? (
+                            <p className="text-[11px] text-white/60 text-center py-2">No approved records</p>
+                          ) : (
+                            activeKpiDetails.approvedBreakdown && activeKpiDetails.approvedBreakdown.map(({ type, count }) => (
+                              <div key={type} className="flex justify-between items-center text-[11px] py-1 border-b border-white/10 text-white/95">
+                                <span className="truncate max-w-[150px]" title={type}>{type}</span>
+                                <span className="font-mono font-bold">{count}</span>
+                              </div>
+                            ))
+                          )}
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </div>
-                <div className="relative z-10">
-                  <div className="flex items-end justify-between">
-                    <div className="w-full">
-                      <div className="mb-1 flex items-center gap-1.5 font-medium text-white" style={{ fontSize: "14px", fontWeight: 500, color: "#ffffff" }}>
+              </div>
+            </div>
+
+            {/* Stat Card 3: Returned Today */}
+            <div className={cn(
+              "relative group transition-all duration-300 hover:-translate-y-1 hover:shadow-lg rounded-xl",
+              selectedKpi === "declined" ? "z-30" : "z-10"
+            )}>
+              <div 
+                onClick={() => setSelectedKpi(selectedKpi === "declined" ? null : "declined")}
+                className="relative overflow-hidden rounded-xl border-none bg-gradient-to-br from-[#f87171] via-[#dc2626] to-[#b91c1c] dark:from-[#dc2626] dark:to-[#7f1d1d] p-5 active:scale-97 cursor-pointer glass-stat-card-red select-none"
+              >
+                  <div className="absolute inset-0 overflow-hidden rounded-xl pointer-events-none z-0">
+                    <div className="absolute bottom-0 left-0 w-[70%] h-[80%] bg-gradient-to-tr from-[#b91c1c]/40 to-[#dc2626]/0 pointer-events-none" style={{ clipPath: 'polygon(0% 100%, 100% 100%, 0% 0%)' }} />
+                    <div className="absolute bottom-0 left-0 w-[50%] h-[60%] bg-gradient-to-tr from-[#f87171]/30 to-[#dc2626]/0 pointer-events-none" style={{ clipPath: 'polygon(0% 100%, 100% 100%, 0% 25%)' }} />
+                  </div>
+                  <div className="relative z-10 flex flex-col justify-between h-full">
+                    <div>
+                      <div className="mb-1 flex items-center gap-1.5 font-medium text-white text-[14px]">
                         Returned Today
                       </div>
-                      <div className="font-semibold text-white tracking-tight" style={{ fontSize: "48px", fontWeight: 600, color: "#ffffff" }}>
+                      <div className="font-semibold text-white tracking-tight text-[48px]">
                         {stats.declinedToday.toLocaleString()}
                       </div>
-                      <div className="mt-1 font-normal text-white" style={{ fontSize: "13px", fontWeight: 400, color: "#ffffff" }}>
+                      <div className="mt-1 font-normal text-white text-[13px]">
                         Found with errors ({stats.totalDeclined.toLocaleString()} total)
                       </div>
                     </div>
                   </div>
+              </div>
+
+              {/* Absolute details container */}
+              <div className={cn(
+                "absolute top-full left-0 right-0 z-[100] mt-2 rounded-xl bg-gradient-to-br from-[#f87171] via-[#dc2626] to-[#b91c1c] dark:from-[#dc2626] dark:to-[#7f1d1d] p-5 shadow-2xl transition-all duration-300 ease-in-out origin-top",
+                selectedKpi === "declined" ? "scale-y-100 opacity-100 translate-y-0" : "scale-y-95 opacity-0 -translate-y-2 pointer-events-none"
+              )} onClick={(e) => e.stopPropagation()}>
+                <div className="space-y-4">
+                  {activeKpiDetails && (
+                    <>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg text-white">
+                          <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Returned Today</span>
+                          <span className="text-lg font-black font-mono">{stats.declinedToday}</span>
+                        </div>
+                        <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg text-white">
+                          <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Total Returned</span>
+                          <span className="text-lg font-black font-mono">{stats.totalDeclined}</span>
+                        </div>
+                      </div>
+
+                      {activeKpiDetails.declineReasons && activeKpiDetails.declineReasons.length > 0 && (
+                        <div>
+                          <h4 className="text-[10px] font-bold text-white/80 mb-1.5 uppercase tracking-wide">Top Reasons</h4>
+                          <div className="space-y-1">
+                            {activeKpiDetails.declineReasons.map(({ reason, count }) => (
+                              <div key={reason} className="flex justify-between items-center text-[11px] py-0.5 text-white/90">
+                                <span className="truncate max-w-[150px] font-medium" title={reason}>"{reason}"</span>
+                                <span className="font-mono font-bold">{count}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      <div>
+                        <h4 className="text-[10px] font-bold text-white/80 mb-1.5 uppercase tracking-wide">Type Breakdown</h4>
+                        <div className="max-h-32 overflow-y-auto space-y-1 pr-1">
+                          {activeKpiDetails.declinedBreakdown && activeKpiDetails.declinedBreakdown.length === 0 ? (
+                            <p className="text-[11px] text-white/60 text-center py-2">No returned records</p>
+                          ) : (
+                            activeKpiDetails.declinedBreakdown && activeKpiDetails.declinedBreakdown.map(({ type, count }) => (
+                              <div key={type} className="flex justify-between items-center text-[11px] py-1 border-b border-white/10 text-white/95">
+                                <span className="truncate max-w-[150px]" title={type}>{type}</span>
+                                <span className="font-mono font-bold">{count}</span>
+                              </div>
+                            ))
+                          )}
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
+            </div>
           </div>
         ) : null}
 
@@ -1141,6 +1358,7 @@ export default function DigitalRecordsReviewTab({
                             <div className="flex items-center justify-end gap-[12px]" onClick={(e) => e.stopPropagation()}>
                               <button
                                 onClick={() => handlePreview(r)}
+                                title="Preview Document"
                                 className="w-7 h-7 rounded-[6px] hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/10 text-[#C7C7CC] dark:text-zinc-600 transition-colors hover:text-[#E5484D] dark:hover:text-red-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
                               >
                                 <i className="ph-bold ph-eye text-[16px]"></i>
@@ -1150,6 +1368,7 @@ export default function DigitalRecordsReviewTab({
                                  <>
                                    <button
                                      onClick={() => handleApprove(r.id)}
+                                     title="Approve Document"
                                      className="w-7 h-7 rounded-[6px] hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/10 text-[#C7C7CC] dark:text-zinc-600 transition-colors hover:text-green-600 dark:hover:text-green-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
                                    >
                                      <i className="ph-bold ph-check text-[16px]"></i>
@@ -1157,6 +1376,7 @@ export default function DigitalRecordsReviewTab({
 
                                    <button
                                      onClick={() => onDecline(r.id)}
+                                     title="Decline Document"
                                      className="w-7 h-7 rounded-[6px] hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/10 text-[#C7C7CC] dark:text-zinc-600 transition-colors hover:text-red-600 dark:hover:text-red-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
                                    >
                                      <i className="ph-bold ph-x text-[16px]"></i>

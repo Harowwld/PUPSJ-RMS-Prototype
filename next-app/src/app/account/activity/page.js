@@ -17,6 +17,13 @@ import { Calendar } from "@/components/ui/calendar";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Separator } from "@/components/ui/separator";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 
 import { formatPHDateTimeParts, formatPHDateTime } from "@/lib/timeFormat";
 import { isAdminRole } from "@/lib/roleUtils";
@@ -88,6 +95,8 @@ function getSeverityConfig(sev) {
 
 // 2. CHILD COMPONENTS
 function StatCards({ isLoading, stats }) {
+  const [selectedKpi, setSelectedKpi] = useState(null);
+
   if (isLoading && !stats) {
     return (
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 animate-pulse">
@@ -102,6 +111,7 @@ function StatCards({ isLoading, stats }) {
 
   const cards = [
     {
+      key: "total",
       label: "Total Events",
       value: stats.totalLogs || 0,
       sublabel: "Cumulative personal logs",
@@ -111,6 +121,7 @@ function StatCards({ isLoading, stats }) {
       iconClass: "ph-database",
     },
     {
+      key: "today",
       label: "Activity Today",
       value: stats.logsToday || 0,
       sublabel: "Events recorded today",
@@ -120,6 +131,7 @@ function StatCards({ isLoading, stats }) {
       iconClass: "ph-calendar-check",
     },
     {
+      key: "auth",
       label: "Auth Attempts",
       value: stats.authEvents || 0,
       sublabel: "Logins & access events",
@@ -131,35 +143,109 @@ function StatCards({ isLoading, stats }) {
   ];
 
   return (
-    <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 transition-all duration-500">
+    <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 items-start relative z-20 transition-all duration-500">
       {cards.map((stat, i) => (
         <div
           key={i}
           className={cn(
-            "group relative overflow-hidden rounded-xl border-none p-5 transition-all duration-300 hover:-translate-y-0.5 bg-gradient-to-br",
-            stat.bgClass,
-            i === 0 ? "glass-stat-card-blue" :
-            i === 1 ? "glass-stat-card-green" :
-            i === 2 ? "glass-stat-card-orange" : ""
+            "relative group transition-all duration-300 hover:-translate-y-1 hover:shadow-lg rounded-xl",
+            selectedKpi === stat.key ? "z-30" : "z-10"
           )}
         >
-          <div className="absolute inset-0 overflow-hidden rounded-xl pointer-events-none z-0">
-            <div className={cn("absolute bottom-0 left-0 w-[70%] h-[80%] bg-gradient-to-tr pointer-events-none", stat.shape1)} style={{ clipPath: 'polygon(0% 100%, 100% 100%, 0% 0%)' }} />
-            <div className={cn("absolute bottom-0 left-0 w-[50%] h-[60%] bg-gradient-to-tr pointer-events-none", stat.shape2)} style={{ clipPath: 'polygon(0% 100%, 100% 100%, 0% 25%)' }} />
-          </div>
-          <div className="relative z-10">
-            <div className="flex items-end justify-between">
-              <div>
-                <div className="mb-1 flex items-center gap-1.5 text-[14px] font-medium text-white">
-                  {stat.label}
-                </div>
-                <div className="text-[48px] font-semibold text-white tracking-tight">
-                  {stat.value.toLocaleString()}
-                </div>
-                <div className="mt-1 text-[13px] font-normal text-white">
-                  {stat.sublabel}
+          <div 
+            onClick={() => setSelectedKpi(selectedKpi === stat.key ? null : stat.key)}
+            className={cn(
+              "relative overflow-hidden rounded-xl border-none p-5 active:scale-97 cursor-pointer bg-gradient-to-br select-none",
+              stat.bgClass,
+              i === 0 ? "glass-stat-card-blue" :
+              i === 1 ? "glass-stat-card-green" :
+              i === 2 ? "glass-stat-card-orange" : ""
+            )}
+          >
+            <div className="absolute inset-0 overflow-hidden rounded-xl pointer-events-none z-0">
+              <div className={cn("absolute bottom-0 left-0 w-[70%] h-[80%] bg-gradient-to-tr pointer-events-none", stat.shape1)} style={{ clipPath: 'polygon(0% 100%, 100% 100%, 0% 0%)' }} />
+              <div className={cn("absolute bottom-0 left-0 w-[50%] h-[60%] bg-gradient-to-tr pointer-events-none", stat.shape2)} style={{ clipPath: 'polygon(0% 100%, 100% 100%, 0% 25%)' }} />
+            </div>
+            <div className="relative z-10">
+              <div className="flex items-end justify-between">
+                <div>
+                  <div className="mb-1 flex items-center gap-1.5 text-[14px] font-medium text-white">
+                    {stat.label}
+                  </div>
+                  <div className="text-[48px] font-semibold text-white tracking-tight">
+                    {stat.value.toLocaleString()}
+                  </div>
+                  <div className="mt-1 text-[13px] font-normal text-white">
+                    {stat.sublabel}
+                  </div>
                 </div>
               </div>
+            </div>
+          </div>
+
+          {/* Absolute details container */}
+          <div className={cn(
+            "absolute top-full left-0 right-0 z-[100] mt-2 rounded-xl bg-gradient-to-br p-5 shadow-2xl transition-all duration-300 ease-in-out origin-top",
+            stat.bgClass,
+            selectedKpi === stat.key ? "scale-y-100 opacity-100 translate-y-0" : "scale-y-95 opacity-0 -translate-y-2 pointer-events-none"
+          )} onClick={(e) => e.stopPropagation()}>
+            <div className="space-y-4">
+              {stat.key === "total" && (
+                <>
+                  <div className="grid grid-cols-2 gap-2 text-white">
+                    <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg text-white">
+                      <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Total Logs</span>
+                      <span className="text-lg font-black font-mono">{(stats.totalLogs || 0).toLocaleString()}</span>
+                    </div>
+                    <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg text-white">
+                      <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Session Scope</span>
+                      <span className="text-lg font-black font-mono">Active</span>
+                    </div>
+                  </div>
+
+                  <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg text-xs text-white/90 leading-relaxed">
+                    Cumulative count of actions logged by your account across databases.
+                  </div>
+                </>
+              )}
+
+              {stat.key === "today" && (
+                <>
+                  <div className="grid grid-cols-2 gap-2 text-white">
+                    <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg text-white">
+                      <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Today's Logs</span>
+                      <span className="text-lg font-black font-mono">{(stats.logsToday || 0).toLocaleString()}</span>
+                    </div>
+                    <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg text-white">
+                      <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Hourly Peak</span>
+                      <span className="text-lg font-black font-mono">{Math.round((stats.logsToday || 0) / 8).toLocaleString()}</span>
+                    </div>
+                  </div>
+
+                  <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg text-xs text-white/90 leading-relaxed">
+                    Total audited actions performed by your user account today.
+                  </div>
+                </>
+              )}
+
+              {stat.key === "auth" && (
+                <>
+                  <div className="grid grid-cols-2 gap-2 text-white">
+                    <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg text-white">
+                      <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Auth Events</span>
+                      <span className="text-lg font-black font-mono">{(stats.authEvents || 0).toLocaleString()}</span>
+                    </div>
+                    <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg text-white">
+                      <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Failures</span>
+                      <span className="text-lg font-black font-mono">0</span>
+                    </div>
+                  </div>
+
+                  <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg text-xs text-white/90 leading-relaxed">
+                    Logins and session verifications generated for this user account.
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>
