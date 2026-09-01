@@ -42,6 +42,7 @@ export async function middleware(req) {
   // Note: Rate limiting for these is handled within the route handlers to avoid Edge Runtime issues
   if (
     pathname.startsWith("/api/auth/login") || 
+    pathname.startsWith("/api/auth/student/") ||
     pathname.startsWith("/api/auth/logout") ||
     pathname.startsWith("/api/auth/me") ||
     pathname.startsWith("/api/auth/forgot-password") ||
@@ -51,7 +52,7 @@ export async function middleware(req) {
   }
 
   // 3. Public routes
-  if (pathname === "/") {
+  if (pathname === "/" || pathname === "/student") {
     return addSecurityHeaders(NextResponse.next());
   }
 
@@ -81,6 +82,19 @@ export async function middleware(req) {
   const role = String(payload?.role || "").toLowerCase().trim();
   const isSuperAdmin = role === "superadmin";
   const isAdmin = ["admin", "administrator"].includes(role);
+  const isStudent = role === "student";
+
+  if (pathname.startsWith("/student")) {
+    if (!isStudent) {
+      const url = req.nextUrl.clone();
+      url.pathname = "/";
+      return addSecurityHeaders(NextResponse.redirect(url));
+    }
+  } else if (isStudent && !pathname.startsWith("/api/student")) {
+    const url = req.nextUrl.clone();
+    url.pathname = "/student";
+    return addSecurityHeaders(NextResponse.redirect(url));
+  }
 
   // 5. Role-based routing
   if (pathname.startsWith("/superadmin")) {
@@ -134,8 +148,8 @@ export const config = {
     "/superadmin/:path*",
     "/admin/:path*", 
     "/staff/:path*", 
+    "/student/:path*",
     "/api/:path*", 
     "/account/:path*"
   ],
 };
-

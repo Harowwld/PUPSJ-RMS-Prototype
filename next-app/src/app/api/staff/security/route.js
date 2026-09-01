@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { sysDbGet, sysDbRun, sysDbAll } from "@/lib/sqlite";
+import { dbGet as sysDbGet, dbRun as sysDbRun, dbAll as sysDbAll } from "@/lib/postgresCompat";
 import { writeAuditLog } from "@/lib/auditLogRequest";
 import { verifySessionToken } from "@/lib/jwt";
 import { hasAllSecurityAnswers } from "@/lib/staffRepo";
@@ -86,10 +86,13 @@ export async function PUT(req) {
       const answerNormalized = answerRaw.toLowerCase();
       const answerHash = crypto.createHash("sha256").update(answerNormalized).digest("hex");
 
-      // Use INSERT OR REPLACE since PRIMARY KEY is (staff_id, question_id)
+      // PostgreSQL upsert for the composite staff/question key.
       await sysDbRun(`
-        INSERT OR REPLACE INTO staff_security_answers (staff_id, question_id, answer_hash, updated_at)
+        INSERT INTO staff_security_answers (staff_id, question_id, answer_hash, updated_at)
         VALUES (?, ?, ?, datetime('now'))
+        ON CONFLICT (staff_id, question_id) DO UPDATE SET
+          answer_hash = EXCLUDED.answer_hash,
+          updated_at = EXCLUDED.updated_at
       `, [uid, qRow.id, answerHash]);
     }
 

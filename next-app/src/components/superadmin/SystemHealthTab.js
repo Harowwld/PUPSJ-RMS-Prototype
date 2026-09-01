@@ -205,7 +205,7 @@ export default function SystemHealthTab({ showToast }) {
             <div className="divide-y divide-gray-100 dark:divide-white/5 text-xs">
               <div className="py-2.5 flex justify-between">
                 <span className="text-gray-500">Database Engine</span>
-                <span className="font-semibold">better-sqlite3 (SQLite 3)</span>
+                <span className="font-semibold">PostgreSQL (local Docker)</span>
               </div>
               <div className="py-2.5 flex justify-between">
                 <span className="text-gray-500">Database Size (Legacy File)</span>

@@ -10,8 +10,9 @@
  */
 import fs from "node:fs";
 import path from "node:path";
-import Database from "better-sqlite3";
 import { AsyncLocalStorage } from "node:async_hooks";
+import { query, queryOne } from "./postgres.js";
+import { postgresSql } from "./postgresCompat.js";
 
 export const officeLocalStorage = new AsyncLocalStorage();
 
@@ -51,19 +52,6 @@ export function getOfficeBackupsDir(officeId) {
   const localRoot = getLocalDataRoot();
   return path.join(localRoot, officeId, "backups");
 }
-
-function tableExistsInDb(db, tableName) {
-  if (!db) return false;
-  const row = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name = ?").get(tableName);
-  return !!row;
-}
-
-function columnExistsInDb(db, tableName, columnName) {
-  if (!db) return false;
-  const columns = db.pragma(`table_info(${tableName})`);
-  return columns.some(col => col.name === columnName);
-}
-
 
 /**
  * Schema templates by office type.
@@ -429,7 +417,7 @@ const SCHEMA_TEMPLATES = {
  * Get or initialize a database connection for a specific office.
  *
  * @param {string} officeId - Office identifier (e.g., 'registrar', 'osas')
- * @returns {Database} better-sqlite3 Database instance
+ * @returns {object} PostgreSQL office context handle
  */
 export async function getOfficeDb(officeId) {
   if (!officeId || typeof officeId !== "string") {
@@ -438,51 +426,8 @@ export async function getOfficeDb(officeId) {
 
   const id = officeId.trim().toLowerCase();
 
-  // Check cached connection
-  if (pool[id]) {
-    try {
-      if (typeof pool[id].pragma !== "function") {
-        throw new Error("Stale connection");
-      }
-      pool[id].prepare("SELECT 1").get();
-      return pool[id];
-    } catch (e) {
-      console.log(`[OfficeDB:${id}] Stale connection. Re-initializing...`);
-      delete pool[id];
-    }
-  }
-
-  const dbPath = getOfficeDbPath(id);
-  const dbDir = path.dirname(dbPath);
-
-  // Create office directory structure
-  if (!fs.existsSync(dbDir)) {
-    fs.mkdirSync(dbDir, { recursive: true });
-  }
-
-  // Create uploads directory
-  const uploadsDir = getOfficeUploadsDir(id);
-  if (!fs.existsSync(uploadsDir)) {
-    fs.mkdirSync(uploadsDir, { recursive: true });
-  }
-
-  // Create backups directory
-  const backupsDir = getOfficeBackupsDir(id);
-  if (!fs.existsSync(backupsDir)) {
-    fs.mkdirSync(backupsDir, { recursive: true });
-  }
-
-  const db = new Database(dbPath);
-  db.pragma("journal_mode = WAL");
-  db.pragma("foreign_keys = ON");
-
-  // Apply the appropriate schema template
-  const templateFn = SCHEMA_TEMPLATES[id] || SCHEMA_TEMPLATES.default;
-  templateFn(db);
-
+  const db = { officeId: id, postgres: true };
   pool[id] = db;
-  console.log(`[OfficeDB:${id}] Initialized at ${dbPath}`);
-
   return db;
 }
 
@@ -516,31 +461,26 @@ export function closeAllOfficeDbs() {
  * Helper: run a query returning all rows on an office database.
  */
 export async function officeDbAll(officeId, sql, params) {
-  const db = await getOfficeDb(officeId);
   const normalized = params === undefined || params === null ? [] : Array.isArray(params) ? params : [params];
-  return db.prepare(sql).all(normalized);
+  return query(postgresSql(sql), normalized);
 }
 
 /**
  * Helper: run a query returning one row on an office database.
  */
 export async function officeDbGet(officeId, sql, params) {
-  const db = await getOfficeDb(officeId);
   const normalized = params === undefined || params === null ? [] : Array.isArray(params) ? params : [params];
-  const row = db.prepare(sql).get(normalized);
-  return row || null;
+  return queryOne(postgresSql(sql), normalized);
 }
 
 /**
  * Helper: run a write query on an office database.
  */
 export async function officeDbRun(officeId, sql, params) {
-  const db = await getOfficeDb(officeId);
   const normalized = params === undefined || params === null ? [] : Array.isArray(params) ? params : [params];
-  const stmt = db.prepare(sql);
-  const result = stmt.run(normalized);
+  const rows = await query(`${postgresSql(sql)} RETURNING *`, normalized);
   return {
-    changes: result.changes,
-    lastInsertRowid: result.lastInsertRowid,
+    changes: rows.length,
+    lastInsertRowid: rows[0]?.id,
   };
 }

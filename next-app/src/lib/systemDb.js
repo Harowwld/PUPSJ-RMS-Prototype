@@ -12,30 +12,14 @@
  * - Rate limits (global)
  * - Chat messages (global)
  */
-import fs from "node:fs";
-import path from "node:path";
 import crypto from "node:crypto";
-import Database from "better-sqlite3";
+import { query, queryOne, withTransaction } from "./postgres.js";
+import { postgresSql } from "./postgresCompat.js";
 
 let systemDb = global.__systemDb || null;
 
-function getSystemDbFilePath() {
-  const base = process.env.LOCAL_DATA_DIR
-    ? process.env.LOCAL_DATA_DIR
-    : path.join(process.cwd(), ".local");
-  return path.join(base, "system.sqlite");
-}
-
-function tableExists(db, tableName) {
-  if (!db) return false;
-  const row = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name = ?").get(tableName);
-  return !!row;
-}
-
-function columnExists(db, tableName, columnName) {
-  if (!db) return false;
-  const columns = db.pragma(`table_info(${tableName})`);
-  return columns.some(col => col.name === columnName);
+function normalize(sql, params = []) {
+  return [postgresSql(sql), Array.isArray(params) ? params : [params]];
 }
 
 /**
@@ -261,35 +245,9 @@ export async function getSystemDb() {
     throw new Error("System database is undergoing maintenance. Please try again in a moment.");
   }
 
-  if (systemDb) {
-    try {
-      if (typeof systemDb.pragma !== "function") {
-        throw new Error("Stale system database instance.");
-      }
-      systemDb.prepare("SELECT 1").get();
-      return systemDb;
-    } catch (e) {
-      console.log("[SystemDB] Stale connection. Re-initializing...");
-      systemDb = null;
-      global.__systemDb = null;
-    }
-  }
-
-  try {
-    const dbPath = getSystemDbFilePath();
-    const dbDir = path.dirname(dbPath);
-    if (!fs.existsSync(dbDir)) {
-      fs.mkdirSync(dbDir, { recursive: true });
-    }
-
-    systemDb = new Database(dbPath);
-    global.__systemDb = systemDb;
-
-    systemDb.pragma("journal_mode = WAL");
-    systemDb.pragma("foreign_keys = ON");
-
-    // ----- Create system tables -----
-    systemDb.exec(`
+  return { query, queryOne, withTransaction };
+  /* legacy SQLite initialization retained below only as historical reference */
+  try { /*
       CREATE TABLE IF NOT EXISTS offices (
         id TEXT PRIMARY KEY,
         name TEXT NOT NULL,
@@ -474,7 +432,7 @@ export async function getSystemDb() {
     // ----- Seed defaults if first run -----
     await seedSystemDefaults(systemDb);
 
-    return systemDb;
+    return systemDb; */
   } catch (err) {
     systemDb = null;
     global.__systemDb = null;
@@ -578,32 +536,27 @@ async function seedSystemDefaults(db) {
  * Helper: run a query and return all rows from the system database.
  */
 export async function sysDbAll(sql, params) {
-  const db = await getSystemDb();
-  const normalized = params === undefined || params === null ? [] : Array.isArray(params) ? params : [params];
-  return db.prepare(sql).all(normalized);
+  const [text, values] = normalize(sql, params);
+  return query(text, values);
 }
 
 /**
  * Helper: run a query and return a single row from the system database.
  */
 export async function sysDbGet(sql, params) {
-  const db = await getSystemDb();
-  const normalized = params === undefined || params === null ? [] : Array.isArray(params) ? params : [params];
-  const row = db.prepare(sql).get(normalized);
-  return row || null;
+  const [text, values] = normalize(sql, params);
+  return queryOne(text, values);
 }
 
 /**
  * Helper: run a write query on the system database.
  */
 export async function sysDbRun(sql, params) {
-  const db = await getSystemDb();
-  const normalized = params === undefined || params === null ? [] : Array.isArray(params) ? params : [params];
-  const stmt = db.prepare(sql);
-  const result = stmt.run(normalized);
+  const [text, values] = normalize(sql, params);
+  const rows = await query(`${text} RETURNING *`, values);
   return {
-    changes: result.changes,
-    lastInsertRowid: result.lastInsertRowid,
+    changes: rows.length,
+    lastInsertRowid: rows[0]?.id,
   };
 }
 
@@ -611,14 +564,6 @@ export async function sysDbRun(sql, params) {
  * Reload the system database connection.
  */
 export function reloadSystemDb() {
-  if (systemDb) {
-    try {
-      systemDb.close();
-      console.log("[SystemDB] Connection closed.");
-    } catch (e) {
-      // ignore
-    }
-  }
   systemDb = null;
   global.__systemDb = null;
   console.log("[SystemDB] Connection cache cleared for reload.");

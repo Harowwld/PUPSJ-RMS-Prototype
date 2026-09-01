@@ -11,7 +11,7 @@ import {
   createDocumentRequest,
 } from "../../../lib/documentRequestsRepo";
 import { getStudentByStudentNo } from "../../../lib/studentsRepo";
-import { dbGet } from "../../../lib/sqlite";
+import { dbGet } from "../../../lib/postgresCompat";
 import { listDocuments } from "../../../lib/documentsRepo";
 
 export const runtime = "nodejs";

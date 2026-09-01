@@ -1,4 +1,4 @@
-import { dbAll, dbGet, dbRun } from "./sqlite.js";
+import { dbAll, dbGet, dbRun } from "./postgresCompat.js";
 
 const VALID_STATUSES = new Set([
   "Pending",

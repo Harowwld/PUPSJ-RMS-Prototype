@@ -55,6 +55,11 @@ export default function AccountSetupModal({ authUser }) {
     try {
       const res = await fetch("/api/staff/security")
       const json = await res.json()
+      console.info("[auth-debug] account_setup.password_response", {
+        ok: Boolean(res.ok && json?.ok),
+        status: res.status,
+        needsSecurity: Boolean(needsSecurity),
+      })
       if (json.ok && json.data?.questions) {
         setQuestions(json.data.questions)
       }
@@ -105,11 +110,19 @@ export default function AccountSetupModal({ authUser }) {
       })
 
       if (needsSecurity) {
+        console.info("[auth-debug] account_setup.password_complete_showing_recovery_questions")
         setStep(2)
         fetchQuestions()
       } else {
         setOpen(false)
-        setTimeout(() => window.location.reload(), 1000)
+        // The password-change response replaces the session cookie. Perform a
+        // full navigation only after the fetch has completed so the browser
+        // sends the new cookie on the next request. A delayed reload could
+        // race with the stale dashboard/auth state and send users back to the
+        // login page in a loop.
+        const destination = window.location.pathname || "/staff"
+        console.info("[auth-debug] account_setup.password_complete_navigating", { destination })
+        window.location.assign(destination)
       }
     } catch (err) {
       setPwError(err?.message || "Failed to change password")
@@ -150,6 +163,7 @@ export default function AccountSetupModal({ authUser }) {
         body: JSON.stringify({ answers: payload }),
       })
       const json = await res.json()
+      console.info("[auth-debug] account_setup.security_response", { ok: Boolean(res.ok && json?.ok), status: res.status })
       if (!res.ok || !json.ok)
         throw new Error(json.error || "Failed to save answers")
 
@@ -157,7 +171,9 @@ export default function AccountSetupModal({ authUser }) {
         description: "Your account is now fully secured.",
       })
       setOpen(false)
-      setTimeout(() => window.location.reload(), 1000)
+      const destination = window.location.pathname || "/staff"
+      console.info("[auth-debug] account_setup.security_complete_navigating", { destination })
+      window.location.assign(destination)
     } catch (err) {
       setSecError(err?.message || "Failed to save answers")
     } finally {
@@ -442,5 +458,3 @@ export default function AccountSetupModal({ authUser }) {
     </Dialog>
   )
 }
-
-

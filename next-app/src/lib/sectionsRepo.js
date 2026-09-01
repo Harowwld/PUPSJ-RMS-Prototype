@@ -24,7 +24,7 @@ export async function createSection(nameRaw, courseCodeRaw) {
   const course = await dbGet("SELECT code FROM courses WHERE code = ?", [safeCode]);
   if (!course) {
     if (safeCode === "UNKN") {
-       await dbRun("INSERT OR IGNORE INTO courses (code, name) VALUES ('UNKN', 'Unknown')");
+       await dbRun("INSERT INTO courses (code, name) VALUES ('UNKN', 'Unknown') ON CONFLICT (code) DO NOTHING");
     } else {
        throw new Error(`Course ${safeCode} not found`);
     }

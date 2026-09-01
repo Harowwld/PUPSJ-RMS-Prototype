@@ -156,7 +156,7 @@ async function seedRegistrarOfficeData({ force = false }) {
     ["BSCS", "Bachelor of Science in Computer Science"],
   ];
   for (const [code, name] of courses) {
-    await dbRun("INSERT OR IGNORE INTO courses (code, name) VALUES (?, ?)", [code, name]);
+    await dbRun("INSERT INTO courses (code, name) VALUES (?, ?) ON CONFLICT (code) DO NOTHING", [code, name]);
   }
 
   // 3. Sections
@@ -166,7 +166,7 @@ async function seedRegistrarOfficeData({ force = false }) {
     ["BSCS-3A", "BSCS"],
   ];
   for (const [name, courseCode] of sections) {
-    await dbRun("INSERT OR IGNORE INTO sections (name, course_code) VALUES (?, ?)", [
+    await dbRun("INSERT INTO sections (name, course_code) VALUES (?, ?) ON CONFLICT (name, course_code) DO NOTHING", [
       name,
       courseCode,
     ]);
@@ -182,7 +182,7 @@ async function seedRegistrarOfficeData({ force = false }) {
     "Birth Certificate",
   ];
   for (const name of docTypes) {
-    await dbRun("INSERT OR IGNORE INTO document_types (name, name_norm) VALUES (?, ?)", [
+    await dbRun("INSERT INTO document_types (name, name_norm) VALUES (?, ?) ON CONFLICT (name) DO NOTHING", [
       name,
       normDocTypeName(name),
     ]);
@@ -423,7 +423,7 @@ async function seedOsasOfficeData({ force = false }) {
     ["BSA", "Bachelor of Science in Accountancy"],
   ];
   for (const [code, name] of courses) {
-    await dbRun("INSERT OR IGNORE INTO courses (code, name) VALUES (?, ?)", [code, name]);
+    await dbRun("INSERT INTO courses (code, name) VALUES (?, ?) ON CONFLICT (code) DO NOTHING", [code, name]);
   }
 
   // 2. Sections
@@ -434,7 +434,7 @@ async function seedOsasOfficeData({ force = false }) {
     ["BSA-2A", "BSA"],
   ];
   for (const [name, courseCode] of sections) {
-    await dbRun("INSERT OR IGNORE INTO sections (name, course_code) VALUES (?, ?)", [
+    await dbRun("INSERT INTO sections (name, course_code) VALUES (?, ?) ON CONFLICT (name, course_code) DO NOTHING", [
       name,
       courseCode,
     ]);
@@ -448,7 +448,7 @@ async function seedOsasOfficeData({ force = false }) {
     "Activity Permit",
   ];
   for (const name of docTypes) {
-    await dbRun("INSERT OR IGNORE INTO document_types (name, name_norm) VALUES (?, ?)", [
+    await dbRun("INSERT INTO document_types (name, name_norm) VALUES (?, ?) ON CONFLICT (name) DO NOTHING", [
       name,
       normDocTypeName(name),
     ]);

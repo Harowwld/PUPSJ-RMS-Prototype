@@ -8,9 +8,9 @@ export async function GET(req) {
   try {
     // Check if rate limit tables exist
     const tables = await dbAll(`
-      SELECT name FROM sqlite_master 
-      WHERE type='table' 
-      AND name IN ('rate_limits', 'rate_limit_hits', 'rate_limit_violations')
+      SELECT table_name AS name FROM information_schema.tables
+      WHERE table_schema = 'public'
+      AND table_name IN ('rate_limits', 'rate_limit_hits', 'rate_limit_violations')
     `);
     
     // Check rate limit config

@@ -14,6 +14,8 @@ import ScanUploadTab from "@/components/staff/ScanUploadTab";
 import DocumentsTab from "@/components/staff/DocumentsTab";
 import NotificationsTab from "@/components/staff/NotificationsTab";
 import DocumentRequestsTab from "@/components/staff/DocumentRequestsTab";
+import RegistrarODRSTab from "@/components/staff/RegistrarODRSTab";
+import OsasMonitoringTab from "@/components/staff/OsasMonitoringTab";
 import PDFPreviewModal from "@/components/shared/PDFPreviewModal";
 import OCRPromptModal from "@/components/staff/OCRPromptModal";
 import ConfirmModal from "@/components/shared/ConfirmModal";
@@ -70,7 +72,7 @@ function StaffPageContent() {
   const docsLoadedRef = useRef(false);
   const locateTimeoutRef = useRef(null);
 
-  const validViews = ["requests", "upload", "documents", "notifications", "search", "storage"];
+  const validViews = ["requests", "osas_monitoring", "upload", "documents", "notifications", "search", "storage"];
   const initialView = validViews.includes(searchParams?.get("view"))
     ? searchParams.get("view")
     : "requests";
@@ -88,7 +90,7 @@ function StaffPageContent() {
 
   useEffect(() => {
     const tab = String(searchParams?.get("view") || searchParams?.get("tab") || "").trim()
-    const allowedTabs = new Set(["requests", "upload", "documents", "notifications", "search", "storage"])
+    const allowedTabs = new Set(["requests", "osas_monitoring", "upload", "documents", "notifications", "search", "storage"])
     if (allowedTabs.has(tab)) {
       setView(tab)
     }
@@ -144,6 +146,7 @@ function StaffPageContent() {
     
     const MODULE_KEY_MAP = {
       requests: "alumni_requests",
+      osas_monitoring: "osas_monitoring",
       upload: "scan_upload",
       documents: "documents",
       notifications: "notifications",
@@ -157,6 +160,7 @@ function StaffPageContent() {
         label: "Operations",
         children: [
           { key: "requests", label: "Alumni Requests", iconClass: "ph-bold ph-tray-arrow-up" },
+          { key: "osas_monitoring", label: "OSAS Monitoring", iconClass: "ph-bold ph-student" },
           { key: "upload", label: "Scan & Upload", iconClass: "ph-bold ph-scan" },
           { key: "documents", label: "Documents", iconClass: "ph-bold ph-file-text" },
           { key: "notifications", label: "Notifications", iconClass: "ph-bold ph-bell", badge: notificationsUnread },
@@ -989,6 +993,7 @@ function StaffPageContent() {
     const enabled = new Set(authUser.enabled_modules || [])
     const MODULE_KEY_MAP = {
       requests: "alumni_requests",
+      osas_monitoring: "osas_monitoring",
       upload: "scan_upload",
       documents: "documents",
       notifications: "notifications",
@@ -1857,13 +1862,21 @@ function StaffPageContent() {
           </TabsContent>
 
           <TabsContent value="requests" className="h-full m-0 border-0 focus-visible:ring-0">
-            <DocumentRequestsTab
-              students={students}
-              docTypes={docTypes}
-              staffDocs={staffDocs}
-              onLocateOnMap={goToStorageMapFromRequest}
-              showToast={showToast}
-            />
+            {authUser?.office_id === "registrar" ? (
+              <RegistrarODRSTab showToast={showToast} />
+            ) : (
+              <DocumentRequestsTab
+                students={students}
+                docTypes={docTypes}
+                staffDocs={staffDocs}
+                onLocateOnMap={goToStorageMapFromRequest}
+                showToast={showToast}
+              />
+            )}
+          </TabsContent>
+
+          <TabsContent value="osas_monitoring" className="h-full m-0 border-0 focus-visible:ring-0">
+            <OsasMonitoringTab showToast={showToast} />
           </TabsContent>
 
           <TabsContent value="documents" className="h-full m-0 border-0 focus-visible:ring-0">

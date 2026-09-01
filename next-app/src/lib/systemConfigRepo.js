@@ -1,4 +1,4 @@
-import { dbAll, dbGet, dbRun } from "./sqlite";
+import { dbAll, dbGet, dbRun } from "./postgresCompat.js";
 
 export const systemConfigRepo = {
   getSettings: async () => {
@@ -31,7 +31,7 @@ export const systemConfigRepo = {
 
   setSetting: async (key, value) => {
     try {
-      await dbRun("INSERT OR REPLACE INTO settings (key, value, updated_at) VALUES (?, ?, datetime('now'))", [
+      await dbRun("INSERT INTO settings (key, value, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = CURRENT_TIMESTAMP", [
         key,
         value !== null && value !== undefined ? String(value) : null,
       ]);

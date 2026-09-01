@@ -4,7 +4,7 @@ import { promisify } from "node:util";
 import fs from "node:fs";
 import path from "node:path";
 import os from "node:os";
-import { dbGet } from "@/lib/sqlite";
+import { dbGet } from "@/lib/postgresCompat";
 
 export const runtime = "nodejs";
 
@@ -168,12 +168,11 @@ async function readDiskStats() {
 
 async function readDbSize() {
   try {
-    const dbPath = path.join(getLocalDataRoot(), "db.sqlite");
-    const stats = await fs.promises.stat(dbPath);
-    if (stats.size > 1024 * 1024) {
-      return `${(stats.size / (1024 * 1024)).toFixed(2)} MB`;
-    }
-    return `${(stats.size / 1024).toFixed(2)} KB`;
+    const row = await dbGet("SELECT pg_database_size(current_database()) AS bytes");
+    const bytes = Number(row?.bytes || 0);
+    return bytes > 1024 * 1024
+      ? `${(bytes / (1024 * 1024)).toFixed(2)} MB`
+      : `${(bytes / 1024).toFixed(2)} KB`;
   } catch {
     return "0 KB";
   }

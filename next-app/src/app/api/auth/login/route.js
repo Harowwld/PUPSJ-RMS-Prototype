@@ -10,8 +10,20 @@ import { createSession } from "../../../../lib/sessionStore";
 import { writeAuditLog } from "../../../../lib/auditLogRequest";
 import { checkAuthLoginRateLimit, resetAuthLoginRateLimit } from "../../../../lib/rateLimiter";
 import { LoginSchema } from "../../../../lib/authSchemas";
+import { query, queryOne } from "@/lib/postgres";
+import { authDebug } from "@/lib/authDebug";
 
 export const runtime = "nodejs";
+
+async function audit(req, action, details, severity = "INFO") {
+  if (!process.env.DATABASE_URL) {
+    return writeAuditLog(req, action, { details, severity });
+  }
+  return query(
+    "INSERT INTO global_audit_logs (actor, role, action, details, severity, ip, user_agent) VALUES ($1, $2, $3, $4, $5, $6, $7)",
+    ["System", "System", action, details || "", severity, req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || req.headers.get("x-real-ip") || null, req.headers.get("user-agent") || null]
+  );
+}
 
 function addSecurityHeaders(response) {
   response.headers.set('X-Content-Type-Options', 'nosniff');
@@ -29,7 +41,8 @@ export async function POST(req) {
                     realIP ? realIP.trim() : 
                     req.ip || 'unknown';
 
-  const rateLimitResult = await checkAuthLoginRateLimit(ipAddress);
+  const rateLimitResult = process.env.DATABASE_URL ? { allowed: true } : await checkAuthLoginRateLimit(ipAddress);
+  authDebug("login.request", { rateLimitAllowed: rateLimitResult.allowed, database: Boolean(process.env.DATABASE_URL) });
   if (!rateLimitResult.allowed) {
     return addSecurityHeaders(NextResponse.json(
       { 
@@ -56,7 +69,8 @@ export async function POST(req) {
   const validation = LoginSchema.safeParse(body);
   
   if (!validation.success) {
-    const errorMsg = validation.error.errors[0]?.message || "Invalid input";
+    authDebug("login.invalid_input", { reason: validation.error.issues?.[0]?.message || "Invalid input" });
+    const errorMsg = validation.error.issues?.[0]?.message || "Invalid input";
     return addSecurityHeaders(NextResponse.json(
       { ok: false, error: errorMsg },
       { status: 400 }
@@ -66,24 +80,18 @@ export async function POST(req) {
   const { username, password } = validation.data;
 
   // 2. Authenticate
-  const staff = await getStaffByUsername(username);
+  const staff = process.env.DATABASE_URL
+    ? await queryOne("SELECT * FROM staff WHERE lower(email) = lower($1)", [username])
+    : await getStaffByUsername(username);
   if (!staff) {
-    await writeAuditLog(req, `Login Attempt`, { 
-      details: `authentication failure: identifier '${username}' not recognized by the system repository`, 
-      actor: username,
-      role: "Guest",
-      severity: "WARNING"
-    });
+    authDebug("login.account_missing", { identifierLength: username.length });
+    await audit(req, "Login Attempt", `authentication failure: identifier '${username}' not recognized by the system repository`, "WARNING");
     return addSecurityHeaders(NextResponse.json({ ok: false, error: "Invalid credentials" }, { status: 401 }));
   }
 
   if (staff.status === "Archived") {
-    await writeAuditLog(req, `Login Attempt`, { 
-      details: `authentication failure: attempt to access personnel account '${username}' which is currently archived and disabled`, 
-      actor: username,
-      role: "Guest",
-      severity: "CRITICAL"
-    });
+    authDebug("login.account_archived", { staffId: staff.id });
+    await audit(req, "Login Attempt", `authentication failure: attempt to access personnel account '${username}' which is currently archived and disabled`, "CRITICAL");
     return addSecurityHeaders(NextResponse.json(
       { ok: false, error: "This account has been archived. Please contact an administrator." },
       { status: 403 }
@@ -92,23 +100,23 @@ export async function POST(req) {
 
   const stored = staff.password_hash;
   if (!stored) {
+    authDebug("login.password_not_configured", { staffId: staff.id });
     return addSecurityHeaders(NextResponse.json({ ok: false, error: "Account has no password" }, { status: 401 }));
   }
 
   const hashed = hashPasswordForStorage(password);
   if (hashed !== stored) {
-    await writeAuditLog(req, `Login Attempt`, { 
-      details: `authentication failure: invalid credentials provided for recognized account '${username}'`, 
-      actor: username,
-      role: "Guest",
-      severity: "WARNING"
-    });
+    authDebug("login.password_rejected", { staffId: staff.id, status: staff.status });
+    await audit(req, "Login Attempt", `authentication failure: invalid credentials provided for recognized account '${username}'`, "WARNING");
     return addSecurityHeaders(NextResponse.json({ ok: false, error: "Invalid credentials" }, { status: 401 }));
   }
 
   // 3. Create Session or Require 2FA
-  const touched = await touchStaffLastActiveById(staff.id);
+  const touched = process.env.DATABASE_URL
+    ? await queryOne("UPDATE staff SET last_active = NOW(), updated_at = NOW() WHERE id = $1 RETURNING *", [staff.id])
+    : await touchStaffLastActiveById(staff.id);
   if (!touched) {
+    authDebug("login.last_active_update_failed", { staffId: staff.id });
     return addSecurityHeaders(NextResponse.json(
       { ok: false, error: "Failed to update last active" },
       { status: 500 }
@@ -117,8 +125,9 @@ export async function POST(req) {
 
   // Check if 2FA is enabled
   if (touched.totp_enabled) {
+    authDebug("login.requires_totp", { staffId: touched.id, role: touched.role, officeId: touched.office_id || null });
     // Reset login rate limit as they successfully provided correct password
-    await resetAuthLoginRateLimit(ipAddress);
+    if (!process.env.DATABASE_URL) await resetAuthLoginRateLimit(ipAddress);
 
     // Generate a temporary token for 2FA verification
     const tempPayload = {
@@ -144,6 +153,12 @@ export async function POST(req) {
   const defaultPassword = process.env.DEFAULT_STAFF_PASSWORD || "pupstaff";
   const defaultHash = hashPasswordForStorage(defaultPassword);
   const mustChangePassword = stored === defaultHash;
+  authDebug("login.session_issued", {
+    staffId: touched.id,
+    role: touched.role || "Staff",
+    officeId: touched.office_id || null,
+    mustChangePassword,
+  });
 
   const sessionPayload = {
     sub: touched.id,
@@ -157,15 +172,9 @@ export async function POST(req) {
   createSession(token, touched.id, touched.role || "Staff", touched.email);
   
   // Reset login rate limit on full successful login
-  await resetAuthLoginRateLimit(ipAddress);
+  if (!process.env.DATABASE_URL) await resetAuthLoginRateLimit(ipAddress);
 
-  await writeAuditLog(req, `User Login`, { 
-    details: `personnel '${getStaffDisplayName(touched)}' successfully authenticated into the system repository`, 
-    actor: getStaffDisplayName(touched),
-    role: touched.role || "Staff",
-    entity_type: "User",
-    entity_id: touched.id
-  });
+  await audit(req, "User Login", `personnel '${getStaffDisplayName(touched)}' successfully authenticated into the system repository`);
 
   const res = NextResponse.json({
     ok: true,
@@ -190,4 +199,3 @@ export async function POST(req) {
 
   return addSecurityHeaders(res);
 }
-

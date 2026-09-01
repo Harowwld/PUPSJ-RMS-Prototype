@@ -1,5 +1,5 @@
-import { dbAll, dbGet } from "./sqlite.js";
-import { listDocTypes } from "./docTypesRepo.js";
+import { dbAll } from "./postgresCompat.js";
+import { query } from "./postgres.js";
 
 function buildDocQualifiesSql(requireApproved) {
   if (requireApproved) {
@@ -46,7 +46,10 @@ export async function getDigitizationComplianceSummary({
   requireApproved = false,
 } = {}) {
   // 1. Get all doc types currently configured in the system
-  const allDocTypes = await listDocTypes();
+  // Read lookup data from PostgreSQL directly; document_types is part of the
+  // migrated schema and the legacy docTypesRepo still targets SQLite.
+  const typeRows = await query("SELECT name FROM document_types WHERE status = 'Active' ORDER BY LOWER(name) ASC");
+  const allDocTypes = typeRows.map((row) => String(row?.name || ""));
   const expectedCountPerStudent = allDocTypes.length;
 
   const docQualifies = buildDocQualifiesSql(Boolean(requireApproved));

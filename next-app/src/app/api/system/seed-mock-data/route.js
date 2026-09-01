@@ -3,7 +3,7 @@ import { cookies } from "next/headers";
 import { getSessionCookieName, verifySessionToken } from "../../../../lib/jwt";
 import { populateSampleData } from "../../../../lib/seedRepo";
 import { getStaffById } from "../../../../lib/staffRepo";
-import { getDb, getSystemDb } from "../../../../lib/sqlite";
+import { queryOne } from "../../../../lib/postgres";
 
 // Touch to recompile
 export const runtime = "nodejs";
@@ -28,8 +28,7 @@ export async function GET(req) {
   const isBypass = bypassToken === masterSecret;
 
   // Check if we're in bootstrap mode (no staff at all in system database)
-  const sysDb = await getSystemDb();
-  const staffCountRow = sysDb.prepare("SELECT COUNT(*) as count FROM staff").get();
+  const staffCountRow = await queryOne("SELECT COUNT(*)::int AS count FROM staff");
   const staffCount = staffCountRow?.count || 0;
 
   if (!isBypass) {

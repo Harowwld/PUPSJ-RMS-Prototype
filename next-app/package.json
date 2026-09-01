@@ -10,6 +10,8 @@
     "lint": "eslint",
     "reset-students": "node scripts/reset-students.mjs --confirm",
     "reset-db": "bash scripts/reset-db.sh",
+    "db:migrate": "node scripts/run-migrations.mjs",
+    "db:migrate:sqlite": "node scripts/migrate-sqlite-to-postgres.mjs",
     "populate-sample-data": "node scripts/populate-sample-data.mjs",
     "hot-folder-watcher": "node scripts/hot-folder-watcher/watch.mjs"
   },
@@ -31,6 +33,7 @@
     "otpauth": "^9.2.2",
     "pdf-lib": "^1.17.1",
     "pdfjs-dist": "^4.10.38",
+    "pg": "^8.23.0",
     "qrcode": "^1.5.4",
     "react": "19.2.3",
     "react-day-picker": "^10.0.0",

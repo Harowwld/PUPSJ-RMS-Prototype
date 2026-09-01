@@ -10,7 +10,7 @@ function normalizeDocTypeKey(nameRaw) {
 export async function listDocTypes({ includeArchived = false } = {}) {
   const where = includeArchived ? "" : "WHERE status = 'Active'";
   const rows = await dbAll(
-    `SELECT name FROM document_types ${where} ORDER BY name COLLATE NOCASE ASC`,
+    `SELECT name FROM document_types ${where} ORDER BY lower(name) ASC`,
     []
   );
   return (rows || []).map((r) => String(r?.name || ""));
@@ -18,7 +18,7 @@ export async function listDocTypes({ includeArchived = false } = {}) {
 
 export async function listAllDocTypes({ includeArchived = false } = {}) {
   const where = includeArchived ? "" : "WHERE status = 'Active'";
-  return await dbAll(`SELECT id, name, name_norm, status, created_at FROM document_types ${where} ORDER BY name COLLATE NOCASE ASC`, []) || [];
+  return await dbAll(`SELECT id, name, name_norm, status, created_at FROM document_types ${where} ORDER BY lower(name) ASC`, []) || [];
 }
 
 export async function createDocTypeFull(nameRaw) {

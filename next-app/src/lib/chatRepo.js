@@ -6,7 +6,7 @@ export async function sendChatMessage(senderId, recipientId, message, imageFilen
 
   const res = await dbRun(
     `INSERT INTO chat_messages (sender_id, recipient_id, message, image_filename, mime_type, created_at, updated_at, is_read)
-     VALUES (?, ?, ?, ?, ?, datetime('now'), datetime('now'), 0)`,
+     VALUES (?, ?, ?, ?, ?, datetime('now'), datetime('now'), FALSE)`,
     [senderId, recipientId || null, msg, imageFilename, mimeType]
   );
 
@@ -79,11 +79,11 @@ export async function deleteChatMessage(messageId, userId) {
   if (msg) {
     if (msg.sender_id === userId) {
       // Unsend: soft delete for everyone
-      await dbRun("UPDATE chat_messages SET is_deleted = 1, updated_at = datetime('now') WHERE id = ?", [messageId]);
+      await dbRun("UPDATE chat_messages SET is_deleted = TRUE, updated_at = datetime('now') WHERE id = ?", [messageId]);
     } else {
       // Soft delete: hide only for this user
       await dbRun(
-        "INSERT OR IGNORE INTO chat_message_deletions (message_id, user_id) VALUES (?, ?)",
+        "INSERT INTO chat_message_deletions (message_id, user_id) VALUES (?, ?) ON CONFLICT (message_id, user_id) DO NOTHING",
         [messageId, userId]
       );
     }
@@ -113,7 +113,7 @@ export async function editChatMessage(messageId, userId, message) {
   // Preserve the very first version of the message before editing
   const origMsg = existing.original_message || existing.message;
 
-  await dbRun("UPDATE chat_messages SET message = ?, is_edited = 1, original_message = ?, updated_at = datetime('now') WHERE id = ? AND sender_id = ? AND is_deleted = 0", [msg, origMsg, messageId, userId]);
+  await dbRun("UPDATE chat_messages SET message = ?, is_edited = TRUE, original_message = ?, updated_at = datetime('now') WHERE id = ? AND sender_id = ? AND is_deleted = FALSE", [msg, origMsg, messageId, userId]);
   
   return await dbGet(
     `SELECT cm.*, s.fname AS sender_fname, s.lname AS sender_lname, s.role AS sender_role, s.avatar_filename AS sender_avatar, s.updated_at AS sender_updated_at
@@ -128,8 +128,8 @@ export async function markPrivateMessagesAsRead(userId, senderId) {
   if (!userId || !senderId) return;
   await dbRun(
     `UPDATE chat_messages 
-     SET is_read = 1 
-     WHERE recipient_id = ? AND sender_id = ? AND is_read = 0`,
+     SET is_read = TRUE
+     WHERE recipient_id = ? AND sender_id = ? AND is_read = FALSE`,
     [userId, senderId]
   );
 }

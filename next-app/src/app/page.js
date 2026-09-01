@@ -210,6 +210,7 @@ export default function Home() {
           body: JSON.stringify({ username: usernameInput, password: passwordInput }),
         });
         const json = await res.json();
+        console.info("[auth-debug] login.client_response", { ok: Boolean(res.ok && json?.ok), status: res.status, role: json?.data?.role || null, mustChangePassword: Boolean(json?.data?.mustChangePassword) });
         if (!res.ok || !json?.ok) {
           throw new Error(json?.error || "Invalid username or password.");
         }
@@ -228,16 +229,20 @@ export default function Home() {
         localStorage.removeItem("pup-logout");
 
         if (role === "SuperAdmin") {
+          console.info("[auth-debug] login.client_navigating", { destination: "/superadmin" });
           router.push("/superadmin");
           return;
         }
         if (role === "Admin") {
+          console.info("[auth-debug] login.client_navigating", { destination: "/admin" });
           router.push("/admin");
           return;
         }
 
+        console.info("[auth-debug] login.client_navigating", { destination: "/staff" });
         router.push("/staff");
       } catch (err) {
+        console.info("[auth-debug] login.client_failed", { message: err?.message || "Unknown login error" });
         setError(err?.message || "Invalid username or password.");
         setIsLoading(false);
       }

@@ -1,4 +1,4 @@
-import { dbAll, dbGet, dbRun } from "./sqlite.js";
+import { dbAll, dbGet, dbRun } from "./postgresCompat.js";
 
 export async function getStaffReviewNotificationsState(staffId) {
   if (!staffId) return { lastSeenReviewedAt: null };
@@ -28,6 +28,7 @@ export async function setNotificationItemState(staffId, notificationIds, field, 
   if (!staffId || !notificationIds) return;
   const ids = Array.isArray(notificationIds) ? notificationIds : [notificationIds];
   const columnName = field === "read" ? "is_read" : "is_archived";
+  const booleanValue = Boolean(value);
   
   for (const id of ids) {
     await dbRun(
@@ -37,14 +38,14 @@ export async function setNotificationItemState(staffId, notificationIds, field, 
         ON CONFLICT(staff_id, notification_id) DO UPDATE SET
           ${columnName} = ?
       `,
-      [staffId, id, value, value]
+      [staffId, id, booleanValue, booleanValue]
     );
   }
 }
 
 export async function markAllStaffNotificationsReadState(staffId, isRead) {
   if (!staffId) return;
-  const value = isRead ? 1 : 0;
+  const value = Boolean(isRead);
   
   // We insert/update for notifications that belong to this staff (uploaded_by) 
   // and have been reviewed, but ONLY if they are NOT archived.
@@ -56,7 +57,7 @@ export async function markAllStaffNotificationsReadState(staffId, isRead) {
       WHERE d.uploaded_by = ? 
         AND d.reviewed_at IS NOT NULL 
         AND d.approval_status IN ('Approved', 'Declined')
-        AND COALESCE(ns.is_archived, 0) = 0
+        AND COALESCE(ns.is_archived, FALSE) = FALSE
       ON CONFLICT(staff_id, notification_id) DO UPDATE SET
         is_read = excluded.is_read
     `,
@@ -85,7 +86,7 @@ export async function listDocumentReviewNotifications({
   }
 
   const whereClause = filters.join(" AND ");
-  const archiveCondition = tab === "archive" ? "COALESCE(ns.is_archived, 0) = 1" : "COALESCE(ns.is_archived, 0) = 0";
+  const archiveCondition = tab === "archive" ? "COALESCE(ns.is_archived, FALSE) = TRUE" : "COALESCE(ns.is_archived, FALSE) = FALSE";
 
   const totalRow = await dbGet(
     `
@@ -103,7 +104,7 @@ export async function listDocumentReviewNotifications({
       SELECT COUNT(1) AS unread
       FROM documents d
       LEFT JOIN staff_notification_item_states ns ON d.id = ns.notification_id AND ns.staff_id = ?
-      WHERE ${whereClause} AND COALESCE(ns.is_read, 0) = 0 AND ${archiveCondition}
+      WHERE ${whereClause} AND COALESCE(ns.is_read, FALSE) = FALSE AND ${archiveCondition}
     `,
     [uploadedBy, ...params]
   );
@@ -114,7 +115,7 @@ export async function listDocumentReviewNotifications({
       SELECT COUNT(1) AS total
       FROM documents d
       LEFT JOIN staff_notification_item_states ns ON d.id = ns.notification_id AND ns.staff_id = ?
-      WHERE ${whereClause} AND COALESCE(ns.is_archived, 0) = 0
+      WHERE ${whereClause} AND COALESCE(ns.is_archived, FALSE) = FALSE
     `,
     [uploadedBy, ...params]
   );
@@ -125,7 +126,7 @@ export async function listDocumentReviewNotifications({
       SELECT COUNT(1) AS total
       FROM documents d
       LEFT JOIN staff_notification_item_states ns ON d.id = ns.notification_id AND ns.staff_id = ?
-      WHERE ${whereClause} AND COALESCE(ns.is_archived, 0) = 1
+      WHERE ${whereClause} AND COALESCE(ns.is_archived, FALSE) = TRUE
     `,
     [uploadedBy, ...params]
   );
@@ -162,8 +163,8 @@ export async function listDocumentReviewNotifications({
         d.created_at,
         d.uploaded_by,
         d.is_previewed,
-        COALESCE(ns.is_read, 0) AS is_read,
-        COALESCE(ns.is_archived, 0) AS is_archived
+        COALESCE(ns.is_read, FALSE) AS is_read,
+        COALESCE(ns.is_archived, FALSE) AS is_archived
       FROM documents d
       LEFT JOIN staff_notification_item_states ns ON d.id = ns.notification_id AND ns.staff_id = ?
       WHERE ${whereClause} AND ${archiveCondition}
@@ -175,4 +176,3 @@ export async function listDocumentReviewNotifications({
 
   return { items, total, unreadCount, inboxCount, archiveCount };
 }
-

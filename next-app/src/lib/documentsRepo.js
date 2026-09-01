@@ -1,51 +1,12 @@
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
-import { dbAll, dbGet, dbRun } from "./sqlite.js";
+import { dbAll, dbGet, dbRun } from "./postgresCompat.js";
 
 let reviewColumnsEnsured = false;
 
 async function ensureReviewColumns() {
-  if (reviewColumnsEnsured) return;
-  try {
-    const cols = await dbAll("PRAGMA table_info(documents)");
-    const names = new Set((cols || []).map((c) => String(c?.name || "")));
-    if (!names.has("approval_status")) {
-      await dbRun(
-        "ALTER TABLE documents ADD COLUMN approval_status TEXT NOT NULL DEFAULT 'Pending'"
-      );
-    }
-    if (!names.has("reviewed_by")) {
-      await dbRun("ALTER TABLE documents ADD COLUMN reviewed_by TEXT");
-    }
-    if (!names.has("reviewed_at")) {
-      await dbRun("ALTER TABLE documents ADD COLUMN reviewed_at TEXT");
-    }
-    if (!names.has("review_note")) {
-      await dbRun("ALTER TABLE documents ADD COLUMN review_note TEXT");
-    }
-    if (!names.has("uploaded_by")) {
-      await dbRun("ALTER TABLE documents ADD COLUMN uploaded_by TEXT");
-      await dbRun(
-        "CREATE INDEX IF NOT EXISTS idx_documents_uploaded_by ON documents(uploaded_by)"
-      );
-    }
-    if (!names.has("is_previewed")) {
-      await dbRun(
-        "ALTER TABLE documents ADD COLUMN is_previewed INTEGER NOT NULL DEFAULT 0"
-      );
-    }
-    await dbRun(
-      "UPDATE documents SET approval_status = 'Approved' WHERE approval_status IS NULL OR approval_status = ''"
-    );
-    await dbRun(
-      "CREATE INDEX IF NOT EXISTS idx_documents_approval_status ON documents(approval_status)"
-    );
-  } catch {
-    // Avoid breaking all reads/writes if schema repair fails once.
-  } finally {
-    reviewColumnsEnsured = true;
-  }
+  reviewColumnsEnsured = true;
 }
 
 function getLocalDir() {
@@ -183,7 +144,9 @@ export async function updateDocumentMetadata(id, { studentNo, studentName, docTy
   const nextStudentNo = studentNo ?? existing.student_no;
   const nextStudentName = studentName ?? existing.student_name;
   const nextDocType = docType ?? existing.doc_type;
-  const nextIsPreviewed = isPreviewed !== undefined ? (isPreviewed ? 1 : 0) : (existing.is_previewed ?? 0);
+  const nextIsPreviewed = isPreviewed !== undefined
+    ? Boolean(isPreviewed)
+    : Boolean(existing.is_previewed);
 
   await dbRun(
     `UPDATE documents

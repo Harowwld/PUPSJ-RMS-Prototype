@@ -38,9 +38,11 @@ export function AuthGuard({ allowedRoles = [], children, redirectTo = "/" }) {
             Expires: "0",
           },
         })
+        console.info("[auth-debug] route_guard.session_response", { path: window.location.pathname, status: res.status })
 
         if (!res.ok) {
           if (res.status === 401) {
+            console.info("[auth-debug] route_guard.redirect_missing_session", { path: window.location.pathname, redirectTo })
             console.log(
               "[AuthGuard] Unauthorized access attempt, redirecting to:",
               redirectTo
@@ -79,6 +81,7 @@ export function AuthGuard({ allowedRoles = [], children, redirectTo = "/" }) {
 
         // Check if user is active (case-insensitive for safety)
         if (String(user.status || "").toLowerCase() !== "active") {
+          console.info("[auth-debug] route_guard.redirect_inactive_account", { path: window.location.pathname, status: user.status, redirectTo })
           console.log("[AuthGuard] Inactive user access attempt:", user.status)
           router.push(redirectTo)
           return
@@ -101,6 +104,7 @@ export function AuthGuard({ allowedRoles = [], children, redirectTo = "/" }) {
           
           // Fallback to strict array comparison if not explicitly handled
           if (!hasRequiredRole) {
+            console.info("[auth-debug] route_guard.redirect_unauthorized_role", { path: window.location.pathname, role: user.role, redirectTo })
             hasRequiredRole = allowedRoles.some(
               (role) => String(role).toLowerCase() === userRole
             )
@@ -229,4 +233,3 @@ export function useAuth() {
 
   return { user, isLoading, isAuthenticated }
 }
-

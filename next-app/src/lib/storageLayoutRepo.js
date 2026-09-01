@@ -1,4 +1,4 @@
-import { dbAll, dbGet, dbRun } from "./sqlite.js";
+import { dbAll, dbGet, dbRun } from "./postgresCompat.js";
 import {
   buildDefaultStorageLayout,
   getDefaultDoor,
@@ -151,7 +151,8 @@ export async function setStorageLayout(layout) {
   }
 
   await dbRun(
-    "INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)",
+    `INSERT INTO settings (key, value) VALUES (?, ?)
+     ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = CURRENT_TIMESTAMP`,
     [STORAGE_LAYOUT_KEY, JSON.stringify(normalized)]
   );
 
@@ -194,7 +195,8 @@ export async function setStorageTemplates(templates) {
     throw new Error("Invalid storage_templates payload");
   }
   await dbRun(
-    "INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)",
+    `INSERT INTO settings (key, value) VALUES (?, ?)
+     ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = CURRENT_TIMESTAMP`,
     [STORAGE_TEMPLATES_KEY, JSON.stringify(templates)]
   );
   return templates;
@@ -205,4 +207,3 @@ export async function restoreDefaultStorageTemplates() {
   const { ROOM_TEMPLATES } = await import("./storageLayoutDefaults.js");
   return ROOM_TEMPLATES;
 }
-

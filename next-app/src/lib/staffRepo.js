@@ -1,5 +1,6 @@
 import crypto from "node:crypto";
-import { sysDbAll as dbAll, sysDbGet as dbGet, sysDbRun as dbRun } from "./sqlite.js";
+import { query, queryOne } from "./postgres.js";
+import { dbAll, dbGet, dbRun } from "./postgresCompat.js";
 
 function hashPassword(password) {
   return crypto.createHash("sha256").update(String(password)).digest("hex");
@@ -13,10 +14,8 @@ export async function setStaffPasswordById(id, newPassword) {
   const existing = await getStaffById(id);
   if (!existing) return null;
 
-  await dbRun(
-    `UPDATE staff
-     SET password_hash = ?, updated_at = datetime('now'), password_last_changed = datetime('now')
-     WHERE id = ?`,
+  await query(
+    `UPDATE staff SET password_hash = $1, updated_at = NOW(), password_last_changed = NOW() WHERE id = $2`,
     [hashPassword(newPassword), id]
   );
 
@@ -284,7 +283,10 @@ export function getStaffDisplayName(staff) {
 
 export async function hasAllSecurityAnswers(id) {
   // Only check for questions marked as required
-  const requiredQuestions = await dbAll("SELECT id FROM security_questions WHERE is_required = 1");
+  // PostgreSQL stores this field as BOOLEAN (SQLite used INTEGER 1/0).
+  // Comparing a boolean column to the integer literal 1 causes auth/me to
+  // fail during the first-login setup flow, leaving the user stuck at login.
+  const requiredQuestions = await dbAll("SELECT id FROM security_questions WHERE is_required = TRUE");
   const totalRequired = requiredQuestions?.length || 0;
 
   // If no required global questions are defined, we consider the requirement "satisfied"

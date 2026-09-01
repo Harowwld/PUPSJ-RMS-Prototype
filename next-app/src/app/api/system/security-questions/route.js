@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { sysDbAll, sysDbRun } from "@/lib/sqlite";
+import { dbAll, dbRun } from "@/lib/postgresCompat";
 import { writeAuditLog } from "@/lib/auditLogRequest";
 import { verifySessionToken, getSessionCookieName } from "@/lib/jwt";
 import { requireTOTP, extractTOTPToken } from "@/lib/totpMiddleware";
@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 
 export async function GET(req) {
   try {
-    const rows = await sysDbAll("SELECT id, question FROM security_questions ORDER BY id ASC");
+    const rows = await dbAll("SELECT id, question FROM security_questions ORDER BY id ASC");
     const questions = rows.map((row) => row.question || "");
     while (questions.length < 2) {
       questions.push("");
@@ -80,12 +80,12 @@ export async function PUT(req) {
     }
 
     // Clear and re-insert to keep it simple and ordered
-    await sysDbRun("DELETE FROM security_questions");
+    await dbRun("DELETE FROM security_questions");
     for (let i = 0; i < questions.length; i++) {
       const q = String(questions[i] || "").trim();
       if (q) {
         // Any question provided is now considered a potential recovery challenge
-        await sysDbRun("INSERT INTO security_questions (id, question, is_required) VALUES (?, ?, ?)", [i + 1, q, 1]);
+        await dbRun("INSERT INTO security_questions (id, question) VALUES (?, ?)", [i + 1, q]);
       }
     }
 

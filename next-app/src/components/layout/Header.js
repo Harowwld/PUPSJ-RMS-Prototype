@@ -41,6 +41,7 @@ export default function Header({ authUser, onLogout, children }) {
 
   const isSuperAdmin = isSuperAdminRole(authUser?.role);
   const isAdmin = isAdminRole(authUser?.role);
+  const isStudent = String(authUser?.role || "").toLowerCase() === "student";
   const hasAdminRights = hasAdminPrivileges(authUser?.role);
 
   useEffect(() => {
@@ -127,16 +128,22 @@ export default function Header({ authUser, onLogout, children }) {
             onClick={handleMainDashboardClick}
             onDoubleClick={(e) => e.preventDefault()}
           >
-            <img 
-              src={(activeView === "superadmin" || activeView === "admin") ? "/admin-logo.png" : "/staff-logo.png"} 
-              alt="eManage Logo" 
-              className={cn(
-                "h-8 w-8 object-contain",
-                activeView === "superadmin" && "brightness-0 dark:invert"
-              )} 
-            />
+            {isStudent ? (
+              <span
+                role="img"
+                aria-label="eManage Logo"
+                className="h-8 w-8 bg-pup-maroon"
+                style={{ WebkitMask: "url('/login-logo.png') center / contain no-repeat", mask: "url('/login-logo.png') center / contain no-repeat" }}
+              />
+            ) : (
+              <img
+                src={(activeView === "superadmin" || activeView === "admin") ? "/admin-logo.png" : "/staff-logo.png"}
+                alt="eManage Logo"
+                className={cn("h-8 w-8 object-contain", activeView === "superadmin" && "brightness-0 dark:invert")}
+              />
+            )}
             <div className="flex items-center">
-              <span className="font-semibold text-[26px] text-black dark:text-white tracking-tight transition-colors group-hover/logo:text-gray-850 dark:group-hover/logo:text-zinc-200 leading-none">
+              <span className={cn("font-semibold text-[26px] tracking-tight transition-colors group-hover/logo:text-gray-850 dark:group-hover/logo:text-zinc-200 leading-none", isStudent ? "text-pup-maroon" : "text-black dark:text-white")}>
                 eManage
               </span>
             </div>
@@ -145,7 +152,9 @@ export default function Header({ authUser, onLogout, children }) {
             className="text-[26px] font-medium select-none leading-none tracking-tight transition-colors duration-300" 
             style={{ 
               color: 
-                String(authUser?.role || "").toLowerCase() === "superadmin" 
+                  isStudent
+                    ? "var(--color-pup-maroon)"
+                    : String(authUser?.role || "").toLowerCase() === "superadmin"
                   ? "#0f172a" 
                   : String(authUser?.role || "").toLowerCase() === "admin" 
                     ? "#e30000" 
@@ -313,4 +322,3 @@ export default function Header({ authUser, onLogout, children }) {
     </header>
   );
 }
-

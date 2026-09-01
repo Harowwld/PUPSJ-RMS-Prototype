@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { getSessionCookieName, verifySessionToken } from "../../../../lib/jwt";
 import { removeSession } from "../../../../lib/sessionStore";
-import { setStaffStatus } from "../../../../lib/staffRepo";
 import { writeAuditLog } from "../../../../lib/auditLogRequest";
+import { authDebug } from "@/lib/authDebug";
 
 export const runtime = "nodejs";
 
@@ -20,14 +20,16 @@ export async function POST(req) {
 
   if (token) {
     removeSession(token);
-    // Verify token and set user status to Inactive
+    // Signing out ends this browser session only. It must not deactivate the
+    // personnel account itself; otherwise the next valid login is redirected
+    // away by AuthGuard as an inactive user.
     try {
       const payload = await verifySessionToken(token);
       const userId = payload?.sub;
       const username = payload?.username;
 
       if (userId && userId !== "admin") {
-        await setStaffStatus(userId, "Inactive");
+        authDebug("logout.session_ended", { staffId: userId });
         await writeAuditLog(req, `User Logout`, { 
           details: `personnel '${username || userId}' successfully terminated system session and secure credentials`,
           entity_type: "User",
@@ -61,4 +63,3 @@ export async function POST(req) {
   
   return addSecurityHeaders(res);
 }
-

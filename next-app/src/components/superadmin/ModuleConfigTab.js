@@ -202,7 +202,7 @@ function ModuleRow({ m, offices, assignments, toggling, onToggle }) {
           <div>
             <div className="flex items-center gap-2">
               <span className="font-semibold text-sm text-gray-900 dark:text-zinc-50">{m.name}</span>
-              {m.is_system === 1 && (
+              {Boolean(m.is_system) && (
                 <span className="bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400 text-[9px] font-bold uppercase px-1.5 py-0.5 rounded-[4px] tracking-wide">
                   System
                 </span>
@@ -218,8 +218,8 @@ function ModuleRow({ m, offices, assignments, toggling, onToggle }) {
       {offices.map(o => {
         const toggleKey = `${o.id}-${m.id}`
         const isToggling = toggling[toggleKey]
-        const enabled = assignments[o.id]?.[m.id]?.enabled || m.is_system === 1
-        const isSystem = m.is_system === 1
+        const enabled = Boolean(assignments[o.id]?.[m.id]?.enabled) || Boolean(m.is_system)
+        const isSystem = Boolean(m.is_system)
 
         return (
           <td key={o.id} className="p-4 text-center align-middle">

@@ -1,8 +1,9 @@
-import { dbAll, dbGet, dbRun, getDb } from "./sqlite.js";
+import { dbAll, dbGet, dbRun } from "./postgresCompat.js";
 import path from "node:path";
 import fs from "node:fs";
 import crypto from "node:crypto";
 import AdmZip from "adm-zip";
+import { execFileSync } from "node:child_process";
 
 const BACKUP_ENC_MAGIC = Buffer.from("PUPSBK1", "utf8");
 const BACKUP_ENC_ALGO = "aes-256-gcm";
@@ -81,18 +82,18 @@ export async function listBackups(filters = {}) {
 
   if (startDate) {
     if (startDate.includes("T") || startDate.includes(":")) {
-      conditions.push(`datetime(created_at) >= datetime(?)`);
+      conditions.push(`created_at >= ?::timestamptz`);
     } else {
-      conditions.push(`date(created_at, 'localtime') >= date(?)`);
+      conditions.push(`created_at::date >= ?::date`);
     }
     params.push(startDate);
   }
 
   if (endDate) {
     if (endDate.includes("T") || endDate.includes(":")) {
-      conditions.push(`datetime(created_at) <= datetime(?)`);
+      conditions.push(`created_at <= ?::timestamptz`);
     } else {
-      conditions.push(`date(created_at, 'localtime') <= date(?)`);
+      conditions.push(`created_at::date <= ?::date`);
     }
     params.push(endDate);
   }
@@ -101,7 +102,7 @@ export async function listBackups(filters = {}) {
     sql += ` WHERE ` + conditions.join(" AND ");
   }
 
-  sql += ` ORDER BY datetime(created_at) DESC`;
+  sql += ` ORDER BY created_at DESC`;
 
   const rows = await dbAll(sql, params);
   console.log(`[REPO] listBackups returned ${rows.length} rows.`);
@@ -202,17 +203,19 @@ export async function executeBackup() {
   const localDir = getLocalDir();
   const uploadsDir = path.join(localDir, "uploads");
 
-  // Safely backup active SQLite database to a temporary file
-  const db = await getDb();
-  const tempDbPath = path.join(localDir, `db-backup-temp-${Date.now()}.sqlite`);
-  await db.backup(tempDbPath);
+  // Safely dump the active PostgreSQL database to a temporary SQL file.
+  const tempDbPath = path.join(localDir, `db-backup-temp-${Date.now()}.sql`);
+  if (!process.env.DATABASE_URL) {
+    throw new Error("DATABASE_URL is required to create a PostgreSQL backup");
+  }
+  execFileSync("pg_dump", ["--no-owner", "--no-privileges", "--file", tempDbPath, process.env.DATABASE_URL]);
 
   // Create the ZIP archive
   const zip = new AdmZip();
 
   // Add Database
   if (fs.existsSync(tempDbPath)) {
-    zip.addLocalFile(tempDbPath, "", "db.sqlite");
+    zip.addLocalFile(tempDbPath, "", "db.sql");
   }
 
   // Add Uploads folder

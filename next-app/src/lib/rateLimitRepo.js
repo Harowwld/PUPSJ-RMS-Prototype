@@ -1,4 +1,4 @@
-import { sysDbGet as dbGet, sysDbAll as dbAll, sysDbRun as dbRun } from "./sqlite";
+import { sysDbGet as dbGet, sysDbAll as dbAll, sysDbRun as dbRun } from "./systemDb.js";
 
 export async function getRateLimitConfig(endpointType, identifier = "default") {
   return await dbGet(
@@ -13,7 +13,7 @@ export async function getAllRateLimitConfigs() {
 
 export async function createRateLimitConfig(endpointType, identifier, windowSeconds, maxRequests) {
   return await dbRun(
-    "INSERT OR REPLACE INTO rate_limits (endpoint_type, identifier, window_seconds, max_requests, updated_at) VALUES (?, ?, ?, ?, datetime('now'))",
+    "INSERT INTO rate_limits (endpoint_type, identifier, window_seconds, max_requests, updated_at) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP) ON CONFLICT (endpoint_type, identifier) DO UPDATE SET window_seconds = EXCLUDED.window_seconds, max_requests = EXCLUDED.max_requests, updated_at = CURRENT_TIMESTAMP",
     [endpointType, identifier, windowSeconds, maxRequests]
   );
 }

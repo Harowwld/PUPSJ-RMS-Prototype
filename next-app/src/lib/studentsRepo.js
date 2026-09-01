@@ -1,11 +1,8 @@
-import { dbAll, dbGet, dbRun } from "./sqlite.js";
+import { dbAll, dbGet, dbRun } from "./postgresCompat.js";
 import { canonicalizeCabinetId } from "./storageLayoutUtils.js";
 
 async function hasPhysicalStorage() {
-  const row = await dbGet(
-    "SELECT 1 FROM sqlite_master WHERE type='table' AND name='students' AND sql LIKE '%room%'"
-  );
-  return !!row;
+  return true;
 }
 
 function normalizeStudentName(name) {
