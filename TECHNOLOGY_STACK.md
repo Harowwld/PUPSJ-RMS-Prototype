@@ -16,14 +16,15 @@
 
 ## **Database & Persistence Layer**
 
-### **SQLite with sql.js** (v1.13.0)
-- **Implementation**: In-process SQLite database using WebAssembly
-- **Location**: `.local/db.sqlite` (configurable via `LOCAL_DATA_DIR`)
-- **Connection Management**: Global singleton pattern for HMR persistence
-- **Features**: Full foreign key support, migrations, audit trails
+### **PostgreSQL 16 (local Docker only)**
+- **Implementation**: PostgreSQL server accessed through the `pg` Node.js client
+- **Location**: Local Docker service at `localhost:5432` (configurable via `DATABASE_URL`)
+- **Connection Management**: Shared connection pool in `src/lib/postgres.js`
+- **Features**: Foreign keys, numbered migrations, transactions, audit trails, and office/module access control
+- **Migration utility**: `scripts/migrate-sqlite-to-postgres.mjs` imports legacy SQLite backups when supplied; SQLite is not the active runtime database
 
 ### **Database Schema**
-- Tables: `staff`, `students`, `documents`, `document_requests`, `courses`, `sections`, `audit_logs`, `settings`
+- Tables: `offices`, `modules`, `office_modules`, `staff`, `students`, `student_accounts`, `documents`, `document_requests`, `event_proposals`, `transaction_updates`, `global_audit_logs`, and supporting configuration tables
 - Repository Pattern: Dedicated `*Repo.js` files for data access abstraction
 
 ---
@@ -194,7 +195,6 @@
   "socket.io-client": "^4.8.3",
   "sonner": "^2.0.7",
   "speakeasy": "^2.0.0",
-  "sql.js": "^1.13.0",
   "tailwind-merge": "^3.5.0",
   "tesseract.js": "^5.1.0",
   "tw-animate-css": "^1.4.0",

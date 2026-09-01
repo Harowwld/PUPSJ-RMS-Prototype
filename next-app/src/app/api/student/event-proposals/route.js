@@ -4,6 +4,7 @@ import path from "node:path";
 import { NextResponse } from "next/server";
 import { getStudentSession } from "@/lib/studentAuth";
 import { query, queryOne } from "@/lib/postgres";
+import { writeGlobalAuditLog } from "@/lib/auditLogRequest";
 
 export const runtime = "nodejs";
 
@@ -21,7 +22,11 @@ export async function GET() {
   const updates = ids.length
     ? await query("SELECT * FROM transaction_updates WHERE event_proposal_id = ANY($1::bigint[]) ORDER BY created_at ASC", [ids])
     : [];
-  const updatesByProposal = Object.groupBy(updates, (item) => String(item.event_proposal_id));
+  const updatesByProposal = updates.reduce((grouped, item) => {
+    const key = String(item.event_proposal_id);
+    (grouped[key] ||= []).push(item);
+    return grouped;
+  }, {});
   proposals.forEach((item) => { item.updates = updatesByProposal[String(item.id)] || []; });
   return NextResponse.json({ ok: true, data: proposals });
 }
@@ -46,5 +51,6 @@ export async function POST(req) {
   );
   await query(`INSERT INTO transaction_updates (event_proposal_id, status, message)
     VALUES ($1, 'Submitted', 'Event proposal submitted.')`, [proposal.id]);
+  await writeGlobalAuditLog(req, "Student event proposal submitted", { actor: session.studentNo, role: "Student", officeId: "osas", details: `Submitted ${title}`, entity_type: "event_proposal", entity_id: String(proposal.id) });
   return NextResponse.json({ ok: true, data: proposal }, { status: 201 });
 }

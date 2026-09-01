@@ -1,7 +1,8 @@
 /**
  * System Database Connection Manager
  * 
- * Manages the global system.sqlite database that stores:
+ * Legacy system-database facade. Active global data is stored in PostgreSQL;
+ * the compatibility methods below preserve older call sites during cutover.
  * - Office registry (offices table)
  * - Module registry (modules table)
  * - Office-module assignments (office_modules table)

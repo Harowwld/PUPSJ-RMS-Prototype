@@ -52,6 +52,12 @@ export async function GET(_req, ctx) {
     return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
   }
 
+  await writeAuditLog(_req, "Viewed Document Request", {
+    details: `Viewed document request #${id}.`,
+    entity_type: "document_request",
+    entity_id: String(id),
+  });
+
   return NextResponse.json({ ok: true, data: row });
 }
 

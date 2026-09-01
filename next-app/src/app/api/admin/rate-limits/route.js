@@ -6,6 +6,7 @@ import {
   createRateLimitConfig 
 } from "../../../../lib/rateLimitRepo";
 import { verifySessionToken } from "../../../../lib/jwt";
+import { writeAuditLog } from "@/lib/auditLogRequest";
 
 export const runtime = "nodejs";
 
@@ -102,6 +103,11 @@ export async function POST(req) {
     }
 
     const result = await createRateLimitConfig(endpointType, identifier, windowSeconds, maxRequests);
+    await writeAuditLog(req, "Create Rate Limit Configuration", {
+      details: `${endpointType}/${identifier}: ${maxRequests} requests per ${windowSeconds} seconds.`,
+      entity_type: "rate_limit_config",
+      entity_id: `${endpointType}:${identifier}`,
+    });
     
     return NextResponse.json({ 
       ok: true, 

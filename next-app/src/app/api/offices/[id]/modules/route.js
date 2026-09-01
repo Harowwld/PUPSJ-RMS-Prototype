@@ -1,12 +1,13 @@
 import { NextResponse } from "next/server";
 import { query, queryOne, transaction } from "@/lib/postgres";
+import { requireSuperAdminSession } from "@/lib/moduleAccess";
+import { writeGlobalAuditLog } from "@/lib/auditLogRequest";
 
 export const runtime = "nodejs";
 
-const isSuperAdmin = (req) => req.headers.get("x-user-role") === "SuperAdmin";
-
 export async function GET(req, { params }) {
-  if (!isSuperAdmin(req)) {
+  const session = await requireSuperAdminSession();
+  if (!session) {
     return NextResponse.json({ ok: false, error: "Forbidden" }, { status: 403 });
   }
 
@@ -22,7 +23,8 @@ export async function GET(req, { params }) {
 }
 
 export async function PUT(req, { params }) {
-  if (!isSuperAdmin(req)) {
+  const session = await requireSuperAdminSession();
+  if (!session) {
     return NextResponse.json({ ok: false, error: "Forbidden" }, { status: 403 });
   }
 
@@ -45,8 +47,12 @@ export async function PUT(req, { params }) {
       }
     });
     const updated = await query("SELECT * FROM office_modules WHERE office_id = $1 ORDER BY module_id", [id]);
-    await query(`INSERT INTO global_audit_logs (actor, role, office_id, action, details, entity_type, entity_id)
-      VALUES ($1, 'SuperAdmin', $2, 'Updated module access', 'Module access assignments changed.', 'Office', $2)`, [req.headers.get("x-user-id") || "SuperAdmin", id]);
+    await writeGlobalAuditLog(req, "Updated module access", {
+      officeId: id,
+      details: "Module access assignments changed.",
+      entity_type: "office",
+      entity_id: id,
+    });
     return NextResponse.json({ ok: true, data: updated });
   } catch (err) {
     return NextResponse.json({ ok: false, error: err.message }, { status: 500 });

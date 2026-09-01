@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { getSessionCookieName, verifySessionToken } from "@/lib/jwt";
 import { getStaffById, updateStaffPreferences } from "@/lib/staffRepo";
+import { writeAuditLog } from "@/lib/auditLogRequest";
 
 export const runtime = "nodejs";
 
@@ -64,6 +65,11 @@ export async function POST(req) {
     }
 
     const updatedPrefs = await updateStaffPreferences(userId, preferences);
+    await writeAuditLog(req, "Updated Account Preferences", {
+      details: "Updated personal dashboard preferences.",
+      entity_type: "staff_preferences",
+      entity_id: String(userId),
+    });
     return NextResponse.json({ ok: true, data: updatedPrefs });
   } catch (error) {
     return NextResponse.json({ ok: false, error: error.message }, { status: 500 });

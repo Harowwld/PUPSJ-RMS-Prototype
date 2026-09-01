@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { getSessionCookieName, verifySessionToken } from "../../../lib/jwt";
 import { getStaffById } from "../../../lib/staffRepo";
 import { isAdminRole } from "../../../lib/roleUtils";
+import { writeAuditLog } from "@/lib/auditLogRequest";
 import {
   getStaffReviewNotificationsState,
   listDocumentReviewNotifications,
@@ -113,6 +114,14 @@ export async function POST(req) {
     return NextResponse.json({ ok: false, error: "Invalid action" }, { status: 400 });
   }
 
+  if (["markSeen", "markAllUnread", "markRead", "markUnread", "archive", "unarchive"].includes(action)) {
+    await writeAuditLog(req, `Notifications ${action}`, {
+      details: ids.length ? `Notification IDs: ${ids.join(", ")}` : "Notification state updated.",
+      entity_type: "notification",
+      entity_id: ids.length === 1 ? String(ids[0]) : "",
+    });
+  }
+
   const state = await getStaffReviewNotificationsState(staff.id);
   const meta = await listDocumentReviewNotifications({
     limit: 1,
@@ -129,4 +138,3 @@ export async function POST(req) {
     },
   });
 }
-

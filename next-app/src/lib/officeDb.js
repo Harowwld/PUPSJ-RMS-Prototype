@@ -1,12 +1,12 @@
 /**
  * Office Database Connection Manager
  *
- * Each office gets its own SQLite database file under .local/<officeId>/db.sqlite.
- * This module manages a connection pool keyed by officeId and initializes
- * each office's database with the appropriate schema template.
+ * Office-scoped storage paths are retained for local uploaded files and legacy
+ * compatibility. Runtime office data is now queried from the shared PostgreSQL
+ * database through the connection pool below.
  *
- * The Registrar office uses the exact same schema as the original sqlite.js.
- * OSAS (and future offices) can have their own schema shape.
+ * The old SQLite schema templates remain only for compatibility with legacy
+ * local-storage helpers; PostgreSQL migrations define the active schema.
  */
 import fs from "node:fs";
 import path from "node:path";

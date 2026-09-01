@@ -19,15 +19,40 @@ const dryRun = args.has("--dry-run");
 if (!process.env.DATABASE_URL && !dryRun) throw new Error("DATABASE_URL is required unless --dry-run is used.");
 const { pool } = dryRun ? { pool: null } : await import("../src/lib/postgres.js");
 
-const report = { source: dataDir, dryRun, startedAt: new Date().toISOString(), tables: {}, conflicts: [], warnings: [] };
+const report = { source: dataDir, dryRun, startedAt: new Date().toISOString(), tables: {}, files: { copied: 0, missing: 0 }, conflicts: [], warnings: [] };
 const count = (name, amount = 1) => { report.tables[name] = (report.tables[name] || 0) + amount; };
 const normalizeName = value => String(value || "").trim().replace(/\s+/g, " ").toLocaleLowerCase();
 const tableExists = (db, table) => !!db.prepare("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = ?").get(table);
 const rows = (db, table) => tableExists(db, table) ? db.prepare(`SELECT * FROM ${table}`).all() : [];
 const sourceDb = file => fs.existsSync(file) ? new Database(file, { readonly: true }) : null;
 
+function storageCandidates(officeId, filename) {
+  return [
+    path.join(dataDir, officeId, "uploads", filename),
+    path.join(dataDir, "uploads", filename),
+  ];
+}
+
+function copyStorageFile(officeId, filename) {
+  if (!filename) return;
+  const source = storageCandidates(officeId, filename).find(file => fs.existsSync(file));
+  if (!source) {
+    report.files.missing += 1;
+    report.warnings.push(`Missing ${officeId} upload: ${filename}`);
+    return;
+  }
+  const target = path.join(dataDir, officeId, "uploads", filename);
+  if (!dryRun) {
+    fs.mkdirSync(path.dirname(target), { recursive: true });
+    if (path.resolve(source) !== path.resolve(target)) fs.copyFileSync(source, target);
+  }
+  report.files.copied += 1;
+}
+
 const system = sourceDb(path.join(dataDir, "system.sqlite"));
-const registrar = sourceDb(path.join(dataDir, "registrar", "db.sqlite"));
+// Support both the newer multi-office backup layout and the original
+// single-office `.local/db.sqlite` layout used by the first prototype.
+const registrar = sourceDb(path.join(dataDir, "registrar", "db.sqlite")) || sourceDb(path.join(dataDir, "db.sqlite"));
 const osas = sourceDb(path.join(dataDir, "osas", "db.sqlite"));
 if (!system && !registrar && !osas) throw new Error(`No SQLite files found under ${dataDir}. Nothing was changed.`);
 
@@ -125,7 +150,18 @@ async function importOfficeRecords(officeId, db) {
       ON CONFLICT (office_id,legacy_id) DO UPDATE SET approval_status=EXCLUDED.approval_status,reviewed_by=EXCLUDED.reviewed_by,reviewed_at=EXCLUDED.reviewed_at,review_note=EXCLUDED.review_note
       RETURNING id`, [officeId,row.student_no || null,row.student_name || null,row.doc_type,row.original_filename,row.storage_filename,row.mime_type,row.size_bytes,row.approval_status || "Pending",row.reviewed_by || null,row.reviewed_at || null,row.review_note || null,row.uploaded_by || null,Boolean(row.is_previewed),row.id,row.created_at || null]);
     if (result.rows[0]) documentIds.set(row.id, result.rows[0].id);
+    copyStorageFile(officeId, row.storage_filename);
     count(`documents:${officeId}`);
+  }
+  const proposalIds = new Map();
+  for (const row of rows(db, "event_proposals")) {
+    const result = await sql(`INSERT INTO event_proposals (office_id,student_no,title,organization_name,event_date,venue,description,storage_filename,original_filename,mime_type,size_bytes,status,reviewed_by,reviewed_at,review_note,created_at,updated_at)
+      VALUES ($1,$2,$3,$4,$5::date,$6,$7,$8,$9,$10,$11,$12,$13,$14::timestamptz,$15,COALESCE($16::timestamptz,NOW()),COALESCE($17::timestamptz,NOW()))
+      ON CONFLICT DO NOTHING RETURNING id`,
+      [officeId, row.student_no, row.title, row.organization_name, row.event_date || null, row.venue || null, row.description || null, row.storage_filename, row.original_filename, row.mime_type || "application/pdf", row.size_bytes || 0, row.status || "Submitted", row.reviewed_by || null, row.reviewed_at || null, row.review_note || null, row.created_at || null, row.updated_at || null]);
+    if (result.rows[0]) proposalIds.set(row.id, result.rows[0].id);
+    copyStorageFile(officeId, row.storage_filename);
+    count(`event_proposals:${officeId}`);
   }
   for (const row of rows(db, "document_requests")) {
     const linked = row.linked_document_id ? documentIds.get(row.linked_document_id) || null : null;
@@ -135,6 +171,24 @@ async function importOfficeRecords(officeId, db) {
       [officeId,row.student_no,row.doc_type,row.status || "Pending",row.notes || null,linked,row.created_by || null,row.updated_by || null,row.id,row.created_at || null,row.updated_at || null]);
     count(`document_requests:${officeId}`);
   }
+  for (const row of rows(db, "transaction_updates")) {
+    const documentRequestId = row.document_request_id ? await mappedId("document_requests", officeId, row.document_request_id) : null;
+    const eventProposalId = row.event_proposal_id ? proposalIds.get(row.event_proposal_id) || null : null;
+    if (!documentRequestId && !eventProposalId) {
+      report.warnings.push(`Skipped transaction update ${row.id} because its parent was not migrated.`);
+      continue;
+    }
+    await sql(`INSERT INTO transaction_updates (document_request_id,event_proposal_id,status,message,created_by,created_at)
+      VALUES ($1,$2,$3,$4,$5,COALESCE($6::timestamptz,NOW()))`,
+      [documentRequestId, eventProposalId, row.status, row.message || null, row.created_by || null, row.created_at || null]);
+    count(`transaction_updates:${officeId}`);
+  }
+}
+
+async function mappedId(table, officeId, legacyId) {
+  if (dryRun) return legacyId;
+  const result = await client.query(`SELECT id FROM ${table} WHERE office_id = $1 AND legacy_id = $2`, [officeId, legacyId]);
+  return result.rows[0]?.id || null;
 }
 
 try {

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getAuditLogStats } from "../../../../lib/auditLogsRepo";
 import { getSessionActorName } from "../../../../lib/authHelpers";
+import { getStudentSession } from "../../../../lib/studentAuth";
 
 export const runtime = "nodejs";
 
@@ -12,6 +13,8 @@ export async function GET(req) {
     
     if (mine) {
       actor = await getSessionActorName();
+      const studentSession = await getStudentSession();
+      if (studentSession?.studentNo) actor = studentSession.studentNo;
       if (!actor) {
         return NextResponse.json({ ok: true, data: { totalLogs: 0, logsToday: 0, authEvents: 0, systemChanges: 0, criticalEvents: 0 } });
       }

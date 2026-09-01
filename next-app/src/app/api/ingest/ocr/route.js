@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireStaff, createAuthErrorResponse } from "../../../../lib/authHelpers";
 import { performNativeOcr } from "../../../../lib/appleVisionOcr";
+import { writeAuditLog } from "@/lib/auditLogRequest";
 import fs from "fs";
 import path from "path";
 import os from "os";
@@ -64,6 +65,11 @@ export async function POST(req) {
       }
     }
 
+    await writeAuditLog(req, "Processed Document with OCR", {
+      details: `OCR processed ${file.name || "document.pdf"}.`,
+      entity_type: "ocr_scan",
+      entity_id: file.name || "document.pdf",
+    });
     return NextResponse.json({ ok: true, text });
 
   } catch (err) {

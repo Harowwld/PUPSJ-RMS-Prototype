@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getStudentSession } from "@/lib/studentAuth";
 import { query, queryOne } from "@/lib/postgres";
+import { writeGlobalAuditLog } from "@/lib/auditLogRequest";
 
 export const runtime = "nodejs";
 
@@ -17,7 +18,11 @@ export async function GET() {
   const updates = ids.length
     ? await query("SELECT * FROM transaction_updates WHERE document_request_id = ANY($1::bigint[]) ORDER BY created_at ASC", [ids])
     : [];
-  const updatesByRequest = Object.groupBy(updates, (item) => String(item.document_request_id));
+  const updatesByRequest = updates.reduce((grouped, item) => {
+    const key = String(item.document_request_id);
+    (grouped[key] ||= []).push(item);
+    return grouped;
+  }, {});
   requests.forEach((item) => { item.updates = updatesByRequest[String(item.id)] || []; });
   return NextResponse.json({ ok: true, data: { requests, documents } });
 }
@@ -38,5 +43,6 @@ export async function POST(req) {
   );
   await query(`INSERT INTO transaction_updates (document_request_id, status, message)
     VALUES ($1, 'Pending', 'Request submitted.')`, [request.id]);
+  await writeGlobalAuditLog(req, "Student document request created", { actor: session.studentNo, role: "Student", officeId: "registrar", details: `Requested ${docType}`, entity_type: "document_request", entity_id: String(request.id) });
   return NextResponse.json({ ok: true, data: request }, { status: 201 });
 }

@@ -240,9 +240,12 @@ export async function createGlobalAuditLog(data) {
   const details = data.details || "";
   const severity = data.severity || "INFO";
   const ip = data.ip || "localhost";
+  const user_agent = data.user_agent || "";
+  const entity_type = data.entity_type || "";
+  const entity_id = data.entity_id || "";
 
-  const sql = "INSERT INTO global_audit_logs (actor, role, office_id, action, details, severity, ip) VALUES (?, ?, ?, ?, ?, ?, ?)";
-  await sysDbRun(sql, [actor, role, officeId, action, details, severity, ip]);
+  const sql = "INSERT INTO global_audit_logs (actor, role, office_id, action, details, severity, user_agent, entity_type, entity_id, ip) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+  await sysDbRun(sql, [actor, role, officeId, action, details, severity, user_agent, entity_type, entity_id, ip]);
 }
 
 /**

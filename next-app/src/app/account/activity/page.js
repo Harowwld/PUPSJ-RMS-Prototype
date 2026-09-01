@@ -1306,7 +1306,7 @@ export default function AccountActivityPage() {
                   <Button
                     variant="ghost"
                     onClick={() => {
-                      const path = isAdminRole(authUser?.role) ? "/admin" : "/staff";
+                      const path = authUser?.role === "Student" ? "/student" : isAdminRole(authUser?.role) ? "/admin" : "/staff";
                       router.push(path);
                     }}
                     className="h-10 px-3 font-semibold text-sm text-gray-600 hover:text-gray-900 hover:bg-transparent dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-transparent transition-colors flex items-center gap-2 rounded-brand shadow-none! border-0! cursor-pointer"

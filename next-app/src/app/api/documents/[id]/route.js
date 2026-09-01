@@ -54,6 +54,12 @@ export async function GET(_req, ctx) {
 
   const bytes = fs.readFileSync(filePath);
 
+  await writeAuditLog(_req, "Viewed Document", {
+    details: `Viewed ${row.original_filename}.`,
+    entity_type: "Document",
+    entity_id: String(id),
+  });
+
   return new NextResponse(bytes, {
     status: 200,
     headers: {

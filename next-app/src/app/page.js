@@ -168,7 +168,7 @@ export default function Home() {
   const handleContinue = () => {
     const emailValue = username.trim();
     if (!emailValue) {
-      setEmailError("Enter a valid email address.");
+      setEmailError("Enter your email address or student number.");
       return;
     }
     setEmailError("");
@@ -198,16 +198,17 @@ export default function Home() {
 
     const usernameInput = username.trim();
     const passwordInput = password;
+    const isStudentLogin = /^\d{4}[-\w]/i.test(usernameInput);
 
     setError("");
     setIsLoading(true);
 
     (async () => {
       try {
-        const res = await fetch("/api/auth/login", {
+        const res = await fetch(isStudentLogin ? "/api/auth/student/login" : "/api/auth/login", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ username: usernameInput, password: passwordInput }),
+          body: JSON.stringify(isStudentLogin ? { studentNo: usernameInput, password: passwordInput } : { username: usernameInput, password: passwordInput }),
         });
         const json = await res.json();
         console.info("[auth-debug] login.client_response", { ok: Boolean(res.ok && json?.ok), status: res.status, role: json?.data?.role || null, mustChangePassword: Boolean(json?.data?.mustChangePassword) });
@@ -236,6 +237,11 @@ export default function Home() {
         if (role === "Admin") {
           console.info("[auth-debug] login.client_navigating", { destination: "/admin" });
           router.push("/admin");
+          return;
+        }
+        if (isStudentLogin || role === "Student") {
+          console.info("[auth-debug] login.client_navigating", { destination: "/student" });
+          router.push("/student");
           return;
         }
 
@@ -382,7 +388,7 @@ export default function Home() {
                     }`}>
                       {/* EMAIL FIELD (top half) */}
                       <div className={`field-wrapper email-wrapper ${emailFocused || username.length > 0 ? "active" : ""} ${loginStep === 2 ? "step2-active" : ""}`}>
-                        <label>Email Address</label>
+                        <label>Email Address or Student Number</label>
                         <Input
                           type="text"
                           id="username"

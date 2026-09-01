@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { systemConfigRepo } from "@/lib/systemConfigRepo";
 import { getSessionCookieName, verifySessionToken } from "@/lib/jwt";
+import { writeAuditLog } from "@/lib/auditLogRequest";
 
 async function isAdmin(req) {
   const token = req.cookies.get(getSessionCookieName())?.value || "";
@@ -41,6 +42,11 @@ export async function POST(req) {
     }
 
     await systemConfigRepo.setSetting(key, value);
+    await writeAuditLog(req, "Updated System Setting", {
+      details: `Updated system setting '${key}'.`,
+      entity_type: "setting",
+      entity_id: String(key),
+    });
     return NextResponse.json({ ok: true });
   } catch (error) {
     return NextResponse.json({ ok: false, error: error.message }, { status: 500 });

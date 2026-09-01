@@ -1,4 +1,6 @@
-// Compatibility exports for legacy imports. Runtime persistence is PostgreSQL.
+// Compatibility exports for legacy imports. Runtime persistence is PostgreSQL;
+// these names remain temporarily so old scripts and repositories can be retired
+// without changing unrelated call sites during the migration.
 export { getSystemDb, sysDbAll, sysDbGet, sysDbRun, reloadSystemDb } from "./systemDb.js";
 export { getOfficeDb, officeDbAll, officeDbGet, officeDbRun } from "./officeDb.js";
 export { dbAll, dbGet, dbRun } from "./postgresCompat.js";

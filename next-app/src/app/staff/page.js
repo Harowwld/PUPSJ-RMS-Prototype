@@ -351,9 +351,30 @@ function StaffPageContent() {
 
   const fetchAllDocs = useCallback(async () => {
     try {
-      const res = await fetch("/api/documents?excludeDeclined=1&limit=500");
+      const [res, proposalsRes] = await Promise.all([
+        fetch("/api/documents?excludeDeclined=1&limit=500"),
+        fetch("/api/osas/event-proposals", { cache: "no-store" }),
+      ]);
       const data = await res.json();
-      setAllDocs(Array.isArray(data.data) ? data.data : []);
+      const proposalsData = await proposalsRes.json().catch(() => null);
+      const proposalDocuments = proposalsRes.ok && Array.isArray(proposalsData?.data)
+        ? proposalsData.data.map((proposal) => ({
+            id: `event-proposal-${proposal.id}`,
+            student_no: proposal.student_no,
+            student_name: proposal.student_name,
+            doc_type: "Event Proposal",
+            original_filename: proposal.original_filename,
+            storage_filename: proposal.storage_filename,
+            mime_type: proposal.mime_type,
+            size_bytes: proposal.size_bytes,
+            approval_status: proposal.status === "Approved" ? "Approved" : "Pending",
+            created_at: proposal.created_at,
+            source_type: "event_proposal",
+            source_id: proposal.id,
+            file_url: `/api/osas/event-proposals/${proposal.id}?file=1`,
+          }))
+        : [];
+      setAllDocs([...(Array.isArray(data.data) ? data.data : []), ...proposalDocuments]);
       docsLoadedRef.current = true;
     } catch {
       /* silent */
@@ -1212,7 +1233,16 @@ function StaffPageContent() {
         const selectedType = String(form.docType || "").trim();
 
         if (!trimmedNo && !trimmedName && !selectedType) {
-          setDocsRows([]);
+          setDocsRows(staffDocs.filter((doc) => doc.source_type === "event_proposal").map((doc) => ({
+            id: doc.id,
+            student_no: doc.student_no,
+            student_name: doc.student_name,
+            doc_type: doc.doc_type,
+            status: "uploaded",
+            verificationStatus: doc.approval_status === "Approved" ? "verified" : "unverified",
+            doc,
+            reviewDoc: doc,
+          })));
           return;
         }
 
@@ -1288,11 +1318,6 @@ function StaffPageContent() {
 
   useEffect(() => {
     if (view !== "documents") return;
-    const hasQuery =
-      String(docsForm.studentNo || "").trim() ||
-      String(docsForm.studentName || "").trim() ||
-      String(docsForm.docType || "").trim();
-    if (!hasQuery) return;
     refreshDocuments(docsForm);
   }, [
     view,
@@ -1929,6 +1954,7 @@ function StaffPageContent() {
                   showToast({ title: "Archive Failed", description: err.message }, true);
                 }
               }}
+              archivedStudents={archivedStudents}
               currentStudent={(() => {
                 const uniqueNo = Array.from(new Set(docsRows.map(r => r.student_no)));
                 const targetNo = uniqueNo.length === 1 ? uniqueNo[0] : docsForm.studentNo;

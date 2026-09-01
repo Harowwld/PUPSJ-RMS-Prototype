@@ -16,9 +16,16 @@ const ICON_MAP = {
   system_data: { icon: "ti ti-settings-cog", color: "#E5484D" },
   system: { icon: "ti ti-database-backup", color: "#E5484D" },
   logs: { icon: "ti ti-history", color: "#E5484D" },
+  offices: { icon: "ti ti-building-community", color: "#E5484D" },
+  modules: { icon: "ti ti-layout-grid", color: "#E5484D" },
+  staff: { icon: "ti ti-users", color: "#E5484D" },
+  health: { icon: "ti ti-activity-heartbeat", color: "#E5484D" },
 
   // Staff views
   requests: { icon: "ti ti-arrow-up-right", color: "#ebb800" },
+  odrs: { icon: "ti ti-file-text", color: "#800000" },
+  osas: { icon: "ti ti-school", color: "#800000" },
+  osas_monitoring: { icon: "ti ti-clipboard-check", color: "#ebb800" },
   upload: { icon: "ti ti-scan", color: "#ebb800" },
   documents: { icon: "ti ti-file-text", color: "#ebb800" },
   notifications: { icon: "ti ti-bell", color: "#ebb800" },

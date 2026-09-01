@@ -5,6 +5,8 @@ const connectionString = process.env.DATABASE_URL;
 const pool = global.__pupsjPostgresPool || new Pool({
   connectionString,
   max: 10,
+  connectionTimeoutMillis: 5000,
+  idleTimeoutMillis: 30000,
 });
 
 global.__pupsjPostgresPool = pool;

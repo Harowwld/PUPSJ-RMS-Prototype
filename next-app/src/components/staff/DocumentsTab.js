@@ -162,7 +162,7 @@ function DocumentsTable({
           docsForm.studentNo.trim() ||
           docsForm.studentName.trim() ||
           docsForm.docType.trim()
-        ) ? (
+        ) && docsRows.length === 0 ? (
           <tr className="border-0 hover:bg-transparent">
             <td colSpan={7} className="p-0 border-0">
               <Empty className="flex h-[450px] flex-col items-center justify-center border-0 bg-transparent text-center">
@@ -290,22 +290,24 @@ function DocumentsTable({
                         View
                       </Button>
 
-                      <Button
-                        size="sm"
-                        onClick={() =>
-                          onRescan?.(
-                            r.student_no,
-                            r.doc_type,
-                            r.doc.id,
-                            r.doc.original_filename,
-                            r.doc.mime_type
-                          )
-                        }
-                        className="btn-brand-red active:scale-95 transition-all dark:shadow-none"
-                      >
-                        <i className="ph-bold ph-arrow-counter-clockwise mr-1.5"></i>
-                        Update
-                      </Button>
+                      {!r.doc.source_type && (
+                        <Button
+                          size="sm"
+                          onClick={() =>
+                            onRescan?.(
+                              r.student_no,
+                              r.doc_type,
+                              r.doc.id,
+                              r.doc.original_filename,
+                              r.doc.mime_type
+                            )
+                          }
+                          className="btn-brand-red active:scale-95 transition-all dark:shadow-none"
+                        >
+                          <i className="ph-bold ph-arrow-counter-clockwise mr-1.5"></i>
+                          Update
+                        </Button>
+                      )}
                     </>
                   ) : (
                     <Button
@@ -342,6 +344,7 @@ export default function DocumentsTab({
   onRescan,
   onUpdateStudent,
   onArchiveStudent,
+  archivedStudents = [],
   currentStudent,
 }) {
   const [isDragActive, setIsDragActive] = useState(false);
@@ -351,6 +354,7 @@ export default function DocumentsTab({
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [selectedDoc, setSelectedDoc] = useState(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [subtab, setSubtab] = useState("active");
 
   useEffect(() => {
     if (!detailModalOpen) {
@@ -543,7 +547,12 @@ export default function DocumentsTab({
             }
           />
 
-          <div className="bg-white border-t border-gray-100 p-4 backdrop-blur-md dark:bg-card/50 dark:border-white/10">
+          <div className="flex gap-8 border-t border-gray-100 px-4 pt-3 dark:border-white/10">
+            <button type="button" onClick={() => setSubtab("active")} className={`relative pb-3 text-sm font-medium ${subtab === "active" ? "text-black after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-full after:bg-black" : "text-gray-400"}`}>Active Documents ({docsRows.length})</button>
+            <button type="button" onClick={() => setSubtab("archive")} className={`relative pb-3 text-sm font-medium ${subtab === "archive" ? "text-black after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-full after:bg-black" : "text-gray-400"}`}>Archive ({archivedStudents.length})</button>
+          </div>
+
+          <div className={cn("bg-white border-t border-gray-100 p-4 backdrop-blur-md dark:bg-card/50 dark:border-white/10", subtab === "archive" && "hidden")}>
             <div className="flex w-full flex-wrap items-center gap-5">
               {/* Student Number */}
               <div className="flex-1 min-w-[200px] group relative">
@@ -682,6 +691,34 @@ export default function DocumentsTab({
             </div>
           )}
         </Card>
+
+        {subtab === "archive" && (
+          <Card className="rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
+            <PageHeader
+              icon="ph-archive-box"
+              title="Archived Documents"
+              description="Archived student records and their documents."
+              showBorder={false}
+            />
+            <div className="p-4">
+              {archivedStudents.length > 0 ? (
+                <div className="space-y-2">
+                  {archivedStudents.map((student) => (
+                    <div key={student.studentNo || student.student_no} className="flex items-center justify-between rounded border border-gray-200 p-3 dark:border-white/10">
+                      <div>
+                        <p className="text-sm font-semibold text-gray-900 dark:text-zinc-50">{student.name || "Unnamed student"}</p>
+                        <p className="text-xs text-gray-500 dark:text-zinc-400">{student.studentNo || student.student_no}</p>
+                      </div>
+                      <span className="rounded-full bg-gray-100 px-2.5 py-1 text-[10px] font-semibold text-gray-600 dark:bg-white/10 dark:text-zinc-300">Archived</span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="py-10 text-center text-sm text-gray-500 dark:text-zinc-400">No archived documents.</p>
+              )}
+            </div>
+          </Card>
+        )}
 
         {/* Main Table Grid & Pagination */}
         <div className="flex flex-col flex-1 h-auto">
@@ -1089,7 +1126,7 @@ export default function DocumentsTab({
 
             <div className="relative flex flex-1 overflow-hidden bg-gray-100 dark:bg-muted">
               {/* Fullscreen Overlay */}
-              {isFullscreen && selectedDoc?.doc?.id && (
+              {isFullscreen && (selectedDoc?.doc?.file_url || selectedDoc?.doc?.id) && (
                 <div className="fixed inset-0 z-[9999] flex flex-col bg-white dark:bg-card animate-in fade-in duration-300">
                   <div className="absolute top-4 right-4 z-[10000]">
                     <Button
@@ -1102,7 +1139,7 @@ export default function DocumentsTab({
                     </Button>
                   </div>
                   <iframe
-                    src={`/api/documents/${selectedDoc.doc.id}#toolbar=0&navpanes=0`}
+                    src={`${selectedDoc.doc.file_url || `/api/documents/${selectedDoc.doc.id}`}#toolbar=0&navpanes=0`}
                     className="w-full h-full border-0"
                     title="PDF Fullscreen Preview"
                   />
@@ -1111,9 +1148,9 @@ export default function DocumentsTab({
 
               {/* Left: Document Preview */}
               <div className="flex-1 bg-white border-r border-gray-200 dark:bg-zinc-900 dark:border-white/10 relative">
-                {selectedDoc?.doc?.id ? (
+                {selectedDoc?.doc?.file_url || selectedDoc?.doc?.id ? (
                   <iframe
-                    src={`/api/documents/${selectedDoc.doc.id}#toolbar=0&navpanes=0`}
+                    src={`${selectedDoc.doc.file_url || `/api/documents/${selectedDoc.doc.id}`}#toolbar=0&navpanes=0`}
                     className="w-full h-full border-0"
                     title="PDF Preview"
                   />
@@ -1216,7 +1253,7 @@ export default function DocumentsTab({
                       variant="outline"
                       size="icon"
                       onClick={() => setIsFullscreen(!isFullscreen)}
-                      disabled={!selectedDoc?.doc?.id}
+                      disabled={!selectedDoc?.doc?.file_url && !selectedDoc?.doc?.id}
                       className={cn(
                         "h-11 w-11 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-card transition-all hover:bg-gray-50 dark:hover:bg-white/10 shadow-sm dark:shadow-none",
                         isFullscreen && "bg-pup-maroon dark:bg-red-600 text-white hover:bg-pup-darkMaroon border-pup-darkMaroon"
@@ -1231,9 +1268,9 @@ export default function DocumentsTab({
                   </TooltipContent>
                 </Tooltip>
 
-                {selectedDoc?.doc?.id && (
+                {(selectedDoc?.doc?.file_url || selectedDoc?.doc?.id) && (
                   <a
-                    href={`/api/documents/${selectedDoc.doc.id}`}
+                    href={selectedDoc.doc.file_url || `/api/documents/${selectedDoc.doc.id}`}
                     target="_blank"
                     rel="noreferrer"
                     className="inline-flex h-11 items-center rounded-brand border border-gray-300 px-6 text-sm font-semibold tracking-wide text-gray-600 hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 shadow-sm transition-colors dark:text-zinc-300 dark:border-white/10"
@@ -1256,7 +1293,7 @@ export default function DocumentsTab({
                 <Button
                   onClick={async () => {
                     setDetailModalOpen(false);
-                    if (selectedDoc?.doc?.id) {
+                    if (selectedDoc?.doc?.id && !selectedDoc?.doc?.source_type) {
                       onRescan?.(
                         selectedDoc.student_no,
                         selectedDoc.doc_type,
@@ -1266,7 +1303,7 @@ export default function DocumentsTab({
                       );
                     }
                   }}
-                  disabled={!selectedDoc?.doc?.id}
+                  disabled={!selectedDoc?.doc?.id || !!selectedDoc?.doc?.source_type}
                   className="h-11 rounded-brand btn-brand-red px-8 text-sm font-semibold tracking-wide shadow-md transition-all active:scale-95 dark:shadow-none"
                 >
                   <i className="ph-bold ph-arrow-counter-clockwise mr-2"></i>

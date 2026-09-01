@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createAuditLog, listAuditLogs, countAuditLogs } from "../../../lib/auditLogsRepo";
 import { getSessionActorName } from "../../../lib/authHelpers";
+import { getStudentSession } from "../../../lib/studentAuth";
 
 export const runtime = "nodejs";
 
@@ -18,13 +19,16 @@ export async function GET(req) {
   const mine = searchParams.get("mine") === "1";
   const actorExact = mine ? await getSessionActorName() : "";
 
-  if (mine && !actorExact) {
+  const studentSession = mine ? await getStudentSession() : null;
+  const resolvedActor = studentSession?.studentNo || actorExact;
+
+  if (mine && !resolvedActor) {
     return NextResponse.json({ ok: true, data: [], total: 0 });
   }
 
   const [rows, total] = await Promise.all([
-    listAuditLogs({ limit, offset, search, actorExact, role, severity, startDate, endDate, sortBy, sortOrder }),
-    countAuditLogs({ search, actorExact, role, severity, startDate, endDate }),
+    listAuditLogs({ limit, offset, search, actorExact: resolvedActor, role: studentSession ? "Student" : role, severity, startDate, endDate, sortBy, sortOrder }),
+    countAuditLogs({ search, actorExact: resolvedActor, role: studentSession ? "Student" : role, severity, startDate, endDate }),
   ]);
 
   return NextResponse.json({ ok: true, data: rows, total });
