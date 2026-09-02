@@ -974,7 +974,7 @@ export default function DocumentRequestsTab({
                   )}
                   <Button
                     type="button"
-                    className="mt-3 w-full bg-[#0A84FF] hover:bg-[#0070E0] text-white font-medium text-[13px] h-10 rounded-[10px] transition-all border-0 flex items-center justify-center gap-2 shadow-none!"
+                    className="mt-3 w-full btn-brand-red text-white font-medium text-[13px] h-10 rounded-[10px] transition-all border-0 flex items-center justify-center gap-2 shadow-none!"
                     disabled={!studentForRequest}
                     onClick={() => {
                       if (!studentForRequest) return;

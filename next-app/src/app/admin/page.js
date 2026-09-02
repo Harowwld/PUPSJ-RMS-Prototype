@@ -1666,7 +1666,7 @@ function AdminPageContent() {
   }
 
   return (
-    <div className="font-inter flex h-screen overflow-hidden flex-col bg-slate-50/30 dark:bg-zinc-950/30 relative transition-colors duration-300">
+    <div className="font-inter flex h-screen overflow-hidden flex-col bg-slate-50/30 dark:bg-zinc-950/30 relative transition-colors duration-300" style={{ "--brand-accent": authUser?.accent_color || "#970000", "--brand-foreground": "#FFFFFF" }}>
       {/* Dynamic Liquid Glass Background Blobs */}
       <div className="liquid-container">
         <div className="liquid-blob liquid-blob-1"></div>
@@ -1693,9 +1693,10 @@ function AdminPageContent() {
                 className={cn(
                   "px-3 py-1.5 text-xs font-semibold rounded-xl flex items-center gap-2 transition-colors duration-300 whitespace-nowrap outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon/20 cursor-pointer shrink-0",
                   active
-                    ? "bg-red-50 text-pup-maroon dark:bg-red-500/10 dark:text-primary shadow-xs"
+                    ? "text-pup-maroon shadow-xs"
                     : "text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-zinc-400 dark:hover:bg-white/5 dark:hover:text-zinc-50"
                 )}
+                style={active ? { backgroundColor: "color-mix(in srgb, var(--brand-accent) 12%, transparent)" } : undefined}
               >
                 <i className={cn(item.iconClass, "text-sm")}></i>
                 {item.label}
@@ -1723,6 +1724,7 @@ function AdminPageContent() {
             handleZoomMouseDown={handleZoomMouseDown}
             accentColor={authUser?.accent_color}
             officeName={authUser?.office_name}
+            authUser={authUser}
           />
         )}
         <main className="relative w-full min-w-0 min-h-0 flex-1 bg-white/25 dark:bg-zinc-950/25 overflow-y-auto backdrop-blur-xs">

@@ -12,6 +12,7 @@ export function LiquidGlassButton({
   className,
   type = "button",
   disabled = false,
+  themeColor = true,
   ...props
 }) {
   return (
@@ -22,10 +23,11 @@ export function LiquidGlassButton({
       style={{
         height: `${height}px`,
         borderRadius: `${radius}px`,
-        background: `linear-gradient(135deg, ${glassColor}, rgba(255, 255, 255, 0.05))`,
+        background: themeColor ? "var(--brand-accent, #ad2f2f)" : `linear-gradient(135deg, ${glassColor}, rgba(255, 255, 255, 0.05))`,
         backdropFilter: "blur(8px)",
         WebkitBackdropFilter: "blur(8px)",
-        border: "1px solid rgba(255, 255, 255, 0.2)",
+        border: themeColor ? "1px solid color-mix(in srgb, var(--brand-accent, #ad2f2f) 75%, black)" : "1px solid rgba(255, 255, 255, 0.2)",
+        color: themeColor ? "var(--brand-foreground, #ffffff)" : undefined,
       }}
       className={cn(
         "relative flex items-center justify-center gap-2 overflow-hidden shadow-xs hover:brightness-105 active:scale-[0.98] transition-all disabled:opacity-50 disabled:pointer-events-none cursor-pointer",

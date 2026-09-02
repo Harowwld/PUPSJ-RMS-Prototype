@@ -3,43 +3,45 @@
 import { useState, useEffect, useRef } from "react"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
+import { getRoleBranding } from "@/lib/roleBranding"
 
 // Icon and color map matching Apple Photos Light Sidebar spec
 const ICON_MAP = {
   // Admin views
-  review: { icon: "ti ti-file-check", color: "#E5484D" },
-  digitization: { icon: "ti ti-chart-bar", color: "#E5484D" },
-  request_analytics: { icon: "ti ti-arrow-up-right", color: "#E5484D" },
-  directory: { icon: "ti ti-users", color: "#E5484D" },
-  create: { icon: "ti ti-user-plus", color: "#E5484D" },
-  storage_layout: { icon: "ti ti-building-warehouse", color: "#E5484D" },
-  system_data: { icon: "ti ti-settings-cog", color: "#E5484D" },
-  system: { icon: "ti ti-database-backup", color: "#E5484D" },
-  logs: { icon: "ti ti-history", color: "#E5484D" },
-  offices: { icon: "ti ti-building-community", color: "#E5484D" },
-  modules: { icon: "ti ti-layout-grid", color: "#E5484D" },
-  staff: { icon: "ti ti-users", color: "#E5484D" },
-  health: { icon: "ti ti-activity-heartbeat", color: "#E5484D" },
+  review: { icon: "ti ti-file-check" },
+  digitization: { icon: "ti ti-chart-bar" },
+  request_analytics: { icon: "ti ti-arrow-up-right" },
+  directory: { icon: "ti ti-users" },
+  create: { icon: "ti ti-user-plus" },
+  storage_layout: { icon: "ti ti-building-warehouse" },
+  system_data: { icon: "ti ti-settings-cog" },
+  system: { icon: "ti ti-database-backup" },
+  logs: { icon: "ti ti-history" },
+  offices: { icon: "ti ti-building-community" },
+  modules: { icon: "ti ti-layout-grid" },
+  staff: { icon: "ti ti-users" },
+  health: { icon: "ti ti-activity-heartbeat" },
 
   // Staff views
-  requests: { icon: "ti ti-arrow-up-right", color: "#ebb800" },
-  odrs: { icon: "ti ti-file-text", color: "#800000" },
-  osas: { icon: "ti ti-school", color: "#800000" },
-  osas_monitoring: { icon: "ti ti-clipboard-check", color: "#ebb800" },
-  upload: { icon: "ti ti-scan", color: "#ebb800" },
-  documents: { icon: "ti ti-file-text", color: "#ebb800" },
-  notifications: { icon: "ti ti-bell", color: "#ebb800" },
-  search: { icon: "ti ti-archive", color: "#ebb800" },
-  storage: { icon: "ti ti-folder-open", color: "#ebb800" },
+  requests: { icon: "ti ti-arrow-up-right" },
+  odrs: { icon: "ti ti-file-text" },
+  osas: { icon: "ti ti-school" },
+  osas_monitoring: { icon: "ti ti-clipboard-check" },
+  upload: { icon: "ti ti-scan" },
+  documents: { icon: "ti ti-file-text" },
+  notifications: { icon: "ti ti-bell" },
+  search: { icon: "ti ti-archive" },
+  storage: { icon: "ti ti-folder-open" },
 }
 
-export default function Sidebar({ open = true, items, activeKey, onSelect, onLogout, zoomNode, setZoomNode, handleZoomMouseDown, accentColor, officeName }) {
+export default function Sidebar({ open = true, items, activeKey, onSelect, onLogout, zoomNode, setZoomNode, handleZoomMouseDown, accentColor, officeName, authUser }) {
   const pathname = usePathname()
   const isStaff = pathname?.startsWith("/staff") || items.some(item => 
     ["requests", "upload", "documents", "notifications", "search"].includes(item.key)
   )
-  const activeColor = accentColor || (isStaff ? "#ebb800" : "#e30000")
-  const staffIconColor = accentColor || (isStaff ? "#ebb800" : "#e30000")
+  const branding = getRoleBranding(authUser || { role: isStaff ? "Staff" : "Admin", officeName })
+  const activeColor = accentColor || branding.color
+  const staffIconColor = accentColor || branding.color
   const sidebarRef = useRef(null)
   const pendingFocusKeyRef = useRef(null)
   const [sidebarFocused, setSidebarFocused] = useState(true)
@@ -173,12 +175,12 @@ export default function Sidebar({ open = true, items, activeKey, onSelect, onLog
                 >
                   <div className="absolute left-0 right-0 h-[2.5px] bg-[#D1D1D6] dark:bg-zinc-700 rounded-full"></div>
                   <div 
-                    className="absolute left-0 h-[2.5px] bg-[#007AFF] rounded-full"
-                    style={{ width: `${(zoomNode / 6) * 100}%` }}
+                    className="absolute left-0 h-[2.5px] rounded-full"
+                    style={{ width: `${(zoomNode / 6) * 100}%`, backgroundColor: activeColor }}
                   ></div>
                   <div 
-                    className="absolute -translate-x-1/2 w-[12px] h-[12px] rounded-full bg-white dark:bg-zinc-900 border-[2px] border-[#007AFF] shadow-xs"
-                    style={{ left: `${(zoomNode / 6) * 100}%` }}
+                    className="absolute -translate-x-1/2 w-[12px] h-[12px] rounded-full bg-white dark:bg-zinc-900 shadow-xs"
+                    style={{ left: `${(zoomNode / 6) * 100}%`, border: `2px solid ${activeColor}` }}
                   ></div>
                 </div>
                 <button

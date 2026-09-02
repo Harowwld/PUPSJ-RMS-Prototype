@@ -177,7 +177,7 @@ function SystemAdminPageContent() {
   const zoomFactor = [0.75, 0.83, 0.92, 1.0, 1.08, 1.17, 1.25][zoomNode]
 
   return (
-    <div className="font-inter flex h-screen overflow-hidden flex-col bg-slate-50/30 dark:bg-zinc-950/30 relative transition-colors duration-300">
+    <div className="font-inter flex h-screen overflow-hidden flex-col bg-slate-50/30 dark:bg-zinc-950/30 relative transition-colors duration-300" style={{ "--brand-accent": "#000000", "--brand-foreground": "#FFFFFF" }}>
       {/* Dynamic Glassmorphism Blobs */}
       <div className="liquid-container">
         <div className="liquid-blob liquid-blob-1 bg-blue-400/20 dark:bg-blue-600/10"></div>
@@ -197,7 +197,7 @@ function SystemAdminPageContent() {
           zoomNode={zoomNode}
           setZoomNode={setZoomNode}
           handleZoomMouseDown={handleZoomMouseDown}
-          accentColor="#000000"
+          authUser={authUser}
         />
         
         <main className="relative w-full min-w-0 min-h-0 flex-1 bg-white/25 dark:bg-zinc-950/25 overflow-y-auto backdrop-blur-xs">

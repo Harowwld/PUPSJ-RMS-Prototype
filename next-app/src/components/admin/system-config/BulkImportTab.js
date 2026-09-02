@@ -394,7 +394,7 @@ export default function BulkImportTab({
                         size="sm"
                         disabled={!quickAdd.name}
                         onClick={handleQuickAdd}
-                        className="h-8 rounded-md bg-[#FF9500] hover:bg-[#E08200] hover:shadow-md transition-all px-4 text-[10px] font-semibold text-white dark:shadow-none border-0"
+                        className="h-8 rounded-md btn-brand-red hover:shadow-md transition-all px-4 text-[10px] font-semibold text-white dark:shadow-none border-0"
                       >
                         <i className="ph-bold ph-plus mr-1"></i> ADD ROW
                       </Button>
@@ -871,6 +871,5 @@ export default function BulkImportTab({
     </div>
   )
 }
-
 
 

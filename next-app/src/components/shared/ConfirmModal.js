@@ -366,6 +366,7 @@ export default function ConfirmModal({
             type="button"
             onClick={onConfirm}
             disabled={isLoading || disabled || !isVerified}
+            themeColor={!(variant === "success" || variant === "warning" || isRestoreModal || isUnsavedChangesModal || v.confirmVariant === "destructive")}
             height={((isDeleteBackup || isArchiveModal || isPersonnelModal || isRegistrationModal) || isRestoreModal || isUnsavedChangesModal) ? 36 : 44}
             radius={((isDeleteBackup || isArchiveModal || isPersonnelModal || isRegistrationModal) || isRestoreModal || isUnsavedChangesModal) ? 18 : 22}
             glassColor="rgba(10, 132, 255, 0.15)"
@@ -392,4 +393,3 @@ export default function ConfirmModal({
     </Dialog>
   );
 }
-

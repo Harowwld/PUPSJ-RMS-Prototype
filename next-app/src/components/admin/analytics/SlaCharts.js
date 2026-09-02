@@ -191,12 +191,12 @@ const SlaCharts = React.memo(function SlaCharts({ data, pieData, onSwitchView })
                       className={cn(
                         "w-full text-left px-3 py-1.5 text-[12px] font-medium rounded-lg transition-colors cursor-pointer flex items-center justify-between",
                         timeGrain === opt 
-                          ? "bg-[#007aff]/10 text-[#007aff] font-semibold" 
+                          ? "bg-pup-maroon/10 text-pup-maroon font-semibold" 
                           : "text-gray-700 dark:text-zinc-300 hover:bg-gray-50 dark:hover:bg-zinc-800"
                       )}
                     >
                       {opt === "monthly" ? "Monthly" : opt === "weekly" ? "Weekly" : "Daily"}
-                      {timeGrain === opt && <i className="ph-bold ph-check text-[10px] text-[#007aff]" />}
+                      {timeGrain === opt && <i className="ph-bold ph-check text-[10px] text-pup-maroon" />}
                     </button>
                   ))}
                 </div>
@@ -537,5 +537,4 @@ const SlaCharts = React.memo(function SlaCharts({ data, pieData, onSwitchView })
 })
 
 export default SlaCharts
-
 
