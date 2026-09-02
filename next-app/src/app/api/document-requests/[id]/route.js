@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
 
 import { getSessionCookieName, verifySessionToken } from "../../../../lib/jwt";
 import { getStaffById } from "../../../../lib/staffRepo";
@@ -14,10 +13,8 @@ import { getDocumentById } from "../../../../lib/documentsRepo";
 
 export const runtime = "nodejs";
 
-async function getSessionStaff() {
-  const cookieName = getSessionCookieName();
-  const store = await cookies();
-  const token = store.get(cookieName)?.value || "";
+async function getSessionStaff(req) {
+  const token = req.cookies.get(getSessionCookieName())?.value || "";
   if (!token) return null;
   try {
     const payload = await verifySessionToken(token);
@@ -35,8 +32,8 @@ function isActiveStaffOrAdmin(staff) {
   return String(staff.status || "").toLowerCase() === "active";
 }
 
-export async function GET(_req, ctx) {
-  const staff = await getSessionStaff();
+export async function GET(req, ctx) {
+  const staff = await getSessionStaff(req);
   if (!staff || !isActiveStaffOrAdmin(staff)) {
     return NextResponse.json({ ok: false, error: "Forbidden" }, { status: 403 });
   }
@@ -62,7 +59,7 @@ export async function GET(_req, ctx) {
 }
 
 export async function PATCH(req, ctx) {
-  const staff = await getSessionStaff();
+  const staff = await getSessionStaff(req);
   if (!staff || !isActiveStaffOrAdmin(staff)) {
     return NextResponse.json({ ok: false, error: "Forbidden" }, { status: 403 });
   }

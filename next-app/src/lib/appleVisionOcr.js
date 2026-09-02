@@ -11,7 +11,7 @@ const execFileAsync = promisify(execFile);
  * depending on host platform (macOS vs Windows).
  * 
  * @param {string} filePath - Absolute path to the image or PDF file to run OCR on.
- * @returns {Promise<string>} - The recognized text.
+ * @returns {Promise<{text: string, pages: Array}>} - OCR text and observations.
  */
 export async function performNativeOcr(filePath) {
   const platform = os.platform();
@@ -50,7 +50,18 @@ export async function performNativeOcr(filePath) {
     if (stderr && stderr.trim() !== "") {
       console.warn(`[System OCR Warning (${platform})]`, stderr);
     }
-    return stdout ? stdout.trim() : "";
+    let parsed;
+    try {
+      parsed = JSON.parse(stdout || "{}");
+    } catch {
+      // Preserve the older Windows binary's plain-text output while its
+      // coordinate-aware replacement is being prepared.
+      return { text: String(stdout || "").trim(), pages: [] };
+    }
+    return {
+      text: typeof parsed.text === "string" ? parsed.text : "",
+      pages: Array.isArray(parsed.pages) ? parsed.pages : [],
+    };
   } catch (error) {
     console.error(`[System OCR Error (${platform})]`, error);
     throw new Error(`Native OCR execution failed: ${error.message}`);

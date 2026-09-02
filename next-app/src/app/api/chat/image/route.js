@@ -1,16 +1,13 @@
 import { NextResponse } from "next/server";
 import fs from "node:fs";
 import path from "node:path";
-import { cookies } from "next/headers";
 import { getSessionCookieName, verifySessionToken } from "../../../../lib/jwt";
 import { getStaffById } from "../../../../lib/staffRepo";
 
 export const runtime = "nodejs";
 
-async function getSessionStaff() {
-  const cookieName = getSessionCookieName();
-  const store = await cookies();
-  const token = store.get(cookieName)?.value || "";
+async function getSessionStaff(req) {
+  const token = req.cookies.get(getSessionCookieName())?.value || "";
   if (!token) return null;
   const payload = await verifySessionToken(token);
   const userId = String(payload?.sub || "").trim();
@@ -21,7 +18,7 @@ async function getSessionStaff() {
 export async function GET(req) {
   let staff = null;
   try {
-    staff = await getSessionStaff();
+    staff = await getSessionStaff(req);
   } catch {
     return new Response("Invalid session", { status: 401 });
   }

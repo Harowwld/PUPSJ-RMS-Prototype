@@ -62,12 +62,23 @@ export default function OCRPromptModal({
                 OCR match resolution required
               </DialogTitle>
               <DialogDescription className="mt-1 text-sm font-medium text-gray-600 dark:text-zinc-300">
-                The optical character recognition system detected multiple
-                student records matching the scanned name. Please select the
-                correct student number to ensure accurate document association.
+                The optical character recognition system found a possible
+                student match. Please confirm the correct student number to
+                ensure accurate document association.
               </DialogDescription>
             </div>
           </div>
+
+          {ocrSuggestion?.coordinateRecognition && (
+            <div className="mb-4 rounded-brand border border-emerald-100 bg-emerald-50 p-3 text-xs text-emerald-800 dark:border-emerald-900/40 dark:bg-emerald-950/20 dark:text-emerald-200">
+              <div className="font-semibold">Coordinate extraction · Page {Number(ocrSuggestion.coordinateRecognition.pageIndex) + 1}</div>
+              <div className="mt-1 grid grid-cols-3 gap-2">
+                {[["firstName", "First"], ["middleName", "Middle"], ["lastName", "Last"]].map(([key, label]) => (
+                  <div key={key}><span className="font-semibold">{label}:</span> {ocrSuggestion.coordinateRecognition.regions?.[key]?.text || "—"}</div>
+                ))}
+              </div>
+            </div>
+          )}
         </DialogHeader>
 
         <div className="p-6">
@@ -110,6 +121,7 @@ export default function OCRPromptModal({
                       {s.courseCode || s.course_code} · Year{" "}
                       {s.yearLevel ?? s.year_level} · {s.section}
                     </span>
+                    {s.score !== undefined && <span className="block text-xs text-gray-500 dark:text-zinc-400">Match: {Math.round(Number(s.score) * 100)}% · {s.reason || "Database match"}</span>}
                   </span>
                 </label>
               )
@@ -138,5 +150,4 @@ export default function OCRPromptModal({
     </Dialog>
   )
 }
-
 

@@ -1,15 +1,13 @@
 import { NextResponse } from "next/server";
 import { listOffices, createOffice, listOfficesWithStats } from "@/lib/officesRepo";
 import { verifySessionToken, getSessionCookieName } from "@/lib/jwt";
-import { cookies } from "next/headers";
 import { writeGlobalAuditLog } from "@/lib/auditLogRequest";
 
 export const runtime = "nodejs";
 
-async function isSuperAdmin() {
+async function isSuperAdmin(req) {
   try {
-    const cookieStore = await cookies();
-    const token = cookieStore.get(getSessionCookieName())?.value;
+    const token = req.cookies.get(getSessionCookieName())?.value;
     if (!token) return false;
     const payload = await verifySessionToken(token);
     return payload.role === "SuperAdmin";
@@ -19,7 +17,7 @@ async function isSuperAdmin() {
 }
 
 export async function GET(req) {
-  if (!await isSuperAdmin()) {
+  if (!await isSuperAdmin(req)) {
     return NextResponse.json({ ok: false, error: "Forbidden" }, { status: 403 });
   }
 
@@ -37,7 +35,7 @@ export async function GET(req) {
 }
 
 export async function POST(req) {
-  if (!await isSuperAdmin()) {
+  if (!await isSuperAdmin(req)) {
     return NextResponse.json({ ok: false, error: "Forbidden" }, { status: 403 });
   }
 

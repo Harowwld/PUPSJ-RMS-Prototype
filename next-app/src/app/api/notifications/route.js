@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
 import { getSessionCookieName, verifySessionToken } from "../../../lib/jwt";
 import { getStaffById } from "../../../lib/staffRepo";
 import { isAdminRole } from "../../../lib/roleUtils";
@@ -14,10 +13,8 @@ import {
 
 export const runtime = "nodejs";
 
-async function getSessionStaff() {
-  const cookieName = getSessionCookieName();
-  const store = await cookies();
-  const token = store.get(cookieName)?.value || "";
+async function getSessionStaff(req) {
+  const token = req.cookies.get(getSessionCookieName())?.value || "";
   if (!token) return null;
   const payload = await verifySessionToken(token);
   const userId = String(payload?.sub || "").trim();
@@ -28,7 +25,7 @@ async function getSessionStaff() {
 export async function GET(req) {
   let staff = null;
   try {
-    staff = await getSessionStaff();
+    staff = await getSessionStaff(req);
   } catch {
     return NextResponse.json({ ok: false, error: "Invalid session" }, { status: 401 });
   }
@@ -70,7 +67,7 @@ export async function GET(req) {
 export async function POST(req) {
   let staff = null;
   try {
-    staff = await getSessionStaff();
+    staff = await getSessionStaff(req);
   } catch {
     return NextResponse.json({ ok: false, error: "Invalid session" }, { status: 401 });
   }

@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { getSessionCookieName, verifySessionToken } from "../../../../lib/jwt";
-import { cookies } from "next/headers";
 import { updateStaff, getStaffByUsername, getStaffById } from "../../../../lib/staffRepo";
 import { writeAuditLog } from "../../../../lib/auditLogRequest";
 
@@ -9,8 +8,7 @@ export const runtime = "nodejs";
 export async function POST(req) {
   try {
     const cookieName = getSessionCookieName();
-    const store = await cookies();
-    const token = store.get(cookieName)?.value || "";
+    const token = req.cookies.get(cookieName)?.value || "";
     if (!token) {
       return NextResponse.json({ ok: false, error: "Not authenticated" }, { status: 401 });
     }

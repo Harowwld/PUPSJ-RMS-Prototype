@@ -14,6 +14,7 @@ const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 const staff = [
   ["PUPREGISTRAR-001", null, "Elias", "Austria", "SuperAdmin", "Administrative", "admin.default@pup.local"],
   ["PUPREGISTRAR-002", "registrar", "Registrar", "Staff", "Staff", "Records", "staff.registrar@pup.local"],
+  ["PUPREGISTRAR-003", "registrar", "Elias", "Austria", "Admin", "Administrative", "admin.registrar@pup.local"],
   ["PUPOSAS-001", "osas", "Sandra", "Gomez", "Admin", "OSAS Admin", "admin.osas@pup.local"],
   ["PUPOSAS-002", "osas", "Juanito", "Rizal", "Staff", "Student Affairs", "staff.osas@pup.local"],
 ];

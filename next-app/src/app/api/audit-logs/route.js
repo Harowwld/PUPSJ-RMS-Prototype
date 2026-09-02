@@ -17,9 +17,9 @@ export async function GET(req) {
   const sortBy = searchParams.get("sortBy") || "created_at";
   const sortOrder = searchParams.get("sortOrder") || "DESC";
   const mine = searchParams.get("mine") === "1";
-  const actorExact = mine ? await getSessionActorName() : "";
+  const actorExact = mine ? await getSessionActorName(req) : "";
 
-  const studentSession = mine ? await getStudentSession() : null;
+  const studentSession = mine ? await getStudentSession(req) : null;
   const resolvedActor = studentSession?.studentNo || actorExact;
 
   if (mine && !resolvedActor) {

@@ -903,7 +903,17 @@ function StaffPageContent() {
           : [];
         const ambiguous = nameMatches.length > 1;
 
-        if (ambiguous) {
+        if (suggestion.requiresConfirmation) {
+          console.log("[OCR] → COORDINATE MATCH branch, requiring staff confirmation");
+          setNewRec((p) => ({
+            ...p,
+            name: String(suggestion.name || p.name || "").trim().replace(/\s+/g, " ").toUpperCase(),
+            docType: suggestion.docType != null && String(suggestion.docType).trim() !== "" ? String(suggestion.docType).trim() : p.docType,
+          }));
+          setUploadStudentIsExisting(false);
+          clearAllUploadFieldErrors();
+          setOcrPromptOpen(true);
+        } else if (ambiguous) {
           console.log("[OCR] → AMBIGUOUS branch, setting docType:", suggestion.docType);
           setNewRec((p) => ({
             ...p,

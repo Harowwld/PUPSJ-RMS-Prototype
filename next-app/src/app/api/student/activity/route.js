@@ -4,8 +4,8 @@ import { query } from "@/lib/postgres";
 
 export const runtime = "nodejs";
 
-export async function GET() {
-  const session = await getStudentSession();
+export async function GET(req) {
+  const session = await getStudentSession(req);
   if (!session) return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   const rows = await query(
     `SELECT id, created_at, action, details, severity, office_id, entity_type, entity_id

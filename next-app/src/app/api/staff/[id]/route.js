@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
 import { archiveStaff, restoreStaff, getStaffById, updateStaff } from "../../../../lib/staffRepo";
 import { writeAuditLog } from "../../../../lib/auditLogRequest";
 import { getSessionCookieName, verifySessionToken } from "../../../../lib/jwt";
@@ -7,12 +6,9 @@ import { requireTOTP, extractTOTPToken } from "../../../../lib/totpMiddleware";
 
 export const runtime = "nodejs";
 
-async function getCurrentUserId() {
+async function getCurrentUserId(req) {
   try {
-    const cookieName = getSessionCookieName();
-    const cookieStore = cookies();
-    const store = (cookieStore instanceof Promise) ? await cookieStore : cookieStore;
-    const token = store.get(cookieName)?.value || "";
+    const token = req.cookies.get(getSessionCookieName())?.value || "";
     if (!token) return null;
     const payload = await verifySessionToken(token);
     return payload.sub || null;
@@ -41,7 +37,7 @@ export async function PATCH(req, ctx) {
     );
   }
 
-  const currentUserId = await getCurrentUserId();
+  const currentUserId = await getCurrentUserId(req);
   if (!currentUserId) {
     return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   }

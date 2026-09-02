@@ -55,9 +55,9 @@ export async function POST(req) {
 
     fs.writeFileSync(tempFilePath, buffer);
 
-    let text = "";
+    let ocrResult = { text: "", pages: [] };
     try {
-      text = await performNativeOcr(tempFilePath);
+      ocrResult = await performNativeOcr(tempFilePath);
     } finally {
       // Ensure we always clean up filesystem resources
       if (fs.existsSync(tempFilePath)) {
@@ -70,7 +70,12 @@ export async function POST(req) {
       entity_type: "ocr_scan",
       entity_id: file.name || "document.pdf",
     });
-    return NextResponse.json({ ok: true, text });
+    return NextResponse.json({
+      ok: true,
+      text: ocrResult.text,
+      pages: ocrResult.pages,
+      engine: os.platform() === "darwin" ? "apple-vision" : "windows-media",
+    });
 
   } catch (err) {
     console.error("[POST /api/ingest/ocr] failed:", err);

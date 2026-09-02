@@ -15,6 +15,7 @@ export async function GET() {
         RESTART IDENTITY CASCADE`);
     });
     await createStaff({ id: "PUPREGISTRAR-001", officeId: "registrar", fname: "Elias", lname: "Austria", role: "SuperAdmin", section: "Administrative", status: "Active", email: "admin.default@pup.local", password: process.env.DEFAULT_STAFF_PASSWORD || "pupstaff" });
+    await createStaff({ id: "PUPREGISTRAR-003", officeId: "registrar", fname: "Elias", lname: "Austria", role: "Admin", section: "Administrative", status: "Active", email: "admin.registrar@pup.local", password: process.env.DEFAULT_STAFF_PASSWORD || "pupstaff" });
     await query("INSERT INTO settings (key, value) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value", ["last_reset_at", new Date().toISOString()]);
     clearHealthCache();
     return NextResponse.json({ ok: true, message: `PostgreSQL data reset successfully. Default SuperAdmin: admin.default@pup.local / ${process.env.DEFAULT_STAFF_PASSWORD || "pupstaff"}` });

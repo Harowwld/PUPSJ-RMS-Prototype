@@ -1,6 +1,5 @@
 import fs from "node:fs";
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
 import {
   declineDocumentAndRemoveFile,
   deleteDocument,
@@ -16,10 +15,8 @@ import { writeAuditLog } from "../../../../lib/auditLogRequest";
 
 export const runtime = "nodejs";
 
-async function getSessionStaff() {
-  const cookieName = getSessionCookieName();
-  const store = await cookies();
-  const token = store.get(cookieName)?.value || "";
+async function getSessionStaff(req) {
+  const token = req.cookies.get(getSessionCookieName())?.value || "";
   if (!token) return null;
   const payload = await verifySessionToken(token);
   const userId = String(payload?.sub || "").trim();
@@ -141,7 +138,7 @@ export async function PATCH(req, ctx) {
 
     let reviewer = null;
     try {
-      reviewer = await getSessionStaff();
+      reviewer = await getSessionStaff(req);
     } catch {
       return NextResponse.json({ ok: false, error: "Invalid session" }, { status: 401 });
     }

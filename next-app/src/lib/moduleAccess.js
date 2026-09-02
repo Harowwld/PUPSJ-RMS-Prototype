@@ -1,10 +1,9 @@
-import { cookies } from "next/headers";
 import { queryOne } from "./postgres";
 import { getSessionCookieName, verifySessionToken } from "./jwt";
 
-async function getVerifiedStaffSession() {
+async function getVerifiedStaffSession(req) {
   try {
-    const token = (await cookies()).get(getSessionCookieName())?.value;
+    const token = req?.cookies?.get?.(getSessionCookieName())?.value;
     if (!token) return null;
     const payload = await verifySessionToken(token);
     const staff = await queryOne(
@@ -18,13 +17,13 @@ async function getVerifiedStaffSession() {
   }
 }
 
-export async function requireSuperAdminSession() {
-  const session = await getVerifiedStaffSession();
+export async function requireSuperAdminSession(req) {
+  const session = await getVerifiedStaffSession(req);
   return session?.role === "SuperAdmin" ? session : null;
 }
 
-export async function requireOfficeModule(moduleId, { officeId, roles = ["Admin", "Staff"] } = {}) {
-  const session = await getVerifiedStaffSession();
+export async function requireOfficeModule(moduleId, { officeId, roles = ["Admin", "Staff"] } = {}, req) {
+  const session = await getVerifiedStaffSession(req);
   if (!session) return null;
   if (session.role === "SuperAdmin") return { ...session, officeId: officeId || session.officeId };
   if (!roles.includes(session.role) || !session.officeId || (officeId && officeId !== session.officeId)) return null;

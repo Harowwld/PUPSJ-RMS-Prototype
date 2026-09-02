@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
 import { getSessionCookieName, verifySessionToken } from "../../../../lib/jwt";
 import { getStaffById, hasAllSecurityAnswers } from "../../../../lib/staffRepo";
 import { getOfficeById } from "../../../../lib/officesRepo";
@@ -20,8 +19,7 @@ function addSecurityHeaders(response) {
 export async function GET(req) {
   try {
     const cookieName = getSessionCookieName();
-    const cookieStore = await cookies();
-    const token = cookieStore.get(cookieName)?.value || "";
+    const token = req.cookies.get(cookieName)?.value || "";
     
     if (!token) {
       authDebug("session_check.missing_cookie", { cookieName });

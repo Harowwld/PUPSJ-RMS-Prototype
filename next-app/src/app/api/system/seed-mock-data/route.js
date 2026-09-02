@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
 import { getSessionCookieName, verifySessionToken } from "../../../../lib/jwt";
 import { populateSampleData } from "../../../../lib/seedRepo";
 import { getStaffById } from "../../../../lib/staffRepo";
@@ -9,8 +8,7 @@ import { queryOne } from "../../../../lib/postgres";
 export const runtime = "nodejs";
 
 export async function GET(req) {
-  const store = await cookies();
-  const token = store.get(getSessionCookieName())?.value || "";
+  const token = req.cookies.get(getSessionCookieName())?.value || "";
   let user = null;
 
   if (token) {

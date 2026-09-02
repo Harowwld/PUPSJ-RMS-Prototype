@@ -36,6 +36,7 @@ import CoursesTab from "./system-config/CoursesTab"
 import SectionsTab from "./system-config/SectionsTab"
 import BulkImportTab from "./system-config/BulkImportTab"
 import SecurityQuestionsTab from "./system-config/SecurityQuestionsTab"
+import RecognitionTemplatesTab from "./system-config/RecognitionTemplatesTab"
 
 export default function SystemConfigTab({
   showToast,
@@ -1028,6 +1029,17 @@ export default function SystemConfigTab({
                 >
                   <span className="whitespace-nowrap tracking-wide">Imports</span>
                 </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveSubTab("recognition-templates")}
+                  className={`flex items-center justify-center text-[15px] pt-[14px] pb-[10px] -mb-[0.5px] border-b-2 border-t-0 border-x-0 rounded-none cursor-pointer bg-transparent focus:outline-none transition-colors ${
+                    activeSubTab === "recognition-templates"
+                      ? "border-black text-black dark:border-zinc-50 dark:text-zinc-50 font-semibold"
+                      : "border-transparent text-[#8E8E93] hover:text-[#111111] dark:hover:text-zinc-200 font-normal"
+                  }`}
+                >
+                  PSA Recognition
+                </button>
               </div>
             </div>
 
@@ -1061,6 +1073,11 @@ export default function SystemConfigTab({
                 loadAll={loadAll}
                 handleExportDocTypes={handleExportDocTypes}
               />
+
+            </TabsContent>
+
+            <TabsContent value="recognition-templates" className="m-0 flex flex-col border-0 focus-visible:ring-0">
+              <RecognitionTemplatesTab showToast={showToast} />
             </TabsContent>
 
             <TabsContent
@@ -1191,6 +1208,4 @@ export default function SystemConfigTab({
     </TooltipProvider>
   )
 }
-
-
 

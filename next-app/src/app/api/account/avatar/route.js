@@ -2,7 +2,6 @@ import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
 import { getStaffById, updateStaff } from "../../../../lib/staffRepo";
 import { getSessionCookieName, verifySessionToken } from "../../../../lib/jwt";
 import { writeAuditLog } from "../../../../lib/auditLogRequest";
@@ -21,10 +20,8 @@ function getAvatarsDir() {
   return dir;
 }
 
-async function getSessionStaff() {
-  const cookieName = getSessionCookieName();
-  const store = await cookies();
-  const token = store.get(cookieName)?.value || "";
+async function getSessionStaff(req) {
+  const token = req.cookies.get(getSessionCookieName())?.value || "";
   if (!token) return null;
   const payload = await verifySessionToken(token);
   const userId = String(payload?.sub || "").trim();
@@ -35,7 +32,7 @@ async function getSessionStaff() {
 // GET serves the avatar image
 export async function GET(req) {
   try {
-    const staff = await getSessionStaff();
+    const staff = await getSessionStaff(req);
     if (!staff) {
       return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
     }
@@ -76,7 +73,7 @@ export async function GET(req) {
 // POST uploads a new avatar image
 export async function POST(req) {
   try {
-    const staff = await getSessionStaff();
+    const staff = await getSessionStaff(req);
     if (!staff) {
       return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
     }
@@ -148,7 +145,7 @@ export async function POST(req) {
 // DELETE removes current custom avatar
 export async function DELETE(req) {
   try {
-    const staff = await getSessionStaff();
+    const staff = await getSessionStaff(req);
     if (!staff) {
       return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
     }

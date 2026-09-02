@@ -5,8 +5,8 @@ import { writeGlobalAuditLog } from "@/lib/auditLogRequest";
 
 export const runtime = "nodejs";
 
-export async function GET() {
-  const session = await getStudentSession();
+export async function GET(req) {
+  const session = await getStudentSession(req);
   if (!session) return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   const [requests, documents] = await Promise.all([
     query(`SELECT dr.*, d.approval_status AS linked_document_status
@@ -28,7 +28,7 @@ export async function GET() {
 }
 
 export async function POST(req) {
-  const session = await getStudentSession();
+  const session = await getStudentSession(req);
   if (!session) return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   const body = await req.json().catch(() => null);
   const docType = String(body?.docType || "").trim();

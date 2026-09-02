@@ -1,4 +1,3 @@
-import { cookies } from "next/headers";
 import { createAuditLog, createGlobalAuditLog } from "./auditLogsRepo";
 import { getSessionCookieName, verifySessionToken } from "./jwt";
 import { getStaffById, getStaffDisplayName } from "./staffRepo";
@@ -9,10 +8,9 @@ function extractIp(req) {
   return forwarded.split(",")[0].trim() || realIp || null;
 }
 
-async function resolveActor() {
+async function resolveActor(req) {
   try {
-    const store = await cookies();
-    const token = store.get(getSessionCookieName())?.value || "";
+    const token = req?.cookies?.get?.(getSessionCookieName())?.value || "";
     if (!token) return { actor: "System", role: "System" };
 
     const payload = await verifySessionToken(token);
@@ -31,7 +29,7 @@ async function resolveActor() {
 
 export async function writeAuditLog(req, action, overrides = {}) {
   try {
-    const base = await resolveActor();
+    const base = await resolveActor(req);
     const userAgent = req?.headers?.get?.("user-agent") || "";
     const officeId = req?.headers?.get?.("x-office-id") || overrides.officeId || overrides.office_id || null;
 
@@ -65,7 +63,7 @@ export async function writeAuditLog(req, action, overrides = {}) {
 
 export async function writeGlobalAuditLog(req, action, overrides = {}) {
   try {
-    const base = await resolveActor();
+    const base = await resolveActor(req);
     const userAgent = req?.headers?.get?.("user-agent") || "";
 
     await createGlobalAuditLog({
@@ -84,4 +82,3 @@ export async function writeGlobalAuditLog(req, action, overrides = {}) {
     console.error("Global audit log write failed:", err?.message || err);
   }
 }
-

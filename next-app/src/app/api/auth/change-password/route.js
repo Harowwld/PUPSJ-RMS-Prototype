@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
 import {
   setStaffPasswordById,
   verifyStaffPasswordById,
@@ -17,8 +16,7 @@ export const runtime = "nodejs";
 export async function POST(req) {
   let session;
   try {
-    const store = await cookies();
-    const token = store.get(getSessionCookieName())?.value || "";
+    const token = req.cookies.get(getSessionCookieName())?.value || "";
     if (!token) {
       authDebug("password_change.missing_session");
       return NextResponse.json({ ok: false, error: "Not authenticated" }, { status: 401 });

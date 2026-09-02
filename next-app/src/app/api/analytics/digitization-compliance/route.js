@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
 
 import { getSessionCookieName, verifySessionToken } from "../../../../lib/jwt";
 import { getStaffById } from "../../../../lib/staffRepo";
@@ -7,10 +6,8 @@ import { getDigitizationComplianceSummary } from "../../../../lib/digitizationCo
 
 export const runtime = "nodejs";
 
-async function getSessionStaff() {
-  const cookieName = getSessionCookieName();
-  const store = await cookies();
-  const token = store.get(cookieName)?.value || "";
+async function getSessionStaff(req) {
+  const token = req.cookies.get(getSessionCookieName())?.value || "";
   if (!token) return null;
 
   const payload = await verifySessionToken(token);
@@ -33,9 +30,7 @@ function parseBool(raw) {
 
 export async function GET(req) {
   try {
-    const cookieName = getSessionCookieName();
-    const store = await cookies();
-    const token = store.get(cookieName)?.value || "";
+    const token = req.cookies.get(getSessionCookieName())?.value || "";
     if (!token) {
       return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
     }

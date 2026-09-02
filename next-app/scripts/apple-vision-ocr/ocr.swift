@@ -3,8 +3,28 @@ import Vision
 import PDFKit
 import AppKit
 
-func runVisionOcr(on cgImage: CGImage) -> String {
-    var recognizedText = ""
+struct OcrObservation: Codable {
+    let text: String
+    let x: Double
+    let y: Double
+    let width: Double
+    let height: Double
+}
+
+struct OcrPage: Codable {
+    let pageIndex: Int
+    let width: Int
+    let height: Int
+    let observations: [OcrObservation]
+}
+
+struct OcrPayload: Codable {
+    let pages: [OcrPage]
+    let text: String
+}
+
+func runVisionOcr(on cgImage: CGImage, pageIndex: Int) -> OcrPage {
+    var observations = [OcrObservation]()
     let semaphore = DispatchSemaphore(value: 0)
     
     let request = VNRecognizeTextRequest { request, error in
@@ -15,13 +35,20 @@ func runVisionOcr(on cgImage: CGImage) -> String {
         }
         
         guard let results = request.results as? [VNRecognizedTextObservation] else { return }
-        var lines = [String]()
         for result in results {
             if let candidate = result.topCandidates(1).first {
-                lines.append(candidate.string)
+                // Vision uses a normalized bottom-left origin. The web client
+                // uses a normalized top-left origin, so convert Y here.
+                let box = result.boundingBox
+                observations.append(OcrObservation(
+                    text: candidate.string,
+                    x: Double(box.origin.x),
+                    y: Double(1.0 - box.origin.y - box.height),
+                    width: Double(box.width),
+                    height: Double(box.height)
+                ))
             }
         }
-        recognizedText = lines.joined(separator: "\n")
     }
     
     // High accuracy configuration
@@ -36,7 +63,12 @@ func runVisionOcr(on cgImage: CGImage) -> String {
         print("Vision Handler Error: \(error.localizedDescription)")
     }
     
-    return recognizedText
+    return OcrPage(
+        pageIndex: pageIndex,
+        width: cgImage.width,
+        height: cgImage.height,
+        observations: observations
+    )
 }
 
 // ─── Main Execution Entry ───
@@ -61,7 +93,7 @@ if fileURL.pathExtension.lowercased() == "pdf" {
         exit(1)
     }
     
-    var fullText = ""
+    var pages = [OcrPage]()
     for pageIndex in 0..<pdf.pageCount {
         guard let page = pdf.page(at: pageIndex) else { continue }
         
@@ -81,10 +113,12 @@ if fileURL.pathExtension.lowercased() == "pdf" {
         img.unlockFocus()
         
         guard let cgImg = img.cgImage(forProposedRect: nil, context: nil, hints: nil) else { continue }
-        let pageText = runVisionOcr(on: cgImg)
-        fullText += pageText + "\n"
+        pages.append(runVisionOcr(on: cgImg, pageIndex: pageIndex))
     }
-    print(fullText.trimmingCharacters(in: .whitespacesAndNewlines))
+    let fullText = pages.flatMap { $0.observations.map(\.text) }.joined(separator: "\n")
+    let payload = OcrPayload(pages: pages, text: fullText.trimmingCharacters(in: .whitespacesAndNewlines))
+    let data = try! JSONEncoder().encode(payload)
+    print(String(data: data, encoding: .utf8)!)
     
 } else {
     // Handle standard Image (PNG/JPG/etc.)
@@ -93,6 +127,8 @@ if fileURL.pathExtension.lowercased() == "pdf" {
         print("Error: Could not load image file")
         exit(1)
     }
-    let text = runVisionOcr(on: cgImg)
-    print(text.trimmingCharacters(in: .whitespacesAndNewlines))
+    let page = runVisionOcr(on: cgImg, pageIndex: 0)
+    let payload = OcrPayload(pages: [page], text: page.observations.map(\.text).joined(separator: "\n").trimmingCharacters(in: .whitespacesAndNewlines))
+    let data = try! JSONEncoder().encode(payload)
+    print(String(data: data, encoding: .utf8)!)
 }

@@ -6,7 +6,7 @@ import { writeGlobalAuditLog } from "@/lib/auditLogRequest";
 export const runtime = "nodejs";
 
 export async function GET(req, { params }) {
-  const session = await requireSuperAdminSession();
+  const session = await requireSuperAdminSession(req);
   if (!session) {
     return NextResponse.json({ ok: false, error: "Forbidden" }, { status: 403 });
   }
@@ -23,7 +23,7 @@ export async function GET(req, { params }) {
 }
 
 export async function PUT(req, { params }) {
-  const session = await requireSuperAdminSession();
+  const session = await requireSuperAdminSession(req);
   if (!session) {
     return NextResponse.json({ ok: false, error: "Forbidden" }, { status: 403 });
   }

@@ -5,7 +5,7 @@ import { requireOfficeModule } from "@/lib/moduleAccess";
 export const runtime = "nodejs";
 
 export async function GET(req) {
-  const access = await requireOfficeModule("osas_monitoring", { officeId: "osas" });
+  const access = await requireOfficeModule("osas_monitoring", { officeId: "osas" }, req);
   if (!access) return NextResponse.json({ ok: false, error: "Forbidden" }, { status: 403 });
   const { searchParams } = new URL(req.url);
   const status = String(searchParams.get("status") || "").trim();

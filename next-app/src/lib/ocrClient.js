@@ -856,6 +856,39 @@ export function splitNameComponents(fullName) {
   return { firstName, middleName, lastName };
 }
 
+function regionIntersection(observation, region) {
+  const left = Math.max(Number(observation?.x) || 0, Number(region?.x) || 0);
+  const top = Math.max(Number(observation?.y) || 0, Number(region?.y) || 0);
+  const right = Math.min((Number(observation?.x) || 0) + (Number(observation?.width) || 0), (Number(region?.x) || 0) + (Number(region?.width) || 0));
+  const bottom = Math.min((Number(observation?.y) || 0) + (Number(observation?.height) || 0), (Number(region?.y) || 0) + (Number(region?.height) || 0));
+  return Math.max(0, right - left) * Math.max(0, bottom - top);
+}
+
+export function extractNameFromCoordinates(pages, template) {
+  const pageIndex = Number(template?.page_index ?? template?.pageIndex ?? 0);
+  const page = Array.isArray(pages) ? pages.find((item) => Number(item?.pageIndex) === pageIndex) : null;
+  if (!page || !template?.regions) return null;
+
+  const regions = {};
+  for (const key of ["firstName", "middleName", "lastName"]) {
+    const region = template.regions[key];
+    const observations = (Array.isArray(page.observations) ? page.observations : [])
+      .filter((observation) => regionIntersection(observation, region) > 0)
+      .sort((a, b) => (Number(a.y) - Number(b.y)) || (Number(a.x) - Number(b.x)));
+    const text = observations.map((observation) => String(observation.text || "").trim()).filter(Boolean).join(" ").replace(/\s+/g, " ").trim();
+    regions[key] = { ...region, text, observations };
+  }
+
+  const first = regions.firstName.text;
+  const middle = regions.middleName.text;
+  const last = regions.lastName.text;
+  return {
+    pageIndex,
+    regions,
+    extractedName: first && last ? formatToLNFnMi(`${last}, ${first}${middle ? ` ${middle}` : ""}`) : "",
+  };
+}
+
 
 // ─── 6. STUDENT MATCHING ────────────────────────────────────────────────────
 
@@ -1127,6 +1160,7 @@ export async function scanFileForSuggestion({ file, students, docTypes, rotation
   // ocrEngine is returned by the server so detectName() picks the correct layout
   // strategy without sniffing navigator.userAgent (client OS !== server OS).
   let ocrEngine = "unknown";
+  let ocrPages = [];
 
   try {
     const formPayload = new FormData();
@@ -1138,6 +1172,7 @@ export async function scanFileForSuggestion({ file, students, docTypes, rotation
     const data = await res.json().catch(() => null);
     if (res.ok && data?.ok && typeof data?.text === "string") {
       rawText = data.text;
+      ocrPages = Array.isArray(data.pages) ? data.pages : [];
       usedNative = true;
       ocrEngine = data?.engine ?? "unknown";
       console.log(`[OCR] Platform-native offline OCR complete (engine: ${ocrEngine})`);
@@ -1169,6 +1204,18 @@ export async function scanFileForSuggestion({ file, students, docTypes, rotation
   // ── Detect doc type ──
   const docType = detectDocType(rawText, docTypes);
 
+  let coordinateRecognition = null;
+  if (docType) {
+    try {
+      const templateResponse = await fetch(`/api/recognition/templates?documentType=${encodeURIComponent(docType)}`, { cache: "no-store" });
+      const templateData = await templateResponse.json().catch(() => null);
+      const template = templateResponse.ok && templateData?.ok ? templateData.data?.[0] : null;
+      if (template) coordinateRecognition = extractNameFromCoordinates(ocrPages, template);
+    } catch (error) {
+      console.warn("[OCR] Coordinate template lookup failed:", error);
+    }
+  }
+
   // ── Detect student number ──
   const extractedStudentNo = detectStudentNo(rawText);
   let matchedStudent = null;
@@ -1187,17 +1234,37 @@ export async function scanFileForSuggestion({ file, students, docTypes, rotation
   // ── Load NLP engine if available ──
   const nlp = await loadNlp().catch(() => null);
 
-  const rawExtracted = matchedStudent ? "" : detectName(lines, { engine: ocrEngine, nlp });
+  const rawExtracted = matchedStudent
+    ? ""
+    : coordinateRecognition?.extractedName || detectName(lines, { engine: ocrEngine, nlp });
 
   // ── Detect name (fallback when student number did not match) ──
   if (!matchedStudent) {
-    if (rawExtracted && Array.isArray(students)) {
+    if (coordinateRecognition?.extractedName) {
+      try {
+        const matchResponse = await fetch("/api/recognition/match", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ extractedName: coordinateRecognition.extractedName }),
+        });
+        const matchData = await matchResponse.json().catch(() => null);
+        if (matchResponse.ok && matchData?.ok) {
+          nameMatchesByName = (matchData.data || []).map((candidate) => ({
+            ...candidate,
+            studentNo: candidate.studentNo || candidate.student_no,
+            student_no: candidate.studentNo || candidate.student_no,
+          }));
+        }
+      } catch (error) {
+        console.warn("[OCR] Database name matching failed:", error);
+      }
+    } else if (rawExtracted && Array.isArray(students)) {
       nameMatchesByName = findStudentsByOcrName(rawExtracted, students);
     }
     if ((!nameMatchesByName || nameMatchesByName.length === 0) && Array.isArray(students)) {
       nameMatchesByName = findStudentsInText(rawText, students);
     }
-    matchedStudent = nameMatchesByName.length === 1 ? nameMatchesByName[0] : null;
+    matchedStudent = coordinateRecognition?.extractedName ? null : nameMatchesByName.length === 1 ? nameMatchesByName[0] : null;
   }
 
   // ── Build final suggested name ──
@@ -1218,8 +1285,9 @@ export async function scanFileForSuggestion({ file, students, docTypes, rotation
     docType,
     matchedStudent,
     nameMatchesByName,
+    requiresConfirmation: Boolean(coordinateRecognition?.extractedName && nameMatchesByName.length > 0),
+    coordinateRecognition,
     ocrTextPreview: rawText.slice(0, 2000),
     ocrLinesPreview: lines.slice(0, 18),
   };
 }
-

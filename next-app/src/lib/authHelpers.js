@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { getSessionCookieName, verifySessionToken } from "./jwt";
-import { cookies } from "next/headers";
 import { getStaffById } from "./staffRepo";
 import { logUnauthorizedAccess, logForbiddenAccess, logInvalidSession } from "./securityAuditLogger";
 
@@ -11,10 +10,7 @@ import { logUnauthorizedAccess, logForbiddenAccess, logInvalidSession } from "./
  */
 export async function validateSession(req) {
   try {
-    const cookieName = getSessionCookieName();
-    const cookieStore = await cookies();
-    const store = cookieStore instanceof Promise ? await cookieStore : cookieStore;
-    const token = store.get(cookieName)?.value || "";
+    const token = extractTokenFromHeaders(req) || "";
     
     if (!token) {
       await logUnauthorizedAccess(req, "Missing session token");
@@ -179,9 +175,8 @@ export function extractTokenFromHeaders(req) {
  * Retrieves the full name of the currently authenticated user from the session cookie.
  * @returns {Promise<string>} The user's full name or an empty string if not authenticated.
  */
-export async function getSessionActorName() {
-  const store = await cookies();
-  const token = store.get(getSessionCookieName())?.value || "";
+export async function getSessionActorName(req) {
+  const token = extractTokenFromHeaders(req) || "";
   if (!token) return "";
   try {
     const payload = await verifySessionToken(token);

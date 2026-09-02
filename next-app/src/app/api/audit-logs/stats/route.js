@@ -12,8 +12,8 @@ export async function GET(req) {
     let actor = "";
     
     if (mine) {
-      actor = await getSessionActorName();
-      const studentSession = await getStudentSession();
+      actor = await getSessionActorName(req);
+      const studentSession = await getStudentSession(req);
       if (studentSession?.studentNo) actor = studentSession.studentNo;
       if (!actor) {
         return NextResponse.json({ ok: true, data: { totalLogs: 0, logsToday: 0, authEvents: 0, systemChanges: 0, criticalEvents: 0 } });

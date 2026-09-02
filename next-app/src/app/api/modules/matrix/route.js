@@ -6,7 +6,7 @@ export const runtime = "nodejs";
 
 export async function GET(req) {
   try {
-    if (!await requireSuperAdminSession()) {
+    if (!await requireSuperAdminSession(req)) {
       return NextResponse.json({ ok: false, error: "Forbidden" }, { status: 403 });
     }
     const [offices, modules, rows] = await Promise.all([

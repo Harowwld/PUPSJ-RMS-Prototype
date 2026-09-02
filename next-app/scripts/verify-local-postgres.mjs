@@ -9,7 +9,7 @@ const client = new Client({ connectionString: process.env.DATABASE_URL });
 const requiredTables = [
   "schema_migrations", "offices", "modules", "office_modules", "staff", "students",
   "student_accounts", "documents", "document_requests", "event_proposals",
-  "transaction_updates", "global_audit_logs",
+  "transaction_updates", "global_audit_logs", "recognition_templates",
 ];
 
 try {

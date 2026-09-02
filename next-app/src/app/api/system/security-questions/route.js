@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
 import { dbAll, dbRun } from "@/lib/postgresCompat";
 import { writeAuditLog } from "@/lib/auditLogRequest";
 import { verifySessionToken, getSessionCookieName } from "@/lib/jwt";
@@ -25,8 +24,7 @@ export async function GET(req) {
 
 export async function PUT(req) {
   try {
-    const store = await cookies();
-    const token = store.get(getSessionCookieName())?.value;
+    const token = req.cookies.get(getSessionCookieName())?.value;
     if (!token) {
       return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
     }

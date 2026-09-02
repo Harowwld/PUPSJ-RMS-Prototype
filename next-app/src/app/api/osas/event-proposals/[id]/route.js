@@ -9,7 +9,7 @@ export const runtime = "nodejs";
 const validStatuses = new Set(["Submitted", "Under Review", "Needs Revision", "Approved", "Declined"]);
 
 export async function GET(req, ctx) {
-  const access = await requireOfficeModule("osas_monitoring", { officeId: "osas" });
+  const access = await requireOfficeModule("osas_monitoring", { officeId: "osas" }, req);
   if (!access) return NextResponse.json({ ok: false, error: "Forbidden" }, { status: 403 });
   const { id } = await ctx.params;
   const proposal = await queryOne("SELECT * FROM event_proposals WHERE id = $1 AND office_id = 'osas'", [id]);
@@ -31,7 +31,7 @@ export async function GET(req, ctx) {
 }
 
 export async function PATCH(req, ctx) {
-  const access = await requireOfficeModule("osas_monitoring", { officeId: "osas" });
+  const access = await requireOfficeModule("osas_monitoring", { officeId: "osas" }, req);
   if (!access) return NextResponse.json({ ok: false, error: "Forbidden" }, { status: 403 });
   const { id } = await ctx.params;
   const body = await req.json().catch(() => null);

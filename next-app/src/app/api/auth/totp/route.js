@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
 import { getSessionCookieName, verifySessionToken } from "../../../../lib/jwt";
 import { getStaffById } from "../../../../lib/staffRepo";
 import { dbGet, dbRun } from "../../../../lib/sqlite";
@@ -22,9 +21,7 @@ import { writeAuditLog } from "../../../../lib/auditLogRequest";
 export const runtime = "nodejs";
 
 async function getAuthenticatedUser(req) {
-  const cookieStore = await cookies();
-  const store = cookieStore instanceof Promise ? await cookieStore : cookieStore;
-  const token = store.get(getSessionCookieName())?.value || "";
+  const token = req.cookies.get(getSessionCookieName())?.value || "";
   if (!token) return null;
   try {
     const payload = await verifySessionToken(token);

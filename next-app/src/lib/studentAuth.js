@@ -1,5 +1,4 @@
 import crypto from "node:crypto";
-import { cookies } from "next/headers";
 import { getSessionCookieName, signSessionToken, verifySessionToken } from "./jwt";
 import { query, queryOne } from "./postgres";
 
@@ -54,9 +53,8 @@ export async function createStudentSession(student) {
   return signSessionToken({ sub: student.student_no, role: "Student", principal_type: "student", student_no: student.student_no, username: student.student_no });
 }
 
-export async function getStudentSession() {
-  const store = await cookies();
-  const token = store.get(getSessionCookieName())?.value || "";
+export async function getStudentSession(req) {
+  const token = req?.cookies?.get?.(getSessionCookieName())?.value || "";
   if (!token) return null;
   try {
     const payload = await verifySessionToken(token);

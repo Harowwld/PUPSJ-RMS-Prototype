@@ -14,8 +14,8 @@ function uploadsDir() {
   return dir;
 }
 
-export async function GET() {
-  const session = await getStudentSession();
+export async function GET(req) {
+  const session = await getStudentSession(req);
   if (!session) return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   const proposals = await query("SELECT * FROM event_proposals WHERE student_no = $1 ORDER BY created_at DESC", [session.studentNo]);
   const ids = proposals.map((item) => item.id);
@@ -32,7 +32,7 @@ export async function GET() {
 }
 
 export async function POST(req) {
-  const session = await getStudentSession();
+  const session = await getStudentSession(req);
   if (!session) return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   const form = await req.formData().catch(() => null);
   const title = String(form?.get("title") || "").trim();
