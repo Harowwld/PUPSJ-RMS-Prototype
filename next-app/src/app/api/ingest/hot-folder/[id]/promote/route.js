@@ -12,6 +12,7 @@ import {
   markIngestPromoted,
 } from "@/lib/ingestQueueRepo";
 import { HOT_FOLDER_ALLOWED_MIME_TYPES, isAllowedIngestExtension } from "@/lib/ingestFileTypes";
+import { isUniqueViolation } from "@/lib/dbErrors";
 
 export const runtime = "nodejs";
 
@@ -84,7 +85,7 @@ export async function POST(req, ctx) {
       });
     } catch (e) {
       const msg = String(e?.message || "Failed to create student");
-      return NextResponse.json({ ok: false, error: msg }, { status: msg.includes("exists") ? 409 : 400 });
+      return NextResponse.json({ ok: false, error: isUniqueViolation(e) ? "Student already exists" : msg }, { status: isUniqueViolation(e) ? 409 : 400 });
     }
   }
 
@@ -101,6 +102,7 @@ export async function POST(req, ctx) {
   fs.copyFileSync(sourceAbsPath, targetAbsPath);
 
   const doc = await createDocument({
+    officeId: user.office_id || "registrar",
     studentNo,
     studentName: studentName || null,
     docType,

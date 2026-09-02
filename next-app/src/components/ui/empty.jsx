@@ -141,7 +141,7 @@ function Empty({
           padding: 0 !important;
           line-height: 1.3 !important;
           letter-spacing: -0.01em !important;
-          font-family: var(--font-sans), system-ui, -apple-system, sans-serif !important;
+          font-family: "Inter" !important;
         }
 
         .dark [data-slot="empty-title"] {
@@ -158,7 +158,7 @@ function Empty({
           line-height: 1.5 !important;
           margin: 0 auto !important;
           padding: 0 !important;
-          font-family: var(--font-sans), system-ui, -apple-system, sans-serif !important;
+          font-family: "Inter" !important;
         }
 
         /* Style CTA buttons to be minimal text links if they exist */

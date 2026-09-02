@@ -689,11 +689,11 @@ export default function DigitalRecordsReviewTab({
                       <div className="grid grid-cols-2 gap-2">
                         <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg text-white">
                           <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Total Pending</span>
-                          <span className="text-lg font-black font-mono">{stats.pending}</span>
+                          <span className="text-lg font-black font-sans">{stats.pending}</span>
                         </div>
                         <div className="bg-[#b91c1c]/40 backdrop-blur-sm p-2.5 rounded-lg text-white">
                           <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">SLA Warnings</span>
-                          <span className="text-lg font-black font-mono">{stats.slaBreachCount}</span>
+                          <span className="text-lg font-black font-sans">{stats.slaBreachCount}</span>
                         </div>
                       </div>
 
@@ -713,7 +713,7 @@ export default function DigitalRecordsReviewTab({
                             activeKpiDetails.pendingBreakdown && activeKpiDetails.pendingBreakdown.map(({ type, count }) => (
                               <div key={type} className="flex justify-between items-center text-[11px] py-1 border-b border-white/10 text-white/95">
                                 <span className="truncate max-w-[150px]" title={type}>{type}</span>
-                                <span className="font-mono font-bold">{count}</span>
+                                <span className="font-sans font-bold">{count}</span>
                               </div>
                             ))
                           )}
@@ -764,11 +764,11 @@ export default function DigitalRecordsReviewTab({
                       <div className="grid grid-cols-2 gap-2">
                         <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg text-white">
                           <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Approved Today</span>
-                          <span className="text-lg font-black font-mono">{stats.approvedToday}</span>
+                          <span className="text-lg font-black font-sans">{stats.approvedToday}</span>
                         </div>
                         <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg text-white">
                           <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Total Approved</span>
-                          <span className="text-lg font-black font-mono">{stats.totalApproved}</span>
+                          <span className="text-lg font-black font-sans">{stats.totalApproved}</span>
                         </div>
                       </div>
 
@@ -781,7 +781,7 @@ export default function DigitalRecordsReviewTab({
                             activeKpiDetails.approvedBreakdown && activeKpiDetails.approvedBreakdown.map(({ type, count }) => (
                               <div key={type} className="flex justify-between items-center text-[11px] py-1 border-b border-white/10 text-white/95">
                                 <span className="truncate max-w-[150px]" title={type}>{type}</span>
-                                <span className="font-mono font-bold">{count}</span>
+                                <span className="font-sans font-bold">{count}</span>
                               </div>
                             ))
                           )}
@@ -832,11 +832,11 @@ export default function DigitalRecordsReviewTab({
                       <div className="grid grid-cols-2 gap-2">
                         <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg text-white">
                           <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Returned Today</span>
-                          <span className="text-lg font-black font-mono">{stats.declinedToday}</span>
+                          <span className="text-lg font-black font-sans">{stats.declinedToday}</span>
                         </div>
                         <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg text-white">
                           <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Total Returned</span>
-                          <span className="text-lg font-black font-mono">{stats.totalDeclined}</span>
+                          <span className="text-lg font-black font-sans">{stats.totalDeclined}</span>
                         </div>
                       </div>
 
@@ -847,7 +847,7 @@ export default function DigitalRecordsReviewTab({
                             {activeKpiDetails.declineReasons.map(({ reason, count }) => (
                               <div key={reason} className="flex justify-between items-center text-[11px] py-0.5 text-white/90">
                                 <span className="truncate max-w-[150px] font-medium" title={reason}>"{reason}"</span>
-                                <span className="font-mono font-bold">{count}</span>
+                                <span className="font-sans font-bold">{count}</span>
                               </div>
                             ))}
                           </div>
@@ -863,7 +863,7 @@ export default function DigitalRecordsReviewTab({
                             activeKpiDetails.declinedBreakdown && activeKpiDetails.declinedBreakdown.map(({ type, count }) => (
                               <div key={type} className="flex justify-between items-center text-[11px] py-1 border-b border-white/10 text-white/95">
                                 <span className="truncate max-w-[150px]" title={type}>{type}</span>
-                                <span className="font-mono font-bold">{count}</span>
+                                <span className="font-sans font-bold">{count}</span>
                               </div>
                             ))
                           )}

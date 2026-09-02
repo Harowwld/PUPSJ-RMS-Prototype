@@ -40,6 +40,7 @@ export default function RecognitionTemplatesTab({ showToast }) {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const imageRef = useRef(null)
+  const sampleInputRef = useRef(null)
 
   const load = async () => {
     setLoading(true)
@@ -109,6 +110,10 @@ export default function RecognitionTemplatesTab({ showToast }) {
     } catch (error) {
       showToast?.({ title: "Sample OCR failed", description: error.message }, true)
     }
+  }
+
+  function chooseSampleFile() {
+    sampleInputRef.current?.click()
   }
 
   async function handlePageChange(value) {
@@ -187,17 +192,37 @@ export default function RecognitionTemplatesTab({ showToast }) {
             <option value="">Select document type</option>
             {docTypes.map((type) => <option key={type.id} value={type.id}>{type.name}</option>)}
           </Select>
+          <div>
+            <label className="block text-xs font-semibold uppercase text-gray-500">Fields to OCR</label>
+            <p className="mt-1 text-xs text-gray-500">Click a field, then drag over its printed value on the page.</p>
+          </div>
+          <div className="grid grid-cols-1 gap-2">
+            {FIELDS.map(([key, label]) => {
+              const plotted = regions[key].width > 0 && regions[key].height > 0
+              return <Button key={key} type="button" variant={activeField === key ? "default" : "outline"} onClick={() => setActiveField(key)} className="justify-between" style={activeField === key ? { backgroundColor: COLORS[key] } : undefined}>
+                <span>{label}</span>
+                <span className="text-xs font-normal">{plotted ? "Set" : "Not set"}</span>
+              </Button>
+            })}
+          </div>
+          <div className="rounded border border-gray-200 bg-white p-3 text-xs text-gray-600">
+            <span className="font-semibold text-gray-900">Selected field:</span> {FIELDS.find(([key]) => key === activeField)?.[1]}
+          </div>
           <label className="block text-xs font-semibold uppercase text-gray-500">Template name</label>
           <input className="h-10 w-full rounded border border-gray-300 bg-white px-3 text-sm" value={templateName} onChange={(event) => setTemplateName(event.target.value)} />
           <label className="block text-xs font-semibold uppercase text-gray-500">Version</label>
           <input type="number" min="1" className="h-10 w-full rounded border border-gray-300 bg-white px-3 text-sm" value={version} onChange={(event) => setVersion(event.target.value)} />
           <label className="block text-xs font-semibold uppercase text-gray-500">Sample PSA file</label>
-          <input type="file" accept="application/pdf,image/*" onChange={(event) => handleSample(event.target.files?.[0])} className="w-full text-xs" />
-          {sampleFile && <p className="truncate text-xs text-gray-500">{sampleFile.name}</p>}
+          <input ref={sampleInputRef} type="file" accept="application/pdf,image/*" onChange={(event) => handleSample(event.target.files?.[0])} className="sr-only" />
+          <Button type="button" variant="outline" className="w-full justify-center border-pup-maroon text-pup-maroon" onClick={chooseSampleFile}>
+            <i className="ph-bold ph-upload-simple mr-2" />
+            {sampleFile ? "Replace sample file" : "Load PSA PDF or image"}
+          </Button>
+          {sampleFile ? <p className="truncate text-xs text-gray-500">Loaded: {sampleFile.name}</p> : <p className="text-xs text-gray-500">Choose a representative scan before plotting.</p>}
           {ocrPages.length > 1 && <><label className="block text-xs font-semibold uppercase text-gray-500">Page</label><Select value={pageIndex} onChange={(event) => handlePageChange(event.target.value)}>{ocrPages.map((page) => <option key={page.pageIndex} value={page.pageIndex}>Page {Number(page.pageIndex) + 1}</option>)}</Select></>}
-          <label className="block text-xs font-semibold uppercase text-gray-500">Field to plot</label>
-          <div className="grid grid-cols-1 gap-2">{FIELDS.map(([key, label]) => <Button key={key} type="button" variant={activeField === key ? "default" : "outline"} onClick={() => setActiveField(key)} className="justify-start" style={activeField === key ? { backgroundColor: COLORS[key] } : undefined}>{label}</Button>)}</div>
-          <Button className="w-full bg-pup-maroon text-white" onClick={saveTemplate} disabled={saving || loading}>{saving ? "Saving..." : "Save template"}</Button>
+          <div className="border-t border-gray-200 pt-4">
+            <Button className="w-full bg-pup-maroon text-white" onClick={saveTemplate} disabled={saving || loading}>{saving ? "Saving..." : "Save template"}</Button>
+          </div>
         </div>
 
         <div className="min-w-0 rounded-brand border border-gray-200 bg-gray-100 p-4 dark:border-white/10 dark:bg-zinc-900">
@@ -208,7 +233,15 @@ export default function RecognitionTemplatesTab({ showToast }) {
               {(currentPage?.observations || []).map((observation, index) => <div key={`${observation.text}-${index}`} className="pointer-events-none absolute border border-emerald-500/70 bg-emerald-400/10" style={{ left: `${observation.x * 100}%`, top: `${observation.y * 100}%`, width: `${observation.width * 100}%`, height: `${observation.height * 100}%` }} />)}
               {FIELDS.map(([key, label]) => { const region = regions[key]; return region.width > 0 && region.height > 0 ? <div key={key} className="pointer-events-none absolute border-2" style={{ left: `${region.x * 100}%`, top: `${region.y * 100}%`, width: `${region.width * 100}%`, height: `${region.height * 100}%`, borderColor: COLORS[key] }}><span className="absolute -top-5 left-0 bg-white px-1 text-[10px] font-semibold" style={{ color: COLORS[key] }}>{label}</span></div> : null })}
             </div>
-          </div> : <div className="flex h-[520px] items-center justify-center text-center text-sm text-gray-500">Load a representative PSA PDF or image to begin plotting.</div>}
+          </div> : <div className="flex h-[520px] flex-col items-center justify-center gap-3 text-center text-sm text-gray-500">
+            <i className="ph-duotone ph-file-arrow-up text-4xl text-pup-maroon" />
+            <p>Load a representative PSA PDF or image to begin plotting.</p>
+            <Button type="button" className="bg-pup-maroon text-white" onClick={chooseSampleFile}>
+              <i className="ph-bold ph-upload-simple mr-2" />
+              Load PSA file
+            </Button>
+            {!documentTypeId && <p className="text-xs text-gray-400">You can load the file now; select the document type before saving.</p>}
+          </div>}
         </div>
 
         <div className="space-y-3 rounded-brand border border-gray-200 bg-white p-4 dark:border-white/10 dark:bg-card">

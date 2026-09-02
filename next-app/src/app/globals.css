@@ -6,7 +6,7 @@
 @theme {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --font-sans: "Inter";
   --radius-brand: var(--radius);
 
   --color-pup-maroon: #ad2f2f;
@@ -14,7 +14,7 @@
   --color-pup-gray: #f5f5f5;
   --color-pup-text: #1f1f1f;
   --color-pup-border: #d1d5db;
-  --font-heading: var(--font-inter), ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --font-heading: "Inter";
   
   /* Font size scale overrides */
   --font-size-micro: 10px;
@@ -176,6 +176,14 @@
 
   html {
     @apply font-sans;
+  }
+
+  /* Inter is the only application typeface. Keep icon font faces on their
+     dedicated elements so Phosphor icons continue to render correctly. */
+  *:not(i):not([class*="ph-"]),
+  *:not(i):not([class*="ph-"])::before,
+  *:not(i):not([class*="ph-"])::after {
+    font-family: "Inter" !important;
   }
 
 
@@ -1095,6 +1103,5 @@ i[data-lucide-translated="true"]::after {
     background-position: -200% 0;
   }
 }
-
 
 

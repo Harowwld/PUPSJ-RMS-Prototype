@@ -1,6 +1,11 @@
 import fs from "node:fs";
 import path from "node:path";
 import Database from "better-sqlite3";
+import {
+  dbAll as postgresDbAll,
+  dbGet as postgresDbGet,
+  dbRun as postgresDbRun,
+} from "./postgresCompat.js";
 
 // Multi-office architecture: re-export system and office DB utilities
 // so consumers can import from the familiar "./sqlite" path if needed.
@@ -279,27 +284,15 @@ export async function getDb() {
 }
 
 export async function dbAll(sql, params) {
-  const database = await getDb();
-  const normalized = params === undefined || params === null ? [] : Array.isArray(params) ? params : [params];
-  return database.prepare(sql).all(normalized);
+  return postgresDbAll(sql, params);
 }
 
 export async function dbGet(sql, params) {
-  const database = await getDb();
-  const normalized = params === undefined || params === null ? [] : Array.isArray(params) ? params : [params];
-  const row = database.prepare(sql).get(normalized);
-  return row || null;
+  return postgresDbGet(sql, params);
 }
 
 export async function dbRun(sql, params) {
-  const database = await getDb();
-  const normalized = params === undefined || params === null ? [] : Array.isArray(params) ? params : [params];
-  const stmt = database.prepare(sql);
-  const result = stmt.run(normalized);
-  return {
-    changes: result.changes,
-    lastInsertRowid: result.lastInsertRowid,
-  };
+  return postgresDbRun(sql, params);
 }
 
 export function reloadDb() {
@@ -442,4 +435,3 @@ function ensureBirthCertificateDocType() {
     console.error("[DB] ensureBirthCertificateDocType:", e);
   }
 }
-

@@ -414,7 +414,7 @@ export default function Header({ authUser, onLogout, children }) {
                                 <span className={cn("text-xs font-semibold text-left", isFocused ? "text-pup-maroon dark:text-zinc-50" : "text-gray-900 dark:text-zinc-100")}>
                                   {student.name}
                                 </span>
-                                <span className="text-[10px] text-gray-400 dark:text-zinc-500 font-mono text-right">
+                                <span className="text-[10px] text-gray-400 dark:text-zinc-500 font-sans text-right">
                                   {studentNo}
                                 </span>
                               </div>

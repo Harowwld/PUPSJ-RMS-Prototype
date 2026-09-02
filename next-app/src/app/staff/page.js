@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import Sidebar from "@/components/shared/Sidebar";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/sonner";
 import { StaffGuard } from "@/components/shared/AuthGuard";
 import RecordsArchiveTab from "@/components/staff/RecordsArchiveTab";
 import StorageExplorerTab from "@/components/staff/StorageExplorerTab";
@@ -1169,6 +1169,7 @@ function StaffPageContent() {
     }
 
     const studentName = String(newRec.name || "").trim().toUpperCase();
+    let uploadFilename = String(uploadedFile.name || "document.pdf");
 
     // RENAME FILE for meaningful identification: [STUDENT_NO]_[DOC_TYPE].[EXT]
     try {
@@ -1178,16 +1179,13 @@ function StaffPageContent() {
       const cleanDocType = docType.replace(/[^a-zA-Z0-9-]/g, "_") || "DOC";
       const extension = "pdf";
       const newFileName = `${cleanStudentNo}_${cleanDocType}.${extension}`;
-      
-      // Use the File constructor to create a renamed blob
-      fileToUpload = new File([fileToUpload], newFileName, { type: "application/pdf" });
+      uploadFilename = newFileName;
     } catch (e) {
       console.error("[Rename Error]", e);
-      // Fallback to original file if renaming fails for some reason
     }
 
     const payload = new FormData();
-    payload.append("file", fileToUpload);
+    payload.append("file", fileToUpload, uploadFilename);
 
     if (uploadStudentIsExisting) {
       payload.append("studentNo", String(newRec.studentNo).trim());

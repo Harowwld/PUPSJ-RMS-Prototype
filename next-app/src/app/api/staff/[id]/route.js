@@ -3,6 +3,7 @@ import { archiveStaff, restoreStaff, getStaffById, updateStaff } from "../../../
 import { writeAuditLog } from "../../../../lib/auditLogRequest";
 import { getSessionCookieName, verifySessionToken } from "../../../../lib/jwt";
 import { requireTOTP, extractTOTPToken } from "../../../../lib/totpMiddleware";
+import { isUniqueViolation } from "../../../../lib/dbErrors";
 
 export const runtime = "nodejs";
 
@@ -145,7 +146,7 @@ export async function PATCH(req, ctx) {
     return NextResponse.json({ ok: true, data: row });
   } catch (e) {
     const msg = String(e?.message || "");
-    if (msg.includes("UNIQUE") || msg.includes("PRIMARY")) {
+    if (isUniqueViolation(e)) {
       return NextResponse.json(
         { ok: false, error: "Staff ID already exists" },
         { status: 409 }

@@ -135,11 +135,11 @@ export default function StatCards({ isLoading, logStats }) {
                     <div className="grid grid-cols-2 gap-2 text-white">
                       <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg text-white">
                         <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Total Logs</span>
-                        <span className="text-lg font-black font-mono">{(logStats?.totalLogs || 0).toLocaleString()}</span>
+                        <span className="text-lg font-black font-sans">{(logStats?.totalLogs || 0).toLocaleString()}</span>
                       </div>
                       <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg text-white">
                         <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Active Actors</span>
-                        <span className="text-lg font-black font-mono">{(logStats?.activeActorsCount || 3).toLocaleString()}</span>
+                        <span className="text-lg font-black font-sans">{(logStats?.activeActorsCount || 3).toLocaleString()}</span>
                       </div>
                     </div>
 
@@ -154,11 +154,11 @@ export default function StatCards({ isLoading, logStats }) {
                     <div className="grid grid-cols-2 gap-2 text-white">
                       <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg text-white">
                         <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Today's Logs</span>
-                        <span className="text-lg font-black font-mono">{(logStats?.logsToday || 0).toLocaleString()}</span>
+                        <span className="text-lg font-black font-sans">{(logStats?.logsToday || 0).toLocaleString()}</span>
                       </div>
                       <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg text-white">
                         <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Hourly Peak</span>
-                        <span className="text-lg font-black font-mono">{Math.round((logStats?.logsToday || 0) / 8).toLocaleString()}</span>
+                        <span className="text-lg font-black font-sans">{Math.round((logStats?.logsToday || 0) / 8).toLocaleString()}</span>
                       </div>
                     </div>
 
@@ -173,11 +173,11 @@ export default function StatCards({ isLoading, logStats }) {
                     <div className="grid grid-cols-2 gap-2 text-white">
                       <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg text-white">
                         <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Auth Events</span>
-                        <span className="text-lg font-black font-mono">{(logStats?.authEvents || 0).toLocaleString()}</span>
+                        <span className="text-lg font-black font-sans">{(logStats?.authEvents || 0).toLocaleString()}</span>
                       </div>
                       <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg text-white">
                         <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Target Failure</span>
-                        <span className="text-lg font-black font-mono">0</span>
+                        <span className="text-lg font-black font-sans">0</span>
                       </div>
                     </div>
 

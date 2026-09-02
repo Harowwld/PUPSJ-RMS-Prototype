@@ -208,10 +208,10 @@ export default function RateLimitingTab() {
                 {data.recentViolations.map((violation) => (
                   <tr key={violation.id} className="hover:bg-gray-50 dark:hover:bg-white/10 dark:bg-card">
                     <td className="p-3 text-sm">{violation.endpoint_type}</td>
-                    <td className="p-3 font-mono text-sm text-xs">
+                    <td className="p-3 font-sans text-sm text-xs">
                       {violation.identifier}
                     </td>
-                    <td className="p-3 font-mono text-sm text-xs">
+                    <td className="p-3 font-sans text-sm text-xs">
                       {violation.ip_address}
                     </td>
                     <td className="p-3 text-sm">
@@ -274,7 +274,7 @@ export default function RateLimitingTab() {
           <tbody className="divide-y divide-gray-100 dark:divide-white/10">
             {data.configs.map((config) => (
               <tr key={config.id} className="hover:bg-gray-50 dark:hover:bg-white/10 dark:bg-card">
-                <td className="p-3 font-mono text-sm">
+                <td className="p-3 font-sans text-sm">
                   {config.endpoint_type}
                 </td>
                 <td className="p-3 text-sm">{config.window_seconds}</td>
@@ -327,7 +327,7 @@ export default function RateLimitingTab() {
             <tbody className="divide-y divide-gray-100 dark:divide-white/10">
               {suspiciousIPs.map((ip, index) => (
                 <tr key={index} className="hover:bg-gray-50 dark:hover:bg-white/10 dark:bg-card">
-                  <td className="p-3 font-mono text-sm">{ip.ip}</td>
+                  <td className="p-3 font-sans text-sm">{ip.ip}</td>
                   <td className="p-3 text-sm">
                     <span
                       className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${getRiskLevelColor(ip.riskLevel)}`}

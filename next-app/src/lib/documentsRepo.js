@@ -22,6 +22,7 @@ export function getUploadsDir() {
 }
 
 export async function createDocument({
+  officeId = "registrar",
   studentNo,
   studentName,
   docType,
@@ -47,6 +48,7 @@ export async function createDocument({
   const res = await dbRun(
     `
     INSERT INTO documents (
+      office_id,
       student_no,
       student_name,
       doc_type,
@@ -56,9 +58,10 @@ export async function createDocument({
       size_bytes,
       approval_status,
       uploaded_by
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `,
     [
+      officeId || "registrar",
       studentNo,
       studentName || null,
       docType,

@@ -2154,7 +2154,7 @@ function AdminPageContent() {
                 className="flex items-center justify-between rounded-[8px] border-[0.5px] border-gray-300 bg-white p-[10px_14px] dark:border-zinc-800 dark:bg-zinc-900/30"
                 style={{ borderWidth: '0.5px', borderStyle: 'solid' }}
               >
-                <code className="font-mono text-[14px] font-medium text-pup-maroon dark:text-red-400">
+                <code className="font-sans text-[14px] font-medium text-pup-maroon dark:text-red-400">
                   {defaultReturnedPw}
                 </code>
 
@@ -2263,7 +2263,7 @@ function AdminPageContent() {
                   {extDriveEvent?.label || "External Storage Device"}
                 </p>
                 {extDriveEvent?.path && (
-                  <p className="mt-0.5 font-mono text-[10px] text-gray-400 truncate dark:text-zinc-500">
+                  <p className="mt-0.5 font-sans text-[10px] text-gray-400 truncate dark:text-zinc-500">
                     {extDriveEvent.path}
                   </p>
                 )}

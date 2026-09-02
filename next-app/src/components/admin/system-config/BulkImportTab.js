@@ -780,7 +780,7 @@ export default function BulkImportTab({
                 <span className="font-semibold tracking-[0.05em] text-[#8E8E93]">Data Mapping</span>
               </div>
 
-              <div className="relative rounded-lg bg-[#F2F2F7] dark:bg-zinc-900 p-4 font-mono text-[12px] text-[#111] dark:text-zinc-100 leading-[1.6]">
+              <div className="relative rounded-lg bg-[#F2F2F7] dark:bg-zinc-900 p-4 font-sans text-[12px] text-[#111] dark:text-zinc-100 leading-[1.6]">
                 <button
                   onClick={handleCopySample}
                   className="absolute top-4 right-4 text-[#8E8E93] hover:text-[#111] transition-colors border-0 bg-transparent p-0 cursor-pointer flex items-center justify-center"

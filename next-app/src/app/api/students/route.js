@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createStudent, listStudents } from "../../../lib/studentsRepo";
 import { writeAuditLog } from "../../../lib/auditLogRequest";
 import { canonicalizeCabinetId } from "../../../lib/storageLayoutUtils";
+import { isUniqueViolation } from "../../../lib/dbErrors";
 
 export const runtime = "nodejs";
 
@@ -105,7 +106,7 @@ export async function POST(req) {
     return NextResponse.json({ ok: true, data: row }, { status: 201 });
   } catch (e) {
     const msg = String(e?.message || "");
-    if (msg.includes("UNIQUE") || msg.includes("PRIMARY")) {
+    if (isUniqueViolation(e)) {
       return NextResponse.json(
         { ok: false, error: "Student already exists" },
         { status: 409 }

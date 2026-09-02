@@ -465,7 +465,7 @@ export default function OfficeManagementTab({ showToast }) {
                   />
                 )}
                 <span className="text-[10px] text-gray-400 mt-1 flex items-center gap-1.5">
-                  Selected: <i className={form.icon}></i> <span className="font-mono">{form.icon}</span>
+                  Selected: <i className={form.icon}></i> <span className="font-sans">{form.icon}</span>
                 </span>
               </div>
 

@@ -434,17 +434,17 @@ export default function DigitizationComplianceTab({
                       <div className="grid grid-cols-2 gap-2 text-white">
                         <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg text-white">
                           <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Completeness</span>
-                          <span className="text-lg font-black font-mono">{summary.percentDigitized}%</span>
+                          <span className="text-lg font-black font-sans">{summary.percentDigitized}%</span>
                         </div>
                         <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg text-white">
                           <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Digitized Files</span>
-                          <span className="text-lg font-black font-mono">{summary.totalDigitizedDocsCount?.toLocaleString()}</span>
+                          <span className="text-lg font-black font-sans">{summary.totalDigitizedDocsCount?.toLocaleString()}</span>
                         </div>
                       </div>
 
                       <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg flex justify-between items-center text-xs text-white">
                         <span className="font-semibold text-white/80">Expected Documents</span>
-                        <span className="font-mono font-bold">{summary.totalExpectedDocsCount?.toLocaleString()}</span>
+                        <span className="font-sans font-bold">{summary.totalExpectedDocsCount?.toLocaleString()}</span>
                       </div>
 
                       {byCourse && byCourse.length > 0 && (
@@ -454,7 +454,7 @@ export default function DigitizationComplianceTab({
                             {byCourse.map((c) => (
                               <div key={c.courseCode} className="flex justify-between items-center text-[11px] py-1 border-b border-white/10 text-white/95">
                                 <span className="truncate max-w-[150px]" title={c.courseCode}>{c.courseCode}</span>
-                                <span className="font-mono font-bold">{c.percent}%</span>
+                                <span className="font-sans font-bold">{c.percent}%</span>
                               </div>
                             ))}
                           </div>
@@ -503,17 +503,17 @@ export default function DigitizationComplianceTab({
                       <div className="grid grid-cols-2 gap-2 text-white">
                         <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg text-white">
                           <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Enrollment</span>
-                          <span className="text-lg font-black font-mono">{summary.totalStudents?.toLocaleString()}</span>
+                          <span className="text-lg font-black font-sans">{summary.totalStudents?.toLocaleString()}</span>
                         </div>
                         <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg text-white">
                           <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Digitized Students</span>
-                          <span className="text-lg font-black font-mono">{summary.digitizedStudents?.toLocaleString()}</span>
+                          <span className="text-lg font-black font-sans">{summary.digitizedStudents?.toLocaleString()}</span>
                         </div>
                       </div>
 
                       <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg flex justify-between items-center text-xs text-white">
                         <span className="font-semibold text-white/80">Remaining Partially Digitized</span>
-                        <span className="font-mono font-bold text-red-200">{summary.notDigitizedStudents?.toLocaleString()}</span>
+                        <span className="font-sans font-bold text-red-200">{summary.notDigitizedStudents?.toLocaleString()}</span>
                       </div>
                     </>
                   )}
@@ -558,17 +558,17 @@ export default function DigitizationComplianceTab({
                       <div className="grid grid-cols-2 gap-2 text-white">
                         <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg text-white">
                           <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Complete</span>
-                          <span className="text-lg font-black font-mono">{summary.digitizedStudents?.toLocaleString()}</span>
+                          <span className="text-lg font-black font-sans">{summary.digitizedStudents?.toLocaleString()}</span>
                         </div>
                         <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg text-white">
                           <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Completeness Rate</span>
-                          <span className="text-lg font-black font-mono">{summary.fullyDigitizedRate}%</span>
+                          <span className="text-lg font-black font-sans">{summary.fullyDigitizedRate}%</span>
                         </div>
                       </div>
 
                       <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg flex justify-between items-center text-xs text-white">
                         <span className="font-semibold text-white/80">Validated student records</span>
-                        <span className="font-mono font-bold text-emerald-300">100% Correct</span>
+                        <span className="font-sans font-bold text-emerald-300">100% Correct</span>
                       </div>
                     </>
                   )}
