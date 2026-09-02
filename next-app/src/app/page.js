@@ -13,6 +13,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { PageTransition, FadeIn, SlideUp } from "@/components/ui/motion";
 
 export default function Home() {
   const router = useRouter();
@@ -168,7 +169,7 @@ export default function Home() {
   const handleContinue = () => {
     const emailValue = username.trim();
     if (!emailValue) {
-      setEmailError("Enter your email address or student number.");
+      setEmailError("Enter a valid email address.");
       return;
     }
     setEmailError("");
@@ -198,20 +199,18 @@ export default function Home() {
 
     const usernameInput = username.trim();
     const passwordInput = password;
-    const isStudentLogin = /^\d{4}[-\w]/i.test(usernameInput);
 
     setError("");
     setIsLoading(true);
 
     (async () => {
       try {
-        const res = await fetch(isStudentLogin ? "/api/auth/student/login" : "/api/auth/login", {
+        const res = await fetch("/api/auth/login", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(isStudentLogin ? { studentNo: usernameInput, password: passwordInput } : { username: usernameInput, password: passwordInput }),
+          body: JSON.stringify({ username: usernameInput, password: passwordInput }),
         });
         const json = await res.json();
-        console.info("[auth-debug] login.client_response", { ok: Boolean(res.ok && json?.ok), status: res.status, role: json?.data?.role || null, mustChangePassword: Boolean(json?.data?.mustChangePassword) });
         if (!res.ok || !json?.ok) {
           throw new Error(json?.error || "Invalid username or password.");
         }
@@ -229,26 +228,17 @@ export default function Home() {
         localStorage.setItem("pup-session-recovered", Date.now().toString());
         localStorage.removeItem("pup-logout");
 
-        if (role === "SuperAdmin") {
-          console.info("[auth-debug] login.client_navigating", { destination: "/superadmin" });
-          router.push("/superadmin");
+        if (role === "SystemAdmin" || role === "SuperAdmin") {
+          router.push("/systemadmin");
           return;
         }
         if (role === "Admin") {
-          console.info("[auth-debug] login.client_navigating", { destination: "/admin" });
           router.push("/admin");
           return;
         }
-        if (isStudentLogin || role === "Student") {
-          console.info("[auth-debug] login.client_navigating", { destination: "/student" });
-          router.push("/student");
-          return;
-        }
 
-        console.info("[auth-debug] login.client_navigating", { destination: "/staff" });
         router.push("/staff");
       } catch (err) {
-        console.info("[auth-debug] login.client_failed", { message: err?.message || "Unknown login error" });
         setError(err?.message || "Invalid username or password.");
         setIsLoading(false);
       }
@@ -284,8 +274,8 @@ export default function Home() {
       localStorage.removeItem("pup-logout");
 
       const role = String(json?.data?.role || "");
-      if (role === "SuperAdmin") {
-        router.push("/superadmin");
+      if (role === "SystemAdmin" || role === "SuperAdmin") {
+        router.push("/systemadmin");
       } else if (role === "Admin") {
         router.push("/admin");
       } else {
@@ -300,8 +290,7 @@ export default function Home() {
 
   return (
     <TooltipProvider delay={200}>
-      <div className="min-h-screen w-full flex items-center justify-center relative bg-slate-50 dark:bg-zinc-950 font-sans p-8 overflow-hidden">
-
+      <PageTransition className="min-h-screen w-full flex items-center justify-center relative bg-slate-50 dark:bg-zinc-950 font-sans p-8 overflow-hidden">
         {/* Dynamic Liquid Glass Background Blobs */}
         <div className="liquid-container">
           <div className="liquid-blob liquid-blob-1"></div>
@@ -370,7 +359,7 @@ export default function Home() {
               <img 
                 src="/login-logo.png" 
                 alt="eManage Logo" 
-                className="w-[30px] h-[30px] object-contain z-10 animate-in zoom-in-50 duration-500" 
+                className="w-[30px] h-[30px] object-contain z-10 animate-in zoom-in-50 duration-slow" 
               />
             </div>
 
@@ -388,7 +377,7 @@ export default function Home() {
                     }`}>
                       {/* EMAIL FIELD (top half) */}
                       <div className={`field-wrapper email-wrapper ${emailFocused || username.length > 0 ? "active" : ""} ${loginStep === 2 ? "step2-active" : ""}`}>
-                        <label>Email Address or Student Number</label>
+                        <label>Email Address</label>
                         <Input
                           type="text"
                           id="username"
@@ -412,7 +401,7 @@ export default function Home() {
                       </div>
 
                       {/* PASSWORD FIELD (bottom half) */}
-                      <div className={`flex flex-col transition-opacity duration-200 ${
+                      <div className={`flex flex-col transition-opacity duration-fast ${
                         loginStep === 2 
                           ? 'opacity-100 max-h-[52px] pointer-events-auto' 
                           : 'opacity-0 max-h-0 overflow-hidden pointer-events-none'
@@ -459,9 +448,9 @@ export default function Home() {
 
                     {/* Keep me signed in and Forgot Password options (Step 2 only) */}
                     {loginStep === 2 && (
-                      <div className="flex items-center justify-between w-full mt-2.5 select-none animate-in fade-in duration-200">
+                      <div className="flex items-center justify-between w-full mt-2.5 select-none animate-in fade-in duration-fast">
                         {emailError || passwordError || error ? (
-                          <div className="flex items-center gap-1.5 text-[#E5484D] animate-in fade-in duration-200 text-left pr-2">
+                          <div className="flex items-center gap-1.5 text-[#E5484D] animate-in fade-in duration-fast text-left pr-2">
                             <i className="ph-bold ph-warning-circle text-[14px] shrink-0 mt-[1px]"></i>
                             <p className="text-[12px] font-normal leading-none">
                               {emailError || passwordError || error}
@@ -494,7 +483,7 @@ export default function Home() {
                       <button
                         type="button"
                         onClick={() => setShowCreateAccountModal(true)}
-                        className="text-[13px] text-[#E5484D] hover:underline focus:outline-none mt-2.5 block text-left font-normal animate-in fade-in duration-200"
+                        className="text-[13px] text-[#E5484D] hover:underline focus:outline-none mt-2.5 block text-left font-normal animate-in fade-in duration-fast"
                       >
                         Create Your eManage Account
                       </button>
@@ -503,7 +492,7 @@ export default function Home() {
 
                   {/* Disclaimer Text with Icon (Step 1 only) */}
                   {loginStep === 1 ? (
-                    <div className="w-full mt-auto pt-9 mb-[124px] text-left flex flex-col items-start select-none animate-in fade-in duration-200">
+                    <div className="w-full mt-auto pt-9 mb-[124px] text-left flex flex-col items-start select-none animate-in fade-in duration-fast">
                       <i className="ph-fill ph-users text-[23px] text-[#007AFF] mb-1"></i>
                       <p className="w-full text-[11px] text-[#8E8E93] dark:text-zinc-400 leading-normal font-normal">
                         Your eManage account provides secure access to the digitization process and administrative tools. Account activity is logged for security and auditing purposes.
@@ -530,7 +519,7 @@ export default function Home() {
                 </form>
               </div>
             ) : (
-              <div className="w-full text-center flex-1 flex flex-col animate-in fade-in duration-300">
+              <div className="w-full text-center flex-1 flex flex-col animate-in fade-in duration-normal">
                 <h1 className="login-title text-[25px] font-bold text-[#1D1D1F] dark:text-zinc-50 tracking-tight mb-5">
                   Account Recovery
                 </h1>
@@ -562,7 +551,7 @@ export default function Home() {
                       </div>
 
                       {forgotError && (
-                        <div className="h-5 mt-1.5 text-left flex items-center gap-1.5 text-[#E5484D] animate-in fade-in duration-200">
+                        <div className="h-5 mt-1.5 text-left flex items-center gap-1.5 text-[#E5484D] animate-in fade-in duration-fast">
                           <i className="ph-bold ph-warning-circle text-[14px] shrink-0 mt-[1px]"></i>
                           <p className="text-[12px] font-normal leading-none">
                             {forgotError}
@@ -677,7 +666,7 @@ export default function Home() {
                       </div>
 
                       {forgotError && (
-                        <div className="h-5 mt-1.5 text-left flex items-center gap-1.5 text-[#E5484D] animate-in fade-in duration-200">
+                        <div className="h-5 mt-1.5 text-left flex items-center gap-1.5 text-[#E5484D] animate-in fade-in duration-fast">
                           <i className="ph-bold ph-warning-circle text-[14px] shrink-0 mt-[1px]"></i>
                           <p className="text-[12px] font-normal leading-none">
                             {forgotError}
@@ -854,7 +843,7 @@ export default function Home() {
             </div>
           </DialogContent>
         </Dialog>
-      </div>
+      </PageTransition>
     </TooltipProvider>
   );
 }

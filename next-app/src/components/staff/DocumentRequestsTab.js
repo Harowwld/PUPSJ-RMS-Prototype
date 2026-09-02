@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { LiquidGlassButton } from "@/components/ui/liquid-glass-button";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -46,9 +47,9 @@ function SortIndicator({ column, sortBy, sortOrder }) {
   if (sortBy !== column)
     return <i className="ph-bold ph-caret-up-down ml-1 text-[11px] opacity-40 transition-opacity group-hover:opacity-70 dark:opacity-30 dark:group-hover:opacity-60"></i>
   return sortOrder === "ASC" ? (
-    <i className="ph-bold ph-caret-up ml-1 text-[11px] text-pup-maroon animate-in fade-in zoom-in duration-300 dark:text-primary"></i>
+    <i className="ph-bold ph-caret-up ml-1 text-[11px] text-pup-maroon animate-in fade-in zoom-in duration-normal dark:text-primary"></i>
   ) : (
-    <i className="ph-bold ph-caret-down ml-1 text-[11px] text-pup-maroon animate-in fade-in zoom-in duration-300 dark:text-primary"></i>
+    <i className="ph-bold ph-caret-down ml-1 text-[11px] text-pup-maroon animate-in fade-in zoom-in duration-normal dark:text-primary"></i>
   )
 }
 
@@ -446,8 +447,8 @@ export default function DocumentRequestsTab({
                 {!loading && !error && (
                   <Button
                     type="button"
-                    className="btn-brand-red font-semibold shrink-0 dark:shadow-none"
                     onClick={() => setCreateOpen(true)}
+                    className="flex h-[36px] items-center justify-center rounded-[8px] btn-brand-red text-[13px] font-medium text-white active:scale-95 disabled:opacity-50 transition-all dark:shadow-none px-4 cursor-pointer"
                   >
                     New Request
                   </Button>
@@ -504,7 +505,7 @@ export default function DocumentRequestsTab({
 
         {/* Active filter Chips Row */}
         {!loading && !error && (q !== "" || statusFilter !== "") && (
-          <div className="flex-none border-b border-gray-100 bg-white px-6 py-3 animate-in fade-in slide-in-from-top-1 duration-300 dark:border-white/10 dark:bg-card">
+          <div className="flex-none border-b border-gray-100 bg-white px-6 py-3 animate-in fade-in slide-in-from-top-1 duration-normal dark:border-white/10 dark:bg-card">
             <div className="flex flex-wrap items-center gap-2">
               <span className="mr-1 text-[11px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500">Active filters:</span>
               {q && (
@@ -706,7 +707,7 @@ export default function DocumentRequestsTab({
                           <tr
                             key={r.id}
                             className={cn(
-                              "group h-[52px] border-b-[0.5px] border-gray-100 dark:border-white/10 last:border-b-0 transition-all duration-200 hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none cursor-pointer",
+                              "group h-[52px] border-b-[0.5px] border-gray-100 dark:border-white/10 last:border-b-0 transition-all duration-fast hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none cursor-pointer",
                               selectedId === r.id && "bg-blue-50/60 dark:bg-blue-950/20"
                             )}
                             onClick={() => openDetail(r.id)}
@@ -989,7 +990,7 @@ export default function DocumentRequestsTab({
                 </div>
 
                 {detail.status === "Ready" && retentionExpiryDate && (
-                  <div className="rounded-brand border border-amber-250 bg-amber-50/40 p-3.5 dark:border-amber-950/40 dark:bg-amber-950/10 animate-in fade-in duration-200">
+                  <div className="rounded-brand border border-amber-250 bg-amber-50/40 p-3.5 dark:border-amber-950/40 dark:bg-amber-950/10 animate-in fade-in duration-fast">
                     <div className="flex gap-3">
                       <i className="ph-bold ph-calendar-blank text-amber-700 dark:text-amber-500 text-lg shrink-0 mt-0.5"></i>
                       <div className="text-[12px]">
@@ -1034,7 +1035,7 @@ export default function DocumentRequestsTab({
           <form onSubmit={handleCreate}>
             <div className="p-6 space-y-4">
               {selectedStudent ? (
-                <div className="rounded-brand border border-red-100 bg-red-50/50 p-4 relative animate-in fade-in zoom-in-95 duration-200 dark:border-white/10 dark:bg-red-950/20">
+                <div className="rounded-brand border border-red-100 bg-red-50/50 p-4 relative animate-in fade-in zoom-in-95 duration-fast dark:border-white/10 dark:bg-red-950/20">
                   <button
                     type="button"
                     className="absolute top-2.5 right-2.5 text-gray-400 hover:text-gray-600 transition-colors bg-white hover:bg-gray-100 border border-gray-200 rounded-full w-5 h-5 flex items-center justify-center shadow-xs dark:bg-zinc-800 dark:border-white/10 dark:text-zinc-300"
@@ -1080,7 +1081,7 @@ export default function DocumentRequestsTab({
                       />
                     </div>
                     {studentSuggestions.length > 0 && (
-                      <div className="absolute z-50 left-0 right-0 mt-1 rounded-brand border border-gray-200 bg-white overflow-hidden shadow-lg animate-in fade-in slide-in-from-top-1 duration-200 dark:bg-zinc-900 dark:border-zinc-800">
+                      <div className="absolute z-50 left-0 right-0 mt-1 rounded-brand border border-gray-200 bg-white overflow-hidden shadow-lg animate-in fade-in slide-in-from-top-1 duration-fast dark:bg-zinc-900 dark:border-zinc-800">
                         {studentSuggestions.map((s) => {
                           const sn = String(s?.studentNo || s?.student_no || "");
                           return (

@@ -15,7 +15,7 @@ export default function LogExpandedRow({ log, handleCopy }) {
 
   return (
     <div 
-      className="animate-in fade-in slide-in-from-top-1 duration-500 bg-[#FAFAFA] dark:bg-[#121214]"
+      className="animate-in fade-in slide-in-from-top-1 duration-slow bg-[#FAFAFA] dark:bg-[#121214]"
       style={{ borderTop: '0.5px solid rgba(0,0,0,0.06)', padding: '20px 28px' }}
     >
       <div className="grid grid-cols-1 gap-[20px] md:grid-cols-3">

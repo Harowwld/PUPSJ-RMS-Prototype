@@ -80,7 +80,7 @@ export async function middleware(req) {
   }
 
   const role = String(payload?.role || "").toLowerCase().trim();
-  const isSuperAdmin = role === "superadmin";
+  const isSystemAdmin = role === "systemadmin" || role === "superadmin";
   const isAdmin = ["admin", "administrator"].includes(role);
   const isStudent = role === "student";
 
@@ -97,17 +97,17 @@ export async function middleware(req) {
   }
 
   // 5. Role-based routing
-  if (pathname.startsWith("/superadmin")) {
-    if (!isSuperAdmin) {
+  if (pathname.startsWith("/systemadmin") || pathname.startsWith("/superadmin")) {
+    if (!isSystemAdmin) {
       const url = req.nextUrl.clone();
-      url.pathname = isSuperAdmin || isAdmin ? "/admin" : "/staff";
-      if (!isAdmin && !isSuperAdmin) url.pathname = "/";
+      url.pathname = isSystemAdmin || isAdmin ? "/admin" : "/staff";
+      if (!isAdmin && !isSystemAdmin) url.pathname = "/";
       return addSecurityHeaders(NextResponse.redirect(url));
     }
   }
 
   if (pathname.startsWith("/admin")) {
-    if (!isAdmin && !isSuperAdmin) {
+    if (!isAdmin && !isSystemAdmin) {
       const url = req.nextUrl.clone();
       url.pathname = "/staff";
       return addSecurityHeaders(NextResponse.redirect(url));
@@ -128,7 +128,7 @@ export async function middleware(req) {
   requestHeaders.set("x-user-role", payload?.role || "");
   requestHeaders.set("x-user-id", payload?.sub || "");
 
-  if (payload?.role === "SuperAdmin") {
+  if (payload?.role === "SystemAdmin" || payload?.role === "SuperAdmin") {
     const { searchParams } = new URL(req.url);
     const override = searchParams.get("officeId") || searchParams.get("office_id");
     if (override) {
@@ -145,6 +145,7 @@ export async function middleware(req) {
 
 export const config = {
   matcher: [
+    "/systemadmin/:path*",
     "/superadmin/:path*",
     "/admin/:path*", 
     "/staff/:path*", 

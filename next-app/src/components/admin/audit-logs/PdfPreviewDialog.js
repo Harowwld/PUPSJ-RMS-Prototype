@@ -38,7 +38,7 @@ export default function PdfPreviewDialog({
     >
       <DialogContent 
         hideClose={true}
-        className="flex h-[90vh] w-[96vw] max-w-[96vw] flex-col overflow-hidden border border-gray-200 bg-gray-100 p-0 shadow-2xl transition-all duration-300 ease-out xl:max-w-[1400px] rounded-brand dark:border-white/10 dark:bg-muted"
+        className="flex h-[90vh] w-[96vw] max-w-[96vw] flex-col overflow-hidden border border-gray-200 bg-gray-100 p-0 shadow-2xl transition-all duration-normal ease-standard xl:max-w-[1400px] rounded-brand dark:border-white/10 dark:bg-muted"
       >
         <DialogHeader 
           className="shrink-0 bg-gray-50 dark:bg-white/5"
@@ -79,7 +79,7 @@ export default function PdfPreviewDialog({
 
         <div className="relative flex flex-1 flex-col overflow-hidden bg-gray-100 p-0 dark:bg-muted">
           {pdfBlobUrl ? (
-            <div className={cn("relative min-h-0 min-w-0 flex-1 transition-all duration-300", isFullscreenPreview ? "fixed inset-0 z-[9999] bg-white dark:bg-card" : "")}>
+            <div className={cn("relative min-h-0 min-w-0 flex-1 transition-all duration-normal", isFullscreenPreview ? "fixed inset-0 z-[9999] bg-white dark:bg-card" : "")}>
               {isFullscreenPreview && (
                 <div className="absolute top-4 right-4 z-[10000]">
                   <Button

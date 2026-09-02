@@ -32,7 +32,7 @@ import { findMatchingDocument } from "@/lib/docAvailability";
 import { imageToPdf, needsConversion, mergeImagesToPdf } from "@/lib/imageToPdf";
 import { canonicalizeCabinetId } from "@/lib/storageLayoutUtils";
 import { cn } from "@/lib/utils";
-
+import { PageTransition } from "@/components/ui/motion";
 
 function normalizeStudentRow(row) {
   if (!row || typeof row !== "object") return row;
@@ -71,6 +71,7 @@ function StaffPageContent() {
   const coreDataLoadedRef = useRef(false);
   const docsLoadedRef = useRef(false);
   const locateTimeoutRef = useRef(null);
+  const processedLocateRef = useRef(null);
 
   const validViews = ["requests", "osas_monitoring", "upload", "documents", "notifications", "search", "storage"];
   const initialView = validViews.includes(searchParams?.get("view"))
@@ -478,6 +479,8 @@ function StaffPageContent() {
     }
   }, [view]);
 
+
+
   useEffect(() => {
     return () => {
       if (locateTimeoutRef.current) {
@@ -773,6 +776,44 @@ function StaffPageContent() {
     },
     [locateStudent],
   );
+
+  useEffect(() => {
+    const handleLocate = (e) => {
+      const { student } = e.detail;
+      if (student) {
+        locateStudent(student);
+      }
+    };
+    window.addEventListener("locate-student", handleLocate);
+    return () => window.removeEventListener("locate-student", handleLocate);
+  }, [locateStudent]);
+
+  useEffect(() => {
+    const handleSwitch = (e) => {
+      const { view: targetView } = e.detail;
+      if (targetView) {
+        switchView(targetView);
+      }
+    };
+    window.addEventListener("switch-view", handleSwitch);
+    return () => window.removeEventListener("switch-view", handleSwitch);
+  }, [switchView]);
+
+  useEffect(() => {
+    const locateNo = searchParams?.get("locate");
+    if (locateNo && students.length > 0 && processedLocateRef.current !== locateNo) {
+      processedLocateRef.current = locateNo;
+      const match = students.find(s => s.studentNo === locateNo) || archivedStudents.find(s => s.studentNo === locateNo);
+      if (match) {
+        // Clear parameter from URL
+        const params = new URLSearchParams(window.location.search);
+        params.delete("locate");
+        router.replace(`${window.location.pathname}?${params.toString()}`, { scroll: false });
+        
+        locateStudent(match);
+      }
+    }
+  }, [searchParams, students, archivedStudents, locateStudent, router]);
 
   const applyStudentNoMask = (val) => {
     let clean = val.replace(/[^0-9A-Z]/g, "").toUpperCase();

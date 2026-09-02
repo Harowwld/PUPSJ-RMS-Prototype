@@ -266,7 +266,7 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
             }
           }
           return (
-            <div className="flex-none border-b border-gray-100 bg-white px-6 py-3 animate-in fade-in slide-in-from-top-1 duration-300 dark:border-white/10 dark:bg-card">
+            <div className="flex-none border-b border-gray-100 bg-white px-6 py-3 animate-in fade-in slide-in-from-top-1 duration-normal dark:border-white/10 dark:bg-card">
               <div className="flex flex-wrap items-center gap-2">
                 <span className="mr-1 text-[11px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500">Active filters:</span>
                 {(startDate || endDate) && (
@@ -325,7 +325,7 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
               </EmptyHeader>
             </Empty>
           ) : data ? (
-            <div className={cn("space-y-6 transition-all duration-500", loading ? "opacity-40 blur-[1px]" : "opacity-100")}>
+            <div className={cn("space-y-6 transition-all duration-slow", loading ? "opacity-40 blur-[1px]" : "opacity-100")}>
               <SlaCharts data={data} pieData={pieData} onSwitchView={onSwitchView} />
             </div>
           ) : null}
@@ -347,7 +347,7 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
       >
         <DialogContent 
           hideClose={true}
-          className="flex h-[90vh] w-[96vw] max-w-[96vw] flex-col overflow-hidden border border-gray-200 bg-gray-100 p-0 shadow-2xl transition-all duration-300 ease-out font-inter xl:max-w-[1200px] rounded-brand dark:border-white/10 dark:bg-muted"
+          className="flex h-[90vh] w-[96vw] max-w-[96vw] flex-col overflow-hidden border border-gray-200 bg-gray-100 p-0 shadow-2xl transition-all duration-normal ease-standard font-inter xl:max-w-[1200px] rounded-brand dark:border-white/10 dark:bg-muted"
         >
           <DialogHeader 
             className="shrink-0 bg-gray-50 dark:bg-white/5"
@@ -388,7 +388,7 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
 
           <div className="relative flex-1 overflow-hidden bg-gray-100 dark:bg-muted">
             {pdfBlobUrl ? (
-              <div className={cn("relative h-full w-full transition-all duration-300", isFullscreenPreview ? "fixed inset-0 z-[9999] bg-white dark:bg-card" : "")}>
+              <div className={cn("relative h-full w-full transition-all duration-normal", isFullscreenPreview ? "fixed inset-0 z-[9999] bg-white dark:bg-card" : "")}>
                 {isFullscreenPreview && (
                   <div className="absolute top-4 right-4 z-[10000]">
                     <Button

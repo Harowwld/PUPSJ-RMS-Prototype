@@ -277,7 +277,7 @@ export default function Sidebar({ open = true, items, activeKey, onSelect, onLog
                     ) : null}
                     <i
                       className={cn(
-                        "ti ti-chevron-down text-xs transition-transform duration-300",
+                        "ti ti-chevron-down text-xs transition-transform duration-normal",
                         isExpanded && "rotate-180"
                       )}
                     ></i>

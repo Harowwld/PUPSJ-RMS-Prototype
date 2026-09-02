@@ -210,11 +210,11 @@ export default function ForgotPasswordPage() {
             <img 
               src="/login-logo.png" 
               alt="eManage Logo" 
-              className="w-[30px] h-[30px] object-contain z-10 animate-in zoom-in-50 duration-500" 
+              className="w-[30px] h-[30px] object-contain z-10 animate-in zoom-in-50 duration-slow" 
             />
           </div>
 
-          <div className="w-full text-center flex-1 flex flex-col animate-in fade-in duration-300">
+          <div className="w-full text-center flex-1 flex flex-col animate-in fade-in duration-normal">
             <h1 className="login-title text-[25px] font-bold text-[#1D1D1F] dark:text-zinc-50 tracking-tight mb-5">
               Account Recovery
             </h1>
@@ -246,7 +246,7 @@ export default function ForgotPasswordPage() {
                   </div>
 
                   {forgotError && (
-                    <div className="h-5 mt-1.5 text-left flex items-center gap-1.5 text-[#E5484D] animate-in fade-in duration-200">
+                    <div className="h-5 mt-1.5 text-left flex items-center gap-1.5 text-[#E5484D] animate-in fade-in duration-fast">
                       <i className="ph-bold ph-warning-circle text-[14px] shrink-0 mt-[1px]"></i>
                       <p className="text-[12px] font-normal leading-none">
                         {forgotError}
@@ -358,7 +358,7 @@ export default function ForgotPasswordPage() {
                   </div>
 
                   {forgotError && (
-                    <div className="h-5 mt-1.5 text-left flex items-center gap-1.5 text-[#E5484D] animate-in fade-in duration-200">
+                    <div className="h-5 mt-1.5 text-left flex items-center gap-1.5 text-[#E5484D] animate-in fade-in duration-fast">
                       <i className="ph-bold ph-warning-circle text-[14px] shrink-0 mt-[1px]"></i>
                       <p className="text-[12px] font-normal leading-none">
                         {forgotError}

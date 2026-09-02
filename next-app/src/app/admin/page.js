@@ -45,6 +45,7 @@ import {
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import { PageTransition } from "@/components/ui/motion"
 
 function AdminPageContent() {
   const router = useRouter()
@@ -83,6 +84,20 @@ function AdminPageContent() {
     window.addEventListener("toggle-sidebar", handleToggle)
     return () => window.removeEventListener("toggle-sidebar", handleToggle)
   }, [])
+
+  useEffect(() => {
+    const handleSwitch = (e) => {
+      const { view: targetView } = e.detail
+      if (targetView) {
+        setView(targetView)
+        const params = new URLSearchParams(window.location.search)
+        params.set("view", targetView)
+        router.replace(`${window.location.pathname}?${params.toString()}`, { scroll: false })
+      }
+    }
+    window.addEventListener("switch-view", handleSwitch)
+    return () => window.removeEventListener("switch-view", handleSwitch)
+  }, [router])
 
   useEffect(() => {
     // Dynamic favicon swap for admin page

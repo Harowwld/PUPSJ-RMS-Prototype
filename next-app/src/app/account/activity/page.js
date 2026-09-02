@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import Header from "@/components/layout/Header";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
+import { LiquidGlassButton } from "@/components/ui/liquid-glass-button";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -33,6 +34,13 @@ import { generateAuditLogsPdf } from "@/lib/pdfGenerator";
 import { generateExportFilename } from "@/lib/exportHelpers";
 import PdfPreviewDialog from "@/components/admin/audit-logs/PdfPreviewDialog";
 import LogDetailSheet from "@/components/admin/audit-logs/LogDetailSheet";
+import {
+  FadeIn,
+  SlideUp,
+  StaggerContainer,
+  StaggerItem,
+  PageTransition,
+} from "@/components/ui/motion";
 import {
   Empty,
   EmptyHeader,
@@ -143,19 +151,19 @@ function StatCards({ isLoading, stats }) {
   ];
 
   return (
-    <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 items-start relative z-20 transition-all duration-500">
+    <StaggerContainer className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 items-start relative z-20 transition-all duration-500">
       {cards.map((stat, i) => (
-        <div
+        <StaggerItem
           key={i}
           className={cn(
-            "relative group transition-all duration-300 hover:-translate-y-1 hover:shadow-lg rounded-xl",
+            "relative group rounded-xl",
             selectedKpi === stat.key ? "z-30" : "z-10"
           )}
         >
           <div 
             onClick={() => setSelectedKpi(selectedKpi === stat.key ? null : stat.key)}
             className={cn(
-              "relative overflow-hidden rounded-xl border-none p-5 active:scale-97 cursor-pointer bg-gradient-to-br select-none",
+              "relative overflow-hidden rounded-xl border-none p-5 cursor-pointer bg-gradient-to-br select-none",
               stat.bgClass,
               i === 0 ? "glass-stat-card-blue" :
               i === 1 ? "glass-stat-card-green" :
@@ -248,9 +256,9 @@ function StatCards({ isLoading, stats }) {
               )}
             </div>
           </div>
-        </div>
+        </StaggerItem>
       ))}
-    </div>
+    </StaggerContainer>
   );
 }
 
@@ -326,7 +334,7 @@ function LogFilters({
 
   return (
     <div className={cn(
-      "bg-white border-t border-gray-100 p-4 backdrop-blur-md dark:bg-card/50 dark:border-white/10 transition-all duration-500",
+      "bg-white border-t border-gray-100 p-4 backdrop-blur-md dark:bg-card/50 dark:border-white/10 transition-all duration-slow",
       isLoading ? "opacity-40 blur-[1px] grayscale-[0.1]" : "opacity-100"
     )}>
       <div className="flex w-full flex-wrap items-center gap-5">
@@ -453,7 +461,7 @@ function LogFilters({
 
 function LogExpandedRow({ log, handleCopy }) {
   return (
-    <div className="animate-in fade-in slide-in-from-top-1 border-t border-gray-100 p-8 duration-500 dark:border-white/10">
+    <div className="animate-in fade-in slide-in-from-top-1 border-t border-gray-100 p-8 duration-slow dark:border-white/10">
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
         {/* Rich Description */}
         <div className="flex flex-col gap-4">
@@ -590,7 +598,7 @@ const LogRow = ({ log, isSelected, isExpanded, toggleRow, setSelectedLog, handle
     <>
       <tr
         className={cn(
-          "group h-[52px] border-b-[0.5px] border-gray-100 dark:border-white/10 last:border-b-0 transition-all duration-200 hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none cursor-pointer",
+          "group h-[52px] border-b-[0.5px] border-gray-100 dark:border-white/10 last:border-b-0 transition-all duration-fast hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none cursor-pointer",
           isSelected && "bg-blue-50/60 dark:bg-blue-950/20",
           isExpanded && "bg-gray-50 dark:bg-white/8"
         )}
@@ -601,7 +609,7 @@ const LogRow = ({ log, isSelected, isExpanded, toggleRow, setSelectedLog, handle
         <td className="py-0 px-4 align-middle text-center" onClick={(e) => e.stopPropagation()}>
           <button
             onClick={() => toggleRow(log.id)}
-            className="mx-auto flex h-7 w-7 items-center justify-center bg-transparent border-none text-[#8E8E93] hover:text-[#111111] dark:hover:text-zinc-200 cursor-pointer transition-transform duration-200"
+            className="mx-auto flex h-7 w-7 items-center justify-center bg-transparent border-none text-[#8E8E93] hover:text-[#111111] dark:hover:text-zinc-200 cursor-pointer transition-transform duration-fast"
             style={{ transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}
           >
             <i className="ti ti-chevron-down text-[14px]" style={{ fontSize: '14px' }}></i>
@@ -794,7 +802,7 @@ function LogTable({
     <div className="space-y-0">
       <div
         className={cn(
-          "overflow-visible rounded-brand border border-gray-200 dark:border-white/10 bg-white dark:bg-card shadow-sm dark:shadow-none transition-all duration-500 animate-fade-up",
+          "overflow-visible rounded-brand border border-gray-200 dark:border-white/10 bg-white dark:bg-card shadow-sm dark:shadow-none transition-all duration-slow animate-fade-up",
           isLoading ? "opacity-40 blur-[1px] grayscale-[0.1]" : "opacity-100"
         )}
       >
@@ -1260,7 +1268,7 @@ export default function AccountActivityPage() {
     <div className="h-screen overflow-hidden flex flex-col bg-gray-50 dark:bg-background font-inter">
       <Header authUser={authUser} onLogout={handleLogout} />
 
-      <main className="flex-1 min-h-0 overflow-y-auto w-full">
+      <PageTransition className="flex-1 min-h-0 overflow-y-auto w-full">
         <div className="max-w-[1400px] mx-auto py-10 px-6">
           <TooltipProvider delayDuration={200}>
           <PageHeader
@@ -1284,20 +1292,21 @@ export default function AccountActivityPage() {
                       "Export"
                     )}
                   </Button>
-                  <Button
+                  <LiquidGlassButton
                     type="button"
-                    variant="default"
-                    size="sm"
                     onClick={handlePreviewPDF}
                     disabled={total === 0 || isExporting || isGeneratingPdf}
-                    className="flex h-[36px] w-[142px] items-center justify-center rounded-[8px] btn-brand-red text-[13px] font-medium text-white active:scale-95 disabled:opacity-50 transition-all dark:shadow-none cursor-pointer"
+                    height={36}
+                    radius={18}
+                    glassColor="rgba(10, 132, 255, 0.15)"
+                    className="w-[142px] text-[13px] font-medium text-white active:scale-95 disabled:opacity-50 transition-all dark:shadow-none cursor-pointer"
                   >
                     {isGeneratingPdf ? (
                       <i className="ph-bold ph-spinner animate-spin text-[16px] flex items-center justify-center"></i>
                     ) : (
                       "Get Report"
                     )}
-                  </Button>
+                  </LiquidGlassButton>
                 </div>
 
                 <div className="h-6 w-px bg-gray-200 dark:bg-zinc-800" />
@@ -1340,7 +1349,7 @@ export default function AccountActivityPage() {
               }
               return (
                 <div className={cn(
-                  "flex-none border-b border-gray-100 bg-white px-6 py-3 transition-all duration-500 animate-in fade-in slide-in-from-top-1 dark:border-white/10 dark:bg-card",
+                  "flex-none border-b border-gray-100 bg-white px-6 py-3 transition-all duration-slow animate-in fade-in slide-in-from-top-1 dark:border-white/10 dark:bg-card",
                   loading ? "opacity-40 blur-[1px] grayscale-[0.1]" : "opacity-100"
                 )}>
                   <div className="flex flex-wrap items-center gap-2">
@@ -1471,8 +1480,8 @@ export default function AccountActivityPage() {
             setIsFullscreenPreview={setIsFullscreenPreview}
           />
         </TooltipProvider>
-      </div>
-    </main>
-  </div>
-  );
-}
+        </div>
+        </PageTransition>
+        </div>
+        );
+        }

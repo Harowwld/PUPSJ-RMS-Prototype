@@ -135,7 +135,7 @@ export default function ModuleConfigTab({ showToast }) {
                 >
                   <div className="flex flex-col items-center">
                     <span className="text-[13px] font-extrabold">{o.short_name}</span>
-                    <span className="text-[9px] font-mono text-gray-400 dark:text-zinc-500 mt-[2px]">{o.status}</span>
+                    <span className="text-[9px] text-gray-400 dark:text-zinc-500 mt-[2px]">{o.status}</span>
                   </div>
                 </th>
               ))}

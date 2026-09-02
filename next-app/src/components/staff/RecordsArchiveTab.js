@@ -503,12 +503,12 @@ export default function RecordsArchiveTab({
                       <div
                         key={index}
                         onClick={it.disabled ? undefined : it.onClick}
-                        className={`group relative h-48 w-full min-w-[180px] max-w-[300px] transition-all duration-300 ${ it.disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer" }`}
+                        className={`group relative h-48 w-full min-w-[180px] max-w-[300px] transition-all duration-normal ${ it.disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer" }`}
                         style={{ perspective: "1000px" }}
                       >
                         {/* Paint Palette Color Picker Button */}
                         <div 
-                          className="absolute bottom-2 right-2 z-40 opacity-0 group-hover:opacity-100 transition-opacity duration-200" 
+                          className="absolute bottom-2 right-2 z-40 opacity-0 group-hover:opacity-100 transition-opacity duration-fast" 
                           onClick={(e) => e.stopPropagation()}
                         >
                           <Popover>
@@ -549,7 +549,7 @@ export default function RecordsArchiveTab({
 
                         {/* macOS Folder Back Flap (CSS panel matching front dimensions/alignment) */}
                         <div 
-                          className="absolute top-[18px] left-0 right-0 bottom-0 rounded-2xl transition-all duration-300"
+                          className="absolute top-[18px] left-0 right-0 bottom-0 rounded-2xl transition-all duration-normal"
                           style={{
                             background: `linear-gradient(180deg, ${theme.backStart} 0%, ${theme.backEnd} 100%)`
                           }}
@@ -564,15 +564,15 @@ export default function RecordsArchiveTab({
                         </div>
 
                         {/* Solid Paper Peek Sheets (Apple-like stacking) */}
-                        <div className="absolute top-[2px] left-[5%] right-[5%] bottom-[20px] z-10 flex flex-col justify-end transition-all duration-300 group-hover:translate-y-[-12px] group-hover:scale-[1.02]">
+                        <div className="absolute top-[2px] left-[5%] right-[5%] bottom-[20px] z-10 flex flex-col justify-end transition-all duration-normal group-hover:translate-y-[-12px] group-hover:scale-[1.02]">
                           {/* Back sheet */}
-                          <div className="absolute bottom-0 left-[6%] right-[6%] h-[56px] bg-white/70 rounded-t-md shadow-[0_-1px_3px_rgba(0,0,0,0.05)] border-t border-x border-gray-200/20 transform -rotate-3 origin-bottom transition-all duration-300 group-hover:rotate-[-6deg]" />
+                          <div className="absolute bottom-0 left-[6%] right-[6%] h-[56px] bg-white/70 rounded-t-md shadow-[0_-1px_3px_rgba(0,0,0,0.05)] border-t border-x border-gray-200/20 transform -rotate-3 origin-bottom transition-all duration-normal group-hover:rotate-[-6deg]" />
                           
                           {/* Middle sheet */}
-                          <div className="absolute bottom-0 left-[3%] right-[3%] h-[60px] bg-white/85 rounded-t-md shadow-[0_-1px_4px_rgba(0,0,0,0.05)] border-t border-x border-gray-200/30 transform rotate-2 origin-bottom transition-all duration-300 group-hover:rotate-[4deg]" />
+                          <div className="absolute bottom-0 left-[3%] right-[3%] h-[60px] bg-white/85 rounded-t-md shadow-[0_-1px_4px_rgba(0,0,0,0.05)] border-t border-x border-gray-200/30 transform rotate-2 origin-bottom transition-all duration-normal group-hover:rotate-[4deg]" />
                           
                           {/* Front sheet with mock content lines */}
-                          <div className="absolute bottom-0 left-0 right-0 h-[64px] bg-white rounded-t-md shadow-[0_-2px_6px_rgba(0,0,0,0.08)] border-t border-x border-gray-200 p-3 flex flex-col gap-1.5 transition-all duration-300">
+                          <div className="absolute bottom-0 left-0 right-0 h-[64px] bg-white rounded-t-md shadow-[0_-2px_6px_rgba(0,0,0,0.08)] border-t border-x border-gray-200 p-3 flex flex-col gap-1.5 transition-all duration-normal">
                             {/* Mock lines */}
                             <div className="h-1.5 w-1/3 bg-gray-300/60 rounded-full" />
                             <div className="h-1 w-full bg-gray-200/50 rounded-full" />
@@ -582,7 +582,7 @@ export default function RecordsArchiveTab({
 
                         {/* macOS Folder Front Body with 3D Opening Tilt */}
                         <div 
-                          className="absolute top-[28px] right-0 bottom-0 left-0 z-20 flex flex-col items-center justify-center rounded-2xl p-4 transition-all duration-300 origin-bottom [transform-style:preserve-3d] group-hover:[transform:rotateX(-14deg)_translateY(2px)]"
+                          className="absolute top-[28px] right-0 bottom-0 left-0 z-20 flex flex-col items-center justify-center rounded-2xl p-4 transition-all duration-normal origin-bottom [transform-style:preserve-3d] group-hover:[transform:rotateX(-14deg)_translateY(2px)]"
                           style={{
                             background: `linear-gradient(180deg, ${theme.frontStart} 0%, ${theme.frontEnd} 100%)`
                           }}
@@ -658,7 +658,7 @@ export default function RecordsArchiveTab({
                       >
                         <div className="absolute top-4 right-4 z-20" onClick={(e) => { e.stopPropagation(); toggleSelect(row.student.studentNo); }}>
                            <div className={cn(
-                             "h-5 w-5 rounded-[6px] border flex items-center justify-center transition-all duration-150 cursor-pointer",
+                             "h-5 w-5 rounded-[6px] border flex items-center justify-center transition-all duration-fast cursor-pointer",
                              isSelected 
                                ? "bg-white border-white text-[#0A84FF]" 
                                : "border-white/40 bg-white/10 hover:border-white/80"
@@ -741,7 +741,7 @@ export default function RecordsArchiveTab({
                           <tr
                             key={row.key}
                             className={cn(
-                              "group h-[52px] border-b-[0.5px] border-gray-100 dark:border-white/10 last:border-b-0 transition-all duration-200 hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none",
+                              "group h-[52px] border-b-[0.5px] border-gray-100 dark:border-white/10 last:border-b-0 transition-all duration-fast hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none",
                               isSelected && "bg-blue-50/60 dark:bg-blue-950/20"
                             )}
                             onClick={() => handleLocateStudentClick(row.student)}

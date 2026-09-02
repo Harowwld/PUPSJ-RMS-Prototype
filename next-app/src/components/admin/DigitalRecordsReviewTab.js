@@ -633,12 +633,12 @@ export default function DigitalRecordsReviewTab({
           <div className="grid grid-cols-1 gap-6 md:grid-cols-3 items-start relative z-20">
             {/* Stat Card 1: Pending Review */}
             <div className={cn(
-              "relative group transition-all duration-300 hover:-translate-y-1 hover:shadow-lg rounded-xl",
+              "relative group rounded-xl",
               selectedKpi === "pending" ? "z-30" : "z-10"
             )}>
               <div 
                 onClick={() => setSelectedKpi(selectedKpi === "pending" ? null : "pending")}
-                className="relative overflow-hidden rounded-xl border-none bg-gradient-to-br from-[#14C8FF] via-[#007AFF] to-[#0055FF] dark:from-[#007AFF] dark:to-[#0033aa] p-5 active:scale-97 cursor-pointer glass-stat-card-blue select-none"
+                className="relative overflow-hidden rounded-xl border-none bg-gradient-to-br from-[#14C8FF] via-[#007AFF] to-[#0055FF] dark:from-[#007AFF] dark:to-[#0033aa] p-5 cursor-pointer glass-stat-card-blue select-none"
               >
                   <div className="absolute inset-0 overflow-hidden rounded-xl pointer-events-none z-0">
                     <div className="absolute bottom-0 left-0 w-[70%] h-[80%] bg-gradient-to-tr from-[#0055FF]/40 to-[#007AFF]/0 pointer-events-none" style={{ clipPath: 'polygon(0% 100%, 100% 100%, 0% 0%)' }} />
@@ -727,12 +727,12 @@ export default function DigitalRecordsReviewTab({
 
             {/* Stat Card 2: Approved Today */}
             <div className={cn(
-              "relative group transition-all duration-300 hover:-translate-y-1 hover:shadow-lg rounded-xl",
+              "relative group rounded-xl",
               selectedKpi === "approved" ? "z-30" : "z-10"
             )}>
               <div 
                 onClick={() => setSelectedKpi(selectedKpi === "approved" ? null : "approved")}
-                className="relative overflow-hidden rounded-xl border-none bg-gradient-to-br from-[#34d399] via-[#059669] to-[#047857] dark:from-[#059669] dark:to-[#024e37] p-5 active:scale-97 cursor-pointer glass-stat-card-green select-none"
+                className="relative overflow-hidden rounded-xl border-none bg-gradient-to-br from-[#34d399] via-[#059669] to-[#047857] dark:from-[#059669] dark:to-[#024e37] p-5 cursor-pointer glass-stat-card-green select-none"
               >
                   <div className="absolute inset-0 overflow-hidden rounded-xl pointer-events-none z-0">
                     <div className="absolute bottom-0 left-0 w-[70%] h-[80%] bg-gradient-to-tr from-[#047857]/40 to-[#059669]/0 pointer-events-none" style={{ clipPath: 'polygon(0% 100%, 100% 100%, 0% 0%)' }} />
@@ -795,12 +795,12 @@ export default function DigitalRecordsReviewTab({
 
             {/* Stat Card 3: Returned Today */}
             <div className={cn(
-              "relative group transition-all duration-300 hover:-translate-y-1 hover:shadow-lg rounded-xl",
+              "relative group rounded-xl",
               selectedKpi === "declined" ? "z-30" : "z-10"
             )}>
               <div 
                 onClick={() => setSelectedKpi(selectedKpi === "declined" ? null : "declined")}
-                className="relative overflow-hidden rounded-xl border-none bg-gradient-to-br from-[#f87171] via-[#dc2626] to-[#b91c1c] dark:from-[#dc2626] dark:to-[#7f1d1d] p-5 active:scale-97 cursor-pointer glass-stat-card-red select-none"
+                className="relative overflow-hidden rounded-xl border-none bg-gradient-to-br from-[#f87171] via-[#dc2626] to-[#b91c1c] dark:from-[#dc2626] dark:to-[#7f1d1d] p-5 cursor-pointer glass-stat-card-red select-none"
               >
                   <div className="absolute inset-0 overflow-hidden rounded-xl pointer-events-none z-0">
                     <div className="absolute bottom-0 left-0 w-[70%] h-[80%] bg-gradient-to-tr from-[#b91c1c]/40 to-[#dc2626]/0 pointer-events-none" style={{ clipPath: 'polygon(0% 100%, 100% 100%, 0% 0%)' }} />
@@ -921,7 +921,7 @@ export default function DigitalRecordsReviewTab({
             }
           }
           return (
-            <div className="flex-none border-b border-gray-100 bg-white px-6 py-3 animate-in fade-in slide-in-from-top-1 duration-300 dark:border-white/10 dark:bg-card">
+            <div className="flex-none border-b border-gray-100 bg-white px-6 py-3 animate-in fade-in slide-in-from-top-1 duration-normal dark:border-white/10 dark:bg-card">
               <div className="flex flex-wrap items-center gap-2">
                 <span className="mr-1 text-[11px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500">Active filters:</span>
                 {localSearch && (
@@ -1285,7 +1285,7 @@ export default function DigitalRecordsReviewTab({
                         <tr
                           key={r.id}
                           className={cn(
-                            "group h-[52px] border-b-[0.5px] border-gray-100 dark:border-white/10 last:border-b-0 transition-all duration-200 hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none cursor-pointer",
+                            "group h-[52px] border-b-[0.5px] border-gray-100 dark:border-white/10 last:border-b-0 transition-all duration-fast hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none cursor-pointer",
                             isSelected && "bg-blue-50/60 dark:bg-blue-950/20",
                             isSlaBreached && !isSelected && "bg-amber-50/30 dark:bg-amber-950/5"
                           )}

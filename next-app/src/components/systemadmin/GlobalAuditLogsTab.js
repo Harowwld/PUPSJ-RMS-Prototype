@@ -393,6 +393,36 @@ export default function GlobalAuditLogsTab({ showToast }) {
                     const office = offices.find((o) => o.id === log.office_id)
                     const isCritical = log.severity === "CRITICAL"
                     const isWarning = log.severity === "WARNING"
+                    
+                    const severityClasses = isCritical
+                      ? "bg-[#FEE2E2] text-[#991B1B] dark:bg-red-950/40 dark:text-red-400"
+                      : isWarning
+                        ? "bg-[#FEF3C7] text-[#92400E] dark:bg-amber-950/40 dark:text-amber-400"
+                        : "bg-[#D1FAE5] text-[#065F46] dark:bg-emerald-950/40 dark:text-emerald-400";
+                    const severityLabel = isCritical ? "Critical" : isWarning ? "Warning" : "Info";
+
+                    const formattedTimestamp = (() => {
+                      try {
+                        let normalized = String(log.created_at);
+                        if (!normalized.includes("T") && !normalized.includes("Z")) {
+                          normalized = normalized.replace(" ", "T") + "Z";
+                        }
+                        const d = new Date(normalized);
+                        if (isNaN(d.getTime())) return log.created_at;
+                        return d.toLocaleString("en-US", {
+                          month: "short",
+                          day: "numeric",
+                          year: "numeric",
+                          hour: "numeric",
+                          minute: "2-digit",
+                          hour12: true
+                        });
+                      } catch (e) {
+                        return log.created_at;
+                      }
+                    })();
+
+                    const isSelected = selectedLog && selectedLog.id === log.id;
 
                     return (
                       <tr
@@ -400,47 +430,42 @@ export default function GlobalAuditLogsTab({ showToast }) {
                         onClick={() => setSelectedLog(log)}
                         className={cn(
                           "group h-[52px] border-b-[0.5px] border-gray-100 dark:border-white/10 last:border-b-0 transition-all duration-200 hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 cursor-pointer select-none",
-                          isCritical && "bg-red-500/5 hover:bg-red-500/10 dark:bg-red-950/10 dark:hover:bg-red-950/20",
-                          isWarning && "bg-amber-500/5 hover:bg-amber-500/10 dark:bg-amber-950/10 dark:hover:bg-amber-950/20"
+                          isSelected && "bg-blue-50/60 dark:bg-blue-950/20"
                         )}
                       >
-                        <td className="py-0 px-4 align-middle font-mono font-normal text-gray-400 dark:text-zinc-500">
-                          {formatPHDateTime(log.created_at)}
+                        <td className="py-0 px-4 align-middle text-[13px] font-normal text-[#111111] dark:text-zinc-55">
+                          {formattedTimestamp}
                         </td>
                         <td className="py-0 px-4 align-middle">
-                          <div className="flex flex-col">
-                            <span className="font-semibold text-gray-950 dark:text-zinc-50">{log.actor}</span>
-                            <span className="text-[10px] text-gray-400 font-normal">{log.role}</span>
+                          <div className="flex flex-col overflow-hidden">
+                            <span className="truncate text-[13px] font-medium text-[#111111] dark:text-zinc-50">{log.actor}</span>
+                            <span className="truncate text-[12px] font-normal text-[#8E8E93] mt-[2px]">{log.role}</span>
                           </div>
                         </td>
-                        <td className="py-0 px-4 align-middle">
+                        <td className="py-0 px-4 align-middle text-[13px] font-normal text-[#111111] dark:text-zinc-50">
                           {office ? (
-                            <span className="font-semibold text-gray-800 dark:text-zinc-300">{office.short_name}</span>
+                            <span className="font-medium text-gray-800 dark:text-zinc-300">{office.short_name}</span>
                           ) : (
-                            <span className="text-blue-600 dark:text-blue-400 font-semibold uppercase text-[10px]">Global</span>
+                            <span className="text-blue-600 dark:text-blue-400 font-semibold uppercase text-[10px] tracking-wider">Global</span>
                           )}
                         </td>
-                        <td className="py-0 px-4 align-middle font-semibold text-slate-800 dark:text-zinc-200">
+                        <td className="py-0 px-4 align-middle text-[13px] font-medium text-[#111111] dark:text-zinc-50">
                           {log.action}
                         </td>
-                        <td className="py-0 px-4 align-middle text-gray-500 dark:text-zinc-400 font-normal leading-relaxed text-[11px] max-w-sm truncate">
+                        <td className="py-0 px-4 align-middle text-[13px] font-normal text-[#8E8E93] max-w-sm truncate">
                           {log.details || "—"}
                         </td>
                         <td className="py-0 px-4 align-middle">
                           <Badge
                             className={cn(
-                              "rounded-md shadow-2xs font-semibold px-2 py-0.5 border text-[10px] tracking-wide",
-                              isCritical
-                                ? "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-400 dark:border-red-500/20"
-                                : isWarning
-                                  ? "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20"
-                                  : "bg-gray-50 text-gray-700 border-gray-200 dark:bg-white/5 dark:text-zinc-400 dark:border-white/5"
+                              "inline-flex w-fit items-center justify-center rounded-[4px] px-[8px] py-[3px] text-[11px] font-medium tracking-[0.04em] shadow-none transition-all border-0",
+                              severityClasses
                             )}
                           >
-                            {log.severity || "INFO"}
+                            {severityLabel}
                           </Badge>
                         </td>
-                        <td className="py-0 px-4 align-middle text-right font-mono font-normal text-gray-400 dark:text-zinc-500">
+                        <td className="py-0 px-4 align-middle text-right text-[13px] font-normal text-gray-400 dark:text-zinc-500">
                           {log.ip || "—"}
                         </td>
                       </tr>

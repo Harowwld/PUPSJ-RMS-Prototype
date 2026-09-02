@@ -5,7 +5,8 @@ import {
   Card,
   CardContent,
 } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
+import { LiquidGlassButton } from "@/components/ui/liquid-glass-button";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton"
 import {
   Empty,
@@ -250,17 +251,20 @@ export default function BackupTab({
                           "Restore Backup"
                         )}
                       </Button>
-                      <Button
+                      <LiquidGlassButton
                         onClick={handleGenerateBackup}
                         disabled={localLoading.generating}
-                        className="flex h-[36px] w-[130px] items-center justify-center rounded-[8px] btn-brand-red active:scale-95 transition-all dark:shadow-none text-[13px] font-medium text-white cursor-pointer"
+                        height={36}
+                        radius={18}
+                        glassColor="rgba(10, 132, 255, 0.15)"
+                        className="w-[130px] active:scale-95 transition-all dark:shadow-none text-[13px] font-medium text-white cursor-pointer"
                       >
                         {localLoading.generating ? (
                           <i className="ph-bold ph-spinner animate-spin text-[16px]"></i>
                         ) : (
                           "Create Backup"
                         )}
-                      </Button>
+                      </LiquidGlassButton>
                       <input
                         ref={restoreFileRef}
                         type="file"
@@ -318,7 +322,7 @@ export default function BackupTab({
               {(localSearch !== "" ||
                 backupStartDate !== "" ||
                 backupEndDate !== "") && (
-                <div className="flex-none border-b border-gray-100 bg-white px-4 py-3 animate-in fade-in slide-in-from-top-1 duration-300 dark:border-white/10 dark:bg-card">
+                <div className="flex-none border-b border-gray-100 bg-white px-4 py-3 animate-in fade-in slide-in-from-top-1 duration-normal dark:border-white/10 dark:bg-card">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="mr-1 text-[10px] font-semibold tracking-widest text-gray-400 dark:text-zinc-550">
                       Active filters:

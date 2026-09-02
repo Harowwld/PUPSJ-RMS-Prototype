@@ -109,7 +109,7 @@ export default function SystemHealthTab({ showToast }) {
             
             <div className="mt-4">
               <div className="flex items-baseline justify-between mb-1">
-                <span className="text-2xl font-black text-gray-900 dark:text-zinc-50 font-mono">
+                <span className="text-2xl font-black text-gray-900 dark:text-zinc-50">
                   {health?.cpu ?? 0}%
                 </span>
                 <span className="text-[10px] font-semibold text-gray-500">Host CPU</span>
@@ -139,7 +139,7 @@ export default function SystemHealthTab({ showToast }) {
             
             <div className="mt-4">
               <div className="flex items-baseline justify-between mb-1">
-                <span className="text-2xl font-black text-gray-900 dark:text-zinc-50 font-mono">
+                <span className="text-2xl font-black text-gray-900 dark:text-zinc-50">
                   {health?.memory?.percent ?? 0}%
                 </span>
                 <span className="text-[10px] font-semibold text-gray-500">
@@ -171,7 +171,7 @@ export default function SystemHealthTab({ showToast }) {
             
             <div className="mt-4">
               <div className="flex items-baseline justify-between mb-1">
-                <span className="text-2xl font-black text-gray-900 dark:text-zinc-50 font-mono">
+                <span className="text-2xl font-black text-gray-900 dark:text-zinc-50">
                   {health?.disk?.percent ?? 0}%
                 </span>
                 <span className="text-[10px] font-semibold text-gray-500">
@@ -209,7 +209,7 @@ export default function SystemHealthTab({ showToast }) {
               </div>
               <div className="py-2.5 flex justify-between">
                 <span className="text-gray-500">Database Size (Legacy File)</span>
-                <span className="font-mono font-semibold">{health?.dbSize || "—"}</span>
+                <span className="font-semibold">{health?.dbSize || "—"}</span>
               </div>
               <div className="py-2.5 flex justify-between">
                 <span className="text-gray-500">Connection Pool Health</span>
@@ -219,7 +219,7 @@ export default function SystemHealthTab({ showToast }) {
               </div>
               <div className="py-2.5 flex justify-between">
                 <span className="text-gray-500">Last System Restoration</span>
-                <span className="font-mono text-[11px]">
+                <span className="text-[11px]">
                   {health?.lastRestorationAt || "Never restored"}
                 </span>
               </div>

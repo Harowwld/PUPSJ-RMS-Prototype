@@ -187,7 +187,7 @@ export default function BackupTable({
                   <tr
                     key={b.id}
                     className={cn(
-                        "group h-[52px] border-b-[0.5px] border-gray-100 dark:border-white/10 last:border-b-0 transition-all duration-200 hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none cursor-pointer",
+                        "group h-[52px] border-b-[0.5px] border-gray-100 dark:border-white/10 last:border-b-0 transition-all duration-fast hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none cursor-pointer",
                         isSelected && "bg-blue-50/60 dark:bg-blue-950/20"
                     )}
                     onClick={(e) => {

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Skeleton } from "@/components/ui/skeleton"
-import { isAdminRole, isStaffRole, isSuperAdminRole } from "@/lib/roleUtils"
+import { isAdminRole, isStaffRole, isSuperAdminRole, isSystemAdminRole } from "@/lib/roleUtils"
 
 function applyAccessibility(highContrast) {
   if (typeof window === "undefined") return;
@@ -92,14 +92,14 @@ export function AuthGuard({ allowedRoles = [], children, redirectTo = "/" }) {
           const userRole = String(user.role || "").toLowerCase()
           
           let hasRequiredRole = false
-          if (allowedRoles.includes("SuperAdmin")) {
-            if (isSuperAdminRole(userRole)) hasRequiredRole = true
+          if (allowedRoles.includes("SystemAdmin") || allowedRoles.includes("SuperAdmin")) {
+            if (isSystemAdminRole(userRole)) hasRequiredRole = true
           }
           if (!hasRequiredRole && allowedRoles.includes("Admin")) {
-            if (isAdminRole(userRole) || isSuperAdminRole(userRole)) hasRequiredRole = true
+            if (isAdminRole(userRole) || isSystemAdminRole(userRole)) hasRequiredRole = true
           }
           if (!hasRequiredRole && allowedRoles.includes("Staff")) {
-            if (isStaffRole(userRole) || isSuperAdminRole(userRole)) hasRequiredRole = true
+            if (isStaffRole(userRole) || isSystemAdminRole(userRole)) hasRequiredRole = true
           }
           
           // Fallback to strict array comparison if not explicitly handled
@@ -117,26 +117,24 @@ export function AuthGuard({ allowedRoles = [], children, redirectTo = "/" }) {
             })
 
             // Redirect staff to appropriate page if they try to access admin
-            if (isStaffRole(userRole) && allowedRoles.includes("Admin")) {
+            if (isStaffRole(userRole)) {
               router.push("/staff")
-              return
+            } else {
+              router.push(redirectTo)
             }
-
-            router.push(redirectTo)
             return
           }
         }
 
         setIsAuthorized(true)
       } catch (err) {
-        console.error("[AuthGuard] Auth check failed:", err)
-        setIsAuthorized(false)
+        console.error("[AuthGuard] Validation error:", err)
+        router.push(redirectTo)
       } finally {
         setIsLoading(false)
       }
-    }
-
-    checkAuth()
+    };
+    checkAuth();
   }, [router, allowedRoles, redirectTo])
 
   useEffect(() => {
@@ -180,10 +178,14 @@ export function AuthGuard({ allowedRoles = [], children, redirectTo = "/" }) {
 }
 
 /**
- * Specific guard for superadmin-only routes
+ * Specific guard for systemadmin-only routes
  */
+export function SystemAdminGuard({ children }) {
+  return <AuthGuard allowedRoles={["SystemAdmin", "SuperAdmin"]}>{children}</AuthGuard>
+}
+
 export function SuperAdminGuard({ children }) {
-  return <AuthGuard allowedRoles={["SuperAdmin"]}>{children}</AuthGuard>
+  return <AuthGuard allowedRoles={["SystemAdmin", "SuperAdmin"]}>{children}</AuthGuard>
 }
 
 /**

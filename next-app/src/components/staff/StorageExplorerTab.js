@@ -505,7 +505,7 @@ export default function StorageExplorerTab({
                               <div
                                 key={d.drawer}
                                 className={cn(
-                                  "flex flex-col gap-[10px] transition-all duration-300",
+                                  "flex flex-col gap-[10px] transition-all duration-normal",
                                   !isClickable && "opacity-30 pointer-events-none select-none"
                                 )}
                               >
