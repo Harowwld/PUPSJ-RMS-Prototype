@@ -4,7 +4,7 @@ import * as React from "react"
 import { createPortal } from "react-dom"
 import { cn } from "@/lib/utils"
 
-const Select = React.forwardRef(({ className, children, value, onChange, placeholder, menuClassName, optionClassName, usePortal = true, ...props }, ref) => {
+const Select = React.forwardRef(({ className, containerClassName, children, value, onChange, placeholder, menuClassName, optionClassName, usePortal = true, ...props }, ref) => {
   const [isOpen, setIsOpen] = React.useState(false)
   const [mounted, setMounted] = React.useState(false)
   const [coords, setCoords] = React.useState({ top: 0, left: 0, width: 0 })
@@ -119,7 +119,7 @@ const Select = React.forwardRef(({ className, children, value, onChange, placeho
   )
 
   return (
-    <div className="relative w-full min-w-0 h-full">
+    <div className={cn("relative w-full min-w-0 h-full", containerClassName)}>
       <button
         type="button"
         ref={(el) => {

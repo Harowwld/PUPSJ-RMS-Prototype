@@ -9,6 +9,7 @@ export async function POST(req) {
   if (error || !user) return createAuthErrorResponse(error || "Authentication required", 401);
   const body = await req.json().catch(() => null);
   const extractedName = String(body?.extractedName || "").trim();
+  const strict = new URL(req.url).searchParams.get("strict") === "1";
   if (!extractedName) return NextResponse.json({ ok: true, data: [] });
 
   const parts = extractedName.split(",");
@@ -39,9 +40,9 @@ export async function POST(req) {
      FROM candidates, input
      WHERE db_name = input.full_name
         OR (db_name LIKE input.surname || ' %' AND db_name LIKE '%' || input.given_name || '%')
-        OR similarity(db_name, input.full_name) >= 0.45
+        OR ($4 = false AND similarity(db_name, input.full_name) >= 0.45)
      ORDER BY score DESC, name ASC LIMIT 20`,
-    [extractedName.toLowerCase(), surname.toLowerCase(), given.toLowerCase()]
+    [extractedName.toLowerCase(), surname.toLowerCase(), given.toLowerCase(), strict]
   );
   return NextResponse.json({ ok: true, data: rows });
 }

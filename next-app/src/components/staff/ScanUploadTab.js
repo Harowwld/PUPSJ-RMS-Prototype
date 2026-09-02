@@ -46,6 +46,12 @@ function toNormalCase(str) {
     .join(" ")
 }
 
+const COORDINATE_REGION_LABELS = {
+  firstName: { label: "First name", color: "#2563eb" },
+  middleName: { label: "Middle name", color: "#9333ea" },
+  lastName: { label: "Last name", color: "#dc2626" },
+}
+
 export default function ScanUploadTab({
   loading,
   error = null,
@@ -107,6 +113,7 @@ export default function ScanUploadTab({
   showToast = () => {},
   onIngestPromoted,
   onSelectExistingStudent,
+  ocrSuggestion = null,
   rotation = 0,
   setRotation,
 }) {
@@ -1236,16 +1243,39 @@ export default function ScanUploadTab({
                               const url = hf.selectedRow ? hf.previewUrl : manualPreviewUrl
                               const mime = hf.selectedRow ? hf.previewMime : uploadedFile?.type
                               const isImg = String(mime || "").startsWith("image/")
+                              const coordinateRegions = ocrSuggestion?.coordinateRecognition?.regions
 
                               if (isImg || pdfPreviewDataUrl) {
                                 return (
-                                  <img
-                                    src={isImg ? url : pdfPreviewDataUrl}
-                                    alt="Preview"
-                                    className="max-h-full max-w-full rounded-md object-contain shadow-2xl transition-transform duration-normal"
-                                    draggable="false"
-                                    style={{ transform: `rotate(${rotation}deg)` }}
-                                  />
+                                  <div className="relative flex max-h-full max-w-full" style={{ transform: `rotate(${rotation}deg)` }}>
+                                    <img
+                                      src={isImg ? url : pdfPreviewDataUrl}
+                                      alt="Preview"
+                                      className="max-h-full max-w-full rounded-md object-contain shadow-2xl transition-transform duration-normal"
+                                      draggable="false"
+                                    />
+                                    {Object.entries(coordinateRegions || {}).map(([key, region]) => {
+                                      const field = COORDINATE_REGION_LABELS[key]
+                                      if (!field || Number(region?.width) <= 0 || Number(region?.height) <= 0) return null
+                                      return (
+                                        <div
+                                          key={key}
+                                          className="pointer-events-none absolute border-2"
+                                          style={{
+                                            left: `${Number(region.x) * 100}%`,
+                                            top: `${Number(region.y) * 100}%`,
+                                            width: `${Number(region.width) * 100}%`,
+                                            height: `${Number(region.height) * 100}%`,
+                                            borderColor: field.color,
+                                          }}
+                                        >
+                                          <span className="absolute -top-5 left-0 whitespace-nowrap bg-white px-1 text-[10px] font-semibold" style={{ color: field.color }}>
+                                            {field.label}
+                                          </span>
+                                        </div>
+                                      )
+                                    })}
+                                  </div>
                                 )
                               }
 
@@ -1914,7 +1944,7 @@ export default function ScanUploadTab({
                               <button
                                 type="button"
                                 onClick={applyCsvBulkLocation}
-                                className="flex h-10 flex-1 items-center justify-center gap-1.5 rounded-[10px] bg-[#0A84FF] hover:bg-[#0062c4] active:scale-[0.98] text-[13px] font-semibold text-white transition-all disabled:opacity-50 disabled:pointer-events-none"
+                                className="flex h-10 flex-1 items-center justify-center gap-1.5 rounded-[10px] btn-brand-red active:scale-[0.98] text-[13px] font-semibold text-white transition-all disabled:opacity-50 disabled:pointer-events-none"
                                 disabled={
                                   Object.values(csvSelected).filter(Boolean)
                                     .length === 0

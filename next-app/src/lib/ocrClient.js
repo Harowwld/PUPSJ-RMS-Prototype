@@ -161,7 +161,7 @@ const DOC_CLUSTERS = [
   },
 ];
 
-function detectDocType(rawText, docTypes) {
+export function detectDocType(rawText, docTypes) {
   if (!Array.isArray(docTypes) || docTypes.length === 0) return "";
   const fallback = docTypes[0]; // guaranteed non-blank
 
@@ -856,12 +856,36 @@ export function splitNameComponents(fullName) {
   return { firstName, middleName, lastName };
 }
 
-function regionIntersection(observation, region) {
-  const left = Math.max(Number(observation?.x) || 0, Number(region?.x) || 0);
-  const top = Math.max(Number(observation?.y) || 0, Number(region?.y) || 0);
-  const right = Math.min((Number(observation?.x) || 0) + (Number(observation?.width) || 0), (Number(region?.x) || 0) + (Number(region?.width) || 0));
-  const bottom = Math.min((Number(observation?.y) || 0) + (Number(observation?.height) || 0), (Number(region?.y) || 0) + (Number(region?.height) || 0));
-  return Math.max(0, right - left) * Math.max(0, bottom - top);
+function observationCenterInsideRegion(observation, region) {
+  const observationX = Number(observation?.x) || 0;
+  const observationY = Number(observation?.y) || 0;
+  const observationWidth = Number(observation?.width) || 0;
+  const observationHeight = Number(observation?.height) || 0;
+  const centerX = observationX + observationWidth / 2;
+  const centerY = observationY + observationHeight / 2;
+  const regionX = Number(region?.x) || 0;
+  const regionY = Number(region?.y) || 0;
+  const regionWidth = Number(region?.width) || 0;
+  const regionHeight = Number(region?.height) || 0;
+
+  return centerX >= regionX && centerX <= regionX + regionWidth
+    && centerY >= regionY && centerY <= regionY + regionHeight;
+}
+
+const COORDINATE_FIELD_LABELS = new Set([
+  "FIRST", "MIDDLE", "LAST", "NAME", "FIRSTNAME", "MIDDLENAME", "LASTNAME",
+  "EXT", "EXTENSION", "NO", "NUMBER",
+]);
+
+function cleanCoordinateFieldText(observations) {
+  return observations
+    .flatMap((observation) => String(observation.text || "").trim().split(/\s+/))
+    .map((token) => token.replace(/^[^A-Za-z]+|[^A-Za-z.'-]+$/g, ""))
+    .filter((token) => /[A-Za-z]/.test(token) && !/\d/.test(token))
+    .filter((token) => !COORDINATE_FIELD_LABELS.has(token.replace(/[.'-]/g, "").toUpperCase()))
+    .join(" ")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 export function extractNameFromCoordinates(pages, template) {
@@ -873,9 +897,9 @@ export function extractNameFromCoordinates(pages, template) {
   for (const key of ["firstName", "middleName", "lastName"]) {
     const region = template.regions[key];
     const observations = (Array.isArray(page.observations) ? page.observations : [])
-      .filter((observation) => regionIntersection(observation, region) > 0)
+      .filter((observation) => observationCenterInsideRegion(observation, region))
       .sort((a, b) => (Number(a.y) - Number(b.y)) || (Number(a.x) - Number(b.x)));
-    const text = observations.map((observation) => String(observation.text || "").trim()).filter(Boolean).join(" ").replace(/\s+/g, " ").trim();
+    const text = cleanCoordinateFieldText(observations);
     regions[key] = { ...region, text, observations };
   }
 
@@ -1204,13 +1228,14 @@ export async function scanFileForSuggestion({ file, students, docTypes, rotation
   // ── Detect doc type ──
   const docType = detectDocType(rawText, docTypes);
 
-  let coordinateRecognition = null;
+  let coordinateTemplates = [];
   if (docType) {
     try {
       const templateResponse = await fetch(`/api/recognition/templates?documentType=${encodeURIComponent(docType)}`, { cache: "no-store" });
       const templateData = await templateResponse.json().catch(() => null);
-      const template = templateResponse.ok && templateData?.ok ? templateData.data?.[0] : null;
-      if (template) coordinateRecognition = extractNameFromCoordinates(ocrPages, template);
+      coordinateTemplates = templateResponse.ok && templateData?.ok && Array.isArray(templateData.data)
+        ? templateData.data
+        : [];
     } catch (error) {
       console.warn("[OCR] Coordinate template lookup failed:", error);
     }
@@ -1231,6 +1256,38 @@ export async function scanFileForSuggestion({ file, students, docTypes, rotation
     }
   }
 
+  let coordinateRecognition = null;
+  let coordinateNameMatches = [];
+  if (!matchedStudent) {
+    for (const template of coordinateTemplates) {
+      const candidate = extractNameFromCoordinates(ocrPages, template);
+      if (!coordinateRecognition && candidate) coordinateRecognition = candidate;
+      if (!candidate?.extractedName) continue;
+
+      try {
+        const matchResponse = await fetch("/api/recognition/match?strict=1", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ extractedName: candidate.extractedName }),
+        });
+        const matchData = await matchResponse.json().catch(() => null);
+        if (matchResponse.ok && matchData?.ok) {
+          coordinateNameMatches = (matchData.data || []).map((candidateMatch) => ({
+            ...candidateMatch,
+            studentNo: candidateMatch.studentNo || candidateMatch.student_no,
+            student_no: candidateMatch.studentNo || candidateMatch.student_no,
+          }));
+          if (coordinateNameMatches.length > 0) {
+            coordinateRecognition = candidate;
+            break;
+          }
+        }
+      } catch (error) {
+        console.warn("[OCR] Database name matching failed for coordinate template:", error);
+      }
+    }
+  }
+
   // ── Load NLP engine if available ──
   const nlp = await loadNlp().catch(() => null);
 
@@ -1241,27 +1298,11 @@ export async function scanFileForSuggestion({ file, students, docTypes, rotation
   // ── Detect name (fallback when student number did not match) ──
   if (!matchedStudent) {
     if (coordinateRecognition?.extractedName) {
-      try {
-        const matchResponse = await fetch("/api/recognition/match", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ extractedName: coordinateRecognition.extractedName }),
-        });
-        const matchData = await matchResponse.json().catch(() => null);
-        if (matchResponse.ok && matchData?.ok) {
-          nameMatchesByName = (matchData.data || []).map((candidate) => ({
-            ...candidate,
-            studentNo: candidate.studentNo || candidate.student_no,
-            student_no: candidate.studentNo || candidate.student_no,
-          }));
-        }
-      } catch (error) {
-        console.warn("[OCR] Database name matching failed:", error);
-      }
+      nameMatchesByName = coordinateNameMatches;
     } else if (rawExtracted && Array.isArray(students)) {
       nameMatchesByName = findStudentsByOcrName(rawExtracted, students);
     }
-    if ((!nameMatchesByName || nameMatchesByName.length === 0) && Array.isArray(students)) {
+    if (!coordinateRecognition?.extractedName && (!nameMatchesByName || nameMatchesByName.length === 0) && Array.isArray(students)) {
       nameMatchesByName = findStudentsInText(rawText, students);
     }
     matchedStudent = coordinateRecognition?.extractedName ? null : nameMatchesByName.length === 1 ? nameMatchesByName[0] : null;
