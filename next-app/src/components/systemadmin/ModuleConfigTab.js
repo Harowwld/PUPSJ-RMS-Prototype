@@ -121,6 +121,12 @@ export default function ModuleConfigTab({ showToast }) {
       />
 
       <div className="overflow-x-auto rounded-2xl border border-gray-200/60 dark:border-white/5 bg-white/60 dark:bg-zinc-900/40 shadow-[0_4px_16px_rgba(0,0,0,0.02)] backdrop-blur-xs">
+        {offices.length === 0 && (
+          <div className="m-4 rounded-brand border border-dashed border-gray-200 bg-gray-50 px-4 py-8 text-center">
+            <p className="text-sm font-semibold text-gray-700">No office configurations yet.</p>
+            <p className="mt-1 text-xs text-gray-500">Add an office before configuring module access.</p>
+          </div>
+        )}
         <table className="w-full border-collapse text-left">
           <thead>
             <tr className="border-b border-gray-200/80 dark:border-white/5 bg-gray-50/55 dark:bg-zinc-950/20">
