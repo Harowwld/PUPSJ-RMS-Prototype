@@ -57,7 +57,7 @@ export function TOTPChallengeModal({
         if (!isOpen) onOpenChange(false)
       }}
     >
-      <DialogContent className="overflow-hidden rounded-brand border border-gray-200 bg-white p-0 shadow-2xl sm:max-w-md dark:border-white/10 dark:bg-card">
+      <DialogContent className="overflow-hidden rounded-2xl border border-gray-200 bg-white p-0 shadow-2xl sm:max-w-md dark:border-white/10 dark:bg-card">
         <DialogHeader className="border-b border-gray-100 bg-transparent p-6 text-left dark:border-white/10 dark:bg-transparent">
           <div className="flex items-start gap-4">
             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-red-100 bg-red-50 text-pup-maroon dark:text-primary shadow-sm dark:bg-red-950/30">

@@ -144,8 +144,7 @@ export default function ConfirmModal({
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onCancel()}>
       <DialogContent
         className={cn(
-          "sm:max-w-lg p-0 overflow-hidden bg-white border border-gray-200 shadow-2xl rounded-brand dark:bg-card dark:border-white/10",
-          isAppleStyled && "rounded-2xl"
+          "sm:max-w-lg p-0 overflow-hidden bg-white border border-gray-200 shadow-2xl rounded-2xl dark:bg-card dark:border-white/10"
         )}
       >
         <DialogHeader className={cn(
@@ -215,7 +214,12 @@ export default function ConfirmModal({
                         {selectedItems.map((item, idx) => (
                           <div
                             key={idx}
-                            className="text-[13px] font-normal text-pup-maroon dark:text-red-400 px-[14px] py-[10px] truncate"
+                            className={cn(
+                              "text-[13px] font-normal px-[14px] py-[10px] truncate",
+                              isRestoreModal
+                                ? "text-gray-900 dark:text-zinc-100"
+                                : "text-pup-maroon dark:text-red-400"
+                            )}
                             style={{
                               borderBottomWidth: idx < selectedItems.length - 1 ? '0.5px' : '0px',
                               borderBottomStyle: 'solid',
@@ -376,13 +380,13 @@ export default function ConfirmModal({
             className={cn(
               "px-6 text-sm font-semibold gap-2 flex items-center transition-all active:scale-95 disabled:opacity-30 disabled:grayscale-[0.5] disabled:cursor-not-allowed",
               !isAppleStyled && "shadow-sm",
-              variant === "success" && "btn-brand-green",
+              (variant === "success" && !isRestoreModal) && "btn-brand-green",
               (variant === "warning" && !isUnsavedChangesModal) && (v.confirmStyle || "bg-amber-600 hover:bg-amber-700 text-white"),
               (variant === "brand") && "btn-brand-red hover:from-red-700 hover:to-red-900",
               (v.confirmVariant === "destructive") && "btn-brand-red",
               (v.confirmVariant === "default" && !["success", "warning", "brand"].includes(variant)) && "bg-gray-900 hover:bg-gray-800 text-white dark:bg-zinc-800 dark:hover:bg-zinc-700 dark:text-zinc-50 dark:border-white/10",
               (isAppleStyled && !isRestoreModal && !isUnsavedChangesModal) && "btn-brand-red rounded-xl! h-10 px-5 text-xs font-semibold text-white shadow-none! border-none! cursor-pointer",
-              isRestoreModal && "bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white rounded-xl! h-10 px-5 text-xs font-semibold shadow-none! border-none! cursor-pointer",
+              isRestoreModal && "bg-slate-900 hover:bg-slate-800 active:bg-black text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 rounded-xl! h-10 px-5 text-xs font-semibold shadow-none! border-none! cursor-pointer",
               isUnsavedChangesModal && "bg-[#FF6410] hover:bg-[#e55300] active:bg-[#cc4a00] text-white rounded-xl! h-10 px-5 text-xs font-semibold shadow-none! border-none! cursor-pointer",
               isRegistrationModal && "w-[120px]",
               confirmClassName

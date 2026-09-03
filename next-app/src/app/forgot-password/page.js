@@ -26,14 +26,6 @@ export default function ForgotPasswordPage() {
   const [newPassFocused, setNewPassFocused] = useState(false);
   const [confirmPassFocused, setConfirmPassFocused] = useState(false);
 
-  useEffect(() => {
-    // Dynamic favicon swap
-    const link = document.querySelector("link[rel*='icon']") || document.createElement('link');
-    link.type = 'image/png';
-    link.rel = 'shortcut icon';
-    link.href = '/login-logo.png';
-    document.getElementsByTagName('head')[0].appendChild(link);
-  }, []);
 
   const resetForgotState = () => {
     setForgotStep(1);
@@ -140,7 +132,7 @@ export default function ForgotPasswordPage() {
 
       {/* Top-Left Brand Logo & Name */}
       <div className="absolute top-6 left-6 flex items-center gap-1 select-none z-20">
-        <img src="/login-logo.png" alt="eManage Logo" className="w-[32px] h-[32px] object-contain" />
+        <img src="/assets/branding/black-icon.png" alt="eManage Logo" className="w-[32px] h-[32px] object-contain" />
         <span className="text-[26px] font-semibold text-[#1D1D1F] dark:text-zinc-50 tracking-tight leading-none">eManage</span>
       </div>
 
@@ -208,7 +200,7 @@ export default function ForgotPasswordPage() {
               })}
             </svg>
             <img 
-              src="/login-logo.png" 
+              src="/assets/branding/black-icon.png" 
               alt="eManage Logo" 
               className="w-[30px] h-[30px] object-contain z-10 animate-in zoom-in-50 duration-slow" 
             />

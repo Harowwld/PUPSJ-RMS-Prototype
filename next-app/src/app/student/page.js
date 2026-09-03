@@ -131,7 +131,7 @@ export default function StudentDashboard() {
       </div>
 
       <div className="absolute left-6 top-6 z-20 flex select-none items-center gap-1">
-        <img src="/login-logo.png" alt="eManage Logo" className="h-8 w-8 object-contain" />
+        <img src="/assets/branding/black-icon.png" alt="eManage Logo" className="h-8 w-8 object-contain" />
         <span className="text-[26px] font-semibold leading-none tracking-tight text-[#1D1D1F] dark:text-zinc-50">eManage</span>
       </div>
 
@@ -153,7 +153,7 @@ export default function StudentDashboard() {
                 return <g key={rIdx} className={ring.reverse ? "origin-center animate-spin-reverse" : "origin-center animate-spin-slow"} style={{ transformOrigin: "80px 80px", animationDuration: rIdx % 2 ? "35s" : "45s" }}>{dots}</g>;
               })}
             </svg>
-            <img src="/login-logo.png" alt="" aria-hidden="true" className="relative z-10 h-8 w-8 object-contain animate-in zoom-in-50 duration-500" />
+            <img src="/assets/branding/black-icon.png" alt="" aria-hidden="true" className="relative z-10 h-8 w-8 object-contain animate-in zoom-in-50 duration-500" />
           </div>
           <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-[#E5484D]">Student Portal</p>
           <h1 className="text-[25px] font-bold tracking-tight text-[#1D1D1F] dark:text-zinc-50">Student ODRS</h1>

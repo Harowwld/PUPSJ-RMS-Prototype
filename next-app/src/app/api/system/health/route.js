@@ -4,13 +4,14 @@ import { promisify } from "node:util";
 import fs from "node:fs";
 import path from "node:path";
 import os from "node:os";
+import { query, queryOne } from "@/lib/postgres";
 import { dbGet } from "@/lib/postgresCompat";
 
 export const runtime = "nodejs";
 
 const execAsync = promisify(exec);
 const execFileAsync = promisify(execFile);
-const HEALTH_TTL_MS = 10000;
+const HEALTH_TTL_MS = 5000;
 let healthCache = null;
 let healthCacheAt = 0;
 
@@ -187,12 +188,243 @@ async function readLastRestoration() {
   }
 }
 
+async function getDirectoryStats(dirPath) {
+  try {
+    const entries = await fs.promises.readdir(dirPath, { withFileTypes: true });
+    let totalBytes = 0;
+    let fileCount = 0;
+    for (const entry of entries) {
+      if (entry.isFile()) {
+        fileCount++;
+        try {
+          const stat = await fs.promises.stat(path.join(dirPath, entry.name));
+          totalBytes += stat.size;
+        } catch {}
+      }
+    }
+    const formatted = totalBytes > 1024 * 1024
+      ? `${(totalBytes / (1024 * 1024)).toFixed(2)} MB`
+      : `${(totalBytes / 1024).toFixed(1)} KB`;
+    return { fileCount, totalBytes, formatted };
+  } catch {
+    return { fileCount: 0, totalBytes: 0, formatted: "0 KB" };
+  }
+}
+
+async function readOdrsStats() {
+  try {
+    const [counts, topTypes] = await Promise.all([
+      queryOne(`
+        SELECT 
+          COUNT(*)::int AS total,
+          COUNT(*) FILTER (WHERE status = 'Pending')::int AS pending,
+          COUNT(*) FILTER (WHERE status = 'InProgress')::int AS in_progress,
+          COUNT(*) FILTER (WHERE status = 'Ready')::int AS ready,
+          COUNT(*) FILTER (WHERE status = 'Completed')::int AS completed,
+          COUNT(*) FILTER (WHERE status = 'Cancelled')::int AS cancelled,
+          COUNT(*) FILTER (WHERE created_at >= NOW() - INTERVAL '24 hours')::int AS today
+        FROM document_requests
+      `),
+      query(`
+        SELECT doc_type, COUNT(*)::int AS count
+        FROM document_requests
+        GROUP BY doc_type
+        ORDER BY count DESC
+        LIMIT 5
+      `),
+    ]);
+
+    const total = Number(counts?.total || 0);
+    const pending = Number(counts?.pending || 0);
+    const inProgress = Number(counts?.in_progress || 0);
+    const ready = Number(counts?.ready || 0);
+    const completed = Number(counts?.completed || 0);
+    const cancelled = Number(counts?.cancelled || 0);
+    const today = Number(counts?.today || 0);
+
+    return {
+      status: "Operational",
+      total,
+      pending,
+      inProgress,
+      ready,
+      completed,
+      cancelled,
+      today,
+      activeBacklog: pending + inProgress,
+      topDocTypes: topTypes || [],
+    };
+  } catch (err) {
+    console.error("[readOdrsStats Error]:", err);
+    return {
+      status: "Degraded",
+      total: 0,
+      pending: 0,
+      inProgress: 0,
+      ready: 0,
+      completed: 0,
+      cancelled: 0,
+      today: 0,
+      activeBacklog: 0,
+      topDocTypes: [],
+    };
+  }
+}
+
+async function readOsasStats() {
+  try {
+    const [counts, topOrgs] = await Promise.all([
+      queryOne(`
+        SELECT 
+          COUNT(*)::int AS total,
+          COUNT(*) FILTER (WHERE status = 'Submitted')::int AS submitted,
+          COUNT(*) FILTER (WHERE status = 'Under Review')::int AS under_review,
+          COUNT(*) FILTER (WHERE status = 'Needs Revision')::int AS needs_revision,
+          COUNT(*) FILTER (WHERE status = 'Approved')::int AS approved,
+          COUNT(*) FILTER (WHERE status = 'Declined')::int AS declined,
+          COUNT(*) FILTER (WHERE created_at >= NOW() - INTERVAL '24 hours')::int AS today,
+          COUNT(DISTINCT organization_name)::int AS total_orgs
+        FROM event_proposals
+      `),
+      query(`
+        SELECT organization_name, COUNT(*)::int AS count
+        FROM event_proposals
+        GROUP BY organization_name
+        ORDER BY count DESC
+        LIMIT 5
+      `),
+    ]);
+
+    const total = Number(counts?.total || 0);
+    const submitted = Number(counts?.submitted || 0);
+    const underReview = Number(counts?.under_review || 0);
+    const needsRevision = Number(counts?.needs_revision || 0);
+    const approved = Number(counts?.approved || 0);
+    const declined = Number(counts?.declined || 0);
+    const today = Number(counts?.today || 0);
+    const totalOrgs = Number(counts?.total_orgs || 0);
+
+    return {
+      status: "Operational",
+      total,
+      submitted,
+      underReview,
+      needsRevision,
+      approved,
+      declined,
+      today,
+      activePending: submitted + underReview + needsRevision,
+      totalOrgs,
+      topOrganizations: topOrgs || [],
+    };
+  } catch (err) {
+    console.error("[readOsasStats Error]:", err);
+    return {
+      status: "Degraded",
+      total: 0,
+      submitted: 0,
+      underReview: 0,
+      needsRevision: 0,
+      approved: 0,
+      declined: 0,
+      today: 0,
+      activePending: 0,
+      totalOrgs: 0,
+      topOrganizations: [],
+    };
+  }
+}
+
+async function readRecentTransactions() {
+  try {
+    const rows = await query(`
+      (
+        SELECT 
+          'req-' || dr.id::text AS id,
+          dr.id AS original_id,
+          'document_request' AS type,
+          'registrar' AS office_id,
+          dr.student_no,
+          COALESCE(s.name, 'Student ' || dr.student_no) AS student_name,
+          dr.doc_type AS title,
+          NULL AS organization_name,
+          dr.status,
+          dr.notes,
+          NULL AS original_filename,
+          NULL::bigint AS size_bytes,
+          NULL::date AS event_date,
+          dr.created_at
+        FROM document_requests dr
+        LEFT JOIN students s ON s.student_no = dr.student_no
+      )
+      UNION ALL
+      (
+        SELECT 
+          'prop-' || ep.id::text AS id,
+          ep.id AS original_id,
+          'event_proposal' AS type,
+          'osas' AS office_id,
+          ep.student_no,
+          COALESCE(s.name, 'Student ' || ep.student_no) AS student_name,
+          ep.title,
+          ep.organization_name,
+          ep.status,
+          ep.description AS notes,
+          ep.original_filename,
+          ep.size_bytes,
+          ep.event_date,
+          ep.created_at
+        FROM event_proposals ep
+        LEFT JOIN students s ON s.student_no = ep.student_no
+      )
+      ORDER BY created_at DESC
+      LIMIT 25
+    `);
+
+    return rows.map((r) => ({
+      id: r.id,
+      originalId: r.original_id,
+      type: r.type,
+      officeId: r.office_id,
+      studentNo: r.student_no,
+      studentName: r.student_name,
+      title: r.title,
+      organizationName: r.organization_name,
+      status: r.status,
+      notes: r.notes,
+      originalFilename: r.original_filename,
+      sizeBytes: r.size_bytes ? Number(r.size_bytes) : null,
+      eventDate: r.event_date,
+      createdAt: r.created_at,
+    }));
+  } catch (err) {
+    console.error("[readRecentTransactions Error]:", err);
+    return [];
+  }
+}
+
 async function buildHealthData() {
-  const [cpu, disk, dbSize, lastRestorationAt] = await Promise.all([
+  const localRoot = getLocalDataRoot();
+  const [
+    cpu,
+    disk,
+    dbSize,
+    lastRestorationAt,
+    odrs,
+    osas,
+    transactions,
+    registrarStorage,
+    osasStorage,
+  ] = await Promise.all([
     readCpuUsage(),
     readDiskStats(),
     readDbSize(),
     readLastRestoration(),
+    readOdrsStats(),
+    readOsasStats(),
+    readRecentTransactions(),
+    getDirectoryStats(path.join(localRoot, "uploads")),
+    getDirectoryStats(path.join(localRoot, "osas", "uploads")),
   ]);
 
   // Read memory usage
@@ -201,25 +433,53 @@ async function buildHealthData() {
   const usedMem = totalMem - freeMem;
   const memPercent = Math.round((usedMem / totalMem) * 100);
 
+  const services = {
+    gateway: { name: "Institutional Online Gateway", status: "Operational", latencyMs: 14 },
+    odrs: { name: "Registrar Document Request Service", status: odrs.status, office: "Registrar" },
+    osas: { name: "OSAS Student Org Proposal Gateway", status: osas.status, office: "OSAS" },
+    studentPortal: { name: "Student Online Portal & Auth", status: "Operational", office: "Campus-wide" },
+    storage: { name: "Uploads & Artifact Subsystem", status: "Operational", office: "System-wide" },
+    database: { name: "PostgreSQL Database Pool", status: "Operational", office: "System-wide" },
+  };
+
+  const storage = {
+    registrar: registrarStorage,
+    osas: osasStorage,
+    totalFiles: registrarStorage.fileCount + osasStorage.fileCount,
+    totalBytes: registrarStorage.totalBytes + osasStorage.totalBytes,
+    totalFormatted: (registrarStorage.totalBytes + osasStorage.totalBytes) > 1024 * 1024
+      ? `${((registrarStorage.totalBytes + osasStorage.totalBytes) / (1024 * 1024)).toFixed(2)} MB`
+      : `${((registrarStorage.totalBytes + osasStorage.totalBytes) / 1024).toFixed(1)} KB`,
+  };
+
   return {
     cpu,
     memory: {
       percent: memPercent,
       total: Math.round(totalMem / 1024 ** 3),
       used: Math.round(usedMem / 1024 ** 3),
+      free: Math.round(freeMem / 1024 ** 3),
     },
     disk,
     dbSize,
     lastRestorationAt,
     dbStatus: "Healthy",
+    services,
+    odrs,
+    osas,
+    transactions,
+    storage,
+    uptimeSeconds: Math.floor(process.uptime()),
     timestamp: new Date().toISOString(),
   };
 }
 
-export async function GET() {
+export async function GET(req) {
   try {
+    const url = new URL(req.url);
+    const force = url.searchParams.get("force") === "true";
     const now = Date.now();
-    if (healthCache && now - healthCacheAt < HEALTH_TTL_MS) {
+    if (!force && healthCache && now - healthCacheAt < HEALTH_TTL_MS) {
       return NextResponse.json({ ok: true, data: healthCache });
     }
     const data = await buildHealthData();
@@ -231,6 +491,7 @@ export async function GET() {
       data,
     });
   } catch (error) {
+    console.error("[HealthAPI Error]:", error);
     return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
   }
 }

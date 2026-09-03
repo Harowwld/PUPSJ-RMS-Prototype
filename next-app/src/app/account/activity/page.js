@@ -27,7 +27,12 @@ import {
 } from "@/components/ui/dialog";
 
 import { formatPHDateTimeParts, formatPHDateTime } from "@/lib/timeFormat";
-import { isAdminRole } from "@/lib/roleUtils";
+import {
+  isAdminRole,
+  isSystemAdminRole,
+  getRoleLabel,
+  getDefaultDashboardPath,
+} from "@/lib/roleUtils";
 import PageHeader from "@/components/shared/PageHeader";
 import { cn } from "@/lib/utils";
 import { generateAuditLogsPdf } from "@/lib/pdfGenerator";
@@ -1055,18 +1060,6 @@ export default function AccountActivityPage() {
     })();
   }, [router]);
 
-  useEffect(() => {
-    if (!authUser) return;
-    const link = document.querySelector("link[rel*='icon']") || document.createElement('link');
-    link.type = 'image/png';
-    link.rel = 'shortcut icon';
-    if (isAdminRole(authUser.role)) {
-      link.href = '/admin-logo.png';
-    } else {
-      link.href = '/staff-logo.png';
-    }
-    document.getElementsByTagName('head')[0].appendChild(link);
-  }, [authUser]);
 
   // 2. Fetch logs matching filters
   const refresh = useCallback(async () => {
@@ -1333,7 +1326,7 @@ export default function AccountActivityPage() {
                   <Button
                     variant="ghost"
                     onClick={() => {
-                      const path = authUser?.role === "Student" ? "/student" : isAdminRole(authUser?.role) ? "/admin" : "/staff";
+                      const path = getDefaultDashboardPath(authUser?.role);
                       router.push(path);
                     }}
                     className="h-10 px-3 font-semibold text-sm text-gray-600 hover:text-gray-900 hover:bg-transparent dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-transparent transition-colors flex items-center gap-2 rounded-brand shadow-none! border-0! cursor-pointer"

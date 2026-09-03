@@ -74,29 +74,15 @@ export default function PromptModal({
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onCancel()}>
-      <DialogContent className="overflow-hidden rounded-brand border border-gray-200 bg-white p-0 shadow-2xl sm:max-w-lg dark:border-white/10 dark:bg-card">
-        <DialogHeader className={cn(
-          "border-b border-gray-100 bg-gray-50 p-6 dark:border-white/10 dark:bg-white/5 min-w-0",
-          isDeclineModal && "bg-white dark:bg-card border-none pb-0"
-        )}>
+      <DialogContent className="overflow-hidden rounded-2xl border border-gray-200 bg-white p-0 shadow-2xl sm:max-w-lg dark:border-white/10 dark:bg-card">
+        <DialogHeader className="bg-white p-6 pb-0 dark:bg-card border-none min-w-0">
           <div className="flex items-start gap-4 w-full">
-            {!isDeclineModal && (
-              <div className={cn("flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border shadow-sm", v.headerIconWrap)}>
-                <i className={cn(v.headerIcon, "text-xl")}></i>
-              </div>
-            )}
             <div className="min-w-0 flex-1">
-              <DialogTitle className={cn(
-                "text-lg font-semibold tracking-tight text-gray-900 dark:text-zinc-50 truncate",
-                isDeclineModal && "text-[16px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
-              )}>
+              <DialogTitle className="text-[16px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50 truncate">
                 {title}
               </DialogTitle>
               {message ? (
-                <DialogDescription className={cn(
-                  "mt-1.5 text-sm font-medium text-gray-600 dark:text-zinc-300",
-                  isDeclineModal && "mt-1 text-[13px] font-normal text-gray-500 dark:text-zinc-400"
-                )}>
+                <DialogDescription className="mt-1 text-[13px] font-normal text-gray-500 dark:text-zinc-400">
                   {message}
                 </DialogDescription>
               ) : null}
@@ -166,18 +152,12 @@ export default function PromptModal({
           </div>
         </div>
 
-        <div className={cn(
-          "flex flex-col-reverse gap-2.5 border-t border-gray-100 bg-white p-4 sm:flex-row sm:justify-end dark:border-white/10 dark:bg-card",
-          isDeclineModal && "flex flex-row justify-end gap-2 bg-white p-6 dark:bg-card border-none"
-        )}>
+        <div className="flex flex-row justify-end gap-2.5 bg-white p-6 pt-0 dark:bg-card border-none">
           <Button
             type="button"
             variant="ghost"
             onClick={onCancel}
-            className={cn(
-              "h-11 rounded-brand px-6 text-sm font-semibold text-gray-500 hover:bg-transparent hover:text-gray-700 dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-transparent transition-colors",
-              isDeclineModal && "h-10 px-4 text-xs font-semibold text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:text-zinc-400 dark:hover:bg-white/5 rounded-xl cursor-pointer border-none shadow-none"
-            )}
+            className="h-10 px-4 text-xs font-semibold text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:text-zinc-400 dark:hover:bg-white/5 rounded-xl cursor-pointer border-none shadow-none"
             disabled={isLoading}
           >
             {cancelLabel}
@@ -188,16 +168,11 @@ export default function PromptModal({
             onClick={onConfirm}
             disabled={isLoading || confirmDisabled}
             className={cn(
-              "h-11 px-6 text-sm font-semibold shadow-sm rounded-brand gap-2 flex items-center transition-all active:scale-95 disabled:opacity-30 disabled:grayscale-[0.5] disabled:cursor-not-allowed",
-              variant === "success" && "bg-green-600 hover:bg-green-700 text-white",
-              variant === "warning" && (v.confirmStyle || "bg-amber-600 hover:bg-amber-700 text-white"),
-              (variant === "brand") && "btn-brand-red hover:from-red-700 hover:to-red-900",
-              v.confirmVariant === "destructive" && "btn-brand-red",
-              (v.confirmVariant === "default" && !["success", "warning", "brand"].includes(variant)) && "bg-gray-900 hover:bg-gray-800 text-white dark:bg-zinc-800 dark:hover:bg-zinc-700 dark:text-zinc-50 dark:border-white/10",
-              isDeclineModal && "flex h-10 items-center justify-center rounded-xl! btn-brand-red text-xs font-semibold text-white shadow-none! border-none! py-0 px-5 cursor-pointer"
+              "flex h-10 items-center justify-center rounded-xl! btn-brand-red text-xs font-semibold text-white shadow-none! border-none! py-0 px-5 cursor-pointer active:scale-95 disabled:opacity-30 disabled:grayscale-[0.5] disabled:cursor-not-allowed",
+              variant === "success" && "bg-emerald-600 hover:bg-emerald-700 text-white",
+              variant === "warning" && (v.confirmStyle || "bg-amber-600 hover:bg-amber-700 text-white")
             )}
           >
-            {!isDeclineModal && <i className={cn(customButtonIcon || v.buttonIcon, "text-lg")}></i>}
             {isLoading ? "Processing..." : confirmLabel}
           </Button>
         </div>

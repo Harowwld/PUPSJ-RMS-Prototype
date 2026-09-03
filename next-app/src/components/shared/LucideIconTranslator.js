@@ -129,6 +129,8 @@ export default function LucideIconTranslator() {
       "identification-badge": "id-card",
       "info-circle": "info",
       "tools": "wrench",
+      "desktop": "monitor",
+      "device-desktop": "monitor",
     };
 
     function toCamelCase(str) {

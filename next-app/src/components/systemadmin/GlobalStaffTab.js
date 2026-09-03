@@ -16,6 +16,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import PageHeader from "@/components/shared/PageHeader"
+import ConfirmModal from "@/components/shared/ConfirmModal"
+import FloatingActionBar from "@/components/shared/FloatingActionBar"
 import { Select } from "@/components/ui/select"
 import {
   Empty,
@@ -26,25 +28,51 @@ import {
 } from "@/components/ui/empty"
 import { cn } from "@/lib/utils"
 
+function SortIndicator({ column, sortBy, sortOrder }) {
+  if (sortBy !== column) {
+    return <i className="ph-bold ph-caret-up-down ml-1 text-[12px] text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"></i>
+  }
+  return sortOrder === "ASC" ? (
+    <i className="ph-bold ph-caret-up ml-1 text-[12px] text-gray-400"></i>
+  ) : (
+    <i className="ph-bold ph-caret-down ml-1 text-[12px] text-gray-400"></i>
+  )
+}
+
 export default function GlobalStaffTab({ authUser, showToast }) {
   const router = useRouter()
   const [staff, setStaff] = useState([])
   const [offices, setOffices] = useState([])
   const [loading, setLoading] = useState(true)
   
-  // Filters
+  // Filters & Search
   const [search, setSearch] = useState("")
   const [officeFilter, setOfficeFilter] = useState("All")
   const [roleFilter, setRoleFilter] = useState("All")
-  const [statusFilter, setStatusFilter] = useState("Active") // "Active" | "Inactive"
+  const [statusFilter, setStatusFilter] = useState("Active")
+  
+  // Sorting
+  const [sortBy, setSortBy] = useState("name")
+  const [sortOrder, setSortOrder] = useState("ASC")
 
-  // Pagination states
+  const handleSort = (column) => {
+    if (sortBy === column) {
+      setSortOrder((prev) => (prev === "ASC" ? "DESC" : "ASC"))
+    } else {
+      setSortBy(column)
+      setSortOrder("ASC")
+    }
+  }
+
+  // Pagination
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(20)
 
-  // Reset page when search or filters change
+  // Reset page and selection when search or filters change
   useEffect(() => {
     setPage(1)
+    setSelectedIds(new Set())
+    setLastSelectedId(null)
   }, [search, officeFilter, roleFilter, statusFilter])
 
   // Dialogs
@@ -66,6 +94,20 @@ export default function GlobalStaffTab({ authUser, showToast }) {
   const [submitLoading, setSubmitLoading] = useState(false)
   const [tempPassword, setTempPassword] = useState(null)
   const [pwDialogOpen, setPwDialogOpen] = useState(false)
+
+  // Archive & Restore Confirmation Modals
+  const [archiveTarget, setArchiveTarget] = useState(null)
+  const [isArchiving, setIsArchiving] = useState(false)
+  const [restoreTarget, setRestoreTarget] = useState(null)
+  const [isRestoring, setIsRestoring] = useState(false)
+
+  // Multi-Selection State & Batch Actions
+  const [selectedIds, setSelectedIds] = useState(new Set())
+  const [lastSelectedId, setLastSelectedId] = useState(null)
+  const [bulkArchiveOpen, setBulkArchiveOpen] = useState(false)
+  const [bulkArchiveLoading, setBulkArchiveLoading] = useState(false)
+  const [bulkRestoreOpen, setBulkRestoreOpen] = useState(false)
+  const [bulkRestoreLoading, setBulkRestoreLoading] = useState(false)
 
   const fetchData = useCallback(async () => {
     try {
@@ -94,6 +136,18 @@ export default function GlobalStaffTab({ authUser, showToast }) {
     fetchData()
   }, [fetchData])
 
+  useEffect(() => {
+    const handleSwitch = (e) => {
+      if (e.detail?.officeId) {
+        setOfficeFilter(e.detail.officeId)
+      } else if (e.detail?.view === "staff") {
+        setOfficeFilter("All")
+      }
+    }
+    window.addEventListener("switch-view", handleSwitch)
+    return () => window.removeEventListener("switch-view", handleSwitch)
+  }, [])
+
   const handleOpenCreate = () => {
     setIsEditing(false)
     setSelectedStaffId(null)
@@ -111,6 +165,10 @@ export default function GlobalStaffTab({ authUser, showToast }) {
   }
 
   const handleOpenEdit = (member) => {
+    if (member.status === "Inactive" || member.status === "Archived") {
+      showToast("Archived accounts cannot be edited. Please restore the account first.", true)
+      return
+    }
     setIsEditing(true)
     setSelectedStaffId(member.id)
     setForm({
@@ -171,23 +229,51 @@ export default function GlobalStaffTab({ authUser, showToast }) {
     }
   }
 
-  const handleToggleStatus = async (member) => {
-    const nextStatus = member.status === "Active" ? "Inactive" : "Active"
+  const confirmArchivePersonnel = async () => {
+    if (!archiveTarget) return
+    setIsArchiving(true)
     try {
-      const res = await fetch(`/api/staff/${member.id}`, {
+      const res = await fetch(`/api/staff/${archiveTarget.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: nextStatus })
+        body: JSON.stringify({ status: "Inactive" })
       })
       const json = await res.json()
       if (res.ok && json.ok) {
-        showToast(`Personnel status set to ${nextStatus}`)
+        showToast(`Personnel account for ${archiveTarget.fname} ${archiveTarget.lname} has been archived.`)
+        setArchiveTarget(null)
         fetchData()
       } else {
-        showToast(json.error || "Failed to update status", true)
+        showToast(json.error || "Failed to archive personnel account", true)
       }
     } catch (err) {
-      showToast("Network error updating status", true)
+      showToast("Network error archiving personnel account", true)
+    } finally {
+      setIsArchiving(false)
+    }
+  }
+
+  const confirmRestorePersonnel = async () => {
+    if (!restoreTarget) return
+    setIsRestoring(true)
+    try {
+      const res = await fetch(`/api/staff/${restoreTarget.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "Active" })
+      })
+      const json = await res.json()
+      if (res.ok && json.ok) {
+        showToast(`Personnel account for ${restoreTarget.fname} ${restoreTarget.lname} has been restored to Active.`)
+        setRestoreTarget(null)
+        fetchData()
+      } else {
+        showToast(json.error || "Failed to restore personnel account", true)
+      }
+    } catch (err) {
+      showToast("Network error restoring personnel account", true)
+    } finally {
+      setIsRestoring(false)
     }
   }
 
@@ -218,11 +304,176 @@ export default function GlobalStaffTab({ authUser, showToast }) {
 
       return matchesSearch && matchesOffice && matchesRole && matchesStatus
     })
-  }, [staff, search, officeFilter, roleFilter, statusFilter])
+
+    list.sort((a, b) => {
+      let valA = ""
+      let valB = ""
+      if (sortBy === "name") {
+        valA = `${a.fname} ${a.lname}`.toLowerCase()
+        valB = `${b.fname} ${b.lname}`.toLowerCase()
+      } else if (sortBy === "id") {
+        valA = (a.id || "").toLowerCase()
+        valB = (b.id || "").toLowerCase()
+      } else if (sortBy === "office") {
+        const offA = offices.find((o) => o.id === a.office_id)?.short_name || "Platform Level"
+        const offB = offices.find((o) => o.id === b.office_id)?.short_name || "Platform Level"
+        valA = offA.toLowerCase()
+        valB = offB.toLowerCase()
+      } else if (sortBy === "role") {
+        valA = (a.role || "").toLowerCase()
+        valB = (b.role || "").toLowerCase()
+      }
+
+      if (valA < valB) return sortOrder === "ASC" ? -1 : 1
+      if (valA > valB) return sortOrder === "ASC" ? 1 : -1
+      return 0
+    })
+
+    return list
+  }, [staff, search, officeFilter, roleFilter, statusFilter, sortBy, sortOrder, offices])
 
   const startIndex = (page - 1) * pageSize
   const endIndex = startIndex + pageSize
   const paginatedStaff = filteredStaff.slice(startIndex, endIndex)
+
+  // Clear selection when changing tabs, page, or filters
+  useEffect(() => {
+    setSelectedIds(new Set())
+    setLastSelectedId(null)
+  }, [statusFilter, page, pageSize, search, officeFilter, roleFilter])
+
+  const toggleSelectAll = (checked) => {
+    if (checked) {
+      setSelectedIds(
+        new Set(
+          paginatedStaff
+            .filter((s) => s.id !== authUser?.id)
+            .map((s) => s.id)
+        )
+      )
+    } else {
+      setSelectedIds(new Set())
+    }
+    setLastSelectedId(null)
+  }
+
+  const toggleSelect = (id, event) => {
+    const isSelected = selectedIds.has(id)
+
+    if (event?.shiftKey && lastSelectedId) {
+      if (isSelected) {
+        if (selectedIds.size > 1) {
+          setSelectedIds(new Set([id]))
+          setLastSelectedId(id)
+        } else {
+          setSelectedIds(new Set())
+          setLastSelectedId(null)
+        }
+        return
+      }
+
+      const currentIdx = paginatedStaff.findIndex((s) => s.id === id)
+      const lastIdx = paginatedStaff.findIndex((s) => s.id === lastSelectedId)
+
+      if (currentIdx !== -1 && lastIdx !== -1) {
+        const start = Math.min(currentIdx, lastIdx)
+        const end = Math.max(currentIdx, lastIdx)
+        const idsInRange = paginatedStaff
+          .slice(start, end + 1)
+          .filter((s) => s.id !== authUser?.id)
+          .map((s) => s.id)
+
+        const next = new Set(selectedIds)
+        idsInRange.forEach((rangeId) => next.add(rangeId))
+        
+        setSelectedIds(next)
+        setLastSelectedId(id)
+        return
+      }
+    }
+
+    const next = new Set(selectedIds)
+    if (isSelected) {
+      next.delete(id)
+      setLastSelectedId(null)
+    } else {
+      next.add(id)
+      setLastSelectedId(id)
+    }
+    setSelectedIds(next)
+  }
+
+  const confirmBulkArchive = async () => {
+    if (bulkArchiveLoading || selectedIds.size === 0) return
+    setBulkArchiveLoading(true)
+    try {
+      let successCount = 0
+      let failCount = 0
+      const idsToArchive = Array.from(selectedIds)
+
+      for (const id of idsToArchive) {
+        if (id === authUser?.id) {
+          failCount++
+          continue
+        }
+        const res = await fetch(`/api/staff/${id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status: "Inactive" })
+        })
+        const json = await res.json()
+        if (res.ok && json.ok) {
+          setStaff((prev) => prev.map((s) => (s.id === id ? { ...s, status: "Inactive" } : s)))
+          successCount++
+        } else {
+          failCount++
+        }
+      }
+
+      showToast(`Archived ${successCount} personnel account(s)${failCount > 0 ? ` (${failCount} failed)` : ""}`)
+      setBulkArchiveOpen(false)
+      setSelectedIds(new Set())
+      fetchData()
+    } catch (err) {
+      showToast("Network error archiving selected accounts", true)
+    } finally {
+      setBulkArchiveLoading(false)
+    }
+  }
+
+  const confirmBulkRestore = async () => {
+    if (bulkRestoreLoading || selectedIds.size === 0) return
+    setBulkRestoreLoading(true)
+    try {
+      let successCount = 0
+      let failCount = 0
+      const idsToRestore = Array.from(selectedIds)
+
+      for (const id of idsToRestore) {
+        const res = await fetch(`/api/staff/${id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status: "Active" })
+        })
+        const json = await res.json()
+        if (res.ok && json.ok) {
+          setStaff((prev) => prev.map((s) => (s.id === id ? { ...s, status: "Active" } : s)))
+          successCount++
+        } else {
+          failCount++
+        }
+      }
+
+      showToast(`Restored ${successCount} personnel account(s)${failCount > 0 ? ` (${failCount} failed)` : ""}`)
+      setBulkRestoreOpen(false)
+      setSelectedIds(new Set())
+      fetchData()
+    } catch (err) {
+      showToast("Network error restoring selected accounts", true)
+    } finally {
+      setBulkRestoreLoading(false)
+    }
+  }
 
   const [selectedKpi, setSelectedKpi] = useState(null)
   const statCardsRef = useRef(null)
@@ -434,7 +685,16 @@ export default function GlobalStaffTab({ authUser, showToast }) {
       <Card className="rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none overflow-hidden">
         <PageHeader
           icon="ph-users"
-          title="Global Personnel Directory"
+          title={
+            <div className="flex items-center gap-[6px]">
+              <span>Global Personnel Directory</span>
+              {statusFilter === "Inactive" && (
+                <span className="text-[12px] font-normal text-emerald-600 dark:text-emerald-400">
+                  · Restore Mode
+                </span>
+              )}
+            </div>
+          }
           description="Manage system access, office assignments, and authorization settings for all administrators and records staff."
           showBorder={false}
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
@@ -512,85 +772,87 @@ export default function GlobalStaffTab({ authUser, showToast }) {
         )}
 
         <CardContent className="font-inter bg-white p-[24px] dark:bg-card/50 backdrop-blur-md flex flex-col gap-5">
-          {/* Tabs list Active vs Archived */}
-          <div className="flex w-full gap-[24px] select-none">
-            <button
-              type="button"
-              onClick={() => setStatusFilter("Active")}
-              className={cn(
-                "relative pb-2 text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer",
-                statusFilter === "Active"
-                  ? "text-black after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-black dark:text-zinc-50 dark:after:bg-zinc-50"
-                  : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
-              )}
-            >
-              Active ({staff.filter((s) => s.status === "Active").length})
-            </button>
-            <button
-              type="button"
-              onClick={() => setStatusFilter("Inactive")}
-              className={cn(
-                "relative pb-2 text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer",
-                statusFilter === "Inactive"
-                  ? "text-black after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-black dark:text-zinc-50 dark:after:bg-zinc-50"
-                  : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
-              )}
-            >
-              Archived ({staff.filter((s) => s.status === "Inactive" || s.status === "Archived").length})
-            </button>
-          </div>
-
-          {/* Toolbar / Search Row */}
-          <div className="flex flex-row items-center gap-[12px] w-full select-none">
-            {/* Search */}
-            <div className="flex-1 min-w-0 relative group">
-              <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                <i className="ph-bold ph-magnifying-glass text-gray-400 transition-colors group-focus-within:text-pup-maroon dark:text-zinc-500 text-sm"></i>
-              </div>
-              <Input
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search by name, ID or email..."
-                className="h-10 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white pl-9 pr-20 text-xs font-normal placeholder:text-[#8E8E93] dark:bg-card focus-visible:ring-pup-maroon shadow-none"
-              />
-              <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[12px] font-normal text-gray-400 dark:text-zinc-500">
-                {filteredStaff.length > 0 ? `${filteredStaff.length} results` : "0 results"}
-              </div>
+          <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 w-full select-none">
+            {/* Left: Active vs Archived Underline Tabs */}
+            <div className="flex items-center gap-6 shrink-0 h-10 px-1 self-start lg:self-auto">
+              <button
+                type="button"
+                onClick={() => setStatusFilter("Active")}
+                className={cn(
+                  "relative h-full flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent",
+                  statusFilter === "Active"
+                    ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
+                    : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
+                )}
+              >
+                Active ({stats.active})
+              </button>
+              <button
+                type="button"
+                onClick={() => setStatusFilter("Inactive")}
+                className={cn(
+                  "relative h-full flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent",
+                  statusFilter === "Inactive"
+                    ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
+                    : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
+                )}
+              >
+                Archived ({stats.inactive})
+              </button>
             </div>
 
-            {/* Office Partition Select */}
-            <div className="shrink-0 w-[190px]">
-              <Select
-                value={officeFilter}
-                onChange={(e) => setOfficeFilter(e.target.value)}
-                className="h-10 rounded-xl border border-gray-200 dark:border-white/10 text-xs font-normal text-[#111111] dark:text-zinc-200 cursor-pointer shadow-none"
-                menuClassName="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-900 shadow-2xl p-1.5"
-                optionClassName="rounded-lg text-xs font-medium py-2 px-3 hover:bg-gray-100 dark:hover:bg-zinc-800"
-              >
-                <option value="All">All Offices</option>
-                <option value="global">System Administration</option>
-                {offices.map((o) => (
-                  <option key={o.id} value={o.id}>
-                    {o.short_name}
-                  </option>
-                ))}
-              </Select>
-            </div>
+            {/* Right: Search Input & Dropdown Popovers Group */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0 w-full lg:w-auto">
+              {/* Search Input with increased width */}
+              <div className="w-full sm:w-[320px] lg:w-[380px] relative group shrink-0">
+                <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                  <i className="ph-bold ph-magnifying-glass text-gray-400 transition-colors group-focus-within:text-pup-maroon dark:text-zinc-500 text-sm"></i>
+                </div>
+                <Input
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Search by name, ID or email..."
+                  className="h-10 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white pl-9 pr-24 text-xs font-normal placeholder:text-[#8E8E93] dark:bg-card focus-visible:ring-pup-maroon shadow-none"
+                />
+                <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[12px] font-normal text-gray-400 dark:text-zinc-500">
+                  {filteredStaff.length > 0 ? `${filteredStaff.length} results` : "0 results"}
+                </div>
+              </div>
 
-            {/* Role Select */}
-            <div className="shrink-0 w-[170px]">
-              <Select
-                value={roleFilter}
-                onChange={(e) => setRoleFilter(e.target.value)}
-                className="h-10 rounded-xl border border-gray-200 dark:border-white/10 text-xs font-normal text-[#111111] dark:text-zinc-200 cursor-pointer shadow-none"
-                menuClassName="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-900 shadow-2xl p-1.5"
-                optionClassName="rounded-lg text-xs font-medium py-2 px-3 hover:bg-gray-100 dark:hover:bg-zinc-800"
-              >
-                <option value="All">All Roles</option>
-                <option value="SystemAdmin">System Admin</option>
-                <option value="Admin">Administrator</option>
-                <option value="Staff">Regular Staff</option>
-              </Select>
+              {/* Office Partition Select */}
+              <div className="w-full sm:w-[185px] shrink-0">
+                <Select
+                  value={officeFilter}
+                  onChange={(e) => setOfficeFilter(e.target.value)}
+                  className="h-10 rounded-xl border border-gray-200 dark:border-white/10 text-xs font-normal text-[#111111] dark:text-zinc-200 cursor-pointer shadow-none"
+                  menuClassName="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-900 shadow-2xl p-1.5"
+                  optionClassName="rounded-lg text-xs font-medium py-2 px-3 hover:bg-gray-100 dark:hover:bg-zinc-800"
+                >
+                  <option value="All">All Offices</option>
+                  <option value="global">System Administration</option>
+                  {offices.map((o) => (
+                    <option key={o.id} value={o.id}>
+                      {o.short_name}
+                    </option>
+                  ))}
+                </Select>
+              </div>
+
+              {/* Role Select */}
+              <div className="w-full sm:w-[165px] shrink-0">
+                <Select
+                  value={roleFilter}
+                  onChange={(e) => setRoleFilter(e.target.value)}
+                  className="h-10 rounded-xl border border-gray-200 dark:border-white/10 text-xs font-normal text-[#111111] dark:text-zinc-200 cursor-pointer shadow-none"
+                  menuClassName="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-900 shadow-2xl p-1.5"
+                  optionClassName="rounded-lg text-xs font-medium py-2 px-3 hover:bg-gray-100 dark:hover:bg-zinc-800"
+                >
+                  <option value="All">All Roles</option>
+                  <option value="SystemAdmin">System Admin</option>
+                  <option value="Admin">Administrator</option>
+                  <option value="Staff">Regular Staff</option>
+                </Select>
+              </div>
             </div>
           </div>
         </CardContent>
@@ -653,13 +915,76 @@ export default function GlobalStaffTab({ authUser, showToast }) {
       ) : (
         <div className="overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card flex flex-col flex-1">
           <table className="min-w-full text-sm">
-            <thead className="sticky top-0 z-10 border-b-[0.5px] border-black/10 dark:border-white/10 bg-white dark:bg-[#1c1c1e]">
-              <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-550 h-11 select-none">
-                <th className="p-4 pl-6">Staff Name / Contact</th>
-                <th className="p-4">Staff ID</th>
-                <th className="p-4">Office Partition</th>
-                <th className="p-4">Privilege Level</th>
-                <th className="p-4 pr-6 text-right">Actions</th>
+            <thead className="sticky top-0 z-10 border-b-[0.5px] border-black/10 dark:border-white/10 bg-white dark:bg-card">
+              <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500 h-11 select-none">
+                <th className="w-12 py-0 px-4 text-center align-middle">
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4 cursor-pointer rounded border border-gray-300 dark:border-white/10"
+                    checked={
+                      paginatedStaff.length > 0 &&
+                      paginatedStaff
+                        .filter((s) => s.id !== authUser?.id)
+                        .every((s) => selectedIds.has(s.id))
+                    }
+                    onChange={(e) => toggleSelectAll(e.target.checked)}
+                    disabled={
+                      paginatedStaff.length === 0 ||
+                      paginatedStaff.every((s) => s.id === authUser?.id)
+                    }
+                  />
+                </th>
+                <th className="p-4 min-w-[260px]">
+                  <button
+                    onClick={() => handleSort("name")}
+                    className={cn(
+                      "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
+                      sortBy === "name" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
+                    )}
+                  >
+                    Staff Name / Contact{" "}
+                    <SortIndicator column="name" sortBy={sortBy} sortOrder={sortOrder} />
+                  </button>
+                </th>
+                <th className="p-4 w-44">
+                  <button
+                    onClick={() => handleSort("id")}
+                    className={cn(
+                      "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
+                      sortBy === "id" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
+                    )}
+                  >
+                    Staff ID{" "}
+                    <SortIndicator column="id" sortBy={sortBy} sortOrder={sortOrder} />
+                  </button>
+                </th>
+                <th className="p-4 w-48">
+                  <button
+                    onClick={() => handleSort("office")}
+                    className={cn(
+                      "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
+                      sortBy === "office" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
+                    )}
+                  >
+                    Office Partition{" "}
+                    <SortIndicator column="office" sortBy={sortBy} sortOrder={sortOrder} />
+                  </button>
+                </th>
+                <th className="p-4 w-44">
+                  <button
+                    onClick={() => handleSort("role")}
+                    className={cn(
+                      "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
+                      sortBy === "role" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
+                    )}
+                  >
+                    Privilege Level{" "}
+                    <SortIndicator column="role" sortBy={sortBy} sortOrder={sortOrder} />
+                  </button>
+                </th>
+                <th className="p-4 pr-6 text-right text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">
+                  Actions
+                </th>
               </tr>
             </thead>
             
@@ -667,13 +992,32 @@ export default function GlobalStaffTab({ authUser, showToast }) {
               {paginatedStaff.map((member) => {
                 const office = offices.find(o => o.id === member.office_id)
                 const isSelf = member.id === authUser?.id
+                const isSelected = selectedIds.has(member.id)
                 
                 return (
                   <tr 
                     key={member.id}
-                    className="group h-[52px] border-b-[0.5px] border-gray-100 dark:border-white/10 last:border-b-0 transition-all duration-200 hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none"
+                    onClick={(e) => !isSelf && toggleSelect(member.id, e)}
+                    className={cn(
+                      "group h-[52px] border-b-[0.5px] border-gray-100 dark:border-white/10 last:border-b-0 transition-all duration-200 hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none",
+                      !isSelf && "cursor-pointer",
+                      isSelected && "bg-blue-50/60 dark:bg-blue-950/20"
+                    )}
                   >
-                    <td className="py-2 px-4 pl-6 align-middle">
+                    <td className="py-0 px-4 align-middle text-center">
+                      {!isSelf && (
+                        <input
+                          type="checkbox"
+                          className={cn(
+                            "h-4 w-4 cursor-pointer rounded border border-gray-300 dark:border-white/10 transition-opacity",
+                            isSelected ? "opacity-100" : "opacity-50 group-hover:opacity-80"
+                          )}
+                          checked={isSelected}
+                          onChange={() => {}}
+                        />
+                      )}
+                    </td>
+                    <td className="py-2 px-4 align-middle">
                       <div className="flex flex-col min-w-0">
                         <span className={cn("text-[14px] font-medium text-[#111111] dark:text-zinc-50 truncate", isSelf && "font-semibold")}>
                           {member.fname} {member.lname} {isSelf && "(You)"}
@@ -717,36 +1061,51 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                         {member.role === "SuperAdmin" || member.role === "SystemAdmin" ? "System Admin" : member.role}
                       </div>
                     </td>
-                    <td className="py-2 px-4 pr-6 align-middle text-right">
-                      {isSelf ? (
-                        <div className="flex items-center justify-end">
+                    <td className="py-0 px-4 pr-6 align-middle text-right">
+                      <div
+                        className="flex items-center justify-end gap-1.5"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {isSelf ? (
                           <button
                             onClick={() => router.push("/account")}
-                            title="Manage My Profile"
-                            className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-lg text-xs font-semibold text-gray-700 hover:text-pup-maroon dark:text-zinc-200 dark:hover:text-white bg-gray-100 hover:bg-gray-200/80 dark:bg-white/10 dark:hover:bg-white/15 transition-all cursor-pointer active:scale-95 border-0"
+                            title="My Account Settings"
+                            className="w-7 h-7 rounded-[6px] hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/10 text-[#C7C7CC] dark:text-zinc-600 transition-colors hover:text-blue-500 dark:hover:text-blue-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
                           >
-                            <i className="ph-bold ph-user-circle text-[15px] text-pup-maroon dark:text-red-400"></i>
-                            <span>My Profile</span>
+                            <i className="ph-bold ph-gear-six text-[16px]"></i>
                           </button>
-                        </div>
-                      ) : (
-                        <div className="flex items-center justify-end gap-1.5">
-                          <button
-                            onClick={() => handleOpenEdit(member)}
-                            title="Edit Personnel"
-                            className="w-7 h-7 rounded-lg hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/10 text-[#C7C7CC] dark:text-zinc-600 transition-colors hover:text-amber-500 dark:hover:text-amber-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
-                          >
-                            <i className="ph-bold ph-pencil-simple text-[16px]"></i>
-                          </button>
-                          <button
-                            onClick={() => handleToggleStatus(member)}
-                            title={member.status === "Active" ? "Archive Personnel" : "Restore Personnel"}
-                            className="w-7 h-7 rounded-lg hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/10 text-[#C7C7CC] dark:text-zinc-600 transition-colors hover:text-red-600 dark:hover:text-red-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
-                          >
-                            <i className="ph-bold ph-archive text-[16px]"></i>
-                          </button>
-                        </div>
-                      )}
+                        ) : (
+                          <div className="flex items-center gap-1.5">
+                            {statusFilter === "Active" && (
+                              <button
+                                onClick={() => handleOpenEdit(member)}
+                                title="Edit Staff Member"
+                                className="w-7 h-7 rounded-[6px] hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/10 text-[#C7C7CC] dark:text-zinc-600 transition-colors hover:text-amber-500 dark:hover:text-amber-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
+                              >
+                                <i className="ph-bold ph-pencil-simple text-[16px]"></i>
+                              </button>
+                            )}
+
+                            {statusFilter === "Inactive" || member.status === "Inactive" || member.status === "Archived" ? (
+                              <button
+                                onClick={() => setRestoreTarget(member)}
+                                title="Restore Staff Member"
+                                className="w-7 h-7 rounded-[6px] hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/10 text-[#C7C7CC] dark:text-zinc-600 transition-colors hover:text-emerald-600 dark:hover:text-emerald-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
+                              >
+                                <i className="ph-bold ph-archive-restore text-[16px]"></i>
+                              </button>
+                            ) : (
+                              <button
+                                onClick={() => setArchiveTarget(member)}
+                                title="Archive Staff Member"
+                                className="w-7 h-7 rounded-[6px] hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/10 text-[#C7C7CC] dark:text-zinc-600 transition-colors hover:text-red-600 dark:hover:text-red-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
+                              >
+                                <i className="ph-bold ph-archive text-[16px]"></i>
+                              </button>
+                            )}
+                          </div>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 )
@@ -810,11 +1169,11 @@ export default function GlobalStaffTab({ authUser, showToast }) {
       <Dialog open={formOpen} onOpenChange={setFormOpen}>
         <DialogContent className="sm:max-w-2xl w-full rounded-2xl bg-white border border-gray-200 dark:bg-zinc-900 dark:border-white/10 p-0 shadow-2xl overflow-hidden">
           <form onSubmit={handleSubmit}>
-            <DialogHeader className="p-6 pb-4 border-b border-gray-100 dark:border-white/5">
-              <DialogTitle className="text-xl font-bold text-gray-900 dark:text-zinc-50 tracking-tight">
+            <DialogHeader className="p-6 pb-0 bg-white dark:bg-card border-none text-left">
+              <DialogTitle className="text-[16px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
                 {isEditing ? "Edit Personnel Profile" : "Register Personnel Account"}
               </DialogTitle>
-              <DialogDescription className="text-xs text-gray-500 mt-1 dark:text-zinc-400">
+              <DialogDescription className="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-1">
                 Define the authorization scope, profile metadata, and security settings for the account.
               </DialogDescription>
             </DialogHeader>
@@ -935,7 +1294,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
               </div>
             </div>
 
-            <DialogFooter className="p-6 bg-gray-50 dark:bg-zinc-950/40 border-t border-gray-100 dark:border-white/5 flex items-center justify-end gap-2.5">
+            <DialogFooter className="p-6 pt-0 bg-white dark:bg-card border-none flex items-center justify-end gap-2.5">
               <Button
                 type="button"
                 variant="ghost"
@@ -959,23 +1318,23 @@ export default function GlobalStaffTab({ authUser, showToast }) {
       {/* Temporary Password Dialog */}
       <Dialog open={pwDialogOpen} onOpenChange={setPwDialogOpen}>
         <DialogContent className="max-w-md rounded-2xl bg-white border border-gray-200 dark:bg-zinc-900 dark:border-white/10 p-6 shadow-2xl">
-          <DialogHeader>
-            <DialogTitle className="text-base font-bold text-gray-900 dark:text-zinc-50">
+          <DialogHeader className="p-0 border-none text-left">
+            <DialogTitle className="text-[16px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
               Staff Credentials Generated
             </DialogTitle>
-            <DialogDescription className="text-xs text-gray-500 dark:text-zinc-400 mt-1">
+            <DialogDescription className="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-1">
               Please share this temporary password securely with the user. They will be prompted to change it upon first login.
             </DialogDescription>
           </DialogHeader>
           
-          <div className="my-6 p-4 rounded-xl border border-dashed border-gray-300 dark:border-white/10 bg-gray-50 dark:bg-zinc-950/20 text-center">
+          <div className="my-5 p-4 rounded-xl border border-dashed border-gray-300 dark:border-white/10 bg-gray-50 dark:bg-zinc-950/20 text-center">
             <span className="text-xs text-gray-400 uppercase font-bold tracking-wider">Temporary Password</span>
             <div className="text-xl font-bold text-pup-maroon dark:text-red-400 mt-1 select-all tracking-wider">
               {tempPassword}
             </div>
           </div>
 
-          <DialogFooter className="flex items-center justify-end gap-2.5 pt-2">
+          <DialogFooter className="flex items-center justify-end gap-2.5 pt-0 border-none bg-transparent">
             <Button
               onClick={() => {
                 navigator.clipboard.writeText(tempPassword)
@@ -995,6 +1354,122 @@ export default function GlobalStaffTab({ authUser, showToast }) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Archive Personnel Confirmation Modal */}
+      <ConfirmModal
+        open={!!archiveTarget}
+        onCancel={() => setArchiveTarget(null)}
+        onConfirm={confirmArchivePersonnel}
+        isLoading={isArchiving}
+        title="Archive Personnel Account"
+        message="This account will be restricted immediately but can be restored later."
+        confirmLabel="Archive Account"
+        icon="ph-duotone ph-archive"
+        buttonIcon="ph-bold ph-archive"
+        selectedItems={[
+          archiveTarget ? `${archiveTarget.fname} ${archiveTarget.lname}` : "",
+        ]}
+        isPersonnelModal={true}
+        isAppleStyled={true}
+        isArchiveModal={true}
+      />
+
+      {/* Restore Personnel Confirmation Modal */}
+      <ConfirmModal
+        open={!!restoreTarget}
+        onCancel={() => setRestoreTarget(null)}
+        onConfirm={confirmRestorePersonnel}
+        isLoading={isRestoring}
+        title="Restore Personnel Account"
+        message="This account will be reactivated and the personnel will be able to log in again."
+        confirmLabel="Restore Account"
+        icon="ph-duotone ph-archive-restore"
+        buttonIcon="ph-bold ph-archive-restore"
+        selectedItems={[
+          restoreTarget ? `${restoreTarget.fname} ${restoreTarget.lname}` : "",
+        ]}
+        isPersonnelModal={true}
+        isAppleStyled={true}
+        isRestoreModal={true}
+      />
+
+      {/* Batch Archive Confirmation Modal */}
+      <ConfirmModal
+        open={bulkArchiveOpen}
+        onCancel={() => setBulkArchiveOpen(false)}
+        onConfirm={confirmBulkArchive}
+        isLoading={bulkArchiveLoading}
+        title="Batch Archive Personnel"
+        message={`${selectedIds.size} personnel profiles will be archived and their system access revoked immediately.`}
+        confirmLabel="Archive Selected"
+        icon="ph-duotone ph-archive"
+        buttonIcon="ph-bold ph-archive"
+        selectedItems={Array.from(selectedIds).map((id) => {
+          const s = staff.find((x) => x.id === id)
+          return s ? `${s.fname} ${s.lname}` : id
+        })}
+        isPersonnelModal={true}
+        isAppleStyled={true}
+        isArchiveModal={true}
+      />
+
+      {/* Batch Restore Confirmation Modal */}
+      <ConfirmModal
+        open={bulkRestoreOpen}
+        onCancel={() => setBulkRestoreOpen(false)}
+        onConfirm={confirmBulkRestore}
+        isLoading={bulkRestoreLoading}
+        title="Batch Restore Personnel"
+        message={`${selectedIds.size} personnel profiles will be reactivated and able to log in again.`}
+        confirmLabel="Restore Selected"
+        icon="ph-duotone ph-archive-restore"
+        buttonIcon="ph-bold ph-archive-restore"
+        selectedItems={Array.from(selectedIds).map((id) => {
+          const s = staff.find((x) => x.id === id)
+          return s ? `${s.fname} ${s.lname}` : id
+        })}
+        isPersonnelModal={true}
+        isAppleStyled={true}
+        isRestoreModal={true}
+      />
+
+      {/* Floating Action Bar */}
+      {selectedIds.size > 1 && (
+        <FloatingActionBar
+          selectedCount={selectedIds.size}
+          selectionStatus="Selected Personnel"
+          onCancel={() => setSelectedIds(new Set())}
+          customContent={
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setSelectedIds(new Set())}
+                className="h-auto text-[13px] font-normal text-[#8E8E93] hover:text-[#111111] dark:hover:text-white bg-transparent hover:bg-transparent border-0 p-0 shadow-none cursor-pointer"
+              >
+                Deselect All
+              </button>
+
+              {statusFilter === "Active" ? (
+                <Button
+                  size="sm"
+                  onClick={() => setBulkArchiveOpen(true)}
+                  className="flex h-[36px] px-5 items-center justify-center rounded-xl btn-brand-red text-[13px] font-medium text-white active:scale-95 transition-all dark:shadow-none cursor-pointer"
+                >
+                  Archive
+                </Button>
+              ) : (
+                <Button
+                  size="sm"
+                  onClick={() => setBulkRestoreOpen(true)}
+                  className="flex h-[36px] px-5 items-center justify-center rounded-xl bg-slate-900 hover:bg-slate-800 text-[13px] font-medium text-white active:scale-95 transition-all dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 cursor-pointer shadow-none border-none"
+                >
+                  Restore
+                </Button>
+              )}
+            </div>
+          }
+        />
+      )}
     </div>
   )
 }

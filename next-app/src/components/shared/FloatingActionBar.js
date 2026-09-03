@@ -29,7 +29,7 @@ export default function FloatingActionBar({
 
   return createPortal(
     <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2">
-      <div className="flex min-w-[320px] w-fit items-center gap-3 rounded-[12px] border border-black/[0.12] dark:border-white/10 bg-white dark:bg-zinc-900 py-[10px] px-[16px] shadow-none">
+      <div className="flex min-w-[320px] w-fit items-center gap-3 rounded-2xl border border-black/[0.12] dark:border-white/10 bg-white dark:bg-zinc-900 py-[10px] px-[16px] shadow-lg">
         
         {/* Count Label (Plain text, no red circle badge, no background pill) */}
         <span className="text-[13px] font-medium text-[#111111] dark:text-zinc-100 whitespace-nowrap">
@@ -59,7 +59,7 @@ export default function FloatingActionBar({
                   size="sm"
                   onClick={onAction}
                   className={cn(
-                    "flex h-[36px] items-center justify-center rounded-[8px] px-5 text-[13px] transition-all active:scale-95 shadow-none cursor-pointer whitespace-nowrap",
+                    "flex h-[36px] items-center justify-center rounded-xl px-5 text-[13px] transition-all active:scale-95 shadow-none cursor-pointer whitespace-nowrap",
                     actionVariant === "danger" 
                       ? "btn-brand-red text-white font-medium" 
                       : actionVariant === "success"

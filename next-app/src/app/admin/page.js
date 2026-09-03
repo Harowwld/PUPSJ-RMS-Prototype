@@ -99,26 +99,6 @@ function AdminPageContent() {
     return () => window.removeEventListener("switch-view", handleSwitch)
   }, [router])
 
-  useEffect(() => {
-    // Dynamic favicon swap for admin page
-    const updateFavicon = () => {
-      const links = document.querySelectorAll("link[rel*='icon']");
-      if (links.length > 0) {
-        links.forEach(link => {
-          link.type = 'image/png';
-          link.rel = 'shortcut icon';
-          link.href = '/admin-logo.png';
-        });
-      } else {
-        const link = document.createElement('link');
-        link.type = 'image/png';
-        link.rel = 'shortcut icon';
-        link.href = '/admin-logo.png';
-        document.getElementsByTagName('head')[0].appendChild(link);
-      }
-    };
-    updateFavicon();
-  }, [view, searchParams]);
 
   const [viewLoading, setViewLoading] = useState({
     directory: false,

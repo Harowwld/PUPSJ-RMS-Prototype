@@ -46,6 +46,13 @@ export async function PATCH(req, { params }) {
     }
 
     const body = await req.json();
+    if (original.status !== "Active" && body.status !== "Active") {
+      return NextResponse.json(
+        { ok: false, error: "Archived offices cannot be modified. Please reactivate the office first." },
+        { status: 400 }
+      );
+    }
+
     const updated = await updateOffice(id, body);
     if (!updated) {
       return NextResponse.json({ ok: false, error: "Office not found or failed to update" }, { status: 404 });

@@ -29,7 +29,6 @@ import { cn } from "@/lib/utils"
 // Expanded predefined icon palette so SuperAdmins have rich choices for campus offices
 const PRESET_ICONS = [
   { value: "ti ti-building", label: "Building" },
-  { value: "ti ti-building-2", label: "Administration" },
   { value: "ti ti-landmark", label: "Institution" },
   { value: "ti ti-school", label: "College" },
   { value: "ti ti-graduation-cap", label: "Graduation" },
@@ -88,6 +87,17 @@ const PRESET_COLORS = [
   { name: "Midnight Black", hex: "#0f172a" },
 ]
 
+function SortIndicator({ column, sortBy, sortOrder }) {
+  if (sortBy !== column) {
+    return <i className="ph-bold ph-caret-up-down ml-1 text-[12px] text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"></i>
+  }
+  return sortOrder === "ASC" ? (
+    <i className="ph-bold ph-caret-up ml-1 text-[12px] text-gray-400"></i>
+  ) : (
+    <i className="ph-bold ph-caret-down ml-1 text-[12px] text-gray-400"></i>
+  )
+}
+
 export default function OfficeManagementTab({ showToast }) {
   const [offices, setOffices] = useState([])
   const [availableModules, setAvailableModules] = useState([])
@@ -97,6 +107,27 @@ export default function OfficeManagementTab({ showToast }) {
   const [selectedKpi, setSelectedKpi] = useState(null)
   const [deactivateOfficeTarget, setDeactivateOfficeTarget] = useState(null)
   const [isDeactivating, setIsDeactivating] = useState(false)
+  const [activateOfficeTarget, setActivateOfficeTarget] = useState(null)
+  const [isActivating, setIsActivating] = useState(false)
+  const [copiedTokenId, setCopiedTokenId] = useState(null)
+  const [revealedTokens, setRevealedTokens] = useState({})
+  const [showModalToken, setShowModalToken] = useState(false)
+  const [hasManuallyEditedId, setHasManuallyEditedId] = useState(false)
+  const [layoutView, setLayoutView] = useState("grid")
+  
+  // Table Sorting state
+  const [sortBy, setSortBy] = useState("short_name")
+  const [sortOrder, setSortOrder] = useState("ASC")
+
+  const handleSort = (column) => {
+    if (sortBy === column) {
+      setSortOrder((prev) => (prev === "ASC" ? "DESC" : "ASC"))
+    } else {
+      setSortBy(column)
+      setSortOrder("ASC")
+    }
+  }
+
   const statCardsRef = useRef(null)
 
   useEffect(() => {
@@ -176,6 +207,8 @@ export default function OfficeManagementTab({ showToast }) {
     setSelectedOfficeId(null)
     setShowCustomIcon(false)
     setModulesAccordionOpen(false)
+    setHasManuallyEditedId(false)
+    setShowModalToken(false)
     const defaultSelected = availableModules.map(m => m.id)
     setForm({
       id: "",
@@ -195,7 +228,10 @@ export default function OfficeManagementTab({ showToast }) {
   }
 
   const handleOpenEdit = (office) => {
+    if (office.status !== "Active") return
     setIsEditing(true)
+    setHasManuallyEditedId(true)
+    setShowModalToken(false)
     setSelectedOfficeId(office.id)
     const icon = office.icon || "ph-bold ph-building"
     setShowCustomIcon(!PRESET_ICONS.some(p => p.value === icon))
@@ -231,7 +267,8 @@ export default function OfficeManagementTab({ showToast }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    if (!form.id.trim() || !form.name.trim() || !form.short_name.trim()) {
+    const cleanId = form.id.trim().toLowerCase().replace(/^-+|-+$/g, "")
+    if (!cleanId || !form.name.trim() || !form.short_name.trim()) {
       showToast("Please fill in all required fields", true)
       return
     }
@@ -242,7 +279,7 @@ export default function OfficeManagementTab({ showToast }) {
       const method = isEditing ? "PATCH" : "POST"
 
       const payload = {
-        id: form.id.trim().toLowerCase(),
+        id: cleanId,
         name: form.name.trim(),
         short_name: form.short_name.trim(),
         description: form.description.trim(),
@@ -335,6 +372,17 @@ export default function OfficeManagementTab({ showToast }) {
     }
   }
 
+  const confirmActivateOffice = async () => {
+    if (!activateOfficeTarget) return
+    setIsActivating(true)
+    try {
+      await handleToggleStatus(activateOfficeTarget)
+      setActivateOfficeTarget(null)
+    } finally {
+      setIsActivating(false)
+    }
+  }
+
   const filteredOffices = useMemo(() => {
     return offices.filter((o) => {
       const matchesSearch =
@@ -345,7 +393,39 @@ export default function OfficeManagementTab({ showToast }) {
       const matchesTab = statusFilter === "Active" ? !isArchived : isArchived
       return matchesSearch && matchesTab
     })
-  }, [offices, searchQuery, statusFilter])
+
+    list.sort((a, b) => {
+      let valA = ""
+      let valB = ""
+      if (sortBy === "short_name") {
+        valA = (a.short_name || a.id || "").toLowerCase()
+        valB = (b.short_name || b.id || "").toLowerCase()
+      } else if (sortBy === "name") {
+        valA = (a.name || "").toLowerCase()
+        valB = (b.name || "").toLowerCase()
+      } else if (sortBy === "station_name") {
+        valA = (a.station_name || "").toLowerCase()
+        valB = (b.station_name || "").toLowerCase()
+      } else if (sortBy === "staff_count") {
+        const numA = a.staff_count || 0
+        const numB = b.staff_count || 0
+        return sortOrder === "ASC" ? numA - numB : numB - numA
+      } else if (sortBy === "module_count") {
+        const numA = a.module_count || 0
+        const numB = b.module_count || 0
+        return sortOrder === "ASC" ? numA - numB : numB - numA
+      } else if (sortBy === "status") {
+        valA = (a.status || "").toLowerCase()
+        valB = (b.status || "").toLowerCase()
+      }
+
+      if (valA < valB) return sortOrder === "ASC" ? -1 : 1
+      if (valA > valB) return sortOrder === "ASC" ? 1 : -1
+      return 0
+    })
+
+    return list
+  }, [offices, searchQuery, statusFilter, sortBy, sortOrder])
 
   const hasActiveFilters = searchQuery !== ""
 
@@ -358,7 +438,7 @@ export default function OfficeManagementTab({ showToast }) {
       key: "total",
       label: "Campus Offices",
       value: stats.total,
-      sublabel: `${stats.active} active institutional partitions`,
+      sublabel: `${stats.active} active offices`,
       color: "blue",
       shape1: "from-[#0055FF]/40 to-[#007AFF]/0",
       shape2: "from-[#14C8FF]/30 to-[#007AFF]/0",
@@ -367,9 +447,9 @@ export default function OfficeManagementTab({ showToast }) {
     },
     {
       key: "active",
-      label: "Active Partitions",
+      label: "Active Departments",
       value: stats.active,
-      sublabel: `${stats.inactive} inactive or decommissioned`,
+      sublabel: `${stats.inactive} archived or inactive`,
       color: "emerald",
       shape1: "from-[#047857]/40 to-[#059669]/0",
       shape2: "from-[#34d399]/30 to-[#059669]/0",
@@ -378,9 +458,9 @@ export default function OfficeManagementTab({ showToast }) {
     },
     {
       key: "staff",
-      label: "Total Personnel",
+      label: "Total Staff",
       value: stats.totalStaff,
-      sublabel: `${stats.avgModules} avg modules per branch`,
+      sublabel: `${stats.avgModules} avg modules per office`,
       color: "amber",
       shape1: "from-[#b45309]/40 to-[#d97706]/0",
       shape2: "from-[#fbbf24]/30 to-[#d97706]/0",
@@ -466,7 +546,7 @@ export default function OfficeManagementTab({ showToast }) {
                   <div className="space-y-3 text-white">
                     <div className="grid grid-cols-2 gap-2">
                       <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg">
-                        <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Total Units</span>
+                        <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Total Offices</span>
                         <span className="text-lg font-black">{stats.total}</span>
                       </div>
                       <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg">
@@ -475,41 +555,59 @@ export default function OfficeManagementTab({ showToast }) {
                       </div>
                     </div>
                     <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg text-xs text-white/90 leading-relaxed">
-                      Partitioned administrative and academic units operating independently with role-based access.
+                      Administrative and academic offices operating across campus with role-based access.
                     </div>
                   </div>
                 )}
                 {stat.key === "active" && (
                   <div className="space-y-3 text-white">
                     <div className="grid grid-cols-2 gap-2">
-                      <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg">
-                        <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Active Units</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setStatusFilter("Active")
+                          setSelectedKpi(null)
+                        }}
+                        className="bg-white/10 hover:bg-white/20 transition-all p-2.5 rounded-lg text-left cursor-pointer border-0 w-full active:scale-95"
+                      >
+                        <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Active Offices ↗</span>
                         <span className="text-lg font-black">{stats.active}</span>
-                      </div>
-                      <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg">
-                        <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Inactive</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setStatusFilter("Inactive")
+                          setSelectedKpi(null)
+                        }}
+                        className="bg-white/10 hover:bg-white/20 transition-all p-2.5 rounded-lg text-left cursor-pointer border-0 w-full active:scale-95"
+                      >
+                        <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Archived Offices ↗</span>
                         <span className="text-lg font-black">{stats.inactive}</span>
-                      </div>
+                      </button>
                     </div>
                     <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg text-xs text-white/90 leading-relaxed">
-                      Offices actively operational with enabled modules and personnel services.
+                      Click either box above to quickly filter the list.
                     </div>
                   </div>
                 )}
                 {stat.key === "staff" && (
                   <div className="space-y-3 text-white">
                     <div className="grid grid-cols-2 gap-2">
-                      <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg">
-                        <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Assigned Staff</span>
+                      <button
+                        type="button"
+                        onClick={() => window.dispatchEvent(new CustomEvent("switch-view", { detail: { view: "staff" } }))}
+                        className="bg-white/10 hover:bg-white/20 transition-all p-2.5 rounded-lg text-left cursor-pointer border-0 w-full active:scale-95"
+                      >
+                        <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Total Staff ↗</span>
                         <span className="text-lg font-black">{stats.totalStaff}</span>
-                      </div>
+                      </button>
                       <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg">
                         <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Avg Staff/Office</span>
                         <span className="text-lg font-black">{stats.total > 0 ? (stats.totalStaff / stats.total).toFixed(1) : 0}</span>
                       </div>
                     </div>
                     <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg text-xs text-white/90 leading-relaxed">
-                      Cumulative personnel count operating within assigned departmental workspaces.
+                      Click Total Staff to view all personnel across all offices in the Global Directory.
                     </div>
                   </div>
                 )}
@@ -523,8 +621,17 @@ export default function OfficeManagementTab({ showToast }) {
       <Card className="rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none overflow-hidden">
         <PageHeader
           icon="ph-bold ph-buildings"
-          title="Departments & Digitization Stations"
-          description="Configure institutional departments, pair physical scanning workstations (PCs), and manage isolated local storage partitions."
+          title={
+            <div className="flex items-center gap-[6px]">
+              <span>Departments & Offices</span>
+              {statusFilter === "Inactive" && (
+                <span className="text-[12px] font-normal text-emerald-600 dark:text-emerald-400">
+                  · Restore Mode
+                </span>
+              )}
+            </div>
+          }
+          description="Manage campus offices, link scanning computers, and configure departmental storage folders."
           showBorder={false}
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
           descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
@@ -534,7 +641,7 @@ export default function OfficeManagementTab({ showToast }) {
               className="flex h-10 items-center justify-center rounded-xl! btn-brand-red text-white font-semibold text-xs active:scale-95 transition-all cursor-pointer px-5 shadow-xs"
             >
               <i className="ph-bold ph-plus mr-1.5 text-[14px]"></i>
-              Add Department Node
+              Add Department
             </Button>
           }
         />
@@ -570,49 +677,83 @@ export default function OfficeManagementTab({ showToast }) {
         )}
 
         <CardContent className="font-inter bg-white p-[24px] dark:bg-card/50 backdrop-blur-md flex flex-col gap-5">
-          {/* Status Tabs Toggle: Active vs Archived */}
-          <div className="flex w-full gap-[24px] select-none">
-            <button
-              type="button"
-              onClick={() => setStatusFilter("Active")}
-              className={cn(
-                "relative pb-2 text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer",
-                statusFilter === "Active"
-                  ? "text-black after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-black dark:text-zinc-50 dark:after:bg-zinc-50"
-                  : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
-              )}
-            >
-              Active ({stats.active})
-            </button>
-            <button
-              type="button"
-              onClick={() => setStatusFilter("Inactive")}
-              className={cn(
-                "relative pb-2 text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer",
-                statusFilter === "Inactive"
-                  ? "text-black after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-black dark:text-zinc-50 dark:after:bg-zinc-50"
-                  : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
-              )}
-            >
-              Archived ({stats.inactive})
-            </button>
-          </div>
+          <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 w-full select-none">
+            {/* Left: Active vs Archived Underline Tabs */}
+            <div className="flex items-center gap-6 shrink-0 h-10 px-1 self-start lg:self-auto">
+              <button
+                type="button"
+                onClick={() => setStatusFilter("Active")}
+                className={cn(
+                  "relative h-full flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent",
+                  statusFilter === "Active"
+                    ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
+                    : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
+                )}
+              >
+                Active ({stats.active})
+              </button>
+              <button
+                type="button"
+                onClick={() => setStatusFilter("Inactive")}
+                className={cn(
+                  "relative h-full flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent",
+                  statusFilter === "Inactive"
+                    ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
+                    : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
+                )}
+              >
+                Archived ({stats.inactive})
+              </button>
+            </div>
 
-          {/* Toolbar Row */}
-          <div className="flex flex-row items-center gap-[12px] w-full select-none">
-            {/* Search */}
-            <div className="flex-1 min-w-0 relative group">
-              <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                <i className="ph-bold ph-magnifying-glass text-gray-400 transition-colors group-focus-within:text-pup-maroon dark:text-zinc-500 text-sm"></i>
+            {/* Right: Search Input & View Switcher Group */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0 w-full lg:w-auto">
+              {/* Search Input with increased width */}
+              <div className="w-full sm:w-[360px] lg:w-[420px] relative group shrink-0">
+                <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                  <i className="ph-bold ph-magnifying-glass text-gray-400 transition-colors group-focus-within:text-pup-maroon dark:text-zinc-500 text-sm"></i>
+                </div>
+                <Input
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search offices by name, acronym, ID..."
+                  className="h-10 w-full rounded-xl border border-gray-200 bg-white pl-9 pr-24 text-xs font-normal placeholder:text-gray-400 dark:border-white/10 dark:bg-card focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5"
+                />
+                <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[12px] font-normal text-gray-400 dark:text-zinc-500">
+                  {filteredOffices.length > 0 ? `${filteredOffices.length} results` : "0 results"}
+                </div>
               </div>
-              <Input
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search offices by name, acronym, ID..."
-                className="h-10 w-full rounded-xl border border-gray-200 bg-white pl-9 pr-20 text-xs font-normal placeholder:text-gray-400 dark:border-white/10 dark:bg-card focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5"
-              />
-              <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[12px] font-normal text-gray-400 dark:text-zinc-500">
-                {filteredOffices.length > 0 ? `${filteredOffices.length} results` : "0 results"}
+
+              {/* View Switcher: Grid vs Table */}
+              <div className="flex items-center gap-1 bg-gray-100 dark:bg-zinc-800/80 p-1 rounded-xl shrink-0 border border-gray-200/60 dark:border-white/5">
+                <button
+                  type="button"
+                  onClick={() => setLayoutView("grid")}
+                  title="Grid Card View"
+                  className={cn(
+                    "h-8 px-3 rounded-lg flex items-center gap-1.5 text-xs font-semibold transition-all cursor-pointer border-0",
+                    layoutView === "grid"
+                      ? "bg-white dark:bg-zinc-900 text-gray-900 dark:text-zinc-50 shadow-2xs"
+                      : "text-gray-500 hover:text-gray-800 dark:text-zinc-400 dark:hover:text-zinc-200 bg-transparent"
+                  )}
+                >
+                  <i className="ph-bold ph-squares-four text-sm"></i>
+                  <span className="hidden sm:inline">Grid</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setLayoutView("table")}
+                  title="Compact Table View"
+                  className={cn(
+                    "h-8 px-3 rounded-lg flex items-center gap-1.5 text-xs font-semibold transition-all cursor-pointer border-0",
+                    layoutView === "table"
+                      ? "bg-white dark:bg-zinc-900 text-gray-900 dark:text-zinc-50 shadow-2xs"
+                      : "text-gray-500 hover:text-gray-800 dark:text-zinc-400 dark:hover:text-zinc-200 bg-transparent"
+                  )}
+                >
+                  <i className="ph-bold ph-list-dashes text-sm"></i>
+                  <span className="hidden sm:inline">Table</span>
+                </button>
               </div>
             </div>
           </div>
@@ -679,7 +820,7 @@ export default function OfficeManagementTab({ showToast }) {
             </EmptyHeader>
           </Empty>
         </div>
-      ) : (
+      ) : layoutView === "grid" ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredOffices.map((office) => {
             const accent = office.accent_color || "#800000"
@@ -687,15 +828,34 @@ export default function OfficeManagementTab({ showToast }) {
             return (
               <Card
                 key={office.id}
-                className="overflow-hidden border border-[#e5e5ea] dark:border-[#3a3a3c] bg-white dark:bg-[#1c1c1e] relative shadow-[0_2px_8px_rgba(0,0,0,0.03)] transition-all duration-300 hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)] hover:-translate-y-0.5 rounded-2xl"
+                className={cn(
+                  "overflow-hidden border relative shadow-[0_2px_8px_rgba(0,0,0,0.03)] transition-all duration-300 rounded-2xl flex flex-col justify-between",
+                  isActive
+                    ? "border-[#e5e5ea] dark:border-[#3a3a3c] bg-white dark:bg-[#1c1c1e] hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)] hover:-translate-y-0.5"
+                    : "border-dashed border-gray-300 dark:border-zinc-700 bg-gray-50/70 dark:bg-zinc-900/40 opacity-80 dark:opacity-75"
+                )}
               >
                 <CardContent className="p-6 flex flex-col h-full justify-between">
                   <div>
+                    {!isActive && (
+                      <div className="mb-3 px-2.5 py-1.5 rounded-lg bg-gray-100 dark:bg-zinc-800/80 text-[11px] font-medium text-gray-600 dark:text-zinc-300 flex items-center justify-between border border-gray-200/60 dark:border-white/5">
+                        <span className="flex items-center gap-1.5">
+                          <i className="ph-bold ph-archive text-gray-400"></i>
+                          <span>Archived Office</span>
+                        </span>
+                        <span className="text-[10px] uppercase tracking-wider text-gray-400 font-medium">Inactive</span>
+                      </div>
+                    )}
+
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex items-center gap-3">
                         <div
                           className="h-10 w-10 rounded-xl flex items-center justify-center border text-lg shadow-sm"
-                          style={{ borderColor: `${accent}20`, backgroundColor: `${accent}08`, color: accent }}
+                          style={
+                            isActive
+                              ? { borderColor: `${accent}20`, backgroundColor: `${accent}08`, color: accent }
+                              : { borderColor: "rgba(142, 142, 147, 0.2)", backgroundColor: "rgba(142, 142, 147, 0.08)", color: "#8e8e93" }
+                          }
                         >
                           <i className={office.icon || "ti ti-building"}></i>
                         </div>
@@ -709,16 +869,16 @@ export default function OfficeManagementTab({ showToast }) {
                         </div>
                       </div>
 
-                      <Badge
+                      <div
                         className={cn(
-                          "rounded-full border-0 px-2 py-0.5 text-[10px] font-bold shadow-none",
+                          "inline-flex w-fit items-center justify-center rounded-[4px] px-[8px] py-[3px] text-[11px] font-medium tracking-[0.04em] select-none",
                           isActive
-                            ? "bg-[#34c759]/10 text-[#34c759] dark:bg-[#30d158]/20 dark:text-[#30d158]"
-                            : "bg-[#8e8e93]/10 text-[#8e8e93] dark:bg-[#8e8e93]/20 dark:text-[#aeaeb2]"
+                            ? "bg-[#D1FAE5] text-[#065F46] dark:bg-emerald-950/40 dark:text-emerald-400"
+                            : "bg-gray-100 text-[#8E8E93] dark:bg-zinc-800 dark:text-zinc-400"
                         )}
                       >
-                        {office.status}
-                      </Badge>
+                        {isActive ? "Active" : "Inactive"}
+                      </div>
                     </div>
 
                     <h4 className="text-xs font-semibold text-gray-900 dark:text-[#f2f2f7] mb-1.5 leading-snug">
@@ -730,12 +890,12 @@ export default function OfficeManagementTab({ showToast }) {
                     </p>
                   </div>
 
-                  {/* Station & Storage Hardware Node */}
+                  {/* Workstation & Scanner Setup */}
                   <div className="space-y-1.5 mt-2 pt-3 border-t border-gray-100 dark:border-zinc-800 text-[11px] text-gray-600 dark:text-zinc-400">
                     <div className="flex items-center justify-between">
                       <span className="flex items-center gap-1.5 text-gray-500 dark:text-zinc-400">
                         <i className="ph-bold ph-desktop text-pup-maroon dark:text-red-400"></i>
-                        <span>Scanning PC:</span>
+                        <span>Scanning Computer:</span>
                       </span>
                       <span className="font-semibold text-gray-900 dark:text-zinc-100">
                         {office.station_name || "Unassigned"}
@@ -745,7 +905,7 @@ export default function OfficeManagementTab({ showToast }) {
                     <div className="flex items-center justify-between">
                       <span className="flex items-center gap-1.5 text-gray-500 dark:text-zinc-400">
                         <i className="ph-bold ph-hard-drives text-pup-maroon dark:text-red-400"></i>
-                        <span>Local Storage:</span>
+                        <span>Storage Folder:</span>
                       </span>
                       <span className="font-medium text-gray-700 dark:text-zinc-300 truncate max-w-[150px]" title={office.storage_path}>
                         {office.storage_path || `.local/storage/${office.id}`}
@@ -755,57 +915,359 @@ export default function OfficeManagementTab({ showToast }) {
                     <div className="flex items-center justify-between">
                       <span className="flex items-center gap-1.5 text-gray-500 dark:text-zinc-400">
                         <i className="ph-bold ph-printer text-pup-maroon dark:text-red-400"></i>
-                        <span>Scanner:</span>
+                        <span>Scanner Model:</span>
                       </span>
                       <span className="font-medium text-gray-700 dark:text-zinc-300 truncate max-w-[150px]" title={office.scanner_model}>
                         {office.scanner_model || "Document Scanner"}
                       </span>
                     </div>
+
+                    {office.ingest_token && (
+                      <div className="flex items-center justify-between pt-0.5">
+                        <span className="flex items-center gap-1.5 text-gray-500 dark:text-zinc-400">
+                          <i className="ph-bold ph-key text-pup-maroon dark:text-red-400"></i>
+                          <span>Scanner Key:</span>
+                        </span>
+                        <div className="flex items-center gap-1">
+                          <span className="text-[11px] text-gray-600 dark:text-zinc-300 tracking-wider">
+                            {revealedTokens[office.id] ? office.ingest_token : "••••••••••••"}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setRevealedTokens(prev => ({ ...prev, [office.id]: !prev[office.id] }))
+                            }}
+                            title={revealedTokens[office.id] ? "Hide Security Key" : "Show Security Key"}
+                            className="p-1 rounded-md text-gray-400 hover:text-gray-700 dark:hover:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer border-0 bg-transparent"
+                          >
+                            <i className={cn("text-xs", revealedTokens[office.id] ? "ph-bold ph-eye-slash" : "ph-bold ph-eye")}></i>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              navigator.clipboard.writeText(office.ingest_token)
+                              setCopiedTokenId(office.id)
+                              showToast("Scanner security key copied to clipboard")
+                              setTimeout(() => setCopiedTokenId(null), 2000)
+                            }}
+                            title="Copy Scanner Security Key"
+                            className="p-1 rounded-md text-gray-400 hover:text-gray-700 dark:hover:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer border-0 bg-transparent"
+                          >
+                            <i className={cn("text-xs", copiedTokenId === office.id ? "ph-bold ph-check text-emerald-600" : "ph-bold ph-copy")}></i>
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
-                  {/* Office Metrics */}
+                  {/* Office Metrics: Clickable Deep Links */}
                   <div className="border-t border-gray-100 dark:border-zinc-800 pt-2.5 mt-2 flex items-center justify-between text-xs text-gray-600 dark:text-zinc-400">
-                    <div className="flex items-center gap-1.5 font-medium">
-                      <i className="ph-bold ph-users text-gray-400"></i>
-                      <span>Staff: <strong className="text-gray-900 dark:text-zinc-100 font-bold">{office.staff_count || 0}</strong></span>
-                    </div>
-                    <div className="flex items-center gap-1.5 font-medium">
-                      <i className="ph-bold ph-squares-four text-gray-400"></i>
-                      <span>Modules: <strong className="text-gray-900 dark:text-zinc-100 font-bold">{office.module_count || 0}</strong></span>
-                    </div>
+                    <button
+                      type="button"
+                      onClick={() => window.dispatchEvent(new CustomEvent("switch-view", { detail: { view: "staff", officeId: office.id } }))}
+                      title={`View assigned personnel in Global Directory`}
+                      className="group/staff flex items-center gap-1.5 font-medium hover:text-pup-maroon dark:hover:text-red-400 transition-colors cursor-pointer border-0 bg-transparent p-0"
+                    >
+                      <i className="ph-bold ph-users text-gray-400 group-hover/staff:text-pup-maroon dark:group-hover/staff:text-red-400 transition-colors"></i>
+                      <span>Staff: <strong className="text-gray-900 dark:text-zinc-100 group-hover/staff:text-pup-maroon dark:group-hover/staff:text-red-400 font-bold underline decoration-dotted underline-offset-2">{office.staff_count || 0}</strong></span>
+                      <i className="ph-bold ph-arrow-right text-[10px] opacity-0 group-hover/staff:opacity-100 transition-opacity"></i>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => window.dispatchEvent(new CustomEvent("switch-view", { detail: { view: "modules", officeId: office.id } }))}
+                      title={`Configure workspace modules for ${office.short_name}`}
+                      className="group/mod flex items-center gap-1.5 font-medium hover:text-pup-maroon dark:hover:text-red-400 transition-colors cursor-pointer border-0 bg-transparent p-0"
+                    >
+                      <i className="ph-bold ph-squares-four text-gray-400 group-hover/mod:text-pup-maroon dark:group-hover/mod:text-red-400 transition-colors"></i>
+                      <span>Modules: <strong className="text-gray-900 dark:text-zinc-100 group-hover/mod:text-pup-maroon dark:group-hover/mod:text-red-400 font-bold underline decoration-dotted underline-offset-2">{office.module_count || 0}</strong></span>
+                      <i className="ph-bold ph-arrow-right text-[10px] opacity-0 group-hover/mod:opacity-100 transition-opacity"></i>
+                    </button>
                   </div>
 
                   {/* Actions */}
                   <div className="flex items-center gap-2 mt-5 pt-3 border-t border-gray-100 dark:border-zinc-800">
-                    <Button
-                      onClick={() => handleOpenEdit(office)}
-                      className="flex-1 bg-[#f2f2f7] hover:bg-[#e5e5ea] dark:bg-[#2c2c2e] dark:hover:bg-[#3a3a3c] text-gray-800 dark:text-[#f2f2f7] font-semibold text-xs h-8 cursor-pointer rounded-xl border-0 shadow-none"
-                    >
-                      Configure
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      onClick={() => {
-                        if (isActive) {
-                          setDeactivateOfficeTarget(office)
-                        } else {
-                          handleToggleStatus(office)
-                        }
-                      }}
-                      className={cn(
-                        "h-8 px-3 rounded-xl text-xs font-semibold cursor-pointer border-0 shadow-none transition-colors",
-                        isActive
-                          ? "text-[#ff3b30] hover:bg-[#ff3b30]/10 dark:text-[#ff453a] dark:hover:bg-[#ff453a]/15"
-                          : "text-[#34c759] hover:bg-[#34c759]/10 dark:text-[#30d158] dark:hover:bg-[#30d158]/15"
-                      )}
-                    >
-                      {isActive ? "Deactivate" : "Activate"}
-                    </Button>
+                    {isActive ? (
+                      <>
+                        <Button
+                          onClick={() => handleOpenEdit(office)}
+                          className="flex-1 bg-[#f2f2f7] hover:bg-[#e5e5ea] dark:bg-[#2c2c2e] dark:hover:bg-[#3a3a3c] text-gray-800 dark:text-[#f2f2f7] font-semibold text-xs h-8 cursor-pointer rounded-xl border-0 shadow-none"
+                        >
+                          Configure
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          onClick={() => setDeactivateOfficeTarget(office)}
+                          className="h-8 px-3 rounded-xl text-xs font-semibold cursor-pointer border-0 shadow-none transition-colors text-[#ff3b30] hover:bg-[#ff3b30]/10 dark:text-[#ff453a] dark:hover:bg-[#ff453a]/15"
+                        >
+                          Deactivate
+                        </Button>
+                      </>
+                    ) : (
+                      <Button
+                        onClick={() => setActivateOfficeTarget(office)}
+                        className="w-full bg-[#34c759]/10 hover:bg-[#34c759]/20 text-[#28a745] dark:bg-[#30d158]/15 dark:hover:bg-[#30d158]/25 dark:text-[#30d158] font-semibold text-xs h-8 cursor-pointer rounded-xl border-0 shadow-none transition-colors flex items-center justify-center gap-1.5"
+                      >
+                        <i className="ph-bold ph-arrow-counter-clockwise text-[13px]"></i>
+                        <span>Activate Department</span>
+                      </Button>
+                    )}
                   </div>
                 </CardContent>
               </Card>
             )
           })}
+        </div>
+      ) : (
+        /* Compact Table View */
+        <div className="rounded-2xl border border-gray-200 dark:border-white/10 overflow-hidden bg-white dark:bg-card shadow-sm">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs text-gray-600 dark:text-zinc-400">
+              <thead className="sticky top-0 z-10 border-b-[0.5px] border-black/10 dark:border-white/10 bg-white dark:bg-card">
+                <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500 h-11 select-none">
+                  <th className="px-5 py-3">
+                    <button
+                      onClick={() => handleSort("short_name")}
+                      className={cn(
+                        "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
+                        sortBy === "short_name" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
+                      )}
+                    >
+                      Department / Office{" "}
+                      <SortIndicator column="short_name" sortBy={sortBy} sortOrder={sortOrder} />
+                    </button>
+                  </th>
+                  <th className="px-5 py-3">
+                    <button
+                      onClick={() => handleSort("name")}
+                      className={cn(
+                        "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
+                        sortBy === "name" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
+                      )}
+                    >
+                      Office Name & Description{" "}
+                      <SortIndicator column="name" sortBy={sortBy} sortOrder={sortOrder} />
+                    </button>
+                  </th>
+                  <th className="px-5 py-3">
+                    <button
+                      onClick={() => handleSort("station_name")}
+                      className={cn(
+                        "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
+                        sortBy === "station_name" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
+                      )}
+                    >
+                      Workstation & Storage{" "}
+                      <SortIndicator column="station_name" sortBy={sortBy} sortOrder={sortOrder} />
+                    </button>
+                  </th>
+                  <th className="px-5 py-3 text-center">
+                    <button
+                      onClick={() => handleSort("staff_count")}
+                      className={cn(
+                        "group inline-flex items-center justify-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
+                        sortBy === "staff_count" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
+                      )}
+                    >
+                      Staff{" "}
+                      <SortIndicator column="staff_count" sortBy={sortBy} sortOrder={sortOrder} />
+                    </button>
+                  </th>
+                  <th className="px-5 py-3 text-center">
+                    <button
+                      onClick={() => handleSort("module_count")}
+                      className={cn(
+                        "group inline-flex items-center justify-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
+                        sortBy === "module_count" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
+                      )}
+                    >
+                      Modules{" "}
+                      <SortIndicator column="module_count" sortBy={sortBy} sortOrder={sortOrder} />
+                    </button>
+                  </th>
+                  <th className="px-5 py-3">
+                    <button
+                      onClick={() => handleSort("status")}
+                      className={cn(
+                        "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
+                        sortBy === "status" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
+                      )}
+                    >
+                      Status{" "}
+                      <SortIndicator column="status" sortBy={sortBy} sortOrder={sortOrder} />
+                    </button>
+                  </th>
+                  <th className="px-5 py-3 text-right text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100 dark:divide-white/5">
+                {filteredOffices.map((office) => {
+                  const accent = office.accent_color || "#800000"
+                  const isActive = office.status === "Active"
+                  return (
+                    <tr
+                      key={office.id}
+                      className={cn(
+                        "hover:bg-gray-50/70 dark:hover:bg-zinc-900/40 transition-colors",
+                        !isActive && "bg-gray-50/40 dark:bg-zinc-900/20 opacity-75"
+                      )}
+                    >
+                      <td className="px-5 py-3.5 whitespace-nowrap">
+                        <div className="flex items-center gap-3">
+                          <div
+                            className="h-8 w-8 rounded-lg flex items-center justify-center border text-sm shadow-2xs shrink-0"
+                            style={
+                              isActive
+                                ? { borderColor: `${accent}20`, backgroundColor: `${accent}08`, color: accent }
+                                : { borderColor: "rgba(142, 142, 147, 0.2)", backgroundColor: "rgba(142, 142, 147, 0.08)", color: "#8e8e93" }
+                            }
+                          >
+                            <i className={office.icon || "ti ti-building"}></i>
+                          </div>
+                          <div>
+                            <span className="font-bold text-gray-900 dark:text-zinc-50 block text-xs leading-tight">
+                              {office.short_name}
+                            </span>
+                            <span className="text-[10px] text-gray-400 dark:text-zinc-500 uppercase tracking-wider">
+                              ID: {office.id}
+                            </span>
+                          </div>
+                        </div>
+                      </td>
+
+                      <td className="px-5 py-3.5">
+                        <div className="max-w-xs">
+                          <span className="font-semibold text-gray-900 dark:text-zinc-100 block text-xs truncate">
+                            {office.name}
+                          </span>
+                          <span className="text-[11px] text-gray-400 dark:text-zinc-500 line-clamp-1">
+                            {office.description || "No description provided."}
+                          </span>
+                        </div>
+                      </td>
+
+                      <td className="px-5 py-3.5 whitespace-nowrap">
+                        <div className="text-[11px] space-y-0.5">
+                          <div className="flex items-center gap-1.5 text-gray-800 dark:text-zinc-200 font-medium">
+                            <i className="ph-bold ph-desktop text-pup-maroon dark:text-red-400 text-xs"></i>
+                            <span>{office.station_name || "Unassigned"}</span>
+                          </div>
+                          <div className="text-[10px] text-gray-400 dark:text-zinc-500 truncate max-w-[150px]" title={office.storage_path}>
+                            {office.storage_path || `.local/storage/${office.id}`}
+                          </div>
+                        </div>
+                      </td>
+
+                      <td className="px-5 py-3.5 text-center whitespace-nowrap">
+                        <button
+                          type="button"
+                          onClick={() => window.dispatchEvent(new CustomEvent("switch-view", { detail: { view: "staff", officeId: office.id } }))}
+                          title="View assigned personnel in Global Directory"
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-gray-700 dark:text-zinc-300 transition-colors font-semibold text-xs cursor-pointer border-0"
+                        >
+                          <i className="ph-bold ph-users text-xs text-gray-500"></i>
+                          <span>{office.staff_count || 0}</span>
+                        </button>
+                      </td>
+
+                      <td className="px-5 py-3.5 text-center whitespace-nowrap">
+                        <button
+                          type="button"
+                          onClick={() => window.dispatchEvent(new CustomEvent("switch-view", { detail: { view: "modules", officeId: office.id } }))}
+                          title={`Configure workspace modules for ${office.short_name}`}
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-gray-700 dark:text-zinc-300 transition-colors font-semibold text-xs cursor-pointer border-0"
+                        >
+                          <i className="ph-bold ph-squares-four text-xs text-gray-500"></i>
+                          <span>{office.module_count || 0}</span>
+                        </button>
+                      </td>
+
+                      <td className="px-5 py-3.5 whitespace-nowrap">
+                        <div
+                          className={cn(
+                            "inline-flex w-fit items-center justify-center rounded-[4px] px-[8px] py-[3px] text-[11px] font-medium tracking-[0.04em] select-none",
+                            isActive
+                              ? "bg-[#D1FAE5] text-[#065F46] dark:bg-emerald-950/40 dark:text-emerald-400"
+                              : "bg-gray-100 text-[#8E8E93] dark:bg-zinc-800 dark:text-zinc-400"
+                          )}
+                        >
+                          {isActive ? "Active" : "Inactive"}
+                        </div>
+                      </td>
+
+                      <td className="px-5 py-3.5 text-right whitespace-nowrap">
+                        <div className="flex items-center justify-end gap-1.5">
+                          {office.ingest_token && (
+                            <div className="flex items-center gap-0.5 mr-1">
+                              <span className="text-[10px] text-gray-400 dark:text-zinc-500 tracking-wider">
+                                {revealedTokens[office.id] ? office.ingest_token.slice(0, 10) + "..." : "••••••••"}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  setRevealedTokens(prev => ({ ...prev, [office.id]: !prev[office.id] }))
+                                }}
+                                title={revealedTokens[office.id] ? "Hide Security Key" : "Show Security Key"}
+                                className="h-7 w-7 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-700 dark:hover:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer border-0 bg-transparent"
+                              >
+                                <i className={cn("text-xs", revealedTokens[office.id] ? "ph-bold ph-eye-slash" : "ph-bold ph-eye")}></i>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  navigator.clipboard.writeText(office.ingest_token)
+                                  setCopiedTokenId(office.id)
+                                  showToast("Scanner security key copied to clipboard")
+                                  setTimeout(() => setCopiedTokenId(null), 2000)
+                                }}
+                                title="Copy Scanner Security Key"
+                                className="h-7 w-7 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-700 dark:hover:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer border-0 bg-transparent"
+                              >
+                                <i className={cn("text-xs", copiedTokenId === office.id ? "ph-bold ph-check text-emerald-600" : "ph-bold ph-copy")}></i>
+                              </button>
+                            </div>
+                          )}
+                          {isActive ? (
+                            <>
+                              <Button
+                                size="sm"
+                                onClick={() => handleOpenEdit(office)}
+                                className="h-7 px-2.5 rounded-lg bg-[#f2f2f7] hover:bg-[#e5e5ea] dark:bg-[#2c2c2e] dark:hover:bg-[#3a3a3c] text-gray-800 dark:text-[#f2f2f7] font-semibold text-[11px] cursor-pointer border-0 shadow-none"
+                              >
+                                Configure
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => setDeactivateOfficeTarget(office)}
+                                className="h-7 px-2 rounded-lg text-[11px] font-semibold text-[#ff3b30] hover:bg-[#ff3b30]/10 dark:text-[#ff453a] cursor-pointer border-0 shadow-none"
+                              >
+                                Deactivate
+                              </Button>
+                            </>
+                          ) : (
+                            <Button
+                              size="sm"
+                              onClick={() => setActivateOfficeTarget(office)}
+                              className="h-7 px-3 rounded-lg bg-[#34c759]/10 hover:bg-[#34c759]/20 text-[#28a745] dark:bg-[#30d158]/15 dark:hover:bg-[#30d158]/25 dark:text-[#30d158] font-semibold text-[11px] cursor-pointer border-0 shadow-none flex items-center gap-1"
+                            >
+                              <i className="ph-bold ph-arrow-counter-clockwise text-xs"></i>
+                              <span>Activate</span>
+                            </Button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
@@ -814,12 +1276,12 @@ export default function OfficeManagementTab({ showToast }) {
         <DialogContent className="sm:max-w-2xl w-full rounded-2xl bg-white border border-gray-200 dark:bg-zinc-900 dark:border-white/10 p-0 shadow-2xl overflow-hidden">
           <form onSubmit={handleSubmit}>
             {/* Header: Clean title without icon as requested */}
-            <DialogHeader className="p-6 pb-4 border-b border-gray-100 dark:border-white/5 text-left">
-              <DialogTitle className="text-xl font-bold text-gray-900 dark:text-zinc-50 tracking-tight">
-                {isEditing ? "Edit Office Configuration" : "Create Administrative Office"}
+            <DialogHeader className="p-6 pb-0 bg-white dark:bg-card border-none text-left">
+              <DialogTitle className="text-[16px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
+                {isEditing ? "Edit Office Details" : "Add New Office"}
               </DialogTitle>
-              <DialogDescription className="text-xs text-gray-500 mt-1 dark:text-zinc-400">
-                Configure identity, default workspace modules, and branding for this campus office.
+              <DialogDescription className="text-[13px] font-normal text-gray-500 mt-1 dark:text-zinc-400">
+                Set up office identity, scanning computer, and enabled services.
               </DialogDescription>
             </DialogHeader>
 
@@ -828,11 +1290,26 @@ export default function OfficeManagementTab({ showToast }) {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
-                    Acronym / Short Name *
+                    Office Acronym / Short Name *
                   </label>
                   <Input
                     value={form.short_name}
-                    onChange={(e) => setForm(prev => ({ ...prev, short_name: e.target.value }))}
+                    onChange={(e) => {
+                      const val = e.target.value
+                      setForm(prev => {
+                        const next = { ...prev, short_name: val }
+                        if (!isEditing && !hasManuallyEditedId) {
+                          next.id = val
+                            .toLowerCase()
+                            .trimStart()
+                            .replace(/[\s_]+/g, "-")
+                            .replace(/[^a-z0-9-]/g, "")
+                            .replace(/-+/g, "-")
+                            .slice(0, 24)
+                        }
+                        return next
+                      })
+                    }}
                     placeholder="e.g. Registrar, OSAS, Library"
                     className="h-10 rounded-xl bg-white border border-gray-200 text-xs focus-visible:ring-pup-maroon dark:bg-zinc-950 dark:border-white/10 dark:text-white"
                     required
@@ -841,21 +1318,35 @@ export default function OfficeManagementTab({ showToast }) {
 
                 <div>
                   <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
-                    Office Identifier (Database ID) *
+                    Office Code / ID *
                   </label>
                   <Input
                     value={form.id}
-                    onChange={(e) => setForm(prev => ({ ...prev, id: e.target.value }))}
+                    onChange={(e) => {
+                      setHasManuallyEditedId(true)
+                      const cleanId = e.target.value
+                        .toLowerCase()
+                        .replace(/[\s_]+/g, "-")
+                        .replace(/[^a-z0-9-]/g, "")
+                        .replace(/-+/g, "-")
+                      setForm(prev => ({ ...prev, id: cleanId }))
+                    }}
                     disabled={isEditing}
                     placeholder="e.g. registrar, osas, library"
-                    className="h-10 rounded-xl bg-white border border-gray-200 text-xs focus-visible:ring-pup-maroon dark:bg-zinc-950 dark:border-white/10 dark:text-white"
                     className="h-10 rounded-xl bg-white border border-gray-200 text-xs focus-visible:ring-pup-maroon dark:bg-zinc-950 dark:border-white/10 dark:text-white"
                     required
                   />
                   {!isEditing && (
-                    <span className="text-[10px] text-gray-400 mt-1 block">
-                      Auto-provisions admin account: <code className="text-gray-600 dark:text-zinc-300 font-semibold">PUP{(form.id || "OFFICE").trim().toUpperCase()}-001</code>
-                    </span>
+                    <div className="flex items-center justify-between text-[10px] text-gray-400 mt-1">
+                      <span>
+                        Default admin: <code className="text-gray-600 dark:text-zinc-300 font-semibold">PUP{(form.id || "OFFICE").trim().toUpperCase()}-001</code>
+                      </span>
+                      {!hasManuallyEditedId && form.id && (
+                        <span className="text-[9.5px] text-emerald-600 dark:text-emerald-400 font-medium">
+                          Auto-generated
+                        </span>
+                      )}
+                    </div>
                   )}
                 </div>
               </div>
@@ -887,7 +1378,7 @@ export default function OfficeManagementTab({ showToast }) {
                 />
               </div>
 
-              {/* Station Hardware & Storage Partition Binding */}
+              {/* Workstation & Document Scanning Setup */}
               <div className="border border-gray-200/80 dark:border-white/10 rounded-2xl p-4 bg-gray-50/50 dark:bg-zinc-950/40 space-y-3.5">
                 <div className="flex items-center gap-2.5 pb-2 border-b border-gray-100 dark:border-white/5">
                   <div className="h-7 w-7 rounded-lg bg-pup-maroon/10 text-pup-maroon dark:bg-white/10 dark:text-zinc-100 flex items-center justify-center text-sm">
@@ -895,10 +1386,10 @@ export default function OfficeManagementTab({ showToast }) {
                   </div>
                   <div>
                     <h5 className="text-xs font-bold text-gray-900 dark:text-zinc-50">
-                      Digitization Workstation & Storage Node
+                      Scanning Workstation & Storage Setup
                     </h5>
                     <p className="text-[11px] text-gray-500 dark:text-zinc-400">
-                      Pair this department to its physical scanner PC and isolated local storage drive.
+                      Link this department to its physical scanning computer and storage folder.
                     </p>
                   </div>
                 </div>
@@ -906,7 +1397,7 @@ export default function OfficeManagementTab({ showToast }) {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
-                      Dedicated Station Host / PC Name
+                      Scanning Computer Name
                     </label>
                     <Input
                       value={form.station_name}
@@ -918,7 +1409,7 @@ export default function OfficeManagementTab({ showToast }) {
 
                   <div>
                     <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
-                      Scanner Hardware Model
+                      Scanner Model
                     </label>
                     <Input
                       value={form.scanner_model}
@@ -931,7 +1422,7 @@ export default function OfficeManagementTab({ showToast }) {
 
                 <div>
                   <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
-                    Dedicated Local Storage Partition Path
+                    Storage Folder Path
                   </label>
                   <Input
                     value={form.storage_path}
@@ -940,19 +1431,20 @@ export default function OfficeManagementTab({ showToast }) {
                     className="h-10 rounded-xl bg-white border border-gray-200 text-xs focus-visible:ring-pup-maroon dark:bg-zinc-950 dark:border-white/10 dark:text-white"
                   />
                   <span className="text-[10px] text-gray-400 mt-1 block">
-                    Scans and documents for this department are physically saved to this local drive partition.
+                    Scanned documents for this department will be physically saved in this local folder.
                   </span>
                 </div>
 
                 <div>
                   <div className="flex items-center justify-between mb-1">
                     <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider">
-                      Station Ingest Security Key / Token
+                      Scanner Connection Token (Security Key)
                     </label>
                     <button
                       type="button"
                       onClick={() => {
-                        const randomToken = `station_token_${(form.short_name || "sec").toLowerCase()}_${Math.random().toString(36).substring(2, 10)}`;
+                        const slug = (form.short_name || "sec").toLowerCase().replace(/[\s_]+/g, "-").replace(/[^a-z0-9-]/g, "").slice(0, 16);
+                        const randomToken = `station_token_${slug || "sec"}_${Math.random().toString(36).substring(2, 10)}`;
                         setForm(prev => ({ ...prev, ingest_token: randomToken }));
                       }}
                       className="text-[10px] font-bold text-pup-maroon hover:underline dark:text-red-400 cursor-pointer"
@@ -960,12 +1452,23 @@ export default function OfficeManagementTab({ showToast }) {
                       Generate New Key
                     </button>
                   </div>
-                  <Input
-                    value={form.ingest_token}
-                    onChange={(e) => setForm(prev => ({ ...prev, ingest_token: e.target.value }))}
-                    placeholder="Secret bearer token for this station's scanner watcher service"
-                    className="h-10 rounded-xl bg-white border border-gray-200 text-xs focus-visible:ring-pup-maroon dark:bg-zinc-950 dark:border-white/10 dark:text-white"
-                  />
+                  <div className="relative">
+                    <Input
+                      type={showModalToken ? "text" : "password"}
+                      value={form.ingest_token}
+                      onChange={(e) => setForm(prev => ({ ...prev, ingest_token: e.target.value }))}
+                      placeholder="Security key for the scanner computer service"
+                      className="h-10 rounded-xl bg-white border border-gray-200 text-xs focus-visible:ring-pup-maroon dark:bg-zinc-950 dark:border-white/10 dark:text-white pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowModalToken(prev => !prev)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-zinc-200 cursor-pointer border-0 bg-transparent p-0"
+                      title={showModalToken ? "Hide security key" : "Show security key"}
+                    >
+                      <i className={cn("text-sm", showModalToken ? "ph-bold ph-eye-slash" : "ph-bold ph-eye")}></i>
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -1126,8 +1629,8 @@ export default function OfficeManagementTab({ showToast }) {
                 </div>
 
                 {!showCustomIcon ? (
-                  <div className="p-3 rounded-2xl border border-gray-200 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-950/40">
-                    <div className="grid grid-cols-6 sm:grid-cols-9 gap-2 max-h-[170px] overflow-y-auto pr-1">
+                  <div className="p-3.5 sm:p-4 rounded-2xl border border-gray-200 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-950/40">
+                    <div className="grid grid-cols-6 sm:grid-cols-9 gap-2.5 sm:gap-3">
                       {PRESET_ICONS.map((opt) => {
                         const selected = form.icon === opt.value
                         return (
@@ -1137,7 +1640,7 @@ export default function OfficeManagementTab({ showToast }) {
                             title={opt.label}
                             onClick={() => setForm(prev => ({ ...prev, icon: opt.value }))}
                             className={cn(
-                              "h-10 flex items-center justify-center rounded-xl border text-lg transition-all cursor-pointer shadow-2xs",
+                              "h-10 w-full flex items-center justify-center rounded-xl border text-lg transition-all cursor-pointer shadow-2xs",
                               selected
                                 ? "border-slate-900 bg-slate-900 text-white dark:border-zinc-100 dark:bg-zinc-100 dark:text-zinc-900 scale-105"
                                 : "border-gray-200/90 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-100 dark:border-white/10 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800"
@@ -1242,12 +1745,12 @@ export default function OfficeManagementTab({ showToast }) {
               </div>
             </div>
 
-            <DialogFooter className="p-6 bg-gray-50 dark:bg-zinc-950/40 border-t border-gray-100 dark:border-white/5 flex items-center justify-end gap-2.5">
+            <DialogFooter className="p-6 pt-0 bg-white dark:bg-card border-none flex items-center justify-end gap-2.5">
               <Button
                 type="button"
                 variant="ghost"
                 onClick={() => setDialogOpen(false)}
-                className="text-xs text-gray-500 dark:text-zinc-400 font-semibold cursor-pointer"
+                className="h-10 px-4 text-xs font-semibold text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:text-zinc-400 dark:hover:bg-white/5 rounded-xl cursor-pointer border-none shadow-none"
               >
                 Cancel
               </Button>
@@ -1269,13 +1772,28 @@ export default function OfficeManagementTab({ showToast }) {
         onCancel={() => setDeactivateOfficeTarget(null)}
         onConfirm={confirmDeactivateOffice}
         isLoading={isDeactivating}
-        title="Deactivate Office Partition"
-        message={`Are you sure you want to deactivate ${deactivateOfficeTarget?.name || "this office"}? Staff members assigned to this office will lose operational workspace access until reactivated.`}
+        title="Deactivate Office"
+        message={`Are you sure you want to deactivate ${deactivateOfficeTarget?.name || "this office"}? Staff members assigned to this office will not have access until it is reactivated.`}
         confirmLabel="Deactivate Office"
         variant="danger"
         isAppleStyled={true}
         isPersonnelModal={true}
         selectedItems={deactivateOfficeTarget ? [`${deactivateOfficeTarget.short_name} (${deactivateOfficeTarget.id}) — ${deactivateOfficeTarget.staff_count || 0} Staff assigned`] : []}
+      />
+
+      {/* Activate Confirmation Modal */}
+      <ConfirmModal
+        open={!!activateOfficeTarget}
+        onCancel={() => setActivateOfficeTarget(null)}
+        onConfirm={confirmActivateOffice}
+        isLoading={isActivating}
+        title="Reactivate Office"
+        message={`Are you sure you want to reactivate ${activateOfficeTarget?.name || "this office"}? Assigned staff members will regain access to their office workspace.`}
+        confirmLabel="Reactivate Office"
+        variant="primary"
+        isAppleStyled={true}
+        isPersonnelModal={true}
+        selectedItems={activateOfficeTarget ? [`${activateOfficeTarget.short_name} (${activateOfficeTarget.id}) — ${activateOfficeTarget.staff_count || 0} Staff assigned`] : []}
       />
     </div>
   )

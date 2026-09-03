@@ -95,10 +95,13 @@ export default function Header({ authUser, onLogout, children }) {
   }, [branding.color, branding.foreground]);
 
   useEffect(() => {
+    if (isSuperAdmin) {
+      setPreferredView("systemadmin");
+      return;
+    }
     if (hasAdminRights) {
       const stored = localStorage.getItem("pup_admin_view_pref");
-      const defaultView = isSuperAdmin ? "systemadmin" : (isAdmin ? "admin" : "staff");
-      const target = stored || (pathname?.startsWith("/systemadmin") || pathname?.startsWith("/superadmin") ? "systemadmin" : (pathname?.startsWith("/admin") ? "admin" : "staff"));
+      const target = (stored === "admin" || stored === "staff") ? stored : (pathname?.startsWith("/admin") ? "admin" : "staff");
       const timer = setTimeout(() => {
         setPreferredView(target);
       }, 0);
@@ -110,13 +113,15 @@ export default function Header({ authUser, onLogout, children }) {
     ? (authUser.fname[0] + authUser.lname[0]).toUpperCase()
     : "AD";
 
-  const activeView = (pathname?.startsWith("/systemadmin") || pathname?.startsWith("/superadmin"))
+  const activeView = isSuperAdmin
     ? "systemadmin"
-    : (pathname?.startsWith("/admin"))
-      ? "admin"
-      : (pathname?.startsWith("/staff"))
-        ? "staff"
-        : (preferredView || (isSuperAdmin ? "systemadmin" : (isAdmin ? "admin" : "staff")));
+    : (pathname?.startsWith("/systemadmin") || pathname?.startsWith("/superadmin"))
+      ? "systemadmin"
+      : (pathname?.startsWith("/admin"))
+        ? "admin"
+        : (pathname?.startsWith("/staff"))
+          ? "staff"
+          : (preferredView || (isAdmin ? "admin" : "staff"));
 
   const handleViewSwitch = (viewKey) => {
     localStorage.setItem("pup_admin_view_pref", viewKey);
@@ -163,7 +168,7 @@ export default function Header({ authUser, onLogout, children }) {
 
   // Dynamically reflect the current view role & accent color based on activeView
   const currentViewRole = (() => {
-    if (activeView === "systemadmin" || activeView === "superadmin") {
+    if (isSuperAdmin || activeView === "systemadmin" || activeView === "superadmin") {
       return "System Administrator";
     }
     if (activeView === "admin") {
@@ -175,23 +180,23 @@ export default function Header({ authUser, onLogout, children }) {
     return getRoleLabel(authUser?.role);
   })();
 
-  const displayRole = currentViewRole;
+  const displayRole = isSuperAdmin ? "System Administrator" : currentViewRole;
 
   const currentViewColor = (() => {
-    if (activeView === "systemadmin" || activeView === "superadmin") {
-      return "#0f172a";
+    if (isSuperAdmin || activeView === "systemadmin" || activeView === "superadmin") {
+      return ROLE_BRANDING.black.color;
     }
     if (activeView === "admin") {
-      return "#e30000";
+      return ROLE_BRANDING.orange.color;
     }
     if (activeView === "staff") {
-      return "#007AFF";
+      return ROLE_BRANDING.yellow.color;
     }
-    return authUser?.accent_color || "#800000";
+    return authUser?.accent_color || ROLE_BRANDING.orange.color;
   })();
 
   const displayOfficeName = (() => {
-    if (activeView === "systemadmin" || activeView === "superadmin") {
+    if (isSuperAdmin || activeView === "systemadmin" || activeView === "superadmin") {
       return "System";
     }
     return authUser?.office_name || (authUser?.office_id ? authUser.office_id.toUpperCase() : "Registrar");
@@ -333,12 +338,9 @@ export default function Header({ authUser, onLogout, children }) {
             <img 
               src={branding.iconSrc}
               alt="eManage Logo" 
-              className={cn(
-                "h-7 w-7 object-contain transition-transform group-hover/logo:scale-105",
-                (activeView === "systemadmin" || activeView === "superadmin") && "brightness-0 dark:invert"
-              )} 
+              className="h-7 w-7 object-contain transition-transform group-hover/logo:scale-105" 
             />
-            <span className="font-bold text-[19px] text-gray-900 dark:text-zinc-50 tracking-tight leading-none group-hover/logo:text-pup-maroon dark:group-hover/logo:text-red-400 transition-colors">
+            <span className="font-bold text-[19px] text-gray-900 dark:text-zinc-50 tracking-tight leading-none group-hover/logo:opacity-75 transition-opacity">
               eManage
             </span>
           </div>
@@ -445,6 +447,16 @@ export default function Header({ authUser, onLogout, children }) {
                </div>
 
                <DropdownMenuGroup className="p-1.5 flex flex-col gap-[2px]">
+                  {(isSettingsActive || isActivityActive) && (
+                     <DropdownMenuItem
+                       className="cursor-pointer rounded-[8px] flex items-center gap-3 font-semibold text-[15px] py-2.5 px-3 text-pup-maroon hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/20 transition-colors outline-none"
+                       onClick={handleMainDashboardClick}
+                     >
+                       <i className="ti ti-layout-dashboard text-[19px] shrink-0 flex items-center justify-center h-[19px] w-[19px] leading-none" style={{ color: branding.color }}></i>
+                       <span>Return to Dashboard</span>
+                     </DropdownMenuItem>
+                   )}
+
                   <DropdownMenuItem
                     className={cn(
                       "cursor-pointer rounded-[8px] flex items-center gap-3 font-normal text-[15px] py-2.5 px-3 transition-colors outline-none",

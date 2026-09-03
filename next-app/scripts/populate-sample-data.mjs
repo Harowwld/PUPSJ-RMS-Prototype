@@ -43,8 +43,69 @@ const documents = [
 ];
 
 const requests = [
-  [1, "2023-20003-MN-0", "Diploma", "Pending", "Sample: alumni counter request", "PUPREGISTRAR-001"],
-  [2, "2024-40005-MN-2", "Transcript of Records", "InProgress", "Sample: being prepared", "PUPREGISTRAR-003"],
+  [1, "2023-20003-MN-0", "Diploma", "Pending", "Alumni document request for employment verification", "PUPREGISTRAR-001"],
+  [2, "2024-40005-MN-2", "Transcript of Records", "InProgress", "Under processing by records evaluation section", "PUPREGISTRAR-003"],
+  [3, "2022-10001-MN-1", "Certificate of Enrollment", "Ready", "Ready for campus registrar counter pickup", "records.marcus@pup.local"],
+  [4, "2022-10002-MN-2", "Form 137", "Completed", "Released and acknowledged by student", "PUPREGISTRAR-001"],
+  [5, "2020-50006-MN-0", "Certificate of Good Moral", "Pending", "Urgent request for scholarship application", "records.marcus@pup.local"],
+];
+
+const proposals = [
+  [
+    "2022-10001-MN-1",
+    "Annual Tech Summit & Hackathon 2026",
+    "Junior Philippine Computer Society (JPCS)",
+    "2026-10-15",
+    "PUP San Juan Audio-Visual Room",
+    "Inter-collegiate programming contest, tech symposium, and innovation showcase for IT and CS majors.",
+    "sample-jpcs-tech-summit.pdf",
+    "Under Review",
+    "Initial safety and venue clearance verified. Endorsement letter pending OSAS head sign-off."
+  ],
+  [
+    "2022-10002-MN-2",
+    "University Leadership Congress & General Assembly",
+    "Central Student Council (CSC)",
+    "2026-09-28",
+    "PUP San Juan Gymnasium",
+    "Mandatory leadership development and student council budget consultation for accredited org leaders.",
+    "sample-csc-leadership-congress.pdf",
+    "Approved",
+    "Approved by OSAS Director. Activity permit issued."
+  ],
+  [
+    "2023-20003-MN-0",
+    "Freshmen Orientation & Welcoming Gala",
+    "Association of Computer Science Students (ACSS)",
+    "2026-09-20",
+    "Campus Quadrangle",
+    "Welcoming event for batch 2026 freshmen, campus tour, and student organization fair.",
+    "sample-acss-freshmen-gala.pdf",
+    "Submitted",
+    null
+  ],
+  [
+    "2024-40005-MN-2",
+    "Financial Literacy & Investment Forum",
+    "Junior Financial Executives (JFINEX)",
+    "2026-11-05",
+    "Room 304 Seminar Hall",
+    "Educational forum on personal wealth management, stock investing, and digital banking literacy.",
+    "sample-jfinex-finance-forum.pdf",
+    "Needs Revision",
+    "Please attach the certified guest speaker profile and updated venue sanitation plan."
+  ],
+  [
+    "2021-30004-MN-1",
+    "Cybersecurity Defense & Ethical Hacking Workshop",
+    "Association of Computer Science Students (ACSS)",
+    "2026-10-22",
+    "Computer Laboratory 2",
+    "Hands-on technical workshop on network security fundamentals and cyber hygiene.",
+    "sample-acss-cyber-defense.pdf",
+    "Approved",
+    "Security protocols approved. Laboratory reservation confirmed."
+  ],
 ];
 
 const osasDocuments = [
@@ -97,7 +158,10 @@ export async function seed({ force: forceOverride } = {}) {
     }
 
     const uploadsDir = path.join(process.env.LOCAL_DATA_DIR || ".local", "uploads");
+    const osasUploadsDir = path.join(process.env.LOCAL_DATA_DIR || ".local", "osas", "uploads");
     fs.mkdirSync(uploadsDir, { recursive: true });
+    fs.mkdirSync(osasUploadsDir, { recursive: true });
+
     for (const [legacyId, studentNo, studentName, docType, filename] of documents) {
       const storageFilename = `sample-${legacyId}-${filename}`;
       fs.writeFileSync(path.join(uploadsDir, storageFilename), minimalPdf);
@@ -130,12 +194,55 @@ export async function seed({ force: forceOverride } = {}) {
     }
 
     for (const [legacyId, studentNo, docType, status, notes, actor] of requests) {
-      await run(
+      const reqRow = await runOne(
         `INSERT INTO document_requests (office_id, student_no, doc_type, status, notes, created_by, updated_by, legacy_id)
          VALUES ('registrar',$1,$2,$3,$4,$5,$5,$6)
-         ON CONFLICT (office_id, legacy_id) DO UPDATE SET student_no=EXCLUDED.student_no, doc_type=EXCLUDED.doc_type, status=EXCLUDED.status, notes=EXCLUDED.notes, updated_by=EXCLUDED.updated_by, updated_at=NOW()`,
+         ON CONFLICT (office_id, legacy_id) DO UPDATE SET student_no=EXCLUDED.student_no, doc_type=EXCLUDED.doc_type, status=EXCLUDED.status, notes=EXCLUDED.notes, updated_by=EXCLUDED.updated_by, updated_at=NOW()
+         RETURNING id`,
         [studentNo, docType, status, notes, actor, legacyId],
       );
+      if (reqRow?.id) {
+        await run(
+          `INSERT INTO transaction_updates (document_request_id, status, message)
+           VALUES ($1, $2, $3)`,
+          [reqRow.id, status, notes || `Status updated to ${status}`],
+        ).catch(() => {});
+      }
+    }
+
+    for (const [studentNo, title, orgName, eventDate, venue, desc, filename, status, reviewNote] of proposals) {
+      const storageFilename = `sample-prop-${filename}`;
+      fs.writeFileSync(path.join(osasUploadsDir, storageFilename), minimalPdf);
+      const existing = await runOne(`SELECT id FROM event_proposals WHERE title = $1 AND organization_name = $2`, [title, orgName]);
+      let propId = existing?.id;
+      if (!propId) {
+        const reviewedAt = reviewNote ? new Date().toISOString() : null;
+        const propRow = await runOne(
+          `INSERT INTO event_proposals (
+             office_id, student_no, title, organization_name, event_date, venue,
+             description, storage_filename, original_filename, mime_type, size_bytes,
+             status, review_note, reviewed_at
+           )
+           VALUES ('osas', $1, $2, $3, $4, $5, $6, $7, $8, 'application/pdf', $9, $10, $11, $12)
+           RETURNING id`,
+          [studentNo, title, orgName, eventDate, venue, desc, storageFilename, filename, minimalPdf.length, status, reviewNote, reviewedAt],
+        );
+        propId = propRow?.id;
+      } else {
+        await run(
+          `UPDATE event_proposals
+           SET student_no=$1, event_date=$2, venue=$3, description=$4, status=$5, review_note=$6, updated_at=NOW()
+           WHERE id=$7`,
+          [studentNo, eventDate, venue, desc, status, reviewNote, propId],
+        );
+      }
+      if (propId) {
+        await run(
+          `INSERT INTO transaction_updates (event_proposal_id, status, message)
+           VALUES ($1, $2, $3)`,
+          [propId, status, reviewNote || `Proposal submitted for ${orgName}`],
+        ).catch(() => {});
+      }
     }
 
     await run(`INSERT INTO global_audit_logs (office_id, actor, role, action, ip) VALUES ('registrar', 'System Administrator', 'Admin', 'Sample data populated (PostgreSQL)', '127.0.0.1')`);
@@ -145,10 +252,11 @@ export async function seed({ force: forceOverride } = {}) {
     }
   });
 
-  const [studentCount, documentCount, requestCount, settings] = await Promise.all([
+  const [studentCount, documentCount, requestCount, proposalCount, settings] = await Promise.all([
     queryOne("SELECT COUNT(*)::int AS count FROM students"),
     queryOne("SELECT COUNT(*)::int AS count FROM documents"),
     queryOne("SELECT COUNT(*)::int AS count FROM document_requests"),
+    queryOne("SELECT COUNT(*)::int AS count FROM event_proposals"),
     queryOne("SELECT value FROM settings WHERE key = 'storage_layout'"),
   ]);
   const layout = settings?.value ? JSON.parse(settings.value) : { rooms: [] };
@@ -158,11 +266,12 @@ export async function seed({ force: forceOverride } = {}) {
     students: Number(studentCount.count),
     documents: Number(documentCount.count),
     requests: Number(requestCount.count),
+    proposals: Number(proposalCount?.count || 0),
     rooms: layout.rooms.length,
     cabinets: cabinetCount,
     drawers: drawerCount,
   };
-  console.log(`[populate-sample-data] PostgreSQL sample data ready: ${summary.students} students, ${summary.documents} documents, ${summary.requests} requests, ${summary.rooms} rooms, ${summary.cabinets} cabinets, ${summary.drawers} drawers.`);
+  console.log(`[populate-sample-data] PostgreSQL sample data ready: ${summary.students} students, ${summary.documents} documents, ${summary.requests} requests, ${summary.proposals} proposals, ${summary.rooms} rooms, ${summary.cabinets} cabinets, ${summary.drawers} drawers.`);
   return summary;
 }
 

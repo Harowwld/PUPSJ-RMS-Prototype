@@ -41,11 +41,16 @@ function SystemAdminPageContent() {
 
   useEffect(() => {
     const handleSwitch = (e) => {
-      const { view: targetView } = e.detail
+      const { view: targetView, officeId } = e.detail || {}
       if (targetView) {
         setView(targetView)
         const params = new URLSearchParams(window.location.search)
         params.set("view", targetView)
+        if (officeId) {
+          params.set("office", officeId)
+        } else {
+          params.delete("office")
+        }
         router.replace(`${window.location.pathname}?${params.toString()}`, { scroll: false })
       }
     }
@@ -147,13 +152,14 @@ function SystemAdminPageContent() {
     setView(nextView)
     const params = new URLSearchParams(window.location.search)
     params.set("view", nextView)
+    params.delete("office")
     router.replace(`${window.location.pathname}?${params.toString()}`, { scroll: false })
   }, [router])
 
   const sidebarItems = [
     { type: "header", label: "Institutional Governance" },
     { key: "offices", label: "Departments & Stations", iconClass: "ph-bold ph-buildings" },
-    { key: "modules", label: "Module Config Matrix", iconClass: "ph-bold ph-squares-four" },
+    { key: "modules", label: "Department Features", iconClass: "ph-bold ph-squares-four" },
     
     { type: "header", label: "Access & Audit" },
     { key: "staff", label: "Global Directory", iconClass: "ph-bold ph-users" },
@@ -203,7 +209,7 @@ function SystemAdminPageContent() {
         
         <main className="relative w-full min-w-0 min-h-0 flex-1 bg-white/25 dark:bg-zinc-950/25 overflow-y-auto backdrop-blur-xs">
           <div 
-            className="flex-1 p-6 flex flex-col min-h-0 w-full"
+            className="flex-1 p-4 flex flex-col min-h-0 w-full"
             style={{ zoom: zoomFactor }}
           >
             {view === "offices" && <OfficeManagementTab showToast={showToast} />}

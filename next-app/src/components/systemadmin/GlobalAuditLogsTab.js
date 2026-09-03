@@ -66,6 +66,13 @@ function getSeverityInfo(sev) {
   }
 }
 
+function parseDateLocal(str) {
+  if (!str) return undefined
+  const [y, m, d] = str.split("-").map(Number)
+  if (isNaN(y) || isNaN(m) || isNaN(d)) return undefined
+  return new Date(y, m - 1, d)
+}
+
 export default function GlobalAuditLogsTab({ showToast }) {
   const [logs, setLogs] = useState([])
   const [offices, setOffices] = useState([])
@@ -244,6 +251,13 @@ export default function GlobalAuditLogsTab({ showToast }) {
   }
 
   const handleQuickRange = (range) => {
+    if (activeShortcut === range) {
+      setStartDate("")
+      setEndDate("")
+      setPage(1)
+      return
+    }
+
     const end = new Date()
     let start = new Date()
 
@@ -258,11 +272,11 @@ export default function GlobalAuditLogsTab({ showToast }) {
         end.setHours(23, 59, 59, 999)
         break
       case "last7":
-        start.setDate(start.getDate() - 7)
+        start.setDate(start.getDate() - 6)
         start.setHours(0, 0, 0, 0)
         break
       case "last30":
-        start.setDate(start.getDate() - 30)
+        start.setDate(start.getDate() - 29)
         start.setHours(0, 0, 0, 0)
         break
     }
@@ -284,11 +298,11 @@ export default function GlobalAuditLogsTab({ showToast }) {
     if (startDate === yestStr && endDate === yestStr) return "yesterday"
 
     const last7 = new Date()
-    last7.setDate(last7.getDate() - 7)
+    last7.setDate(last7.getDate() - 6)
     if (startDate === format(last7, "yyyy-MM-dd") && endDate === todayStr) return "last7"
 
     const last30 = new Date()
-    last30.setDate(last30.getDate() - 30)
+    last30.setDate(last30.getDate() - 29)
     if (startDate === format(last30, "yyyy-MM-dd") && endDate === todayStr) return "last30"
 
     return null
@@ -574,7 +588,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
                 )}
                 {(startDate || endDate) && (
                   <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
-                    Date: {startDate ? format(new Date(startDate), "MMM d, yyyy") : "Start"} → {endDate ? format(new Date(endDate), "MMM d, yyyy") : "End"}
+                    Date: {startDate ? format(parseDateLocal(startDate), "MMM d, yyyy") : "Start"} → {endDate ? format(parseDateLocal(endDate), "MMM d, yyyy") : "End"}
                     <button
                       onClick={() => {
                         setStartDate("")
@@ -695,13 +709,13 @@ export default function GlobalAuditLogsTab({ showToast }) {
                           !startDate ? "text-gray-400 dark:text-zinc-500" : "text-gray-700 dark:text-zinc-200"
                         )}
                       >
-                        {startDate ? format(new Date(startDate), "MMM d, yyyy") : "Start Date"}
+                        {startDate ? format(parseDateLocal(startDate), "MMM d, yyyy") : "Start Date"}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto rounded-2xl border border-gray-200 bg-white p-0 shadow-2xl dark:border-white/10 dark:bg-card" align="start">
                       <Calendar
                         mode="single"
-                        selected={startDate ? new Date(startDate) : undefined}
+                        selected={startDate ? parseDateLocal(startDate) : undefined}
                         onSelect={(date) => {
                           setStartDate(date ? format(date, "yyyy-MM-dd") : "")
                           setPage(1)
@@ -724,13 +738,13 @@ export default function GlobalAuditLogsTab({ showToast }) {
                           !endDate ? "text-gray-400 dark:text-zinc-500" : "text-gray-700 dark:text-zinc-200"
                         )}
                       >
-                        {endDate ? format(new Date(endDate), "MMM d, yyyy") : "End Date"}
+                        {endDate ? format(parseDateLocal(endDate), "MMM d, yyyy") : "End Date"}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto rounded-2xl border border-gray-200 bg-white p-0 shadow-2xl dark:border-white/10 dark:bg-card" align="start">
                       <Calendar
                         mode="single"
-                        selected={endDate ? new Date(endDate) : undefined}
+                        selected={endDate ? parseDateLocal(endDate) : undefined}
                         onSelect={(date) => {
                           setEndDate(date ? format(date, "yyyy-MM-dd") : "")
                           setPage(1)
@@ -754,13 +768,16 @@ export default function GlobalAuditLogsTab({ showToast }) {
             ))}
           </div>
         ) : error ? (
-          <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card p-6">
-            <Empty className="flex h-[320px] flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400">
+          <div className="flex h-[420px] flex-col items-center justify-center rounded-2xl border border-dashed border-gray-200 dark:border-white/10 bg-white/40 dark:bg-zinc-900/20 text-center">
+            <Empty className="flex flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400">
               <EmptyHeader className="flex flex-col items-center gap-0">
-                <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
-                  <i className="ph-duotone ph-warning-circle text-xl text-pup-maroon dark:text-primary" />
-                </EmptyMedia>
-                <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">
+                <div className="relative mb-6">
+                  <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
+                  <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
+                    <i className="ph-duotone ph-warning-circle text-3xl text-red-500 dark:text-red-400" />
+                  </EmptyMedia>
+                </div>
+                <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
                   Load failed
                 </EmptyTitle>
                 <EmptyDescription className="mt-1 max-w-md text-sm font-medium text-gray-600 dark:text-zinc-300">
@@ -769,115 +786,114 @@ export default function GlobalAuditLogsTab({ showToast }) {
               </EmptyHeader>
             </Empty>
           </div>
+        ) : logs.length === 0 ? (
+          <div className="flex h-[420px] flex-col items-center justify-center rounded-2xl border border-dashed border-gray-200 dark:border-white/10 bg-white/40 dark:bg-zinc-900/20 text-center">
+            <Empty className="flex flex-col items-center justify-center border-0 bg-transparent text-center">
+              <EmptyHeader className="flex flex-col items-center gap-0">
+                <div className="relative mb-6">
+                  <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
+                  <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
+                    <i className="ph-duotone ph-magnifying-glass text-3xl text-gray-400 dark:text-zinc-500"></i>
+                  </EmptyMedia>
+                </div>
+                <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
+                  No Activity Found
+                </EmptyTitle>
+                <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400 mt-1">
+                  Try adjusting your search filters to find what you&apos;re looking for.
+                </EmptyDescription>
+                {hasActiveFilters && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleClearFilters}
+                    className="mt-6 flex h-10 items-center gap-2 rounded-xl border border-gray-300 bg-white px-5 text-xs font-semibold text-gray-700 shadow-xs transition-colors hover:bg-gray-50 dark:bg-zinc-900 dark:border-white/10 dark:text-zinc-300 cursor-pointer"
+                  >
+                    <i className="ph-bold ph-arrow-counter-clockwise"></i>
+                    Clear Search
+                  </Button>
+                )}
+              </EmptyHeader>
+            </Empty>
+          </div>
         ) : (
           <div className="flex flex-1 flex-col min-h-0">
             <div className="flex-1 min-h-0 flex flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card isolate">
               <div className="flex-1 overflow-auto rounded-[inherit] isolate">
-                <table className={cn("min-w-full text-sm", logs.length === 0 && "h-full")}>
-              <thead className="sticky top-0 z-10 border-b border-gray-200 bg-white dark:bg-card dark:border-white/10">
-                <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">
+                <table className="min-w-full text-sm">
+              <thead className="sticky top-0 z-10 border-b-[0.5px] border-black/10 dark:border-white/10 bg-white dark:bg-card">
+                <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500 h-11 select-none">
                   <th className="w-12 p-4 text-center"></th>
                   <th className="p-4">
                     <button
                       onClick={() => handleSort("created_at")}
-                      className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none text-[12px] font-medium tracking-[0.04em] cursor-pointer"
+                      className={cn(
+                        "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
+                        sortBy === "created_at" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
+                      )}
                     >
-                      Timestamp
+                      Timestamp{" "}
                       <SortIndicator column="created_at" sortBy={sortBy} sortOrder={sortOrder} />
                     </button>
                   </th>
                   <th className="p-4">
                     <button
                       onClick={() => handleSort("severity")}
-                      className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none text-[12px] font-medium tracking-[0.04em] cursor-pointer"
+                      className={cn(
+                        "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
+                        sortBy === "severity" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
+                      )}
                     >
-                      Level
+                      Level{" "}
                       <SortIndicator column="severity" sortBy={sortBy} sortOrder={sortOrder} />
                     </button>
                   </th>
                   <th className="p-4">
                     <button
                       onClick={() => handleSort("actor")}
-                      className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none text-[12px] font-medium tracking-[0.04em] cursor-pointer"
+                      className={cn(
+                        "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
+                        sortBy === "actor" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
+                      )}
                     >
-                      Actor
+                      Actor{" "}
                       <SortIndicator column="actor" sortBy={sortBy} sortOrder={sortOrder} />
                     </button>
                   </th>
                   <th className="p-4">
                     <button
                       onClick={() => handleSort("office_id")}
-                      className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none text-[12px] font-medium tracking-[0.04em] cursor-pointer"
+                      className={cn(
+                        "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
+                        sortBy === "office_id" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
+                      )}
                     >
-                      Scope
+                      Scope{" "}
                       <SortIndicator column="office_id" sortBy={sortBy} sortOrder={sortOrder} />
                     </button>
                   </th>
                   <th className="p-4">
                     <button
                       onClick={() => handleSort("action")}
-                      className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none text-[12px] font-medium tracking-[0.04em] cursor-pointer"
+                      className={cn(
+                        "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
+                        sortBy === "action" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
+                      )}
                     >
-                      Action
+                      Action{" "}
                       <SortIndicator column="action" sortBy={sortBy} sortOrder={sortOrder} />
                     </button>
                   </th>
-                  <th className="p-4 text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">
+                  <th className="p-4 text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">
                     Description
                   </th>
-                  <th className="p-4 text-right text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">
+                  <th className="p-4 text-right text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className={cn("bg-transparent", logs.length === 0 && "h-full")}>
-                {loading ? (
-                  Array.from({ length: 5 }).map((_, idx) => (
-                    <tr key={idx} className="h-[52px] border-b-[0.5px] border-gray-100 dark:border-white/10">
-                      <td className="p-4 text-center"><Skeleton className="h-4 w-4 mx-auto" /></td>
-                      <td className="p-4"><Skeleton className="h-4 w-28" /></td>
-                      <td className="p-4"><Skeleton className="h-4 w-12" /></td>
-                      <td className="p-4"><Skeleton className="h-4 w-24" /></td>
-                      <td className="p-4"><Skeleton className="h-4 w-16" /></td>
-                      <td className="p-4"><Skeleton className="h-4 w-24" /></td>
-                      <td className="p-4"><Skeleton className="h-4 w-full max-w-xs" /></td>
-                      <td className="p-4 text-right"><Skeleton className="h-4 w-6 ml-auto" /></td>
-                    </tr>
-                  ))
-                ) : logs.length === 0 ? (
-                  <tr className="border-0 hover:bg-transparent h-full">
-                    <td colSpan={8} className="border-0 p-0 h-full">
-                      <Empty className="flex h-[380px] flex-col items-center justify-center border-0 bg-transparent text-center">
-                        <EmptyHeader className="flex flex-col items-center gap-0">
-                          <div className="relative mb-6">
-                            <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                            <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
-                              <i className="ph-duotone ph-magnifying-glass text-xl text-gray-300 dark:text-zinc-600"></i>
-                            </EmptyMedia>
-                          </div>
-                          <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
-                            No Activity Found
-                          </EmptyTitle>
-                          <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400">
-                            Try adjusting your search filters to find what you&apos;re looking for.
-                          </EmptyDescription>
-                          {hasActiveFilters && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={handleClearFilters}
-                              className="mt-6 flex h-10 items-center gap-3 rounded-xl border border-gray-300 bg-white px-6 text-xs font-semibold text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 tracking-wide dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10 cursor-pointer"
-                            >
-                              <i className="ph-bold ph-arrow-counter-clockwise"></i>
-                              Clear Search
-                            </Button>
-                          )}
-                        </EmptyHeader>
-                      </Empty>
-                    </td>
-                  </tr>
-                ) : (
-                  logs.map((log) => {
+              <tbody className="bg-transparent">
+                {logs.map((log) => {
                     const isCritical = log.severity === "CRITICAL"
                     const isWarning = log.severity === "WARNING"
                     const severityInfo = getSeverityInfo(log.severity)
@@ -1015,8 +1031,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
                         )}
                       </React.Fragment>
                     )
-                  })
-                )}
+                  })}
               </tbody>
             </table>
           </div>

@@ -118,7 +118,7 @@ export default function RegisterAccountTab({
   return (
     <TooltipProvider delay={200}>
       <Dialog open={open} onOpenChange={onClose}>
-        <DialogContent className="w-full max-w-2xl overflow-hidden rounded-brand border border-gray-200 bg-white p-0 shadow-2xl sm:max-w-2xl dark:border-white/10 dark:bg-card">
+        <DialogContent className="w-full max-w-2xl overflow-hidden rounded-2xl border border-gray-200 bg-white p-0 shadow-2xl sm:max-w-2xl dark:border-white/10 dark:bg-card">
           <DialogHeader className="bg-white p-6 pb-0 dark:bg-card border-none">
             <div className="flex items-start gap-4">
               <div className="min-w-0">

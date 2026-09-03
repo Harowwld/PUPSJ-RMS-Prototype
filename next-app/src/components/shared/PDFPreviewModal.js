@@ -73,7 +73,7 @@ export default function PDFPreviewModal({ open, onClose, preview }) {
     >
       <DialogContent 
         hideClose={true}
-        className="flex h-[90vh] w-[96vw] max-w-[96vw] flex-col overflow-hidden border border-gray-200 bg-gray-100 p-0 shadow-2xl transition-all duration-normal ease-standard xl:max-w-[1400px] rounded-brand dark:border-white/10 dark:bg-muted"
+        className="flex h-[90vh] w-[96vw] max-w-[96vw] flex-col overflow-hidden border border-gray-200 bg-gray-100 p-0 shadow-2xl transition-all duration-normal ease-standard xl:max-w-[1400px] rounded-2xl dark:border-white/10 dark:bg-muted"
       >
         <DialogHeader className="shrink-0 border-b bg-gray-50 dark:bg-white/5" style={{ padding: '20px 24px', borderBottomWidth: '0.5px', borderBottomColor: 'rgba(0,0,0,0.08)' }}>
           <div className="flex items-center justify-between w-full">

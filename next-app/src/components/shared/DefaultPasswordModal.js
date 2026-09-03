@@ -30,17 +30,17 @@ export default function DefaultPasswordModal({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="overflow-hidden rounded-brand border border-gray-200 bg-white p-0 shadow-2xl sm:max-w-md dark:border-white/10 dark:bg-card">
-        <DialogHeader className="border-b border-gray-100 bg-transparent p-6 dark:border-white/10 dark:bg-transparent">
+      <DialogContent className="overflow-hidden rounded-2xl border border-gray-200 bg-white p-0 shadow-2xl sm:max-w-md dark:border-white/10 dark:bg-card">
+        <DialogHeader className="bg-white p-6 pb-0 dark:bg-card border-none">
           <div className="flex items-start gap-4">
             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-red-100 bg-red-50 text-pup-maroon dark:text-primary shadow-sm dark:bg-red-950/30">
               <i className="ph-duotone ph-key text-xl"></i>
             </div>
             <div className="min-w-0">
-              <DialogTitle className="text-lg font-semibold tracking-tight text-gray-900 dark:text-zinc-50">
+              <DialogTitle className="text-[16px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
                 Account Credentials Ready
               </DialogTitle>
-              <DialogDescription className="mt-1.5 text-sm font-medium text-gray-600 dark:text-zinc-300">
+              <DialogDescription className="mt-1 text-[13px] font-normal text-gray-500 dark:text-zinc-400">
                 The staff account has been created. Securely share these
                 temporary credentials with the user.
               </DialogDescription>
@@ -93,20 +93,20 @@ export default function DefaultPasswordModal({
           </div>
         </div>
 
-        <div className="flex flex-col-reverse gap-2.5 border-t border-gray-100 bg-white p-4 sm:flex-row sm:justify-end dark:border-white/10 dark:bg-card">
+        <div className="flex flex-col-reverse gap-2.5 border-none bg-white p-6 pt-0 sm:flex-row sm:justify-end dark:bg-card">
           <Button
             type="button"
-            variant="outline"
+            variant="ghost"
             onClick={onClose}
-            className="h-11 rounded-brand border-gray-300 px-6 text-sm font-semibold text-gray-700 hover:bg-gray-50 dark:border-white/10 dark:text-zinc-200 dark:hover:bg-white/10 dark:bg-card"
+            className="h-10 px-4 text-xs font-semibold text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:text-zinc-400 dark:hover:bg-white/5 rounded-xl cursor-pointer border-none shadow-none"
           >
             Close
           </Button>
           <Button
             onClick={onClose}
-            className="btn-brand-red px-6 shadow-sm dark:shadow-none"
+            className="btn-brand-red h-10 px-5 text-xs font-semibold text-white rounded-xl shadow-none cursor-pointer flex items-center gap-1.5"
           >
-            <i className="ph-bold ph-check text-lg"></i>
+            <i className="ph-bold ph-check text-base"></i>
             I&apos;ve Recorded This
           </Button>
         </div>

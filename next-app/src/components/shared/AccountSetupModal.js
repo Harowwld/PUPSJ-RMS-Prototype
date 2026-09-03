@@ -180,7 +180,7 @@ export default function AccountSetupModal({ authUser }) {
   return (
     <Dialog open={open} onOpenChange={() => {}}>
       <DialogContent
-        className="flex h-[85vh] max-h-screen flex-col overflow-hidden rounded-[12px] border border-gray-200 bg-white p-0 shadow-2xl shadow-black/5 sm:max-w-2xl md:h-[500px] md:flex-row transition-colors dark:border-white/10 dark:bg-card dark:shadow-none"
+        className="flex h-[85vh] max-h-screen flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white p-0 shadow-2xl shadow-black/5 sm:max-w-2xl md:h-[500px] md:flex-row transition-colors dark:border-white/10 dark:bg-card dark:shadow-none"
         hideClose
       >
         {/* Sidebar Steps */}
