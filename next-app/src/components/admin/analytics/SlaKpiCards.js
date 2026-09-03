@@ -1,11 +1,27 @@
-import { useState } from "react"
+import { useState, useRef, useEffect } from "react"
 import { cn } from "@/lib/utils"
 
 export default function SlaKpiCards({ total, completionRate }) {
   const [selectedKpi, setSelectedKpi] = useState(null)
+  const containerRef = useRef(null)
+
+  useEffect(() => {
+    if (!selectedKpi) return
+    const handleClickOutside = (e) => {
+      if (containerRef.current && !containerRef.current.contains(e.target)) {
+        setSelectedKpi(null)
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside)
+    document.addEventListener("touchstart", handleClickOutside)
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside)
+      document.removeEventListener("touchstart", handleClickOutside)
+    }
+  }, [selectedKpi])
 
   return (
-    <div className="grid grid-cols-1 gap-6 md:grid-cols-2 items-stretch relative z-20 w-full">
+    <div ref={containerRef} className="grid grid-cols-1 gap-6 md:grid-cols-2 items-stretch relative z-20 w-full">
       {/* Completion Rate */}
       <div className={cn(
         "relative group rounded-xl h-full flex flex-col w-full",

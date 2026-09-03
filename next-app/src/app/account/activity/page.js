@@ -104,6 +104,22 @@ function getSeverityConfig(sev) {
 // 2. CHILD COMPONENTS
 function StatCards({ isLoading, stats }) {
   const [selectedKpi, setSelectedKpi] = useState(null);
+  const containerRef = useRef(null);
+
+  useEffect(() => {
+    if (!selectedKpi) return;
+    const handleClickOutside = (e) => {
+      if (containerRef.current && !containerRef.current.contains(e.target)) {
+        setSelectedKpi(null);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("touchstart", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+    };
+  }, [selectedKpi]);
 
   if (isLoading && !stats) {
     return (
@@ -151,7 +167,8 @@ function StatCards({ isLoading, stats }) {
   ];
 
   return (
-    <StaggerContainer className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 items-start relative z-20 transition-all duration-500">
+    <div ref={containerRef}>
+      <StaggerContainer className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 items-start relative z-20 transition-all duration-500">
       {cards.map((stat, i) => (
         <StaggerItem
           key={i}
@@ -258,7 +275,8 @@ function StatCards({ isLoading, stats }) {
           </div>
         </StaggerItem>
       ))}
-    </StaggerContainer>
+      </StaggerContainer>
+    </div>
   );
 }
 

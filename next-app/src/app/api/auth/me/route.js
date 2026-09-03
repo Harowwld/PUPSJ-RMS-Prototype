@@ -77,8 +77,8 @@ export async function GET(req) {
       accentColor = "#000000";
       // SuperAdmin has access to everything
       const allModules = process.env.DATABASE_URL
-        ? await query("SELECT m.* FROM modules m JOIN office_modules om ON om.module_id = m.id WHERE om.office_id = 'registrar' AND om.enabled = true")
-        : await getOfficeModules("registrar");
+        ? await query("SELECT id FROM modules")
+        : await listAllModules();
       enabledModules = (allModules || []).map(m => m.id);
     }
 

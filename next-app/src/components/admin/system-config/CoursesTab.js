@@ -730,7 +730,7 @@ export default function CoursesTab({
                                 </EmptyMedia>
                               </div>
                               <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
-                                {totalInView > 0 ? "No matches found" : (showArchived ? "No archive found" : "No activity found")}
+                                {totalInView > 0 ? "No matches found" : (showArchived ? "No Archived Programs Found" : "No Degree Programs Found")}
                               </EmptyTitle>
                               <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400">
                                 {totalInView > 0

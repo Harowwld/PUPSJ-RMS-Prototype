@@ -22,12 +22,11 @@ export default function AccountSetupModal({ authUser }) {
   const needsSecurity = authUser?.mustSetSecurityQuestions
 
   // Password state
-  const [pwCurrent, setPwCurrent] = useState("")
   const [pwNext, setPwNext] = useState("")
   const [pwConfirm, setPwConfirm] = useState("")
   const [pwLoading, setPwLoading] = useState(false)
   const [pwError, setPwError] = useState("")
-  const [showPw, setShowPw] = useState({ current: false, next: false, confirm: false })
+  const [showPw, setShowPw] = useState({ next: false, confirm: false })
 
   // Security state
   const [questions, setQuestions] = useState([])
@@ -72,16 +71,12 @@ export default function AccountSetupModal({ authUser }) {
   const submitPassword = async (e) => {
     e.preventDefault()
     if (pwLoading) return
-    if (!pwCurrent || !pwNext || !pwConfirm) {
+    if (!pwNext || !pwConfirm) {
       setPwError("Please fill all fields")
       return
     }
     if (pwNext !== pwConfirm) {
       setPwError("New passwords do not match")
-      return
-    }
-    if (pwNext === pwCurrent) {
-      setPwError("New password cannot be the same as the current password")
       return
     }
     if (pwNext.length < 6) {
@@ -97,7 +92,6 @@ export default function AccountSetupModal({ authUser }) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          currentPassword: pwCurrent,
           newPassword: pwNext,
         }),
       })
@@ -292,30 +286,6 @@ export default function AccountSetupModal({ authUser }) {
                 )}
 
                 <div className="space-y-4">
-                  <div>
-                    <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-[0.04em] text-gray-550 dark:text-zinc-400">
-                      Current <span className="text-[11px] font-normal text-gray-450 dark:text-zinc-500">*</span>
-                    </label>
-                    <div className="relative group">
-                      <Input
-                        type={showPw.current ? "text" : "password"}
-                        className="h-10 rounded-[8px] border-[0.5px] border-gray-300 bg-white pr-10 text-[13px] font-normal text-gray-900 focus-visible:border-gray-500 focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none focus:ring-0 focus:border-gray-500 dark:border-zinc-800 dark:bg-card dark:text-zinc-50 dark:focus:border-zinc-650"
-                        style={{ borderWidth: '0.5px', borderStyle: 'solid' }}
-                        value={pwCurrent}
-                        onChange={(e) => setPwCurrent(e.target.value)}
-                        placeholder="••••••••"
-                        required
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPw(prev => ({ ...prev, current: !prev.current }))}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-pup-maroon dark:hover:text-red-500 transition-colors dark:text-zinc-500 dark:hover:text-red-500"
-                      >
-                        <i className={cn("ph-bold text-[16px]", showPw.current ? "ph-eye-slash" : "ph-eye")}></i>
-                      </button>
-                    </div>
-                  </div>
-
                   <div>
                     <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-[0.04em] text-gray-550 dark:text-zinc-400">
                       New <span className="text-[11px] font-normal text-gray-450 dark:text-zinc-500">*</span>
