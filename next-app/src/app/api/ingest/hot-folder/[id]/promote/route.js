@@ -97,8 +97,8 @@ export async function POST(req, ctx) {
 
   const bytes = fs.readFileSync(sourceAbsPath);
   const ext = path.extname(String(ingest.original_filename || "")).toLowerCase();
-  const targetStorageFilename = `${Date.now()}-${sanitizeNameForFs(path.basename(String(ingest.storage_filename || "file"), ext))}${ext}`;
-  const targetAbsPath = path.join(getUploadsDir(), targetStorageFilename);
+  const officeId = user.office_id || "registrar";
+  const targetAbsPath = path.join(getUploadsDir(officeId), targetStorageFilename);
   fs.copyFileSync(sourceAbsPath, targetAbsPath);
 
   const doc = await createDocument({

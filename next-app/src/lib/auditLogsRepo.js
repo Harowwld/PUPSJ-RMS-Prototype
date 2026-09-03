@@ -176,11 +176,12 @@ export async function listAuditLogs(options) {
 export async function getAuditLogStats(actor = "") {
   // Main stats
   let mainQuery = "SELECT " +
-    "COUNT(*) as totalLogs, " +
-    "COALESCE(SUM(CASE WHEN created_at::date = CURRENT_DATE THEN 1 ELSE 0 END), 0) as logsToday, " +
-    "COALESCE(SUM(CASE WHEN LOWER(action) LIKE '%login%' OR LOWER(action) LIKE '%logout%' THEN 1 ELSE 0 END), 0) as authEvents, " +
-    "COALESCE(SUM(CASE WHEN LOWER(action) LIKE '%delete%' OR LOWER(action) LIKE '%remove%' OR LOWER(action) LIKE '%archive%' OR LOWER(action) LIKE '%update%' OR LOWER(action) LIKE '%edit%' OR LOWER(action) LIKE '%modify%' THEN 1 ELSE 0 END), 0) as systemChanges, " +
-    "COALESCE(SUM(CASE WHEN severity = 'CRITICAL' THEN 1 ELSE 0 END), 0) as criticalEvents " +
+    'COUNT(*)::int as "totalLogs", ' +
+    'COALESCE(SUM(CASE WHEN created_at::date = CURRENT_DATE THEN 1 ELSE 0 END), 0)::int as "logsToday", ' +
+    'COALESCE(SUM(CASE WHEN LOWER(action) LIKE \'%login%\' OR LOWER(action) LIKE \'%logout%\' THEN 1 ELSE 0 END), 0)::int as "authEvents", ' +
+    'COALESCE(SUM(CASE WHEN LOWER(action) LIKE \'%delete%\' OR LOWER(action) LIKE \'%remove%\' OR LOWER(action) LIKE \'%archive%\' OR LOWER(action) LIKE \'%update%\' OR LOWER(action) LIKE \'%edit%\' OR LOWER(action) LIKE \'%modify%\' THEN 1 ELSE 0 END), 0)::int as "systemChanges", ' +
+    'COALESCE(SUM(CASE WHEN severity = \'CRITICAL\' THEN 1 ELSE 0 END), 0)::int as "criticalEvents", ' +
+    'COALESCE(COUNT(DISTINCT actor), 0)::int as "activeActorsCount" ' +
     "FROM global_audit_logs";
   
   let params = [];
@@ -190,15 +191,20 @@ export async function getAuditLogStats(actor = "") {
   }
 
   const mainRows = await dbAll(mainQuery, params);
-  const stats = (mainRows && mainRows.length > 0) ? mainRows[0] : { totalLogs: 0, logsToday: 0, authEvents: 0, systemChanges: 0, criticalEvents: 0 };
+  const row = (mainRows && mainRows.length > 0) ? mainRows[0] : {};
+  const totalLogs = Number(row?.totalLogs ?? row?.totallogs ?? 0);
+  const logsToday = Number(row?.logsToday ?? row?.logstoday ?? 0);
+  const authEvents = Number(row?.authEvents ?? row?.authevents ?? 0);
+  const systemChanges = Number(row?.systemChanges ?? row?.systemchanges ?? 0);
+  const criticalEvents = Number(row?.criticalEvents ?? row?.criticalevents ?? 0);
+  const activeActorsCount = Number(row?.activeActorsCount ?? row?.activeactorscount ?? 0);
 
   // 7-day trend data
-  // We'll get counts for each of the last 7 days
   let trendQuery = "SELECT " +
-    "created_at::date as day, " +
-    "COUNT(*) as count, " +
-    "COALESCE(SUM(CASE WHEN LOWER(action) LIKE '%login%' OR LOWER(action) LIKE '%logout%' THEN 1 ELSE 0 END), 0) as authCount, " +
-    "COALESCE(SUM(CASE WHEN severity = 'CRITICAL' THEN 1 ELSE 0 END), 0) as criticalCount " +
+    'created_at::date as "day", ' +
+    'COUNT(*)::int as "count", ' +
+    'COALESCE(SUM(CASE WHEN LOWER(action) LIKE \'%login%\' OR LOWER(action) LIKE \'%logout%\' THEN 1 ELSE 0 END), 0)::int as "authCount", ' +
+    'COALESCE(SUM(CASE WHEN severity = \'CRITICAL\' THEN 1 ELSE 0 END), 0)::int as "criticalCount" ' +
     "FROM global_audit_logs " +
     "WHERE created_at::date >= CURRENT_DATE - INTERVAL '6 days' ";
   
@@ -219,14 +225,21 @@ export async function getAuditLogStats(actor = "") {
     const match = trendRows.find(r => String(r.day).slice(0, 10) === dayStr);
     trends.push({
       day: dayStr,
-      total: match ? match.count : 0,
-      auth: match ? match.authCount : 0,
-      critical: match ? match.criticalCount : 0
+      total: Number(match?.count ?? match?.total ?? 0),
+      auth: Number(match?.authCount ?? match?.authcount ?? 0),
+      critical: Number(match?.criticalCount ?? match?.criticalcount ?? 0)
     });
   }
   
-  stats.trends = trends;
-  return stats;
+  return {
+    totalLogs,
+    logsToday,
+    authEvents,
+    systemChanges,
+    criticalEvents,
+    activeActorsCount,
+    trends
+  };
 }
 
 /**
@@ -257,6 +270,11 @@ export async function listGlobalAuditLogs(options = {}) {
   const search = options.search || "";
   const officeId = options.officeId || options.office_id || "";
   const severity = options.severity || "";
+  const role = options.role || "";
+  const startDate = options.startDate || "";
+  const endDate = options.endDate || "";
+  const sortBy = options.sortBy || "created_at";
+  const sortOrder = String(options.sortOrder || "DESC").toUpperCase() === "ASC" ? "ASC" : "DESC";
 
   let query = "SELECT * FROM global_audit_logs";
   let params = [];
@@ -271,9 +289,24 @@ export async function listGlobalAuditLogs(options = {}) {
     }
   }
 
+  if (role && role !== "All") {
+    whereClauses.push("role = ?");
+    params.push(role);
+  }
+
   if (severity && severity !== "All") {
     whereClauses.push("severity = ?");
     params.push(severity);
+  }
+
+  if (startDate) {
+    whereClauses.push(startDate.includes("T") || startDate.includes(":") ? "created_at >= ?::timestamptz" : "created_at::date >= ?::date");
+    params.push(startDate);
+  }
+
+  if (endDate) {
+    whereClauses.push(endDate.includes("T") || endDate.includes(":") ? "created_at <= ?::timestamptz" : "created_at::date <= ?::date");
+    params.push(endDate);
   }
 
   if (search) {
@@ -286,7 +319,16 @@ export async function listGlobalAuditLogs(options = {}) {
     query += " WHERE " + whereClauses.join(" AND ");
   }
 
-  query += " ORDER BY created_at DESC, id DESC LIMIT ? OFFSET ?";
+  const allowedSortColumns = {
+    created_at: "created_at",
+    severity: "severity",
+    actor: "actor",
+    action: "action",
+    office_id: "office_id",
+  };
+  const sortCol = allowedSortColumns[sortBy] || "created_at";
+
+  query += ` ORDER BY ${sortCol} ${sortOrder}, id DESC LIMIT ? OFFSET ?`;
   params.push(limit, offset);
 
   return await sysDbAll(query, params);
@@ -299,6 +341,9 @@ export async function countGlobalAuditLogs(options = {}) {
   const search = options.search || "";
   const officeId = options.officeId || options.office_id || "";
   const severity = options.severity || "";
+  const role = options.role || "";
+  const startDate = options.startDate || "";
+  const endDate = options.endDate || "";
 
   let query = "SELECT COUNT(*) as count FROM global_audit_logs";
   let params = [];
@@ -313,9 +358,24 @@ export async function countGlobalAuditLogs(options = {}) {
     }
   }
 
+  if (role && role !== "All") {
+    whereClauses.push("role = ?");
+    params.push(role);
+  }
+
   if (severity && severity !== "All") {
     whereClauses.push("severity = ?");
     params.push(severity);
+  }
+
+  if (startDate) {
+    whereClauses.push(startDate.includes("T") || startDate.includes(":") ? "created_at >= ?::timestamptz" : "created_at::date >= ?::date");
+    params.push(startDate);
+  }
+
+  if (endDate) {
+    whereClauses.push(endDate.includes("T") || endDate.includes(":") ? "created_at <= ?::timestamptz" : "created_at::date <= ?::date");
+    params.push(endDate);
   }
 
   if (search) {
@@ -372,14 +432,22 @@ export async function getGlobalAuditLogStats(options = {}) {
   }
 
   const filter = whereClauses.length ? ` WHERE ${whereClauses.join(" AND ")}` : "";
-  const [stats] = await sysDbAll(
-    "SELECT COUNT(*)::int AS totalLogs, " +
-      "COALESCE(SUM(CASE WHEN created_at::date = CURRENT_DATE THEN 1 ELSE 0 END), 0)::int AS logsToday, " +
-      "COALESCE(SUM(CASE WHEN LOWER(action) LIKE '%login%' OR LOWER(action) LIKE '%logout%' THEN 1 ELSE 0 END), 0)::int AS authEvents, " +
-      "COALESCE(SUM(CASE WHEN LOWER(action) LIKE '%delete%' OR LOWER(action) LIKE '%remove%' OR LOWER(action) LIKE '%archive%' OR LOWER(action) LIKE '%update%' OR LOWER(action) LIKE '%edit%' OR LOWER(action) LIKE '%modify%' THEN 1 ELSE 0 END), 0)::int AS systemChanges, " +
-      "COALESCE(SUM(CASE WHEN severity = 'CRITICAL' THEN 1 ELSE 0 END), 0)::int AS criticalEvents FROM global_audit_logs" + filter,
+  const [statsRow] = await sysDbAll(
+    'SELECT COUNT(*)::int AS "totalLogs", ' +
+      'COALESCE(SUM(CASE WHEN created_at::date = CURRENT_DATE THEN 1 ELSE 0 END), 0)::int AS "logsToday", ' +
+      'COALESCE(SUM(CASE WHEN LOWER(action) LIKE \'%login%\' OR LOWER(action) LIKE \'%logout%\' THEN 1 ELSE 0 END), 0)::int AS "authEvents", ' +
+      'COALESCE(SUM(CASE WHEN LOWER(action) LIKE \'%delete%\' OR LOWER(action) LIKE \'%remove%\' OR LOWER(action) LIKE \'%archive%\' OR LOWER(action) LIKE \'%update%\' OR LOWER(action) LIKE \'%edit%\' OR LOWER(action) LIKE \'%modify%\' THEN 1 ELSE 0 END), 0)::int AS "systemChanges", ' +
+      'COALESCE(SUM(CASE WHEN severity = \'CRITICAL\' THEN 1 ELSE 0 END), 0)::int AS "criticalEvents", ' +
+      'COALESCE(COUNT(DISTINCT actor), 0)::int AS "activeActorsCount" FROM global_audit_logs' + filter,
     params
   );
+
+  const totalLogs = Number(statsRow?.totalLogs ?? statsRow?.totallogs ?? 0);
+  const logsToday = Number(statsRow?.logsToday ?? statsRow?.logstoday ?? 0);
+  const authEvents = Number(statsRow?.authEvents ?? statsRow?.authevents ?? 0);
+  const systemChanges = Number(statsRow?.systemChanges ?? statsRow?.systemchanges ?? 0);
+  const criticalEvents = Number(statsRow?.criticalEvents ?? statsRow?.criticalevents ?? 0);
+  const activeActorsCount = Number(statsRow?.activeActorsCount ?? statsRow?.activeactorscount ?? 0);
 
   // The trend uses the same filters plus a seven-day window. Parameters must
   // be copied because the compatibility adapter maps positional placeholders.
@@ -387,10 +455,10 @@ export async function getGlobalAuditLogStats(options = {}) {
     ? ` AND ${whereClauses.join(" AND ")}`
     : "";
   const trendRows = await sysDbAll(
-    "SELECT created_at::date AS day, COUNT(*)::int AS count, " +
-      "COALESCE(SUM(CASE WHEN LOWER(action) LIKE '%login%' OR LOWER(action) LIKE '%logout%' THEN 1 ELSE 0 END), 0)::int AS authCount, " +
-      "COALESCE(SUM(CASE WHEN severity = 'CRITICAL' THEN 1 ELSE 0 END), 0)::int AS criticalCount " +
-      "FROM global_audit_logs WHERE created_at::date >= CURRENT_DATE - INTERVAL '6 days'" + trendFilter + " GROUP BY day ORDER BY day ASC",
+    'SELECT created_at::date AS "day", COUNT(*)::int AS "count", ' +
+      'COALESCE(SUM(CASE WHEN LOWER(action) LIKE \'%login%\' OR LOWER(action) LIKE \'%logout%\' THEN 1 ELSE 0 END), 0)::int AS "authCount", ' +
+      'COALESCE(SUM(CASE WHEN severity = \'CRITICAL\' THEN 1 ELSE 0 END), 0)::int AS "criticalCount" ' +
+      'FROM global_audit_logs WHERE created_at::date >= CURRENT_DATE - INTERVAL \'6 days\'' + trendFilter + ' GROUP BY day ORDER BY day ASC',
     params
   );
 
@@ -400,7 +468,20 @@ export async function getGlobalAuditLogStats(options = {}) {
     day.setDate(day.getDate() - i);
     const dayStr = day.toISOString().slice(0, 10);
     const match = trendRows.find((row) => String(row.day).slice(0, 10) === dayStr);
-    trends.push({ day: dayStr, total: match?.count || 0, auth: match?.authCount || 0, critical: match?.criticalCount || 0 });
+    trends.push({
+      day: dayStr,
+      total: Number(match?.count ?? match?.total ?? 0),
+      auth: Number(match?.authCount ?? match?.authcount ?? 0),
+      critical: Number(match?.criticalCount ?? match?.criticalcount ?? 0)
+    });
   }
-  return { ...(stats || { totalLogs: 0, logsToday: 0, authEvents: 0, systemChanges: 0, criticalEvents: 0 }), trends };
+  return {
+    totalLogs,
+    logsToday,
+    authEvents,
+    systemChanges,
+    criticalEvents,
+    activeActorsCount,
+    trends
+  };
 }

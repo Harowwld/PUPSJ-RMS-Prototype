@@ -131,6 +131,17 @@ export const MODULE_REGISTRY = [
     component_key: "DocumentRequestsTab",
   },
   {
+    id: "osas_monitoring",
+    name: "OSAS Monitoring",
+    description: "Review student event proposals and requirements",
+    category: "staff",
+    icon: "ph-bold ph-student",
+    sidebar_group: "Operations",
+    sort_order: 2,
+    is_system: 0,
+    component_key: "OsasMonitoringTab",
+  },
+  {
     id: "scan_upload",
     name: "Scan & Upload",
     description: "Scan and upload documents with OCR",
@@ -224,7 +235,7 @@ export const DEFAULT_OFFICE_MODULES = {
     // OSAS modules — no storage/physical archive modules
     "records_review", "compliance_analytics",
     "staff_directory", "system_config", "backup", "audit_logs",
-    "scan_upload", "documents", "notifications",
+    "osas_monitoring", "scan_upload", "documents", "notifications",
   ],
 };
 

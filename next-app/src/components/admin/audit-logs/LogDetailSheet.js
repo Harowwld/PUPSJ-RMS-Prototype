@@ -161,7 +161,7 @@ export default function LogDetailSheet({
                   <div className="flex-1 min-w-0">
                     <p className="truncate text-[13px] font-medium text-[#111111] dark:text-zinc-50">{selectedLog.user}</p>
                     <p className="mt-0.5 text-[12px] font-normal text-[#8E8E93]">
-                      {selectedLog.role}
+                      {selectedLog.role}{selectedLog.officeName ? ` • ${selectedLog.officeName}` : selectedLog.scope ? ` • ${selectedLog.scope}` : ""}
                     </p>
                   </div>
                 </div>
@@ -203,7 +203,7 @@ export default function LogDetailSheet({
                   </p>
                 </div>
 
-                {(selectedLog.entityType || selectedLog.entityId) && (
+                {(selectedLog.entityType || selectedLog.entityId || selectedLog.officeName || selectedLog.scope) && (
                   <div className="grid grid-cols-2 gap-4 border-t border-black/5 pt-[16px] dark:border-white/5">
                     <div>
                       <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.04em] text-[#8E8E93]">
@@ -231,6 +231,16 @@ export default function LogDetailSheet({
                         {selectedLog.entityId || "N/A"}
                       </p>
                     </div>
+                    {(selectedLog.officeName || selectedLog.scope) && (
+                      <div className="col-span-2 border-t border-black/5 pt-[12px] dark:border-white/5">
+                        <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.04em] text-[#8E8E93]">
+                          Scope / Office
+                        </p>
+                        <span className="text-[13px] font-medium text-[#111111] dark:text-zinc-50">
+                          {selectedLog.officeName || selectedLog.scope}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -283,18 +293,18 @@ export default function LogDetailSheet({
         )}
 
         <div className="absolute bottom-0 left-0 right-0 border-t border-gray-100 bg-white p-4 backdrop-blur-sm dark:border-white/10 dark:bg-[#121214]/80">
-          <div className="flex items-center justify-between gap-[8px]">
+          <div className="flex items-center justify-between gap-2.5">
             <button
               disabled={!hasPrev}
               onClick={onPrev}
-              className="flex-1 h-[36px] rounded-[8px] bg-transparent text-[13px] font-normal text-gray-700 hover:bg-gray-100 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer dark:text-zinc-300 dark:hover:bg-white/5 border border-black/15 dark:border-white/20 select-none"
+              className="flex-1 h-10 rounded-xl bg-transparent text-xs font-semibold text-gray-700 hover:bg-gray-100 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer dark:text-zinc-300 dark:hover:bg-white/5 border border-black/15 dark:border-white/20 select-none flex items-center justify-center gap-1.5"
             >
               ← Previous Log
             </button>
             <button
               disabled={!hasNext}
               onClick={onNext}
-              className="flex-1 h-[36px] rounded-[8px] bg-transparent text-[13px] font-normal text-gray-700 hover:bg-gray-100 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer dark:text-zinc-300 dark:hover:bg-white/5 border border-black/15 dark:border-white/20 select-none"
+              className="flex-1 h-10 rounded-xl bg-transparent text-xs font-semibold text-gray-700 hover:bg-gray-100 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer dark:text-zinc-300 dark:hover:bg-white/5 border border-black/15 dark:border-white/20 select-none flex items-center justify-center gap-1.5"
             >
               Next Log →
             </button>

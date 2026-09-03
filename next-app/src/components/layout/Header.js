@@ -126,7 +126,7 @@ export default function Header({ authUser, onLogout, children }) {
 
   const handleMainDashboardClick = () => {
     if (isSuperAdmin) {
-      router.push(activeView === "systemadmin" || activeView === "superadmin" ? "/systemadmin" : (activeView === "admin" ? "/admin" : "/staff"));
+      router.push("/systemadmin");
     } else if (hasAdminRights) {
       router.push(activeView === "admin" ? "/admin" : "/staff");
     } else {
@@ -471,37 +471,7 @@ export default function Header({ authUser, onLogout, children }) {
                     <span>My Activity</span>
                   </DropdownMenuItem>
  
-                  {isSuperAdmin && (
-                    <>
-                      {activeView !== "systemadmin" && activeView !== "superadmin" && (
-                        <DropdownMenuItem
-                          onClick={() => handleViewSwitch("systemadmin")}
-                          className="cursor-pointer rounded-[8px] flex items-center gap-3 font-normal text-[15px] py-2.5 px-3 hover:bg-gray-50 dark:hover:bg-white/5 text-gray-900 dark:text-zinc-100 transition-colors outline-none"
-                        >
-                          <i className="ti ti-shield text-[19px] shrink-0 flex items-center justify-center h-[19px] w-[19px] leading-none" style={{ color: ROLE_BRANDING.black.color }}></i>
-                          <span>Switch to System Admin View</span>
-                        </DropdownMenuItem>
-                      )}
-                      {activeView !== "admin" && (
-                        <DropdownMenuItem
-                          onClick={() => handleViewSwitch("admin")}
-                          className="cursor-pointer rounded-[8px] flex items-center gap-3 font-normal text-[15px] py-2.5 px-3 hover:bg-gray-50 dark:hover:bg-white/5 text-gray-900 dark:text-zinc-100 transition-colors outline-none"
-                        >
-                          <i className="ti ti-shield-check text-[19px] shrink-0 flex items-center justify-center h-[19px] w-[19px] leading-none" style={{ color: ROLE_BRANDING.red.color }}></i>
-                          <span>Switch to Admin View</span>
-                        </DropdownMenuItem>
-                      )}
-                      {activeView !== "staff" && (
-                        <DropdownMenuItem
-                          onClick={() => handleViewSwitch("staff")}
-                          className="cursor-pointer rounded-[8px] flex items-center gap-3 font-normal text-[15px] py-2.5 px-3 hover:bg-gray-50 dark:hover:bg-white/5 text-gray-900 dark:text-zinc-100 transition-colors outline-none"
-                        >
-                          <i className="ti ti-users text-[19px] shrink-0 flex items-center justify-center h-[19px] w-[19px] leading-none" style={{ color: ROLE_BRANDING.yellow.color }}></i>
-                          <span>Switch to Staff View</span>
-                        </DropdownMenuItem>
-                      )}
-                    </>
-                  )}
+
                   {!isSuperAdmin && hasAdminRights && (
                     <DropdownMenuItem
                       onClick={() => handleViewSwitch(activeView === "admin" ? "staff" : "admin")}

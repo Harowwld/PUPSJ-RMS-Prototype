@@ -9,6 +9,37 @@ import { Badge } from "@/components/ui/badge"
 import PageHeader from "@/components/shared/PageHeader"
 import { cn } from "@/lib/utils"
 
+function getOfficeIcon(office) {
+  if (office?.icon && office.icon.trim()) return office.icon
+  const id = (office?.id || office?.short_name || "").toLowerCase()
+  if (id.includes("reg")) return "ph-bold ph-certificate"
+  if (id.includes("osas") || id.includes("student")) return "ph-bold ph-student"
+  if (id.includes("admiss")) return "ph-bold ph-user-check"
+  if (id.includes("lib")) return "ph-bold ph-books"
+  if (id.includes("acc") || id.includes("cash") || id.includes("fin")) return "ph-bold ph-banknote"
+  return "ph-bold ph-building"
+}
+
+function getModuleIcon(m) {
+  if (m?.icon && m.icon.trim()) return m.icon
+  if (m?.id === "osas_monitoring") return "ph-bold ph-student"
+  if (m?.id === "records_review") return "ph-bold ph-seal-check"
+  if (m?.id === "compliance_analytics") return "ph-bold ph-chart-bar"
+  if (m?.id === "request_analytics") return "ph-bold ph-trend-up"
+  if (m?.id === "staff_directory") return "ph-bold ph-users"
+  if (m?.id === "storage_layout") return "ph-bold ph-warehouse"
+  if (m?.id === "system_config") return "ph-bold ph-gear"
+  if (m?.id === "backup") return "ph-bold ph-database-backup"
+  if (m?.id === "audit_logs") return "ph-bold ph-shield-check"
+  if (m?.id === "alumni_requests") return "ph-bold ph-tray-arrow-up"
+  if (m?.id === "scan_upload") return "ph-bold ph-scan"
+  if (m?.id === "documents") return "ph-bold ph-file-text"
+  if (m?.id === "notifications") return "ph-bold ph-bell"
+  if (m?.id === "records_archive") return "ph-bold ph-archive-box"
+  if (m?.id === "storage_explorer") return "ph-bold ph-folder-open"
+  return "ph-bold ph-cube"
+}
+
 export default function ModuleConfigTab({ showToast }) {
   const [matrix, setMatrix] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -217,9 +248,12 @@ export default function ModuleConfigTab({ showToast }) {
     <div className="flex flex-col gap-6 w-full animate-fade-up font-inter">
       {/* Header with Clean View Switcher */}
       <PageHeader
-        icon="ti ti-layout-grid"
+        icon="ph-bold ph-squares-four"
         title="Module Configuration Matrix"
         description="Enable or disable standard workspace modules for campus departments. Modules are grouped by role operations (Office Head/Admin vs Staff)."
+        showBorder={false}
+        titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
+        descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
         actions={
           <div className="flex items-center gap-2 bg-gray-100 dark:bg-zinc-800/70 p-1 rounded-xl border border-gray-200/60 dark:border-white/5">
             <button
@@ -232,7 +266,7 @@ export default function ModuleConfigTab({ showToast }) {
                   : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100"
               )}
             >
-              <i className="ti ti-building text-sm"></i>
+              <i className="ph-bold ph-buildings text-sm"></i>
               By Department
             </button>
             <button
@@ -245,7 +279,7 @@ export default function ModuleConfigTab({ showToast }) {
                   : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100"
               )}
             >
-              <i className="ti ti-table text-sm"></i>
+              <i className="ph-bold ph-table text-sm"></i>
               Matrix Overview
             </button>
           </div>
@@ -269,6 +303,7 @@ export default function ModuleConfigTab({ showToast }) {
                 const isSelected = o.id === selectedOfficeId
                 const activeCount = officeCounts[o.id] || 0
                 const accent = o.accent_color || "#800000"
+                const officeIconClass = getOfficeIcon(o)
 
                 return (
                   <button
@@ -291,13 +326,13 @@ export default function ModuleConfigTab({ showToast }) {
                             color: accent,
                           }}
                         >
-                          <i className={o.icon || "ti ti-building"}></i>
+                          <i className={cn(officeIconClass, "text-base")}></i>
                         </div>
                         <div>
                           <div className="text-xs font-bold text-gray-900 dark:text-zinc-50 group-hover:text-pup-maroon transition-colors">
                             {o.short_name}
                           </div>
-                          <div className="text-[10px] text-gray-400 font-mono">
+                          <div className="text-[10px] text-gray-400">
                             ID: {o.id}
                           </div>
                         </div>
@@ -306,7 +341,7 @@ export default function ModuleConfigTab({ showToast }) {
                       <Badge
                         variant="secondary"
                         className={cn(
-                          "text-[10px] font-mono px-2 py-0.5 rounded-full border-0 font-bold",
+                          "text-[10px] px-2 py-0.5 rounded-full border-0 font-bold",
                           isSelected
                             ? "bg-pup-maroon text-white dark:bg-zinc-100 dark:text-zinc-900"
                             : "bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-zinc-300"
@@ -317,7 +352,7 @@ export default function ModuleConfigTab({ showToast }) {
                     </div>
 
                     <div className="text-[11px] text-gray-500 dark:text-zinc-400 truncate w-full">
-                      {o.name}
+                      {o.name || o.short_name}
                     </div>
                   </button>
                 )
@@ -328,26 +363,21 @@ export default function ModuleConfigTab({ showToast }) {
           {/* Active Office Banner & Filters */}
           {currentOffice && (
             <Card className="rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card overflow-hidden">
-              <div
-                className="p-5 border-b border-gray-100 dark:border-white/5 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-950/20"
-                style={{
-                  borderLeft: `4px solid ${currentOffice.accent_color || "#800000"}`,
-                }}
-              >
+              <div className="p-5 border-b border-gray-100 dark:border-white/5 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-950/20">
                 <div className="flex items-center gap-3.5">
                   <div
-                    className="h-11 w-11 rounded-xl flex items-center justify-center text-xl shadow-xs"
+                    className="h-11 w-11 rounded-xl flex items-center justify-center text-xl shadow-xs shrink-0"
                     style={{
                       backgroundColor: `${currentOffice.accent_color || "#800000"}15`,
                       color: currentOffice.accent_color || "#800000",
                     }}
                   >
-                    <i className={currentOffice.icon || "ti ti-building"}></i>
+                    <i className={cn(getOfficeIcon(currentOffice), "text-xl")}></i>
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
                       <h3 className="text-base font-bold text-gray-900 dark:text-zinc-50">
-                        {currentOffice.name} ({currentOffice.short_name})
+                        {currentOffice.name || currentOffice.short_name} ({currentOffice.short_name})
                       </h3>
                       <Badge className="text-[10px] font-bold bg-[#34c759]/15 text-[#34c759] border-0">
                         {currentOffice.status}
@@ -366,20 +396,20 @@ export default function ModuleConfigTab({ showToast }) {
                     size="sm"
                     disabled={Boolean(toggling[`${currentOffice.id}-all-batch`])}
                     onClick={() => handleBatchToggle(currentOffice.id, "all", true)}
-                    className="h-8 text-xs font-semibold rounded-lg border-gray-200 dark:border-white/10 cursor-pointer"
+                    className="h-8 text-xs font-semibold rounded-xl border-gray-200 dark:border-white/10 cursor-pointer flex items-center gap-1.5 px-3"
                   >
-                    <i className="ti ti-check-double mr-1 text-xs"></i>
-                    Enable All Modules
+                    <i className="ph-bold ph-checks text-sm text-emerald-600 dark:text-emerald-400"></i>
+                    <span>Enable All Modules</span>
                   </Button>
                   <Button
                     variant="outline"
                     size="sm"
                     disabled={Boolean(toggling[`${currentOffice.id}-all-batch`])}
                     onClick={() => handleBatchToggle(currentOffice.id, "all", false)}
-                    className="h-8 text-xs font-semibold rounded-lg border-gray-200 dark:border-white/10 text-gray-600 hover:text-red-600 cursor-pointer"
+                    className="h-8 text-xs font-semibold rounded-xl border-gray-200 dark:border-white/10 text-gray-600 hover:text-red-600 cursor-pointer flex items-center gap-1.5 px-3"
                   >
-                    <i className="ti ti-rotate-clockwise mr-1 text-xs"></i>
-                    System Only
+                    <i className="ph-bold ph-arrow-counter-clockwise text-sm"></i>
+                    <span>System Only</span>
                   </Button>
                 </div>
               </div>
@@ -392,7 +422,7 @@ export default function ModuleConfigTab({ showToast }) {
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Filter modules by name or description..."
-                    className="h-9 w-full rounded-lg border border-gray-200 bg-white pl-9 pr-20 text-xs font-normal placeholder:text-gray-400 dark:border-white/10 dark:bg-zinc-900"
+                    className="h-10 w-full rounded-xl border border-gray-200 bg-white pl-9 pr-20 text-xs font-normal placeholder:text-gray-400 dark:border-white/10 dark:bg-zinc-900 focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5"
                   />
                   <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] font-normal text-gray-400">
                     {filteredModules.length} modules
@@ -400,12 +430,12 @@ export default function ModuleConfigTab({ showToast }) {
                 </div>
 
                 {/* Category Segmented Tabs */}
-                <div className="flex items-center gap-1 bg-gray-100 dark:bg-zinc-800/80 p-1 rounded-lg shrink-0 select-none">
+                <div className="flex items-center gap-1 bg-gray-100 dark:bg-zinc-800/80 p-1 rounded-xl shrink-0 select-none">
                   <button
                     type="button"
                     onClick={() => setCategoryFilter("All")}
                     className={cn(
-                      "px-2.5 py-1 text-xs font-semibold rounded-md transition-all cursor-pointer",
+                      "px-2.5 py-1 text-xs font-semibold rounded-lg transition-all cursor-pointer",
                       categoryFilter === "All"
                         ? "bg-white dark:bg-zinc-900 text-gray-900 dark:text-zinc-50 shadow-2xs"
                         : "text-gray-500 hover:text-gray-900 dark:text-zinc-400"
@@ -493,7 +523,7 @@ export default function ModuleConfigTab({ showToast }) {
                             <h4 className="text-sm font-bold text-gray-900 dark:text-zinc-50">
                               Office Head & Administrator Tools
                             </h4>
-                            <span className="text-[10px] font-mono px-2 py-0.2 rounded-full bg-gray-100 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400 font-bold">
+                            <span className="text-[10px] px-2 py-0.2 rounded-full bg-gray-100 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400 font-bold">
                               {groupedModules.admin.filter(
                                 (m) =>
                                   m.is_system ||
@@ -512,16 +542,18 @@ export default function ModuleConfigTab({ showToast }) {
                         <button
                           type="button"
                           onClick={() => handleBatchToggle(currentOffice.id, "admin", true)}
-                          className="text-[11px] font-semibold text-pup-maroon hover:underline dark:text-red-400 cursor-pointer"
+                          className="text-[11px] font-semibold text-pup-maroon hover:underline dark:text-red-400 cursor-pointer inline-flex items-center gap-1"
                         >
+                          <i className="ph-bold ph-check text-[10px]"></i>
                           Enable All Admin
                         </button>
                         <span className="text-gray-300 dark:text-zinc-700">·</span>
                         <button
                           type="button"
                           onClick={() => handleBatchToggle(currentOffice.id, "admin", false)}
-                          className="text-[11px] font-semibold text-gray-500 hover:underline dark:text-zinc-400 cursor-pointer"
+                          className="text-[11px] font-semibold text-gray-500 hover:underline dark:text-zinc-400 cursor-pointer inline-flex items-center gap-1"
                         >
+                          <i className="ph-bold ph-x text-[10px]"></i>
                           Disable Optional
                         </button>
                       </div>
@@ -561,7 +593,7 @@ export default function ModuleConfigTab({ showToast }) {
                             <h4 className="text-sm font-bold text-gray-900 dark:text-zinc-50">
                               Staff Workspace & Digitization Modules
                             </h4>
-                            <span className="text-[10px] font-mono px-2 py-0.2 rounded-full bg-gray-100 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400 font-bold">
+                            <span className="text-[10px] px-2 py-0.2 rounded-full bg-gray-100 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400 font-bold">
                               {groupedModules.staff.filter(
                                 (m) =>
                                   m.is_system ||
@@ -580,16 +612,18 @@ export default function ModuleConfigTab({ showToast }) {
                         <button
                           type="button"
                           onClick={() => handleBatchToggle(currentOffice.id, "staff", true)}
-                          className="text-[11px] font-semibold text-pup-maroon hover:underline dark:text-red-400 cursor-pointer"
+                          className="text-[11px] font-semibold text-pup-maroon hover:underline dark:text-red-400 cursor-pointer inline-flex items-center gap-1"
                         >
+                          <i className="ph-bold ph-check text-[10px]"></i>
                           Enable All Staff
                         </button>
                         <span className="text-gray-300 dark:text-zinc-700">·</span>
                         <button
                           type="button"
                           onClick={() => handleBatchToggle(currentOffice.id, "staff", false)}
-                          className="text-[11px] font-semibold text-gray-500 hover:underline dark:text-zinc-400 cursor-pointer"
+                          className="text-[11px] font-semibold text-gray-500 hover:underline dark:text-zinc-400 cursor-pointer inline-flex items-center gap-1"
                         >
+                          <i className="ph-bold ph-x text-[10px]"></i>
                           Disable Optional
                         </button>
                       </div>
@@ -638,7 +672,7 @@ export default function ModuleConfigTab({ showToast }) {
                   >
                     <div className="flex flex-col items-center">
                       <span className="text-[13px] font-black">{o.short_name}</span>
-                      <span className="text-[10px] text-gray-400 font-mono mt-0.5">
+                      <span className="text-[10px] text-gray-400 mt-0.5">
                         {officeCounts[o.id] || 0}/{modules.length}
                       </span>
                     </div>
@@ -703,6 +737,7 @@ function ModuleCard({ m, office, assignments, toggling, onToggle }) {
   const isToggling = toggling[toggleKey]
   const isSystem = Boolean(m.is_system)
   const isEnabled = isSystem || Boolean(assignments[office.id]?.[m.id]?.enabled)
+  const moduleIconClass = getModuleIcon(m)
 
   return (
     <div
@@ -724,13 +759,13 @@ function ModuleCard({ m, office, assignments, toggling, onToggle }) {
                   : "bg-gray-200/60 text-gray-500 dark:bg-zinc-800 dark:text-zinc-400"
               )}
             >
-              <i className={m.icon || "ti ti-cube"}></i>
+              <i className={cn(moduleIconClass, "text-base")}></i>
             </div>
             <div>
               <h5 className="text-xs font-bold text-gray-900 dark:text-zinc-50 leading-tight">
                 {m.name}
               </h5>
-              <span className="text-[10px] text-gray-400 font-mono">
+              <span className="text-[10px] text-gray-400">
                 {m.id}
               </span>
             </div>
@@ -799,13 +834,14 @@ function ModuleCard({ m, office, assignments, toggling, onToggle }) {
  */
 function MatrixTableRow({ m, offices, assignments, toggling, onToggle }) {
   const isSystem = Boolean(m.is_system)
+  const moduleIconClass = getModuleIcon(m)
 
   return (
     <tr className="hover:bg-gray-50/40 dark:hover:bg-white/2 transition-colors">
       <td className="p-4 align-top">
         <div className="flex items-start gap-3">
           <div className="mt-0.5 h-7 w-7 rounded-lg bg-gray-100 dark:bg-zinc-800 flex items-center justify-center text-gray-500 dark:text-zinc-400 text-xs shrink-0">
-            <i className={m.icon || "ti ti-cube"}></i>
+            <i className={cn(moduleIconClass, "text-sm")}></i>
           </div>
           <div>
             <div className="flex items-center gap-2">
@@ -864,3 +900,4 @@ function MatrixTableRow({ m, offices, assignments, toggling, onToggle }) {
     </tr>
   )
 }
+

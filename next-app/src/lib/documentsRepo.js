@@ -15,8 +15,27 @@ function getLocalDir() {
     : path.join(process.cwd(), ".local");
 }
 
-export function getUploadsDir() {
-  const dir = path.join(getLocalDir(), "uploads");
+const officeStorageMap = new Map();
+
+export function setOfficeStoragePath(officeId, storagePath) {
+  if (officeId && storagePath) {
+    officeStorageMap.set(String(officeId).toLowerCase(), storagePath);
+  }
+}
+
+export function getUploadsDir(officeId = null) {
+  if (officeId) {
+    const custom = officeStorageMap.get(String(officeId).toLowerCase());
+    if (custom) {
+      const dir = path.isAbsolute(custom) ? custom : path.join(process.cwd(), custom);
+      fs.mkdirSync(dir, { recursive: true });
+      return dir;
+    }
+  }
+  const base = getLocalDir();
+  const dir = officeId
+    ? path.join(base, "storage", String(officeId).toLowerCase(), "uploads")
+    : path.join(base, "uploads");
   fs.mkdirSync(dir, { recursive: true });
   return dir;
 }
@@ -35,12 +54,20 @@ export async function createDocument({
 }) {
   await ensureReviewColumns();
 
+  try {
+    const { getOfficeById } = await import("./officesRepo.js");
+    const office = await getOfficeById(officeId);
+    if (office?.storage_path) {
+      setOfficeStoragePath(officeId, office.storage_path);
+    }
+  } catch {}
+
   const cleanStudentNo = String(studentNo || "UNKNOWN").trim().toUpperCase().replace(/[^A-Z0-9-]/g, "_");
   const cleanDocType = String(docType || "DOCUMENT").trim().toUpperCase().replace(/[^A-Z0-9-]/g, "_");
   const ext = path.extname(originalFilename || "").toLowerCase() || ".pdf";
   const storageFilename =
     providedStorageFilename || `${cleanStudentNo}_${cleanDocType}_${Date.now()}${ext}`;
-  const absPath = path.join(getUploadsDir(), storageFilename);
+  const absPath = path.join(getUploadsDir(officeId), storageFilename);
   if (buffer) {
     fs.writeFileSync(absPath, buffer);
   }
@@ -243,16 +270,32 @@ export async function deleteDocument(id) {
 
   await dbRun("DELETE FROM documents WHERE id = ?", [id]);
 
-  const absPath = path.join(getUploadsDir(), row.storage_filename);
-  try {
-    fs.unlinkSync(absPath);
-  } catch {
-    // ignore missing file
+  const filePath = getDocumentFilePath(row);
+  if (filePath) {
+    try {
+      fs.unlinkSync(filePath);
+    } catch {
+      // ignore missing file
+    }
   }
 
   return row;
 }
 
 export function getDocumentFilePath(row) {
-  return path.join(getUploadsDir(), row.storage_filename);
+  if (!row?.storage_filename) return null;
+  const officeId = row.office_id || "registrar";
+  const configuredPath = path.join(getUploadsDir(officeId), row.storage_filename);
+  if (fs.existsSync(configuredPath)) {
+    return configuredPath;
+  }
+  const defaultPartitionedPath = path.join(getLocalDir(), "storage", String(officeId).toLowerCase(), "uploads", row.storage_filename);
+  if (fs.existsSync(defaultPartitionedPath)) {
+    return defaultPartitionedPath;
+  }
+  const legacyPath = path.join(getLocalDir(), "uploads", row.storage_filename);
+  if (fs.existsSync(legacyPath)) {
+    return legacyPath;
+  }
+  return configuredPath;
 }

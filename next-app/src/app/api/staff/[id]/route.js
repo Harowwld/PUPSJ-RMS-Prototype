@@ -49,7 +49,7 @@ export async function PATCH(req, ctx) {
   }
 
   const currentUser = await getStaffById(currentUserId);
-  const isSuper = currentUser?.role === "SuperAdmin";
+  const isSuper = currentUser?.role === "SuperAdmin" || currentUser?.role === "SystemAdmin";
   const isAdmin = currentUser?.role === "Admin";
 
   const body = await req.json().catch(() => null);
@@ -77,25 +77,33 @@ export async function PATCH(req, ctx) {
   // Handle explicit status toggle (archiving/restoring)
   const isStatusToggle = body.status !== undefined && Object.keys(body).length === 1;
   if (isStatusToggle) {
-    if (body.status === "Active") {
-      const row = await restoreStaff(id);
-      if (!row) return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
-      await writeAuditLog(req, `Restore Account`, { 
-        details: `restored system access permissions for personnel account '${name}' (ID: ${id})`,
-        entity_type: "User",
-        entity_id: id
-      });
-      return NextResponse.json({ ok: true, data: row });
-    } else if (body.status === "Inactive" || body.status === "Archived") {
-      const row = await archiveStaff(id);
-      if (!row) return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
-      await writeAuditLog(req, `Archive Account`, { 
-        details: `archived personnel profile for '${name}' (ID: ${id}) and suspended all associated credentials`,
-        severity: "WARNING",
-        entity_type: "User",
-        entity_id: id
-      });
-      return NextResponse.json({ ok: true, data: row });
+    try {
+      if (body.status === "Active") {
+        const row = await restoreStaff(id);
+        if (!row) return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
+        await writeAuditLog(req, `Restore Account`, { 
+          details: `restored system access permissions for personnel account '${name}' (ID: ${id})`,
+          entity_type: "User",
+          entity_id: id
+        });
+        return NextResponse.json({ ok: true, data: row });
+      } else if (body.status === "Inactive" || body.status === "Archived") {
+        const row = await archiveStaff(id);
+        if (!row) return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
+        await writeAuditLog(req, `Archive Account`, { 
+          details: `archived personnel profile for '${name}' (ID: ${id}) and suspended all associated credentials`,
+          severity: "WARNING",
+          entity_type: "User",
+          entity_id: id
+        });
+        return NextResponse.json({ ok: true, data: row });
+      }
+    } catch (statusErr) {
+      console.error("[api/staff/[id]] status toggle error:", statusErr);
+      return NextResponse.json(
+        { ok: false, error: statusErr.message || "Failed to update personnel status" },
+        { status: 500 }
+      );
     }
   }
 
@@ -182,7 +190,7 @@ export async function DELETE(req, ctx) {
   }
 
   const currentUser = await getStaffById(currentUserId);
-  const isSuper = currentUser?.role === "SuperAdmin";
+  const isSuper = currentUser?.role === "SuperAdmin" || currentUser?.role === "SystemAdmin";
   const isAdmin = currentUser?.role === "Admin";
 
   if (!isSuper && (!isAdmin || currentUser?.office_id !== targetStaff.office_id)) {
@@ -244,7 +252,7 @@ export async function GET(_req, ctx) {
   // Permission Check
   if (currentUserId !== id) {
     const currentUser = await getStaffById(currentUserId);
-    const isSuper = currentUser?.role === "SuperAdmin";
+    const isSuper = currentUser?.role === "SuperAdmin" || currentUser?.role === "SystemAdmin";
     const isAdmin = currentUser?.role === "Admin";
     if (!isSuper && (!isAdmin || currentUser?.office_id !== row.office_id)) {
       return NextResponse.json({ ok: false, error: "Forbidden" }, { status: 403 });

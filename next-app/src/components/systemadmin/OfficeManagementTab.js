@@ -126,9 +126,13 @@ export default function OfficeManagementTab({ showToast }) {
     name: "",
     short_name: "",
     description: "",
-    icon: "ti ti-building",
+    icon: "ph-bold ph-building",
     accent_color: "#800000",
     status: "Active",
+    station_name: "",
+    storage_path: "",
+    scanner_model: "",
+    ingest_token: "",
     selectedModules: [],
   })
   
@@ -172,16 +176,19 @@ export default function OfficeManagementTab({ showToast }) {
     setSelectedOfficeId(null)
     setShowCustomIcon(false)
     setModulesAccordionOpen(false)
-    // Default enabled modules: all standard modules
     const defaultSelected = availableModules.map(m => m.id)
     setForm({
       id: "",
       name: "",
       short_name: "",
       description: "",
-      icon: "ti ti-building",
+      icon: "ph-bold ph-building",
       accent_color: "#800000",
       status: "Active",
+      station_name: "",
+      storage_path: "",
+      scanner_model: "Fujitsu fi-7160 Batch Scanner",
+      ingest_token: `station_token_${Math.random().toString(36).substring(2, 10)}`,
       selectedModules: defaultSelected,
     })
     setDialogOpen(true)
@@ -190,7 +197,7 @@ export default function OfficeManagementTab({ showToast }) {
   const handleOpenEdit = (office) => {
     setIsEditing(true)
     setSelectedOfficeId(office.id)
-    const icon = office.icon || "ti ti-building"
+    const icon = office.icon || "ph-bold ph-building"
     setShowCustomIcon(!PRESET_ICONS.some(p => p.value === icon))
     setModulesAccordionOpen(false)
     setForm({
@@ -201,6 +208,10 @@ export default function OfficeManagementTab({ showToast }) {
       icon,
       accent_color: office.accent_color || "#800000",
       status: office.status || "Active",
+      station_name: office.station_name || "",
+      storage_path: office.storage_path || "",
+      scanner_model: office.scanner_model || "",
+      ingest_token: office.ingest_token || "",
       selectedModules: [],
     })
     setDialogOpen(true)
@@ -238,6 +249,10 @@ export default function OfficeManagementTab({ showToast }) {
         icon: form.icon.trim(),
         accent_color: form.accent_color,
         status: form.status,
+        station_name: form.station_name.trim() || undefined,
+        storage_path: form.storage_path.trim() || undefined,
+        scanner_model: form.scanner_model.trim() || undefined,
+        ingest_token: form.ingest_token.trim() || undefined,
       }
 
       if (!isEditing) {
@@ -507,16 +522,19 @@ export default function OfficeManagementTab({ showToast }) {
       {/* Main Card with Header, Active Filter Chips & Toolbar */}
       <Card className="rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none overflow-hidden">
         <PageHeader
-          icon="ti ti-building-community"
-          title="Office & Department Management"
-          description="Add, configure, and monitor administrative offices and campus departments."
+          icon="ph-bold ph-buildings"
+          title="Departments & Digitization Stations"
+          description="Configure institutional departments, pair physical scanning workstations (PCs), and manage isolated local storage partitions."
+          showBorder={false}
+          titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
+          descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
           actions={
             <Button
               onClick={handleOpenCreate}
-              className="flex h-[36px] items-center justify-center rounded-[8px] btn-brand-red text-white font-medium text-[13px] active:scale-95 transition-all cursor-pointer px-5"
+              className="flex h-10 items-center justify-center rounded-xl! btn-brand-red text-white font-semibold text-xs active:scale-95 transition-all cursor-pointer px-5 shadow-xs"
             >
               <i className="ph-bold ph-plus mr-1.5 text-[14px]"></i>
-              Create Office
+              Add Department Node
             </Button>
           }
         />
@@ -591,7 +609,7 @@ export default function OfficeManagementTab({ showToast }) {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search offices by name, acronym, ID..."
-                className="h-[36px] w-full rounded-[8px] border-[0.5px] border-black/15 bg-white pl-9 pr-20 text-[13px] font-normal placeholder:text-[#8E8E93] dark:border-white/15 dark:bg-card"
+                className="h-10 w-full rounded-xl border border-gray-200 bg-white pl-9 pr-20 text-xs font-normal placeholder:text-gray-400 dark:border-white/10 dark:bg-card focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5"
               />
               <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[12px] font-normal text-gray-400 dark:text-zinc-500">
                 {filteredOffices.length > 0 ? `${filteredOffices.length} results` : "0 results"}
@@ -712,14 +730,47 @@ export default function OfficeManagementTab({ showToast }) {
                     </p>
                   </div>
 
+                  {/* Station & Storage Hardware Node */}
+                  <div className="space-y-1.5 mt-2 pt-3 border-t border-gray-100 dark:border-zinc-800 text-[11px] text-gray-600 dark:text-zinc-400">
+                    <div className="flex items-center justify-between">
+                      <span className="flex items-center gap-1.5 text-gray-500 dark:text-zinc-400">
+                        <i className="ph-bold ph-desktop text-pup-maroon dark:text-red-400"></i>
+                        <span>Scanning PC:</span>
+                      </span>
+                      <span className="font-semibold text-gray-900 dark:text-zinc-100">
+                        {office.station_name || "Unassigned"}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <span className="flex items-center gap-1.5 text-gray-500 dark:text-zinc-400">
+                        <i className="ph-bold ph-hard-drives text-pup-maroon dark:text-red-400"></i>
+                        <span>Local Storage:</span>
+                      </span>
+                      <span className="font-medium text-gray-700 dark:text-zinc-300 truncate max-w-[150px]" title={office.storage_path}>
+                        {office.storage_path || `.local/storage/${office.id}`}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <span className="flex items-center gap-1.5 text-gray-500 dark:text-zinc-400">
+                        <i className="ph-bold ph-printer text-pup-maroon dark:text-red-400"></i>
+                        <span>Scanner:</span>
+                      </span>
+                      <span className="font-medium text-gray-700 dark:text-zinc-300 truncate max-w-[150px]" title={office.scanner_model}>
+                        {office.scanner_model || "Document Scanner"}
+                      </span>
+                    </div>
+                  </div>
+
                   {/* Office Metrics */}
-                  <div className="border-t border-gray-100 dark:border-zinc-800 pt-4 mt-2 flex items-center justify-between text-xs text-gray-600 dark:text-zinc-400">
+                  <div className="border-t border-gray-100 dark:border-zinc-800 pt-2.5 mt-2 flex items-center justify-between text-xs text-gray-600 dark:text-zinc-400">
                     <div className="flex items-center gap-1.5 font-medium">
-                      <i className="ti ti-users text-gray-400"></i>
+                      <i className="ph-bold ph-users text-gray-400"></i>
                       <span>Staff: <strong className="text-gray-900 dark:text-zinc-100 font-bold">{office.staff_count || 0}</strong></span>
                     </div>
                     <div className="flex items-center gap-1.5 font-medium">
-                      <i className="ti ti-layout-grid text-gray-400"></i>
+                      <i className="ph-bold ph-squares-four text-gray-400"></i>
                       <span>Modules: <strong className="text-gray-900 dark:text-zinc-100 font-bold">{office.module_count || 0}</strong></span>
                     </div>
                   </div>
@@ -728,7 +779,7 @@ export default function OfficeManagementTab({ showToast }) {
                   <div className="flex items-center gap-2 mt-5 pt-3 border-t border-gray-100 dark:border-zinc-800">
                     <Button 
                       onClick={() => handleOpenEdit(office)}
-                      className="flex-1 bg-[#f2f2f7] hover:bg-[#e5e5ea] dark:bg-[#2c2c2e] dark:hover:bg-[#3a3a3c] text-gray-800 dark:text-[#f2f2f7] font-semibold text-xs h-8 cursor-pointer rounded-lg border-0 shadow-none"
+                      className="flex-1 bg-[#f2f2f7] hover:bg-[#e5e5ea] dark:bg-[#2c2c2e] dark:hover:bg-[#3a3a3c] text-gray-800 dark:text-[#f2f2f7] font-semibold text-xs h-8 cursor-pointer rounded-xl border-0 shadow-none"
                     >
                       Configure
                     </Button>
@@ -742,7 +793,7 @@ export default function OfficeManagementTab({ showToast }) {
                         }
                       }}
                       className={cn(
-                        "h-8 px-3 rounded-lg text-xs font-semibold cursor-pointer border-0 shadow-none transition-colors",
+                        "h-8 px-3 rounded-xl text-xs font-semibold cursor-pointer border-0 shadow-none transition-colors",
                         isActive 
                           ? "text-[#ff3b30] hover:bg-[#ff3b30]/10 dark:text-[#ff453a] dark:hover:bg-[#ff453a]/15"
                           : "text-[#34c759] hover:bg-[#34c759]/10 dark:text-[#30d158] dark:hover:bg-[#30d158]/15"
@@ -797,12 +848,12 @@ export default function OfficeManagementTab({ showToast }) {
                     onChange={(e) => setForm(prev => ({ ...prev, id: e.target.value }))}
                     disabled={isEditing}
                     placeholder="e.g. registrar, osas, library"
-                    className="h-10 rounded-xl bg-white border border-gray-200 text-xs focus-visible:ring-pup-maroon dark:bg-zinc-950 dark:border-white/10 dark:text-white font-mono"
+                    className="h-10 rounded-xl bg-white border border-gray-200 text-xs focus-visible:ring-pup-maroon dark:bg-zinc-950 dark:border-white/10 dark:text-white"
                     required
                   />
                   {!isEditing && (
                     <span className="text-[10px] text-gray-400 mt-1 block">
-                      Auto-provisions admin account: <code className="font-mono text-gray-600 dark:text-zinc-300">PUP{(form.id || "OFFICE").trim().toUpperCase()}-001</code>
+                      Auto-provisions admin account: <code className="text-gray-600 dark:text-zinc-300 font-semibold">PUP{(form.id || "OFFICE").trim().toUpperCase()}-001</code>
                     </span>
                   )}
                 </div>
@@ -833,6 +884,88 @@ export default function OfficeManagementTab({ showToast }) {
                   placeholder="Describe the department's institutional role and functions..."
                   className="h-10 rounded-xl bg-white border border-gray-200 text-xs focus-visible:ring-pup-maroon dark:bg-zinc-950 dark:border-white/10 dark:text-white"
                 />
+              </div>
+
+              {/* Station Hardware & Storage Partition Binding */}
+              <div className="border border-gray-200/80 dark:border-white/10 rounded-2xl p-4 bg-gray-50/50 dark:bg-zinc-950/40 space-y-3.5">
+                <div className="flex items-center gap-2.5 pb-2 border-b border-gray-100 dark:border-white/5">
+                  <div className="h-7 w-7 rounded-lg bg-pup-maroon/10 text-pup-maroon dark:bg-white/10 dark:text-zinc-100 flex items-center justify-center text-sm">
+                    <i className="ph-bold ph-desktop"></i>
+                  </div>
+                  <div>
+                    <h5 className="text-xs font-bold text-gray-900 dark:text-zinc-50">
+                      Digitization Workstation & Storage Node
+                    </h5>
+                    <p className="text-[11px] text-gray-500 dark:text-zinc-400">
+                      Pair this department to its physical scanner PC and isolated local storage drive.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
+                      Dedicated Station Host / PC Name
+                    </label>
+                    <Input
+                      value={form.station_name}
+                      onChange={(e) => setForm(prev => ({ ...prev, station_name: e.target.value }))}
+                      placeholder="e.g. REG-ARCHIVE-PC01"
+                      className="h-10 rounded-xl bg-white border border-gray-200 text-xs focus-visible:ring-pup-maroon dark:bg-zinc-950 dark:border-white/10 dark:text-white"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
+                      Scanner Hardware Model
+                    </label>
+                    <Input
+                      value={form.scanner_model}
+                      onChange={(e) => setForm(prev => ({ ...prev, scanner_model: e.target.value }))}
+                      placeholder="e.g. Fujitsu fi-7160 / Canon DR-G2140"
+                      className="h-10 rounded-xl bg-white border border-gray-200 text-xs focus-visible:ring-pup-maroon dark:bg-zinc-950 dark:border-white/10 dark:text-white"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
+                    Dedicated Local Storage Partition Path
+                  </label>
+                  <Input
+                    value={form.storage_path}
+                    onChange={(e) => setForm(prev => ({ ...prev, storage_path: e.target.value }))}
+                    placeholder="e.g. D:\PUP_REGISTRAR_RECORDS or .local/storage/registrar/uploads"
+                    className="h-10 rounded-xl bg-white border border-gray-200 text-xs focus-visible:ring-pup-maroon dark:bg-zinc-950 dark:border-white/10 dark:text-white"
+                  />
+                  <span className="text-[10px] text-gray-400 mt-1 block">
+                    Scans and documents for this department are physically saved to this local drive partition.
+                  </span>
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider">
+                      Station Ingest Security Key / Token
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const randomToken = `station_token_${(form.short_name || "sec").toLowerCase()}_${Math.random().toString(36).substring(2, 10)}`;
+                        setForm(prev => ({ ...prev, ingest_token: randomToken }));
+                      }}
+                      className="text-[10px] font-bold text-pup-maroon hover:underline dark:text-red-400 cursor-pointer"
+                    >
+                      Generate New Key
+                    </button>
+                  </div>
+                  <Input
+                    value={form.ingest_token}
+                    onChange={(e) => setForm(prev => ({ ...prev, ingest_token: e.target.value }))}
+                    placeholder="Secret bearer token for this station's scanner watcher service"
+                    className="h-10 rounded-xl bg-white border border-gray-200 text-xs focus-visible:ring-pup-maroon dark:bg-zinc-950 dark:border-white/10 dark:text-white"
+                  />
+                </div>
               </div>
 
               {/* Row 4: Module Scope Section with Collapsible Accordion (Create View) */}

@@ -123,29 +123,60 @@ export const generateAuditLogsPdf = async (logs, options = {}) => {
   doc.setTextColor(150, 150, 150)
   doc.text("FILTER CRITERIA:", 40, y)
   doc.setTextColor(0, 0, 0)
-  const filterText = `Role: ${options.role || "All"} | Severity: ${options.severity || "All"} | Range: ${options.startDate || "Any"} to ${options.endDate || "Any"} | Search: ${options.search || "None"}`
+  const filterParts = []
+  if (options.scope) filterParts.push(`Scope: ${options.scope}`)
+  if (options.role) filterParts.push(`Role: ${options.role}`)
+  if (options.severity) filterParts.push(`Severity: ${options.severity}`)
+  filterParts.push(`Range: ${options.startDate || "Any"} to ${options.endDate || "Any"}`)
+  filterParts.push(`Search: ${options.search || "None"}`)
+  const filterText = filterParts.join(" | ")
   doc.text(filterText, 130, y)
 
-  const tableData = logs.map((log) => [
-    formatPHDateTime(log.created_at),
-    log.severity || "INFO",
-    log.actor,
-    log.role,
-    log.action,
-    log.details || "—",
-  ])
+  const hasScope = logs.some((l) => l.officeName || l.scope || l.office_id)
+  const head = hasScope
+    ? [["Timestamp", "Severity", "Actor", "Role", "Scope", "Action", "Details"]]
+    : [["Timestamp", "Severity", "Actor", "Role", "Action", "Details"]]
+
+  const tableData = logs.map((log) => {
+    const base = [
+      formatPHDateTime(log.created_at || log.time),
+      log.severity || "INFO",
+      log.actor || log.user,
+      log.role,
+    ]
+    if (hasScope) {
+      base.push(log.officeName || log.scope || (log.office_id ? "Office" : "Global"))
+    }
+    base.push(log.action)
+    base.push(log.details || "—")
+    return base
+  })
 
   autoTable(doc, {
     startY: y + 25,
-    head: [["Timestamp", "Severity", "Actor", "Role", "Action", "Details"]],
+    head: head,
     body: tableData,
     theme: "striped",
     headStyles: { fillColor: [122, 30, 40] },
     styles: { fontSize: 8, cellPadding: 4 },
-    columnStyles: {
-      0: { cellWidth: 90 }, 1: { cellWidth: 60 }, 2: { cellWidth: 100 },
-      3: { cellWidth: 70 }, 4: { cellWidth: 100 }, 5: { cellWidth: "auto" },
-    },
+    columnStyles: hasScope
+      ? {
+          0: { cellWidth: 85 },
+          1: { cellWidth: 55 },
+          2: { cellWidth: 85 },
+          3: { cellWidth: 65 },
+          4: { cellWidth: 75 },
+          5: { cellWidth: 85 },
+          6: { cellWidth: "auto" },
+        }
+      : {
+          0: { cellWidth: 90 },
+          1: { cellWidth: 60 },
+          2: { cellWidth: 100 },
+          3: { cellWidth: 70 },
+          4: { cellWidth: 100 },
+          5: { cellWidth: "auto" },
+        },
   })
 
   return doc.output("blob")

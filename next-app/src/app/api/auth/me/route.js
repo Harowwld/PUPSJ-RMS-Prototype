@@ -59,6 +59,9 @@ export async function GET(req) {
     let officeName = null;
     let accentColor = "#800000"; // default maroon
     let enabledModules = [];
+    let stationName = null;
+    let storagePath = null;
+    let scannerModel = null;
 
     if (staff && staff.office_id) {
       const office = process.env.DATABASE_URL
@@ -67,6 +70,9 @@ export async function GET(req) {
       if (office) {
         officeName = office.name;
         accentColor = office.accent_color || "#800000";
+        stationName = office.station_name || `${staff.office_id.toUpperCase()}-STATION-01`;
+        storagePath = office.storage_path || `.local/storage/${staff.office_id}/uploads`;
+        scannerModel = office.scanner_model || "High-Speed Document Scanner";
         const modules = process.env.DATABASE_URL
           ? await query("SELECT m.* FROM modules m JOIN office_modules om ON om.module_id = m.id WHERE om.office_id = $1 AND om.enabled = true", [staff.office_id])
           : await getOfficeModules(staff.office_id);
@@ -116,6 +122,9 @@ export async function GET(req) {
         office_name: officeName,
         accent_color: accentColor,
         enabled_modules: enabledModules,
+        station_name: stationName,
+        storage_path: storagePath,
+        scanner_model: scannerModel,
         username: payload.username || null,
         fname: staff?.fname || "",
         lname: staff?.lname || "",

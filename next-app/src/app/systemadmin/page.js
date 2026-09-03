@@ -5,7 +5,6 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { toast } from "sonner"
 
 import Header from "@/components/layout/Header"
-import Footer from "@/components/layout/Footer"
 import Sidebar from "@/components/shared/Sidebar"
 import ConfirmModal from "@/components/shared/ConfirmModal"
 import { SystemAdminGuard } from "@/components/shared/AuthGuard"
@@ -18,14 +17,15 @@ import GlobalStaffTab from "@/components/systemadmin/GlobalStaffTab"
 import GlobalAuditLogsTab from "@/components/systemadmin/GlobalAuditLogsTab"
 import SystemHealthTab from "@/components/systemadmin/SystemHealthTab"
 
+const VALID_VIEWS = ["offices", "modules", "staff", "logs", "health"]
+
 function SystemAdminPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [loading, setLoading] = useState(true)
   const [authUser, setAuthUser] = useState(null)
   
-  const validViews = ["offices", "modules", "staff", "logs", "health"]
-  const initialView = validViews.includes(searchParams?.get("view"))
+  const initialView = VALID_VIEWS.includes(searchParams?.get("view"))
     ? searchParams.get("view")
     : "offices"
 
@@ -118,7 +118,8 @@ function SystemAdminPageContent() {
 
   useEffect(() => {
     const tab = String(searchParams?.get("view") || "").trim()
-    if (validViews.includes(tab)) {
+    if (VALID_VIEWS.includes(tab)) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setView(tab)
     }
   }, [searchParams])
@@ -150,16 +151,16 @@ function SystemAdminPageContent() {
   }, [router])
 
   const sidebarItems = [
-    { type: "header", label: "Office Administration" },
-    { key: "offices", label: "Offices & Departments", iconClass: "ti ti-building-community" },
-    { key: "modules", label: "Module Config Matrix", iconClass: "ti ti-layout-grid" },
+    { type: "header", label: "Institutional Governance" },
+    { key: "offices", label: "Departments & Stations", iconClass: "ph-bold ph-buildings" },
+    { key: "modules", label: "Module Config Matrix", iconClass: "ph-bold ph-squares-four" },
     
     { type: "header", label: "Access & Audit" },
-    { key: "staff", label: "Global Directory", iconClass: "ti ti-users" },
-    { key: "logs", label: "Platform Audit Trail", iconClass: "ti ti-history" },
+    { key: "staff", label: "Global Directory", iconClass: "ph-bold ph-users" },
+    { key: "logs", label: "Platform Audit Trail", iconClass: "ph-bold ph-history" },
     
-    { type: "header", label: "Platform Health" },
-    { key: "health", label: "System Health", iconClass: "ti ti-activity-heartbeat" }
+    { type: "header", label: "Platform Infrastructure" },
+    { key: "health", label: "System Health", iconClass: "ph-bold ph-activity" }
   ]
 
   if (loading) {
@@ -213,7 +214,6 @@ function SystemAdminPageContent() {
           </div>
         </main>
       </div>
-      <Footer />
     </div>
   )
 }

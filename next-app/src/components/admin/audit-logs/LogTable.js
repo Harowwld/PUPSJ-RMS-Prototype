@@ -327,7 +327,7 @@ export default function LogTable({
                           No Activity Found
                         </EmptyTitle>
                         <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400">
-                          Try adjusting your search filters to find what you're looking for.
+                          Try adjusting your search filters to find what you&apos;re looking for.
                         </EmptyDescription>
                         {(localSearch !== "" ||
                           logRoleFilter !== "All" ||

@@ -53,6 +53,7 @@ const COORDINATE_REGION_LABELS = {
 }
 
 export default function ScanUploadTab({
+  authUser = null,
   loading,
   error = null,
   uploadMode,
@@ -579,6 +580,46 @@ export default function ScanUploadTab({
             )
           }
         />
+
+        {/* Workstation Hardware & Digitization Path Banner */}
+        <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-2.5 bg-slate-50/70 dark:bg-zinc-900/60 border-b border-gray-100 dark:border-white/5 text-xs">
+          <div className="flex items-center gap-3 flex-wrap">
+            <div className="flex items-center gap-1.5">
+              <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span className="text-[10px] font-bold text-gray-500 dark:text-zinc-400 uppercase tracking-wider">
+                Workstation:
+              </span>
+              <span className="font-semibold text-gray-800 dark:text-zinc-200">
+                {authUser?.station_name || `${(authUser?.office_id || "REG").toUpperCase()}-ARCHIVE-PC01`}
+              </span>
+            </div>
+
+            <span className="text-gray-300 dark:text-zinc-700">·</span>
+
+            <div className="flex items-center gap-1.5">
+              <i className="ph-bold ph-printer text-pup-maroon dark:text-red-400 text-xs"></i>
+              <span className="text-[10px] font-bold text-gray-500 dark:text-zinc-400 uppercase tracking-wider">
+                Scanner:
+              </span>
+              <span className="font-medium text-gray-700 dark:text-zinc-300">
+                {authUser?.scanner_model || "High-Speed Document Scanner"}
+              </span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <i className="ph-bold ph-hard-drives text-pup-maroon dark:text-red-400 text-xs"></i>
+            <span className="text-[10px] font-bold text-gray-500 dark:text-zinc-400 uppercase tracking-wider">
+              Digitization Save Path:
+            </span>
+            <span 
+              className="text-[11px] font-medium text-gray-700 dark:text-zinc-200 bg-white dark:bg-zinc-800 border border-gray-200 dark:border-white/10 px-2.5 py-0.5 rounded-md truncate max-w-[340px]"
+              title={authUser?.storage_path || `.local/storage/${authUser?.office_id || "registrar"}/uploads`}
+            >
+              {authUser?.storage_path || `.local/storage/${authUser?.office_id || "registrar"}/uploads`}
+            </span>
+          </div>
+        </div>
 
         {/* Mode Toggles as Sub-tabs */}
         <div className="w-full select-none px-6 border-b border-gray-100 dark:border-white/5">
@@ -1771,7 +1812,27 @@ export default function ScanUploadTab({
                           </Select>
                         </div>
 
-                          <LiquidGlassButton
+                        {/* Target Digitization Storage Destination */}
+                        <div className="rounded-xl border border-gray-200/80 bg-slate-50/60 p-3 dark:border-white/10 dark:bg-white/5 text-xs space-y-1.5">
+                          <div className="flex items-center justify-between">
+                            <span className="flex items-center gap-1.5 font-bold text-gray-800 dark:text-zinc-200 text-xs">
+                              <i className="ph-bold ph-hard-drives text-pup-maroon dark:text-red-400"></i>
+                              <span>Digitization Destination</span>
+                            </span>
+                            <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/60 dark:border-emerald-500/20 px-2 py-0.5 rounded-full">
+                              Local Partition
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-gray-500 dark:text-zinc-400 leading-normal">
+                            Scanned document will be saved directly into this station&apos;s isolated directory:
+                          </p>
+                          <div className="flex items-center gap-2 bg-white dark:bg-zinc-900 border border-gray-200 dark:border-white/10 rounded-lg px-2.5 py-1.5 text-[11px] text-gray-700 dark:text-zinc-300 break-all">
+                            <i className="ph-bold ph-folder-notch-open text-amber-600 dark:text-amber-400 shrink-0"></i>
+                            <span>{authUser?.storage_path || `.local/storage/${authUser?.office_id || "registrar"}/uploads`}</span>
+                          </div>
+                        </div>
+
+                        <LiquidGlassButton
                           type="button"
                           onClick={() =>
                             processSubmission({

@@ -1681,6 +1681,7 @@ function StaffPageContent() {
 
           <TabsContent value="upload" className="h-full m-0 border-0 focus-visible:ring-0">
             <ScanUploadTab
+              authUser={authUser}
               loading={!storageLayout}
               uploadMode={uploadMode}
               uploadStudentIsExisting={uploadStudentIsExisting}

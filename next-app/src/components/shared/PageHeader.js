@@ -49,21 +49,27 @@ export default function PageHeader({
           
           <div className="flex flex-col gap-[4px]">
             <CardTitle 
-              className={cn("flex items-center gap-2 text-xl font-semibold tracking-tight text-gray-900 transition-colors dark:text-zinc-50 m-0", titleClassName)}
-              style={
-                titleClassName?.includes("text-[15px]")
-                  ? { fontSize: "15px" }
-                  : titleClassName?.includes("text-[18px]")
-                  ? { fontSize: "18px" }
-                  : undefined
-              }
+              className={cn("flex items-center gap-2 text-[18px] font-semibold tracking-[-0.01em] text-gray-900 transition-colors dark:text-zinc-50 m-0", titleClassName)}
+              style={{
+                fontSize: "18px",
+                fontWeight: 600,
+                letterSpacing: "-0.01em",
+                ...(titleClassName?.includes("text-[15px]") ? { fontSize: "15px" } : {}),
+                ...(titleClassName?.includes("text-[20px]") ? { fontSize: "20px" } : {})
+              }}
             >
               {title}
             </CardTitle>
             {description && (
               <CardDescription 
-                className={cn("text-sm font-medium text-gray-500 transition-colors dark:text-zinc-400 m-0", descriptionClassName)}
-                style={descriptionClassName?.includes("text-[13px]") ? { fontSize: "13px" } : undefined}
+                className={cn("text-[13px] font-normal text-gray-500 transition-colors dark:text-zinc-400 m-0 mt-[4px]", descriptionClassName)}
+                style={{
+                  fontSize: "13px",
+                  fontWeight: 400,
+                  marginTop: "4px",
+                  ...(descriptionClassName?.includes("text-[12px]") ? { fontSize: "12px" } : {}),
+                  ...(descriptionClassName?.includes("text-[14px]") ? { fontSize: "14px" } : {})
+                }}
               >
                 {description}
               </CardDescription>

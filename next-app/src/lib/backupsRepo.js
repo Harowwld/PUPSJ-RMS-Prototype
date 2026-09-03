@@ -218,9 +218,15 @@ export async function executeBackup() {
     zip.addLocalFile(tempDbPath, "", "db.sql");
   }
 
-  // Add Uploads folder
+  // Add Uploads folder (legacy)
   if (fs.existsSync(uploadsDir)) {
     zip.addLocalFolder(uploadsDir, "uploads");
+  }
+
+  // Add Partitioned Storage folder
+  const storageDir = path.join(localDir, "storage");
+  if (fs.existsSync(storageDir)) {
+    zip.addLocalFolder(storageDir, "storage");
   }
 
   // Clean up temporary database copy

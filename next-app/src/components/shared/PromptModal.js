@@ -176,7 +176,7 @@ export default function PromptModal({
             onClick={onCancel}
             className={cn(
               "h-11 rounded-brand px-6 text-sm font-semibold text-gray-500 hover:bg-transparent hover:text-gray-700 dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-transparent transition-colors",
-              isDeclineModal && "text-[13px] font-medium text-gray-500 dark:text-zinc-400 bg-transparent hover:bg-transparent border-none shadow-none p-0 h-auto cursor-pointer focus:outline-none"
+              isDeclineModal && "h-10 px-4 text-xs font-semibold text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:text-zinc-400 dark:hover:bg-white/5 rounded-xl cursor-pointer border-none shadow-none"
             )}
             disabled={isLoading}
           >
@@ -194,7 +194,7 @@ export default function PromptModal({
               (variant === "brand") && "btn-brand-red hover:from-red-700 hover:to-red-900",
               v.confirmVariant === "destructive" && "btn-brand-red",
               (v.confirmVariant === "default" && !["success", "warning", "brand"].includes(variant)) && "bg-gray-900 hover:bg-gray-800 text-white dark:bg-zinc-800 dark:hover:bg-zinc-700 dark:text-zinc-50 dark:border-white/10",
-              isDeclineModal && "flex h-[36px] items-center justify-center rounded-[8px] btn-brand-red text-[13px] font-medium text-white shadow-none border-none py-0 px-4 cursor-pointer"
+              isDeclineModal && "flex h-10 items-center justify-center rounded-xl! btn-brand-red text-xs font-semibold text-white shadow-none! border-none! py-0 px-5 cursor-pointer"
             )}
           >
             {!isDeclineModal && <i className={cn(customButtonIcon || v.buttonIcon, "text-lg")}></i>}

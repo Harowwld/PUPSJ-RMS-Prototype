@@ -37,6 +37,7 @@ export default function ConfirmModal({
   isPersonnelModal = false,
   isRegistrationModal = false,
   isUnsavedChangesModal = false,
+  isAppleStyled: isAppleStyledProp = false,
 }) {
   const inputRefs = [useRef(), useRef(), useRef(), useRef()];
 
@@ -137,12 +138,15 @@ export default function ConfirmModal({
     return () => window.removeEventListener("keydown", handleGlobalKey);
   }, [open, isLoading, disabled, isVerified, onConfirm]);
 
-  const isAppleStyled = isDeleteBackup || isArchiveModal || isRestoreModal || isPersonnelModal || isRegistrationModal || isUnsavedChangesModal;
+  const isAppleStyled = isAppleStyledProp || isDeleteBackup || isArchiveModal || isRestoreModal || isPersonnelModal || isRegistrationModal || isUnsavedChangesModal;
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onCancel()}>
       <DialogContent 
-        className="sm:max-w-lg p-0 overflow-hidden bg-white border border-gray-200 shadow-2xl rounded-brand dark:bg-card dark:border-white/10"
+        className={cn(
+          "sm:max-w-lg p-0 overflow-hidden bg-white border border-gray-200 shadow-2xl rounded-brand dark:bg-card dark:border-white/10",
+          isAppleStyled && "rounded-2xl"
+        )}
       >
         <DialogHeader className={cn(
           "p-6 border-b border-gray-100 dark:border-white/10 bg-gray-50 dark:bg-white/5 min-w-0",
@@ -347,7 +351,7 @@ export default function ConfirmModal({
 
         <div className={cn(
           "p-4 border-t border-gray-100 dark:border-white/10 bg-white dark:bg-card flex flex-col-reverse sm:flex-row sm:justify-end gap-2.5",
-          isAppleStyled && "border-none pt-0 gap-2 justify-end flex-row",
+          isAppleStyled && "border-none pt-0 gap-2.5 justify-end flex-row items-center",
           (!selectedItems.length && !isVerificationEnabled) && "pt-0 border-t-0"
         )}>
           <Button
@@ -356,7 +360,7 @@ export default function ConfirmModal({
             onClick={onCancel}
             className={cn(
               "h-11 rounded-brand px-6 text-sm font-semibold text-gray-500 hover:bg-transparent hover:text-gray-700 dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-transparent transition-colors",
-              isAppleStyled && "text-[13px] font-medium text-gray-500 dark:text-zinc-400 bg-transparent hover:bg-transparent border-none shadow-none p-0 h-auto"
+              isAppleStyled && "h-10 px-4 text-xs font-semibold text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:text-zinc-400 dark:hover:bg-white/5 rounded-xl cursor-pointer border-none shadow-none"
             )}
             disabled={isLoading}
           >
@@ -367,20 +371,20 @@ export default function ConfirmModal({
             onClick={onConfirm}
             disabled={isLoading || disabled || !isVerified}
             themeColor={!(variant === "success" || variant === "warning" || isRestoreModal || isUnsavedChangesModal || v.confirmVariant === "destructive")}
-            height={((isDeleteBackup || isArchiveModal || isPersonnelModal || isRegistrationModal) || isRestoreModal || isUnsavedChangesModal) ? 36 : 44}
-            radius={((isDeleteBackup || isArchiveModal || isPersonnelModal || isRegistrationModal) || isRestoreModal || isUnsavedChangesModal) ? 18 : 22}
+            height={isAppleStyled ? 40 : 44}
+            radius={isAppleStyled ? 12 : 22}
             glassColor="rgba(10, 132, 255, 0.15)"
             className={cn(
               "px-6 text-sm font-semibold gap-2 flex items-center transition-all active:scale-95 disabled:opacity-30 disabled:grayscale-[0.5] disabled:cursor-not-allowed",
               !isAppleStyled && "shadow-sm",
               variant === "success" && "btn-brand-green",
-              (variant === "warning" && !isAppleStyled) && (v.confirmStyle || "bg-amber-600 hover:bg-amber-700 text-white"),
+              (variant === "warning" && !isUnsavedChangesModal) && (v.confirmStyle || "bg-amber-600 hover:bg-amber-700 text-white"),
               (variant === "brand") && "btn-brand-red hover:from-red-700 hover:to-red-900",
-              (v.confirmVariant === "destructive" && !isAppleStyled) && "btn-brand-red",
-              (v.confirmVariant === "default" && !["success", "warning", "brand"].includes(variant) && !isAppleStyled) && "bg-gray-900 hover:bg-gray-800 text-white dark:bg-zinc-800 dark:hover:bg-zinc-700 dark:text-zinc-50 dark:border-white/10",
-              ((isDeleteBackup || isArchiveModal || isPersonnelModal || isRegistrationModal) && !isRestoreModal) && "text-[13px] font-medium text-white shadow-none! border-none! py-0 px-4 cursor-pointer",
-              isRestoreModal && "bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white shadow-none! border-none! py-0 px-4 cursor-pointer text-[13px] font-medium",
-              isUnsavedChangesModal && "bg-[#FF6410] hover:bg-[#e55300] active:bg-[#cc4a00] text-white shadow-none! border-none! py-0 px-4 cursor-pointer text-[13px] font-medium",
+              (v.confirmVariant === "destructive") && "btn-brand-red",
+              (v.confirmVariant === "default" && !["success", "warning", "brand"].includes(variant)) && "bg-gray-900 hover:bg-gray-800 text-white dark:bg-zinc-800 dark:hover:bg-zinc-700 dark:text-zinc-50 dark:border-white/10",
+              (isAppleStyled && !isRestoreModal && !isUnsavedChangesModal) && "btn-brand-red rounded-xl! h-10 px-5 text-xs font-semibold text-white shadow-none! border-none! cursor-pointer",
+              isRestoreModal && "bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white rounded-xl! h-10 px-5 text-xs font-semibold shadow-none! border-none! cursor-pointer",
+              isUnsavedChangesModal && "bg-[#FF6410] hover:bg-[#e55300] active:bg-[#cc4a00] text-white rounded-xl! h-10 px-5 text-xs font-semibold shadow-none! border-none! cursor-pointer",
               isRegistrationModal && "w-[120px]",
               confirmClassName
             )}

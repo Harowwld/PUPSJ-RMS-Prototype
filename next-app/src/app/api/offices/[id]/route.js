@@ -70,6 +70,18 @@ export async function PATCH(req, { params }) {
     if (body.status !== undefined && body.status !== original.status) {
       changes.push(`Status: '${original.status}' -> '${body.status}'`);
     }
+    if (body.station_name !== undefined && body.station_name !== original.station_name) {
+      changes.push(`Station Host: '${original.station_name || "Unassigned"}' -> '${body.station_name}'`);
+    }
+    if (body.storage_path !== undefined && body.storage_path !== original.storage_path) {
+      changes.push(`Storage Partition: '${original.storage_path || "Default"}' -> '${body.storage_path}'`);
+    }
+    if (body.scanner_model !== undefined && body.scanner_model !== original.scanner_model) {
+      changes.push(`Scanner Model: '${original.scanner_model || "Generic"}' -> '${body.scanner_model}'`);
+    }
+    if (body.ingest_token !== undefined && body.ingest_token !== original.ingest_token) {
+      changes.push(`Station Ingest Token rotated`);
+    }
 
     if (changes.length > 0) {
       let action = "Update Office Configuration";

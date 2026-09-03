@@ -93,6 +93,9 @@ export default function SystemHealthTab({ showToast }) {
       <PageHeader
         title="System Health & Maintenance"
         description="Monitor real-time host resource metrics, database sizes, and perform administrative overrides."
+        showBorder={false}
+        titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
+        descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
       />
 
       {/* Metrics Cards */}
@@ -249,7 +252,7 @@ export default function SystemHealthTab({ showToast }) {
                 <Button 
                   onClick={handleSeedData}
                   disabled={seedLoading}
-                  className="bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-lg h-8 px-4 cursor-pointer dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900"
+                  className="bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-xl h-9 px-4 cursor-pointer dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs active:scale-95 transition-all"
                 >
                   {seedLoading ? "Seeding..." : "Seed"}
                 </Button>
@@ -263,7 +266,7 @@ export default function SystemHealthTab({ showToast }) {
                 </div>
                 <Button 
                   onClick={() => setResetOpen(true)}
-                  className="bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded-lg h-8 px-4 cursor-pointer"
+                  className="bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded-xl h-9 px-4 cursor-pointer shadow-xs active:scale-95 transition-all"
                 >
                   Reset DB
                 </Button>

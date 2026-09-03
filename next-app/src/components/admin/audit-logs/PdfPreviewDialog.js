@@ -38,7 +38,7 @@ export default function PdfPreviewDialog({
     >
       <DialogContent 
         hideClose={true}
-        className="flex h-[90vh] w-[96vw] max-w-[96vw] flex-col overflow-hidden border border-gray-200 bg-gray-100 p-0 shadow-2xl transition-all duration-normal ease-standard xl:max-w-[1400px] rounded-brand dark:border-white/10 dark:bg-muted"
+        className="flex h-[90vh] w-[96vw] max-w-[96vw] flex-col overflow-hidden border border-gray-200 bg-gray-100 p-0 shadow-2xl transition-all duration-normal ease-standard xl:max-w-[1400px] rounded-2xl dark:border-white/10 dark:bg-muted"
       >
         <DialogHeader 
           className="shrink-0 bg-gray-50 dark:bg-white/5"
@@ -136,44 +136,23 @@ export default function PdfPreviewDialog({
             variant="ghost"
             size="icon"
             onClick={() => setIsFullscreenPreview(!isFullscreenPreview)}
-            className="text-[#8E8E93] hover:text-[#111] dark:hover:text-white hover:bg-transparent transition-colors rounded-brand shadow-none border-0 p-0"
-            style={{
-              height: '36px',
-              width: '36px',
-              background: 'none'
-            }}
+            className="text-[#8E8E93] hover:text-[#111] dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/10 transition-colors rounded-xl shadow-none border-0 p-0 h-10 w-10 cursor-pointer"
           >
-            <i className="ti ti-arrows-vertical" style={{ fontSize: '16px' }}></i>
+            <i className="ti ti-arrows-vertical text-[16px]"></i>
           </Button>
 
-          <div className="flex items-center gap-[8px]" style={{ marginLeft: 'auto' }}>
+          <div className="flex items-center gap-2.5 ml-auto">
             <Button
               variant="ghost"
               onClick={() => setPdfPreviewOpen(false)}
-              className="font-semibold text-sm text-gray-600 hover:text-[#111] hover:bg-transparent dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-transparent transition-colors rounded-brand shadow-none border-0"
-              style={{
-                height: '36px',
-                fontSize: '13px',
-                fontWeight: 500,
-                boxShadow: 'none',
-                background: 'none'
-              }}
+              className="font-semibold text-xs text-gray-600 hover:text-[#111] hover:bg-gray-100 dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-white/10 transition-colors rounded-xl shadow-none border-0 h-10 px-4 cursor-pointer"
             >
               Close
             </Button>
             <Button
               onClick={handleDownloadFromPreview}
               disabled={!pdfBlobUrl}
-              className="text-white btn-brand-red active:scale-95 disabled:opacity-50 transition-all dark:shadow-none"
-              style={{
-                height: '36px',
-                borderRadius: '8px',
-                fontSize: '13px',
-                fontWeight: 500,
-                boxShadow: 'none',
-                paddingLeft: '24px',
-                paddingRight: '24px'
-              }}
+              className="text-white btn-brand-red active:scale-95 disabled:opacity-50 transition-all dark:shadow-none h-10 px-5 rounded-xl! text-xs font-semibold shadow-xs cursor-pointer"
             >
               Save to Device
             </Button>

@@ -89,7 +89,7 @@ export async function POST(req) {
     return addSecurityHeaders(NextResponse.json({ ok: false, error: "Invalid credentials" }, { status: 401 }));
   }
 
-  if (staff.status === "Archived") {
+  if (staff.status === "Archived" || staff.status === "Inactive") {
     authDebug("login.account_archived", { staffId: staff.id });
     await audit(req, "Login Attempt", `authentication failure: attempt to access personnel account '${username}' which is currently archived and disabled`, "CRITICAL");
     return addSecurityHeaders(NextResponse.json(

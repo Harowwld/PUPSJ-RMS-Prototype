@@ -28,8 +28,7 @@ export default function LogExpandedRow({ log, handleCopy }) {
             </h5>
           </div>
           <div 
-            className="bg-white dark:bg-card p-[16px] rounded-[8px] h-full"
-            style={{ border: '0.5px solid rgba(0,0,0,0.08)' }}
+            className="bg-white dark:bg-card p-[16px] rounded-xl h-full border border-gray-200/60 dark:border-white/10"
           >
             <p className="text-[13px] font-normal text-[#111111] dark:text-zinc-50 leading-[1.5]">
               {formattedDescription}
@@ -46,8 +45,7 @@ export default function LogExpandedRow({ log, handleCopy }) {
             </h5>
           </div>
           <div 
-            className="space-y-[16px] bg-white dark:bg-card p-[16px] rounded-[8px]"
-            style={{ border: '0.5px solid rgba(0,0,0,0.08)' }}
+            className="space-y-[16px] bg-white dark:bg-card p-[16px] rounded-xl border border-gray-200/60 dark:border-white/10"
           >
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-semibold uppercase tracking-[0.04em] text-[#8E8E93]">IP Address</span>
@@ -55,7 +53,7 @@ export default function LogExpandedRow({ log, handleCopy }) {
                 <span className="text-[13px] font-normal text-[#111111] dark:text-zinc-50">{log.ip || "::1"}</span>
                 <button 
                   onClick={() => handleCopy(log.ip, "IP Address")}
-                  className="w-7 h-7 rounded-[6px] hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/10 text-[#C7C7CC] hover:text-[#111111] dark:hover:text-zinc-100 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors"
+                  className="w-7 h-7 rounded-lg hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/10 text-[#C7C7CC] hover:text-[#111111] dark:hover:text-zinc-100 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors"
                 >
                   <i className="ti ti-copy text-[14px]" style={{ fontSize: '14px' }}></i>
                 </button>
@@ -79,12 +77,11 @@ export default function LogExpandedRow({ log, handleCopy }) {
             </h5>
           </div>
           <div 
-            className="space-y-[16px] bg-white dark:bg-card p-[16px] rounded-[8px]"
-            style={{ border: '0.5px solid rgba(0,0,0,0.08)' }}
+            className="space-y-[16px] bg-white dark:bg-card p-[16px] rounded-xl border border-gray-200/60 dark:border-white/10"
           >
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-semibold uppercase tracking-[0.04em] text-[#8E8E93]">Target</span>
-              <span className="rounded-[4px] bg-[#E0F2FE] px-[8px] py-[3px] text-[11px] font-medium text-[#0369A1] dark:bg-blue-950/40 dark:text-blue-400">
+              <span className="rounded-md bg-[#E0F2FE] px-[8px] py-[3px] text-[11px] font-medium text-[#0369A1] dark:bg-blue-950/40 dark:text-blue-400">
                 {log.entityType || "N/A"}
               </span>
             </div>
@@ -95,13 +92,21 @@ export default function LogExpandedRow({ log, handleCopy }) {
                 {log.entityId && (
                   <button 
                     onClick={() => handleCopy(log.entityId, "Reference ID")}
-                    className="w-7 h-7 rounded-[6px] hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/10 text-[#C7C7CC] hover:text-[#111111] dark:hover:text-zinc-100 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors"
+                    className="w-7 h-7 rounded-lg hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/10 text-[#C7C7CC] hover:text-[#111111] dark:hover:text-zinc-100 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors"
                   >
                     <i className="ti ti-copy text-[14px]" style={{ fontSize: '14px' }}></i>
                   </button>
                 )}
               </div>
             </div>
+            {(log.officeName || log.scope) && (
+              <div className="flex items-center justify-between border-t border-black/5 pt-[16px] dark:border-white/5">
+                <span className="text-[11px] font-semibold uppercase tracking-[0.04em] text-[#8E8E93]">Scope</span>
+                <span className="text-[13px] font-medium text-[#111111] dark:text-zinc-50">
+                  {log.officeName || log.scope}
+                </span>
+              </div>
+            )}
           </div>
         </div>
       </div>
