@@ -7,8 +7,11 @@ test("extracts PSA name fields from normalized coordinate regions", () => {
     {
       pageIndex: 0,
       observations: [
+        { text: "OUTSIDE", x: 0.10, y: 0.30, width: 0.10, height: 0.02 },
         { text: "JUAN", x: 0.20, y: 0.30, width: 0.10, height: 0.02 },
         { text: "A.", x: 0.42, y: 0.30, width: 0.03, height: 0.02 },
+        { text: "(Middle)", x: 0.45, y: 0.29, width: 0.04, height: 0.02 },
+        { text: "12", x: 0.47, y: 0.31, width: 0.02, height: 0.02 },
         { text: "DELA CRUZ", x: 0.64, y: 0.30, width: 0.15, height: 0.02 },
         { text: "MOTHER", x: 0.20, y: 0.70, width: 0.15, height: 0.02 },
       ],
@@ -24,6 +27,7 @@ test("extracts PSA name fields from normalized coordinate regions", () => {
 
   assert.equal(result.extractedName, "DELA CRUZ, JUAN A.");
   assert.equal(result.regions.firstName.text, "JUAN");
+  assert.equal(result.regions.middleName.text, "A.");
   assert.equal(result.regions.lastName.text, "DELA CRUZ");
   assert.equal(result.regions.lastName.observations.length, 1);
 });

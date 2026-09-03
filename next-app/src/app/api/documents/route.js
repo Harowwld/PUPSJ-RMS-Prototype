@@ -6,6 +6,7 @@ import {
 import { createStudent, getStudentByStudentNo } from "../../../lib/studentsRepo";
 import { writeAuditLog } from "../../../lib/auditLogRequest";
 import { requireStaff, createAuthErrorResponse } from "../../../lib/authHelpers";
+import { isUniqueViolation } from "../../../lib/dbErrors";
 
 export const runtime = "nodejs";
 
@@ -155,7 +156,7 @@ export async function POST(req) {
       });
     } catch (e) {
       const msg = String(e?.message || "");
-      if (msg.includes("UNIQUE") || msg.includes("PRIMARY")) {
+      if (isUniqueViolation(e)) {
         return NextResponse.json(
           { ok: false, error: "Student already exists" },
           { status: 409 }
@@ -178,6 +179,7 @@ export async function POST(req) {
   const buf = Buffer.from(await file.arrayBuffer());
 
   const row = await createDocument({
+    officeId: user.office_id || "registrar",
     studentNo,
     studentName,
     docType,

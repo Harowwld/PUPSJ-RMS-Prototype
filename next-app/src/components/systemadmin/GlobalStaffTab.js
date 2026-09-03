@@ -928,7 +928,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
           
           <div className="my-6 p-4 rounded-xl border border-dashed border-gray-300 dark:border-white/10 bg-gray-50 dark:bg-zinc-950/20 text-center">
             <span className="text-xs text-gray-400 uppercase font-bold tracking-wider">Temporary Password</span>
-            <div className="font-mono text-xl font-bold text-pup-maroon dark:text-red-400 mt-1 select-all">
+            <div className="font-sans text-xl font-bold text-pup-maroon dark:text-red-400 mt-1 select-all">
               {tempPassword}
             </div>
           </div>

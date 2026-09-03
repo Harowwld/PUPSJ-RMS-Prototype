@@ -4,6 +4,7 @@ import { listCourses } from "../../../../lib/coursesRepo";
 import { writeAuditLog } from "../../../../lib/auditLogRequest";
 import { getStorageLayout } from "../../../../lib/storageLayoutRepo";
 import { canonicalizeCabinetId } from "../../../../lib/storageLayoutUtils";
+import { isUniqueViolation } from "../../../../lib/dbErrors";
 
 export const runtime = "nodejs";
 
@@ -120,7 +121,7 @@ export async function POST(req) {
       results.push({ index: i, ok: true, data: created });
     } catch (e) {
       const msg = String(e?.message || "");
-      if (msg.includes("UNIQUE") || msg.includes("PRIMARY")) {
+      if (isUniqueViolation(e)) {
         results.push({ index: i, ok: false, error: "Student already exists" });
       } else if (
         msg.includes("Invalid courseCode") ||

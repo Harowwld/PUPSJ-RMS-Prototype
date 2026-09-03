@@ -1456,7 +1456,7 @@ function AccountPageContent() {
                 </div>
                 <Button 
                   onClick={() => setShowRecoveryCodesDialog(false)}
-                  className="w-full h-11 bg-[#0A84FF] hover:bg-[#0070E0] active:bg-[#0062C4] text-white font-semibold text-[14px] rounded-[12px] transition-colors shadow-none active:scale-95 border-0"
+                  className="w-full h-11 btn-brand-red text-white font-semibold text-[14px] rounded-[12px] transition-colors shadow-none active:scale-95 border-0"
                 >
                   Done
                 </Button>

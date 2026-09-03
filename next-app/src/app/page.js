@@ -818,7 +818,7 @@ export default function Home() {
                   <i className="ph-bold ph-envelope-simple text-base text-[#E5484D] mt-0.5"></i>
                   <div>
                     <span className="font-semibold block text-gray-800 dark:text-zinc-200">Email Submission</span>
-                    Submit requests to: <span className="font-mono text-[11px] bg-slate-100 dark:bg-zinc-800 px-1 py-0.5 rounded text-gray-850 dark:text-zinc-200">registrar.admin@pup.edu.ph</span>
+                    Submit requests to: <span className="font-sans text-[11px] bg-slate-100 dark:bg-zinc-800 px-1 py-0.5 rounded text-gray-850 dark:text-zinc-200">registrar.admin@pup.edu.ph</span>
                   </div>
                 </div>
 

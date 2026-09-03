@@ -901,7 +901,7 @@ export default function SectionsTab({
               </Button>
               <Button
                 type="submit"
-                className="flex h-[36px] items-center justify-center rounded-[8px] bg-[#007AFF] hover:bg-[#0066cc] text-[13px] font-medium text-white active:scale-95 disabled:opacity-50 transition-all px-4 dark:shadow-none border-0"
+                className="flex h-[36px] items-center justify-center rounded-[8px] btn-brand-red text-[13px] font-medium text-white active:scale-95 disabled:opacity-50 transition-all px-4 dark:shadow-none border-0"
               >
                 Create Block
               </Button>

@@ -1,285 +1,176 @@
 /**
- * Inserts sample courses, sections, document types, storage layout, students,
- * optional staff, sample PDFs, document requests, and a few audit log rows.
+ * Seed the complete local PostgreSQL sample dataset.
  *
- * Run from next-app/ after DB reset (or on an empty taxonomy):
+ * Run from next-app/:
  *   pnpm populate-sample-data
- *
- * If students already exist, the script exits unless you pass --force.
- * Restart the dev server after running if it was already running (sql.js cache).
+ *   pnpm populate-sample-data --force   # also replaces storage_layout
  */
+import crypto from "node:crypto";
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import dotenv from "dotenv";
 
-import { dbGet, dbRun, getDb, reloadDb } from "../src/lib/sqlite.js";
-import { setStorageLayout } from "../src/lib/storageLayoutRepo.js";
-import { buildDefaultStorageLayout } from "../src/lib/storageLayoutDefaults.js";
-import { createStudent } from "../src/lib/studentsRepo.js";
-import { createStaff } from "../src/lib/staffRepo.js";
-import { createDocument } from "../src/lib/documentsRepo.js";
+dotenv.config({ path: ".env.local" });
+dotenv.config();
 
-const MINIMAL_PDF = Buffer.from(
-  [
-    "%PDF-1.4",
-    "1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj",
-    "2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj",
-    "3 0 obj<</Type/Page/MediaBox[0 0 612 792]>>endobj",
-    "xref",
-    "0 4",
-    "0000000000 65535 f ",
-    "0000000009 00000 n ",
-    "0000000052 00000 n ",
-    "0000000101 00000 n ",
-    "trailer<</Size 4/Root 1 0 R>>",
-    "startxref",
-    "178",
-    "%%EOF",
-  ].join("\n"),
+const { query, queryOne, transaction } = await import("../src/lib/postgres.js");
+const { buildDefaultStorageLayout } = await import("../src/lib/storageLayoutDefaults.js");
+
+if (!process.env.DATABASE_URL) {
+  throw new Error("DATABASE_URL is required. Start PostgreSQL and check next-app/.env.local.");
+}
+
+const passwordHash = crypto
+  .createHash("sha256")
+  .update(process.env.DEFAULT_STAFF_PASSWORD || "pupstaff")
+  .digest("hex");
+
+const students = [
+  ["2022-10001-MN-1", "DELA CRUZ, JUAN A.", "BSIT", 2024, "BSIT-4A", 1, "2020", 1],
+  ["2022-10002-MN-2", "SANTOS, MARIA B.", "BSIT", 2024, "BSIT-4A", 1, "2021", 2],
+  ["2023-20003-MN-0", "REYES, CARLOS C.", "BSIT", 2025, "BSIT-4B", 2, "2022", 3],
+  ["2021-30004-MN-1", "GARCIA, ANA D.", "BSCS", 2024, "BSCS-3A", 3, "2023", 4],
+  ["2024-40005-MN-2", "TORRES, LUIS E.", "BSCS", 2025, "BSCS-3A", 1, "2024", 1],
+  ["2020-50006-MN-0", "FLORES, ELENA F.", "BSIT", 2024, "BSIT-4B", 4, "2025", 2],
+];
+
+const documents = [
+  [1, "2022-10001-MN-1", "DELA CRUZ, JUAN A.", "Transcript of Records", "sample-tor-juan.pdf"],
+  [2, "2022-10001-MN-1", "DELA CRUZ, JUAN A.", "Certificate of Enrollment", "sample-coe-juan.pdf"],
+  [3, "2022-10002-MN-2", "SANTOS, MARIA B.", "Form 137", "sample-form137-maria.pdf"],
+  [4, "2021-30004-MN-1", "GARCIA, ANA D.", "Diploma", "sample-diploma-ana.pdf"],
+];
+
+const requests = [
+  [1, "2023-20003-MN-0", "Diploma", "Pending", "Sample: alumni counter request", "PUPREGISTRAR-001"],
+  [2, "2024-40005-MN-2", "Transcript of Records", "InProgress", "Sample: being prepared", "PUPREGISTRAR-003"],
+];
+
+const osasDocuments = [
+  [101, "2025-90001-MN-0", "DE LA ROSA, ANGELA M.", "Organization Registration Certificate", "sample-org-cert-angela.pdf"],
+];
+
+const minimalPdf = Buffer.from(
+  ["%PDF-1.4", "1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj", "2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj", "3 0 obj<</Type/Page/MediaBox[0 0 612 792]>>endobj", "xref", "0 4", "0000000000 65535 f ", "0000000009 00000 n ", "0000000052 00000 n ", "0000000101 00000 n ", "trailer<</Size 4/Root 1 0 R>>", "startxref", "178", "%%EOF"].join("\n"),
 );
 
-function normDocTypeName(name) {
-  return String(name || "")
-    .trim()
-    .toLowerCase()
-    .replace(/\s+/g, " ");
-}
-
-async function countStudents() {
-  const db = await getDb();
-  const r = db.exec("SELECT COUNT(*) AS c FROM students");
-  const v = r?.[0]?.values?.[0]?.[0];
-  return v != null ? Number(v) : 0;
-}
-
-async function main() {
-  const force = process.argv.includes("--force");
-  const n = await countStudents();
-  if (n > 0 && !force) {
-    throw new Error(
-      `[populate-sample-data] Refusing: ${n} student(s) already in the database. ` +
-        "Run reset first, or pass --force (not recommended on non-empty DBs).",
+export async function seed({ force: forceOverride } = {}) {
+  const force = forceOverride ?? process.argv.includes("--force");
+  await transaction(async ({ query: run, queryOne: runOne }) => {
+    await run(
+      `INSERT INTO staff (id, office_id, fname, lname, role, section, status, email, password_hash, password_last_changed, updated_at)
+       VALUES ('records.marcus@pup.local', 'registrar', 'Marcus', 'Reyes', 'Staff', 'Records', 'Active', 'records.marcus@pup.local', $1, NOW(), NOW())
+       ON CONFLICT (id) DO UPDATE SET office_id=EXCLUDED.office_id, status='Active', password_hash=EXCLUDED.password_hash, updated_at=NOW()`,
+      [passwordHash],
     );
-  }
 
-  const bootstrapAdmin = await dbGet("SELECT id FROM staff WHERE id = ? OR email = ?", [
-    "admin.default@pup.local",
-    "admin.default@pup.local",
+    for (const [code, name] of [["BSIT", "Bachelor of Science in Information Technology"], ["BSCS", "Bachelor of Science in Computer Science"]]) {
+      await run(`INSERT INTO courses (office_id, code, name, status) VALUES ('registrar', $1, $2, 'Active') ON CONFLICT (office_id, code) DO UPDATE SET name=EXCLUDED.name, status='Active'`, [code, name]);
+    }
+
+    for (const [name, code] of [["BSIT-4A", "BSIT"], ["BSIT-4B", "BSIT"], ["BSCS-3A", "BSCS"]]) {
+      await run(`INSERT INTO sections (office_id, name, course_code, status) VALUES ('registrar', $1, $2, 'Active') ON CONFLICT (office_id, name, course_code) DO UPDATE SET status='Active'`, [name, code]);
+    }
+
+    for (const name of ["Transcript of Records", "Diploma", "Certificate of Good Moral", "Form 137", "Certificate of Enrollment", "Birth Certificate"]) {
+      await run(`INSERT INTO document_types (office_id, name, name_norm, status) VALUES ('registrar', $1, $2, 'Active') ON CONFLICT (office_id, name_norm) DO UPDATE SET name=EXCLUDED.name, status='Active'`, [name, name.toLowerCase()]);
+    }
+
+    for (const [code, name] of [["BSA", "Bachelor of Science in Accountancy"]]) {
+      await run(`INSERT INTO courses (office_id, code, name, status) VALUES ('osas', $1, $2, 'Active') ON CONFLICT (office_id, code) DO UPDATE SET name=EXCLUDED.name, status='Active'`, [code, name]);
+    }
+    await run(`INSERT INTO sections (office_id, name, course_code, status) VALUES ('osas', 'BSA-2A', 'BSA', 'Active') ON CONFLICT (office_id, name, course_code) DO UPDATE SET status='Active'`);
+    for (const name of ["Good Moral Certificate", "Clearance Form", "Organization Registration Certificate", "Activity Permit"]) {
+      await run(`INSERT INTO document_types (office_id, name, name_norm, status) VALUES ('osas', $1, $2, 'Active') ON CONFLICT (office_id, name_norm) DO UPDATE SET name=EXCLUDED.name, status='Active'`, [name, name.toLowerCase()]);
+    }
+
+    for (const student of students) {
+      await run(
+        `INSERT INTO students (student_no, name, course_code, year_level, section, status, storage_room, storage_cabinet, storage_drawer)
+         VALUES ($1,$2,$3,$4,$5,'Active',$6,$7,$8)
+         ON CONFLICT (student_no) DO UPDATE SET name=EXCLUDED.name, course_code=EXCLUDED.course_code, year_level=EXCLUDED.year_level,
+           section=EXCLUDED.section, status='Active', storage_room=EXCLUDED.storage_room, storage_cabinet=EXCLUDED.storage_cabinet,
+           storage_drawer=EXCLUDED.storage_drawer, updated_at=NOW()`,
+        student,
+      );
+    }
+
+    const uploadsDir = path.join(process.env.LOCAL_DATA_DIR || ".local", "uploads");
+    fs.mkdirSync(uploadsDir, { recursive: true });
+    for (const [legacyId, studentNo, studentName, docType, filename] of documents) {
+      const storageFilename = `sample-${legacyId}-${filename}`;
+      fs.writeFileSync(path.join(uploadsDir, storageFilename), minimalPdf);
+      await run(
+        `INSERT INTO documents (office_id, student_no, student_name, doc_type, original_filename, storage_filename, mime_type, size_bytes, approval_status, legacy_id)
+         VALUES ('registrar',$1,$2,$3,$4,$5,'application/pdf',$6,'Pending',$7)
+         ON CONFLICT (office_id, legacy_id) DO UPDATE SET student_no=EXCLUDED.student_no, student_name=EXCLUDED.student_name,
+           doc_type=EXCLUDED.doc_type, original_filename=EXCLUDED.original_filename, storage_filename=EXCLUDED.storage_filename, size_bytes=EXCLUDED.size_bytes`,
+        [studentNo, studentName, docType, filename, storageFilename, minimalPdf.length, legacyId],
+      );
+    }
+
+    await run(
+      `INSERT INTO students (student_no, name, course_code, year_level, section, status)
+       VALUES ('2025-90001-MN-0', 'DE LA ROSA, ANGELA M.', 'BSA', 2026, 'BSA-2A', 'Active')
+       ON CONFLICT (student_no) DO UPDATE SET name=EXCLUDED.name, course_code=EXCLUDED.course_code,
+         year_level=EXCLUDED.year_level, section=EXCLUDED.section, status='Active', updated_at=NOW()`,
+    );
+
+    for (const [legacyId, studentNo, studentName, docType, filename] of osasDocuments) {
+      const storageFilename = `sample-${legacyId}-${filename}`;
+      fs.writeFileSync(path.join(uploadsDir, storageFilename), minimalPdf);
+      await run(
+        `INSERT INTO documents (office_id, student_no, student_name, doc_type, original_filename, storage_filename, mime_type, size_bytes, approval_status, legacy_id)
+         VALUES ('osas',$1,$2,$3,$4,$5,'application/pdf',$6,'Pending',$7)
+         ON CONFLICT (office_id, legacy_id) DO UPDATE SET student_no=EXCLUDED.student_no, student_name=EXCLUDED.student_name,
+           doc_type=EXCLUDED.doc_type, original_filename=EXCLUDED.original_filename, storage_filename=EXCLUDED.storage_filename, size_bytes=EXCLUDED.size_bytes`,
+        [studentNo, studentName, docType, filename, storageFilename, minimalPdf.length, legacyId],
+      );
+    }
+
+    for (const [legacyId, studentNo, docType, status, notes, actor] of requests) {
+      await run(
+        `INSERT INTO document_requests (office_id, student_no, doc_type, status, notes, created_by, updated_by, legacy_id)
+         VALUES ('registrar',$1,$2,$3,$4,$5,$5,$6)
+         ON CONFLICT (office_id, legacy_id) DO UPDATE SET student_no=EXCLUDED.student_no, doc_type=EXCLUDED.doc_type, status=EXCLUDED.status, notes=EXCLUDED.notes, updated_by=EXCLUDED.updated_by, updated_at=NOW()`,
+        [studentNo, docType, status, notes, actor, legacyId],
+      );
+    }
+
+    await run(`INSERT INTO global_audit_logs (office_id, actor, role, action, ip) VALUES ('registrar', 'System Administrator', 'Admin', 'Sample data populated (PostgreSQL)', '127.0.0.1')`);
+
+    if (force || !(await runOne("SELECT 1 FROM settings WHERE key = 'storage_layout'"))) {
+      await run(`INSERT INTO settings (key, value) VALUES ('storage_layout', $1) ON CONFLICT (key) DO UPDATE SET value=EXCLUDED.value, updated_at=NOW()`, [JSON.stringify(buildDefaultStorageLayout())]);
+    }
+  });
+
+  const [studentCount, documentCount, requestCount, settings] = await Promise.all([
+    queryOne("SELECT COUNT(*)::int AS count FROM students"),
+    queryOne("SELECT COUNT(*)::int AS count FROM documents"),
+    queryOne("SELECT COUNT(*)::int AS count FROM document_requests"),
+    queryOne("SELECT value FROM settings WHERE key = 'storage_layout'"),
   ]);
-  if (!bootstrapAdmin) {
-    throw new Error(
-      "[populate-sample-data] No default admin (admin.default@pup.local). " +
-        "Run `pnpm reset-db` with the app running, then restart the server, then run this script again.",
-    );
-  }
+  const layout = settings?.value ? JSON.parse(settings.value) : { rooms: [] };
+  const cabinetCount = layout.rooms.reduce((sum, room) => sum + room.cabinets.length, 0);
+  const drawerCount = layout.rooms.reduce((sum, room) => sum + room.cabinets.reduce((n, cabinet) => n + cabinet.drawerIds.length, 0), 0);
+  const summary = {
+    students: Number(studentCount.count),
+    documents: Number(documentCount.count),
+    requests: Number(requestCount.count),
+    rooms: layout.rooms.length,
+    cabinets: cabinetCount,
+    drawers: drawerCount,
+  };
+  console.log(`[populate-sample-data] PostgreSQL sample data ready: ${summary.students} students, ${summary.documents} documents, ${summary.requests} requests, ${summary.rooms} rooms, ${summary.cabinets} cabinets, ${summary.drawers} drawers.`);
+  return summary;
+}
 
-  await setStorageLayout(buildDefaultStorageLayout());
-
-  const courses = [
-    ["BSIT", "Bachelor of Science in Information Technology"],
-    ["BSCS", "Bachelor of Science in Computer Science"],
-  ];
-  for (const [code, name] of courses) {
-    await dbRun("INSERT OR IGNORE INTO courses (code, name) VALUES (?, ?)", [code, name]);
-  }
-
-  const sections = [
-    ["BSIT-4A", "BSIT"],
-    ["BSIT-4B", "BSIT"],
-    ["BSCS-3A", "BSCS"],
-  ];
-  for (const [name, courseCode] of sections) {
-    await dbRun("INSERT OR IGNORE INTO sections (name, course_code) VALUES (?, ?)", [
-      name,
-      courseCode,
-    ]);
-  }
-
-  const docTypes = [
-    "Transcript of Records",
-    "Diploma",
-    "Certificate of Good Moral",
-    "Form 137",
-    "Certificate of Enrollment",
-  ];
-  for (const name of docTypes) {
-    await dbRun("INSERT OR IGNORE INTO document_types (name, name_norm) VALUES (?, ?)", [
-      name,
-      normDocTypeName(name),
-    ]);
-  }
-
+if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1])) {
   try {
-    await createStaff({
-      id: "records.marcus@pup.local",
-      fname: "Marcus",
-      lname: "Reyes",
-      role: "Staff",
-      section: "Records",
-      status: "Active",
-      email: "records.marcus@pup.local",
-      password: "pupstaff",
-    });
-  } catch (e) {
-    console.warn("[populate-sample-data] Skipped sample staff (may already exist):", e?.message || e);
+    await seed();
+  } catch (error) {
+    console.error("[populate-sample-data] Failed:", error);
+    process.exitCode = 1;
   }
-
-  const students = [
-    {
-      studentNo: "2022-10001-MN-1",
-      name: "DELA CRUZ, JUAN A.",
-      courseCode: "BSIT",
-      yearLevel: 2024,
-      section: "BSIT-4A",
-      room: 1,
-      cabinet: "2020",
-      drawer: 1,
-    },
-    {
-      studentNo: "2022-10002-MN-2",
-      name: "SANTOS, MARIA B.",
-      courseCode: "BSIT",
-      yearLevel: 2024,
-      section: "BSIT-4A",
-      room: 1,
-      cabinet: "2021",
-      drawer: 2,
-    },
-    {
-      studentNo: "2023-20003-MN-0",
-      name: "REYES, CARLOS C.",
-      courseCode: "BSIT",
-      yearLevel: 2025,
-      section: "BSIT-4B",
-      room: 2,
-      cabinet: "2022",
-      drawer: 3,
-    },
-    {
-      studentNo: "2021-30004-MN-1",
-      name: "GARCIA, ANA D.",
-      courseCode: "BSCS",
-      yearLevel: 2024,
-      section: "BSCS-3A",
-      room: 3,
-      cabinet: "2023",
-      drawer: 4,
-    },
-    {
-      studentNo: "2024-40005-MN-2",
-      name: "TORRES, LUIS E.",
-      courseCode: "BSCS",
-      yearLevel: 2025,
-      section: "BSCS-3A",
-      room: 1,
-      cabinet: "2024",
-      drawer: 1,
-    },
-    {
-      studentNo: "2020-50006-MN-0",
-      name: "FLORES, ELENA F.",
-      courseCode: "BSIT",
-      yearLevel: 2024,
-      section: "BSIT-4B",
-      room: 4,
-      cabinet: "2025",
-      drawer: 2,
-    },
-  ];
-
-  for (const s of students) {
-    await createStudent(s);
-  }
-
-  const docRows = [
-    {
-      studentNo: "2022-10001-MN-1",
-      studentName: "DELA CRUZ, JUAN A.",
-      docType: "Transcript of Records",
-      originalFilename: "sample-tor-juan.pdf",
-    },
-    {
-      studentNo: "2022-10001-MN-1",
-      studentName: "DELA CRUZ, JUAN A.",
-      docType: "Certificate of Enrollment",
-      originalFilename: "sample-coe-juan.pdf",
-    },
-    {
-      studentNo: "2022-10002-MN-2",
-      studentName: "SANTOS, MARIA B.",
-      docType: "Form 137",
-      originalFilename: "sample-form137-maria.pdf",
-    },
-    {
-      studentNo: "2021-30004-MN-1",
-      studentName: "GARCIA, ANA D.",
-      docType: "Diploma",
-      originalFilename: "sample-diploma-ana.pdf",
-    },
-  ];
-
-  for (const d of docRows) {
-    await createDocument({
-      studentNo: d.studentNo,
-      studentName: d.studentName,
-      docType: d.docType,
-      originalFilename: d.originalFilename,
-      mimeType: "application/pdf",
-      sizeBytes: MINIMAL_PDF.length,
-      buffer: MINIMAL_PDF,
-    });
-  }
-
-  await dbRun(
-    `INSERT INTO document_requests (
-      student_no, doc_type, status, notes, created_by, updated_by
-    ) VALUES (?, ?, ?, ?, ?, ?)`,
-    [
-      "2023-20003-MN-0",
-      "Diploma",
-      "Pending",
-      "Sample: alumni counter request",
-      "PUPREGISTRAR-001",
-      "PUPREGISTRAR-001",
-    ],
-  );
-
-  await dbRun(
-    `INSERT INTO document_requests (
-      student_no, doc_type, status, notes, created_by, updated_by
-    ) VALUES (?, ?, ?, ?, ?, ?)`,
-    [
-      "2024-40005-MN-2",
-      "Transcript of Records",
-      "InProgress",
-      "Sample: being prepared",
-      "records.marcus@pup.local",
-      "records.marcus@pup.local",
-    ],
-  );
-
-  await dbRun(
-    `INSERT INTO audit_logs (actor, role, action, ip) VALUES (?, ?, ?, ?)`,
-    ["System Administrator", "Admin", "Sample data populated (script)", "127.0.0.1"],
-  );
-
-  await dbRun(
-    `INSERT INTO audit_logs (actor, role, action, ip) VALUES (?, ?, ?, ?)`,
-    ["Marcus Reyes", "Staff", "Sample audit entry", "127.0.0.1"],
-  );
-
-  console.log("[populate-sample-data] Done.");
-  console.log(
-    "  Logins: admin.default@pup.local / pupstaff   |   records.marcus@pup.local / pupstaff",
-  );
-  console.log("[populate-sample-data] Restart the Next.js server if it was running so it reloads the DB file.");
 }
-
-let exitCode = 0;
-try {
-  await main();
-} catch (err) {
-  exitCode = 1;
-  console.error("[populate-sample-data] Failed:", err);
-} finally {
-  reloadDb();
-}
-
-process.exitCode = exitCode;

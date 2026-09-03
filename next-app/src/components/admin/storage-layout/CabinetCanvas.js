@@ -186,7 +186,7 @@ const CabinetCanvas = memo(({
       {/* Precision Stats Overlay */}
       <div className="pointer-events-none absolute bottom-3 right-3 z-50 flex flex-col items-end gap-1 select-none">
         {selectedCabinet && (
-          <div className="animate-in fade-in slide-in-from-right-2 flex flex-col items-end gap-1 rounded-md bg-slate-900/90 p-2.5 font-mono text-[10px] text-white backdrop-blur-sm border border-white/10 shadow-lg">
+          <div className="animate-in fade-in slide-in-from-right-2 flex flex-col items-end gap-1 rounded-md bg-slate-900/90 p-2.5 font-sans text-[10px] text-white backdrop-blur-sm border border-white/10 shadow-lg">
             <div className="flex items-center gap-2">
               <span className="opacity-60">Pos:</span>
               <span className="font-semibold">
@@ -203,7 +203,7 @@ const CabinetCanvas = memo(({
             </div>
           </div>
         )}
-        <div className="rounded bg-slate-800/40 px-2 py-1 font-mono text-[9px] text-slate-200 tracking-tight">
+        <div className="rounded bg-slate-800/40 px-2 py-1 font-sans text-[9px] text-slate-200 tracking-tight">
           GRID: {toPct(SNAP_STEP_X)}% x {toPct(SNAP_STEP_Y)}%
         </div>
       </div>

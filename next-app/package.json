@@ -8,6 +8,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "audit:buttons": "node scripts/audit-button-theme.mjs",
+    "audit:empty-states": "node scripts/audit-empty-states.mjs",
     "reset-students": "node scripts/reset-students.mjs --confirm",
     "reset-db": "bash scripts/reset-db.sh",
     "db:migrate": "node scripts/run-migrations.mjs",
@@ -17,6 +19,7 @@
     "db:seed:test": "node scripts/seed-test-accounts.mjs",
     "test:recognition": "node --test test/recognition.test.mjs",
     "populate-sample-data": "node scripts/populate-sample-data.mjs",
+    "db:seed:sample": "node scripts/populate-sample-data.mjs",
     "hot-folder-watcher": "node scripts/hot-folder-watcher/watch.mjs"
   },
   "dependencies": {

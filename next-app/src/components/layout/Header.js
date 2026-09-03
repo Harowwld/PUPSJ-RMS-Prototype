@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/dialog";
 import AccountSetupModal from "@/components/shared/AccountSetupModal";
 import { isAdminRole, getRoleLabel, isSystemAdminRole, hasAdminPrivileges } from "@/lib/roleUtils";
+import { getRoleBranding, ROLE_BRANDING } from "@/lib/roleBranding";
 import { cn } from "@/lib/utils";
 
 export default function Header({ authUser, onLogout, children }) {
@@ -82,6 +83,16 @@ export default function Header({ authUser, onLogout, children }) {
   const isSuperAdmin = isSystemAdminRole(authUser?.role);
   const isAdmin = isAdminRole(authUser?.role);
   const hasAdminRights = hasAdminPrivileges(authUser?.role);
+  const branding = getRoleBranding(authUser);
+
+  useEffect(() => {
+    document.documentElement.style.setProperty("--brand-accent", branding.color);
+    document.documentElement.style.setProperty("--brand-foreground", branding.foreground);
+    return () => {
+      document.documentElement.style.removeProperty("--brand-accent");
+      document.documentElement.style.removeProperty("--brand-foreground");
+    };
+  }, [branding.color, branding.foreground]);
 
   useEffect(() => {
     if (hasAdminRights) {
@@ -320,7 +331,7 @@ export default function Header({ authUser, onLogout, children }) {
             onDoubleClick={(e) => e.preventDefault()}
           >
             <img 
-              src={(activeView === "systemadmin" || activeView === "superadmin" || activeView === "admin") ? "/admin-logo.png" : "/staff-logo.png"} 
+              src={branding.iconSrc}
               alt="eManage Logo" 
               className={cn(
                 "h-7 w-7 object-contain transition-transform group-hover/logo:scale-105",
@@ -438,12 +449,12 @@ export default function Header({ authUser, onLogout, children }) {
                     className={cn(
                       "cursor-pointer rounded-[8px] flex items-center gap-3 font-normal text-[15px] py-2.5 px-3 transition-colors outline-none",
                       isSettingsActive
-                        ? "text-[#007AFF] bg-gray-50 dark:bg-white/5 font-semibold"
+                        ? "text-pup-maroon bg-gray-50 dark:bg-white/5 font-semibold"
                         : "text-gray-900 hover:bg-gray-50 dark:text-zinc-100 dark:hover:bg-white/5"
                     )}
                     onClick={() => router.push("/account")}
                   >
-                    <i className="ti ti-settings text-[19px] shrink-0 flex items-center justify-center h-[19px] w-[19px] leading-none" style={{ color: "#0071eb" }}></i>
+                    <i className="ti ti-settings text-[19px] shrink-0 flex items-center justify-center h-[19px] w-[19px] leading-none" style={{ color: branding.color }}></i>
                     <span>Account Settings</span>
                   </DropdownMenuItem>
  
@@ -451,12 +462,12 @@ export default function Header({ authUser, onLogout, children }) {
                     className={cn(
                       "cursor-pointer rounded-[8px] flex items-center gap-3 font-normal text-[15px] py-2.5 px-3 transition-colors outline-none",
                       isActivityActive
-                        ? "text-[#007AFF] bg-gray-50 dark:bg-white/5 font-semibold"
+                        ? "text-pup-maroon bg-gray-50 dark:bg-white/5 font-semibold"
                         : "text-gray-900 hover:bg-gray-50 dark:text-zinc-100 dark:hover:bg-white/5"
                     )}
                     onClick={() => router.push("/account/activity")}
                   >
-                    <i className="ti ti-history text-[19px] shrink-0 flex items-center justify-center h-[19px] w-[19px] leading-none" style={{ color: "#03a10e" }}></i>
+                    <i className="ti ti-history text-[19px] shrink-0 flex items-center justify-center h-[19px] w-[19px] leading-none" style={{ color: branding.color }}></i>
                     <span>My Activity</span>
                   </DropdownMenuItem>
  
@@ -467,7 +478,7 @@ export default function Header({ authUser, onLogout, children }) {
                           onClick={() => handleViewSwitch("systemadmin")}
                           className="cursor-pointer rounded-[8px] flex items-center gap-3 font-normal text-[15px] py-2.5 px-3 hover:bg-gray-50 dark:hover:bg-white/5 text-gray-900 dark:text-zinc-100 transition-colors outline-none"
                         >
-                          <i className="ti ti-shield text-[19px] shrink-0 flex items-center justify-center h-[19px] w-[19px] leading-none" style={{ color: "#0f172a" }}></i>
+                          <i className="ti ti-shield text-[19px] shrink-0 flex items-center justify-center h-[19px] w-[19px] leading-none" style={{ color: ROLE_BRANDING.black.color }}></i>
                           <span>Switch to System Admin View</span>
                         </DropdownMenuItem>
                       )}
@@ -476,7 +487,7 @@ export default function Header({ authUser, onLogout, children }) {
                           onClick={() => handleViewSwitch("admin")}
                           className="cursor-pointer rounded-[8px] flex items-center gap-3 font-normal text-[15px] py-2.5 px-3 hover:bg-gray-50 dark:hover:bg-white/5 text-gray-900 dark:text-zinc-100 transition-colors outline-none"
                         >
-                          <i className="ti ti-shield-check text-[19px] shrink-0 flex items-center justify-center h-[19px] w-[19px] leading-none" style={{ color: "#e30000" }}></i>
+                          <i className="ti ti-shield-check text-[19px] shrink-0 flex items-center justify-center h-[19px] w-[19px] leading-none" style={{ color: ROLE_BRANDING.red.color }}></i>
                           <span>Switch to Admin View</span>
                         </DropdownMenuItem>
                       )}
@@ -485,7 +496,7 @@ export default function Header({ authUser, onLogout, children }) {
                           onClick={() => handleViewSwitch("staff")}
                           className="cursor-pointer rounded-[8px] flex items-center gap-3 font-normal text-[15px] py-2.5 px-3 hover:bg-gray-50 dark:hover:bg-white/5 text-gray-900 dark:text-zinc-100 transition-colors outline-none"
                         >
-                          <i className="ti ti-users text-[19px] shrink-0 flex items-center justify-center h-[19px] w-[19px] leading-none" style={{ color: "#edbb00" }}></i>
+                          <i className="ti ti-users text-[19px] shrink-0 flex items-center justify-center h-[19px] w-[19px] leading-none" style={{ color: ROLE_BRANDING.yellow.color }}></i>
                           <span>Switch to Staff View</span>
                         </DropdownMenuItem>
                       )}
@@ -500,7 +511,7 @@ export default function Header({ authUser, onLogout, children }) {
                         "text-[19px] shrink-0 flex items-center justify-center h-[19px] w-[19px] leading-none",
                         activeView === "admin" ? "ti ti-users" : "ti ti-shield-check"
                       )}
-                      style={{ color: activeView === "admin" ? "#edbb00" : "#e30000" }}
+                      style={{ color: activeView === "admin" ? ROLE_BRANDING.yellow.color : branding.color }}
                       ></i>
                       <span>{activeView === "admin" ? "Switch to Staff View" : "Switch to Admin View"}</span>
                     </DropdownMenuItem>

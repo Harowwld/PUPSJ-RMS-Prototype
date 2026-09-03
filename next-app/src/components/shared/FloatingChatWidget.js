@@ -1121,7 +1121,7 @@ export default function FloatingChatWidget() {
                   type="submit"
                   size="icon"
                   disabled={isLoading || (!inputValue.trim() && !selectedImage)}
-                  className="h-8 w-8 rounded-full bg-[#0A84FF] text-[#FFFFFF] hover:bg-[#0070E0] transition-colors shrink-0 flex items-center justify-center shadow-xs"
+                  className="h-8 w-8 rounded-full btn-brand-red transition-colors shrink-0 flex items-center justify-center shadow-xs"
                 >
                   {editingMessageId ? (
                     <Check className="h-3.5 w-3.5" />

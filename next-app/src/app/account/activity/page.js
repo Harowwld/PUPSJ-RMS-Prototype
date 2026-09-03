@@ -220,11 +220,11 @@ function StatCards({ isLoading, stats }) {
                   <div className="grid grid-cols-2 gap-2 text-white">
                     <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg text-white">
                       <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Total Logs</span>
-                      <span className="text-lg font-black font-mono">{(stats.totalLogs || 0).toLocaleString()}</span>
+                      <span className="text-lg font-black font-sans">{(stats.totalLogs || 0).toLocaleString()}</span>
                     </div>
                     <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg text-white">
                       <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Session Scope</span>
-                      <span className="text-lg font-black font-mono">Active</span>
+                      <span className="text-lg font-black font-sans">Active</span>
                     </div>
                   </div>
 
@@ -239,11 +239,11 @@ function StatCards({ isLoading, stats }) {
                   <div className="grid grid-cols-2 gap-2 text-white">
                     <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg text-white">
                       <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Today's Logs</span>
-                      <span className="text-lg font-black font-mono">{(stats.logsToday || 0).toLocaleString()}</span>
+                      <span className="text-lg font-black font-sans">{(stats.logsToday || 0).toLocaleString()}</span>
                     </div>
                     <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg text-white">
                       <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Hourly Peak</span>
-                      <span className="text-lg font-black font-mono">{Math.round((stats.logsToday || 0) / 8).toLocaleString()}</span>
+                      <span className="text-lg font-black font-sans">{Math.round((stats.logsToday || 0) / 8).toLocaleString()}</span>
                     </div>
                   </div>
 
@@ -258,11 +258,11 @@ function StatCards({ isLoading, stats }) {
                   <div className="grid grid-cols-2 gap-2 text-white">
                     <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg text-white">
                       <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Auth Events</span>
-                      <span className="text-lg font-black font-mono">{(stats.authEvents || 0).toLocaleString()}</span>
+                      <span className="text-lg font-black font-sans">{(stats.authEvents || 0).toLocaleString()}</span>
                     </div>
                     <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg text-white">
                       <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Failures</span>
-                      <span className="text-lg font-black font-mono">0</span>
+                      <span className="text-lg font-black font-sans">0</span>
                     </div>
                   </div>
 
@@ -512,7 +512,7 @@ function LogExpandedRow({ log, handleCopy }) {
             <div className="flex items-center justify-between">
               <span className="text-[10px] font-semibold text-gray-400 dark:text-zinc-300">IP ADDRESS:</span>
               <div className="flex items-center gap-3">
-                <span className="font-mono text-xs font-semibold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-lg dark:text-blue-400 dark:bg-blue-900/30">{log.ip}</span>
+                <span className="font-sans text-xs font-semibold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-lg dark:text-blue-400 dark:bg-blue-900/30">{log.ip}</span>
                 <Button 
                   variant="ghost"
                   size="icon"
@@ -552,7 +552,7 @@ function LogExpandedRow({ log, handleCopy }) {
             <div className="flex items-center justify-between border-t border-gray-50 pt-4 dark:border-white/10">
               <span className="text-[10px] font-semibold text-gray-400 dark:text-zinc-300">REFERENCE ID:</span>
               <div className="flex items-center gap-3">
-                <span className="font-mono text-xs font-semibold text-emerald-600 dark:text-emerald-400">{log.entityId || log.entity_id || "N/A"}</span>
+                <span className="font-sans text-xs font-semibold text-emerald-600 dark:text-emerald-400">{log.entityId || log.entity_id || "N/A"}</span>
                 {(log.entityId || log.entity_id) && (
                   <Button 
                     variant="ghost"

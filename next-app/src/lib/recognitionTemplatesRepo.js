@@ -1,4 +1,4 @@
-import { query, queryOne } from "./postgres.js";
+import { query, queryOne, transaction } from "./postgres.js";
 
 const REGION_KEYS = ["firstName", "middleName", "lastName"];
 
@@ -54,13 +54,29 @@ export async function getRecognitionTemplateByDocumentType(documentType) {
 
 export async function createRecognitionTemplate({ officeId = "registrar", documentTypeId, name, version = 1, pageIndex = 0, rotation = 0, regions, actorId }) {
   validateRecognitionRegions(regions);
-  return queryOne(
-    `INSERT INTO recognition_templates
-      (office_id, document_type_id, name, version, page_index, rotation, regions, created_by, updated_by)
-     VALUES ($1, $2, $3, $4, $5, $6, $7::jsonb, $8, $8)
-     RETURNING *`,
-    [officeId, documentTypeId, String(name || "PSA template").trim(), Number(version), Number(pageIndex), Number(rotation), JSON.stringify(regions), actorId || null]
-  );
+  const templateName = String(name || "PSA template").trim();
+  const requestedVersion = Math.max(1, Number(version) || 1);
+  return transaction(async ({ queryOne: queryOneInTransaction }) => {
+    await queryOneInTransaction(
+      "SELECT pg_advisory_xact_lock(hashtext($1))",
+      [`recognition-template:${officeId}:${documentTypeId}:${templateName}`]
+    );
+    const existing = await queryOneInTransaction(
+      `SELECT MAX(version) AS max_version
+       FROM recognition_templates
+       WHERE office_id = $1 AND document_type_id = $2 AND name = $3`,
+      [officeId, documentTypeId, templateName]
+    );
+    const maxVersion = Number(existing?.max_version) || 0;
+    const finalVersion = maxVersion >= requestedVersion ? maxVersion + 1 : requestedVersion;
+    return queryOneInTransaction(
+      `INSERT INTO recognition_templates
+        (office_id, document_type_id, name, version, page_index, rotation, regions, created_by, updated_by)
+       VALUES ($1, $2, $3, $4, $5, $6, $7::jsonb, $8, $8)
+       RETURNING *`,
+      [officeId, documentTypeId, templateName, finalVersion, Number(pageIndex), Number(rotation), JSON.stringify(regions), actorId || null]
+    );
+  });
 }
 
 export async function updateRecognitionTemplate(id, { name, version, pageIndex, rotation, regions, actorId }) {
@@ -80,5 +96,14 @@ export async function archiveRecognitionTemplate(id, actorId) {
     `UPDATE recognition_templates SET status = 'Archived', updated_by = $2, updated_at = NOW()
      WHERE id = $1 RETURNING *`,
     [id, actorId || null]
+  );
+}
+
+export async function deleteRecognitionTemplate(id) {
+  return queryOne(
+    `DELETE FROM recognition_templates
+     WHERE id = $1
+     RETURNING *`,
+    [id]
   );
 }

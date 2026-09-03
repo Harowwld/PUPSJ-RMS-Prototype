@@ -5,6 +5,12 @@ async function hasPhysicalStorage() {
   return true;
 }
 
+const STUDENT_SELECT = `
+  student_no, name, course_code, year_level, section, status,
+  storage_room AS room, storage_cabinet AS cabinet, storage_drawer AS drawer,
+  created_at, updated_at
+`;
+
 function normalizeStudentName(name) {
   return String(name || "")
     .trim()
@@ -77,9 +83,9 @@ export async function createStudent({
         course_code,
         year_level,
         section,
-        room,
-        cabinet,
-        drawer,
+        storage_room,
+        storage_cabinet,
+        storage_drawer,
         status
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `,
@@ -193,7 +199,7 @@ export async function listStudents({
 
   return await dbAll(
     `
-      SELECT *
+      SELECT ${STUDENT_SELECT}
       FROM students
       ${where}
       ORDER BY name ASC
@@ -204,7 +210,7 @@ export async function listStudents({
 }
 
 export async function getStudentByStudentNo(studentNo) {
-  const row = await dbGet("SELECT * FROM students WHERE student_no = ?", [studentNo]);
+  const row = await dbGet(`SELECT ${STUDENT_SELECT} FROM students WHERE student_no = ?`, [studentNo]);
   return row || null;
 }
 
@@ -235,7 +241,7 @@ export async function updateStudent(studentNo, patch) {
     await dbRun(
       `
       UPDATE students
-      SET name = ?, course_code = ?, year_level = ?, section = ?, room = ?, cabinet = ?, drawer = ?, status = ?
+      SET name = ?, course_code = ?, year_level = ?, section = ?, storage_room = ?, storage_cabinet = ?, storage_drawer = ?, status = ?
       WHERE student_no = ?
     `,
       [
@@ -298,11 +304,11 @@ export async function listStudentLocationUsage() {
 
   return await dbAll(
     `
-      SELECT room, cabinet, drawer, COUNT(*) as count
+      SELECT storage_room AS room, storage_cabinet AS cabinet, storage_drawer AS drawer, COUNT(*) as count
       FROM students
       WHERE status = 'Active'
-      GROUP BY room, cabinet, drawer
-      ORDER BY room ASC, cabinet ASC, drawer ASC
+      GROUP BY storage_room, storage_cabinet, storage_drawer
+      ORDER BY storage_room ASC, storage_cabinet ASC, storage_drawer ASC
     `,
     []
   );
@@ -339,8 +345,8 @@ export async function reassignStudentsByLocationMappings(mappings = []) {
     const res = await dbRun(
       `
         UPDATE students
-        SET room = ?, cabinet = ?, drawer = ?
-        WHERE room = ? AND cabinet = ? AND drawer = ?
+        SET storage_room = ?, storage_cabinet = ?, storage_drawer = ?
+        WHERE storage_room = ? AND storage_cabinet = ? AND storage_drawer = ?
       `,
       [toRoom, toCabinet, toDrawer, fromRoom, fromCabinet, fromDrawer],
     );

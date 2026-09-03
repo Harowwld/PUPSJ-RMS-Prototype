@@ -331,7 +331,7 @@ export default function RecordsArchiveTab({
                         <div className="text-sm font-semibold text-gray-800 group-hover:text-pup-maroon dark:group-hover:text-red-500 dark:text-zinc-100">
                           {s.name}
                         </div>
-                        <div className="font-mono text-xs font-medium text-gray-500 dark:text-zinc-400">
+                        <div className="font-sans text-xs font-medium text-gray-500 dark:text-zinc-400">
                           {s.studentNo}
                         </div>
                       </div>

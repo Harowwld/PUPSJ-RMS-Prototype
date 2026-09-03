@@ -3,6 +3,7 @@ import { createStaff, listStaff } from "../../../lib/staffRepo";
 import { writeAuditLog } from "../../../lib/auditLogRequest";
 import { requireTOTP, extractTOTPToken } from "../../../lib/totpMiddleware";
 import { requireAdmin, requireStaff, createAuthErrorResponse } from "../../../lib/authHelpers";
+import { isUniqueViolation } from "../../../lib/dbErrors";
 
 export const runtime = "nodejs";
 
@@ -118,7 +119,7 @@ export async function POST(req) {
     return NextResponse.json({ ok: true, data: row, defaultPassword: password === DEFAULT_PASSWORD ? DEFAULT_PASSWORD : null }, { status: 201 });
   } catch (e) {
     const msg = String(e?.message || "");
-    if (msg.includes("UNIQUE") || msg.includes("PRIMARY")) {
+    if (isUniqueViolation(e)) {
       return NextResponse.json(
         { ok: false, error: "Staff ID already exists" },
         { status: 409 }

@@ -71,7 +71,7 @@ export default function DefaultPasswordModal({
             </label>
             <div className="relative">
               <div className="rounded-brand border-2 border-amber-200 bg-amber-50 p-4 dark:bg-amber-950/30">
-                <p className="text-center font-mono text-xl font-semibold tracking-wider break-all text-amber-900">
+                <p className="text-center font-sans text-xl font-semibold tracking-wider break-all text-amber-900">
                   {password}
                 </p>
               </div>

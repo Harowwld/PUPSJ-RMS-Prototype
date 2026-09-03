@@ -825,7 +825,7 @@ export default function DocumentRequestsTab({
         </Card>
 
         {/* 3. Request details Card (Right Column) */}
-        <Card className="rounded-[14px] border border-[#E5E5EA] bg-white shadow-sm overflow-hidden flex flex-col min-h-[560px] dark:bg-card dark:border-white/10 dark:shadow-none p-0 mb-4" style={{ fontFamily: '-apple-system, "SF Pro Text", "Segoe UI", Roboto, sans-serif' }}>
+        <Card className="rounded-[14px] border border-[#E5E5EA] bg-white shadow-sm overflow-hidden flex flex-col min-h-[560px] dark:bg-card dark:border-white/10 dark:shadow-none p-0 mb-4" style={{ fontFamily: "Inter" }}>
           <div className="p-[16px_20px] border-b border-[#E5E5EA] bg-white flex items-center justify-between dark:border-white/10 dark:bg-card">
             <div className="text-[14px] font-semibold text-[#8E8E93] dark:text-zinc-400 tracking-wider">
               Request Details
@@ -974,7 +974,7 @@ export default function DocumentRequestsTab({
                   )}
                   <Button
                     type="button"
-                    className="mt-3 w-full bg-[#0A84FF] hover:bg-[#0070E0] text-white font-medium text-[13px] h-10 rounded-[10px] transition-all border-0 flex items-center justify-center gap-2 shadow-none!"
+                    className="mt-3 w-full btn-brand-red text-white font-medium text-[13px] h-10 rounded-[10px] transition-all border-0 flex items-center justify-center gap-2 shadow-none!"
                     disabled={!studentForRequest}
                     onClick={() => {
                       if (!studentForRequest) return;

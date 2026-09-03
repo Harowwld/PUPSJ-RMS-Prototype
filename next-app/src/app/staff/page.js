@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import Sidebar from "@/components/shared/Sidebar";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/sonner";
 import { StaffGuard } from "@/components/shared/AuthGuard";
 import RecordsArchiveTab from "@/components/staff/RecordsArchiveTab";
 import StorageExplorerTab from "@/components/staff/StorageExplorerTab";
@@ -1169,6 +1169,7 @@ function StaffPageContent() {
     }
 
     const studentName = String(newRec.name || "").trim().toUpperCase();
+    let uploadFilename = String(uploadedFile.name || "document.pdf");
 
     // RENAME FILE for meaningful identification: [STUDENT_NO]_[DOC_TYPE].[EXT]
     try {
@@ -1178,16 +1179,13 @@ function StaffPageContent() {
       const cleanDocType = docType.replace(/[^a-zA-Z0-9-]/g, "_") || "DOC";
       const extension = "pdf";
       const newFileName = `${cleanStudentNo}_${cleanDocType}.${extension}`;
-      
-      // Use the File constructor to create a renamed blob
-      fileToUpload = new File([fileToUpload], newFileName, { type: "application/pdf" });
+      uploadFilename = newFileName;
     } catch (e) {
       console.error("[Rename Error]", e);
-      // Fallback to original file if renaming fails for some reason
     }
 
     const payload = new FormData();
-    payload.append("file", fileToUpload);
+    payload.append("file", fileToUpload, uploadFilename);
 
     if (uploadStudentIsExisting) {
       payload.append("studentNo", String(newRec.studentNo).trim());
@@ -1529,7 +1527,7 @@ function StaffPageContent() {
   }
 
   return (
-    <div className="h-screen overflow-hidden flex flex-col bg-slate-50/30 dark:bg-zinc-950/30 font-inter relative transition-colors duration-300">
+    <div className="h-screen overflow-hidden flex flex-col bg-slate-50/30 dark:bg-zinc-950/30 font-inter relative transition-colors duration-300" style={{ "--brand-accent": authUser?.accent_color || "#EDBB00", "--brand-foreground": "#1C1C1E" }}>
       {/* Dynamic Liquid Glass Background Blobs */}
       <div className="liquid-container">
         <div className="liquid-blob liquid-blob-1"></div>
@@ -1562,9 +1560,10 @@ function StaffPageContent() {
                   className={cn(
                     "px-3 py-1.5 text-xs font-semibold rounded-xl flex items-center gap-2 transition-colors duration-300 whitespace-nowrap outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon/20 cursor-pointer shrink-0",
                     active
-                      ? "bg-red-50 text-pup-maroon dark:bg-red-500/10 dark:text-primary shadow-xs"
+                      ? "text-pup-maroon shadow-xs"
                       : "text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-zinc-400 dark:hover:bg-white/5 dark:hover:text-zinc-50"
                   )}
+                  style={active ? { backgroundColor: "color-mix(in srgb, var(--brand-accent) 12%, transparent)" } : undefined}
                 >
                   <i className={cn(item.iconClass, "text-sm")}></i>
                   {item.label}
@@ -1587,8 +1586,9 @@ function StaffPageContent() {
             zoomNode={zoomNode}
             setZoomNode={setZoomNode}
             handleZoomMouseDown={handleZoomMouseDown}
-            accentColor="#ebb800"
+            accentColor={authUser?.accent_color}
             officeName={authUser?.office_name}
+            authUser={authUser}
           />
         )}
         <main className="flex-1 relative w-full min-w-0 min-h-0 bg-white/25 dark:bg-zinc-950/25 overflow-y-auto backdrop-blur-xs">
@@ -1713,6 +1713,7 @@ function StaffPageContent() {
               }}
               ocrLoading={ocrLoading}
               ocrError={ocrError}
+              ocrSuggestion={ocrSuggestion}
               csvFile={csvFile}
               csvRows={csvRows}
               csvSelected={csvSelected}

@@ -111,7 +111,7 @@ export default function OCRPromptModal({
                     onChange={() => setSelectedStudentNo(id)}
                   />
                   <span className="flex-1">
-                    <span className="font-mono text-sm font-semibold text-gray-900 dark:text-zinc-50">
+                    <span className="font-sans text-sm font-semibold text-gray-900 dark:text-zinc-50">
                       {id}
                     </span>
                     <span className="block font-medium text-gray-700 dark:text-zinc-200">

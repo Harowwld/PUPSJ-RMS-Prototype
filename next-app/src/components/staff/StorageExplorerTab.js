@@ -318,7 +318,7 @@ export default function StorageExplorerTab({
                               <div className="mt-4 pt-3 border-t border-gray-100 dark:border-zinc-800">
                                 <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider mb-1.5">
                                   <span className={isTarget ? "text-white/70" : "text-[#8e8e93] dark:text-[#8e8e93]"}>Occupancy</span>
-                                  <span className={isTarget ? "text-white font-mono" : "text-gray-700 dark:text-zinc-300 font-mono"}>{occupancyRate}%</span>
+                                  <span className={isTarget ? "text-white font-sans" : "text-gray-700 dark:text-zinc-300 font-sans"}>{occupancyRate}%</span>
                                 </div>
                                 <div className={cn(
                                   "h-1.5 w-full rounded-full overflow-hidden",

@@ -5,6 +5,7 @@ import { getOfficeById } from "../../../../lib/officesRepo";
 import { getOfficeModules } from "../../../../lib/modulesRepo";
 import { query, queryOne } from "@/lib/postgres";
 import { authDebug } from "@/lib/authDebug";
+import { getRoleBranding } from "@/lib/roleBranding";
 
 export const runtime = "nodejs";
 
@@ -73,13 +74,20 @@ export async function GET(req) {
       }
     } else if (currentRole === "SuperAdmin") {
       officeName = "Super Administration";
-      accentColor = "#e30000"; // eManage Brand Red
+      accentColor = "#000000";
       // SuperAdmin has access to everything
       const allModules = process.env.DATABASE_URL
         ? await query("SELECT id FROM modules")
         : await listAllModules();
       enabledModules = (allModules || []).map(m => m.id);
     }
+
+    // Office accent colors are contextual branding, not user-editable theme data.
+    accentColor = getRoleBranding({
+      role: currentRole,
+      officeId: staff?.office_id,
+      officeName,
+    }).color;
 
     const defaultPreferences = {
       theme: "light",

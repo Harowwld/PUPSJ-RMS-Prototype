@@ -67,11 +67,11 @@ export default function SlaKpiCards({ total, completionRate }) {
             <div className="grid grid-cols-2 gap-2 text-white">
               <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg text-white">
                 <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Completion Rate</span>
-                <span className="text-lg font-black font-mono">{completionRate}%</span>
+                <span className="text-lg font-black font-sans">{completionRate}%</span>
               </div>
               <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg text-white">
                 <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">SLA Target</span>
-                <span className="text-lg font-black font-mono">90%</span>
+                <span className="text-lg font-black font-sans">90%</span>
               </div>
             </div>
  
@@ -122,11 +122,11 @@ export default function SlaKpiCards({ total, completionRate }) {
             <div className="grid grid-cols-2 gap-2 text-white">
               <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg text-white">
                 <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Total Volume</span>
-                <span className="text-lg font-black font-mono">{total?.toLocaleString()}</span>
+                <span className="text-lg font-black font-sans">{total?.toLocaleString()}</span>
               </div>
               <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg text-white">
                 <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Est. Monthly</span>
-                <span className="text-lg font-black font-mono">{Math.round((total || 0) / 12).toLocaleString()}</span>
+                <span className="text-lg font-black font-sans">{Math.round((total || 0) / 12).toLocaleString()}</span>
               </div>
             </div>
 

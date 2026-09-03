@@ -973,7 +973,7 @@ export default function SystemConfigTab({
             onValueChange={setActiveSubTab}
           >
             <div className="w-full select-none px-[28px] pt-[20px]">
-              <div className="flex items-center gap-[24px]">
+              <div className="flex flex-wrap items-center gap-x-[24px] gap-y-0">
                 <button
                   type="button"
                   onClick={() => setActiveSubTab("document-types")}
@@ -1038,7 +1038,7 @@ export default function SystemConfigTab({
                       : "border-transparent text-[#8E8E93] hover:text-[#111111] dark:hover:text-zinc-200 font-normal"
                   }`}
                 >
-                  PSA Recognition
+                  OCR Configuration
                 </button>
               </div>
             </div>
@@ -1208,4 +1208,3 @@ export default function SystemConfigTab({
     </TooltipProvider>
   )
 }
-
