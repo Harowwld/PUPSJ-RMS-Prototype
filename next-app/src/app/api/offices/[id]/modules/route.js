@@ -34,8 +34,11 @@ export async function PUT(req, { params }) {
     if (!body || !Array.isArray(body.moduleIds)) {
       return NextResponse.json({ ok: false, error: "Missing moduleIds array in body" }, { status: 400 });
     }
-    const office = await queryOne("SELECT id FROM offices WHERE id = $1", [id]);
+    const office = await queryOne("SELECT id, status FROM offices WHERE id = $1", [id]);
     if (!office) return NextResponse.json({ ok: false, error: "Office not found" }, { status: 404 });
+    if (office.status === "Inactive" || office.status === "Archived") {
+      return NextResponse.json({ ok: false, error: "Archived offices cannot be modified. Please reactivate the office first." }, { status: 400 });
+    }
     const requested = new Set(body.moduleIds.map(String));
     const modules = await query("SELECT id, is_system FROM modules");
     await transaction(async ({ query: run }) => {

@@ -101,3 +101,15 @@ export function getAvailableRoles(includeSystemAdmin = false) {
 
   return roles;
 }
+
+/**
+ * Get the default dashboard route for a given user role.
+ * @param {string} role - The role string
+ * @returns {string} The canonical dashboard path ("/systemadmin", "/admin", "/student", or "/staff")
+ */
+export function getDefaultDashboardPath(role) {
+  if (isSystemAdminRole(role)) return "/systemadmin";
+  if (isAdminRole(role)) return "/admin";
+  if (String(role || "").toLowerCase() === "student") return "/student";
+  return "/staff";
+}

@@ -66,7 +66,7 @@ export async function countAuditLogs(options) {
     if (startDate.includes("T") || startDate.includes(":")) {
       whereClauses.push("created_at >= ?::timestamptz");
     } else {
-      whereClauses.push("created_at::date >= ?::date");
+      whereClauses.push("(created_at AT TIME ZONE 'Asia/Manila')::date >= ?::date");
     }
     params.push(startDate);
   }
@@ -75,7 +75,7 @@ export async function countAuditLogs(options) {
     if (endDate.includes("T") || endDate.includes(":")) {
       whereClauses.push("created_at <= ?::timestamptz");
     } else {
-      whereClauses.push("created_at::date <= ?::date");
+      whereClauses.push("(created_at AT TIME ZONE 'Asia/Manila')::date <= ?::date");
     }
     params.push(endDate);
   }
@@ -133,7 +133,7 @@ export async function listAuditLogs(options) {
     if (startDate.includes("T") || startDate.includes(":")) {
       whereClauses.push("created_at >= ?::timestamptz");
     } else {
-      whereClauses.push("created_at::date >= ?::date");
+      whereClauses.push("(created_at AT TIME ZONE 'Asia/Manila')::date >= ?::date");
     }
     params.push(startDate);
   }
@@ -142,7 +142,7 @@ export async function listAuditLogs(options) {
     if (endDate.includes("T") || endDate.includes(":")) {
       whereClauses.push("created_at <= ?::timestamptz");
     } else {
-      whereClauses.push("created_at::date <= ?::date");
+      whereClauses.push("(created_at AT TIME ZONE 'Asia/Manila')::date <= ?::date");
     }
     params.push(endDate);
   }
@@ -300,12 +300,12 @@ export async function listGlobalAuditLogs(options = {}) {
   }
 
   if (startDate) {
-    whereClauses.push(startDate.includes("T") || startDate.includes(":") ? "created_at >= ?::timestamptz" : "created_at::date >= ?::date");
+    whereClauses.push(startDate.includes("T") || startDate.includes(":") ? "created_at >= ?::timestamptz" : "(created_at AT TIME ZONE 'Asia/Manila')::date >= ?::date");
     params.push(startDate);
   }
 
   if (endDate) {
-    whereClauses.push(endDate.includes("T") || endDate.includes(":") ? "created_at <= ?::timestamptz" : "created_at::date <= ?::date");
+    whereClauses.push(endDate.includes("T") || endDate.includes(":") ? "created_at <= ?::timestamptz" : "(created_at AT TIME ZONE 'Asia/Manila')::date <= ?::date");
     params.push(endDate);
   }
 
@@ -369,12 +369,12 @@ export async function countGlobalAuditLogs(options = {}) {
   }
 
   if (startDate) {
-    whereClauses.push(startDate.includes("T") || startDate.includes(":") ? "created_at >= ?::timestamptz" : "created_at::date >= ?::date");
+    whereClauses.push(startDate.includes("T") || startDate.includes(":") ? "created_at >= ?::timestamptz" : "(created_at AT TIME ZONE 'Asia/Manila')::date >= ?::date");
     params.push(startDate);
   }
 
   if (endDate) {
-    whereClauses.push(endDate.includes("T") || endDate.includes(":") ? "created_at <= ?::timestamptz" : "created_at::date <= ?::date");
+    whereClauses.push(endDate.includes("T") || endDate.includes(":") ? "created_at <= ?::timestamptz" : "(created_at AT TIME ZONE 'Asia/Manila')::date <= ?::date");
     params.push(endDate);
   }
 
@@ -418,11 +418,11 @@ export async function getGlobalAuditLogStats(options = {}) {
     params.push(severity);
   }
   if (startDate) {
-    whereClauses.push(startDate.includes("T") || startDate.includes(":") ? "created_at >= ?::timestamptz" : "created_at::date >= ?::date");
+    whereClauses.push(startDate.includes("T") || startDate.includes(":") ? "created_at >= ?::timestamptz" : "(created_at AT TIME ZONE 'Asia/Manila')::date >= ?::date");
     params.push(startDate);
   }
   if (endDate) {
-    whereClauses.push(endDate.includes("T") || endDate.includes(":") ? "created_at <= ?::timestamptz" : "created_at::date <= ?::date");
+    whereClauses.push(endDate.includes("T") || endDate.includes(":") ? "created_at <= ?::timestamptz" : "(created_at AT TIME ZONE 'Asia/Manila')::date <= ?::date");
     params.push(endDate);
   }
   if (search) {
@@ -434,7 +434,7 @@ export async function getGlobalAuditLogStats(options = {}) {
   const filter = whereClauses.length ? ` WHERE ${whereClauses.join(" AND ")}` : "";
   const [statsRow] = await sysDbAll(
     'SELECT COUNT(*)::int AS "totalLogs", ' +
-      'COALESCE(SUM(CASE WHEN created_at::date = CURRENT_DATE THEN 1 ELSE 0 END), 0)::int AS "logsToday", ' +
+      'COALESCE(SUM(CASE WHEN (created_at AT TIME ZONE \'Asia/Manila\')::date = (CURRENT_TIMESTAMP AT TIME ZONE \'Asia/Manila\')::date THEN 1 ELSE 0 END), 0)::int AS "logsToday", ' +
       'COALESCE(SUM(CASE WHEN LOWER(action) LIKE \'%login%\' OR LOWER(action) LIKE \'%logout%\' THEN 1 ELSE 0 END), 0)::int AS "authEvents", ' +
       'COALESCE(SUM(CASE WHEN LOWER(action) LIKE \'%delete%\' OR LOWER(action) LIKE \'%remove%\' OR LOWER(action) LIKE \'%archive%\' OR LOWER(action) LIKE \'%update%\' OR LOWER(action) LIKE \'%edit%\' OR LOWER(action) LIKE \'%modify%\' THEN 1 ELSE 0 END), 0)::int AS "systemChanges", ' +
       'COALESCE(SUM(CASE WHEN severity = \'CRITICAL\' THEN 1 ELSE 0 END), 0)::int AS "criticalEvents", ' +
@@ -455,18 +455,19 @@ export async function getGlobalAuditLogStats(options = {}) {
     ? ` AND ${whereClauses.join(" AND ")}`
     : "";
   const trendRows = await sysDbAll(
-    'SELECT created_at::date AS "day", COUNT(*)::int AS "count", ' +
+    'SELECT (created_at AT TIME ZONE \'Asia/Manila\')::date AS "day", COUNT(*)::int AS "count", ' +
       'COALESCE(SUM(CASE WHEN LOWER(action) LIKE \'%login%\' OR LOWER(action) LIKE \'%logout%\' THEN 1 ELSE 0 END), 0)::int AS "authCount", ' +
       'COALESCE(SUM(CASE WHEN severity = \'CRITICAL\' THEN 1 ELSE 0 END), 0)::int AS "criticalCount" ' +
-      'FROM global_audit_logs WHERE created_at::date >= CURRENT_DATE - INTERVAL \'6 days\'' + trendFilter + ' GROUP BY day ORDER BY day ASC',
+      'FROM global_audit_logs WHERE (created_at AT TIME ZONE \'Asia/Manila\')::date >= (CURRENT_TIMESTAMP AT TIME ZONE \'Asia/Manila\')::date - INTERVAL \'6 days\'' + trendFilter + ' GROUP BY day ORDER BY day ASC',
     params
   );
 
+  const phFormatter = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Manila" });
   const trends = [];
   for (let i = 6; i >= 0; i -= 1) {
     const day = new Date();
     day.setDate(day.getDate() - i);
-    const dayStr = day.toISOString().slice(0, 10);
+    const dayStr = phFormatter.format(day);
     const match = trendRows.find((row) => String(row.day).slice(0, 10) === dayStr);
     trends.push({
       day: dayStr,

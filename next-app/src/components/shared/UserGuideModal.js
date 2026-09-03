@@ -27,7 +27,7 @@ export default function UserGuideModal({ open, onClose }) {
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-5xl md:max-w-6xl w-[95vw] p-0 overflow-hidden bg-white border border-gray-200 shadow-2xl flex flex-col max-h-[90vh] rounded-brand dark:bg-card dark:border-white/10">
+      <DialogContent className="sm:max-w-5xl md:max-w-6xl w-[95vw] p-0 overflow-hidden bg-white border border-gray-200 shadow-2xl flex flex-col max-h-[90vh] rounded-2xl dark:bg-card dark:border-white/10">
         <Tabs
           defaultValue="general"
           value={activeTab}

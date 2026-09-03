@@ -1493,26 +1493,6 @@ function StaffPageContent() {
     return () => window.removeEventListener("toggle-sidebar", handleToggle);
   }, []);
 
-  useEffect(() => {
-    // Dynamic favicon swap for staff page
-    const updateFavicon = () => {
-      const links = document.querySelectorAll("link[rel*='icon']");
-      if (links.length > 0) {
-        links.forEach(link => {
-          link.type = 'image/png';
-          link.rel = 'shortcut icon';
-          link.href = '/staff-logo.png';
-        });
-      } else {
-        const link = document.createElement('link');
-        link.type = 'image/png';
-        link.rel = 'shortcut icon';
-        link.href = '/staff-logo.png';
-        document.getElementsByTagName('head')[0].appendChild(link);
-      }
-    };
-    updateFavicon();
-  }, [view, searchParams]);
 
   if (loading) {
     return (

@@ -47,8 +47,8 @@ export async function createOffice({
   moduleIds,
 }) {
   if (!id || !name || !short_name) throw Error("Office id, name, and short_name are required.");
-  const oid = String(id).trim().toLowerCase();
-  if (!/^[a-z0-9]+$/.test(oid)) throw Error("Office id must contain only letters and numbers (no spaces or symbols).");
+  const oid = String(id).trim().toLowerCase().replace(/^-+|-+$/g, "");
+  if (!/^[a-z0-9-]+$/.test(oid)) throw Error("Office id must contain only lowercase letters, numbers, and dashes (no spaces or symbols).");
   if (await getOfficeById(oid)) throw Error(`Office with id '${oid}' already exists.`);
 
   const defaultStorage = storage_path || `.local/storage/${oid}/uploads`;

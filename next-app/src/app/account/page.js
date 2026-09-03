@@ -38,6 +38,13 @@ import PageHeader from "@/components/shared/PageHeader";
 import { formatPHDateTime } from "@/lib/timeFormat";
 import { cn } from "@/lib/utils";
 import { FadeIn, SlideUp, StaggerContainer, StaggerItem, PageTransition } from "@/components/ui/motion";
+import {
+  isAdminRole,
+  isSystemAdminRole,
+  hasAdminPrivileges,
+  getRoleLabel,
+  getDefaultDashboardPath,
+} from "@/lib/roleUtils";
 
 function AccountPageContent() {
   const router = useRouter();
@@ -97,15 +104,6 @@ function AccountPageContent() {
   // User Preferences State (Personal)
   const [userPreferences, setUserPreferences] = useState({});
 
-  const isAdminRole = (role) => {
-    const normalized = String(role || "").toLowerCase();
-    return (
-      normalized === "admin" ||
-      normalized === "administrator" ||
-      normalized === "superadmin"
-    );
-  };
-
   useEffect(() => {
     (async () => {
       try {
@@ -134,8 +132,8 @@ function AccountPageContent() {
         setUserPreferences(user.preferences || {});
 
 
-        // If admin, fetch global system settings
-        if (isAdminRole(user.role)) {
+        // If admin or superadmin, fetch global system settings
+        if (hasAdminPrivileges(user.role)) {
           fetch("/api/system/settings")
             .then(res => res.json())
             .then(json => {
@@ -168,18 +166,6 @@ function AccountPageContent() {
     })();
   }, [router]);
 
-  useEffect(() => {
-    if (!authUser) return;
-    const link = document.querySelector("link[rel*='icon']") || document.createElement('link');
-    link.type = 'image/png';
-    link.rel = 'shortcut icon';
-    if (isAdminRole(authUser.role)) {
-      link.href = '/admin-logo.png';
-    } else {
-      link.href = '/staff-logo.png';
-    }
-    document.getElementsByTagName('head')[0].appendChild(link);
-  }, [authUser]);
 
   useEffect(() => {
     setAvatarLoaded(false);
@@ -710,10 +696,10 @@ function AccountPageContent() {
             <Button
               variant="ghost"
               onClick={() => {
-                const path = isAdminRole(authUser?.role) ? "/admin" : "/staff";
+                const path = getDefaultDashboardPath(authUser?.role);
                 router.push(path);
               }}
-              className="h-10 px-3 font-semibold text-sm text-gray-600 hover:text-gray-900 hover:bg-transparent dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-transparent transition-colors flex items-center gap-2 rounded-brand shadow-none! border-0!"
+              className="h-10 px-3 font-semibold text-sm text-gray-600 hover:text-gray-900 hover:bg-transparent dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-transparent transition-colors flex items-center gap-2 rounded-brand shadow-none! border-0! cursor-pointer"
             >
               <i className="ph-bold ph-arrow-left"></i>
               Dashboard
@@ -791,7 +777,7 @@ function AccountPageContent() {
                     </h3>
                     {authUser?.role && (
                       <span className="text-[11px] font-medium px-2.5 py-1 rounded-[4px] bg-red-50 text-pup-maroon dark:bg-red-500/20 dark:text-red-400 tracking-[0.04em]">
-                        {isAdminRole(authUser.role) ? "Admin" : authUser.role}
+                        {getRoleLabel(authUser.role)}
                       </span>
                     )}
                   </div>
