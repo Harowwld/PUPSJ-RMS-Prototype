@@ -22,7 +22,7 @@ export default function StatCards({ isLoading, logStats }) {
   }, [selectedKpi]);
 
   const trends = logStats?.trends || [];
-  
+
   const stats = [
     {
       key: "total",
@@ -55,26 +55,26 @@ export default function StatCards({ isLoading, logStats }) {
 
   const getColorClasses = (color) => {
     switch (color) {
-      case "blue": return { 
+      case "blue": return {
         bg: "from-[#14C8FF] via-[#007AFF] to-[#0055FF] dark:from-[#007AFF] dark:to-[#0033aa]",
         shape1: "from-[#0055FF]/40 to-[#007AFF]/0",
         shape2: "from-[#14C8FF]/30 to-[#007AFF]/0",
-        text: "text-white", 
-        sub: "text-blue-200", spark: "#BFDBFE" 
+        text: "text-white",
+        sub: "text-blue-200", spark: "#BFDBFE"
       };
-      case "emerald": return { 
+      case "emerald": return {
         bg: "from-[#34d399] via-[#059669] to-[#047857] dark:from-[#059669] dark:to-[#024e37]",
         shape1: "from-[#047857]/40 to-[#059669]/0",
         shape2: "from-[#34d399]/30 to-[#059669]/0",
-        text: "text-white", 
-        sub: "text-emerald-100", spark: "#A7F3D0" 
+        text: "text-white",
+        sub: "text-emerald-100", spark: "#A7F3D0"
       };
-      case "amber": return { 
+      case "amber": return {
         bg: "from-[#fbbf24] via-[#d97706] to-[#b45309] dark:from-[#d97706] dark:to-[#78350f]",
         shape1: "from-[#b45309]/40 to-[#d97706]/0",
         shape2: "from-[#fbbf24]/30 to-[#d97706]/0",
-        text: "text-white", 
-        sub: "text-amber-100", spark: "#FDE68A" 
+        text: "text-white",
+        sub: "text-amber-100", spark: "#FDE68A"
       };
       default: return {};
     }
@@ -103,14 +103,14 @@ export default function StatCards({ isLoading, logStats }) {
       {stats.map((stat, i) => {
         const classes = getColorClasses(stat.color);
         return (
-          <div 
-            key={i} 
+          <div
+            key={i}
             className={cn(
               "relative group rounded-xl",
               selectedKpi === stat.key ? "z-30" : "z-10"
             )}
           >
-            <div 
+            <div
               onClick={() => setSelectedKpi(selectedKpi === stat.key ? null : stat.key)}
               className={cn(
                 "relative overflow-hidden rounded-xl border-none p-5 cursor-pointer bg-gradient-to-br select-none",
@@ -125,7 +125,7 @@ export default function StatCards({ isLoading, logStats }) {
                 <div className={cn("absolute bottom-0 left-0 w-[70%] h-[80%] bg-gradient-to-tr pointer-events-none", classes.shape1)} style={{ clipPath: 'polygon(0% 100%, 100% 100%, 0% 0%)' }} />
                 <div className={cn("absolute bottom-0 left-0 w-[50%] h-[60%] bg-gradient-to-tr pointer-events-none", classes.shape2)} style={{ clipPath: 'polygon(0% 100%, 100% 100%, 0% 25%)' }} />
               </div>
-              
+
               <div className="relative z-10">
                 <div className="flex items-end justify-between">
                   <div>
@@ -197,7 +197,7 @@ export default function StatCards({ isLoading, logStats }) {
                       </div>
                       <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg text-white">
                         <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Target Failure</span>
-                        <span className="text-lg font-black font-sans">0</span>
+                        <span className="text-lg font-black">0</span>
                       </div>
                     </div>
 

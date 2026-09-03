@@ -118,7 +118,7 @@ export default function EditUserModal({
                 <Input
                   type="text"
                   readOnly
-                  className="h-[36px] cursor-not-allowed rounded-[8px] border-[0.5px] border-gray-300 bg-gray-50/50 font-sans text-[13px] font-normal tracking-[-0.01em] text-gray-500 focus-visible:outline-none dark:border-zinc-800 dark:bg-zinc-900/30 dark:text-zinc-400"
+                  className="h-[36px] cursor-not-allowed rounded-[8px] border-[0.5px] border-gray-300 bg-gray-50/50 text-[13px] font-normal tracking-[-0.01em] text-gray-500 focus-visible:outline-none dark:border-zinc-800 dark:bg-zinc-900/30 dark:text-zinc-400"
                   style={{ borderWidth: '0.5px', borderStyle: 'solid' }}
                   placeholder="e.g. 2023-001"
                   value={editForm.id}

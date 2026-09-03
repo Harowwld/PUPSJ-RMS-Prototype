@@ -378,11 +378,11 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                     <div className="grid grid-cols-2 gap-2">
                       <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg">
                         <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Total Accounts</span>
-                        <span className="text-lg font-black font-mono">{stats.total}</span>
+                        <span className="text-lg font-black">{stats.total}</span>
                       </div>
                       <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg">
                         <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Offices Covered</span>
-                        <span className="text-lg font-black font-mono">{stats.assignedOffices}</span>
+                        <span className="text-lg font-black">{stats.assignedOffices}</span>
                       </div>
                     </div>
                     <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg text-xs text-white/90 leading-relaxed">
@@ -395,11 +395,11 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                     <div className="grid grid-cols-2 gap-2">
                       <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg">
                         <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Active Staff</span>
-                        <span className="text-lg font-black font-mono">{stats.active}</span>
+                        <span className="text-lg font-black">{stats.active}</span>
                       </div>
                       <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg">
                         <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Suspended</span>
-                        <span className="text-lg font-black font-mono">{stats.inactive}</span>
+                        <span className="text-lg font-black">{stats.inactive}</span>
                       </div>
                     </div>
                     <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg text-xs text-white/90 leading-relaxed">
@@ -412,11 +412,11 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                     <div className="grid grid-cols-2 gap-2">
                       <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg">
                         <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Admin Level</span>
-                        <span className="text-lg font-black font-mono">{stats.admins}</span>
+                        <span className="text-lg font-black">{stats.admins}</span>
                       </div>
                       <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg">
                         <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Regular Staff</span>
-                        <span className="text-lg font-black font-mono">{stats.regular}</span>
+                        <span className="text-lg font-black">{stats.regular}</span>
                       </div>
                     </div>
                     <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg text-xs text-white/90 leading-relaxed">
@@ -970,7 +970,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
           
           <div className="my-6 p-4 rounded-xl border border-dashed border-gray-300 dark:border-white/10 bg-gray-50 dark:bg-zinc-950/20 text-center">
             <span className="text-xs text-gray-400 uppercase font-bold tracking-wider">Temporary Password</span>
-            <div className="font-sans text-xl font-bold text-pup-maroon dark:text-red-400 mt-1 select-all">
+            <div className="text-xl font-bold text-pup-maroon dark:text-red-400 mt-1 select-all tracking-wider">
               {tempPassword}
             </div>
           </div>

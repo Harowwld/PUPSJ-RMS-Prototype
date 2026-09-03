@@ -342,6 +342,7 @@ export default function ModuleConfigTab({ showToast }) {
                         variant="secondary"
                         className={cn(
                           "text-[10px] px-2 py-0.5 rounded-full border-0 font-bold",
+                          "text-[10px] px-2 py-0.5 rounded-full border-0 font-bold",
                           isSelected
                             ? "bg-pup-maroon text-white dark:bg-zinc-100 dark:text-zinc-900"
                             : "bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-zinc-300"
@@ -593,6 +594,7 @@ export default function ModuleConfigTab({ showToast }) {
                             <h4 className="text-sm font-bold text-gray-900 dark:text-zinc-50">
                               Staff Workspace & Digitization Modules
                             </h4>
+                            <span className="text-[10px] px-2 py-0.2 rounded-full bg-gray-100 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400 font-bold">
                             <span className="text-[10px] px-2 py-0.2 rounded-full bg-gray-100 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400 font-bold">
                               {groupedModules.staff.filter(
                                 (m) =>

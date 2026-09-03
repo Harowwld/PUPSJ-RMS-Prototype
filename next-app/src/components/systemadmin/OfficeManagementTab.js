@@ -120,7 +120,7 @@ export default function OfficeManagementTab({ showToast }) {
   const [selectedOfficeId, setSelectedOfficeId] = useState(null)
   const [showCustomIcon, setShowCustomIcon] = useState(false)
   const [modulesAccordionOpen, setModulesAccordionOpen] = useState(false)
-  
+
   const [form, setForm] = useState({
     id: "",
     name: "",
@@ -135,7 +135,7 @@ export default function OfficeManagementTab({ showToast }) {
     ingest_token: "",
     selectedModules: [],
   })
-  
+
   const [submitLoading, setSubmitLoading] = useState(false)
 
   const fetchOffices = useCallback(async () => {
@@ -467,11 +467,11 @@ export default function OfficeManagementTab({ showToast }) {
                     <div className="grid grid-cols-2 gap-2">
                       <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg">
                         <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Total Units</span>
-                        <span className="text-lg font-black font-mono">{stats.total}</span>
+                        <span className="text-lg font-black">{stats.total}</span>
                       </div>
                       <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg">
                         <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Avg Modules</span>
-                        <span className="text-lg font-black font-mono">{stats.avgModules}</span>
+                        <span className="text-lg font-black">{stats.avgModules}</span>
                       </div>
                     </div>
                     <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg text-xs text-white/90 leading-relaxed">
@@ -484,11 +484,11 @@ export default function OfficeManagementTab({ showToast }) {
                     <div className="grid grid-cols-2 gap-2">
                       <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg">
                         <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Active Units</span>
-                        <span className="text-lg font-black font-mono">{stats.active}</span>
+                        <span className="text-lg font-black">{stats.active}</span>
                       </div>
                       <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg">
                         <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Inactive</span>
-                        <span className="text-lg font-black font-mono">{stats.inactive}</span>
+                        <span className="text-lg font-black">{stats.inactive}</span>
                       </div>
                     </div>
                     <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg text-xs text-white/90 leading-relaxed">
@@ -501,11 +501,11 @@ export default function OfficeManagementTab({ showToast }) {
                     <div className="grid grid-cols-2 gap-2">
                       <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg">
                         <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Assigned Staff</span>
-                        <span className="text-lg font-black font-mono">{stats.totalStaff}</span>
+                        <span className="text-lg font-black">{stats.totalStaff}</span>
                       </div>
                       <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg">
                         <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Avg Staff/Office</span>
-                        <span className="text-lg font-black font-mono">{stats.total > 0 ? (stats.totalStaff / stats.total).toFixed(1) : 0}</span>
+                        <span className="text-lg font-black">{stats.total > 0 ? (stats.totalStaff / stats.total).toFixed(1) : 0}</span>
                       </div>
                     </div>
                     <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg text-xs text-white/90 leading-relaxed">
@@ -646,8 +646,8 @@ export default function OfficeManagementTab({ showToast }) {
                 </EmptyMedia>
               </div>
               <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
-                {searchQuery 
-                  ? "No Results Found" 
+                {searchQuery
+                  ? "No Results Found"
                   : (statusFilter === "Inactive" ? "No Archived Offices Found" : "No Offices Found")}
               </EmptyTitle>
               <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400 mt-1">
@@ -685,15 +685,15 @@ export default function OfficeManagementTab({ showToast }) {
             const accent = office.accent_color || "#800000"
             const isActive = office.status === "Active"
             return (
-              <Card 
-                key={office.id} 
+              <Card
+                key={office.id}
                 className="overflow-hidden border border-[#e5e5ea] dark:border-[#3a3a3c] bg-white dark:bg-[#1c1c1e] relative shadow-[0_2px_8px_rgba(0,0,0,0.03)] transition-all duration-300 hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)] hover:-translate-y-0.5 rounded-2xl"
               >
                 <CardContent className="p-6 flex flex-col h-full justify-between">
                   <div>
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex items-center gap-3">
-                        <div 
+                        <div
                           className="h-10 w-10 rounded-xl flex items-center justify-center border text-lg shadow-sm"
                           style={{ borderColor: `${accent}20`, backgroundColor: `${accent}08`, color: accent }}
                         >
@@ -709,10 +709,10 @@ export default function OfficeManagementTab({ showToast }) {
                         </div>
                       </div>
 
-                      <Badge 
+                      <Badge
                         className={cn(
                           "rounded-full border-0 px-2 py-0.5 text-[10px] font-bold shadow-none",
-                          isActive 
+                          isActive
                             ? "bg-[#34c759]/10 text-[#34c759] dark:bg-[#30d158]/20 dark:text-[#30d158]"
                             : "bg-[#8e8e93]/10 text-[#8e8e93] dark:bg-[#8e8e93]/20 dark:text-[#aeaeb2]"
                         )}
@@ -724,7 +724,7 @@ export default function OfficeManagementTab({ showToast }) {
                     <h4 className="text-xs font-semibold text-gray-900 dark:text-[#f2f2f7] mb-1.5 leading-snug">
                       {office.name}
                     </h4>
-                    
+
                     <p className="text-xs text-gray-500 dark:text-zinc-400 line-clamp-2 leading-relaxed mb-4">
                       {office.description || "No description provided."}
                     </p>
@@ -777,14 +777,14 @@ export default function OfficeManagementTab({ showToast }) {
 
                   {/* Actions */}
                   <div className="flex items-center gap-2 mt-5 pt-3 border-t border-gray-100 dark:border-zinc-800">
-                    <Button 
+                    <Button
                       onClick={() => handleOpenEdit(office)}
                       className="flex-1 bg-[#f2f2f7] hover:bg-[#e5e5ea] dark:bg-[#2c2c2e] dark:hover:bg-[#3a3a3c] text-gray-800 dark:text-[#f2f2f7] font-semibold text-xs h-8 cursor-pointer rounded-xl border-0 shadow-none"
                     >
                       Configure
                     </Button>
-                    <Button 
-                      variant="ghost" 
+                    <Button
+                      variant="ghost"
                       onClick={() => {
                         if (isActive) {
                           setDeactivateOfficeTarget(office)
@@ -794,7 +794,7 @@ export default function OfficeManagementTab({ showToast }) {
                       }}
                       className={cn(
                         "h-8 px-3 rounded-xl text-xs font-semibold cursor-pointer border-0 shadow-none transition-colors",
-                        isActive 
+                        isActive
                           ? "text-[#ff3b30] hover:bg-[#ff3b30]/10 dark:text-[#ff453a] dark:hover:bg-[#ff453a]/15"
                           : "text-[#34c759] hover:bg-[#34c759]/10 dark:text-[#30d158] dark:hover:bg-[#30d158]/15"
                       )}
@@ -848,6 +848,7 @@ export default function OfficeManagementTab({ showToast }) {
                     onChange={(e) => setForm(prev => ({ ...prev, id: e.target.value }))}
                     disabled={isEditing}
                     placeholder="e.g. registrar, osas, library"
+                    className="h-10 rounded-xl bg-white border border-gray-200 text-xs focus-visible:ring-pup-maroon dark:bg-zinc-950 dark:border-white/10 dark:text-white"
                     className="h-10 rounded-xl bg-white border border-gray-200 text-xs focus-visible:ring-pup-maroon dark:bg-zinc-950 dark:border-white/10 dark:text-white"
                     required
                   />
@@ -985,7 +986,7 @@ export default function OfficeManagementTab({ showToast }) {
                           <span className="text-xs font-bold text-gray-900 dark:text-zinc-100">
                             Assign Default Modules
                           </span>
-                          <Badge className="text-[10px] font-mono px-2 py-0.2 rounded-full bg-slate-900 text-white dark:bg-zinc-100 dark:text-zinc-900 border-0">
+                          <Badge className="text-[10px] px-2 py-0.2 rounded-full bg-slate-900 text-white dark:bg-zinc-100 dark:text-zinc-900 border-0 font-medium">
                             {enabledCount} of {availableModules.length} enabled
                           </Badge>
                         </div>
@@ -1041,8 +1042,8 @@ export default function OfficeManagementTab({ showToast }) {
                               key={mod.id}
                               className={cn(
                                 "flex items-start gap-2.5 p-2 rounded-xl text-xs transition-all border select-none",
-                                isChecked 
-                                  ? "border-pup-maroon/20 bg-pup-maroon/5 dark:border-white/15 dark:bg-white/5" 
+                                isChecked
+                                  ? "border-pup-maroon/20 bg-pup-maroon/5 dark:border-white/15 dark:bg-white/5"
                                   : "border-gray-200/70 bg-gray-50/50 dark:border-white/5 dark:bg-zinc-900/40",
                                 isSystem ? "opacity-80 cursor-default" : "hover:border-pup-maroon/40 cursor-pointer"
                               )}
@@ -1158,7 +1159,7 @@ export default function OfficeManagementTab({ showToast }) {
                 )}
                 <div className="flex items-center justify-between text-[10px] text-gray-400 dark:text-zinc-500 pt-0.5">
                   <span className="flex items-center gap-1.5">
-                    Selected icon: <i className={form.icon}></i> <code className="font-mono text-gray-600 dark:text-zinc-400">{form.icon}</code>
+                    Selected icon: <i className={form.icon}></i> <code className="text-gray-600 dark:text-zinc-400 font-medium">{form.icon}</code>
                   </span>
                   <span>{PRESET_ICONS.length} icons available</span>
                 </div>
@@ -1170,7 +1171,7 @@ export default function OfficeManagementTab({ showToast }) {
                   <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider">
                     Branding Theme Color
                   </label>
-                  <span className="text-[11px] font-mono text-gray-400 dark:text-zinc-500">
+                  <span className="text-[11px] font-medium text-gray-400 dark:text-zinc-500">
                     {form.accent_color}
                   </span>
                 </div>
@@ -1188,8 +1189,8 @@ export default function OfficeManagementTab({ showToast }) {
                           onClick={() => setForm(prev => ({ ...prev, accent_color: c.hex }))}
                           className={cn(
                             "h-8 rounded-xl border transition-all cursor-pointer flex items-center justify-center shadow-2xs",
-                            isSelected 
-                              ? "ring-2 ring-slate-900 ring-offset-2 dark:ring-white dark:ring-offset-zinc-950 scale-105" 
+                            isSelected
+                              ? "ring-2 ring-slate-900 ring-offset-2 dark:ring-white dark:ring-offset-zinc-950 scale-105"
                               : "border-black/10 hover:scale-105"
                           )}
                           style={{ backgroundColor: c.hex }}
@@ -1215,7 +1216,7 @@ export default function OfficeManagementTab({ showToast }) {
                         value={form.accent_color}
                         onChange={(e) => setForm(prev => ({ ...prev, accent_color: e.target.value }))}
                         placeholder="#800000"
-                        className="h-9 w-28 rounded-xl bg-white border border-gray-200 text-xs focus-visible:ring-pup-maroon dark:bg-zinc-950 dark:border-white/10 dark:text-white font-mono"
+                        className="h-9 w-28 rounded-xl bg-white border border-gray-200 text-xs focus-visible:ring-pup-maroon dark:bg-zinc-950 dark:border-white/10 dark:text-white"
                       />
                     </div>
 
@@ -1224,12 +1225,12 @@ export default function OfficeManagementTab({ showToast }) {
                       <span className="text-[10px] text-gray-400 dark:text-zinc-500 uppercase tracking-wider font-semibold">
                         Live Preview:
                       </span>
-                      <div 
+                      <div
                         className="flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-semibold shadow-2xs"
-                        style={{ 
-                          borderColor: `${form.accent_color}30`, 
-                          backgroundColor: `${form.accent_color}10`, 
-                          color: form.accent_color 
+                        style={{
+                          borderColor: `${form.accent_color}30`,
+                          backgroundColor: `${form.accent_color}10`,
+                          color: form.accent_color
                         }}
                       >
                         <i className={cn(form.icon || "ti ti-building", "text-sm")}></i>
