@@ -98,6 +98,7 @@ export async function POST(req, ctx) {
   const bytes = fs.readFileSync(sourceAbsPath);
   const ext = path.extname(String(ingest.original_filename || "")).toLowerCase();
   const officeId = user.office_id || "registrar";
+  const targetStorageFilename = `${sanitizeNameForFs(studentNo)}_${sanitizeNameForFs(docType)}_${Date.now()}${ext || ".pdf"}`;
   const targetAbsPath = path.join(getUploadsDir(officeId), targetStorageFilename);
   fs.copyFileSync(sourceAbsPath, targetAbsPath);
 

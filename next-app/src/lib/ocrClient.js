@@ -7,9 +7,10 @@
  *   - warmupOcrWorker()                                     → pre-initialise worker
  *   - normalizeExtractedName(raw)                           → "LASTNAME, FIRSTNAME MI."
  *
- * Return shape of scanFileForSuggestion:
- *   { name, docType, matchedStudent, nameMatchesByName, ocrTextPreview, ocrLinesPreview }
+ * Return shape of scanFileForSuggestion includes transparent match and OCR quality scores.
  */
+
+import { calculateOcrConfidence } from "./ocrConfidence.js";
 
 // ─── Singleton state ────────────────────────────────────────────────────────
 let _nlpPromise = null;
@@ -296,7 +297,7 @@ function stripTrailing(s) {
  * @param {{ engine?: string }} opts  engine: "apple-vision"|"windows-media"|"unknown"
  * @returns {string}
  */
-function detectName(lines, { engine = "unknown", nlp = null } = {}) {
+export function detectName(lines, { engine = "unknown", nlp = null } = {}) {
   const full = lines.join(" ");
   /** @type {{ name: string; score: number; strategy: string }[]} */
   const candidates = [];
@@ -904,12 +905,20 @@ export function extractNameFromCoordinates(pages, template) {
   }
 
   const first = regions.firstName.text;
-  const middle = regions.middleName.text;
+  let middle = regions.middleName.text;
   const last = regions.lastName.text;
+  // A slightly oversized/overlapping template can capture the last-name
+  // observation in both the middle and last regions. Do not duplicate it in
+  // the assembled name.
+  if (middle && last && middle.toLowerCase() === last.toLowerCase()) middle = "";
+  const extractedName = last && first
+    ? formatToLNFnMi(`${last}, ${first}${middle ? ` ${middle}` : ""}`)
+    : [last, first, middle].filter(Boolean).join(" ").trim();
+
   return {
     pageIndex,
     regions,
-    extractedName: first && last ? formatToLNFnMi(`${last}, ${first}${middle ? ` ${middle}` : ""}`) : "",
+    extractedName,
   };
 }
 
@@ -1288,24 +1297,26 @@ export async function scanFileForSuggestion({ file, students, docTypes, rotation
     }
   }
 
+  const templateApplied = Boolean(coordinateRecognition);
+
   // ── Load NLP engine if available ──
   const nlp = await loadNlp().catch(() => null);
 
   const rawExtracted = matchedStudent
     ? ""
-    : coordinateRecognition?.extractedName || detectName(lines, { engine: ocrEngine, nlp });
+    : templateApplied ? coordinateRecognition.extractedName : detectName(lines, { engine: ocrEngine, nlp });
 
   // ── Detect name (fallback when student number did not match) ──
   if (!matchedStudent) {
-    if (coordinateRecognition?.extractedName) {
+    if (templateApplied) {
       nameMatchesByName = coordinateNameMatches;
     } else if (rawExtracted && Array.isArray(students)) {
       nameMatchesByName = findStudentsByOcrName(rawExtracted, students);
     }
-    if (!coordinateRecognition?.extractedName && (!nameMatchesByName || nameMatchesByName.length === 0) && Array.isArray(students)) {
+    if (!templateApplied && (!nameMatchesByName || nameMatchesByName.length === 0) && Array.isArray(students)) {
       nameMatchesByName = findStudentsInText(rawText, students);
     }
-    matchedStudent = coordinateRecognition?.extractedName ? null : nameMatchesByName.length === 1 ? nameMatchesByName[0] : null;
+    matchedStudent = templateApplied ? null : nameMatchesByName.length === 1 ? nameMatchesByName[0] : null;
   }
 
   // ── Build final suggested name ──
@@ -1317,6 +1328,24 @@ export async function scanFileForSuggestion({ file, students, docTypes, rotation
   }
 
   const nameComponents = splitNameComponents(suggestedName);
+  const fullTextMatches = Array.isArray(students) ? findStudentsInText(rawText, students) : [];
+  const coordinateStudentNos = new Set(nameMatchesByName.map((student) => String(student?.studentNo || student?.student_no || "")));
+  const conflictingCandidates = coordinateRecognition?.extractedName
+    ? fullTextMatches
+      .filter((student) => !coordinateStudentNos.has(String(student?.studentNo || student?.student_no || "")))
+      .map((student) => ({ studentNo: student.studentNo || student.student_no, name: student.name }))
+    : [];
+  const scored = calculateOcrConfidence({
+    extractedName: coordinateRecognition?.extractedName || rawExtracted || suggestedName,
+    candidate: matchedStudent || (nameMatchesByName.length === 1 ? nameMatchesByName[0] : null),
+    candidates: nameMatchesByName,
+    studentNumberMatched: Boolean(extractedStudentNo && matchedStudent),
+    extractionSource: extractedStudentNo && matchedStudent ? "student_number" : templateApplied ? "template" : suggestedName ? "full_page" : "none",
+    templateFields: coordinateRecognition?.regions || {},
+    text: rawText,
+    observations: ocrPages.flatMap((page) => page.observations || []),
+    conflictingCandidates,
+  });
 
   return {
     name: suggestedName,
@@ -1330,5 +1359,14 @@ export async function scanFileForSuggestion({ file, students, docTypes, rotation
     coordinateRecognition,
     ocrTextPreview: rawText.slice(0, 2000),
     ocrLinesPreview: lines.slice(0, 18),
+    matchConfidence: scored.matchConfidence,
+    matchPercent: scored.matchPercent,
+    matchBand: scored.matchBand,
+    ocrQualityScore: scored.ocrQualityScore,
+    ocrQualityPercent: scored.ocrQualityPercent,
+    ocrQualityBand: scored.ocrQualityBand,
+    matchMethod: scored.matchMethod,
+    matchStatus: scored.matchStatus,
+    matchEvidence: scored.evidence,
   };
 }

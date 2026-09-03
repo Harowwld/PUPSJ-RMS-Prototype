@@ -11,6 +11,7 @@
     "audit:buttons": "node scripts/audit-button-theme.mjs",
     "audit:empty-states": "node scripts/audit-empty-states.mjs",
     "reset-students": "node scripts/reset-students.mjs --confirm",
+    "reset-scan-documents": "node scripts/reset-scan-documents.mjs",
     "reset-db": "bash scripts/reset-db.sh",
     "db:migrate": "node scripts/run-migrations.mjs",
     "db:migrate:sqlite": "node scripts/migrate-sqlite-to-postgres.mjs",

@@ -13,6 +13,7 @@ export async function ensureOfficeStationColumns() {
       ALTER TABLE offices ADD COLUMN IF NOT EXISTS ingest_token TEXT;
       ALTER TABLE offices ADD COLUMN IF NOT EXISTS scanner_model TEXT;
       ALTER TABLE offices ADD COLUMN IF NOT EXISTS last_station_ping TIMESTAMPTZ;
+      ALTER TABLE offices ADD COLUMN IF NOT EXISTS inbound_path TEXT;
     `);
     columnsEnsured = true;
   } catch {
@@ -44,6 +45,7 @@ export async function createOffice({
   storage_path,
   ingest_token,
   scanner_model,
+  inbound_path,
   moduleIds,
 }) {
   if (!id || !name || !short_name) throw Error("Office id, name, and short_name are required.");
@@ -55,11 +57,12 @@ export async function createOffice({
   const defaultStation = station_name || `${oid.toUpperCase()}-STATION-01`;
   const defaultToken = ingest_token || `token_${oid}_${crypto.randomBytes(8).toString("hex")}`;
   const defaultScanner = scanner_model || "High-Speed Document Scanner";
+  const defaultInbound = inbound_path || ".local/hot-folder/INBOUND";
 
   await query(
-    `INSERT INTO offices(id, name, short_name, description, icon, accent_color, station_name, storage_path, ingest_token, scanner_model, last_station_ping) 
-     VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW())`,
-    [oid, name, short_name, description || null, icon || null, accent_color || "#800000", defaultStation, defaultStorage, defaultToken, defaultScanner]
+    `INSERT INTO offices(id, name, short_name, description, icon, accent_color, station_name, storage_path, inbound_path, ingest_token, scanner_model, last_station_ping)
+     VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW())`,
+    [oid, name, short_name, description || null, icon || null, accent_color || "#800000", defaultStation, defaultStorage, defaultInbound, defaultToken, defaultScanner]
   );
 
   const allMods = await query("SELECT id, is_system FROM modules");
@@ -90,11 +93,12 @@ export async function updateOffice(id, p) {
        status = COALESCE($6, status),
        station_name = COALESCE($7, station_name),
        storage_path = COALESCE($8, storage_path),
-       ingest_token = COALESCE($9, ingest_token),
-       scanner_model = COALESCE($10, scanner_model),
-       last_station_ping = COALESCE($11, last_station_ping),
+       inbound_path = COALESCE($9, inbound_path),
+       ingest_token = COALESCE($10, ingest_token),
+       scanner_model = COALESCE($11, scanner_model),
+       last_station_ping = COALESCE($12, last_station_ping),
        updated_at = NOW() 
-     WHERE id = $12`,
+     WHERE id = $13`,
     [
       p.name !== undefined ? p.name : null,
       p.short_name !== undefined ? p.short_name : null,
@@ -104,6 +108,7 @@ export async function updateOffice(id, p) {
       p.status !== undefined ? p.status : null,
       p.station_name !== undefined ? p.station_name : null,
       p.storage_path !== undefined ? p.storage_path : null,
+      p.inbound_path !== undefined ? p.inbound_path : null,
       p.ingest_token !== undefined ? p.ingest_token : null,
       p.scanner_model !== undefined ? p.scanner_model : null,
       p.last_station_ping !== undefined ? p.last_station_ping : null,
@@ -117,4 +122,3 @@ export async function listOfficesWithStats(){
   await ensureOfficeStationColumns();
   return query("SELECT o.*,(SELECT COUNT(*) FROM office_modules om WHERE om.office_id=o.id AND om.enabled=true)::int module_count,(SELECT COUNT(*) FROM staff s WHERE s.office_id=o.id AND s.status='Active')::int staff_count FROM offices o ORDER BY o.created_at");
 }
-

@@ -2,6 +2,7 @@ import Foundation
 import Vision
 import PDFKit
 import AppKit
+import ImageIO
 
 struct OcrObservation: Codable {
     let text: String
@@ -71,6 +72,51 @@ func runVisionOcr(on cgImage: CGImage, pageIndex: Int) -> OcrPage {
     )
 }
 
+func renderPDFPage(_ page: PDFPage, scale: CGFloat) -> CGImage? {
+    let bounds = page.bounds(for: .mediaBox)
+    let width = Int(ceil(bounds.width * scale))
+    let height = Int(ceil(bounds.height * scale))
+    guard width > 0, height > 0 else { return nil }
+
+    let colorSpace = CGColorSpaceCreateDeviceRGB()
+    guard let context = CGContext(
+        data: nil,
+        width: width,
+        height: height,
+        bitsPerComponent: 8,
+        bytesPerRow: 0,
+        space: colorSpace,
+        bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+    ) else { return nil }
+
+    context.setFillColor(CGColor.white)
+    context.fill(CGRect(x: 0, y: 0, width: width, height: height))
+    context.saveGState()
+    context.scaleBy(x: scale, y: scale)
+    context.translateBy(x: -bounds.origin.x, y: -bounds.origin.y)
+    page.draw(with: .mediaBox, to: context)
+    context.restoreGState()
+    return context.makeImage()
+}
+
+func normalizeImage(_ image: CGImage) -> CGImage? {
+    let colorSpace = CGColorSpaceCreateDeviceRGB()
+    guard let context = CGContext(
+        data: nil,
+        width: image.width,
+        height: image.height,
+        bitsPerComponent: 8,
+        bytesPerRow: 0,
+        space: colorSpace,
+        bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+    ) else { return nil }
+
+    context.setFillColor(CGColor.white)
+    context.fill(CGRect(x: 0, y: 0, width: image.width, height: image.height))
+    context.draw(image, in: CGRect(x: 0, y: 0, width: image.width, height: image.height))
+    return context.makeImage()
+}
+
 // ─── Main Execution Entry ───
 let args = CommandLine.arguments
 guard args.count > 1 else {
@@ -97,22 +143,12 @@ if fileURL.pathExtension.lowercased() == "pdf" {
     for pageIndex in 0..<pdf.pageCount {
         guard let page = pdf.page(at: pageIndex) else { continue }
         
-        // Render PDF page to a CGImage for Vision analysis
-        let bounds = page.bounds(for: .mediaBox)
-        let resolutionScale: CGFloat = 3.0 // High-quality rendering
-        let size = CGSize(width: bounds.width * resolutionScale, height: bounds.height * resolutionScale)
-        
-        let img = NSImage(size: size)
-        img.lockFocus()
-        if let ctx = NSGraphicsContext.current?.cgContext {
-            ctx.setFillColor(NSColor.white.cgColor)
-            ctx.fill(CGRect(origin: .zero, size: size))
-            ctx.scaleBy(x: resolutionScale, y: resolutionScale)
-            page.draw(with: .mediaBox, to: ctx)
+        let resolutionScale: CGFloat = 3.0
+        guard let rendered = renderPDFPage(page, scale: resolutionScale),
+              let cgImg = normalizeImage(rendered) else {
+            fputs("Error: Could not render PDF page \(pageIndex)\n", stderr)
+            continue
         }
-        img.unlockFocus()
-        
-        guard let cgImg = img.cgImage(forProposedRect: nil, context: nil, hints: nil) else { continue }
         pages.append(runVisionOcr(on: cgImg, pageIndex: pageIndex))
     }
     let fullText = pages.flatMap { $0.observations.map(\.text) }.joined(separator: "\n")
@@ -121,9 +157,10 @@ if fileURL.pathExtension.lowercased() == "pdf" {
     print(String(data: data, encoding: .utf8)!)
     
 } else {
-    // Handle standard Image (PNG/JPG/etc.)
-    guard let img = NSImage(contentsOf: fileURL),
-          let cgImg = img.cgImage(forProposedRect: nil, context: nil, hints: nil) else {
+    // Handle standard images through ImageIO so Vision receives the source CGImage directly.
+    guard let source = CGImageSourceCreateWithURL(fileURL as CFURL, nil),
+          let decoded = CGImageSourceCreateImageAtIndex(source, 0, nil),
+          let cgImg = normalizeImage(decoded) else {
         print("Error: Could not load image file")
         exit(1)
     }

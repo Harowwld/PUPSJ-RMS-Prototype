@@ -131,6 +131,7 @@ export default function OfficeManagementTab({ showToast }) {
     status: "Active",
     station_name: "",
     storage_path: "",
+    inbound_path: "",
     scanner_model: "",
     ingest_token: "",
     selectedModules: [],
@@ -187,6 +188,7 @@ export default function OfficeManagementTab({ showToast }) {
       status: "Active",
       station_name: "",
       storage_path: "",
+      inbound_path: "",
       scanner_model: "Fujitsu fi-7160 Batch Scanner",
       ingest_token: `station_token_${Math.random().toString(36).substring(2, 10)}`,
       selectedModules: defaultSelected,
@@ -210,6 +212,7 @@ export default function OfficeManagementTab({ showToast }) {
       status: office.status || "Active",
       station_name: office.station_name || "",
       storage_path: office.storage_path || "",
+      inbound_path: office.inbound_path || "",
       scanner_model: office.scanner_model || "",
       ingest_token: office.ingest_token || "",
       selectedModules: [],
@@ -251,6 +254,7 @@ export default function OfficeManagementTab({ showToast }) {
         status: form.status,
         station_name: form.station_name.trim() || undefined,
         storage_path: form.storage_path.trim() || undefined,
+        inbound_path: form.inbound_path.trim() || undefined,
         scanner_model: form.scanner_model.trim() || undefined,
         ingest_token: form.ingest_token.trim() || undefined,
       }
@@ -849,7 +853,6 @@ export default function OfficeManagementTab({ showToast }) {
                     disabled={isEditing}
                     placeholder="e.g. registrar, osas, library"
                     className="h-10 rounded-xl bg-white border border-gray-200 text-xs focus-visible:ring-pup-maroon dark:bg-zinc-950 dark:border-white/10 dark:text-white"
-                    className="h-10 rounded-xl bg-white border border-gray-200 text-xs focus-visible:ring-pup-maroon dark:bg-zinc-950 dark:border-white/10 dark:text-white"
                     required
                   />
                   {!isEditing && (
@@ -941,6 +944,21 @@ export default function OfficeManagementTab({ showToast }) {
                   />
                   <span className="text-[10px] text-gray-400 mt-1 block">
                     Scans and documents for this department are physically saved to this local drive partition.
+                  </span>
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
+                    Scanner Inbound Folder Path
+                  </label>
+                  <Input
+                    value={form.inbound_path}
+                    onChange={(e) => setForm(prev => ({ ...prev, inbound_path: e.target.value }))}
+                    placeholder="e.g. /Volumes/RegistrarScanner/INBOUND or .local/hot-folder/INBOUND"
+                    className="h-10 rounded-xl bg-white border border-gray-200 text-xs focus-visible:ring-pup-maroon dark:bg-zinc-950 dark:border-white/10 dark:text-white"
+                  />
+                  <span className="text-[10px] text-gray-400 mt-1 block">
+                    The local folder watched by Continuous Scanning. The watcher reloads this setting automatically.
                   </span>
                 </div>
 

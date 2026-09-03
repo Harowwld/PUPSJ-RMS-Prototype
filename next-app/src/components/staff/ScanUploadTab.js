@@ -37,6 +37,7 @@ import PageHeader from "@/components/shared/PageHeader"
 import { RefreshButton } from "@/components/shared/RefreshButton"
 import { canonicalizeCabinetId } from "@/lib/storageLayoutUtils"
 import { findStudentsByOcrName } from "@/lib/ocrClient"
+import ContinuousScanningPanel from "@/components/staff/ContinuousScanningPanel"
 function toNormalCase(str) {
   if (!str) return ""
   return str
@@ -117,6 +118,7 @@ export default function ScanUploadTab({
   ocrSuggestion = null,
   rotation = 0,
   setRotation,
+  onOpenBatchReview,
 }) {
   const [clearInboxOpen, setClearInboxOpen] = useState(false)
   const [showPagesSidebar, setShowPagesSidebar] = useState(true)
@@ -619,7 +621,21 @@ export default function ScanUploadTab({
               {authUser?.storage_path || `.local/storage/${authUser?.office_id || "registrar"}/uploads`}
             </span>
           </div>
+          <div className="flex items-center gap-2">
+            <i className="ph-bold ph-folder-open text-pup-maroon dark:text-red-400 text-xs"></i>
+            <span className="text-[10px] font-bold text-gray-500 dark:text-zinc-400 uppercase tracking-wider">
+              Scanner Inbound:
+            </span>
+            <span
+              className="text-[11px] font-medium text-gray-700 dark:text-zinc-200 bg-white dark:bg-zinc-800 border border-gray-200 dark:border-white/10 px-2.5 py-0.5 rounded-md truncate max-w-[340px]"
+              title={authUser?.inbound_path || ".local/hot-folder/INBOUND"}
+            >
+              {authUser?.inbound_path || ".local/hot-folder/INBOUND"}
+            </span>
+          </div>
         </div>
+
+        {uploadMode === "pdf" && <ContinuousScanningPanel onOpenReview={onOpenBatchReview} showToast={showToast} />}
 
         {/* Mode Toggles as Sub-tabs */}
         <div className="w-full select-none px-6 border-b border-gray-100 dark:border-white/5">
@@ -1459,6 +1475,13 @@ export default function ScanUploadTab({
                   <div className="p-[20px] bg-white dark:bg-white/5">
                     {uploadMode === "pdf" ? (
                       <div className="space-y-6">
+                        {ocrSuggestion && (
+                          <div className="grid grid-cols-2 gap-2 rounded-[10px] border border-blue-100 bg-blue-50/60 p-3 dark:border-blue-400/20 dark:bg-blue-950/20">
+                            <div><div className="text-[10px] font-semibold uppercase tracking-wider text-blue-700 dark:text-blue-300">Student match</div><div className="text-lg font-bold text-blue-900 dark:text-blue-100">{ocrSuggestion.matchPercent != null ? `${ocrSuggestion.matchPercent}%` : "—"}</div><div className="text-[11px] text-blue-700 dark:text-blue-300">{ocrSuggestion.matchBand || ocrSuggestion.matchStatus || "Not scored"}</div></div>
+                            <div><div className="text-[10px] font-semibold uppercase tracking-wider text-emerald-700 dark:text-emerald-300">OCR read quality</div><div className="text-lg font-bold text-emerald-900 dark:text-emerald-100">{ocrSuggestion.ocrQualityPercent != null ? `${ocrSuggestion.ocrQualityPercent}%` : "—"}</div><div className="text-[11px] text-emerald-700 dark:text-emerald-300">{ocrSuggestion.ocrQualityBand || "Not scored"}</div></div>
+                            {ocrSuggestion.matchEvidence?.reason && <div className="col-span-2 border-t border-blue-100 pt-2 text-[11px] text-gray-600 dark:border-blue-400/20 dark:text-zinc-300">{ocrSuggestion.matchEvidence.reason}</div>}
+                          </div>
+                        )}
                         {uploadStudentIsExisting && (
                           <div className="flex flex-col gap-2 rounded-[10px] border border-emerald-200 bg-emerald-50 px-3 py-2.5 dark:border-emerald-500/20 dark:bg-emerald-950/20">
                              <span className="inline-flex items-start gap-2 text-[11px] font-medium tracking-[0.04em] text-emerald-900 dark:text-emerald-400">

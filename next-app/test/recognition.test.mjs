@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { extractNameFromCoordinates, normalizeExtractedName } from "../src/lib/ocrClient.js";
+import { calculateOcrConfidence } from "../src/lib/ocrConfidence.js";
 
 test("extracts PSA name fields from normalized coordinate regions", () => {
   const result = extractNameFromCoordinates([
@@ -48,4 +49,27 @@ test("returns evidence but no name when a required PSA field is absent", () => {
 test("normalizes extracted names into the project format", () => {
   assert.equal(normalizeExtractedName("Juan dela Cruz"), "DELA CRUZ, JUAN");
   assert.equal(normalizeExtractedName("DELA CRUZ, JUAN A."), "DELA CRUZ, JUAN A");
+});
+
+test("scores the same name strongly when OCR and database order differ", () => {
+  const result = calculateOcrConfidence({
+    extractedName: "GABRIEL MATEO SANTOS RAMIREZ",
+    candidate: { studentNo: "2025-60009-MN-2", name: "RAMIREZ, GABRIEL MATEO SANTOS" },
+    candidates: [{ studentNo: "2025-60009-MN-2", name: "RAMIREZ, GABRIEL MATEO SANTOS" }],
+    extractionSource: "template",
+  });
+  assert.ok(result.matchConfidence >= 0.9);
+  assert.equal(result.evidence.candidates[0].tokenSetSimilarity, 1);
+});
+
+test("keeps a strong unique match usable despite a non-primary document name conflict", () => {
+  const result = calculateOcrConfidence({
+    extractedName: "LIAM CARTER VALENCIA MERCADO",
+    candidate: { studentNo: "2025-60010-MN-0", name: "MERCADO, LIAM CARTER VALENCIA" },
+    candidates: [{ studentNo: "2025-60010-MN-0", name: "MERCADO, LIAM CARTER VALENCIA" }],
+    extractionSource: "template",
+    conflictingCandidates: [{ studentNo: "2022-10002-MN-2", name: "SANTOS, MARIA B." }],
+  });
+  assert.equal(result.matchBand, "Conflict");
+  assert.ok(result.matchConfidence >= 0.85);
 });

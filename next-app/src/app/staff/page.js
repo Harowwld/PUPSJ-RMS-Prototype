@@ -11,6 +11,7 @@ import { StaffGuard } from "@/components/shared/AuthGuard";
 import RecordsArchiveTab from "@/components/staff/RecordsArchiveTab";
 import StorageExplorerTab from "@/components/staff/StorageExplorerTab";
 import ScanUploadTab from "@/components/staff/ScanUploadTab";
+import BatchReviewTab from "@/components/staff/BatchReviewTab";
 import DocumentsTab from "@/components/staff/DocumentsTab";
 import NotificationsTab from "@/components/staff/NotificationsTab";
 import DocumentRequestsTab from "@/components/staff/DocumentRequestsTab";
@@ -73,7 +74,7 @@ function StaffPageContent() {
   const locateTimeoutRef = useRef(null);
   const processedLocateRef = useRef(null);
 
-  const validViews = ["requests", "osas_monitoring", "upload", "documents", "notifications", "search", "storage"];
+  const validViews = ["requests", "osas_monitoring", "upload", "batch_review", "documents", "notifications", "search", "storage"];
   const initialView = validViews.includes(searchParams?.get("view"))
     ? searchParams.get("view")
     : "requests";
@@ -91,7 +92,7 @@ function StaffPageContent() {
 
   useEffect(() => {
     const tab = String(searchParams?.get("view") || searchParams?.get("tab") || "").trim()
-    const allowedTabs = new Set(["requests", "osas_monitoring", "upload", "documents", "notifications", "search", "storage"])
+    const allowedTabs = new Set(["requests", "osas_monitoring", "upload", "batch_review", "documents", "notifications", "search", "storage"])
     if (allowedTabs.has(tab)) {
       setView(tab)
     }
@@ -149,6 +150,7 @@ function StaffPageContent() {
       requests: "alumni_requests",
       osas_monitoring: "osas_monitoring",
       upload: "scan_upload",
+      batch_review: "scan_upload",
       documents: "documents",
       notifications: "notifications",
       search: "records_archive",
@@ -163,6 +165,7 @@ function StaffPageContent() {
           { key: "requests", label: "Alumni Requests", iconClass: "ph-bold ph-tray-arrow-up" },
           { key: "osas_monitoring", label: "OSAS Monitoring", iconClass: "ph-bold ph-student" },
           { key: "upload", label: "Scan & Upload", iconClass: "ph-bold ph-scan" },
+          { key: "batch_review", label: "Batch Review", iconClass: "ph-bold ph-check-square" },
           { key: "documents", label: "Documents", iconClass: "ph-bold ph-file-text" },
           { key: "notifications", label: "Notifications", iconClass: "ph-bold ph-bell", badge: notificationsUnread },
         ]
@@ -1936,7 +1939,12 @@ function StaffPageContent() {
                 setOcrPromptOpen(false);
                 checkDuplicate(student.studentNo || student.student_no, ocrDocType);
               }}
+              onOpenBatchReview={() => switchView("batch_review")}
             />
+          </TabsContent>
+
+          <TabsContent value="batch_review" className="h-full m-0 border-0 focus-visible:ring-0">
+            <BatchReviewTab showToast={showToast} students={students} docTypes={docTypes} />
           </TabsContent>
 
           <TabsContent value="requests" className="h-full m-0 border-0 focus-visible:ring-0">
