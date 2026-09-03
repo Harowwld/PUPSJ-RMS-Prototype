@@ -17,6 +17,7 @@
     "db:backup": "node scripts/backup-postgres.mjs",
     "db:verify": "node scripts/verify-local-postgres.mjs",
     "db:seed:test": "node scripts/seed-test-accounts.mjs",
+    "db:seed:sample": "node scripts/populate-sample-data.mjs",
     "test:recognition": "node --test test/recognition.test.mjs",
     "populate-sample-data": "node scripts/populate-sample-data.mjs",
     "db:seed:sample": "node scripts/populate-sample-data.mjs",
