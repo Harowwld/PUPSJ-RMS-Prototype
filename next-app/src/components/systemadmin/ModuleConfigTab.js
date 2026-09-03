@@ -297,7 +297,7 @@ export default function ModuleConfigTab({ showToast }) {
                           <div className="text-xs font-bold text-gray-900 dark:text-zinc-50 group-hover:text-pup-maroon transition-colors">
                             {o.short_name}
                           </div>
-                          <div className="text-[10px] text-gray-400 font-mono">
+                          <div className="text-[10px] text-gray-400 font-medium">
                             ID: {o.id}
                           </div>
                         </div>
@@ -306,7 +306,7 @@ export default function ModuleConfigTab({ showToast }) {
                       <Badge
                         variant="secondary"
                         className={cn(
-                          "text-[10px] font-mono px-2 py-0.5 rounded-full border-0 font-bold",
+                          "text-[10px] px-2 py-0.5 rounded-full border-0 font-bold",
                           isSelected
                             ? "bg-pup-maroon text-white dark:bg-zinc-100 dark:text-zinc-900"
                             : "bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-zinc-300"
@@ -493,7 +493,7 @@ export default function ModuleConfigTab({ showToast }) {
                             <h4 className="text-sm font-bold text-gray-900 dark:text-zinc-50">
                               Office Head & Administrator Tools
                             </h4>
-                            <span className="text-[10px] font-mono px-2 py-0.2 rounded-full bg-gray-100 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400 font-bold">
+                            <span className="text-[10px] px-2 py-0.2 rounded-full bg-gray-100 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400 font-bold">
                               {groupedModules.admin.filter(
                                 (m) =>
                                   m.is_system ||
@@ -561,7 +561,7 @@ export default function ModuleConfigTab({ showToast }) {
                             <h4 className="text-sm font-bold text-gray-900 dark:text-zinc-50">
                               Staff Workspace & Digitization Modules
                             </h4>
-                            <span className="text-[10px] font-mono px-2 py-0.2 rounded-full bg-gray-100 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400 font-bold">
+                            <span className="text-[10px] px-2 py-0.2 rounded-full bg-gray-100 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400 font-bold">
                               {groupedModules.staff.filter(
                                 (m) =>
                                   m.is_system ||
@@ -638,7 +638,7 @@ export default function ModuleConfigTab({ showToast }) {
                   >
                     <div className="flex flex-col items-center">
                       <span className="text-[13px] font-black">{o.short_name}</span>
-                      <span className="text-[10px] text-gray-400 font-mono mt-0.5">
+                      <span className="text-[10px] text-gray-400 font-medium mt-0.5">
                         {officeCounts[o.id] || 0}/{modules.length}
                       </span>
                     </div>
@@ -730,7 +730,7 @@ function ModuleCard({ m, office, assignments, toggling, onToggle }) {
               <h5 className="text-xs font-bold text-gray-900 dark:text-zinc-50 leading-tight">
                 {m.name}
               </h5>
-              <span className="text-[10px] text-gray-400 font-mono">
+              <span className="text-[10px] text-gray-400 font-medium">
                 {m.id}
               </span>
             </div>

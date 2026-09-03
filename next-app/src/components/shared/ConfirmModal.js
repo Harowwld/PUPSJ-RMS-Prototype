@@ -233,7 +233,7 @@ export default function ConfirmModal({
                             className={cn(
                               (isArchiveModal || isRestoreModal)
                                 ? "text-[13px] font-normal text-pup-maroon dark:text-red-400 truncate"
-                                : "text-[12px] font-normal text-gray-500 dark:text-zinc-400 font-sans truncate"
+                                : "text-[12px] font-normal text-gray-500 dark:text-zinc-400 truncate"
                             )}
                           >
                             {item}
@@ -286,7 +286,7 @@ export default function ConfirmModal({
                           type="text"
                           maxLength={1}
                           inputMode="numeric"
-                          className="h-[44px] w-[44px] rounded-[8px] border-[0.5px] border-gray-300 dark:border-zinc-800 bg-white text-center font-sans text-[18px] font-semibold text-gray-900 transition-all focus:border-[#e30000] focus:ring-0 focus:outline-none focus-visible:outline-none focus:border-[1.5px] caret-transparent dark:bg-card dark:text-zinc-50"
+                          className="h-[44px] w-[44px] rounded-[8px] border-[0.5px] border-gray-300 dark:border-zinc-800 bg-white text-center text-[18px] font-semibold text-gray-900 transition-all focus:border-[#e30000] focus:ring-0 focus:outline-none focus-visible:outline-none focus:border-[1.5px] caret-transparent dark:bg-card dark:text-zinc-50"
                           style={{ borderWidth: '0.5px', borderStyle: 'solid' }}
                           placeholder="0"
                           value={verificationValue[i] || ""}
@@ -308,7 +308,7 @@ export default function ConfirmModal({
                       <label className="mb-2 block text-[9px] font-semibold tracking-widest text-red-800/60 dark:text-red-500/60">
                         Security Authorization Code
                       </label>
-                      <div className="flex h-12 items-center justify-center rounded-xl border-2 border-dashed border-red-200 bg-white px-8 font-sans text-xl font-semibold text-red-700 shadow-inner dark:bg-card dark:shadow-none dark:border-zinc-800 dark:text-red-400">
+                      <div className="flex h-12 items-center justify-center rounded-xl border-2 border-dashed border-red-200 bg-white px-8 text-xl font-semibold text-red-700 shadow-inner dark:bg-card dark:shadow-none dark:border-zinc-800 dark:text-red-400 tracking-wider">
                         {verificationTarget}
                       </div>
                     </div>
@@ -325,7 +325,7 @@ export default function ConfirmModal({
                             type="text"
                             maxLength={1}
                             inputMode="numeric"
-                            className="h-16 w-14 rounded-xl border-2 border-red-200 bg-white text-center font-sans text-xl font-semibold text-gray-900 shadow-sm transition-all focus:scale-105 focus:border-red-500 focus:ring-4 focus:ring-red-100 focus:outline-none caret-transparent dark:bg-card dark:text-zinc-50 dark:border-zinc-800 dark:focus:border-red-500/50 dark:focus:ring-red-900/20"
+                            className="h-16 w-14 rounded-xl border-2 border-red-200 bg-white text-center text-xl font-semibold text-gray-900 shadow-sm transition-all focus:scale-105 focus:border-red-500 focus:ring-4 focus:ring-red-100 focus:outline-none caret-transparent dark:bg-card dark:text-zinc-50 dark:border-zinc-800 dark:focus:border-red-500/50 dark:focus:ring-red-900/20"
                             placeholder="0"
                             value={verificationValue[i] || ""}
                             onChange={(e) => handleInputChange(i, e.target.value)}
@@ -366,7 +366,6 @@ export default function ConfirmModal({
             type="button"
             onClick={onConfirm}
             disabled={isLoading || disabled || !isVerified}
-            themeColor={!(variant === "success" || variant === "warning" || isRestoreModal || isUnsavedChangesModal || v.confirmVariant === "destructive")}
             height={((isDeleteBackup || isArchiveModal || isPersonnelModal || isRegistrationModal) || isRestoreModal || isUnsavedChangesModal) ? 36 : 44}
             radius={((isDeleteBackup || isArchiveModal || isPersonnelModal || isRegistrationModal) || isRestoreModal || isUnsavedChangesModal) ? 18 : 22}
             glassColor="rgba(10, 132, 255, 0.15)"
@@ -393,3 +392,4 @@ export default function ConfirmModal({
     </Dialog>
   );
 }
+
