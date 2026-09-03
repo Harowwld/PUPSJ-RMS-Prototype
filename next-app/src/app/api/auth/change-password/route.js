@@ -40,9 +40,10 @@ export async function POST(req) {
   const id = String(session?.sub || "").trim();
   const currentPassword = String(body.currentPassword || "");
   const newPassword = String(body.newPassword || "");
+  const isInitialSetup = Boolean(session?.mustChangePassword);
 
-  if (!id || !currentPassword || !newPassword) {
-    authDebug("password_change.missing_fields", { staffId: id || null, hasCurrentPassword: Boolean(currentPassword), hasNewPassword: Boolean(newPassword) });
+  if (!id || !newPassword || (!currentPassword && !isInitialSetup)) {
+    authDebug("password_change.missing_fields", { staffId: id || null, hasCurrentPassword: Boolean(currentPassword), hasNewPassword: Boolean(newPassword), isInitialSetup });
     return NextResponse.json(
       { ok: false, error: "Missing required fields" },
       { status: 400 }
@@ -57,9 +58,19 @@ export async function POST(req) {
     );
   }
 
-  const ok = await verifyStaffPasswordById(id, currentPassword);
+  const defaultPassword = process.env.DEFAULT_STAFF_PASSWORD || "pupstaff";
+  if (isInitialSetup && newPassword === defaultPassword) {
+    return NextResponse.json(
+      { ok: false, error: "New password cannot be the same as the default password" },
+      { status: 400 }
+    );
+  }
+
+  // If initial setup and no currentPassword was provided, verify against the default password
+  const passwordToCheck = currentPassword || (isInitialSetup ? defaultPassword : "");
+  const ok = await verifyStaffPasswordById(id, passwordToCheck);
   if (!ok) {
-    authDebug("password_change.current_password_rejected", { staffId: id });
+    authDebug("password_change.current_password_rejected", { staffId: id, isInitialSetup });
     return NextResponse.json(
       { ok: false, error: "Current password is incorrect" },
       { status: 401 }

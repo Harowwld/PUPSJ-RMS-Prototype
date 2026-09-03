@@ -1,6 +1,6 @@
 "use client"
-// Trigger rebuild comment
-import { useState, useMemo, useEffect } from "react"
+
+import { useState, useMemo, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
@@ -114,6 +114,22 @@ export default function DigitalRecordsReviewTab({
   const [selectedIds, setSelectedIds] = useState(new Set())
   const [lastSelectedId, setLastSelectedId] = useState(null)
   const [selectedKpi, setSelectedKpi] = useState(null)
+  const statCardsRef = useRef(null)
+
+  useEffect(() => {
+    if (!selectedKpi) return
+    const handleClickOutside = (e) => {
+      if (statCardsRef.current && !statCardsRef.current.contains(e.target)) {
+        setSelectedKpi(null)
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside)
+    document.addEventListener("touchstart", handleClickOutside)
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside)
+      document.removeEventListener("touchstart", handleClickOutside)
+    }
+  }, [selectedKpi])
 
   const cardDetailsData = useMemo(() => {
     if (!selectedKpi || !records) return null
@@ -630,7 +646,7 @@ export default function DigitalRecordsReviewTab({
             ))}
           </div>
         ) : !error ? (
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-3 items-start relative z-20">
+          <div ref={statCardsRef} className="grid grid-cols-1 gap-6 md:grid-cols-3 items-start relative z-20">
             {/* Stat Card 1: Pending Review */}
             <div className={cn(
               "relative group rounded-xl",

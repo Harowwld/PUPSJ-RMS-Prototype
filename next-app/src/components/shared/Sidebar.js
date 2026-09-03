@@ -38,46 +38,11 @@ export default function Sidebar({ open = true, items, activeKey, onSelect, onLog
   const isStaff = pathname?.startsWith("/staff") || items.some(item => 
     ["requests", "upload", "documents", "notifications", "search"].includes(item.key)
   )
-  const activeColor = accentColor || (isStaff ? "#ebb800" : "#e30000")
-  const staffIconColor = accentColor || (isStaff ? "#ebb800" : "#e30000")
+  const isSystemAdmin = pathname?.startsWith("/systemadmin") || pathname?.startsWith("/superadmin")
+  const defaultColor = isSystemAdmin ? "#0f172a" : (isStaff ? "#ebb800" : "#e30000")
+  const activeColor = accentColor || defaultColor
+  const staffIconColor = accentColor || defaultColor
   const sidebarRef = useRef(null)
-  const pendingFocusKeyRef = useRef(null)
-  const [sidebarFocused, setSidebarFocused] = useState(true)
-
-  useEffect(() => {
-    const handleDocumentClick = (e) => {
-      if (sidebarRef.current && sidebarRef.current.contains(e.target)) {
-        const linkEl = e.target.closest("[data-sidebar-key]")
-        if (linkEl) {
-          const clickedKey = linkEl.getAttribute("data-sidebar-key")
-          if (clickedKey !== activeKey) {
-            pendingFocusKeyRef.current = clickedKey
-            return
-          }
-        }
-        pendingFocusKeyRef.current = null
-        setSidebarFocused(true)
-      } else {
-        pendingFocusKeyRef.current = null
-        setSidebarFocused(false)
-      }
-    }
-    if (typeof document !== "undefined") {
-      document.addEventListener("mousedown", handleDocumentClick)
-    }
-    return () => {
-      if (typeof document !== "undefined") {
-        document.removeEventListener("mousedown", handleDocumentClick)
-      }
-    }
-  }, [activeKey])
-
-  useEffect(() => {
-    if (pendingFocusKeyRef.current === activeKey) {
-      setSidebarFocused(true)
-      pendingFocusKeyRef.current = null
-    }
-  }, [activeKey])
 
   const [expandedKeys, setExpandedKeys] = useState(() => {
     const initial = {}
@@ -122,7 +87,7 @@ export default function Sidebar({ open = true, items, activeKey, onSelect, onLog
       ref={sidebarRef}
       className={cn(
         "z-10 flex-col gap-[2px] bg-white/20 backdrop-blur-md dark:bg-zinc-950/25 select-none sticky top-0 h-screen overflow-hidden hidden md:flex shrink-0",
-        open ? "w-[260px] py-2 px-2" : "w-[60px] py-2 px-1"
+        open ? "w-[275px] py-2 px-2" : "w-[60px] py-2 px-1"
       )}
       style={{ 
         borderRight: "0.5px solid rgba(255,255,255,0.18)",
@@ -132,7 +97,7 @@ export default function Sidebar({ open = true, items, activeKey, onSelect, onLog
       <div className="flex flex-col gap-[2px] flex-1 h-full overflow-y-auto w-full items-stretch">
         <div 
           className="flex items-center mb-1.5 w-full"
-          style={{ paddingLeft: "8px", height: "36px" }}
+          style={{ paddingLeft: "6px", height: "36px" }}
         >
           <button
             type="button"
@@ -143,15 +108,15 @@ export default function Sidebar({ open = true, items, activeKey, onSelect, onLog
             }}
             title={open ? "Collapse Sidebar" : "Expand Sidebar"}
             data-tooltip-placement="right"
-            className="flex w-[36px] h-[36px] items-center justify-center rounded-[6px] hover:bg-[rgba(0,0,0,0.06)] cursor-pointer transition-colors shrink-0"
+            className="flex w-[36px] h-[36px] items-center justify-center rounded-[6px] hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/5 cursor-pointer transition-colors shrink-0"
           >
             <i className={cn("text-[21px] transition-all duration-300", open ? "ti ti-panel-left-dashed" : "ti ti-panel-left")} style={{ color: activeColor }}></i>
           </button>
- 
+
           {/* Zoom Control when Sidebar is Visible */}
           <div className={cn(
             "flex items-center gap-1 select-none transition-all duration-300 ease-in-out overflow-hidden origin-left",
-            open ? "opacity-25 hover:opacity-100 max-w-[150px] ml-1" : "opacity-0 max-w-0 ml-0 pointer-events-none"
+            open ? "opacity-35 hover:opacity-100 max-w-[220px] ml-1" : "opacity-0 max-w-0 ml-0 pointer-events-none"
           )}>
             {zoomNode !== undefined && setZoomNode && handleZoomMouseDown && (
               <>
@@ -159,7 +124,7 @@ export default function Sidebar({ open = true, items, activeKey, onSelect, onLog
                   type="button"
                   onClick={() => setZoomNode(prev => Math.max(0, prev - 1))}
                   title="Zoom Out"
-                  className="group flex items-center justify-center border-0 rounded-brand hover:bg-gray-100 dark:hover:bg-white/5 text-gray-500 hover:text-gray-75 dark:text-zinc-400 dark:hover:text-zinc-200 cursor-pointer bg-transparent h-7 w-7 transition-colors duration-75"
+                  className="group flex items-center justify-center border-0 rounded-brand hover:bg-gray-100 dark:hover:bg-white/5 text-gray-500 hover:text-gray-700 dark:text-zinc-400 dark:hover:text-zinc-200 cursor-pointer bg-transparent h-7 w-7 transition-colors duration-75 shrink-0"
                 >
                   <svg width="12" height="12" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M2.5 7H11.5" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/>
@@ -168,8 +133,8 @@ export default function Sidebar({ open = true, items, activeKey, onSelect, onLog
                 <div 
                   onMouseDown={handleZoomMouseDown}
                   onTouchStart={handleZoomMouseDown}
-                  title="Adjust Layout scale"
-                  className="relative w-[50px] h-[14px] flex items-center group cursor-pointer"
+                  title="Adjust Layout Scale (Drag slider or click Reset to restore)"
+                  className="relative w-[50px] h-[14px] flex items-center group cursor-pointer shrink-0"
                 >
                   <div className="absolute left-0 right-0 h-[2.5px] bg-[#D1D1D6] dark:bg-zinc-700 rounded-full"></div>
                   <div 
@@ -185,16 +150,30 @@ export default function Sidebar({ open = true, items, activeKey, onSelect, onLog
                   type="button"
                   onClick={() => setZoomNode(prev => Math.min(6, prev + 1))}
                   title="Zoom In"
-                  className="group flex items-center justify-center border-0 rounded-brand hover:bg-gray-150 dark:hover:bg-white/5 text-gray-500 hover:text-gray-75 dark:text-zinc-400 dark:hover:text-zinc-200 cursor-pointer bg-transparent h-7 w-7 transition-colors duration-75"
+                  className="group flex items-center justify-center border-0 rounded-brand hover:bg-gray-100 dark:hover:bg-white/5 text-gray-500 hover:text-gray-700 dark:text-zinc-400 dark:hover:text-zinc-200 cursor-pointer bg-transparent h-7 w-7 transition-colors duration-75 shrink-0"
                 >
                   <svg width="12" height="12" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M7 2.5V11.5M2.5 7H11.5" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/>
                   </svg>
                 </button>
+                
+                {/* Reset button to restore default scale (100% / node 3) */}
+                {zoomNode !== 3 && (
+                  <button
+                    type="button"
+                    onClick={() => setZoomNode(3)}
+                    title="Reset scale to 100% (Default)"
+                    className="flex items-center gap-1 px-1.5 h-6 text-[10px] font-semibold text-gray-600 dark:text-zinc-300 hover:text-gray-900 dark:hover:text-white bg-gray-200/80 hover:bg-gray-300 dark:bg-zinc-800 dark:hover:bg-zinc-700 rounded-md transition-colors cursor-pointer border-0 shadow-2xs shrink-0 select-none"
+                  >
+                    <i className="ti ti-rotate-2 text-[11px]"></i>
+                    <span>Reset</span>
+                  </button>
+                )}
               </>
             )}
           </div>
         </div>
+
         {items.map((item, idx) => {
           if (item.type === "header") {
             return (
@@ -205,11 +184,11 @@ export default function Sidebar({ open = true, items, activeKey, onSelect, onLog
                   height: "20px", 
                   marginTop: idx === 0 ? "8px" : "24px",
                   marginBottom: "8px",
-                  paddingLeft: "16px"
+                  paddingLeft: "14px"
                 }}
               >
                 {open ? (
-                  <span className="text-[12px] font-semibold tracking-[0.05em] uppercase text-[#8E8E93] block truncate transition-opacity duration-300 opacity-100">
+                  <span className="text-[11.5px] font-semibold tracking-[0.05em] uppercase text-[#8E8E93] dark:text-zinc-500 block truncate transition-opacity duration-300 opacity-100">
                     {item.label}
                   </span>
                 ) : (
@@ -218,12 +197,12 @@ export default function Sidebar({ open = true, items, activeKey, onSelect, onLog
               </div>
             )
           }
- 
+
           if (item.type === "accordion") {
             const isExpanded = expandedKeys[item.key]
             const hasActiveChild = item.children?.some((c) => c.key === activeKey)
             const iconConfig = ICON_MAP[item.key] || { icon: item.iconClass, color: staffIconColor }
- 
+
             return (
               <div key={item.key} className="flex flex-col gap-[2px] w-full items-stretch">
                 <button
@@ -232,33 +211,30 @@ export default function Sidebar({ open = true, items, activeKey, onSelect, onLog
                   title={!open ? item.label : undefined}
                   data-tooltip-placement="right"
                   className={cn(
-                    "flex w-full h-[36px] items-center rounded-[6px] text-[15px] outline-none cursor-pointer justify-between",
+                    "flex w-full h-[36px] items-center rounded-[6px] text-[14.5px] outline-none cursor-pointer justify-between transition-colors",
                     hasActiveChild && !isExpanded
-                      ? sidebarFocused
-                        ? "text-white font-normal animate-none"
-                        : "bg-[#F0F0F0] text-[#1D1D1F] font-normal"
-                      : "text-[#1D1D1F] hover:bg-[rgba(0,0,0,0.06)] font-normal"
+                      ? "text-white font-medium shadow-2xs"
+                      : "text-[#1D1D1F] dark:text-zinc-200 hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/5 font-normal"
                   )}
                   style={{
-                    backgroundColor: hasActiveChild && !isExpanded && sidebarFocused ? activeColor : undefined,
-                    paddingLeft: "16px",
+                    backgroundColor: hasActiveChild && !isExpanded ? activeColor : undefined,
+                    paddingLeft: "14px",
                     paddingRight: "8px",
-                    transition: "background-color 150ms ease"
                   }}
                 >
-                  <div className="flex min-w-0 items-center justify-start">
+                  <div className="flex min-w-0 flex-1 items-center justify-start overflow-hidden mr-1">
                     <i
                       className={cn(iconConfig.icon, "text-[18px] transition-colors shrink-0")}
-                      style={{ color: hasActiveChild && !isExpanded ? (sidebarFocused ? "#FFFFFF" : staffIconColor) : staffIconColor }}
+                      style={{ color: hasActiveChild && !isExpanded ? "#FFFFFF" : staffIconColor }}
                     ></i>
                     <span className={cn(
-                      "transition-all duration-300 ease-in-out whitespace-nowrap overflow-hidden origin-left block",
-                      open ? "opacity-100 max-w-[150px] ml-1.5" : "opacity-0 max-w-0 ml-0 pointer-events-none"
+                      "transition-all duration-300 ease-in-out whitespace-nowrap overflow-hidden text-ellipsis origin-left block",
+                      open ? "opacity-100 flex-1 min-w-0 ml-2 text-left" : "opacity-0 max-w-0 ml-0 pointer-events-none"
                     )}>
                       {item.label}
                     </span>
                   </div>
-                  <div className={cn("flex items-center gap-2 transition-all duration-300", open ? "opacity-100 max-w-[50px] scale-100" : "opacity-0 max-w-0 scale-0 pointer-events-none w-0")}>
+                  <div className={cn("flex items-center gap-1.5 shrink-0 transition-all duration-300", open ? "opacity-100 scale-100" : "opacity-0 scale-0 pointer-events-none w-0")}>
                     {item.badge > 0 ? (
                       <span
                         className={cn(
@@ -266,9 +242,7 @@ export default function Sidebar({ open = true, items, activeKey, onSelect, onLog
                         )}
                         style={
                           hasActiveChild && !isExpanded
-                            ? sidebarFocused
-                              ? { backgroundColor: "#FFFFFF", color: activeColor }
-                              : { backgroundColor: activeColor, color: "#FFFFFF" }
+                            ? { backgroundColor: "#FFFFFF", color: activeColor }
                             : { backgroundColor: activeColor, color: "#FFFFFF" }
                         }
                       >
@@ -283,7 +257,7 @@ export default function Sidebar({ open = true, items, activeKey, onSelect, onLog
                     ></i>
                   </div>
                 </button>
- 
+
                 <div
                   className={cn(
                     "overflow-hidden transition-all duration-[450ms] ease-out w-full",
@@ -294,7 +268,7 @@ export default function Sidebar({ open = true, items, activeKey, onSelect, onLog
                     {item.children.map((child, childIdx) => {
                       const isActive = activeKey === child.key
                       const childIconConfig = ICON_MAP[child.key] || { icon: child.iconClass, color: staffIconColor }
- 
+
                       return (
                         <a
                           key={child.key}
@@ -304,31 +278,26 @@ export default function Sidebar({ open = true, items, activeKey, onSelect, onLog
                           title={!open ? child.label : undefined}
                           data-tooltip-placement="right"
                           className={cn(
-                            "flex w-full h-[36px] items-center rounded-[6px] text-[15px] outline-none cursor-pointer justify-between",
+                            "flex w-full h-[36px] items-center rounded-[6px] text-[14.5px] outline-none cursor-pointer justify-between transition-colors",
                             isActive
-                              ? sidebarFocused
-                                ? "text-white font-normal animate-none"
-                                : "bg-[#F0F0F0] text-[#1D1D1F] font-normal"
-                              : "text-[#1D1D1F] hover:bg-[rgba(0,0,0,0.06)] font-normal"
+                              ? "text-white font-medium shadow-2xs"
+                              : "text-[#1D1D1F] dark:text-zinc-200 hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/5 font-normal"
                           )}
                           style={{
-                            backgroundColor: isActive && sidebarFocused ? activeColor : undefined,
-                            paddingLeft: "32px",
+                            backgroundColor: isActive ? activeColor : undefined,
+                            paddingLeft: "26px",
                             paddingRight: "8px",
-                            transition: "background-color 150ms ease",
-                            transitionDelay: isExpanded
-                              ? `${childIdx * 50}ms`
-                              : "0ms",
+                            transitionDelay: isExpanded ? `${childIdx * 50}ms` : "0ms",
                           }}
                         >
-                          <span className="flex min-w-0 items-center justify-start">
+                          <span className="flex min-w-0 flex-1 items-center justify-start overflow-hidden mr-1">
                             <i
                               className={cn(childIconConfig.icon, "text-[18px] transition-colors shrink-0")}
-                              style={{ color: isActive ? (sidebarFocused ? "#FFFFFF" : staffIconColor) : staffIconColor }}
+                              style={{ color: isActive ? "#FFFFFF" : staffIconColor }}
                             ></i>
                             <span className={cn(
-                              "transition-all duration-300 ease-in-out whitespace-nowrap overflow-hidden origin-left block",
-                              open ? "opacity-100 max-w-[150px] ml-1.5" : "opacity-0 max-w-0 ml-0 pointer-events-none"
+                              "transition-all duration-300 ease-in-out whitespace-nowrap overflow-hidden text-ellipsis origin-left block",
+                              open ? "opacity-100 flex-1 min-w-0 ml-2 text-left" : "opacity-0 max-w-0 ml-0 pointer-events-none"
                             )}>
                               {child.label}
                             </span>
@@ -340,9 +309,7 @@ export default function Sidebar({ open = true, items, activeKey, onSelect, onLog
                             )}
                             style={
                               isActive
-                                ? sidebarFocused
-                                  ? { backgroundColor: "#FFFFFF", color: activeColor }
-                                  : { backgroundColor: activeColor, color: "#FFFFFF" }
+                                ? { backgroundColor: "#FFFFFF", color: activeColor }
                                 : { backgroundColor: activeColor, color: "#FFFFFF" }
                             }
                           >
@@ -356,10 +323,10 @@ export default function Sidebar({ open = true, items, activeKey, onSelect, onLog
               </div>
             )
           }
- 
+
           const isActive = activeKey === item.key
           const iconConfig = ICON_MAP[item.key] || { icon: item.iconClass, color: staffIconColor }
- 
+
           return (
             <a
               key={item.key}
@@ -369,28 +336,25 @@ export default function Sidebar({ open = true, items, activeKey, onSelect, onLog
               title={!open ? item.label : undefined}
               data-tooltip-placement="right"
               className={cn(
-                "flex w-full h-[36px] items-center rounded-[6px] text-[15px] outline-none cursor-pointer justify-between",
+                "flex w-full h-[36px] items-center rounded-[6px] text-[14.5px] outline-none cursor-pointer justify-between transition-colors",
                 isActive
-                  ? sidebarFocused
-                    ? "text-white font-normal animate-none"
-                    : "bg-[#F0F0F0] text-[#1D1D1F] font-normal"
-                  : "text-[#1D1D1F] hover:bg-[rgba(0,0,0,0.06)] font-normal"
+                  ? "text-white font-medium shadow-2xs"
+                  : "text-[#1D1D1F] dark:text-zinc-200 hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/5 font-normal"
               )}
               style={{
-                backgroundColor: isActive && sidebarFocused ? activeColor : undefined,
-                paddingLeft: "16px",
+                backgroundColor: isActive ? activeColor : undefined,
+                paddingLeft: "14px",
                 paddingRight: "8px",
-                transition: "background-color 150ms ease"
               }}
             >
-              <span className="flex min-w-0 items-center justify-start">
+              <span className="flex min-w-0 flex-1 items-center justify-start overflow-hidden mr-1">
                 <i
                   className={cn(iconConfig.icon, "text-[18px] transition-colors shrink-0")}
-                  style={{ color: isActive ? (sidebarFocused ? "#FFFFFF" : staffIconColor) : staffIconColor }}
+                  style={{ color: isActive ? "#FFFFFF" : staffIconColor }}
                 ></i>
                 <span className={cn(
-                  "transition-all duration-300 ease-in-out whitespace-nowrap overflow-hidden origin-left block",
-                  open ? "opacity-100 max-w-[150px] ml-1.5" : "opacity-0 max-w-0 ml-0 pointer-events-none"
+                  "transition-all duration-300 ease-in-out whitespace-nowrap overflow-hidden text-ellipsis origin-left block",
+                  open ? "opacity-100 flex-1 min-w-0 ml-2 text-left" : "opacity-0 max-w-0 ml-0 pointer-events-none"
                 )}>
                   {item.label}
                 </span>
@@ -402,9 +366,7 @@ export default function Sidebar({ open = true, items, activeKey, onSelect, onLog
                 )}
                 style={
                   isActive
-                    ? sidebarFocused
-                      ? { backgroundColor: "#FFFFFF", color: activeColor }
-                      : { backgroundColor: activeColor, color: "#FFFFFF" }
+                    ? { backgroundColor: "#FFFFFF", color: activeColor }
                     : { backgroundColor: activeColor, color: "#FFFFFF" }
                 }
               >

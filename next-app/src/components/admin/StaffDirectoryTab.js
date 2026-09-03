@@ -785,7 +785,7 @@ export default function StaffDirectoryTab({
                                 </EmptyMedia>
                               </div>
                               <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
-                                {hasActiveFilters || search !== "" ? "No Matches Found" : (activeTab === "archived" ? "No archive found" : "No Activity Found")}
+                                {hasActiveFilters || search !== "" ? "No Matches Found" : (activeTab === "archived" ? "No Archived Personnel Found" : "No Personnel Found")}
                               </EmptyTitle>
                               <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400">
                                 {hasActiveFilters || search !== ""

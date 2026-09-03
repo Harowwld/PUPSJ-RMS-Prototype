@@ -1,9 +1,26 @@
-import { useState } from "react"
+import { useState, useRef, useEffect } from "react"
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
 
 export default function StatCards({ isLoading, logStats }) {
   const [selectedKpi, setSelectedKpi] = useState(null);
+  const containerRef = useRef(null);
+
+  useEffect(() => {
+    if (!selectedKpi) return;
+    const handleClickOutside = (e) => {
+      if (containerRef.current && !containerRef.current.contains(e.target)) {
+        setSelectedKpi(null);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("touchstart", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+    };
+  }, [selectedKpi]);
+
   const trends = logStats?.trends || [];
   
   const stats = [
@@ -76,10 +93,13 @@ export default function StatCards({ isLoading, logStats }) {
   if (!logStats) return null;
 
   return (
-    <div className={cn(
-      "grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 items-start relative z-20 transition-all duration-500",
-      isLoading ? "opacity-40 blur-[1px] grayscale-[0.1]" : "opacity-100"
-    )}>
+    <div
+      ref={containerRef}
+      className={cn(
+        "grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 items-start relative z-20 transition-all duration-500",
+        isLoading ? "opacity-40 blur-[1px] grayscale-[0.1]" : "opacity-100"
+      )}
+    >
       {stats.map((stat, i) => {
         const classes = getColorClasses(stat.color);
         return (

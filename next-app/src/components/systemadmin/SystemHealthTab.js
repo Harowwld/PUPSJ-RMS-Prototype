@@ -76,7 +76,7 @@ export default function SystemHealthTab({ showToast }) {
 
   if (loading && !health) {
     return (
-      <div className="flex flex-col gap-6 w-full max-w-6xl mx-auto">
+      <div className="flex flex-col gap-6 w-full animate-fade-up font-inter">
         <Skeleton className="h-10 w-48 rounded-md" />
         <Skeleton className="h-4 w-96 rounded-md" />
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
@@ -89,7 +89,7 @@ export default function SystemHealthTab({ showToast }) {
   }
 
   return (
-    <div className="flex flex-col gap-6 w-full max-w-6xl mx-auto">
+    <div className="flex flex-col gap-6 w-full animate-fade-up font-inter">
       <PageHeader
         title="System Health & Maintenance"
         description="Monitor real-time host resource metrics, database sizes, and perform administrative overrides."

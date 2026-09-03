@@ -71,6 +71,22 @@ export default function DigitizationComplianceTab({
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [isExportingCsv, setIsExportingCsv] = useState(false);
   const [selectedKpi, setSelectedKpi] = useState(null);
+  const statCardsRef = useRef(null);
+
+  useEffect(() => {
+    if (!selectedKpi) return;
+    const handleClickOutside = (e) => {
+      if (statCardsRef.current && !statCardsRef.current.contains(e.target)) {
+        setSelectedKpi(null);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("touchstart", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+    };
+  }, [selectedKpi]);
 
   const [sortBy, setSortBy] = useState("courseCode");
   const [sortOrder, setSortOrder] = useState("asc");
@@ -379,7 +395,7 @@ export default function DigitizationComplianceTab({
           (loading && !manualLoading) ? "opacity-40 blur-[1px] grayscale-[0.1]" : "opacity-100"
         )}>
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 relative z-20">
+          <div ref={statCardsRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 relative z-20">
             {/* Completeness Card */}
             <div className={cn(
               "relative group rounded-xl",

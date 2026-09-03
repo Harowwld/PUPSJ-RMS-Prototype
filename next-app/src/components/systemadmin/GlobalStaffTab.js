@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback, useMemo } from "react"
+import { useState, useEffect, useCallback, useMemo, useRef } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -15,6 +15,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import PageHeader from "@/components/shared/PageHeader"
+import { Select } from "@/components/ui/select"
 import { cn } from "@/lib/utils"
 
 export default function GlobalStaffTab({ authUser, showToast }) {
@@ -212,88 +213,370 @@ export default function GlobalStaffTab({ authUser, showToast }) {
   const endIndex = startIndex + pageSize
   const paginatedStaff = filteredStaff.slice(startIndex, endIndex)
 
+  const [selectedKpi, setSelectedKpi] = useState(null)
+  const statCardsRef = useRef(null)
+
+  useEffect(() => {
+    if (!selectedKpi) return
+    const handleClickOutside = (e) => {
+      if (statCardsRef.current && !statCardsRef.current.contains(e.target)) {
+        setSelectedKpi(null)
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside)
+    document.addEventListener("touchstart", handleClickOutside)
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside)
+      document.removeEventListener("touchstart", handleClickOutside)
+    }
+  }, [selectedKpi])
+
+  const stats = useMemo(() => {
+    const total = staff.length
+    const active = staff.filter((s) => s.status === "Active").length
+    const inactive = staff.filter((s) => s.status !== "Active").length
+    const admins = staff.filter(
+      (s) => s.role === "Admin" || s.role === "SystemAdmin" || s.role === "SuperAdmin"
+    ).length
+    const regular = staff.filter((s) => s.role === "Staff").length
+    const assignedOffices = new Set(staff.map((s) => s.office_id).filter(Boolean)).size
+    return {
+      total,
+      active,
+      inactive,
+      admins,
+      regular,
+      assignedOffices,
+    }
+  }, [staff])
+
+  const hasActiveFilters = search !== "" || officeFilter !== "All" || roleFilter !== "All"
+
+  const handleClearFilters = () => {
+    setSearch("")
+    setOfficeFilter("All")
+    setRoleFilter("All")
+    setPage(1)
+  }
+
+  const statCardsData = [
+    {
+      key: "total",
+      label: "Total Personnel",
+      value: stats.total,
+      sublabel: `${stats.assignedOffices} campus partitions represented`,
+      color: "blue",
+      shape1: "from-[#0055FF]/40 to-[#007AFF]/0",
+      shape2: "from-[#14C8FF]/30 to-[#007AFF]/0",
+      bg: "from-[#14C8FF] via-[#007AFF] to-[#0055FF] dark:from-[#007AFF] dark:to-[#0033aa]",
+      glass: "glass-stat-card-blue",
+    },
+    {
+      key: "active",
+      label: "Active Personnel",
+      value: stats.active,
+      sublabel: `${stats.inactive} suspended or archived`,
+      color: "emerald",
+      shape1: "from-[#047857]/40 to-[#059669]/0",
+      shape2: "from-[#34d399]/30 to-[#059669]/0",
+      bg: "from-[#34d399] via-[#059669] to-[#047857] dark:from-[#059669] dark:to-[#024e37]",
+      glass: "glass-stat-card-green",
+    },
+    {
+      key: "admins",
+      label: "Administrators",
+      value: stats.admins,
+      sublabel: `${stats.regular} standard records staff`,
+      color: "amber",
+      shape1: "from-[#b45309]/40 to-[#d97706]/0",
+      shape2: "from-[#fbbf24]/30 to-[#d97706]/0",
+      bg: "from-[#fbbf24] via-[#d97706] to-[#b45309] dark:from-[#d97706] dark:to-[#78350f]",
+      glass: "glass-stat-card-orange",
+    },
+  ]
+
   return (
-    <div className="flex flex-col gap-6 w-full max-w-6xl mx-auto">
-      <PageHeader
-        title="Global Personnel Directory"
-        description="Manage system access, tenant scoping, and authorization settings for all administrators and records staff."
-        actions={
-          <Button 
-            onClick={handleOpenCreate}
-            className="bg-slate-900 hover:bg-slate-800 text-white font-semibold rounded-xl h-10 px-4 flex items-center gap-2 cursor-pointer dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900"
-          >
-            <i className="ti ti-user-plus text-base"></i>
-            Register Staff
-          </Button>
-        }
-      />
-
-      {/* Tabs list Active vs Archived */}
-      <div className="flex items-center justify-between border-b border-gray-200 dark:border-white/10 pb-1">
-        <div className="flex gap-4">
-          <button
-            onClick={() => setStatusFilter("Active")}
-            className={cn(
-              "pb-3 text-sm font-semibold border-b-2 transition-colors cursor-pointer outline-none",
-              statusFilter === "Active"
-                ? "border-slate-950 text-slate-950 dark:border-white dark:text-white"
-                : "border-transparent text-gray-500 hover:text-gray-900 dark:hover:text-zinc-300"
-            )}
-          >
-            Active Personnel ({staff.filter(s => s.status === "Active").length})
-          </button>
-          <button
-            onClick={() => setStatusFilter("Inactive")}
-            className={cn(
-              "pb-3 text-sm font-semibold border-b-2 transition-colors cursor-pointer outline-none",
-              statusFilter === "Inactive"
-                ? "border-slate-950 text-slate-950 dark:border-white dark:text-white"
-                : "border-transparent text-gray-500 hover:text-gray-900 dark:hover:text-zinc-300"
-            )}
-          >
-            Suspended/Archived ({staff.filter(s => s.status === "Inactive").length})
-          </button>
+    <div className="flex flex-col gap-6 w-full animate-fade-up font-inter">
+      {/* Stat Cards */}
+      {loading ? (
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 animate-pulse">
+          {[1, 2, 3].map((i) => (
+            <Skeleton key={i} className="h-28 rounded-xl bg-gray-100 dark:bg-muted" />
+          ))}
         </div>
-      </div>
+      ) : (
+        <div
+          ref={statCardsRef}
+          className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 items-start relative z-20 transition-all duration-500"
+        >
+          {statCardsData.map((stat) => (
+            <div
+              key={stat.key}
+              className={cn(
+                "relative group rounded-xl",
+                selectedKpi === stat.key ? "z-30" : "z-10"
+              )}
+            >
+              <div
+                onClick={() => setSelectedKpi(selectedKpi === stat.key ? null : stat.key)}
+                className={cn(
+                  "relative overflow-hidden rounded-xl border-none p-5 cursor-pointer bg-gradient-to-br select-none",
+                  stat.bg,
+                  stat.glass
+                )}
+              >
+                <div className="absolute inset-0 overflow-hidden rounded-xl pointer-events-none z-0">
+                  <div
+                    className={cn("absolute bottom-0 left-0 w-[70%] h-[80%] bg-gradient-to-tr pointer-events-none", stat.shape1)}
+                    style={{ clipPath: "polygon(0% 100%, 100% 100%, 0% 0%)" }}
+                  />
+                  <div
+                    className={cn("absolute bottom-0 left-0 w-[50%] h-[60%] bg-gradient-to-tr pointer-events-none", stat.shape2)}
+                    style={{ clipPath: "polygon(0% 100%, 100% 100%, 0% 25%)" }}
+                  />
+                </div>
 
-      {/* Toolbar / Search */}
-      <div className="flex items-center justify-between bg-white/40 dark:bg-zinc-900/30 p-3 rounded-2xl border border-gray-200/50 dark:border-white/5 backdrop-blur-xs">
-        <div className="relative w-72">
-          <i className="ti ti-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-500"></i>
-          <Input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by name, ID or email..."
-            className="pl-9 h-9 w-full bg-white/70 dark:bg-zinc-900/40 border border-gray-200 dark:border-white/5 rounded-xl text-xs"
-          />
+                <div className="relative z-10">
+                  <div className="flex items-end justify-between">
+                    <div>
+                      <div className="mb-1 flex items-center gap-1.5 text-[14px] font-medium text-white">
+                        {stat.label}
+                      </div>
+                      <div className="text-[48px] font-semibold text-white tracking-tight">
+                        {stat.value.toLocaleString()}
+                      </div>
+                      <div className="mt-1 text-[13px] font-normal text-white">
+                        {stat.sublabel}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Absolute details container */}
+              <div
+                className={cn(
+                  "absolute top-full left-0 right-0 z-[100] mt-2 rounded-xl bg-gradient-to-br p-5 shadow-2xl transition-all duration-300 ease-in-out origin-top",
+                  stat.bg,
+                  selectedKpi === stat.key ? "scale-y-100 opacity-100 translate-y-0" : "scale-y-95 opacity-0 -translate-y-2 pointer-events-none"
+                )}
+                onClick={(e) => e.stopPropagation()}
+              >
+                {stat.key === "total" && (
+                  <div className="space-y-3 text-white">
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg">
+                        <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Total Accounts</span>
+                        <span className="text-lg font-black font-mono">{stats.total}</span>
+                      </div>
+                      <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg">
+                        <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Offices Covered</span>
+                        <span className="text-lg font-black font-mono">{stats.assignedOffices}</span>
+                      </div>
+                    </div>
+                    <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg text-xs text-white/90 leading-relaxed">
+                      Directory registry of all personnel across all campus partitions and centralized administrative systems.
+                    </div>
+                  </div>
+                )}
+                {stat.key === "active" && (
+                  <div className="space-y-3 text-white">
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg">
+                        <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Active Staff</span>
+                        <span className="text-lg font-black font-mono">{stats.active}</span>
+                      </div>
+                      <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg">
+                        <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Suspended</span>
+                        <span className="text-lg font-black font-mono">{stats.inactive}</span>
+                      </div>
+                    </div>
+                    <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg text-xs text-white/90 leading-relaxed">
+                      Personnel in good standing with active operational privileges and live credentials.
+                    </div>
+                  </div>
+                )}
+                {stat.key === "admins" && (
+                  <div className="space-y-3 text-white">
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg">
+                        <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Admin Level</span>
+                        <span className="text-lg font-black font-mono">{stats.admins}</span>
+                      </div>
+                      <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg">
+                        <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Regular Staff</span>
+                        <span className="text-lg font-black font-mono">{stats.regular}</span>
+                      </div>
+                    </div>
+                    <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg text-xs text-white/90 leading-relaxed">
+                      Staff members holding elevated administrator or system administrator privileges.
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
         </div>
+      )}
 
-        {/* Filters */}
-        <div className="flex items-center gap-3">
-          <select
-            value={officeFilter}
-            onChange={(e) => setOfficeFilter(e.target.value)}
-            className="h-9 px-3 text-xs bg-white/70 dark:bg-zinc-900/40 border border-gray-200 dark:border-white/5 rounded-xl outline-none focus:border-slate-900 dark:text-white cursor-pointer"
-          >
-            <option value="All">All Offices</option>
-            <option value="global">System Administration (No Office)</option>
-            {offices.map(o => (
-              <option key={o.id} value={o.id}>{o.short_name}</option>
-            ))}
-          </select>
+      {/* Main Table Card with Header, Active Filter Chips & Toolbar */}
+      <Card className="rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none overflow-hidden">
+        <PageHeader
+          icon="ph-users"
+          title="Global Personnel Directory"
+          description="Manage system access, office assignments, and authorization settings for all administrators and records staff."
+          actions={
+            <Button
+              onClick={handleOpenCreate}
+              className="flex h-[36px] items-center justify-center rounded-[8px] btn-brand-red text-white font-medium text-[13px] active:scale-95 transition-all cursor-pointer px-5"
+            >
+              <i className="ph-bold ph-user-plus mr-1.5 text-[14px]"></i>
+              Register Staff
+            </Button>
+          }
+        />
 
-          <select
-            value={roleFilter}
-            onChange={(e) => setRoleFilter(e.target.value)}
-            className="h-9 px-3 text-xs bg-white/70 dark:bg-zinc-900/40 border border-gray-200 dark:border-white/5 rounded-xl outline-none focus:border-slate-900 dark:text-white cursor-pointer"
-          >
-            <option value="All">All Roles</option>
-            <option value="SystemAdmin">System Administrator</option>
-            <option value="Admin">Administrator</option>
-            <option value="Staff">Records Staff</option>
-          </select>
-        </div>
-      </div>
+        {/* Active Filter Chips Row */}
+        {hasActiveFilters && (
+          <div className="flex-none border-b border-gray-100 bg-white px-6 py-3 animate-in fade-in slide-in-from-top-1 duration-normal dark:border-white/10 dark:bg-card">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="mr-1 text-[11px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500">
+                Active filters:
+              </span>
+              {search && (
+                <div className="flex items-center gap-[6px] rounded-[6px] bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
+                  Search: {search}
+                  <button
+                    onClick={() => {
+                      setSearch("")
+                      setPage(1)
+                    }}
+                    className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
+                  >
+                    ×
+                  </button>
+                </div>
+              )}
+              {officeFilter !== "All" && (
+                <div className="flex items-center gap-[6px] rounded-[6px] bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
+                  Office: {officeFilter === "global" ? "System Administration" : offices.find((o) => o.id === officeFilter)?.short_name || officeFilter}
+                  <button
+                    onClick={() => {
+                      setOfficeFilter("All")
+                      setPage(1)
+                    }}
+                    className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
+                  >
+                    ×
+                  </button>
+                </div>
+              )}
+              {roleFilter !== "All" && (
+                <div className="flex items-center gap-[6px] rounded-[6px] bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
+                  Role: {roleFilter === "SystemAdmin" ? "System Admin" : roleFilter}
+                  <button
+                    onClick={() => {
+                      setRoleFilter("All")
+                      setPage(1)
+                    }}
+                    className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
+                  >
+                    ×
+                  </button>
+                </div>
+              )}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleClearFilters}
+                className="h-auto text-[12px] font-medium text-gray-400 dark:text-zinc-500 border-0 bg-transparent hover:bg-transparent shadow-none p-0 hover:text-red-600 dark:hover:text-red-500 transition-colors cursor-pointer"
+              >
+                Clear
+              </Button>
+            </div>
+          </div>
+        )}
+
+        <CardContent className="font-inter bg-white p-[24px] dark:bg-card/50 backdrop-blur-md flex flex-col gap-5">
+          {/* Tabs list Active vs Archived */}
+          <div className="flex w-full gap-[24px] select-none">
+            <button
+              type="button"
+              onClick={() => setStatusFilter("Active")}
+              className={cn(
+                "relative pb-2 text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer",
+                statusFilter === "Active"
+                  ? "text-black after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-black dark:text-zinc-50 dark:after:bg-zinc-50"
+                  : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
+              )}
+            >
+              Active Personnel ({staff.filter((s) => s.status === "Active").length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setStatusFilter("Inactive")}
+              className={cn(
+                "relative pb-2 text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer",
+                statusFilter === "Inactive"
+                  ? "text-black after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-black dark:text-zinc-50 dark:after:bg-zinc-50"
+                  : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
+              )}
+            >
+              Suspended / Archived ({staff.filter((s) => s.status === "Inactive").length})
+            </button>
+          </div>
+
+          {/* Toolbar / Search Row */}
+          <div className="flex flex-row items-center gap-[12px] w-full select-none">
+            {/* Search */}
+            <div className="flex-1 min-w-0 relative group">
+              <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                <i className="ph-bold ph-magnifying-glass text-gray-400 transition-colors group-focus-within:text-pup-maroon dark:text-zinc-500 text-sm"></i>
+              </div>
+              <Input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search by name, ID or email..."
+                className="h-[36px] w-full rounded-[8px] border-[0.5px] border-black/15 bg-white pl-9 pr-20 text-[13px] font-normal placeholder:text-[#8E8E93] dark:border-white/15 dark:bg-card"
+              />
+              <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[12px] font-normal text-gray-400 dark:text-zinc-500">
+                {filteredStaff.length > 0 ? `${filteredStaff.length} results` : "0 results"}
+              </div>
+            </div>
+
+            {/* Office Partition Select */}
+            <div className="shrink-0 w-[180px]">
+              <Select
+                value={officeFilter}
+                onChange={(e) => setOfficeFilter(e.target.value)}
+                className="h-[36px] rounded-[8px] border-[0.5px] border-black/15 text-[13px] font-normal text-[#111111] dark:border-white/15"
+              >
+                <option value="All">All Offices</option>
+                <option value="global">System Administration</option>
+                {offices.map((o) => (
+                  <option key={o.id} value={o.id}>
+                    {o.short_name}
+                  </option>
+                ))}
+              </Select>
+            </div>
+
+            {/* Role Select */}
+            <div className="shrink-0 w-[160px]">
+              <Select
+                value={roleFilter}
+                onChange={(e) => setRoleFilter(e.target.value)}
+                className="h-[36px] rounded-[8px] border-[0.5px] border-black/15 text-[13px] font-normal text-[#111111] dark:border-white/15"
+              >
+                <option value="All">All Roles</option>
+                <option value="SystemAdmin">System Admin</option>
+                <option value="Admin">Administrator</option>
+                <option value="Staff">Regular Staff</option>
+              </Select>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Directory Table */}
       {loading ? (
@@ -306,10 +589,38 @@ export default function GlobalStaffTab({ authUser, showToast }) {
         <Card className="border border-dashed border-gray-200 dark:border-white/5 bg-white/10 rounded-2xl">
           <CardContent className="p-12 flex flex-col items-center justify-center text-center">
             <div className="w-12 h-12 rounded-full bg-white dark:bg-zinc-900 border border-gray-100 dark:border-white/5 flex items-center justify-center mb-3 shadow-xs">
-              <i className="ti ti-users text-xl text-gray-400"></i>
+              <i className={cn(
+                "text-xl text-gray-400",
+                hasActiveFilters ? "ti ti-search" : (statusFilter === "Inactive" ? "ti ti-archive" : "ti ti-users")
+              )}></i>
             </div>
-            <span className="font-semibold text-gray-800 dark:text-zinc-200">No personnel matches found</span>
-            <span className="text-xs text-gray-500 mt-1">Try resetting the search terms or filters above.</span>
+            <span className="font-semibold text-gray-800 dark:text-zinc-200">
+              {hasActiveFilters 
+                ? "No personnel matches found" 
+                : (statusFilter === "Inactive" ? "No Suspended or Archived Personnel" : "No Personnel Configured")}
+            </span>
+            <span className="text-xs text-gray-500 mt-1 max-w-sm">
+              {hasActiveFilters 
+                ? "Try resetting the search terms or partition filters above." 
+                : (statusFilter === "Inactive" 
+                    ? "There are currently no suspended or archived staff accounts in the system." 
+                    : "No staff members are registered in the directory yet.")}
+            </span>
+            {hasActiveFilters && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setSearch("");
+                  setOfficeFilter("All");
+                  setRoleFilter("All");
+                }}
+                className="mt-4 flex h-9 items-center gap-2 rounded-xl border border-gray-300 bg-white px-4 text-xs font-semibold text-gray-700 shadow-xs transition-colors hover:bg-gray-50 dark:bg-zinc-900 dark:border-white/10 dark:text-zinc-300 cursor-pointer"
+              >
+                <i className="ph-bold ph-arrow-counter-clockwise"></i>
+                Clear Filters
+              </Button>
+            )}
           </CardContent>
         </Card>
       ) : (
@@ -536,7 +847,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
               {/* Office Scope Selection */}
               <div>
                 <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
-                  Office Partition / Tenant Scope
+                  Assigned Office / Department
                 </label>
                 <select
                   value={form.office_id}

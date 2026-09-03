@@ -16,6 +16,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import LogDetailSheet from "../admin/audit-logs/LogDetailSheet"
+import StatCards from "../admin/audit-logs/StatCards"
 
 export default function GlobalAuditLogsTab({ showToast }) {
   const [logs, setLogs] = useState([])
@@ -24,6 +25,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
   const [loading, setLoading] = useState(true)
   const [isManualLoading, setIsManualLoading] = useState(false)
   const [selectedLog, setSelectedLog] = useState(null)
+  const [logStats, setLogStats] = useState(null)
 
   // Pagination & Filtering
   const [page, setPage] = useState(1)
@@ -55,6 +57,24 @@ export default function GlobalAuditLogsTab({ showToast }) {
       }
     } catch {}
   }, [])
+
+  const fetchStats = useCallback(async () => {
+    try {
+      const officeQuery = officeFilter !== "All" ? `&officeId=${encodeURIComponent(officeFilter)}` : ""
+      const severityQuery = severityFilter !== "All" ? `&severity=${encodeURIComponent(severityFilter)}` : ""
+      const searchQuery = search ? `&search=${encodeURIComponent(search)}` : ""
+      const startQuery = startDate ? `&startDate=${encodeURIComponent(startDate)}` : ""
+      const endQuery = endDate ? `&endDate=${encodeURIComponent(endDate)}` : ""
+
+      const res = await fetch(`/api/audit-logs/global/stats?${officeQuery}${severityQuery}${searchQuery}${startQuery}${endQuery}`)
+      const json = await res.json()
+      if (res.ok && json.ok) {
+        setLogStats(json.data)
+      }
+    } catch (err) {
+      console.error("Failed to fetch global audit log stats", err)
+    }
+  }, [officeFilter, severityFilter, search, startDate, endDate])
 
   const fetchLogs = useCallback(async (isManual = false) => {
     if (isManual) setIsManualLoading(true)
@@ -111,7 +131,8 @@ export default function GlobalAuditLogsTab({ showToast }) {
 
   useEffect(() => {
     fetchLogs()
-  }, [fetchLogs])
+    fetchStats()
+  }, [fetchLogs, fetchStats])
 
   const handleRoleChange = (e) => {
     setOfficeFilter(e.target.value)
@@ -160,18 +181,16 @@ export default function GlobalAuditLogsTab({ showToast }) {
 
     const yesterday = new Date()
     yesterday.setDate(yesterday.getDate() - 1)
-    const yesterdayStr = format(yesterday, "yyyy-MM-dd")
-    if (startDate === yesterdayStr && endDate === yesterdayStr) return "yesterday"
+    const yestStr = format(yesterday, "yyyy-MM-dd")
+    if (startDate === yestStr && endDate === yestStr) return "yesterday"
 
     const last7 = new Date()
     last7.setDate(last7.getDate() - 7)
-    const last7Str = format(last7, "yyyy-MM-dd")
-    if (startDate === last7Str && endDate === todayStr) return "last7"
+    if (startDate === format(last7, "yyyy-MM-dd") && endDate === todayStr) return "last7"
 
     const last30 = new Date()
     last30.setDate(last30.getDate() - 30)
-    const last30Str = format(last30, "yyyy-MM-dd")
-    if (startDate === last30Str && endDate === todayStr) return "last30"
+    if (startDate === format(last30, "yyyy-MM-dd") && endDate === todayStr) return "last30"
 
     return null
   })()
@@ -186,27 +205,123 @@ export default function GlobalAuditLogsTab({ showToast }) {
     showToast({ title: "Copied to Clipboard", description: `${label} has been successfully copied to your clipboard.` })
   }
 
+  const hasActiveFilters = localSearch !== "" || officeFilter !== "All" || severityFilter !== "All" || startDate !== "" || endDate !== ""
+
+  const handleClearFilters = () => {
+    setLocalSearch("")
+    setSearch("")
+    setOfficeFilter("All")
+    setSeverityFilter("All")
+    setStartDate("")
+    setEndDate("")
+    setPage(1)
+  }
+
   return (
     <TooltipProvider delay={200}>
-      <div className="animate-fade-up font-inter flex w-full flex-col gap-6 max-w-6xl mx-auto">
+      <div className="animate-fade-up font-inter flex w-full flex-col gap-6">
+        {/* Stat Cards */}
+        <StatCards isLoading={loading && !isManualLoading} logStats={logStats} />
+
+        {/* Main Table Card */}
         <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-xl border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
           <PageHeader
             icon="ph-shield-check"
             title="Platform Audit Trail"
-            description="Inspect administrative actions, tenant configuration updates, and security logs across all database environments."
+            description="Inspect administrative actions, office configuration updates, and security logs across all database environments."
             showBorder={false}
             titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
             descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
             actions={
               <div className="flex items-center gap-6">
                 <RefreshButton
-                  onRefresh={() => fetchLogs(true)}
+                  onRefresh={() => {
+                    fetchLogs(true)
+                    fetchStats()
+                  }}
                   isLoading={isManualLoading}
                   title="Refresh Audit Logs"
                 />
               </div>
             }
           />
+
+          {/* Active Filter Chips Row */}
+          {hasActiveFilters && (
+            <div className="flex-none border-b border-gray-100 bg-white px-6 py-3 animate-in fade-in slide-in-from-top-1 duration-normal dark:border-white/10 dark:bg-card">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="mr-1 text-[11px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500">
+                  Active filters:
+                </span>
+                {localSearch && (
+                  <div className="flex items-center gap-[6px] rounded-[6px] bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
+                    Search: {localSearch}
+                    <button
+                      onClick={() => {
+                        setLocalSearch("")
+                        setSearch("")
+                        setPage(1)
+                      }}
+                      className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
+                    >
+                      ×
+                    </button>
+                  </div>
+                )}
+                {officeFilter !== "All" && (
+                  <div className="flex items-center gap-[6px] rounded-[6px] bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
+                    Scope: {officeFilter === "global" ? "Global (Platform)" : offices.find((o) => o.id === officeFilter)?.short_name || officeFilter}
+                    <button
+                      onClick={() => {
+                        setOfficeFilter("All")
+                        setPage(1)
+                      }}
+                      className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
+                    >
+                      ×
+                    </button>
+                  </div>
+                )}
+                {severityFilter !== "All" && (
+                  <div className="flex items-center gap-[6px] rounded-[6px] bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
+                    Severity: {severityFilter}
+                    <button
+                      onClick={() => {
+                        setSeverityFilter("All")
+                        setPage(1)
+                      }}
+                      className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
+                    >
+                      ×
+                    </button>
+                  </div>
+                )}
+                {(startDate || endDate) && (
+                  <div className="flex items-center gap-[6px] rounded-[6px] bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
+                    Date: {startDate ? format(new Date(startDate), "MMM d, yyyy") : "Start"} → {endDate ? format(new Date(endDate), "MMM d, yyyy") : "End"}
+                    <button
+                      onClick={() => {
+                        setStartDate("")
+                        setEndDate("")
+                        setPage(1)
+                      }}
+                      className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
+                    >
+                      ×
+                    </button>
+                  </div>
+                )}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleClearFilters}
+                  className="h-auto text-[12px] font-medium text-gray-400 dark:text-zinc-500 border-0 bg-transparent hover:bg-transparent shadow-none p-0 hover:text-red-600 dark:hover:text-red-500 transition-colors cursor-pointer"
+                >
+                  Clear
+                </Button>
+              </div>
+            </div>
+          )}
 
           {/* Filters Toolbar */}
           <div className="bg-white border-t border-gray-100 p-4 backdrop-blur-md dark:bg-card/50 dark:border-white/10">

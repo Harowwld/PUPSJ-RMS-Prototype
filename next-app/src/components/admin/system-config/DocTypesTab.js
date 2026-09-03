@@ -645,7 +645,7 @@ export default function DocTypesTab({
                                 </EmptyMedia>
                               </div>
                               <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
-                                {totalInView > 0 ? "No matches found" : (showArchived ? "No archive found" : "No activity found")}
+                                {totalInView > 0 ? "No matches found" : (showArchived ? "No Archived Document Types Found" : "No Document Types Found")}
                               </EmptyTitle>
                               <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400">
                                 {totalInView > 0

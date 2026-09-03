@@ -150,8 +150,8 @@ function SystemAdminPageContent() {
   }, [router])
 
   const sidebarItems = [
-    { type: "header", label: "Tenant Administration" },
-    { key: "offices", label: "Offices & Tenants", iconClass: "ti ti-building-community" },
+    { type: "header", label: "Office Administration" },
+    { key: "offices", label: "Offices & Departments", iconClass: "ti ti-building-community" },
     { key: "modules", label: "Module Config Matrix", iconClass: "ti ti-layout-grid" },
     
     { type: "header", label: "Access & Audit" },
@@ -167,7 +167,7 @@ function SystemAdminPageContent() {
       <div className="font-inter flex min-h-screen flex-col gap-4 bg-gray-50 p-4 transition-colors duration-300 dark:bg-background">
         <Skeleton className="h-16 w-full shrink-0 rounded-brand" />
         <div className="flex flex-1 gap-4">
-          <Skeleton className="h-full w-[260px] rounded-brand" />
+          <Skeleton className="h-full w-[275px] rounded-brand" />
           <Skeleton className="h-full flex-1 rounded-brand" />
         </div>
       </div>
@@ -225,7 +225,7 @@ export default function SystemAdminPage() {
         <div className="font-inter flex min-h-screen flex-col gap-4 bg-gray-50 p-4 dark:bg-background">
           <Skeleton className="h-16 w-full shrink-0 rounded-brand" />
           <div className="flex flex-1 gap-4">
-            <Skeleton className="h-full w-[260px] rounded-brand" />
+            <Skeleton className="h-full w-[275px] rounded-brand" />
             <Skeleton className="h-full flex-1 rounded-brand" />
           </div>
         </div>
