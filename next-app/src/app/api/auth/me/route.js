@@ -61,6 +61,7 @@ export async function GET(req) {
     let enabledModules = [];
     let stationName = null;
     let storagePath = null;
+    let inboundPath = null;
     let scannerModel = null;
 
     if (staff && staff.office_id) {
@@ -72,6 +73,7 @@ export async function GET(req) {
         accentColor = office.accent_color || "#800000";
         stationName = office.station_name || `${staff.office_id.toUpperCase()}-STATION-01`;
         storagePath = office.storage_path || `.local/storage/${staff.office_id}/uploads`;
+        inboundPath = office.inbound_path || ".local/hot-folder/INBOUND";
         scannerModel = office.scanner_model || "High-Speed Document Scanner";
         const modules = process.env.DATABASE_URL
           ? await query("SELECT m.* FROM modules m JOIN office_modules om ON om.module_id = m.id WHERE om.office_id = $1 AND om.enabled = true", [staff.office_id])
@@ -124,6 +126,7 @@ export async function GET(req) {
         enabled_modules: enabledModules,
         station_name: stationName,
         storage_path: storagePath,
+        inbound_path: inboundPath,
         scanner_model: scannerModel,
         username: payload.username || null,
         fname: staff?.fname || "",

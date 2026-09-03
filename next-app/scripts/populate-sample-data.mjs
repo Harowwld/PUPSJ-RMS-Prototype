@@ -33,6 +33,11 @@ const students = [
   ["2021-30004-MN-1", "GARCIA, ANA D.", "BSCS", 2024, "BSCS-3A", 3, "2023", 4],
   ["2024-40005-MN-2", "TORRES, LUIS E.", "BSCS", 2025, "BSCS-3A", 1, "2024", 1],
   ["2020-50006-MN-0", "FLORES, ELENA F.", "BSIT", 2024, "BSIT-4B", 4, "2025", 2],
+  // OCR matching fixtures from the PSA birth-certificate samples.
+  ["2025-60007-MN-0", "BAUTISTA, JULIANNE MARIE MERCADO", "BSIT", 2025, "BSIT-4A", 5, "2026", 1],
+  ["2025-60008-MN-1", "DE LEON, JULIAN CARLO SANTOS", "BSIT", 2025, "BSIT-4A", 5, "2026", 2],
+  ["2025-60009-MN-2", "RAMIREZ, GABRIEL MATEO SANTOS", "BSIT", 2025, "BSIT-4B", 5, "2026", 3],
+  ["2025-60010-MN-0", "MERCADO, LIAM CARTER VALENCIA", "BSIT", 2025, "BSIT-4B", 5, "2026", 4],
 ];
 
 const documents = [
