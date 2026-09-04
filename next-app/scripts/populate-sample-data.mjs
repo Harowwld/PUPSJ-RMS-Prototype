@@ -131,6 +131,20 @@ export async function seed({ force: forceOverride } = {}) {
       [passwordHash],
     );
 
+    for (const [id, fname, lname, role, section, email] of [
+      ["PUPOSAS-001", "Sandra", "Gomez", "Admin", "OSAS Admin", "admin.osas@pup.local"],
+      ["PUPOSAS-002", "Juanito", "Rizal", "Staff", "Student Affairs", "staff.osas@pup.local"],
+    ]) {
+      await run(
+        `INSERT INTO staff (id, office_id, fname, lname, role, section, status, email, password_hash, password_last_changed, updated_at)
+         VALUES ($1, 'osas', $2, $3, $4, $5, 'Active', $6, $7, NOW(), NOW())
+         ON CONFLICT (id) DO UPDATE SET office_id=EXCLUDED.office_id, fname=EXCLUDED.fname, lname=EXCLUDED.lname,
+           role=EXCLUDED.role, section=EXCLUDED.section, status='Active', email=EXCLUDED.email,
+           password_hash=EXCLUDED.password_hash, password_last_changed=NOW(), updated_at=NOW()`,
+        [id, fname, lname, role, section, email, passwordHash],
+      );
+    }
+
     for (const [code, name] of [["BSIT", "Bachelor of Science in Information Technology"], ["BSCS", "Bachelor of Science in Computer Science"]]) {
       await run(`INSERT INTO courses (office_id, code, name, status) VALUES ('registrar', $1, $2, 'Active') ON CONFLICT (office_id, code) DO UPDATE SET name=EXCLUDED.name, status='Active'`, [code, name]);
     }
