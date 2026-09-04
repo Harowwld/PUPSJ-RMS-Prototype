@@ -8,6 +8,10 @@ import { isAdminRole, isStaffRole, isSuperAdminRole, isSystemAdminRole } from "@
 export const AuthUserContext = createContext(null)
 export const useAuthUser = () => useContext(AuthUserContext)
 
+const NO_REQUIRED_ROLES = []
+const SYSTEM_ADMIN_ROLES = ["SystemAdmin", "SuperAdmin"]
+const ADMIN_ROLES = ["Admin"]
+
 function applyAccessibility(highContrast) {
   if (typeof window === "undefined") return;
   
@@ -25,7 +29,7 @@ function applyAccessibility(highContrast) {
  * @param {React.ReactNode} props.children - Child components to render if authorized
  * @param {string} props.redirectTo - Path to redirect to if unauthorized (default: "/")
  */
-export function AuthGuard({ allowedRoles = [], children, redirectTo = "/" }) {
+export function AuthGuard({ allowedRoles = NO_REQUIRED_ROLES, children, redirectTo = "/" }) {
   const router = useRouter()
   const [currentUser, setCurrentUser] = useState(null)
   const [isAuthorized, setIsAuthorized] = useState(null)
@@ -192,18 +196,18 @@ export function AuthGuard({ allowedRoles = [], children, redirectTo = "/" }) {
  * Specific guard for systemadmin-only routes
  */
 export function SystemAdminGuard({ children }) {
-  return <AuthGuard allowedRoles={["SystemAdmin", "SuperAdmin"]}>{children}</AuthGuard>
+  return <AuthGuard allowedRoles={SYSTEM_ADMIN_ROLES}>{children}</AuthGuard>
 }
 
 export function SuperAdminGuard({ children }) {
-  return <AuthGuard allowedRoles={["SystemAdmin", "SuperAdmin"]}>{children}</AuthGuard>
+  return <AuthGuard allowedRoles={SYSTEM_ADMIN_ROLES}>{children}</AuthGuard>
 }
 
 /**
  * Specific guard for admin-only routes
  */
 export function AdminGuard({ children }) {
-  return <AuthGuard allowedRoles={["Admin"]}>{children}</AuthGuard>
+  return <AuthGuard allowedRoles={ADMIN_ROLES}>{children}</AuthGuard>
 }
 
 /**

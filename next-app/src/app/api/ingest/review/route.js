@@ -15,7 +15,14 @@ export async function GET(req) {
   const offset = Math.max(Number(searchParams.get("offset") || 0), 0);
   const values = [user.office_id || "registrar"];
   const filters = ["office_id = $1"];
-  if (status) { values.push(status); filters.push(`review_status = $${values.length}`); }
+  if (status) {
+    if (status === "Conflict") {
+      filters.push("review_status IN ('Conflict', 'Needs Review')");
+    } else {
+      values.push(status);
+      filters.push(`review_status = $${values.length}`);
+    }
+  }
   if (batchId) { values.push(batchId); filters.push(`batch_id = $${values.length}`); }
   if (q) { values.push(`%${q}%`); filters.push(`(original_filename ILIKE $${values.length} OR COALESCE(ocr_name, '') ILIKE $${values.length} OR COALESCE(ocr_text, '') ILIKE $${values.length})`); }
   const where = filters.join(" AND ");

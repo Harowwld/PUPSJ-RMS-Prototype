@@ -4,22 +4,35 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import PageHeader from "@/components/shared/PageHeader";
 
-const STATUSES = ["", "Processing", "Needs Review", "Conflict", "Failed", "Duplicate", "Confirmed", "Rejected"];
+const STATUSES = ["Confirmed", "Conflict", "Failed"];
 const REGION_LABELS = {
   firstName: { label: "First name", color: "#2563eb" },
   middleName: { label: "Middle name", color: "#9333ea" },
   lastName: { label: "Last name", color: "#dc2626" },
 };
 
+function parseMatchCandidates(value) {
+  if (Array.isArray(value)) return value;
+  if (typeof value !== "string") return [];
+  try { return JSON.parse(value || "[]"); } catch { return []; }
+}
+
+function getMatchReason(item, candidates) {
+  if (candidates.length > 1) return "Multiple student matches found.";
+  if (candidates.length === 0) return "No matching student found.";
+  if (item.match_confidence != null && Number(item.match_confidence) < 0.5) return "Low OCR confidence.";
+  if (item.match_evidence?.reason) return item.match_evidence.reason;
+  return item.match_status || "Student match requires validation.";
+}
+
 export default function BatchReviewTab({ showToast = () => {}, students = [], docTypes = [] }) {
   const [rows, setRows] = useState([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(0);
-  const [status, setStatus] = useState("Needs Review");
+  const [status, setStatus] = useState("Conflict");
   const [query, setQuery] = useState("");
   const [selectedId, setSelectedId] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -81,14 +94,11 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
   const isImage = selected?.mime_type?.startsWith("image/");
   const ocrRegions = selected?.ocr_regions && typeof selected.ocr_regions === "object" ? selected.ocr_regions : {};
   const matchEvidence = selected?.match_evidence && typeof selected.match_evidence === "object" ? selected.match_evidence : null;
+  const matchCandidates = useMemo(() => parseMatchCandidates(selected?.match_candidates), [selected]);
   const matchingStudentNumbers = useMemo(() => {
-    const candidates = Array.isArray(selected?.match_candidates)
-      ? selected.match_candidates
-      : typeof selected?.match_candidates === "string"
-        ? JSON.parse(selected.match_candidates || "[]")
-        : [];
+    const candidates = matchCandidates;
     return new Set(candidates.map((candidate) => String(candidate?.studentNo || candidate?.student_no || "")));
-  }, [selected]);
+  }, [matchCandidates]);
   const matchingStudents = useMemo(
     () => students.filter((student) => matchingStudentNumbers.has(String(student.studentNo || student.student_no || ""))),
     [matchingStudentNumbers, students],
@@ -100,13 +110,14 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
     return students.filter((student) => [student.name, student.studentNo || student.student_no]
       .some((value) => String(value || "").toLowerCase().includes(search)));
   }, [matchingStudents, studentAssignmentQuery, students]);
+  const matchReason = selected ? getMatchReason(selected, matchCandidates) : "";
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-4 overflow-auto p-1">
       <Card className="rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card">
         <PageHeader icon="ph-check-square" title="Batch Review" description="Verify OCR proposals before creating formal student records." showBorder={false} actions={<Button size="sm" variant="outline" onClick={load}>Refresh</Button>} />
-        <CardContent className="flex flex-wrap items-center gap-3 border-t border-gray-100 p-4 dark:border-white/5">
-          <Select value={status} onChange={(event) => setStatus(event.target.value)} className="h-9 w-44"><option value="">All statuses</option>{STATUSES.filter(Boolean).map((item) => <option key={item} value={item}>{item}</option>)}</Select>
+          <CardContent className="flex flex-wrap items-center gap-3 border-t border-gray-100 p-4 dark:border-white/5">
+          <div className="flex flex-wrap items-center gap-1 rounded-lg bg-gray-100 p-1 dark:bg-zinc-900">{STATUSES.map((item) => <button key={item} type="button" onClick={() => { setStatus(item); setPage(0); }} className={`rounded-md px-3 py-1.5 text-xs font-semibold transition-colors ${status === item ? "bg-pup-maroon text-white shadow-sm" : "text-gray-600 hover:bg-white hover:text-pup-maroon dark:text-zinc-400 dark:hover:bg-zinc-800"}`}>{item}</button>)}</div>
           <Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search filename or OCR text" className="h-9 max-w-sm" />
           <span className="text-xs text-gray-500 dark:text-zinc-400">{total} item(s)</span>
         </CardContent>
@@ -128,11 +139,11 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
               <div className="flex min-h-[280px] items-center justify-center overflow-hidden rounded-lg bg-gray-100 dark:bg-zinc-900">{isImage ? <div className="relative inline-flex max-h-[520px] max-w-full"><Image src={previewUrl} alt="Scanned document" width={800} height={1000} unoptimized className="max-h-[520px] max-w-full object-contain" />{Object.entries(ocrRegions).map(([key, region]) => { const field = REGION_LABELS[key]; if (!field || Number(region?.width) <= 0 || Number(region?.height) <= 0) return null; return <div key={key} className="pointer-events-none absolute border-2" style={{ left: `${Number(region.x) * 100}%`, top: `${Number(region.y) * 100}%`, width: `${Number(region.width) * 100}%`, height: `${Number(region.height) * 100}%`, borderColor: field.color }}><span className="absolute -top-5 left-0 whitespace-nowrap bg-white px-1 text-[10px] font-semibold" style={{ color: field.color }}>{field.label}</span></div>; })}</div> : <div className="flex h-[520px] w-full flex-col"><iframe title="Scanned document preview" src={previewUrl} className="min-h-0 flex-1 w-full border-0" />{Object.keys(ocrRegions).length > 0 && <div className="border-t border-amber-200 bg-amber-50 px-3 py-2 text-[11px] text-amber-800">OCR field boxes are available for the scanned page image; PDF overlays are not rendered in this preview.</div>}</div>}</div>
               {!Object.keys(ocrRegions).length && <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] text-amber-800 dark:border-amber-400/20 dark:bg-amber-950/20 dark:text-amber-200">No OCR field regions were saved for this item. Click <strong>Retry OCR</strong> to apply the current recognition template and display the highlighted boxes.</div>}
               <div className="space-y-3">
-                <label className="block text-xs font-semibold text-gray-600 dark:text-zinc-300">Student assignment{matchingStudents.length === 0 && <Input value={studentAssignmentQuery} onChange={(event) => setStudentAssignmentQuery(event.target.value)} placeholder="Type a name or student number to search" className="mt-1 h-9" />}<select className="mt-1 h-9 w-full rounded-md border border-gray-200 bg-white px-2 text-sm dark:border-white/10 dark:bg-zinc-900" value={selected.proposed_student_no || ""} onChange={(event) => update({ studentNo: event.target.value }).catch((error) => showToast({ title: "Save failed", description: error.message }, true))}><option value="">Unmatched</option>{assignmentStudents.length > 0 ? assignmentStudents.map((student) => <option key={student.studentNo || student.student_no} value={student.studentNo || student.student_no}>{student.name} ({student.studentNo || student.student_no})</option>) : <option value="" disabled>{matchingStudents.length > 0 ? "No matching student candidates" : studentAssignmentQuery.trim() ? "No students found" : "Type to search students"}</option>}</select><span className="mt-1 block text-[11px] font-normal text-gray-500">{matchingStudents.length > 0 ? "Only OCR-matched student candidates are shown." : "Type a name or student number to search for a student."}</span></label>
+                <div className="space-y-2"><div className="text-xs font-semibold text-gray-600 dark:text-zinc-300">Student assignment</div>{matchingStudents.length > 0 ? <div className="space-y-2">{matchingStudents.map((student) => { const studentNo = student.studentNo || student.student_no; const isSelected = selected.proposed_student_no === studentNo; return <label key={studentNo} className={`flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors ${isSelected ? "border-pup-maroon bg-red-50 dark:border-red-400 dark:bg-red-950/20" : "border-gray-200 bg-white hover:border-red-200 dark:border-white/10 dark:bg-zinc-900"}`}><input type="radio" name={`student-assignment-${selected.id}`} value={studentNo} checked={isSelected} onChange={() => update({ studentNo }).catch((error) => showToast({ title: "Save failed", description: error.message }, true))} className="mt-0.5 h-4 w-4 accent-pup-maroon" /><span className="min-w-0"><span className="block truncate text-sm font-semibold text-gray-900 dark:text-zinc-100">{student.name}</span><span className="mt-0.5 block font-mono text-[11px] text-gray-500 dark:text-zinc-400">{studentNo}</span></span></label>; })}</div> : <div className="relative"><Input value={studentAssignmentQuery} onChange={(event) => setStudentAssignmentQuery(event.target.value)} placeholder="Type a name or student number to search" role="combobox" aria-expanded={Boolean(studentAssignmentQuery.trim())} aria-controls={`student-search-results-${selected.id}`} className="h-9" />{studentAssignmentQuery.trim() && <div id={`student-search-results-${selected.id}`} role="listbox" className="mt-1 max-h-52 overflow-auto rounded-lg border border-gray-200 bg-white p-1 shadow-lg dark:border-white/10 dark:bg-zinc-900">{assignmentStudents.length > 0 ? assignmentStudents.map((student) => { const studentNo = student.studentNo || student.student_no; return <button key={studentNo} type="button" role="option" aria-selected={selected.proposed_student_no === studentNo} onClick={() => { setStudentAssignmentQuery(student.name); update({ studentNo }).catch((error) => showToast({ title: "Save failed", description: error.message }, true)); }} className="w-full rounded-md px-3 py-2 text-left hover:bg-red-50 dark:hover:bg-red-950/20"><span className="block text-sm font-semibold text-gray-900 dark:text-zinc-100">{student.name}</span><span className="font-mono text-[11px] text-gray-500 dark:text-zinc-400">{studentNo}</span></button>; }) : <p className="px-3 py-2 text-xs text-gray-500">No students found.</p>}</div>}</div>}<span className="block text-[11px] font-normal text-gray-500">{matchingStudents.length > 0 ? "Select one of the OCR-matched student candidates." : "No OCR match. Type to search students by name or number."}</span></div>
                 <label className="block text-xs font-semibold text-gray-600 dark:text-zinc-300">Document type<select className="mt-1 h-9 w-full rounded-md border border-gray-200 bg-white px-2 text-sm dark:border-white/10 dark:bg-zinc-900" value={selected.proposed_doc_type || ""} onChange={(event) => update({ docType: event.target.value }).catch((error) => showToast({ title: "Save failed", description: error.message }, true))}><option value="">Select type</option>{docTypes.map((type) => <option key={type} value={type}>{type}</option>)}</select></label>
                 <div><div className="mb-1 text-xs font-semibold text-gray-600 dark:text-zinc-300">Extracted name</div><Input value={selected.ocr_name || ""} onChange={(event) => update({ ocrName: event.target.value }).catch((error) => showToast({ title: "Save failed", description: error.message }, true))} /></div>
                 <div className="grid grid-cols-2 gap-2"><div className="rounded-md border border-blue-100 bg-blue-50 p-2 dark:border-blue-400/20 dark:bg-blue-950/20"><div className="text-[10px] font-semibold uppercase text-blue-700 dark:text-blue-300">Match confidence</div><div className="text-lg font-bold text-blue-900 dark:text-blue-100">{selected.match_confidence != null ? `${Math.round(Number(selected.match_confidence) * 100)}%` : "—"}</div><div className="text-[11px] text-blue-700 dark:text-blue-300">{matchEvidence?.reason || selected.match_status || "Not scored"}</div></div><div className="rounded-md border border-emerald-100 bg-emerald-50 p-2 dark:border-emerald-400/20 dark:bg-emerald-950/20"><div className="text-[10px] font-semibold uppercase text-emerald-700 dark:text-emerald-300">OCR read quality</div><div className="text-lg font-bold text-emerald-900 dark:text-emerald-100">{selected.ocr_quality_score != null ? `${Math.round(Number(selected.ocr_quality_score) * 100)}%` : "—"}</div><div className="text-[11px] text-emerald-700 dark:text-emerald-300">{selected.match_method || "Not scored"}</div></div></div>
-                {selected.match_status === "Conflict" && <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] text-amber-800 dark:border-amber-400/20 dark:bg-amber-950/20 dark:text-amber-200"><strong>Conflict detected.</strong> The configured template and other OCR evidence identified different names. Confirm only after checking the document.</div>}
+                {(selected.match_status === "Conflict" || status === "Conflict") && <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] text-amber-800 dark:border-amber-400/20 dark:bg-amber-950/20 dark:text-amber-200"><strong>Conflict reason:</strong> {matchReason}</div>}
                 {matchEvidence && <details className="rounded-md border border-gray-200 p-2 text-[11px] dark:border-white/10"><summary className="cursor-pointer font-semibold text-gray-600 dark:text-zinc-300">Evidence breakdown</summary><pre className="mt-2 max-h-40 overflow-auto whitespace-pre-wrap text-gray-500 dark:text-zinc-400">{JSON.stringify(matchEvidence, null, 2)}</pre></details>}
                 <div><div className="mb-1 text-xs font-semibold text-gray-600 dark:text-zinc-300">OCR response</div><pre className="max-h-36 overflow-auto rounded-md bg-gray-50 p-2 text-[11px] whitespace-pre-wrap dark:bg-zinc-900">{selected.last_error || selected.ocr_text || "No OCR text returned."}</pre></div>
                 <div><div className="mb-1 text-xs font-semibold text-gray-600 dark:text-zinc-300">Review note</div><Input value={note} onChange={(event) => setNote(event.target.value)} onBlur={() => update({ reviewNote: note }).catch(() => {})} placeholder="Optional note" /></div>
