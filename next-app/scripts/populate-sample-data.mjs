@@ -50,9 +50,9 @@ const documents = [
 const requests = [
   [1, "2023-20003-MN-0", "Diploma", "Pending", "Alumni document request for employment verification", "PUPREGISTRAR-001"],
   [2, "2024-40005-MN-2", "Transcript of Records", "InProgress", "Under processing by records evaluation section", "PUPREGISTRAR-003"],
-  [3, "2022-10001-MN-1", "Certificate of Enrollment", "Ready", "Ready for campus registrar counter pickup", "records.marcus@pup.local"],
+  [3, "2022-10001-MN-1", "Certificate of Enrollment", "Ready", "Ready for campus registrar counter pickup", "PUPREGISTRAR-002"],
   [4, "2022-10002-MN-2", "Form 137", "Completed", "Released and acknowledged by student", "PUPREGISTRAR-001"],
-  [5, "2020-50006-MN-0", "Certificate of Good Moral", "Pending", "Urgent request for scholarship application", "records.marcus@pup.local"],
+  [5, "2020-50006-MN-0", "Certificate of Good Moral", "Pending", "Urgent request for scholarship application", "PUPREGISTRAR-002"],
 ];
 
 const proposals = [
@@ -126,8 +126,8 @@ export async function seed({ force: forceOverride } = {}) {
   await transaction(async ({ query: run, queryOne: runOne }) => {
     await run(
       `INSERT INTO staff (id, office_id, fname, lname, role, section, status, email, password_hash, password_last_changed, updated_at)
-       VALUES ('records.marcus@pup.local', 'registrar', 'Marcus', 'Reyes', 'Staff', 'Records', 'Active', 'records.marcus@pup.local', $1, NOW(), NOW())
-       ON CONFLICT (id) DO UPDATE SET office_id=EXCLUDED.office_id, status='Active', password_hash=EXCLUDED.password_hash, updated_at=NOW()`,
+       VALUES ('PUPREGISTRAR-002', 'registrar', 'Marcus', 'Reyes', 'Staff', 'Records', 'Active', 'staff.registrar@pup.local', $1, NOW(), NOW())
+       ON CONFLICT (id) DO UPDATE SET office_id=EXCLUDED.office_id, fname=EXCLUDED.fname, lname=EXCLUDED.lname, role=EXCLUDED.role, section=EXCLUDED.section, status='Active', email=EXCLUDED.email, password_hash=EXCLUDED.password_hash, updated_at=NOW()`,
       [passwordHash],
     );
 
@@ -162,14 +162,19 @@ export async function seed({ force: forceOverride } = {}) {
       );
     }
 
-    const uploadsDir = path.join(process.env.LOCAL_DATA_DIR || ".local", "uploads");
-    const osasUploadsDir = path.join(process.env.LOCAL_DATA_DIR || ".local", "osas", "uploads");
+    const uploadsDir = path.join(process.env.LOCAL_DATA_DIR || ".local", "storage", "registrar", "uploads");
+    const legacyUploadsDir = path.join(process.env.LOCAL_DATA_DIR || ".local", "uploads");
+    const osasUploadsDir = path.join(process.env.LOCAL_DATA_DIR || ".local", "storage", "osas", "uploads");
+    const legacyOsasUploadsDir = path.join(process.env.LOCAL_DATA_DIR || ".local", "osas", "uploads");
     fs.mkdirSync(uploadsDir, { recursive: true });
+    fs.mkdirSync(legacyUploadsDir, { recursive: true });
     fs.mkdirSync(osasUploadsDir, { recursive: true });
+    fs.mkdirSync(legacyOsasUploadsDir, { recursive: true });
 
     for (const [legacyId, studentNo, studentName, docType, filename] of documents) {
       const storageFilename = `sample-${legacyId}-${filename}`;
       fs.writeFileSync(path.join(uploadsDir, storageFilename), minimalPdf);
+      try { fs.writeFileSync(path.join(legacyUploadsDir, storageFilename), minimalPdf); } catch {}
       await run(
         `INSERT INTO documents (office_id, student_no, student_name, doc_type, original_filename, storage_filename, mime_type, size_bytes, approval_status, legacy_id)
          VALUES ('registrar',$1,$2,$3,$4,$5,'application/pdf',$6,'Pending',$7)
@@ -186,9 +191,19 @@ export async function seed({ force: forceOverride } = {}) {
          year_level=EXCLUDED.year_level, section=EXCLUDED.section, status='Active', updated_at=NOW()`,
     );
 
+    const studentSalt = "local-test-student-salt";
+    const studentHash = `${studentSalt}:${crypto.scryptSync("student123", studentSalt, 64).toString("hex")}`;
+    await run(
+      `INSERT INTO student_accounts (student_no, email, password_hash, status, updated_at)
+       VALUES ('2022-10001-MN-1', 'student@pup.local', $1, 'Active', NOW())
+       ON CONFLICT (student_no) DO UPDATE SET email=EXCLUDED.email, password_hash=EXCLUDED.password_hash, status='Active', updated_at=NOW()`,
+      [studentHash],
+    );
+
     for (const [legacyId, studentNo, studentName, docType, filename] of osasDocuments) {
       const storageFilename = `sample-${legacyId}-${filename}`;
       fs.writeFileSync(path.join(uploadsDir, storageFilename), minimalPdf);
+      try { fs.writeFileSync(path.join(legacyUploadsDir, storageFilename), minimalPdf); } catch {}
       await run(
         `INSERT INTO documents (office_id, student_no, student_name, doc_type, original_filename, storage_filename, mime_type, size_bytes, approval_status, legacy_id)
          VALUES ('osas',$1,$2,$3,$4,$5,'application/pdf',$6,'Pending',$7)
@@ -218,6 +233,7 @@ export async function seed({ force: forceOverride } = {}) {
     for (const [studentNo, title, orgName, eventDate, venue, desc, filename, status, reviewNote] of proposals) {
       const storageFilename = `sample-prop-${filename}`;
       fs.writeFileSync(path.join(osasUploadsDir, storageFilename), minimalPdf);
+      try { fs.writeFileSync(path.join(legacyOsasUploadsDir, storageFilename), minimalPdf); } catch {}
       const existing = await runOne(`SELECT id FROM event_proposals WHERE title = $1 AND organization_name = $2`, [title, orgName]);
       let propId = existing?.id;
       if (!propId) {

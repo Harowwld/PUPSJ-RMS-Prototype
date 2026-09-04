@@ -15,10 +15,13 @@ export async function GET(req, ctx) {
   const proposal = await queryOne("SELECT * FROM event_proposals WHERE id = $1 AND office_id = 'osas'", [id]);
   if (!proposal) return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
   if (new URL(req.url).searchParams.get("file") === "1") {
-    const filePath = path.join(process.env.LOCAL_DATA_DIR || path.join(process.cwd(), ".local"), "osas", "uploads", proposal.storage_filename);
+    const localDir = process.env.LOCAL_DATA_DIR || path.join(process.cwd(), ".local");
+    const configuredPath = path.join(localDir, "storage", "osas", "uploads", proposal.storage_filename);
+    const legacyPath = path.join(localDir, "osas", "uploads", proposal.storage_filename);
+    const filePath = fs.existsSync(configuredPath) ? configuredPath : legacyPath;
     if (!fs.existsSync(filePath)) return NextResponse.json({ ok: false, error: "File missing" }, { status: 404 });
     const bytes = fs.readFileSync(filePath);
-    return new NextResponse(bytes, { headers: { "Content-Type": proposal.mime_type, "Content-Disposition": `inline; filename=\"${proposal.original_filename}\"` } });
+    return new NextResponse(bytes, { headers: { "Content-Type": proposal.mime_type, "Content-Disposition": `inline; filename="${proposal.original_filename}"` } });
   }
   const updates = await query("SELECT * FROM transaction_updates WHERE event_proposal_id = $1 ORDER BY created_at ASC", [id]);
   await writeGlobalAuditLog(req, "Viewed OSAS proposal", {

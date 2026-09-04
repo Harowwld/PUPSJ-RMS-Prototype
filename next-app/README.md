@@ -77,20 +77,19 @@ pnpm dev:next
 
 Open [http://localhost:3000](http://localhost:3000).
 
-## Default local accounts
+## Default demo & local accounts
 
-The seeded Registrar administrator is:
+The system includes pre-seeded demo accounts for all administrative, office, and student roles. The default password for all accounts is `pupstaff` (configured via `DEFAULT_STAFF_PASSWORD`).
 
-| Field | Value |
-|---|---|
-| Email | `admin.registrar@pup.local` |
-| Password | Value of `DEFAULT_STAFF_PASSWORD` (default: `pupstaff`) |
-| Role | Admin |
-| Office | Registrar |
+| Role | Office / Scope | Account ID / Student No | Email Identifier | Default Password | Dashboard Route & Purpose |
+|---|---|---|---|---|---|
+| **SuperAdmin** | Global (`NULL`) | `PUPREGISTRAR-001` | `admin.default@pup.local` *(or `superadmin@pup.local`)* | `pupstaff` | `/systemadmin` (System-wide administration, office provisioning, system health) |
+| **Registrar Admin** | Office of the Registrar | `PUPREGISTRAR-003` | `admin.registrar@pup.local` | `pupstaff` | `/admin` (Registrar compliance, storage layout, document review, batch scanning) |
+| **Registrar Staff** | Office of the Registrar | `PUPREGISTRAR-002` | `staff.registrar@pup.local` | `pupstaff` | `/staff` (Digitization, scan & upload, student records, document request fulfillment) |
+| **OSAS Admin** | Office of Student Affairs and Services | `PUPOSAS-001` | `admin.osas@pup.local` | `pupstaff` | `/admin` (OSAS records review, student organization event proposals) |
+| **Student** | Student Portal | `2022-10001-MN-1` (Juan Dela Cruz) | `student@pup.local` *(or `2022-10001-MN-1`)* | `pupstaff` *(or `student123`)* | `/student` (Online Document Request System & Student Org Event Submissions) |
 
-The sample staff account is `records.marcus@pup.local` and uses the same default password.
-
-Change default passwords before using the system beyond local testing.
+> **Note**: Demo personnel accounts are pre-seeded with recovery answers so they bypass first-time password setup modals during presentations. You can also use the **Demo Accounts** quick-fill pills located on the sign-in page (`/`).
 
 ## Apple Vision OCR setup (macOS)
 

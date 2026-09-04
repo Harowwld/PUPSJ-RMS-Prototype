@@ -4,6 +4,7 @@ import {
   hashPasswordForStorage,
   touchStaffLastActiveById,
   getStaffDisplayName,
+  hasAllSecurityAnswers,
 } from "../../../../lib/staffRepo";
 import { getSessionCookieName, signSessionToken } from "../../../../lib/jwt";
 import { createSession } from "../../../../lib/sessionStore";
@@ -12,6 +13,7 @@ import { checkAuthLoginRateLimit, resetAuthLoginRateLimit } from "../../../../li
 import { LoginSchema } from "../../../../lib/authSchemas";
 import { query, queryOne } from "@/lib/postgres";
 import { authDebug } from "@/lib/authDebug";
+import { authenticateStudent, createStudentSession, setStudentSessionCookie } from "@/lib/studentAuth";
 
 export const runtime = "nodejs";
 
@@ -80,12 +82,39 @@ export async function POST(req) {
   const { username, password } = validation.data;
 
   // 2. Authenticate
+  const cleanUsername = String(username || "").trim();
+  const normalizedIdentifier = cleanUsername.toLowerCase() === "superadmin@pup.local"
+    ? "admin.default@pup.local"
+    : cleanUsername;
+
   const staff = process.env.DATABASE_URL
-    ? await queryOne("SELECT * FROM staff WHERE lower(email) = lower($1)", [username])
-    : await getStaffByUsername(username);
+    ? await queryOne(
+        "SELECT * FROM staff WHERE lower(email) = lower($1) OR lower(id) = lower($1)",
+        [normalizedIdentifier]
+      )
+    : await getStaffByUsername(normalizedIdentifier);
+
   if (!staff) {
-    authDebug("login.account_missing", { identifierLength: username.length });
-    await audit(req, "Login Attempt", `authentication failure: identifier '${username}' not recognized by the system repository`, "WARNING");
+    // Check if it's a student trying to log in
+    const student = await authenticateStudent({ studentNo: cleanUsername, password });
+    if (student) {
+      const token = await createStudentSession(student);
+      await audit(req, "Student Login", `student '${student.student_no}' authenticated via main portal`);
+      const studentRes = NextResponse.json({
+        ok: true,
+        data: {
+          role: "Student",
+          id: student.student_no,
+          student_no: student.student_no,
+          username: student.student_no,
+          name: student.name,
+        },
+      });
+      return addSecurityHeaders(setStudentSessionCookie(studentRes, token));
+    }
+
+    authDebug("login.account_missing", { identifierLength: cleanUsername.length });
+    await audit(req, "Login Attempt", `authentication failure: identifier '${cleanUsername}' not recognized by the system repository`, "WARNING");
     return addSecurityHeaders(NextResponse.json({ ok: false, error: "Invalid credentials" }, { status: 401 }));
   }
 
@@ -152,7 +181,8 @@ export async function POST(req) {
 
   const defaultPassword = process.env.DEFAULT_STAFF_PASSWORD || "pupstaff";
   const defaultHash = hashPasswordForStorage(defaultPassword);
-  const mustChangePassword = stored === defaultHash;
+  const hasSecurity = await hasAllSecurityAnswers(touched.id);
+  const mustChangePassword = (stored === defaultHash) && !hasSecurity;
   authDebug("login.session_issued", {
     staffId: touched.id,
     role: touched.role || "Staff",
