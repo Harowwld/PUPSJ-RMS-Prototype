@@ -1,6 +1,7 @@
 import { isAdminRole, isSystemAdminRole, isStaffRole } from "./roleUtils.js";
 
 export const ROLE_BRANDING = {
+  red: { key: "red", color: "#800000", foreground: "#FFFFFF", iconSrc: "/assets/branding/black-icon.png" },
   black: { key: "black", color: "#0F172A", foreground: "#FFFFFF", iconSrc: "/assets/branding/black-icon.png" },
   white: { key: "white", color: "#FFFFFF", foreground: "#0F172A", iconSrc: "/assets/branding/white-icon.png" },
   orange: { key: "orange", color: "#EA580C", foreground: "#FFFFFF", iconSrc: "/assets/branding/orange-icon.png" },
@@ -24,6 +25,8 @@ function isSecondaryOffice(officeId, officeName) {
 /** Resolve the supplied color/icon branding from the authenticated context. */
 export function getRoleBranding(context = {}) {
   const { role, officeId = context.office_id, officeName = context.office_name } = context;
+
+  if (String(role || "").toLowerCase().trim() === "student") return ROLE_BRANDING.red;
 
   // 1. SystemAdmin / SuperAdmin (Global Level - Always Black)
   if (isSystemAdminRole(role)) {

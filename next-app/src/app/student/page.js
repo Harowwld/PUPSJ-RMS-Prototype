@@ -216,12 +216,12 @@ export default function StudentDashboard() {
   }
 
   const StatusBadge = ({ status }) => {
-    const tone = status === "Approved" || status === "Completed" ? "bg-emerald-50 text-emerald-700" : status === "Declined" || status === "Cancelled" ? "bg-red-50 text-red-700" : status === "Archived" ? "bg-gray-100 text-gray-700" : status === "Under Review" ? "bg-blue-50 text-blue-700" : "bg-amber-50 text-amber-700";
+    const tone = status === "Approved" || status === "Completed" ? "bg-red-100 text-red-900" : status === "Declined" || status === "Cancelled" ? "bg-red-50 text-red-700" : "bg-red-50 text-red-700";
     return <span className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold ${tone}`}>{status}</span>;
   };
 
   return (
-    <div className="relative flex h-screen min-h-0 flex-col overflow-hidden bg-slate-50/30 font-inter dark:bg-zinc-950/30">
+    <div className="relative flex h-screen min-h-0 flex-col overflow-hidden bg-red-50/20 font-inter dark:bg-red-950/10">
       {/* Shared dashboard liquid-gradient background used by Staff/Admin views. */}
       <div className="liquid-container">
         <div className="liquid-blob liquid-blob-1" />
@@ -231,7 +231,7 @@ export default function StudentDashboard() {
       <Header authUser={{ ...me, role: "Student", username: me.email || me.student_no }} onLogout={handleLogout} />
       <div className="flex min-h-0 flex-1">
       <Sidebar open={sidebarOpen} items={sidebarItems} activeKey={view} onSelect={(key) => key === "activity" ? router.push("/account/activity") : setView(key)} onLogout={handleLogout} accentColor="#800000" officeName="Student Portal" />
-        <main className="relative w-full min-w-0 min-h-0 flex-1 overflow-y-auto bg-white/25 dark:bg-zinc-950/25 backdrop-blur-xs">
+        <main className="relative w-full min-w-0 min-h-0 flex-1 overflow-y-auto bg-red-50/10 dark:bg-red-950/10 backdrop-blur-xs">
           <div className="flex min-h-0 w-full flex-1 flex-col p-4 sm:p-6">
             <div className="mx-auto w-full max-w-7xl space-y-6">
             <div className="flex items-start justify-between gap-4">
