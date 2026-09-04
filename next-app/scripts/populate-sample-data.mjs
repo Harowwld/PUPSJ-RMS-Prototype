@@ -14,7 +14,7 @@ import dotenv from "dotenv";
 dotenv.config({ path: ".env.local" });
 dotenv.config();
 
-const { query, queryOne, transaction } = await import("../src/lib/postgres.js");
+const { pool, query, queryOne, transaction } = await import("../src/lib/postgres.js");
 const { buildDefaultStorageLayout } = await import("../src/lib/storageLayoutDefaults.js");
 
 if (!process.env.DATABASE_URL) {
@@ -25,6 +25,8 @@ const passwordHash = crypto
   .createHash("sha256")
   .update(process.env.DEFAULT_STAFF_PASSWORD || "pupstaff")
   .digest("hex");
+const studentSalt = "local-test-student-salt";
+const studentPasswordHash = `${studentSalt}:${crypto.scryptSync("student123", studentSalt, 64).toString("hex")}`;
 
 const students = [
   ["2023-00001-IT-1", "TEST STUDENT", "BSIT", 4, "BSIT-4A", 1, "2027", 1],
@@ -177,6 +179,13 @@ export async function seed({ force: forceOverride } = {}) {
       );
     }
 
+    await run(
+      `INSERT INTO student_accounts (student_no, password_hash, status, updated_at)
+       VALUES ('2023-00001-IT-1', $1, 'Active', NOW())
+       ON CONFLICT (student_no) DO UPDATE SET password_hash=EXCLUDED.password_hash, status='Active', updated_at=NOW()`,
+      [studentPasswordHash],
+    );
+
     const uploadsDir = path.join(process.env.LOCAL_DATA_DIR || ".local", "uploads");
     const osasUploadsDir = path.join(process.env.LOCAL_DATA_DIR || ".local", "osas", "uploads");
     fs.mkdirSync(uploadsDir, { recursive: true });
@@ -301,5 +310,7 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.a
   } catch (error) {
     console.error("[populate-sample-data] Failed:", error);
     process.exitCode = 1;
+  } finally {
+    await pool.end();
   }
 }
