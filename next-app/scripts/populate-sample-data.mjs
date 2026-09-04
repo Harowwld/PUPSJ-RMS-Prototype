@@ -27,6 +27,7 @@ const passwordHash = crypto
   .digest("hex");
 
 const students = [
+  ["2023-00001-IT-1", "TEST STUDENT", "BSIT", 4, "BSIT-4A", 1, "2027", 1],
   ["2022-10001-MN-1", "DELA CRUZ, JUAN A.", "BSIT", 2024, "BSIT-4A", 1, "2020", 1],
   ["2022-10002-MN-2", "SANTOS, MARIA B.", "BSIT", 2024, "BSIT-4A", 1, "2021", 2],
   ["2023-20003-MN-0", "REYES, CARLOS C.", "BSIT", 2025, "BSIT-4B", 2, "2022", 3],

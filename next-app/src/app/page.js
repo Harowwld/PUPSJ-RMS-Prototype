@@ -168,7 +168,7 @@ export default function Home() {
   const handleContinue = () => {
     const emailValue = username.trim();
     if (!emailValue) {
-      setEmailError("Enter a valid email address.");
+      setEmailError("Enter your email address or student number.");
       return;
     }
     setEmailError("");
@@ -198,16 +198,19 @@ export default function Home() {
 
     const usernameInput = username.trim();
     const passwordInput = password;
+    const isStudentNumber = /^\d{4}-\d{5}-[A-Za-z]{2}-\d$/.test(usernameInput);
 
     setError("");
     setIsLoading(true);
 
     (async () => {
       try {
-        const res = await fetch("/api/auth/login", {
+        const res = await fetch(isStudentNumber ? "/api/auth/student/login" : "/api/auth/login", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ username: usernameInput, password: passwordInput }),
+          body: JSON.stringify(isStudentNumber
+            ? { studentNo: usernameInput, password: passwordInput }
+            : { username: usernameInput, password: passwordInput }),
         });
         const json = await res.json();
         if (!res.ok || !json?.ok) {
@@ -218,6 +221,13 @@ export default function Home() {
           setTempToken(json.data.tempToken);
           setShow2FAModal(true);
           setIsLoading(false);
+          return;
+        }
+
+        if (isStudentNumber || json?.data?.role === "Student") {
+          localStorage.setItem("pup-session-recovered", Date.now().toString());
+          localStorage.removeItem("pup-logout");
+          router.push("/student");
           return;
         }
 
@@ -378,7 +388,7 @@ export default function Home() {
                     }`}>
                       {/* EMAIL FIELD (top half) */}
                       <div className={`field-wrapper email-wrapper ${emailFocused || username.length > 0 ? "active" : ""} ${loginStep === 2 ? "step2-active" : ""}`}>
-                        <label>Email Address</label>
+                        <label>Email Address or Student Number</label>
                         <Input
                           type="text"
                           id="username"
