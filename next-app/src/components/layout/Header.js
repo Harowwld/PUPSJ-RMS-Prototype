@@ -81,6 +81,7 @@ export default function Header({ authUser, onLogout, children }) {
   }, [commandOpen]);
 
   const isSuperAdmin = isSystemAdminRole(authUser?.role);
+  const isStudent = String(authUser?.role || "").toLowerCase() === "student";
   const isAdmin = isAdminRole(authUser?.role);
   const hasAdminRights = hasAdminPrivileges(authUser?.role);
   const branding = getRoleBranding(authUser);
@@ -119,9 +120,9 @@ export default function Header({ authUser, onLogout, children }) {
       ? "systemadmin"
       : (pathname?.startsWith("/admin"))
         ? "admin"
-        : (pathname?.startsWith("/staff"))
+          : (pathname?.startsWith("/staff"))
           ? "staff"
-          : (preferredView || (isAdmin ? "admin" : "staff"));
+          : (isStudent ? "student" : (preferredView || (isAdmin ? "admin" : "staff")));
 
   const handleViewSwitch = (viewKey) => {
     localStorage.setItem("pup_admin_view_pref", viewKey);
@@ -130,7 +131,9 @@ export default function Header({ authUser, onLogout, children }) {
   };
 
   const handleMainDashboardClick = () => {
-    if (isSuperAdmin) {
+    if (isStudent) {
+      router.push("/student");
+    } else if (isSuperAdmin) {
       router.push("/systemadmin");
     } else if (hasAdminRights) {
       router.push(activeView === "admin" ? "/admin" : "/staff");
@@ -168,6 +171,7 @@ export default function Header({ authUser, onLogout, children }) {
 
   // Dynamically reflect the current view role & accent color based on activeView
   const currentViewRole = (() => {
+    if (isStudent) return "Student";
     if (isSuperAdmin || activeView === "systemadmin" || activeView === "superadmin") {
       return "System Administrator";
     }
@@ -183,6 +187,7 @@ export default function Header({ authUser, onLogout, children }) {
   const displayRole = isSuperAdmin ? "System Administrator" : currentViewRole;
 
   const currentViewColor = (() => {
+    if (isStudent) return ROLE_BRANDING.red.color;
     if (isSuperAdmin || activeView === "systemadmin" || activeView === "superadmin") {
       return ROLE_BRANDING.black.color;
     }
@@ -196,6 +201,7 @@ export default function Header({ authUser, onLogout, children }) {
   })();
 
   const displayOfficeName = (() => {
+    if (isStudent) return "Student Portal";
     if (isSuperAdmin || activeView === "systemadmin" || activeView === "superadmin") {
       return "System";
     }
@@ -338,9 +344,10 @@ export default function Header({ authUser, onLogout, children }) {
             <img 
               src={branding.iconSrc}
               alt="eManage Logo" 
-              className="h-7 w-7 object-contain transition-transform group-hover/logo:scale-105" 
+              className={cn("h-7 w-7 object-contain transition-transform group-hover/logo:scale-105", isStudent && "brightness-0 saturate-100")}
+              style={isStudent ? { filter: "brightness(0) saturate(100%) invert(13%) sepia(95%) saturate(3180%) hue-rotate(355deg) brightness(77%) contrast(118%)" } : undefined}
             />
-            <span className="font-bold text-[19px] text-gray-900 dark:text-zinc-50 tracking-tight leading-none group-hover/logo:opacity-75 transition-opacity">
+              <span className={cn("font-bold text-[19px] tracking-tight leading-none group-hover/logo:opacity-75 transition-opacity", isStudent ? "text-pup-maroon" : "text-gray-900 dark:text-zinc-50")}>
               eManage
             </span>
           </div>
@@ -350,11 +357,11 @@ export default function Header({ authUser, onLogout, children }) {
               <div className="hidden sm:block h-4 w-px bg-gray-200 dark:bg-zinc-800" />
               
               {/* Dynamic Scope & Current View Role Badge */}
-              <div className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium bg-gray-100/90 dark:bg-zinc-900 border border-gray-200/70 dark:border-white/10 text-gray-700 dark:text-zinc-300 shadow-2xs transition-all">
-                <span className="font-semibold text-gray-900 dark:text-zinc-100">
+              <div className={cn("hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium shadow-2xs transition-all", isStudent ? "bg-red-50 border border-red-200 text-red-800" : "bg-gray-100/90 dark:bg-zinc-900 border border-gray-200/70 dark:border-white/10 text-gray-700 dark:text-zinc-300")}>
+                <span className={cn("font-semibold", isStudent ? "text-pup-maroon" : "text-gray-900 dark:text-zinc-100")}>
                   {displayOfficeName}
                 </span>
-                <span className="text-gray-300 dark:text-zinc-600">·</span>
+                <span className={isStudent ? "text-red-300" : "text-gray-300 dark:text-zinc-600"}>·</span>
                 <span 
                   className="font-medium transition-colors duration-200"
                   style={{ color: currentViewColor }}
@@ -377,7 +384,7 @@ export default function Header({ authUser, onLogout, children }) {
                 setFocusedIndex(0);
                 setCommandOpen(true);
               }}
-              className="group w-full max-w-sm h-9 pl-3 pr-2 flex items-center justify-between rounded-xl bg-gray-100/70 hover:bg-gray-100/90 dark:bg-zinc-900/60 dark:hover:bg-zinc-900/90 border border-gray-200/80 hover:border-gray-300 dark:border-white/10 dark:hover:border-white/20 transition-all cursor-pointer shadow-2xs select-none"
+              className={cn("group w-full max-w-sm h-9 pl-3 pr-2 flex items-center justify-between rounded-xl transition-all cursor-pointer shadow-2xs select-none", isStudent ? "bg-red-50/70 hover:bg-red-50 border border-red-100 hover:border-red-200" : "bg-gray-100/70 hover:bg-gray-100/90 dark:bg-zinc-900/60 dark:hover:bg-zinc-900/90 border border-gray-200/80 hover:border-gray-300 dark:border-white/10 dark:hover:border-white/20")}
             >
               <div className="flex items-center gap-2 text-gray-400 dark:text-zinc-500">
                 <i className="ph-bold ph-magnifying-glass text-xs transition-colors group-hover:text-pup-maroon dark:group-hover:text-red-400"></i>
@@ -400,7 +407,7 @@ export default function Header({ authUser, onLogout, children }) {
                   ? "bg-gray-100 dark:bg-zinc-850 border-gray-200/80 dark:border-white/10 shadow-2xs" 
                   : "hover:bg-gray-100/70 dark:hover:bg-zinc-900"
               )}>
-                <div className="relative h-8 w-8 rounded-lg bg-white dark:bg-zinc-850 flex items-center justify-center text-xs font-bold text-gray-700 dark:text-zinc-300 border border-gray-200 dark:border-white/10 overflow-hidden shadow-2xs shrink-0">
+                <div className={cn("relative h-8 w-8 rounded-lg bg-white flex items-center justify-center text-xs font-bold border overflow-hidden shadow-2xs shrink-0", isStudent ? "text-pup-maroon border-red-200" : "text-gray-700 dark:bg-zinc-850 dark:text-zinc-300 border-gray-200 dark:border-white/10")}>
                   {authUser?.avatar_filename && !imageError ? (
                     <>
                       <img 
@@ -419,14 +426,14 @@ export default function Header({ authUser, onLogout, children }) {
                   ) : (
                     initials
                   )}
-                  <span className="absolute bottom-0 right-0 h-2 w-2 rounded-full ring-1.5 ring-white dark:ring-zinc-950 bg-emerald-500" />
+                  <span className={cn("absolute bottom-0 right-0 h-2 w-2 rounded-full ring-1.5 ring-white", isStudent ? "bg-pup-maroon" : "bg-emerald-500 dark:ring-zinc-950")} />
                 </div>
 
                 <div className="hidden sm:flex flex-col text-left leading-tight">
-                  <span className="text-[12px] font-semibold text-gray-800 dark:text-zinc-100 truncate max-w-[120px]">
-                    {authUser?.fname ? `${authUser.fname} ${authUser?.lname || ""}`.trim() : "Account"}
+                  <span className={cn("text-[12px] font-semibold truncate max-w-[120px]", isStudent ? "text-pup-maroon" : "text-gray-800 dark:text-zinc-100")}>
+                    {isStudent ? (authUser?.name || authUser?.student_no || "Student") : (authUser?.fname ? `${authUser.fname} ${authUser?.lname || ""}`.trim() : "Account")}
                   </span>
-                  <span className="text-[10px] text-gray-400 dark:text-zinc-500">
+                  <span className={cn("text-[10px]", isStudent ? "text-red-700" : "text-gray-400 dark:text-zinc-500")}>
                     {displayRole}
                   </span>
                 </div>
@@ -673,7 +680,7 @@ export default function Header({ authUser, onLogout, children }) {
             </div>
             <div className="flex items-center gap-1.5 font-medium text-gray-400 dark:text-zinc-500 text-[10px]">
               <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: currentViewColor }} />
-              <span>{activeView === "systemadmin" ? "System Admin" : (activeView === "admin" ? "Office Admin" : "Staff")}</span>
+              <span>{isStudent ? "Student" : (activeView === "systemadmin" ? "System Admin" : (activeView === "admin" ? "Office Admin" : "Staff"))}</span>
             </div>
           </div>
         </DialogContent>

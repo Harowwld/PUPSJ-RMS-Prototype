@@ -15,6 +15,26 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
+const STUDENT_NUMBER_PATTERN = /^\d{4}-\d{5}-[A-Z]{2}-\d$/;
+
+function applyStudentNumberMask(value) {
+  const clean = String(value || "").replace(/[^0-9A-Z]/gi, "").toUpperCase();
+  let masked = "";
+  for (let index = 0; index < Math.min(clean.length, 12); index += 1) {
+    masked += clean[index];
+    if (index === 3 || index === 8 || index === 10) masked += "-";
+  }
+  return masked;
+}
+
+function formatRegistrarStudentName({ firstName, middleName, lastName }) {
+  const first = String(firstName || "").trim().replace(/\s+/g, " ").toUpperCase();
+  const last = String(lastName || "").trim().replace(/\s+/g, " ").toUpperCase();
+  const middleLetters = String(middleName || "").replace(/[^a-z]/gi, "");
+  const middleInitial = middleLetters ? ` ${middleLetters[0].toUpperCase()}.` : "";
+  return first && last ? `${last}, ${first}${middleInitial}` : "";
+}
+
 export default function Home() {
   const router = useRouter();
   const [view, setView] = useState("login"); // "login" or "forgot"
@@ -44,6 +64,10 @@ export default function Home() {
   const [twoFactorError, setTwoFactorError] = useState("");
   const [tempToken, setTempToken] = useState("");
   const [showCreateAccountModal, setShowCreateAccountModal] = useState(false);
+  const [showStudentSignupModal, setShowStudentSignupModal] = useState(false);
+  const [studentSignup, setStudentSignup] = useState({ studentNo: "", firstName: "", middleName: "", lastName: "", password: "", confirmPassword: "" });
+  const [studentSignupError, setStudentSignupError] = useState("");
+  const [studentSignupLoading, setStudentSignupLoading] = useState(false);
 
   // Forgot Password State
   const [forgotStep, setForgotStep] = useState(1);
@@ -199,7 +223,7 @@ export default function Home() {
 
     const usernameInput = username.trim();
     const passwordInput = password;
-    const isStudentNumber = /^\d{4}-\d{5}-[A-Za-z]{2}-\d$/.test(usernameInput);
+    const isStudentNumber = STUDENT_NUMBER_PATTERN.test(usernameInput.toUpperCase());
 
     setError("");
     setIsLoading(true);
@@ -254,6 +278,71 @@ export default function Home() {
       }
     })();
   }
+
+  async function handleStudentSignup(e) {
+    e.preventDefault();
+    if (!STUDENT_NUMBER_PATTERN.test(studentSignup.studentNo)) {
+      setStudentSignupError("Use the format YYYY-XXXXX-AA-0.");
+      return;
+    }
+    if (!studentSignup.firstName.trim() || !studentSignup.lastName.trim()) {
+      setStudentSignupError("First name and last name are required.");
+      return;
+    }
+    if (studentSignup.password.length < 8) {
+      setStudentSignupError("Password must be at least 8 characters.");
+      return;
+    }
+    if (studentSignup.password !== studentSignup.confirmPassword) {
+      setStudentSignupError("Passwords do not match.");
+      return;
+    }
+
+    setStudentSignupError("");
+    setStudentSignupLoading(true);
+    try {
+      const formattedName = formatRegistrarStudentName(studentSignup);
+      const res = await fetch("/api/auth/student/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          studentNo: studentSignup.studentNo,
+          name: formattedName,
+          password: studentSignup.password,
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json?.ok) {
+        throw new Error(json?.error || "Unable to create student account.");
+      }
+
+      localStorage.setItem("pup-session-recovered", Date.now().toString());
+      localStorage.removeItem("pup-logout");
+      setShowStudentSignupModal(false);
+      router.push("/student");
+    } catch (err) {
+      setStudentSignupError(err?.message || "Unable to create student account.");
+    } finally {
+      setStudentSignupLoading(false);
+    }
+  }
+
+  function handleStudentSignupNumberKeyDown(e) {
+    if (e.key !== "Backspace") return;
+    const input = e.currentTarget;
+    const cursor = input.selectionStart;
+    if (cursor !== input.selectionEnd || cursor === 0 || input.value[cursor - 1] !== "-") return;
+
+    e.preventDefault();
+    const nextValue = `${input.value.slice(0, cursor - 2)}${input.value.slice(cursor)}`;
+    const masked = applyStudentNumberMask(nextValue);
+    setStudentSignup((current) => ({ ...current, studentNo: masked }));
+    setTimeout(() => {
+      input.setSelectionRange(Math.min(cursor - 2, masked.length), Math.min(cursor - 2, masked.length));
+    }, 0);
+  }
+
+  const formattedStudentSignupName = formatRegistrarStudentName(studentSignup);
 
   const handle2FAVerify = async (e) => {
     e.preventDefault();
@@ -504,13 +593,26 @@ export default function Home() {
 
                     {/* Create Account Link (Step 1 only) */}
                     {loginStep === 1 && (
-                      <button
-                        type="button"
-                        onClick={() => setShowCreateAccountModal(true)}
-                        className="text-[13px] text-[#E5484D] hover:underline focus:outline-none mt-2.5 block text-left font-normal animate-in fade-in duration-200"
-                      >
-                        Create Your eManage Account
-                      </button>
+                      <div className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1 animate-in fade-in duration-200">
+                        <button
+                          type="button"
+                          onClick={() => setShowCreateAccountModal(true)}
+                          className="text-[13px] text-[#E5484D] hover:underline focus:outline-none font-normal"
+                        >
+                          Create Your eManage Account
+                        </button>
+                        <span className="text-[12px] text-gray-300 dark:text-zinc-600">|</span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setStudentSignupError("");
+                            setShowStudentSignupModal(true);
+                          }}
+                          className="text-[13px] text-[#007AFF] hover:underline focus:outline-none font-normal"
+                        >
+                          Student Sign Up
+                        </button>
+                      </div>
                     )}
                   </div>
 
@@ -903,6 +1005,72 @@ export default function Home() {
                 </Button>
               </div>
             </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Student Sign Up Modal */}
+        <Dialog open={showStudentSignupModal} onOpenChange={setShowStudentSignupModal}>
+          <DialogContent className="max-w-md rounded-[20px] border-gray-100 bg-white dark:border-zinc-800 dark:bg-zinc-900">
+            <DialogHeader>
+              <DialogTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">Student Sign Up</DialogTitle>
+              <DialogDescription className="mt-2 text-sm font-medium text-gray-600 dark:text-zinc-400">
+                Use the details registered in the Records Management System.
+              </DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleStudentSignup} className="mt-3 space-y-3">
+              <Input
+                placeholder="202X-XXXXX-MN-0"
+                value={studentSignup.studentNo}
+                onKeyDown={handleStudentSignupNumberKeyDown}
+                onChange={(e) => setStudentSignup({ ...studentSignup, studentNo: applyStudentNumberMask(e.target.value) })}
+                required
+              />
+              <div className="grid grid-cols-2 gap-3">
+                <Input
+                  placeholder="First name"
+                  value={studentSignup.firstName}
+                  onChange={(e) => setStudentSignup({ ...studentSignup, firstName: e.target.value })}
+                  required
+                />
+                <Input
+                  placeholder="Middle name (optional)"
+                  value={studentSignup.middleName}
+                  onChange={(e) => setStudentSignup({ ...studentSignup, middleName: e.target.value })}
+                />
+              </div>
+              <Input
+                placeholder="Last name"
+                value={studentSignup.lastName}
+                onChange={(e) => setStudentSignup({ ...studentSignup, lastName: e.target.value })}
+                required
+              />
+              {formattedStudentSignupName && (
+                <p className="text-xs font-medium text-gray-500 dark:text-zinc-400">
+                  Registrar format: <span className="font-bold text-gray-800 dark:text-zinc-200">{formattedStudentSignupName}</span>
+                </p>
+              )}
+              <Input
+                type="password"
+                placeholder="Password (minimum 8 characters)"
+                value={studentSignup.password}
+                onChange={(e) => setStudentSignup({ ...studentSignup, password: e.target.value })}
+                required
+              />
+              <Input
+                type="password"
+                placeholder="Confirm password"
+                value={studentSignup.confirmPassword}
+                onChange={(e) => setStudentSignup({ ...studentSignup, confirmPassword: e.target.value })}
+                required
+              />
+              {studentSignupError && <p className="text-xs font-medium text-[#E5484D]">{studentSignupError}</p>}
+              <div className="flex justify-end gap-2 pt-2">
+                <Button type="button" variant="outline" onClick={() => setShowStudentSignupModal(false)}>Cancel</Button>
+                <Button type="submit" disabled={studentSignupLoading} className="bg-[#E5484D] text-white hover:bg-[#c93b40]">
+                  {studentSignupLoading ? "Creating..." : "Create Student Account"}
+                </Button>
+              </div>
+            </form>
           </DialogContent>
         </Dialog>
       </PageTransition>
