@@ -10,7 +10,14 @@ import { logUnauthorizedAccess, logForbiddenAccess, logInvalidSession } from "./
  */
 export async function validateSession(req) {
   try {
-    const token = extractTokenFromHeaders(req) || "";
+    let token = extractTokenFromHeaders(req) || "";
+    if (!token) {
+      try {
+        const { cookies } = await import("next/headers");
+        const cookieStore = await cookies();
+        token = cookieStore.get(getSessionCookieName())?.value || "";
+      } catch {}
+    }
     
     if (!token) {
       await logUnauthorizedAccess(req, "Missing session token");
@@ -41,6 +48,7 @@ export async function validateSession(req) {
       id: staff.id,
       role: staff.role || payload.role,
       office_id: staff.office_id || null,
+      section: staff.section || null,
       email: staff.email,
       fname: staff.fname,
       lname: staff.lname,
@@ -163,18 +171,23 @@ export function createAuthErrorResponse(error, status = 401) {
  * @returns {string|null}
  */
 export function extractTokenFromHeaders(req) {
-  const authHeader = req.headers.get("authorization");
+  const authHeader = req?.headers?.get?.("authorization");
   if (authHeader && authHeader.startsWith("Bearer ")) {
     return authHeader.substring(7);
   }
   
-  const cookieHeader = req.headers.get("cookie");
+  const cookieName = getSessionCookieName();
+  const cookieHeader = req?.headers?.get?.("cookie");
   if (cookieHeader) {
-    const cookieName = getSessionCookieName();
-    const match = cookieHeader.match(new RegExp(`${cookieName}=([^;]+)`));
+    const match = cookieHeader.match(new RegExp(`(?:^|;\\s*)${cookieName}=([^;]+)`));
     if (match) {
       return decodeURIComponent(match[1]);
     }
+  }
+
+  if (req?.cookies?.get) {
+    const val = req.cookies.get(cookieName)?.value;
+    if (val) return val;
   }
   
   return null;

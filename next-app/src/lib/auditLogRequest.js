@@ -10,7 +10,28 @@ function extractIp(req) {
 
 async function resolveActor(req) {
   try {
-    const token = req?.cookies?.get?.(getSessionCookieName())?.value || "";
+    const cookieName = getSessionCookieName();
+    let token = req?.cookies?.get?.(cookieName)?.value || "";
+    
+    if (!token && req?.headers?.get) {
+      const authHeader = req.headers.get("authorization");
+      if (authHeader && authHeader.startsWith("Bearer ")) {
+        token = authHeader.substring(7);
+      } else {
+        const cookieHeader = req.headers.get("cookie") || "";
+        const match = cookieHeader.match(new RegExp(`(?:^|;\\s*)${cookieName}=([^;]+)`));
+        if (match) token = decodeURIComponent(match[1]);
+      }
+    }
+
+    if (!token) {
+      try {
+        const { cookies } = await import("next/headers");
+        const cookieStore = await cookies();
+        token = cookieStore.get(cookieName)?.value || "";
+      } catch {}
+    }
+
     if (!token) return { actor: "System", role: "System" };
 
     const payload = await verifySessionToken(token);
@@ -33,20 +54,6 @@ export async function writeAuditLog(req, action, overrides = {}) {
     const userAgent = req?.headers?.get?.("user-agent") || "";
     const officeId = req?.headers?.get?.("x-office-id") || overrides.officeId || overrides.office_id || null;
 
-    // 1. Write to local office database
-    await createAuditLog({
-      actor: overrides.actor || base.actor,
-      role: overrides.role || base.role,
-      action: String(action || "").trim(),
-      details: overrides.details || "",
-      severity: overrides.severity || "INFO",
-      user_agent: userAgent,
-      entity_type: overrides.entity_type || "",
-      entity_id: overrides.entity_id || "",
-      ip: overrides.ip || extractIp(req),
-    });
-
-    // 2. Write to system-wide global database
     await createGlobalAuditLog({
       actor: overrides.actor || base.actor,
       role: overrides.role || base.role,
@@ -54,6 +61,9 @@ export async function writeAuditLog(req, action, overrides = {}) {
       action: String(action || "").trim(),
       details: overrides.details || "",
       severity: overrides.severity || "INFO",
+      user_agent: userAgent,
+      entity_type: overrides.entity_type || "",
+      entity_id: overrides.entity_id || "",
       ip: overrides.ip || extractIp(req),
     });
   } catch (err) {

@@ -17,6 +17,7 @@ import {
   EmptyDescription,
 } from "@/components/ui/empty"
 import { cn } from "@/lib/utils"
+import { getCachedData, setCachedData, invalidateDataCache } from "@/lib/dataCache"
 
 function getOfficeIcon(office) {
   if (office?.icon && office.icon.trim()) return office.icon
@@ -118,20 +119,32 @@ export default function ModuleConfigTab({ showToast }) {
     }
   }
 
-  const fetchMatrix = useCallback(async () => {
+  const fetchMatrix = useCallback(async (isSilent = false) => {
     try {
+      const cached = getCachedData("systemadmin_module_matrix")
+      if (cached && !isSilent) {
+        setMatrix(cached)
+        if (cached.offices?.length > 0) {
+          setSelectedOfficeId((prev) => prev || cached.offices[0].id)
+        }
+        setLoading(false)
+      }
+
       const res = await fetch("/api/modules/matrix")
       const json = await res.json()
-      if (res.ok && json.ok) {
+      if (res.ok && json.ok && json.data) {
         setMatrix(json.data)
+        setCachedData("systemadmin_module_matrix", json.data, 60000)
         if (json.data.offices?.length > 0) {
           setSelectedOfficeId((prev) => prev || json.data.offices[0].id)
         }
-      } else {
+      } else if (!cached) {
         showToast(json.error || "Failed to fetch module matrix", true)
       }
     } catch (err) {
-      showToast("Network error fetching module matrix", true)
+      if (!getCachedData("systemadmin_module_matrix")) {
+        showToast("Network error fetching module matrix", true)
+      }
     } finally {
       setLoading(false)
     }
@@ -209,6 +222,7 @@ export default function ModuleConfigTab({ showToast }) {
       const json = await res.json()
       if (res.ok && json.ok) {
         showToast("Feature settings saved")
+        invalidateDataCache("systemadmin_module_matrix")
       } else {
         // Rollback on server failure
         setMatrix((prev) => ({ ...prev, assignments: previousAssignments }))
@@ -258,6 +272,7 @@ export default function ModuleConfigTab({ showToast }) {
       if (res.ok && json.ok) {
         const groupName = category === "all" ? "all" : category === "admin" ? "supervisor" : "staff"
         showToast(`Updated ${groupName} features successfully`)
+        invalidateDataCache("systemadmin_module_matrix")
         setMatrix((prev) => {
           const nextAssignments = { ...prev.assignments }
           const officeMap = { ...(nextAssignments[officeId] || {}) }

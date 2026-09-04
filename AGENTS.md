@@ -271,20 +271,18 @@ Create a `.env.local` file in `next-app/` with these variables:
 | `HOT_FOLDER_ROOT` | No | `.local/hot-folder` | Hot-folder filesystem root |
 | `NODE_ENV` | No | — | Set to `production` for secure cookies |
 
-### 5.1 Default Admin Account (Reset DB)
+### 5.1 Default Accounts (Reset DB & Demo Accounts)
 
-After calling `GET /api/system/reset-db`, the system seeds a default admin:
+After calling `GET /api/system/reset-db` or running `node scripts/seed-test-accounts.mjs`, the system seeds default accounts:
 
-| Field | Value |
-|-------|-------|
-| **Staff ID** | `PUPREGISTRAR-001` |
-| **First Name** | Elias |
-| **Last Name** | Austria |
-| **Email** | `admin.default@pup.local` |
-| **Role** | Admin |
-| **Section** | Administrative |
-| **Status** | Active |
-| **Password** | Value of `DEFAULT_STAFF_PASSWORD` env var (default: `pupstaff`) |
+| Role | Staff ID | Name | Email | Default Route |
+|------|----------|------|-------|---------------|
+| **SuperAdmin** | `PUPSUPERADMIN-001` | System Administrator | `superadmin@pup.local` *(or `admin.default@pup.local`)* | `/systemadmin` |
+| **Registrar Admin** | `PUPREGISTRAR-003` | Elias Austria | `admin.registrar@pup.local` | `/admin` |
+| **Registrar Staff** | `PUPREGISTRAR-002` | Marcus Reyes | `staff.registrar@pup.local` | `/staff` |
+| **OSAS Admin** | `PUPOSAS-001` | Sandra Gomez | `admin.osas@pup.local` | `/admin` |
+
+The default password for all personnel accounts is `pupstaff` (configured via `DEFAULT_STAFF_PASSWORD`).
 
 **Important**: After resetting the database, you **must restart** the Next.js server for the changes to take effect.
 

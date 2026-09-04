@@ -46,10 +46,19 @@ function getSeverityInfo(sev) {
       classes: "bg-[#FEF3C7] text-[#92400E] dark:bg-amber-950/40 dark:text-amber-400"
     };
   }
-  return {
-    label: "Info",
-    classes: "bg-[#D1FAE5] text-[#065F46] dark:bg-emerald-950/40 dark:text-emerald-400"
-  };
+function formatActionLabel(actionStr) {
+  if (!actionStr) return "—";
+  if (actionStr === "Rotate Password") return "Password Rotated";
+  if (actionStr.startsWith("[SECURITY]")) {
+    if (actionStr.includes("UNAUTHORIZED_ACCESS")) return "Unauthorized Access Attempt";
+    if (actionStr.includes("FORBIDDEN_ACCESS")) return "Forbidden Access Attempt";
+    if (actionStr.includes("INVALID_SESSION")) return "Invalid Session Detected";
+    if (actionStr.includes("RATE_LIMIT_EXCEEDED")) return "Rate Limit Exceeded";
+    if (actionStr.includes("PRIVILEGE_ESCALATION")) return "Privilege Escalation Attempt";
+    if (actionStr.includes("BRUTE_FORCE_ATTEMPT")) return "Brute Force Attempt Detected";
+    return actionStr.split(" - ")[0].replace("[SECURITY] ", "");
+  }
+  return actionStr;
 }
 
 const LogRow = React.memo(function LogRow({
@@ -126,7 +135,7 @@ const LogRow = React.memo(function LogRow({
           </div>
         </td>
         <td className="py-0 px-4 align-middle text-[13px] font-medium text-[#111111] dark:text-zinc-50">
-          {log.action === "Rotate Password" ? "Password Rotated" : log.action}
+          {formatActionLabel(log.action)}
         </td>
         <td className="py-0 px-4 align-middle">
           <Tooltip>

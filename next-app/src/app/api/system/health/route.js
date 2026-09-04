@@ -7,18 +7,15 @@ import os from "node:os";
 import { query, queryOne } from "@/lib/postgres";
 import { dbGet } from "@/lib/postgresCompat";
 
+import { getHealthCache, setHealthCache, clearHealthCache } from "@/lib/healthCache";
+
 export const runtime = "nodejs";
 
 const execAsync = promisify(exec);
 const execFileAsync = promisify(execFile);
-const HEALTH_TTL_MS = 5000;
-let healthCache = null;
-let healthCacheAt = 0;
+const HEALTH_TTL_MS = 15000;
 
-export function clearHealthCache() {
-  healthCache = null;
-  healthCacheAt = 0;
-}
+export { clearHealthCache };
 
 function getLocalDataRoot() {
   return process.env.LOCAL_DATA_DIR
@@ -26,24 +23,39 @@ function getLocalDataRoot() {
     : path.join(process.cwd(), ".local");
 }
 
-/** Cross-platform CPU %: delta of idle vs total ticks between two samples (~250ms). */
+let lastCpuSample = null;
+
+function sampleCpu() {
+  const cpus = os.cpus();
+  let idle = 0;
+  let total = 0;
+  for (const cpu of cpus) {
+    const t = cpu.times;
+    idle += t.idle;
+    total += t.user + t.nice + t.sys + t.idle + t.irq;
+  }
+  return { idle, total };
+}
+
+/** Cross-platform CPU %: instantaneous delta against previous sample, or short 50ms sample on cold start. */
 async function readCpuUsage() {
-  const sample = () => {
-    const cpus = os.cpus();
-    let idle = 0;
-    let total = 0;
-    for (const cpu of cpus) {
-      const t = cpu.times;
-      idle += t.idle;
-      total += t.user + t.nice + t.sys + t.idle + t.irq;
-    }
-    return { idle, total };
-  };
-  const a = sample();
-  await new Promise((r) => setTimeout(r, 250));
-  const b = sample();
-  const idleDiff = b.idle - a.idle;
-  const totalDiff = b.total - a.total;
+  const current = sampleCpu();
+  if (!lastCpuSample) {
+    lastCpuSample = current;
+    await new Promise((r) => setTimeout(r, 50));
+    const next = sampleCpu();
+    lastCpuSample = next;
+    const idleDiff = next.idle - current.idle;
+    const totalDiff = next.total - current.total;
+    if (totalDiff <= 0) return 0;
+    const pct = Math.round((100 * (totalDiff - idleDiff)) / totalDiff);
+    return Math.max(0, Math.min(100, pct));
+  }
+
+  const prev = lastCpuSample;
+  lastCpuSample = current;
+  const idleDiff = current.idle - prev.idle;
+  const totalDiff = current.total - prev.total;
   if (totalDiff <= 0) return 0;
   const pct = Math.round((100 * (totalDiff - idleDiff)) / totalDiff);
   return Math.max(0, Math.min(100, pct));
@@ -587,12 +599,12 @@ export async function GET(req) {
     const url = new URL(req.url);
     const force = url.searchParams.get("force") === "true";
     const now = Date.now();
+    const { healthCache, healthCacheAt } = getHealthCache();
     if (!force && healthCache && now - healthCacheAt < HEALTH_TTL_MS) {
       return NextResponse.json({ ok: true, data: healthCache });
     }
     const data = await buildHealthData();
-    healthCache = data;
-    healthCacheAt = now;
+    setHealthCache(data, now);
 
     return NextResponse.json({
       ok: true,

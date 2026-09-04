@@ -11,7 +11,7 @@ const defaultHash = hashPasswordForStorage("pupstaff");
 
 // Test 1: Staff accounts
 const staffTests = [
-  { email: "admin.default@pup.local", id: "PUPREGISTRAR-001", role: "SuperAdmin", office: null },
+  { email: "superadmin@pup.local", id: "PUPSUPERADMIN-001", role: "SuperAdmin", office: null },
   { email: "admin.registrar@pup.local", id: "PUPREGISTRAR-003", role: "Admin", office: "registrar" },
   { email: "staff.registrar@pup.local", id: "PUPREGISTRAR-002", role: "Staff", office: "registrar" },
   { email: "admin.osas@pup.local", id: "PUPOSAS-001", role: "Admin", office: "osas" },
@@ -45,8 +45,9 @@ console.log("PASS: Student auth by student_no (student123):", Boolean(s3));
 
 // Test 4: Verify authentication resolution for all inputs
 const testInputs = [
-  { input: "admin.default@pup.local", expectedRole: "SuperAdmin" },
   { input: "superadmin@pup.local", expectedRole: "SuperAdmin" },
+  { input: "PUPSUPERADMIN-001", expectedRole: "SuperAdmin" },
+  { input: "admin.default@pup.local", expectedRole: "SuperAdmin" },
   { input: "PUPREGISTRAR-001", expectedRole: "SuperAdmin" },
   { input: "admin.registrar@pup.local", expectedRole: "Admin" },
   { input: "PUPREGISTRAR-003", expectedRole: "Admin" },
@@ -60,7 +61,8 @@ const testInputs = [
 
 for (const t of testInputs) {
   const clean = t.input.trim();
-  const normalized = clean.toLowerCase() === "superadmin@pup.local" ? "admin.default@pup.local" : clean;
+  const lower = clean.toLowerCase();
+  const normalized = (lower === "admin.default@pup.local" || lower === "pupregistrar-001") ? "superadmin@pup.local" : clean;
   const staff = await queryOne(
     "SELECT * FROM staff WHERE lower(email) = lower($1) OR lower(id) = lower($1)",
     [normalized]

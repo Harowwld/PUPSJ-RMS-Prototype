@@ -46,7 +46,8 @@ export async function middleware(req) {
     pathname.startsWith("/api/auth/logout") ||
     pathname.startsWith("/api/auth/me") ||
     pathname.startsWith("/api/auth/forgot-password") ||
-    pathname === "/api/system/reset-db"
+    pathname === "/api/system/reset-db" ||
+    pathname === "/api/system/seed-mock-data"
   ) {
     return addSecurityHeaders(NextResponse.next());
   }

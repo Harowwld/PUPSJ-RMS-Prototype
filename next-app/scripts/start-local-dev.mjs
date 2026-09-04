@@ -5,10 +5,11 @@ import dotenv from "dotenv";
 dotenv.config({ path: ".env.local" });
 dotenv.config();
 
-const pnpmCommand = process.platform === "win32" ? "pnpm.cmd" : "pnpm";
+const isWindows = process.platform === "win32";
+const pnpmCommand = isWindows ? "pnpm.cmd" : "pnpm";
 
 function run(command, args, label) {
-  const result = spawnSync(command, args, { stdio: "inherit", cwd: process.cwd(), shell: false });
+  const result = spawnSync(command, args, { stdio: "inherit", cwd: process.cwd(), shell: isWindows });
   if (result.error) {
     throw new Error(`${label} failed: ${result.error.message}`);
   }
@@ -34,7 +35,7 @@ try {
   const dev = spawn(
     pnpmCommand,
     ["exec", "concurrently", "-n", devCommands.length === 2 ? "next,hot-folder" : "next", "-c", "cyan,magenta", ...devCommands],
-    { stdio: "inherit", cwd: process.cwd(), shell: false }
+    { stdio: "inherit", cwd: process.cwd(), shell: isWindows }
   );
 
   const stop = (signal) => {

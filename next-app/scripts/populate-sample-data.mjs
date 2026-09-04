@@ -51,11 +51,11 @@ const documents = [
 ];
 
 const requests = [
-  [1, "2023-20003-MN-0", "Diploma", "Pending", "Alumni document request for employment verification", "PUPREGISTRAR-001"],
+  [1, "2023-20003-MN-0", "Diploma", "Pending", "Alumni document request for employment verification", "PUPREGISTRAR-002"],
   [2, "2024-40005-MN-2", "Transcript of Records", "InProgress", "Under processing by records evaluation section", "PUPREGISTRAR-003"],
-  [3, "2022-10001-MN-1", "Certificate of Enrollment", "Ready", "Ready for campus registrar counter pickup", "records.marcus@pup.local"],
-  [4, "2022-10002-MN-2", "Form 137", "Completed", "Released and acknowledged by student", "PUPREGISTRAR-001"],
-  [5, "2020-50006-MN-0", "Certificate of Good Moral", "Pending", "Urgent request for scholarship application", "records.marcus@pup.local"],
+  [3, "2022-10001-MN-1", "Certificate of Enrollment", "Ready", "Ready for campus registrar counter pickup", "PUPREGISTRAR-002"],
+  [4, "2022-10002-MN-2", "Form 137", "Completed", "Released and acknowledged by student", "PUPREGISTRAR-003"],
+  [5, "2020-50006-MN-0", "Certificate of Good Moral", "Pending", "Urgent request for scholarship application", "PUPREGISTRAR-002"],
 ];
 
 const proposals = [
@@ -127,25 +127,62 @@ const minimalPdf = Buffer.from(
 export async function seed({ force: forceOverride } = {}) {
   const force = forceOverride ?? process.argv.includes("--force");
   await transaction(async ({ query: run, queryOne: runOne }) => {
-    await run(
-      `INSERT INTO staff (id, office_id, fname, lname, role, section, status, email, password_hash, password_last_changed, updated_at)
-       VALUES ('records.marcus@pup.local', 'registrar', 'Marcus', 'Reyes', 'Staff', 'Records', 'Active', 'records.marcus@pup.local', $1, NOW(), NOW())
-       ON CONFLICT (id) DO UPDATE SET office_id=EXCLUDED.office_id, status='Active', password_hash=EXCLUDED.password_hash, updated_at=NOW()`,
-      [passwordHash],
-    );
+    const officialStaff = [
+      ["PUPSUPERADMIN-001", null, "System", "Administrator", "SuperAdmin", "System Administration", "superadmin@pup.local"],
+      ["PUPREGISTRAR-003", "registrar", "Elias", "Austria", "Admin", "Administrative", "admin.registrar@pup.local"],
+      ["PUPREGISTRAR-002", "registrar", "Marcus", "Reyes", "Staff", "Records", "staff.registrar@pup.local"],
+      ["PUPOSAS-001", "osas", "Sandra", "Gomez", "Admin", "OSAS Admin", "admin.osas@pup.local"],
+    ];
 
-    for (const [id, fname, lname, role, section, email] of [
-      ["PUPOSAS-001", "Sandra", "Gomez", "Admin", "OSAS Admin", "admin.osas@pup.local"],
-      ["PUPOSAS-002", "Juanito", "Rizal", "Staff", "Student Affairs", "staff.osas@pup.local"],
-    ]) {
+    for (const [id, office, fname, lname, role, section, email] of officialStaff) {
       await run(
         `INSERT INTO staff (id, office_id, fname, lname, role, section, status, email, password_hash, password_last_changed, updated_at)
-         VALUES ($1, 'osas', $2, $3, $4, $5, 'Active', $6, $7, NOW(), NOW())
-         ON CONFLICT (id) DO UPDATE SET office_id=EXCLUDED.office_id, fname=EXCLUDED.fname, lname=EXCLUDED.lname,
+         VALUES ($1, $2, $3, $4, $5, $6, 'Active', $7, $8, NOW(), NOW())
+         ON CONFLICT (id) DO UPDATE SET
+           office_id=EXCLUDED.office_id, fname=EXCLUDED.fname, lname=EXCLUDED.lname,
            role=EXCLUDED.role, section=EXCLUDED.section, status='Active', email=EXCLUDED.email,
            password_hash=EXCLUDED.password_hash, password_last_changed=NOW(), updated_at=NOW()`,
-        [id, fname, lname, role, section, email, passwordHash],
+        [id, office, fname, lname, role, section, email, passwordHash],
       );
+    }
+
+    // Remap legacy request actors and purge old demo accounts
+    await run(`UPDATE document_requests SET created_by = 'PUPREGISTRAR-002' WHERE created_by = 'records.marcus@pup.local' OR created_by = 'PUPREGISTRAR-001'`);
+    await run(`UPDATE document_requests SET updated_by = 'PUPREGISTRAR-002' WHERE updated_by = 'records.marcus@pup.local' OR updated_by = 'PUPREGISTRAR-001'`);
+    await run(`DELETE FROM staff_security_answers WHERE staff_id = 'PUPREGISTRAR-001'`);
+    await run(`DELETE FROM staff WHERE id = 'records.marcus@pup.local' OR email = 'records.marcus@pup.local' OR id = 'PUPREGISTRAR-001' OR email = 'admin.default@pup.local'`);
+    await run(`DELETE FROM staff WHERE id = 'PUPOSAS-002' OR email = 'staff.osas@pup.local'`);
+
+    // Ensure security questions and recovery answers
+    const securityQuestions = [
+      [1, "What is your mother's maiden name?", true],
+      [2, "What was the name of your first school?", true],
+      [3, "What is your favorite color?", false],
+    ];
+    for (const [qid, qtext, req] of securityQuestions) {
+      await run(
+        `INSERT INTO security_questions (id, question, is_required)
+         VALUES ($1, $2, $3)
+         ON CONFLICT (id) DO UPDATE SET question = EXCLUDED.question, is_required = EXCLUDED.is_required`,
+        [qid, qtext, req],
+      );
+    }
+
+    const defaultAnswers = [
+      [1, "answer1"],
+      [2, "answer2"],
+      [3, "blue"],
+    ];
+    for (const [staffId] of officialStaff) {
+      for (const [qid, ans] of defaultAnswers) {
+        const aHash = crypto.createHash("sha256").update(ans.toLowerCase()).digest("hex");
+        await run(
+          `INSERT INTO staff_security_answers (staff_id, question_id, answer_hash, updated_at)
+           VALUES ($1, $2, $3, NOW())
+           ON CONFLICT (staff_id, question_id) DO UPDATE SET answer_hash = EXCLUDED.answer_hash, updated_at = NOW()`,
+          [staffId, qid, aHash],
+        );
+      }
     }
 
     for (const [code, name] of [["BSIT", "Bachelor of Science in Information Technology"], ["BSCS", "Bachelor of Science in Computer Science"]]) {
@@ -179,12 +216,17 @@ export async function seed({ force: forceOverride } = {}) {
       );
     }
 
-    await run(
-      `INSERT INTO student_accounts (student_no, password_hash, status, updated_at)
-       VALUES ('2023-00001-IT-1', $1, 'Active', NOW())
-       ON CONFLICT (student_no) DO UPDATE SET password_hash=EXCLUDED.password_hash, status='Active', updated_at=NOW()`,
-      [studentPasswordHash],
-    );
+    for (const [sNo, sEmail] of [
+      ["2023-00001-IT-1", "test.student@pup.local"],
+      ["2022-10001-MN-1", "student@pup.local"],
+    ]) {
+      await run(
+        `INSERT INTO student_accounts (student_no, email, password_hash, status, updated_at)
+         VALUES ($1, $2, $3, 'Active', NOW())
+         ON CONFLICT (student_no) DO UPDATE SET email=EXCLUDED.email, password_hash=EXCLUDED.password_hash, status='Active', updated_at=NOW()`,
+        [sNo, sEmail, studentPasswordHash],
+      );
+    }
 
     const uploadsDir = path.join(process.env.LOCAL_DATA_DIR || ".local", "uploads");
     const osasUploadsDir = path.join(process.env.LOCAL_DATA_DIR || ".local", "osas", "uploads");

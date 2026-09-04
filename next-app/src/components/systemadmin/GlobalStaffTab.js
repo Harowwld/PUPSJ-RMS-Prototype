@@ -27,6 +27,7 @@ import {
   EmptyDescription,
 } from "@/components/ui/empty"
 import { cn } from "@/lib/utils"
+import { getCachedData, setCachedData, invalidateDataCache } from "@/lib/dataCache"
 
 function SortIndicator({ column, sortBy, sortOrder }) {
   if (sortBy !== column) {
@@ -110,6 +111,15 @@ export default function GlobalStaffTab({ authUser, showToast }) {
   const [bulkRestoreLoading, setBulkRestoreLoading] = useState(false)
 
   const fetchData = useCallback(async () => {
+    // SWR Cache-first: instant render from cache if available
+    const cachedStaff = getCachedData("systemadmin_staff")
+    const cachedOffices = getCachedData("systemadmin_offices")
+    if (Array.isArray(cachedStaff) && Array.isArray(cachedOffices)) {
+      setStaff(cachedStaff)
+      setOffices(cachedOffices)
+      setLoading(false)
+    }
+
     try {
       const [resStaff, resOffices] = await Promise.all([
         fetch("/api/staff?limit=500"),
@@ -119,14 +129,18 @@ export default function GlobalStaffTab({ authUser, showToast }) {
       const jsonStaff = await resStaff.json()
       const jsonOffices = await resOffices.json()
       
-      if (resStaff.ok && jsonStaff.ok) {
+      if (resStaff.ok && jsonStaff.ok && Array.isArray(jsonStaff.data)) {
         setStaff(jsonStaff.data)
+        setCachedData("systemadmin_staff", jsonStaff.data, 60000)
       }
-      if (resOffices.ok && jsonOffices.ok) {
+      if (resOffices.ok && jsonOffices.ok && Array.isArray(jsonOffices.data)) {
         setOffices(jsonOffices.data)
+        setCachedData("systemadmin_offices", jsonOffices.data, 120000)
       }
     } catch (err) {
-      showToast("Failed to load directory data", true)
+      if (!cachedStaff) {
+        showToast("Failed to load directory data", true)
+      }
     } finally {
       setLoading(false)
     }
@@ -213,6 +227,8 @@ export default function GlobalStaffTab({ authUser, showToast }) {
       if (res.ok && json.ok) {
         showToast(isEditing ? "Personnel updated successfully" : "Personnel account created")
         setFormOpen(false)
+        invalidateDataCache("systemadmin_staff")
+        invalidateDataCache("systemadmin_offices_stats")
         fetchData()
         
         if (!isEditing && json.defaultPassword) {
@@ -242,6 +258,8 @@ export default function GlobalStaffTab({ authUser, showToast }) {
       if (res.ok && json.ok) {
         showToast(`Personnel account for ${archiveTarget.fname} ${archiveTarget.lname} has been archived.`)
         setArchiveTarget(null)
+        invalidateDataCache("systemadmin_staff")
+        invalidateDataCache("systemadmin_offices_stats")
         fetchData()
       } else {
         showToast(json.error || "Failed to archive personnel account", true)
@@ -266,6 +284,8 @@ export default function GlobalStaffTab({ authUser, showToast }) {
       if (res.ok && json.ok) {
         showToast(`Personnel account for ${restoreTarget.fname} ${restoreTarget.lname} has been restored to Active.`)
         setRestoreTarget(null)
+        invalidateDataCache("systemadmin_staff")
+        invalidateDataCache("systemadmin_offices_stats")
         fetchData()
       } else {
         showToast(json.error || "Failed to restore personnel account", true)
@@ -315,8 +335,9 @@ export default function GlobalStaffTab({ authUser, showToast }) {
         valA = (a.id || "").toLowerCase()
         valB = (b.id || "").toLowerCase()
       } else if (sortBy === "office") {
-        const offA = offices.find((o) => o.id === a.office_id)?.short_name || "Platform Level"
-        const offB = offices.find((o) => o.id === b.office_id)?.short_name || "Platform Level"
+        const offList = Array.isArray(offices) ? offices : []
+        const offA = offList.find((o) => o.id === a.office_id)?.short_name || "Platform Level"
+        const offB = offList.find((o) => o.id === b.office_id)?.short_name || "Platform Level"
         valA = offA.toLowerCase()
         valB = offB.toLowerCase()
       } else if (sortBy === "role") {
@@ -433,6 +454,8 @@ export default function GlobalStaffTab({ authUser, showToast }) {
       showToast(`Archived ${successCount} personnel account(s)${failCount > 0 ? ` (${failCount} failed)` : ""}`)
       setBulkArchiveOpen(false)
       setSelectedIds(new Set())
+      invalidateDataCache("systemadmin_staff")
+      invalidateDataCache("systemadmin_offices_stats")
       fetchData()
     } catch (err) {
       showToast("Network error archiving selected accounts", true)
@@ -467,6 +490,8 @@ export default function GlobalStaffTab({ authUser, showToast }) {
       showToast(`Restored ${successCount} personnel account(s)${failCount > 0 ? ` (${failCount} failed)` : ""}`)
       setBulkRestoreOpen(false)
       setSelectedIds(new Set())
+      invalidateDataCache("systemadmin_staff")
+      invalidateDataCache("systemadmin_offices_stats")
       fetchData()
     } catch (err) {
       showToast("Network error restoring selected accounts", true)
@@ -733,7 +758,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
               )}
               {officeFilter !== "All" && (
                 <div className="flex items-center gap-[6px] rounded-[6px] bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
-                  Office: {officeFilter === "global" ? "System Administration" : offices.find((o) => o.id === officeFilter)?.short_name || officeFilter}
+                  Office: {officeFilter === "global" ? "System Administration" : (Array.isArray(offices) ? offices : []).find((o) => o.id === officeFilter)?.short_name || officeFilter}
                   <button
                     onClick={() => {
                       setOfficeFilter("All")
@@ -830,7 +855,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                 >
                   <option value="All">All Offices</option>
                   <option value="global">System Administration</option>
-                  {offices.map((o) => (
+                  {(Array.isArray(offices) ? offices : []).map((o) => (
                     <option key={o.id} value={o.id}>
                       {o.short_name}
                     </option>
@@ -990,7 +1015,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
             
             <tbody className="divide-y divide-gray-100 dark:divide-white/5 font-medium text-gray-900 dark:text-zinc-100 bg-white dark:bg-[#1c1c1e]">
               {paginatedStaff.map((member) => {
-                const office = offices.find(o => o.id === member.office_id)
+                const office = (Array.isArray(offices) ? offices : []).find(o => o.id === member.office_id)
                 const isSelf = member.id === authUser?.id
                 const isSelected = selectedIds.has(member.id)
                 
@@ -1268,7 +1293,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                     optionClassName="rounded-lg text-xs font-medium py-2.5 px-3 hover:bg-gray-100 dark:hover:bg-zinc-800"
                   >
                     <option value="">SystemAdmin / Global (No Office Scope)</option>
-                    {offices.map(o => (
+                    {(Array.isArray(offices) ? offices : []).map(o => (
                       <option key={o.id} value={o.id}>{o.name}</option>
                     ))}
                   </Select>

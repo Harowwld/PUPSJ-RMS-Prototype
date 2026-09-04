@@ -1,5 +1,14 @@
 import { writeAuditLog } from "./auditLogRequest";
 
+function formatTarget(targetUrl) {
+  try {
+    const parsed = new URL(targetUrl);
+    return `${parsed.pathname}${parsed.search}`;
+  } catch {
+    return targetUrl || "Unknown";
+  }
+}
+
 /**
  * Logs security-related events for monitoring and compliance
  * @param {Request} req - The request object
@@ -18,58 +27,71 @@ export async function logSecurityEvent(req, eventType, details = {}) {
       req.headers.get("x-real-ip") ||
       "localhost";
     
-    const userAgent = details.userAgent || req.headers.get("user-agent") || "Unknown";
-    const target = details.target || req.url || "Unknown";
+    const userAgent = details.userAgent || req.headers.get("user-agent") || "";
+    const rawTarget = details.target || req.url || "Unknown";
+    const target = formatTarget(rawTarget);
     const reason = details.reason || "Security event triggered";
     const context = details.context || {};
 
-    // Create standardized security event message
-    let action = `[SECURITY] ${eventType}`;
+    let action = "Security Alert";
+    let logDetails = `${reason} on ${target}`;
     
     switch (eventType) {
       case "UNAUTHORIZED_ACCESS":
-        action += ` - Unauthorized access attempt to ${target}`;
+        action = "Unauthorized Access Attempt";
+        logDetails = `Unauthorized access attempt to ${target}${reason ? `: ${reason}` : ""}`;
         break;
       case "FORBIDDEN_ACCESS":
-        action += ` - Forbidden access attempt to ${target}`;
+        action = "Forbidden Access Attempt";
+        logDetails = `Forbidden access attempt to ${target}${reason ? `: ${reason}` : ""}`;
         break;
       case "INVALID_SESSION":
-        action += ` - Invalid session token used for ${target}`;
+        action = "Invalid Session Detected";
+        logDetails = `Invalid session token on ${target}${reason ? `: ${reason}` : ""}`;
         break;
       case "PRIVILEGE_ESCALATION":
-        action += ` - Privilege escalation attempt: ${reason}`;
+        action = "Privilege Escalation Attempt";
+        logDetails = `Privilege escalation attempt on ${target}: ${reason}`;
         break;
       case "SUSPICIOUS_ACTIVITY":
-        action += ` - Suspicious activity detected: ${reason}`;
+        action = "Suspicious Activity Detected";
+        logDetails = `Suspicious activity on ${target}: ${reason}`;
         break;
       case "RATE_LIMIT_EXCEEDED":
-        action += ` - Rate limit exceeded for ${target}`;
+        action = "Rate Limit Exceeded";
+        logDetails = `Rate limit exceeded on ${target}${reason ? `: ${reason}` : ""}`;
         break;
       case "CSRF_DETECTED":
-        action += ` - CSRF attempt detected on ${target}`;
+        action = "CSRF Attempt Detected";
+        logDetails = `CSRF attempt on ${target}${reason ? `: ${reason}` : ""}`;
         break;
       case "BRUTE_FORCE_ATTEMPT":
-        action += ` - Brute force attempt detected: ${reason}`;
+        action = "Brute Force Attempt Detected";
+        logDetails = `Brute force attempt on ${target}: ${reason}`;
         break;
       default:
-        action += ` - ${reason}`;
+        action = eventType.replace(/_/g, " ").toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
+        logDetails = `${reason} on ${target}`;
     }
 
-    // Add context information to the audit log
-    const contextInfo = Object.keys(context).length > 0 
-      ? ` | Context: ${JSON.stringify(context)}`
-      : "";
+    if (context && Object.keys(context).length > 0) {
+      logDetails += ` | Context: ${JSON.stringify(context)}`;
+    }
 
-    await writeAuditLog(req, `${action}${contextInfo}`, {
+    await writeAuditLog(req, action, {
+      details: logDetails,
       ip,
       userAgent,
       target,
       eventType,
       severity: getSeverityLevel(eventType),
+      actor: details.actor,
+      role: details.role,
+      officeId: details.officeId || details.office_id || null,
       timestamp: new Date().toISOString(),
     });
 
-    console.log(`[Security Audit] ${eventType}: ${action}`, {
+    console.log(`[Security Audit] ${action}: ${logDetails}`, {
       ip,
       userAgent,
       target,
@@ -85,21 +107,21 @@ export async function logSecurityEvent(req, eventType, details = {}) {
 /**
  * Determines the severity level for different security events
  * @param {string} eventType - Type of security event
- * @returns {string} Severity level (LOW, MEDIUM, HIGH, CRITICAL)
+ * @returns {string} Severity level (INFO, WARNING, CRITICAL)
  */
 function getSeverityLevel(eventType) {
   const severityMap = {
-    "UNAUTHORIZED_ACCESS": "MEDIUM",
-    "FORBIDDEN_ACCESS": "HIGH",
-    "INVALID_SESSION": "MEDIUM",
+    "UNAUTHORIZED_ACCESS": "WARNING",
+    "FORBIDDEN_ACCESS": "WARNING",
+    "INVALID_SESSION": "WARNING",
     "PRIVILEGE_ESCALATION": "CRITICAL",
-    "SUSPICIOUS_ACTIVITY": "HIGH",
-    "RATE_LIMIT_EXCEEDED": "MEDIUM",
-    "CSRF_DETECTED": "HIGH",
+    "SUSPICIOUS_ACTIVITY": "WARNING",
+    "RATE_LIMIT_EXCEEDED": "WARNING",
+    "CSRF_DETECTED": "CRITICAL",
     "BRUTE_FORCE_ATTEMPT": "CRITICAL",
   };
 
-  return severityMap[eventType] || "MEDIUM";
+  return severityMap[eventType] || "WARNING";
 }
 
 /**

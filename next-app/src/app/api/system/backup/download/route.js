@@ -4,6 +4,7 @@ import path from "node:path";
 import { getBackupById, getBackupsDir } from "../../../../../lib/backupsRepo";
 import { writeAuditLog } from "../../../../../lib/auditLogRequest";
 import { requireAdmin, createAuthErrorResponse } from "../../../../../lib/authHelpers";
+import { isSystemAdminRole } from "../../../../../lib/roleUtils";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -21,6 +22,13 @@ export async function GET(req) {
 
     const backup = await getBackupById(id);
     if (!backup) return NextResponse.json({ ok: false, error: "Backup not found" }, { status: 404 });
+
+    if (!isSystemAdminRole(user.role)) {
+      const userOffice = String(user.office_id || user.section || "registrar").toLowerCase().trim();
+      if (backup.scope === "system" || (backup.office_id && backup.office_id.toLowerCase() !== userOffice)) {
+        return NextResponse.json({ ok: false, error: "Forbidden: You do not have permission to download this backup" }, { status: 403 });
+      }
+    }
 
     const backupsDir = getBackupsDir();
     const filePath = path.join(backupsDir, backup.filename);

@@ -83,16 +83,25 @@ export async function POST(req) {
 
   // 2. Authenticate
   const cleanUsername = String(username || "").trim();
-  const normalizedIdentifier = cleanUsername.toLowerCase() === "superadmin@pup.local"
-    ? "admin.default@pup.local"
-    : cleanUsername;
+  const lowerUser = cleanUsername.toLowerCase();
+  const isSuperAdminAlias = lowerUser === "admin.default@pup.local" || lowerUser === "pupregistrar-001";
+  const searchIdentifier = isSuperAdminAlias ? "superadmin@pup.local" : cleanUsername;
 
-  const staff = process.env.DATABASE_URL
+  let staff = process.env.DATABASE_URL
     ? await queryOne(
         "SELECT * FROM staff WHERE lower(email) = lower($1) OR lower(id) = lower($1)",
-        [normalizedIdentifier]
+        [searchIdentifier]
       )
-    : await getStaffByUsername(normalizedIdentifier);
+    : await getStaffByUsername(searchIdentifier);
+
+  if (!staff && isSuperAdminAlias) {
+    staff = process.env.DATABASE_URL
+      ? await queryOne(
+          "SELECT * FROM staff WHERE lower(email) = lower($1) OR lower(id) = lower($1)",
+          [cleanUsername]
+        )
+      : await getStaffByUsername(cleanUsername);
+  }
 
   if (!staff) {
     // Check if it's a student trying to log in

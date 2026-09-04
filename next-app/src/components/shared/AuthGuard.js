@@ -1,9 +1,12 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import React, { createContext, useContext, useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Skeleton } from "@/components/ui/skeleton"
 import { isAdminRole, isStaffRole, isSuperAdminRole, isSystemAdminRole } from "@/lib/roleUtils"
+
+export const AuthUserContext = createContext(null)
+export const useAuthUser = () => useContext(AuthUserContext)
 
 function applyAccessibility(highContrast) {
   if (typeof window === "undefined") return;
@@ -24,6 +27,7 @@ function applyAccessibility(highContrast) {
  */
 export function AuthGuard({ allowedRoles = [], children, redirectTo = "/" }) {
   const router = useRouter()
+  const [currentUser, setCurrentUser] = useState(null)
   const [isAuthorized, setIsAuthorized] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
 
@@ -63,6 +67,7 @@ export function AuthGuard({ allowedRoles = [], children, redirectTo = "/" }) {
         }
 
         const user = json.data
+        setCurrentUser(user)
 
         // Setup accessibility scaling and high contrast preferences
         if (user && user.id) {
@@ -174,7 +179,13 @@ export function AuthGuard({ allowedRoles = [], children, redirectTo = "/" }) {
   }
 
   // Render children if authorized, otherwise render nothing (redirect will happen)
-  return isAuthorized ? children : null
+  return isAuthorized ? (
+    <AuthUserContext.Provider value={currentUser}>
+      {React.isValidElement(children)
+        ? React.cloneElement(children, { authUser: currentUser })
+        : children}
+    </AuthUserContext.Provider>
+  ) : null
 }
 
 /**

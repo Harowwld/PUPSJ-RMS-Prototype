@@ -1,11 +1,12 @@
 "use client"
 
-import React, { useState, useEffect, useCallback } from "react"
+import React, { useState, useEffect, useCallback, useRef } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Badge } from "@/components/ui/badge"
+import { getCachedData, setCachedData } from "@/lib/dataCache"
 import {
   Empty,
   EmptyHeader,
@@ -73,9 +74,29 @@ function parseDateLocal(str) {
   return new Date(y, m - 1, d)
 }
 
+function formatActionLabel(actionStr) {
+  if (!actionStr) return "—";
+  if (actionStr === "Rotate Password") return "Password Rotated";
+  if (actionStr.startsWith("[SECURITY]")) {
+    if (actionStr.includes("UNAUTHORIZED_ACCESS")) return "Unauthorized Access Attempt";
+    if (actionStr.includes("FORBIDDEN_ACCESS")) return "Forbidden Access Attempt";
+    if (actionStr.includes("INVALID_SESSION")) return "Invalid Session Detected";
+    if (actionStr.includes("RATE_LIMIT_EXCEEDED")) return "Rate Limit Exceeded";
+    if (actionStr.includes("PRIVILEGE_ESCALATION")) return "Privilege Escalation Attempt";
+    if (actionStr.includes("BRUTE_FORCE_ATTEMPT")) return "Brute Force Attempt Detected";
+    return actionStr.split(" - ")[0].replace("[SECURITY] ", "");
+  }
+  return actionStr;
+}
+
 export default function GlobalAuditLogsTab({ showToast }) {
   const [logs, setLogs] = useState([])
   const [offices, setOffices] = useState([])
+  const officesRef = useRef(offices)
+  useEffect(() => {
+    officesRef.current = offices
+  }, [offices])
+
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -118,18 +139,34 @@ export default function GlobalAuditLogsTab({ showToast }) {
   }, [localSearch, search])
 
   const fetchOffices = useCallback(async () => {
+    const cached = getCachedData("systemadmin_offices")
+    if (Array.isArray(cached)) {
+      setOffices(cached)
+      officesRef.current = cached
+      return cached
+    }
     try {
       const res = await fetch("/api/offices")
       const json = await res.json()
-      if (res.ok && json.ok) {
-        setOffices(json.data || [])
-        return json.data || []
+      if (res.ok && json.ok && Array.isArray(json.data)) {
+        setOffices(json.data)
+        officesRef.current = json.data
+        setCachedData("systemadmin_offices", json.data, 120000)
+        return json.data
       }
     } catch {}
+    setOffices([])
+    officesRef.current = []
     return []
   }, [])
 
   const fetchStats = useCallback(async () => {
+    const statsKey = `audit_stats_${officeFilter}_${severityFilter}_${search}_${startDate}_${endDate}`
+    const cachedStats = getCachedData(statsKey)
+    if (cachedStats) {
+      setLogStats(cachedStats)
+    }
+
     try {
       const officeQuery = officeFilter !== "All" ? `&officeId=${encodeURIComponent(officeFilter)}` : ""
       const severityQuery = severityFilter !== "All" ? `&severity=${encodeURIComponent(severityFilter)}` : ""
@@ -141,6 +178,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
       const json = await res.json()
       if (res.ok && json.ok) {
         setLogStats(json.data)
+        setCachedData(statsKey, json.data, 30000)
       }
     } catch (err) {
       console.error("Failed to fetch global audit log stats", err)
@@ -149,8 +187,20 @@ export default function GlobalAuditLogsTab({ showToast }) {
 
   const fetchLogs = useCallback(
     async (isManual = false, currentOffices = null) => {
+      const logsKey = `audit_logs_${page}_${limit}_${officeFilter}_${severityFilter}_${search}_${startDate}_${endDate}_${sortBy}_${sortOrder}`
+      if (!isManual) {
+        const cached = getCachedData(logsKey)
+        if (cached) {
+          setLogs(cached.logs)
+          setTotal(cached.total)
+          setLoading(false)
+        }
+      }
+
       if (isManual) setIsManualLoading(true)
-      setLoading(true)
+      if (!getCachedData(logsKey)) {
+        setLoading(true)
+      }
       setError(null)
       try {
         const offset = (page - 1) * limit
@@ -166,40 +216,40 @@ export default function GlobalAuditLogsTab({ showToast }) {
         )
         const json = await res.json()
 
-        const officeList = currentOffices || offices
+        const officeList = currentOffices || officesRef.current || []
 
         if (res.ok && json.ok) {
           setError(null)
-          setLogs(
-            (json.data || []).map((r) => {
-              const off = officeList.find((o) => o.id === r.office_id)
-              const scopeLabel = off ? off.short_name : "Global"
-              const officeName = off ? off.short_name : "Global (Platform)"
-              return {
-                id: `${r.log_source || "global"}-${r.office_id || "global"}-${r.id}`,
-                rawId: r.id,
-                time: formatPHDateTime(r.created_at),
-                user: r.actor,
-                actor: r.actor,
-                role: r.role,
-                office_id: r.office_id,
-                officeName,
-                scope: scopeLabel,
-                action: r.action,
-                details: r.details || "—",
-                severity: r.severity || "INFO",
-                userAgent: r.user_agent || "—",
-                user_agent: r.user_agent || "—",
-                entityType: r.entity_type || "",
-                entity_type: r.entity_type || "",
-                entityId: r.entity_id || "",
-                entity_id: r.entity_id || "",
-                ip: r.ip || "—",
-                created_at: r.created_at,
-              }
-            })
-          )
+          const formatted = (json.data || []).map((r) => {
+            const off = officeList.find((o) => o.id === r.office_id)
+            const scopeLabel = off ? off.short_name : "Global"
+            const officeName = off ? off.short_name : "Global (Platform)"
+            return {
+              id: `${r.log_source || "global"}-${r.office_id || "global"}-${r.id}`,
+              rawId: r.id,
+              time: formatPHDateTime(r.created_at),
+              user: r.actor,
+              actor: r.actor,
+              role: r.role,
+              office_id: r.office_id,
+              officeName,
+              scope: scopeLabel,
+              action: r.action,
+              details: r.details || "—",
+              severity: r.severity || "INFO",
+              userAgent: r.user_agent || "—",
+              user_agent: r.user_agent || "—",
+              entityType: r.entity_type || "",
+              entity_type: r.entity_type || "",
+              entityId: r.entity_id || "",
+              entity_id: r.entity_id || "",
+              ip: r.ip || "—",
+              created_at: r.created_at,
+            }
+          })
+          setLogs(formatted)
           setTotal(json.total || 0)
+          setCachedData(logsKey, { logs: formatted, total: json.total || 0 }, 30000)
         } else {
           setError(json.error || "Failed to fetch audit logs")
           showToast?.(json.error || "Failed to fetch audit logs", true)
@@ -212,19 +262,17 @@ export default function GlobalAuditLogsTab({ showToast }) {
         setIsManualLoading(false)
       }
     },
-    [page, limit, officeFilter, severityFilter, search, startDate, endDate, sortBy, sortOrder, offices, showToast]
+    [page, limit, officeFilter, severityFilter, search, startDate, endDate, sortBy, sortOrder, showToast]
   )
 
   useEffect(() => {
-    fetchOffices().then((offs) => {
-      fetchLogs(false, offs)
-    })
+    fetchOffices()
   }, [fetchOffices])
 
   useEffect(() => {
-    fetchLogs()
     fetchStats()
-  }, [fetchLogs, fetchStats])
+    fetchLogs()
+  }, [fetchStats, fetchLogs])
 
   const toggleRow = useCallback((id) => {
     setExpandedRows((prev) => ({
@@ -319,7 +367,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
     const json = await res.json()
     if (!res.ok || !json.ok) throw new Error(json.error || "Export failed")
     return (json.data || []).map((r) => {
-      const off = offices.find((o) => o.id === r.office_id)
+      const off = (Array.isArray(offices) ? offices : []).find((o) => o.id === r.office_id)
       return {
         ...r,
         officeName: off ? off.short_name : "Global (Platform)",
@@ -389,7 +437,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
     setIsGeneratingPdf(true)
     try {
       const allLogs = await fetchAllForExport()
-      const offObj = offices.find((o) => o.id === officeFilter)
+      const offObj = (Array.isArray(offices) ? offices : []).find((o) => o.id === officeFilter)
       const scopeLabel =
         officeFilter === "All"
           ? "All Scopes"
@@ -560,7 +608,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
                 )}
                 {officeFilter !== "All" && (
                   <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
-                    Scope: {officeFilter === "global" ? "Global (Platform)" : offices.find((o) => o.id === officeFilter)?.short_name || officeFilter}
+                    Scope: {officeFilter === "global" ? "Global (Platform)" : (Array.isArray(offices) ? offices : []).find((o) => o.id === officeFilter)?.short_name || officeFilter}
                     <button
                       onClick={() => {
                         setOfficeFilter("All")
@@ -645,7 +693,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
                 >
                   <option value="All">All Scopes</option>
                   <option value="global">Global (Platform)</option>
-                  {offices.map((o) => (
+                  {(Array.isArray(offices) ? offices : []).map((o) => (
                     <option key={o.id} value={o.id}>
                       {o.short_name}
                     </option>
@@ -983,7 +1031,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
 
                           {/* Action */}
                           <td className="py-0 px-4 align-middle text-[13px] font-medium text-[#111111] dark:text-zinc-50">
-                            {log.action === "Rotate Password" ? "Password Rotated" : log.action}
+                            {formatActionLabel(log.action)}
                           </td>
 
                           {/* Description Tooltip */}

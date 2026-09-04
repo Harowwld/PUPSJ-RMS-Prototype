@@ -83,7 +83,7 @@ The system includes pre-seeded demo accounts for all administrative, office, and
 
 | Role | Office / Scope | Account ID / Student No | Email Identifier | Default Password | Dashboard Route & Purpose |
 |---|---|---|---|---|---|
-| **SuperAdmin** | Global (`NULL`) | `PUPREGISTRAR-001` | `admin.default@pup.local` *(or `superadmin@pup.local`)* | `pupstaff` | `/systemadmin` (System-wide administration, office provisioning, system health) |
+| **SuperAdmin** | Global (`NULL`) | `PUPSUPERADMIN-001` | `superadmin@pup.local` *(or `admin.default@pup.local`)* | `pupstaff` | `/systemadmin` (System-wide administration, office provisioning, system health) |
 | **Registrar Admin** | Office of the Registrar | `PUPREGISTRAR-003` | `admin.registrar@pup.local` | `pupstaff` | `/admin` (Registrar compliance, storage layout, document review, batch scanning) |
 | **Registrar Staff** | Office of the Registrar | `PUPREGISTRAR-002` | `staff.registrar@pup.local` | `pupstaff` | `/staff` (Digitization, scan & upload, student records, document request fulfillment) |
 | **OSAS Admin** | Office of Student Affairs and Services | `PUPOSAS-001` | `admin.osas@pup.local` | `pupstaff` | `/admin` (OSAS records review, student organization event proposals) |
