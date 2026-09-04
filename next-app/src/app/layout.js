@@ -4,11 +4,16 @@ import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/shared/ThemeProvider";
 import LucideIconTranslator from "@/components/shared/LucideIconTranslator";
 import DynamicFavicon from "@/components/shared/DynamicFavicon";
-import { Inter } from "next/font/google";
+import localFont from "next/font/local";
 
-const inter = Inter({
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
+const inter = localFont({
+  src: [
+    { path: "../../public/assets/fonts/inter/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuOKfMZg.ttf", weight: "300" },
+    { path: "../../public/assets/fonts/inter/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuLyfMZg.ttf", weight: "400" },
+    { path: "../../public/assets/fonts/inter/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuI6fMZg.ttf", weight: "500" },
+    { path: "../../public/assets/fonts/inter/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuGKYMZg.ttf", weight: "600" },
+    { path: "../../public/assets/fonts/inter/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuFuYMZg.ttf", weight: "700" },
+  ],
   variable: "--font-inter",
   display: "swap",
 });

@@ -45,7 +45,8 @@ export async function GET(req) {
     limit,
     offset,
     lastSeenReviewedAt: state.lastSeenReviewedAt,
-    uploadedBy: staff.id,
+    staffId: staff.id,
+    officeId: staff.office_id || "registrar",
     sortBy,
     sortOrder,
     tab,
@@ -87,10 +88,10 @@ export async function POST(req) {
   }
 
   if (action === "markSeen") {
-    await markAllStaffNotificationsReadState(staff.id, true);
+    await markAllStaffNotificationsReadState(staff.id, staff.office_id || "registrar", true);
     await markStaffReviewNotificationsSeen(staff.id);
   } else if (action === "markAllUnread") {
-    await markAllStaffNotificationsReadState(staff.id, false);
+    await markAllStaffNotificationsReadState(staff.id, staff.office_id || "registrar", false);
   } else if (action === "markRead") {
     if (ids.length > 0) {
       await setNotificationItemState(staff.id, ids, "read", 1);
@@ -124,7 +125,8 @@ export async function POST(req) {
     limit: 1,
     offset: 0,
     lastSeenReviewedAt: state.lastSeenReviewedAt,
-    uploadedBy: staff.id,
+    staffId: staff.id,
+    officeId: staff.office_id || "registrar",
   });
 
   return NextResponse.json({

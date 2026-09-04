@@ -2,21 +2,13 @@
 
 import { useState, useEffect, useMemo, useRef, useCallback, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import dynamic from "next/dynamic";
 
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import Sidebar from "@/components/shared/Sidebar";
 import { toast } from "@/components/ui/sonner";
-import { StaffGuard } from "@/components/shared/AuthGuard";
-import RecordsArchiveTab from "@/components/staff/RecordsArchiveTab";
-import StorageExplorerTab from "@/components/staff/StorageExplorerTab";
-import ScanUploadTab from "@/components/staff/ScanUploadTab";
-import BatchReviewTab from "@/components/staff/BatchReviewTab";
-import DocumentsTab from "@/components/staff/DocumentsTab";
-import NotificationsTab from "@/components/staff/NotificationsTab";
-import DocumentRequestsTab from "@/components/staff/DocumentRequestsTab";
-import RegistrarODRSTab from "@/components/staff/RegistrarODRSTab";
-import OsasMonitoringTab from "@/components/staff/OsasMonitoringTab";
+import { StaffGuard, useAuthUser } from "@/components/shared/AuthGuard";
 import PDFPreviewModal from "@/components/shared/PDFPreviewModal";
 import OCRPromptModal from "@/components/staff/OCRPromptModal";
 import ConfirmModal from "@/components/shared/ConfirmModal";
@@ -28,12 +20,20 @@ import {
   TabsContent,
 } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
-import { scanFileForSuggestion, warmupOcrWorker, splitNameComponents } from "@/lib/ocrClient";
-import { findMatchingDocument } from "@/lib/docAvailability";
-import { imageToPdf, needsConversion, mergeImagesToPdf } from "@/lib/imageToPdf";
 import { canonicalizeCabinetId } from "@/lib/storageLayoutUtils";
 import { cn } from "@/lib/utils";
 import { PageTransition } from "@/components/ui/motion";
+
+const StaffTabLoading = () => <div className="min-h-[360px] animate-pulse rounded-brand bg-gray-50" />;
+const RecordsArchiveTab = dynamic(() => import("@/components/staff/RecordsArchiveTab"), { loading: StaffTabLoading });
+const StorageExplorerTab = dynamic(() => import("@/components/staff/StorageExplorerTab"), { loading: StaffTabLoading });
+const ScanUploadTab = dynamic(() => import("@/components/staff/ScanUploadTab"), { loading: StaffTabLoading });
+const BatchReviewTab = dynamic(() => import("@/components/staff/BatchReviewTab"), { loading: StaffTabLoading });
+const DocumentsTab = dynamic(() => import("@/components/staff/DocumentsTab"), { loading: StaffTabLoading });
+const NotificationsTab = dynamic(() => import("@/components/staff/NotificationsTab"), { loading: StaffTabLoading });
+const DocumentRequestsTab = dynamic(() => import("@/components/staff/DocumentRequestsTab"), { loading: StaffTabLoading });
+const RegistrarODRSTab = dynamic(() => import("@/components/staff/RegistrarODRSTab"), { loading: StaffTabLoading });
+const OsasMonitoringTab = dynamic(() => import("@/components/staff/OsasMonitoringTab"), { loading: StaffTabLoading });
 
 function normalizeStudentRow(row) {
   if (!row || typeof row !== "object") return row;
@@ -65,8 +65,10 @@ function getStudentNoYear(studentNo) {
 
 
 
-function StaffPageContent() {
+function StaffPageContent({ authUser: propAuthUser = null }) {
   const router = useRouter();
+  const contextAuthUser = useAuthUser();
+  const initialAuthUser = propAuthUser || contextAuthUser;
 
   const searchParams = useSearchParams();
   const coreDataLoadedRef = useRef(false);
@@ -80,7 +82,7 @@ function StaffPageContent() {
     : "requests";
 
   const [view, setView] = useState(initialView);
-  const [authUser, setAuthUser] = useState(null);
+  const [authUser, setAuthUser] = useState(initialAuthUser);
 
   const switchView = useCallback((nextView) => {
     setView(nextView);
@@ -97,7 +99,7 @@ function StaffPageContent() {
       setView(tab)
     }
   }, [searchParams])
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!initialAuthUser);
   const [zoomNode, setZoomNode] = useState(3); // 0 to 6 (7 nodes)
   const handleZoomMouseDown = (e) => {
     // Avoid text selection or default drag triggers
@@ -398,33 +400,16 @@ function StaffPageContent() {
   }, []);
 
   useEffect(() => {
-    (async () => {
-      try {
-        const res = await fetch("/api/auth/me");
-        const json = await res.json().catch(() => null);
-        if (!res.ok || !json?.ok) {
-          if (res.status === 401) {
-            router.push("/");
-          }
-          return;
-        }
-        setAuthUser(json.data);
-
-        // Render first, then hydrate data in background.
-        setLoading(false);
-        setTimeout(() => {
-          fetchData();
-          fetchAllDocs();
-          fetchNotificationsUnread();
-          warmupOcrWorker().catch(() => {
-            // Keep silent; OCR path will show explicit errors on scan.
-          });
-        }, 0);
-      } catch (err) {
-        console.error("[StaffPage] Profile fetch failed:", err);
-      }
-    })();
-  }, [router, fetchData, fetchAllDocs, fetchNotificationsUnread]);
+    if (!initialAuthUser) return undefined;
+    setAuthUser(initialAuthUser);
+    setLoading(false);
+    const timer = setTimeout(() => {
+      fetchData();
+      fetchAllDocs();
+      fetchNotificationsUnread();
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [initialAuthUser, fetchData, fetchAllDocs, fetchNotificationsUnread]);
 
   useEffect(() => {
     const onVisible = () => {
@@ -439,6 +424,13 @@ function StaffPageContent() {
       window.removeEventListener("focus", onVisible);
     };
   }, [fetchAllDocs, fetchNotificationsUnread]);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      if (document.visibilityState === "visible") fetchNotificationsUnread();
+    }, 30000);
+    return () => clearInterval(timer);
+  }, [fetchNotificationsUnread]);
 
   // Sync navigation layout preferences across tabs
   useEffect(() => {
@@ -924,6 +916,7 @@ function StaffPageContent() {
 
       setOcrLoading(true);
       try {
+        const { scanFileForSuggestion } = await import("@/lib/ocrClient");
         const suggestion = await scanFileForSuggestion({
           file: activeFile,
           students,
@@ -1141,6 +1134,7 @@ function StaffPageContent() {
     setUploadFieldErrors({});
 
     // Convert image files to PDF before uploading (API only accepts PDFs)
+    const { imageToPdf, needsConversion, mergeImagesToPdf } = await import("@/lib/imageToPdf");
     let fileToUpload = uploadedFile;
     if (uploadedFiles.length > 1) {
       const allImages = uploadedFiles.every(f => needsConversion(f));
