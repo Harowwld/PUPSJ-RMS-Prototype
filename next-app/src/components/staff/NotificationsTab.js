@@ -294,6 +294,13 @@ export default function NotificationsTab({
   }, [load])
 
   useEffect(() => {
+    const timer = setInterval(() => {
+      if (document.visibilityState === "visible") load()
+    }, 30000)
+    return () => clearInterval(timer)
+  }, [load])
+
+  useEffect(() => {
     const onVisible = () => {
       if (document.visibilityState !== "visible") return
       load()
@@ -1034,4 +1041,3 @@ export default function NotificationsTab({
     </TooltipProvider>
   )
 }
-

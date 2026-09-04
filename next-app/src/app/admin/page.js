@@ -8,6 +8,7 @@ import {
   useCallback,
   Suspense,
 } from "react"
+import dynamic from "next/dynamic"
 import { useRouter, useSearchParams } from "next/navigation"
 import { toast } from "sonner"
 
@@ -20,19 +21,9 @@ import FloatingChatWidget from "@/components/shared/FloatingChatWidget"
 import PromptModal from "@/components/shared/PromptModal"
 import PDFPreviewModal from "@/components/shared/PDFPreviewModal"
 import { TOTPChallengeModal } from "@/components/shared/TOTPChallengeModal"
-import { AdminGuard } from "@/components/shared/AuthGuard"
+import { AdminGuard, useAuthUser } from "@/components/shared/AuthGuard"
 
-import StaffDirectoryTab from "@/components/admin/StaffDirectoryTab"
-import RegisterAccountTab from "@/components/admin/RegisterAccountTab"
-import AuditLogsTab from "@/components/admin/AuditLogsTab"
 import { generateExportFilename } from "@/lib/exportHelpers"
-import BackupTab from "@/components/admin/BackupTab"
-import EditUserModal from "@/components/admin/EditUserModal"
-import SystemConfigTab from "@/components/admin/SystemConfigTab"
-import DigitalRecordsReviewTab from "@/components/admin/DigitalRecordsReviewTab"
-import DigitizationComplianceTab from "@/components/admin/DigitizationComplianceTab"
-import SLAAnalyticsTab from "@/components/admin/SLAAnalyticsTab"
-import StorageLayoutEditorTab from "@/components/admin/StorageLayoutEditorTab"
 import { formatPHDateTime } from "@/lib/timeFormat"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
@@ -47,11 +38,25 @@ import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { PageTransition } from "@/components/ui/motion"
 
-function AdminPageContent() {
+const AdminTabLoading = () => <div className="min-h-[360px] animate-pulse rounded-brand bg-gray-50" />
+const StaffDirectoryTab = dynamic(() => import("@/components/admin/StaffDirectoryTab"), { loading: AdminTabLoading })
+const AuditLogsTab = dynamic(() => import("@/components/admin/AuditLogsTab"), { loading: AdminTabLoading })
+const SystemConfigTab = dynamic(() => import("@/components/admin/SystemConfigTab"), { loading: AdminTabLoading })
+const StorageLayoutEditorTab = dynamic(() => import("@/components/admin/StorageLayoutEditorTab"), { loading: AdminTabLoading })
+const DigitalRecordsReviewTab = dynamic(() => import("@/components/admin/DigitalRecordsReviewTab"), { loading: AdminTabLoading })
+const DigitizationComplianceTab = dynamic(() => import("@/components/admin/DigitizationComplianceTab"), { loading: AdminTabLoading })
+const SLAAnalyticsTab = dynamic(() => import("@/components/admin/SLAAnalyticsTab"), { loading: AdminTabLoading })
+const BackupTab = dynamic(() => import("@/components/admin/BackupTab"), { loading: AdminTabLoading })
+const RegisterAccountTab = dynamic(() => import("@/components/admin/RegisterAccountTab"), { loading: AdminTabLoading })
+const EditUserModal = dynamic(() => import("@/components/admin/EditUserModal"), { loading: () => null })
+
+function AdminPageContent({ authUser: propAuthUser = null }) {
   const router = useRouter()
+  const contextAuthUser = useAuthUser()
+  const initialAuthUser = propAuthUser || contextAuthUser
 
   const searchParams = useSearchParams()
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(!initialAuthUser)
   const loadedViewsRef = useRef({
     directory: false,
     logs: false,
@@ -245,7 +250,7 @@ function AdminPageContent() {
     "Enter the 6-digit code from your authenticator app to confirm this action."
   )
 
-  const [authUser, setAuthUser] = useState(null)
+  const [authUser, setAuthUser] = useState(initialAuthUser)
 
   const sidebarItems = useMemo(() => {
     if (!authUser?.enabled_modules) return []
@@ -751,30 +756,16 @@ function AdminPageContent() {
   }, [searchParams])
 
   useEffect(() => {
-    ;(async () => {
-      try {
-        const res = await fetch("/api/auth/me")
-        const json = await res.json().catch(() => null)
-        if (!res.ok || !json?.ok) {
-          if (res.status === 401) {
-            router.push("/")
-          }
-          return
-        }
-        setAuthUser(json.data)
-
-        // Render first, then hydrate data in background.
-        setLoading(false)
-        setTimeout(() => {
-          refreshStaff()
-          refreshSystemHealth()
-          fetchPendingReviewCount()
-        }, 0)
-      } catch (err) {
-        console.error("[AdminPage] Profile fetch failed:", err)
-      }
-    })()
-  }, [router, refreshStaff, refreshAuditLogs, refreshSystemHealth, fetchPendingReviewCount])
+    if (!initialAuthUser) return undefined
+    setAuthUser(initialAuthUser)
+    setLoading(false)
+    const timer = setTimeout(() => {
+      refreshStaff()
+      refreshSystemHealth()
+      fetchPendingReviewCount()
+    }, 0)
+    return () => clearTimeout(timer)
+  }, [initialAuthUser, refreshStaff, refreshSystemHealth, fetchPendingReviewCount])
 
   useEffect(() => {
     if (!authUser) return
@@ -945,7 +936,7 @@ function AdminPageContent() {
         )
       }
     },
-    [reviewRecords, refreshReviewRecords, showToast]
+    [refreshReviewRecords, showToast]
   )
 
   const bulkReviewDocumentsStatus = useCallback(

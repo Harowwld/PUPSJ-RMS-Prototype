@@ -43,25 +43,25 @@ export async function setNotificationItemState(staffId, notificationIds, field, 
   }
 }
 
-export async function markAllStaffNotificationsReadState(staffId, isRead) {
-  if (!staffId) return;
+export async function markAllStaffNotificationsReadState(staffId, officeId, isRead) {
+  if (!staffId || !officeId) return;
   const value = Boolean(isRead);
   
-  // We insert/update for notifications that belong to this staff (uploaded_by) 
-  // and have been reviewed, but ONLY if they are NOT archived.
+  // Notification visibility is office-wide. Read/archive state remains
+  // personal to the staff member who is viewing the notification center.
   await dbRun(
     `
       INSERT INTO staff_notification_item_states (staff_id, notification_id, is_read)
       SELECT ?, d.id, ? FROM documents d
       LEFT JOIN staff_notification_item_states ns ON d.id = ns.notification_id AND ns.staff_id = ?
-      WHERE d.uploaded_by = ? 
+      WHERE d.office_id = ?
         AND d.reviewed_at IS NOT NULL 
         AND d.approval_status IN ('Approved', 'Declined')
         AND COALESCE(ns.is_archived, FALSE) = FALSE
       ON CONFLICT(staff_id, notification_id) DO UPDATE SET
         is_read = excluded.is_read
     `,
-    [staffId, value, staffId, staffId]
+    [staffId, value, staffId, officeId]
   );
 }
 
@@ -69,7 +69,8 @@ export async function listDocumentReviewNotifications({
   limit = 20,
   offset = 0,
   lastSeenReviewedAt = null,
-  uploadedBy = null,
+  staffId = null,
+  officeId = null,
   sortBy = "reviewed_at",
   sortOrder = "DESC",
   tab = "inbox",
@@ -80,9 +81,9 @@ export async function listDocumentReviewNotifications({
   const filters = ["d.reviewed_at IS NOT NULL", "d.approval_status IN ('Approved', 'Declined')"];
   const params = [];
 
-  if (uploadedBy) {
-    filters.push("d.uploaded_by = ?");
-    params.push(uploadedBy);
+  if (officeId) {
+    filters.push("d.office_id = ?");
+    params.push(officeId);
   }
 
   const whereClause = filters.join(" AND ");
@@ -95,7 +96,7 @@ export async function listDocumentReviewNotifications({
       LEFT JOIN staff_notification_item_states ns ON d.id = ns.notification_id AND ns.staff_id = ?
       WHERE ${whereClause} AND ${archiveCondition}
     `,
-    [uploadedBy, ...params]
+    [staffId, ...params]
   );
   const total = Number(totalRow?.total || 0);
 
@@ -106,7 +107,7 @@ export async function listDocumentReviewNotifications({
       LEFT JOIN staff_notification_item_states ns ON d.id = ns.notification_id AND ns.staff_id = ?
       WHERE ${whereClause} AND COALESCE(ns.is_read, FALSE) = FALSE AND ${archiveCondition}
     `,
-    [uploadedBy, ...params]
+    [staffId, ...params]
   );
   const unreadCount = Number(unreadRow?.unread || 0);
 
@@ -117,7 +118,7 @@ export async function listDocumentReviewNotifications({
       LEFT JOIN staff_notification_item_states ns ON d.id = ns.notification_id AND ns.staff_id = ?
       WHERE ${whereClause} AND COALESCE(ns.is_archived, FALSE) = FALSE
     `,
-    [uploadedBy, ...params]
+    [staffId, ...params]
   );
   const inboxCount = Number(inboxCountRow?.total || 0);
 
@@ -128,7 +129,7 @@ export async function listDocumentReviewNotifications({
       LEFT JOIN staff_notification_item_states ns ON d.id = ns.notification_id AND ns.staff_id = ?
       WHERE ${whereClause} AND COALESCE(ns.is_archived, FALSE) = TRUE
     `,
-    [uploadedBy, ...params]
+    [staffId, ...params]
   );
   const archiveCount = Number(archiveCountRow?.total || 0);
 
@@ -171,7 +172,7 @@ export async function listDocumentReviewNotifications({
       ORDER BY ${sortCol} ${order}, d.id DESC
       LIMIT ? OFFSET ?
     `,
-    [uploadedBy, ...params, lim, off]
+    [staffId, ...params, lim, off]
   );
 
   return { items, total, unreadCount, inboxCount, archiveCount };
