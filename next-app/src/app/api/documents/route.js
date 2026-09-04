@@ -29,6 +29,7 @@ export async function GET(req) {
   const offset = searchParams.get("offset") || "0";
 
   const rows = await listDocuments({
+    officeId: user.office_id || undefined,
     q: q || undefined,
     studentNo: studentNo || undefined,
     docType: docType || undefined,
@@ -193,7 +194,8 @@ export async function POST(req) {
     req,
     isNewStudent
       ? `Created student ${studentNo} and uploaded ${docType}`
-      : `Uploaded document for student ${studentNo} (${docType})`
+      : `Uploaded document for student ${studentNo} (${docType})`,
+    { officeId: user.office_id || "registrar" }
   );
 
   return NextResponse.json({ ok: true, data: row }, { status: 201 });

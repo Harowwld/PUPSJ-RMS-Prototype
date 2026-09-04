@@ -50,6 +50,7 @@ function getStudentFolderYear(s) {
 }
 
 import ConfirmModal from "@/components/shared/ConfirmModal"
+import OfficeDocumentsTable from "@/components/staff/OfficeDocumentsTable"
 import { cn } from "@/lib/utils"
 
 export default function RecordsArchiveTab({
@@ -72,6 +73,8 @@ export default function RecordsArchiveTab({
   onSelectionChange,
   onBulkArchive,
   onBulkRestore,
+  staffDocs,
+  officeLabel,
 }) {
   const [listType, setListType] = useState("card")
   const [showArchived, setShowArchived] = useState(false)
@@ -859,6 +862,13 @@ export default function RecordsArchiveTab({
 
         </section>
       </div>
+
+      <OfficeDocumentsTable
+        documents={staffDocs}
+        officeLabel={officeLabel}
+        breadcrumbs={breadcrumbs}
+        onPreviewDocument={onPreviewDocument}
+      />
 
       <ConfirmModal
         open={restoreStudentOpen}

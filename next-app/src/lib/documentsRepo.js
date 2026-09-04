@@ -105,6 +105,7 @@ export async function createDocument({
 }
 
 export async function listDocuments({
+  officeId,
   q,
   studentNo,
   docType,
@@ -117,6 +118,11 @@ export async function listDocuments({
 
   const filters = [];
   const params = [];
+
+  if (officeId) {
+    filters.push("office_id = ?");
+    params.push(officeId);
+  }
 
   if (studentNo) {
     filters.push("student_no = ?");
@@ -160,9 +166,15 @@ export async function listDocuments({
   );
 }
 
-export async function getDocumentById(id) {
+export async function getDocumentById(id, { officeId } = {}) {
   await ensureReviewColumns();
-  const row = await dbGet("SELECT * FROM documents WHERE id = ?", [id]);
+  const filters = ["id = ?"];
+  const params = [id];
+  if (officeId) {
+    filters.push("office_id = ?");
+    params.push(officeId);
+  }
+  const row = await dbGet(`SELECT * FROM documents WHERE ${filters.join(" AND ")}`, params);
   return row || null;
 }
 
@@ -200,10 +212,10 @@ export async function replaceDocumentFile(
   const cleanDocType = String(existing.doc_type || "DOCUMENT").trim().toUpperCase().replace(/[^A-Z0-9-]/g, "_");
   const ext = path.extname(originalFilename || "").toLowerCase() || ".pdf";
   const storageFilename = `${cleanStudentNo}_${cleanDocType}_${Date.now()}${ext}`;
-  const absPath = path.join(getUploadsDir(), storageFilename);
+  const absPath = path.join(getUploadsDir(existing.office_id), storageFilename);
   fs.writeFileSync(absPath, buffer);
 
-  const prevAbsPath = path.join(getUploadsDir(), existing.storage_filename);
+  const prevAbsPath = path.join(getUploadsDir(existing.office_id), existing.storage_filename);
   try {
     fs.unlinkSync(prevAbsPath);
   } catch {

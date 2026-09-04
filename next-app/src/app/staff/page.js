@@ -1600,6 +1600,8 @@ function StaffPageContent() {
               }}
               students={students}
               archivedStudents={archivedStudents}
+              staffDocs={staffDocs.filter((doc) => doc.source_type !== "event_proposal")}
+              officeLabel={authUser?.office_id === "osas" ? "OSAS" : "Registrar"}
               explorerItems={explorerItems}
               onSwitchView={setView}
               onPreviewDocument={(docType, name, no, id) => {

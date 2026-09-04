@@ -12,6 +12,7 @@ import {
 import { getSessionCookieName, verifySessionToken } from "../../../../lib/jwt";
 import { getStaffById } from "../../../../lib/staffRepo";
 import { writeAuditLog } from "../../../../lib/auditLogRequest";
+import { requireStaff, createAuthErrorResponse } from "../../../../lib/authHelpers";
 
 export const runtime = "nodejs";
 
@@ -24,7 +25,27 @@ async function getSessionStaff(req) {
   return await getStaffById(userId);
 }
 
-export async function GET(_req, ctx) {
+function canAccessDocument(user, row) {
+  const role = String(user?.role || "").toLowerCase();
+  return role === "superadmin" || role === "systemadmin" || user?.office_id === row?.office_id;
+}
+
+async function requireDocumentAccess(req, id) {
+  const { user, error } = await requireStaff(req);
+  if (error || !user) {
+    return { response: createAuthErrorResponse(error || "Authentication required", 401) };
+  }
+  const row = await getDocumentById(id);
+  if (!row) {
+    return { response: NextResponse.json({ ok: false, error: "Not found" }, { status: 404 }) };
+  }
+  if (!canAccessDocument(user, row)) {
+    return { response: NextResponse.json({ ok: false, error: "Forbidden" }, { status: 403 }) };
+  }
+  return { user, row };
+}
+
+export async function GET(req, ctx) {
   const params = await ctx.params;
   const raw = params.id;
   const id = Number(raw);
@@ -35,10 +56,9 @@ export async function GET(_req, ctx) {
     );
   }
 
-  const row = await getDocumentById(id);
-  if (!row) {
-    return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
-  }
+  const access = await requireDocumentAccess(req, id);
+  if (access.response) return access.response;
+  const { row } = access;
 
   const filePath = getDocumentFilePath(row);
 
@@ -51,10 +71,11 @@ export async function GET(_req, ctx) {
 
   const bytes = fs.readFileSync(filePath);
 
-  await writeAuditLog(_req, "Viewed Document", {
+  await writeAuditLog(req, "Viewed Document", {
     details: `Viewed ${row.original_filename}.`,
     entity_type: "Document",
     entity_id: String(id),
+    officeId: row.office_id,
   });
 
   return new NextResponse(bytes, {
@@ -77,6 +98,9 @@ export async function PATCH(req, ctx) {
       { status: 400 }
     );
   }
+
+  const access = await requireDocumentAccess(req, id);
+  if (access.response) return access.response;
 
   const contentType = String(req.headers.get("content-type") || "").toLowerCase();
   let body = null;
@@ -159,7 +183,8 @@ export async function PATCH(req, ctx) {
         details: `declined digital record for student '${declined.student_name}' (Document: ${declined.doc_type})${reviewNote ? `. Reason: ${reviewNote}` : ""}`,
         severity: "WARNING",
         entity_type: "Document",
-        entity_id: id
+        entity_id: id,
+        officeId: declined.office_id,
       });
       return NextResponse.json({
         ok: true,
@@ -178,7 +203,8 @@ export async function PATCH(req, ctx) {
     await writeAuditLog(req, `Review Document`, { 
       details: `${approvalStatus.toLowerCase()} digital record for student '${row.student_name}' (Document: ${row.doc_type})${reviewNote ? `. Review note: ${reviewNote}` : ""}`,
       entity_type: "Document",
-      entity_id: id
+      entity_id: id,
+      officeId: row.office_id,
     });
     return NextResponse.json({ ok: true, data: row });
   }
@@ -209,7 +235,8 @@ export async function PATCH(req, ctx) {
       ? `overwrote binary file for student '${row.student_name}' (Document: ${row.doc_type}) with updated PDF upload`
       : `updated registry metadata (Student: '${row.student_name}', Type: '${row.doc_type}') for document record #${id}`,
     entity_type: "Document",
-    entity_id: id
+    entity_id: id,
+    officeId: row.office_id,
   });
 
   return NextResponse.json({ ok: true, data: row });
@@ -226,6 +253,9 @@ export async function DELETE(_req, ctx) {
     );
   }
 
+  const access = await requireDocumentAccess(_req, id);
+  if (access.response) return access.response;
+
   const row = await deleteDocument(id);
   if (!row) {
     return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
@@ -234,7 +264,8 @@ export async function DELETE(_req, ctx) {
     details: `permanently removed digital record for student '${row.student_name}' (Document: ${row.doc_type}) from system repository`,
     severity: "WARNING",
     entity_type: "Document",
-    entity_id: id
+    entity_id: id,
+    officeId: row.office_id,
   });
 
   return NextResponse.json({ ok: true, data: row });
