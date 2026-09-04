@@ -135,7 +135,7 @@ export async function getStaffById(id) {
 export async function getStaffByUsername(username) {
   const u = String(username || "").trim();
   if (!u) return null;
-  const row = await dbGet("SELECT * FROM staff WHERE lower(email) = lower(?)", [u]);
+  const row = await dbGet("SELECT * FROM staff WHERE lower(email) = lower(?) OR lower(id) = lower(?)", [u, u]);
   return row || null;
 }
 

@@ -9,7 +9,8 @@ import { writeGlobalAuditLog } from "@/lib/auditLogRequest";
 export const runtime = "nodejs";
 
 function uploadsDir() {
-  const dir = path.join(process.env.LOCAL_DATA_DIR || path.join(process.cwd(), ".local"), "osas", "uploads");
+  const localDir = process.env.LOCAL_DATA_DIR || path.join(process.cwd(), ".local");
+  const dir = path.join(localDir, "storage", "osas", "uploads");
   fs.mkdirSync(dir, { recursive: true });
   return dir;
 }
@@ -43,7 +44,13 @@ export async function POST(req) {
     return NextResponse.json({ ok: false, error: "Title, organization, event date, and one PDF proposal are required." }, { status: 400 });
   }
   const storageFilename = `${crypto.randomUUID()}.pdf`;
-  fs.writeFileSync(path.join(uploadsDir(), storageFilename), Buffer.from(await file.arrayBuffer()));
+  const fileBytes = Buffer.from(await file.arrayBuffer());
+  fs.writeFileSync(path.join(uploadsDir(), storageFilename), fileBytes);
+  try {
+    const legacyDir = path.join(process.env.LOCAL_DATA_DIR || path.join(process.cwd(), ".local"), "osas", "uploads");
+    fs.mkdirSync(legacyDir, { recursive: true });
+    fs.writeFileSync(path.join(legacyDir, storageFilename), fileBytes);
+  } catch {}
   const proposal = await queryOne(
     `INSERT INTO event_proposals (office_id, student_no, title, organization_name, event_date, original_filename, storage_filename, mime_type, size_bytes, status)
      VALUES ('osas', $1, $2, $3, $4, $5, $6, $7, $8, 'Submitted') RETURNING *`,

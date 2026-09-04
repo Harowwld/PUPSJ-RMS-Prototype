@@ -167,13 +167,35 @@ async function readDiskStats() {
   return { total: 0, free: 0, percent: 0 };
 }
 
-async function readDbSize() {
+async function readDbInfo() {
+  const t0 = Date.now();
   try {
-    const row = await dbGet("SELECT pg_database_size(current_database()) AS bytes");
-    const bytes = Number(row?.bytes || 0);
-    return bytes > 1024 * 1024
+    const [sizeRow, verRow] = await Promise.all([
+      dbGet("SELECT pg_database_size(current_database()) AS bytes"),
+      dbGet("SELECT version() AS ver"),
+    ]);
+    const latencyMs = Math.max(1, Date.now() - t0);
+    const bytes = Number(sizeRow?.bytes || 0);
+    const dbSize = bytes > 1024 * 1024
       ? `${(bytes / (1024 * 1024)).toFixed(2)} MB`
       : `${(bytes / 1024).toFixed(2)} KB`;
+
+    let dbEngine = "PostgreSQL";
+    if (verRow?.ver) {
+      const match = verRow.ver.match(/PostgreSQL\s+([\d.]+)/i);
+      if (match) dbEngine = `PostgreSQL ${match[1]}`;
+    }
+
+    return { dbSize, dbEngine, dbStatus: "Healthy", latencyMs };
+  } catch (err) {
+    return { dbSize: "0 KB", dbEngine: "PostgreSQL", dbStatus: "Degraded", latencyMs: 12 };
+  }
+}
+
+async function readDbSize() {
+  try {
+    const info = await readDbInfo();
+    return info.dbSize;
   } catch {
     return "0 KB";
   }
@@ -188,26 +210,44 @@ async function readLastRestoration() {
   }
 }
 
-async function getDirectoryStats(dirPath) {
+async function getDirectoryStats(primaryPath, fallbackPaths = [], displayPath = "") {
   try {
-    const entries = await fs.promises.readdir(dirPath, { withFileTypes: true });
+    const seenFiles = new Set();
     let totalBytes = 0;
     let fileCount = 0;
-    for (const entry of entries) {
-      if (entry.isFile()) {
-        fileCount++;
-        try {
-          const stat = await fs.promises.stat(path.join(dirPath, entry.name));
-          totalBytes += stat.size;
-        } catch {}
-      }
+    const allPaths = [primaryPath, ...(fallbackPaths || [])].filter(Boolean);
+
+    for (const dirPath of allPaths) {
+      try {
+        const entries = await fs.promises.readdir(dirPath, { withFileTypes: true });
+        for (const entry of entries) {
+          if (entry.isFile() && !seenFiles.has(entry.name)) {
+            seenFiles.add(entry.name);
+            fileCount++;
+            try {
+              const stat = await fs.promises.stat(path.join(dirPath, entry.name));
+              totalBytes += stat.size;
+            } catch {}
+          }
+        }
+      } catch {}
     }
     const formatted = totalBytes > 1024 * 1024
       ? `${(totalBytes / (1024 * 1024)).toFixed(2)} MB`
       : `${(totalBytes / 1024).toFixed(1)} KB`;
-    return { fileCount, totalBytes, formatted };
+    return {
+      fileCount,
+      totalBytes,
+      formatted,
+      path: displayPath || primaryPath,
+    };
   } catch {
-    return { fileCount: 0, totalBytes: 0, formatted: "0 KB" };
+    return {
+      fileCount: 0,
+      totalBytes: 0,
+      formatted: "0 KB",
+      path: displayPath || primaryPath,
+    };
   }
 }
 
@@ -343,7 +383,8 @@ async function readRecentTransactions() {
           'req-' || dr.id::text AS id,
           dr.id AS original_id,
           'document_request' AS type,
-          'registrar' AS office_id,
+          COALESCE(dr.office_id, 'registrar') AS office_id,
+          COALESCE(o.name, 'Office of the Registrar') AS office_name,
           dr.student_no,
           COALESCE(s.name, 'Student ' || dr.student_no) AS student_name,
           dr.doc_type AS title,
@@ -353,9 +394,13 @@ async function readRecentTransactions() {
           NULL AS original_filename,
           NULL::bigint AS size_bytes,
           NULL::date AS event_date,
+          s.storage_room::text AS storage_room,
+          s.storage_cabinet::text AS storage_cabinet,
+          s.storage_drawer::text AS storage_drawer,
           dr.created_at
         FROM document_requests dr
         LEFT JOIN students s ON s.student_no = dr.student_no
+        LEFT JOIN offices o ON o.id = dr.office_id
       )
       UNION ALL
       (
@@ -363,7 +408,8 @@ async function readRecentTransactions() {
           'prop-' || ep.id::text AS id,
           ep.id AS original_id,
           'event_proposal' AS type,
-          'osas' AS office_id,
+          COALESCE(ep.office_id, 'osas') AS office_id,
+          COALESCE(o.name, 'Office of Student Affairs and Services') AS office_name,
           ep.student_no,
           COALESCE(s.name, 'Student ' || ep.student_no) AS student_name,
           ep.title,
@@ -373,9 +419,13 @@ async function readRecentTransactions() {
           ep.original_filename,
           ep.size_bytes,
           ep.event_date,
+          NULL::text AS storage_room,
+          NULL::text AS storage_cabinet,
+          NULL::text AS storage_drawer,
           ep.created_at
         FROM event_proposals ep
         LEFT JOIN students s ON s.student_no = ep.student_no
+        LEFT JOIN offices o ON o.id = ep.office_id
       )
       ORDER BY created_at DESC
       LIMIT 25
@@ -386,6 +436,7 @@ async function readRecentTransactions() {
       originalId: r.original_id,
       type: r.type,
       officeId: r.office_id,
+      officeName: r.office_name,
       studentNo: r.student_no,
       studentName: r.student_name,
       title: r.title,
@@ -395,6 +446,9 @@ async function readRecentTransactions() {
       originalFilename: r.original_filename,
       sizeBytes: r.size_bytes ? Number(r.size_bytes) : null,
       eventDate: r.event_date,
+      storageRoom: r.storage_room,
+      storageCabinet: r.storage_cabinet,
+      storageDrawer: r.storage_drawer,
       createdAt: r.created_at,
     }));
   } catch (err) {
@@ -405,27 +459,77 @@ async function readRecentTransactions() {
 
 async function buildHealthData() {
   const localRoot = getLocalDataRoot();
+
   const [
     cpu,
     disk,
-    dbSize,
+    dbInfo,
     lastRestorationAt,
     odrs,
     osas,
     transactions,
-    registrarStorage,
-    osasStorage,
+    allOffices,
   ] = await Promise.all([
     readCpuUsage(),
     readDiskStats(),
-    readDbSize(),
+    readDbInfo(),
     readLastRestoration(),
     readOdrsStats(),
     readOsasStats(),
     readRecentTransactions(),
-    getDirectoryStats(path.join(localRoot, "uploads")),
-    getDirectoryStats(path.join(localRoot, "osas", "uploads")),
+    query("SELECT id, name, short_name, storage_path FROM offices ORDER BY created_at ASC").catch(() => []),
   ]);
+
+  const resolveAbs = (p) => {
+    if (!p) return "";
+    return path.isAbsolute(p) ? p : path.join(process.cwd(), p);
+  };
+
+  const officesList = allOffices && allOffices.length > 0 ? allOffices : [
+    { id: "registrar", name: "Office of the Registrar", short_name: "Registrar", storage_path: ".local/storage/registrar/uploads" },
+    { id: "osas", name: "Office of Student Affairs and Services", short_name: "OSAS", storage_path: ".local/storage/osas/uploads" },
+  ];
+
+  const volumes = await Promise.all(
+    officesList.map(async (office) => {
+      const defaultPartition = `.local/storage/${office.id}/uploads`;
+      const configuredPath = office.storage_path || defaultPartition;
+      const primary = resolveAbs(configuredPath);
+      const fallbacks = [
+        path.join(localRoot, "storage", office.id, "uploads"),
+        office.id === "registrar" ? path.join(localRoot, "uploads") : null,
+        office.id === "osas" ? path.join(localRoot, "osas", "uploads") : null,
+      ].filter((p) => p && p !== primary);
+
+      const stats = await getDirectoryStats(primary, fallbacks, configuredPath);
+      return {
+        id: office.id,
+        name: office.name,
+        shortName: office.short_name,
+        volumeLabel: `${office.short_name || office.name} Volume`,
+        ...stats,
+      };
+    })
+  );
+
+  const registrarVolume = volumes.find((v) => v.id === "registrar") || {
+    fileCount: 0,
+    totalBytes: 0,
+    formatted: "0 KB",
+    path: ".local/storage/registrar/uploads",
+  };
+  const osasVolume = volumes.find((v) => v.id === "osas") || {
+    fileCount: 0,
+    totalBytes: 0,
+    formatted: "0 KB",
+    path: ".local/storage/osas/uploads",
+  };
+
+  const totalFiles = volumes.reduce((sum, v) => sum + (v.fileCount || 0), 0);
+  const totalBytes = volumes.reduce((sum, v) => sum + (v.totalBytes || 0), 0);
+  const totalFormatted = totalBytes > 1024 * 1024
+    ? `${(totalBytes / (1024 * 1024)).toFixed(2)} MB`
+    : `${(totalBytes / 1024).toFixed(1)} KB`;
 
   // Read memory usage
   const totalMem = os.totalmem();
@@ -434,22 +538,25 @@ async function buildHealthData() {
   const memPercent = Math.round((usedMem / totalMem) * 100);
 
   const services = {
-    gateway: { name: "Institutional Online Gateway", status: "Operational", latencyMs: 14 },
+    gateway: {
+      name: "Institutional Online Gateway",
+      status: "Operational",
+      latencyMs: dbInfo.latencyMs,
+    },
     odrs: { name: "Registrar Document Request Service", status: odrs.status, office: "Registrar" },
     osas: { name: "OSAS Student Org Proposal Gateway", status: osas.status, office: "OSAS" },
     studentPortal: { name: "Student Online Portal & Auth", status: "Operational", office: "Campus-wide" },
     storage: { name: "Uploads & Artifact Subsystem", status: "Operational", office: "System-wide" },
-    database: { name: "PostgreSQL Database Pool", status: "Operational", office: "System-wide" },
+    database: { name: `${dbInfo.dbEngine} Connection Pool`, status: dbInfo.dbStatus, office: "System-wide" },
   };
 
   const storage = {
-    registrar: registrarStorage,
-    osas: osasStorage,
-    totalFiles: registrarStorage.fileCount + osasStorage.fileCount,
-    totalBytes: registrarStorage.totalBytes + osasStorage.totalBytes,
-    totalFormatted: (registrarStorage.totalBytes + osasStorage.totalBytes) > 1024 * 1024
-      ? `${((registrarStorage.totalBytes + osasStorage.totalBytes) / (1024 * 1024)).toFixed(2)} MB`
-      : `${((registrarStorage.totalBytes + osasStorage.totalBytes) / 1024).toFixed(1)} KB`,
+    volumes,
+    registrar: registrarVolume,
+    osas: osasVolume,
+    totalFiles,
+    totalBytes,
+    totalFormatted,
   };
 
   return {
@@ -461,9 +568,10 @@ async function buildHealthData() {
       free: Math.round(freeMem / 1024 ** 3),
     },
     disk,
-    dbSize,
+    dbSize: dbInfo.dbSize,
+    dbEngine: dbInfo.dbEngine,
+    dbStatus: dbInfo.dbStatus,
     lastRestorationAt,
-    dbStatus: "Healthy",
     services,
     odrs,
     osas,

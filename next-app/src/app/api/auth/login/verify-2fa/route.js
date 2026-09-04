@@ -4,7 +4,8 @@ import {
   verifyRecoveryCode, 
   getStaffDisplayName, 
   hashPasswordForStorage,
-  verifySerialKey
+  verifySerialKey,
+  hasAllSecurityAnswers,
 } from "@/lib/staffRepo";
 import { getSessionCookieName, verifySessionToken, signSessionToken } from "@/lib/jwt";
 import { verifyTOTP, decryptSecret } from "@/lib/totp";
@@ -115,7 +116,8 @@ export async function POST(req) {
   // 4. Verification Successful -> Create Full Session
   const defaultPassword = process.env.DEFAULT_STAFF_PASSWORD || "pupstaff";
   const defaultHash = hashPasswordForStorage(defaultPassword);
-  const mustChangePassword = staff.password_hash === defaultHash;
+  const hasSecurity = await hasAllSecurityAnswers(staff.id);
+  const mustChangePassword = (staff.password_hash === defaultHash) && !hasSecurity;
 
   const sessionPayload = {
     sub: staff.id,

@@ -18,8 +18,10 @@ import {
 import { useState, useEffect } from "react"
 import { cn } from "@/lib/utils"
 
-function PDFFrame({ docId }) {
+function PDFFrame({ docId, url }) {
   const [frameReady, setFrameReady] = useState(false)
+  const resolvedSrc = url || (docId ? `/api/documents/${docId}` : "")
+  const finalSrc = resolvedSrc ? (resolvedSrc.includes("#") ? resolvedSrc : `${resolvedSrc}#toolbar=0&navpanes=0`) : ""
 
   return (
     <div className="relative min-h-0 min-w-0 flex-1 flex flex-col">
@@ -34,7 +36,7 @@ function PDFFrame({ docId }) {
       ) : null}
       <iframe
         title="PDF Preview"
-        src={`/api/documents/${docId}#toolbar=0&navpanes=0`}
+        src={finalSrc}
         className="absolute inset-0 h-full w-full bg-gray-200 dark:bg-zinc-700"
         style={{ border: "none" }}
         onLoad={() => setFrameReady(true)}
@@ -47,6 +49,8 @@ export default function PDFPreviewModal({ open, onClose, preview }) {
   const [isFullscreen, setIsFullscreen] = useState(false)
 
   const docId = preview?.docId
+  const fileUrl = preview?.url || preview?.fileUrl || (docId ? `/api/documents/${docId}` : null)
+  const hasFile = !!fileUrl || !!docId
 
   if (!open && isFullscreen) {
     setIsFullscreen(false)
@@ -73,13 +77,13 @@ export default function PDFPreviewModal({ open, onClose, preview }) {
     >
       <DialogContent 
         hideClose={true}
-        className="flex h-[90vh] w-[96vw] max-w-[96vw] flex-col overflow-hidden border border-gray-200 bg-gray-100 p-0 shadow-2xl transition-all duration-normal ease-standard xl:max-w-[1400px] rounded-2xl dark:border-white/10 dark:bg-muted"
+        className="flex h-[90vh] w-[96vw] max-w-[96vw] flex-col overflow-hidden border border-gray-200 bg-gray-100 p-0 shadow-2xl transition-all duration-normal ease-standard xl:max-w-[1400px] rounded-2xl dark:border-white/10 dark:bg-muted z-[60]"
       >
         <DialogHeader className="shrink-0 border-b bg-gray-50 dark:bg-white/5" style={{ padding: '20px 24px', borderBottomWidth: '0.5px', borderBottomColor: 'rgba(0,0,0,0.08)' }}>
           <div className="flex items-center justify-between w-full">
             <div className="min-w-0">
               <DialogTitle className="text-left font-semibold text-[#111111] dark:text-zinc-50" style={{ fontSize: '15px', letterSpacing: '-0.01em' }}>
-                Document Preview: {preview?.docType || "Loading..."}
+                Document Preview: {preview?.title || preview?.docType || preview?.originalFilename || "Preview"}
               </DialogTitle>
               <p className="text-left font-normal text-[#8E8E93] dark:text-zinc-400" style={{ fontSize: '12px', marginTop: '2px' }}>
                 Reviewing digitized record for <span className="font-semibold" style={{ color: '#E5484D' }}>{preview?.studentName || "student"}</span>. Ensure all identifiers and data are clearly legible.
@@ -96,10 +100,10 @@ export default function PDFPreviewModal({ open, onClose, preview }) {
         </DialogHeader>
 
         <div className="relative flex flex-1 flex-col overflow-hidden bg-gray-100 p-0 dark:bg-muted">
-          {docId ? (
-            <div className={cn("relative min-h-0 min-w-0 flex-1 flex flex-col transition-all duration-normal", isFullscreen ? "fixed inset-0 z-[9999] bg-white dark:bg-card" : "")}>
+          {hasFile ? (
+            <div className={cn("relative min-h-0 min-w-0 flex-1 flex flex-col transition-all duration-normal", isFullscreen ? "fixed inset-0 z-[99999] bg-white dark:bg-card" : "")}>
               {isFullscreen && (
-                <div className="absolute top-4 right-4 z-[10000]">
+                <div className="absolute top-4 right-4 z-[100000]">
                   <Button
                     variant="default"
                     size="icon"
@@ -110,7 +114,7 @@ export default function PDFPreviewModal({ open, onClose, preview }) {
                   </Button>
                 </div>
               )}
-              <PDFFrame key={docId} docId={docId} />
+              <PDFFrame key={fileUrl || docId} docId={docId} url={fileUrl} />
             </div>
           ) : (
             <div className="flex flex-1 items-center justify-center bg-white p-6 dark:bg-card">
@@ -153,9 +157,9 @@ export default function PDFPreviewModal({ open, onClose, preview }) {
               Close
             </Button>
           </DialogClose>
-          {docId ? (
+          {fileUrl ? (
             <a
-              href={`/api/documents/${docId}`}
+              href={fileUrl}
               target="_blank"
               rel="noreferrer"
               className="inline-flex items-center text-[#E5484D] hover:text-[#c93b40] font-medium group"
@@ -163,7 +167,7 @@ export default function PDFPreviewModal({ open, onClose, preview }) {
                 height: '36px', 
                 paddingLeft: '8px', 
                 paddingRight: '8px', 
-                fontSize: '13px'
+                fontSize: '13px' 
               }}
             >
               <span className="group-hover:underline">Open Full View</span>
