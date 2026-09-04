@@ -13,7 +13,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { PageTransition, FadeIn, SlideUp } from "@/components/ui/motion";
 
 export default function Home() {
   const router = useRouter();
@@ -64,6 +63,13 @@ export default function Home() {
   useEffect(() => {
     // Clear logout sync flag when on login page
     localStorage.removeItem("pup-logout");
+
+    // Dynamic favicon swap for login page
+    const link = document.querySelector("link[rel*='icon']") || document.createElement('link');
+    link.type = 'image/png';
+    link.rel = 'shortcut icon';
+    link.href = '/login-logo.png';
+    document.getElementsByTagName('head')[0].appendChild(link);
   }, []);
 
   const resetForgotState = () => {
@@ -221,10 +227,6 @@ export default function Home() {
         localStorage.setItem("pup-session-recovered", Date.now().toString());
         localStorage.removeItem("pup-logout");
 
-        if (role === "SystemAdmin" || role === "SuperAdmin") {
-          router.push("/systemadmin");
-          return;
-        }
         if (role === "Admin") {
           router.push("/admin");
           return;
@@ -271,9 +273,7 @@ export default function Home() {
       localStorage.removeItem("pup-logout");
 
       const role = String(json?.data?.role || "");
-      if (role === "SystemAdmin" || role === "SuperAdmin") {
-        router.push("/systemadmin");
-      } else if (role === "Admin") {
+      if (role === "Admin") {
         router.push("/admin");
       } else if (role.toLowerCase() === "student") {
         router.push("/student");
@@ -299,13 +299,13 @@ export default function Home() {
 
         {/* Top-Left Brand Logo & Name */}
         <div className="absolute top-6 left-6 flex items-center gap-1 select-none z-20">
-          <img src="/assets/branding/black-icon.png" alt="eManage Logo" className="w-[32px] h-[32px] object-contain" />
+          <img src="/login-logo.png" alt="eManage Logo" className="w-[32px] h-[32px] shrink-0 object-contain p-0.5" />
           <span className="text-[26px] font-semibold text-[#1D1D1F] dark:text-zinc-50 tracking-tight leading-none">eManage</span>
         </div>
 
         <div className="w-full max-w-[550px] p-4 z-10">
           <div
-            className="glass-panel rounded-[20px] flex flex-col items-center w-full relative"
+            className="bg-white rounded-[20px] shadow-[0_4px_40px_rgba(0,0,0,0.12)] dark:bg-zinc-900 flex flex-col items-center w-full relative"
             style={{ padding: "56px 52px", height: "630px" }}
           >
             {/* APP ICON WITH CONCENTRIC CIRCLES */}
@@ -322,12 +322,26 @@ export default function Home() {
                     const angle = (i * 2 * Math.PI) / ring.count;
                     const cx = Number((80 + ring.r * Math.cos(angle)).toFixed(4));
                     const cy = Number((80 + ring.r * Math.sin(angle)).toFixed(4));
-                    const progress = i / ring.count;
-                    const rawHue = 340 + progress * 35;
+                    const rawHue = (i / ring.count) * 360 + 200;
                     const hue = rawHue % 360;
                     
-                    const sat = Math.round(65 + Math.sin(progress * Math.PI) * 25);
-                    const light = Math.round(28 + progress * 24);
+                    // Sage/cream/yellow (hues 60 to 160) should be desaturated and lighter
+                    let sat = 78;
+                    let light = 70;
+                    if (hue >= 60 && hue <= 160) {
+                      sat = 35; // desaturated sage/cream
+                      light = 76; // lighter
+                    } else if (hue > 160 && hue <= 200) {
+                      // smooth transition to cyan
+                      const ratio = (hue - 160) / 40;
+                      sat = 35 + Math.round(ratio * 43);
+                      light = 76 - Math.round(ratio * 6);
+                    } else if (hue >= 20 && hue < 60) {
+                      // smooth transition to orange/cream
+                      const ratio = (hue - 20) / 40;
+                      sat = 78 - Math.round(ratio * 43);
+                      light = 70 + Math.round(ratio * 6);
+                    }
                     
                     const color = `hsl(${hue}, ${sat}%, ${light}%)`;
                     dots.push(
@@ -355,11 +369,11 @@ export default function Home() {
                   );
                 })}
               </svg>
-              <img 
-                src="/assets/branding/black-icon.png" 
-                alt="eManage Logo" 
-                className="w-[30px] h-[30px] object-contain z-10 animate-in zoom-in-50 duration-slow" 
-              />
+            <img 
+              src="/login-logo.png" 
+              alt="eManage Logo" 
+              className="w-[30px] h-[30px] shrink-0 object-contain p-[2px] z-10 animate-in zoom-in-50 duration-500" 
+            />
             </div>
 
             {view === "login" ? (
@@ -400,7 +414,7 @@ export default function Home() {
                       </div>
 
                       {/* PASSWORD FIELD (bottom half) */}
-                      <div className={`flex flex-col transition-opacity duration-fast ${
+                      <div className={`flex flex-col transition-opacity duration-200 ${
                         loginStep === 2 
                           ? 'opacity-100 max-h-[52px] pointer-events-auto' 
                           : 'opacity-0 max-h-0 overflow-hidden pointer-events-none'
@@ -447,9 +461,9 @@ export default function Home() {
 
                     {/* Keep me signed in and Forgot Password options (Step 2 only) */}
                     {loginStep === 2 && (
-                      <div className="flex items-center justify-between w-full mt-2.5 select-none animate-in fade-in duration-fast">
+                      <div className="flex items-center justify-between w-full mt-2.5 select-none animate-in fade-in duration-200">
                         {emailError || passwordError || error ? (
-                          <div className="flex items-center gap-1.5 text-[#E5484D] animate-in fade-in duration-fast text-left pr-2">
+                          <div className="flex items-center gap-1.5 text-[#E5484D] animate-in fade-in duration-200 text-left pr-2">
                             <i className="ph-bold ph-warning-circle text-[14px] shrink-0 mt-[1px]"></i>
                             <p className="text-[12px] font-normal leading-none">
                               {emailError || passwordError || error}
@@ -482,7 +496,7 @@ export default function Home() {
                       <button
                         type="button"
                         onClick={() => setShowCreateAccountModal(true)}
-                        className="text-[13px] text-[#E5484D] hover:underline focus:outline-none mt-2.5 block text-left font-normal animate-in fade-in duration-fast"
+                        className="text-[13px] text-[#E5484D] hover:underline focus:outline-none mt-2.5 block text-left font-normal animate-in fade-in duration-200"
                       >
                         Create Your eManage Account
                       </button>
@@ -491,7 +505,7 @@ export default function Home() {
 
                   {/* Disclaimer Text with Icon (Step 1 only) */}
                   {loginStep === 1 ? (
-                    <div className="w-full mt-auto pt-9 mb-[124px] text-left flex flex-col items-start select-none animate-in fade-in duration-fast">
+                    <div className="w-full mt-auto pt-9 mb-[124px] text-left flex flex-col items-start select-none animate-in fade-in duration-200">
                       <i className="ph-fill ph-users text-[23px] text-[#007AFF] mb-1"></i>
                       <p className="w-full text-[11px] text-[#8E8E93] dark:text-zinc-400 leading-normal font-normal">
                         Your eManage account provides secure access to the digitization process and administrative tools. Account activity is logged for security and auditing purposes.
@@ -518,7 +532,7 @@ export default function Home() {
                 </form>
               </div>
             ) : (
-              <div className="w-full text-center flex-1 flex flex-col animate-in fade-in duration-normal">
+              <div className="w-full text-center flex-1 flex flex-col animate-in fade-in duration-300">
                 <h1 className="login-title text-[25px] font-bold text-[#1D1D1F] dark:text-zinc-50 tracking-tight mb-5">
                   Account Recovery
                 </h1>
@@ -550,7 +564,7 @@ export default function Home() {
                       </div>
 
                       {forgotError && (
-                        <div className="h-5 mt-1.5 text-left flex items-center gap-1.5 text-[#E5484D] animate-in fade-in duration-fast">
+                        <div className="h-5 mt-1.5 text-left flex items-center gap-1.5 text-[#E5484D] animate-in fade-in duration-200">
                           <i className="ph-bold ph-warning-circle text-[14px] shrink-0 mt-[1px]"></i>
                           <p className="text-[12px] font-normal leading-none">
                             {forgotError}
@@ -665,7 +679,7 @@ export default function Home() {
                       </div>
 
                       {forgotError && (
-                        <div className="h-5 mt-1.5 text-left flex items-center gap-1.5 text-[#E5484D] animate-in fade-in duration-fast">
+                        <div className="h-5 mt-1.5 text-left flex items-center gap-1.5 text-[#E5484D] animate-in fade-in duration-200">
                           <i className="ph-bold ph-warning-circle text-[14px] shrink-0 mt-[1px]"></i>
                           <p className="text-[12px] font-normal leading-none">
                             {forgotError}
@@ -825,14 +839,14 @@ export default function Home() {
 
         {/* Create Account Modal */}
         <Dialog open={showCreateAccountModal} onOpenChange={setShowCreateAccountModal}>
-          <DialogContent className="max-w-md rounded-[20px] border border-gray-100 bg-white dark:border-zinc-800 dark:bg-zinc-900 p-6">
-            <DialogHeader className="pb-3 border-b border-gray-100 dark:border-zinc-800">
+          <DialogContent className="max-w-md rounded-[20px] border-gray-100 bg-white dark:border-zinc-800 dark:bg-zinc-900">
+            <DialogHeader>
               <DialogTitle className="text-lg font-semibold text-gray-900 flex items-center gap-2 dark:text-zinc-50">
-                <i className="ph-fill ph-user-plus text-[#E5484D]"></i>
+                <i className="ph-fill ph-info text-[#E5484D]"></i>
                 Account Registration
               </DialogTitle>
-              <DialogDescription className="text-xs text-gray-500 dark:text-zinc-400">
-                Guidelines for requesting a new system user account.
+              <DialogDescription className="text-sm font-medium text-gray-600 dark:text-zinc-400 mt-2">
+                Contact your admin to create your account.
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 mt-3">
@@ -880,7 +894,7 @@ export default function Home() {
             </div>
           </DialogContent>
         </Dialog>
-      </PageTransition>
+      </div>
     </TooltipProvider>
   );
 }

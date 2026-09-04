@@ -208,7 +208,38 @@ export async function executeBackup() {
   if (!process.env.DATABASE_URL) {
     throw new Error("DATABASE_URL is required to create a PostgreSQL backup");
   }
-  execFileSync("pg_dump", ["--no-owner", "--no-privileges", "--file", tempDbPath, process.env.DATABASE_URL]);
+  try {
+    execFileSync("pg_dump", ["--no-owner", "--no-privileges", "--file", tempDbPath, process.env.DATABASE_URL]);
+  } catch (error) {
+    if (error.code !== "ENOENT") {
+      throw error;
+    }
+
+    try {
+      const dockerDump = execFileSync(
+        "docker",
+        [
+          "exec",
+          "pupsj-rms-postgres",
+          "pg_dump",
+          "--no-owner",
+          "--no-privileges",
+          "--username",
+          "pupsj_rms",
+          "--dbname",
+          "pupsj_rms",
+        ],
+        { encoding: "buffer" }
+      );
+      fs.writeFileSync(tempDbPath, dockerDump);
+    } catch (dockerError) {
+      throw new Error(
+        dockerError.code === "ENOENT"
+          ? "pg_dump is unavailable and Docker is not installed. Install PostgreSQL client tools or start the Docker-based database."
+          : dockerError.stderr?.toString() || "Unable to create a PostgreSQL backup using the host or Docker database tools."
+      );
+    }
+  }
 
   // Create the ZIP archive
   const zip = new AdmZip();
