@@ -8,7 +8,7 @@ dotenv.config();
 const pnpmCommand = process.platform === "win32" ? "pnpm.cmd" : "pnpm";
 
 function run(command, args, label) {
-  const result = spawnSync(command, args, { stdio: "inherit", cwd: process.cwd(), shell: true });
+  const result = spawnSync(command, args, { stdio: "inherit", cwd: process.cwd(), shell: false });
   if (result.error) {
     throw new Error(`${label} failed: ${result.error.message}`);
   }
@@ -24,7 +24,7 @@ try {
   run(pnpmCommand, ["db:migrate"], "Database migrations");
   console.log("[dev] Starting Next.js and the hot-folder watcher...");
 
-  const devCommands = ["\"next dev\""];
+  const devCommands = ["\"next dev --webpack\""];
   if (process.env.HOT_FOLDER_INGEST_TOKEN) {
     devCommands.push("\"wait-on tcp:3000 && node scripts/hot-folder-watcher/watch.mjs\"");
   } else {
@@ -34,7 +34,7 @@ try {
   const dev = spawn(
     pnpmCommand,
     ["exec", "concurrently", "-n", devCommands.length === 2 ? "next,hot-folder" : "next", "-c", "cyan,magenta", ...devCommands],
-    { stdio: "inherit", cwd: process.cwd(), shell: true }
+    { stdio: "inherit", cwd: process.cwd(), shell: false }
   );
 
   const stop = (signal) => {
