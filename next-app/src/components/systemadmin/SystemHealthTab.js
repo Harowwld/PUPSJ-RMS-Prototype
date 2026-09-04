@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/dialog"
 import ConfirmModal from "@/components/shared/ConfirmModal"
 import PageHeader from "@/components/shared/PageHeader"
+import PDFPreviewModal from "@/components/shared/PDFPreviewModal"
 import { formatPHDateTime, formatRelativeTime } from "@/lib/timeFormat"
 import { cn } from "@/lib/utils"
 
@@ -70,7 +71,7 @@ export default function SystemHealthTab({ showToast }) {
   const [sortBy, setSortBy] = useState("createdAt")
   const [sortOrder, setSortOrder] = useState("DESC")
   const [page, setPage] = useState(1)
-  const pageSize = 10
+  const [pageSize, setPageSize] = useState(10)
 
   // Stat card dropdown state (matching GlobalStaffTab & OfficeManagementTab)
   const [selectedKpi, setSelectedKpi] = useState(null)
@@ -78,6 +79,23 @@ export default function SystemHealthTab({ showToast }) {
 
   // Standardized inspection modal
   const [selectedItem, setSelectedItem] = useState(null)
+  const [pdfPreviewOpen, setPdfPreviewOpen] = useState(false)
+  const [pdfPreviewData, setPdfPreviewData] = useState(null)
+
+  const handleOpenPdfPreview = (item) => {
+    if (!item?.originalFilename) return
+    const url = item.officeId === "registrar"
+      ? `/api/documents/${item.linkedDocumentId || item.originalId}`
+      : `/api/osas/event-proposals/${item.originalId}?file=1`
+    setPdfPreviewData({
+      url,
+      title: item.title || item.originalFilename,
+      studentName: item.studentName,
+      docType: item.officeId === "registrar" ? "Document Request" : "Event Proposal",
+      originalFilename: item.originalFilename,
+    })
+    setPdfPreviewOpen(true)
+  }
 
   // Maintenance states
   const [resetOpen, setResetOpen] = useState(false)
@@ -233,15 +251,16 @@ export default function SystemHealthTab({ showToast }) {
 
   // Pagination calculations
   const totalPages = Math.ceil(sortedTransactions.length / pageSize) || 1
+  const startIndex = (page - 1) * pageSize
+  const endIndex = startIndex + pageSize
   const paginatedTransactions = useMemo(() => {
-    const start = (page - 1) * pageSize
-    return sortedTransactions.slice(start, start + pageSize)
-  }, [sortedTransactions, page])
+    return sortedTransactions.slice(startIndex, endIndex)
+  }, [sortedTransactions, startIndex, endIndex])
 
   // Reset page when filters change
   useEffect(() => {
     setPage(1)
-  }, [search, statusFilter, activeView])
+  }, [search, statusFilter, activeView, pageSize])
 
   // Signature 3 Stat Cards data (matching GlobalStaffTab & OfficeManagementTab)
   const statCardsData = [
@@ -443,7 +462,7 @@ export default function SystemHealthTab({ showToast }) {
               {/* Gateway Online Status Badge */}
               <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/60 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/40">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                Gateway Online (14ms)
+                Gateway Online ({health?.services?.gateway?.latencyMs ?? 12}ms)
               </span>
 
               {/* Refresh Button */}
@@ -779,40 +798,59 @@ export default function SystemHealthTab({ showToast }) {
               </div>
             )}
 
-            {/* Pagination Footer matching GlobalStaffTab */}
+            {/* Pagination Footer */}
             {sortedTransactions.length > 0 && (
-              <div className="flex items-center justify-between border-t border-gray-100 dark:border-white/10 px-6 py-3 bg-white dark:bg-card select-none">
-                <div className="text-xs font-normal text-gray-500 dark:text-zinc-400">
-                  Showing <strong className="font-semibold text-gray-900 dark:text-zinc-100">{(page - 1) * pageSize + 1}</strong> to{" "}
-                  <strong className="font-semibold text-gray-900 dark:text-zinc-100">
-                    {Math.min(page * pageSize, sortedTransactions.length)}
-                  </strong>{" "}
-                  of <strong className="font-semibold text-gray-900 dark:text-zinc-100">{sortedTransactions.length}</strong> transactions
+              <div className="flex items-center justify-between border-t border-[#e5e5ea] dark:border-[#3a3a3c] bg-white dark:bg-[#1c1c1e] p-4 px-6 rounded-b-2xl">
+                <div className="flex items-center gap-6 text-xs text-gray-500 dark:text-zinc-400 select-none">
+                  <span>
+                    Showing {paginatedTransactions.length} of {sortedTransactions.length}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <span>Rows:</span>
+                    {[10, 20, 50, 100].map((sz) => (
+                      <button
+                        key={sz}
+                        type="button"
+                        onClick={() => {
+                          setPageSize(sz)
+                          setPage(1)
+                        }}
+                        className={cn(
+                          "px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer",
+                          pageSize === sz
+                            ? "bg-gray-100 dark:bg-zinc-800 text-gray-900 dark:text-zinc-100"
+                            : "text-gray-400 hover:text-gray-600 dark:hover:text-zinc-200"
+                        )}
+                      >
+                        {sz}
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 select-none">
                   <Button
-                    variant="outline"
+                    variant="ghost"
                     size="sm"
                     disabled={page <= 1}
-                    onClick={() => setPage((p) => p - 1)}
-                    className="h-8 rounded-lg border-gray-200 dark:border-white/10 text-xs font-medium cursor-pointer disabled:opacity-50"
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    className="text-xs text-gray-500 dark:text-zinc-400 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
                   >
-                    <i className="ph-bold ph-caret-left mr-1 text-xs"></i>
-                    Previous
+                    Prev
                   </Button>
-                  <span className="text-xs font-medium text-gray-700 dark:text-zinc-300 px-2">
-                    Page {page} of {totalPages}
-                  </span>
+
+                  <div className="h-8 w-8 rounded-xl border border-[#e5e5ea] dark:border-zinc-800 flex items-center justify-center text-xs font-bold text-gray-800 dark:text-zinc-200 bg-white dark:bg-zinc-900">
+                    {page}
+                  </div>
+
                   <Button
-                    variant="outline"
+                    variant="ghost"
                     size="sm"
-                    disabled={page >= totalPages}
-                    onClick={() => setPage((p) => p + 1)}
-                    className="h-8 rounded-lg border-gray-200 dark:border-white/10 text-xs font-medium cursor-pointer disabled:opacity-50"
+                    disabled={page >= totalPages || endIndex >= sortedTransactions.length}
+                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                    className="text-xs text-gray-500 dark:text-zinc-400 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
                   >
                     Next
-                    <i className="ph-bold ph-caret-right ml-1 text-xs"></i>
                   </Button>
                 </div>
               </div>
@@ -881,7 +919,7 @@ export default function SystemHealthTab({ showToast }) {
                 <div className="divide-y divide-gray-100 dark:divide-white/5 text-xs">
                   <div className="py-2.5 flex justify-between">
                     <span className="text-gray-500">Engine</span>
-                    <span className="font-medium text-gray-900 dark:text-zinc-100">PostgreSQL (Docker Container)</span>
+                    <span className="font-medium text-gray-900 dark:text-zinc-100">{health?.dbEngine || "PostgreSQL"}</span>
                   </div>
                   <div className="py-2.5 flex justify-between">
                     <span className="text-gray-500">Database Size</span>
@@ -912,25 +950,49 @@ export default function SystemHealthTab({ showToast }) {
                 </h4>
 
                 <div className="divide-y divide-gray-100 dark:divide-white/5 text-xs">
-                  <div className="py-2.5 flex justify-between items-center">
-                    <div>
-                      <span className="block font-medium text-gray-900 dark:text-zinc-100">Registrar Scans Volume</span>
-                      <span className="text-[11px] text-gray-400 font-mono">.local/uploads/</span>
-                    </div>
-                    <span className="font-medium text-gray-900 dark:text-zinc-100">
-                      {health?.storage?.registrar?.fileCount ?? 0} files ({health?.storage?.registrar?.formatted || "0 KB"})
-                    </span>
-                  </div>
+                  {health?.storage?.volumes && health.storage.volumes.length > 0 ? (
+                    health.storage.volumes.map((vol) => (
+                      <div key={vol.id} className="py-2.5 flex justify-between items-center">
+                        <div className="min-w-0 mr-3">
+                          <span className="block font-medium text-gray-900 dark:text-zinc-100">
+                            {vol.volumeLabel || `${vol.shortName || vol.name} Volume`}
+                          </span>
+                          <span className="text-[11px] text-gray-400 font-mono truncate block" title={vol.path}>
+                            {vol.path}
+                          </span>
+                        </div>
+                        <span className="font-medium text-gray-900 dark:text-zinc-100 shrink-0">
+                          {vol.fileCount ?? 0} files ({vol.formatted || "0 KB"})
+                        </span>
+                      </div>
+                    ))
+                  ) : (
+                    <>
+                      <div className="py-2.5 flex justify-between items-center">
+                        <div className="min-w-0 mr-3">
+                          <span className="block font-medium text-gray-900 dark:text-zinc-100">Registrar Scans Volume</span>
+                          <span className="text-[11px] text-gray-400 font-mono truncate block" title={health?.storage?.registrar?.path || ".local/storage/registrar/uploads"}>
+                            {health?.storage?.registrar?.path || ".local/storage/registrar/uploads"}
+                          </span>
+                        </div>
+                        <span className="font-medium text-gray-900 dark:text-zinc-100 shrink-0">
+                          {health?.storage?.registrar?.fileCount ?? 0} files ({health?.storage?.registrar?.formatted || "0 KB"})
+                        </span>
+                      </div>
 
-                  <div className="py-2.5 flex justify-between items-center">
-                    <div>
-                      <span className="block font-medium text-gray-900 dark:text-zinc-100">OSAS Proposals Volume</span>
-                      <span className="text-[11px] text-gray-400 font-mono">.local/osas/uploads/</span>
-                    </div>
-                    <span className="font-medium text-gray-900 dark:text-zinc-100">
-                      {health?.storage?.osas?.fileCount ?? 0} files ({health?.storage?.osas?.formatted || "0 KB"})
-                    </span>
-                  </div>
+                      <div className="py-2.5 flex justify-between items-center">
+                        <div className="min-w-0 mr-3">
+                          <span className="block font-medium text-gray-900 dark:text-zinc-100">OSAS Proposals Volume</span>
+                          <span className="text-[11px] text-gray-400 font-mono truncate block" title={health?.storage?.osas?.path || ".local/storage/osas/uploads"}>
+                            {health?.storage?.osas?.path || ".local/storage/osas/uploads"}
+                          </span>
+                        </div>
+                        <span className="font-medium text-gray-900 dark:text-zinc-100 shrink-0">
+                          {health?.storage?.osas?.fileCount ?? 0} files ({health?.storage?.osas?.formatted || "0 KB"})
+                        </span>
+                      </div>
+                    </>
+                  )}
 
                   <div className="py-2.5 flex justify-between items-center font-semibold">
                     <span className="text-gray-700 dark:text-zinc-300">Total Managed Files</span>
@@ -965,124 +1027,165 @@ export default function SystemHealthTab({ showToast }) {
         )}
       </Card>
 
-      {/* Standardized Request / Proposal Details Modal (Matching DocumentRequestsTab & GlobalStaffTab) */}
+      {/* Transaction / Proposal Details Modal (Standardized SuperAdmin Modal Pattern) */}
       {selectedItem && (
         <Dialog open={!!selectedItem} onOpenChange={() => setSelectedItem(null)}>
-          <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-white border border-gray-200 shadow-2xl rounded-brand dark:bg-card dark:border-white/10">
-            {/* Standardized Header */}
-            <DialogHeader className="p-6 border-b border-gray-100 bg-gray-50 dark:border-white/10 dark:bg-white/5">
-              <div className="flex items-start gap-4">
-                <div className={cn(
-                  "w-12 h-12 rounded-xl border shadow-sm flex items-center justify-center shrink-0",
-                  selectedItem?.officeId === "registrar"
-                    ? "border-red-100 dark:border-zinc-800 bg-red-50 text-pup-maroon dark:bg-red-950/30 dark:text-primary"
-                    : "border-blue-100 dark:border-blue-900/40 bg-blue-50 text-blue-600 dark:bg-blue-950/30 dark:text-blue-400"
-                )}>
-                  <i className={cn("text-xl", selectedItem?.officeId === "registrar" ? "ph-duotone ph-file-text" : "ph-duotone ph-student")}></i>
-                </div>
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className={cn(
-                      "px-2 py-0.5 rounded-[6px] text-[11px] font-semibold",
-                      selectedItem?.officeId === "registrar"
-                        ? "bg-rose-50 text-pup-maroon border border-rose-200/60 dark:bg-rose-950/40 dark:text-rose-300"
-                        : "bg-blue-50 text-blue-700 border border-blue-200/60 dark:bg-blue-950/40 dark:text-blue-300"
-                    )}>
-                      {selectedItem?.officeId === "registrar" ? "Registrar ODRS Request" : "OSAS Event Proposal"}
-                    </span>
-                    <span className="text-[11px] text-[#8E8E93] dark:text-zinc-500 font-mono">Ref: #{selectedItem?.id}</span>
+          <DialogContent className="sm:max-w-2xl w-full rounded-2xl bg-white border border-gray-200 dark:bg-zinc-900 dark:border-white/10 p-0 shadow-2xl overflow-hidden">
+            {/* Standardized SuperAdmin Header */}
+            <DialogHeader className="p-6 pb-4 bg-white dark:bg-card border-b border-gray-100 dark:border-white/10 text-left">
+              <div className="flex items-start justify-between gap-4">
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                    {selectedItem?.officeId === "registrar" ? (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[6px] text-[11px] font-semibold bg-[#800000]/10 text-pup-maroon dark:bg-pup-maroon/20 dark:text-rose-300">
+                        <i className="ph-bold ph-certificate text-xs"></i>
+                        {selectedItem?.officeName || "Registrar"} ODRS Request
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[6px] text-[11px] font-semibold bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300">
+                        <i className="ph-bold ph-student text-xs"></i>
+                        {selectedItem?.officeName || "OSAS"} Event Proposal
+                      </span>
+                    )}
                   </div>
-                  <DialogTitle className="text-lg font-semibold tracking-tight text-gray-900 dark:text-zinc-50 truncate">
+                  <DialogTitle className="text-[16px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50 truncate">
                     {selectedItem?.title}
                   </DialogTitle>
-                  <DialogDescription className="text-xs font-medium text-gray-500 dark:text-zinc-400 mt-0.5">
+                  <DialogDescription className="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-1">
                     Submitted on {selectedItem?.createdAt ? formatPHDateTime(selectedItem.createdAt) : "—"}
                   </DialogDescription>
                 </div>
               </div>
             </DialogHeader>
 
-            {/* Standardized Body with #F5F5F7 group boxes */}
-            <div className="p-6 space-y-4 max-h-[65vh] overflow-y-auto">
-              {/* Student Detail Group */}
-              <div className="flex flex-col">
-                <span className="text-[11px] font-semibold tracking-wider text-[#8E8E93] dark:text-zinc-400 mb-1.5 uppercase">
-                  Applicant Student
-                </span>
-                <div className="w-full bg-[#F5F5F7] dark:bg-zinc-800/40 border border-[#E5E5EA] dark:border-white/10 rounded-[10px] p-[12px] text-[13px] font-medium text-[#111111] dark:text-zinc-50">
-                  <div className="font-semibold text-gray-900 dark:text-zinc-50">{selectedItem?.studentName}</div>
-                  <div className="text-[11px] text-[#8E8E93] dark:text-zinc-500 font-normal mt-0.5">{selectedItem?.studentNo}</div>
+            {/* Modal Body */}
+            <div className="p-6 space-y-5 max-h-[68vh] overflow-y-auto">
+              {/* Row 1: Applicant & Status Cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Applicant Student */}
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-500 dark:text-zinc-400 uppercase tracking-wider mb-1.5">
+                    Applicant Student
+                  </label>
+                  <div className="rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/70 dark:bg-zinc-800/40 p-3.5 flex items-start gap-3">
+                    <div className="w-9 h-9 rounded-lg bg-white dark:bg-zinc-800 border border-gray-200/60 dark:border-white/10 flex items-center justify-center text-gray-600 dark:text-zinc-300 shrink-0 shadow-2xs">
+                      <i className="ph-bold ph-user text-base"></i>
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="text-[13px] font-semibold text-gray-900 dark:text-zinc-50 truncate">
+                        {selectedItem?.studentName}
+                      </div>
+                      <div className="text-[11px] font-mono text-gray-500 dark:text-zinc-400 mt-0.5">
+                        {selectedItem?.studentNo}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Lifecycle Status */}
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-500 dark:text-zinc-400 uppercase tracking-wider mb-1.5">
+                    Current Lifecycle Status
+                  </label>
+                  <div className="rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/70 dark:bg-zinc-800/40 p-3.5 flex items-center justify-between h-[66px]">
+                    <span
+                      className={cn(
+                        "inline-flex items-center gap-1.5 rounded-[6px] px-2.5 py-1 text-[11px] font-semibold",
+                        statusBadgeClass(selectedItem?.status)
+                      )}
+                    >
+                      <span className="w-1.5 h-1.5 rounded-full bg-current"></span>
+                      {selectedItem?.status === "InProgress" ? "In Progress" : selectedItem?.status}
+                    </span>
+                    <span className="text-[11px] text-gray-500 dark:text-zinc-400">
+                      {formatRelativeTime(selectedItem?.createdAt).relative}
+                    </span>
+                  </div>
                 </div>
               </div>
 
-              {/* Document Type Group */}
-              <div className="flex flex-col">
-                <span className="text-[11px] font-semibold tracking-wider text-[#8E8E93] dark:text-zinc-400 mb-1.5 uppercase">
-                  {selectedItem?.officeId === "registrar" ? "Document Type" : "Proposal Title"}
-                </span>
-                <div className="w-full bg-[#F5F5F7] dark:bg-zinc-800/40 border border-[#E5E5EA] dark:border-white/10 rounded-[10px] p-[12px] flex items-center justify-between">
-                  <span className="inline-flex w-fit items-center justify-center rounded-[6px] bg-white dark:bg-zinc-800 border border-[#E5E5EA] dark:border-white/10 px-[8px] py-[3px] text-[11px] font-medium text-gray-900 dark:text-zinc-100">
-                    {selectedItem?.title}
-                  </span>
-                  <span className={cn("inline-flex items-center justify-center rounded-[6px] px-[8px] py-[3px] text-[11px] font-medium", statusBadgeClass(selectedItem?.status))}>
-                    {selectedItem?.status === "InProgress" ? "In Progress" : selectedItem?.status}
-                  </span>
-                </div>
-              </div>
-
-              {/* Organization (if OSAS) */}
+              {/* Row 2: Organization (if OSAS) */}
               {selectedItem?.organizationName && (
-                <div className="flex flex-col">
-                  <span className="text-[11px] font-semibold tracking-wider text-[#8E8E93] dark:text-zinc-400 mb-1.5 uppercase">
-                    Student Organization
-                  </span>
-                  <div className="w-full bg-[#F5F5F7] dark:bg-zinc-800/40 border border-[#E5E5EA] dark:border-white/10 rounded-[10px] p-[12px] text-[13px] text-[#111111] dark:text-zinc-100">
-                    <div className="font-semibold text-blue-600 dark:text-blue-400">{selectedItem.organizationName}</div>
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-500 dark:text-zinc-400 uppercase tracking-wider mb-1.5">
+                    Student Organization & Schedule
+                  </label>
+                  <div className="rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/70 dark:bg-zinc-800/40 p-3.5 flex items-center justify-between">
+                    <div>
+                      <div className="text-[13px] font-semibold text-blue-600 dark:text-blue-400">
+                        {selectedItem.organizationName}
+                      </div>
+                      <div className="text-[11px] text-gray-500 dark:text-zinc-400 mt-0.5">
+                        Verified Student Organization Chapter
+                      </div>
+                    </div>
                     {selectedItem.eventDate && (
-                      <div className="text-[11px] text-gray-500 mt-1 flex items-center gap-1">
-                        <i className="ph-bold ph-calendar"></i>
-                        Event Date: <strong>{selectedItem.eventDate.substring(0, 10)}</strong>
+                      <div className="text-right">
+                        <span className="text-[10px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider block">
+                          Scheduled Event Date
+                        </span>
+                        <div className="text-[12px] font-semibold text-gray-800 dark:text-zinc-200 mt-0.5 flex items-center gap-1.5 justify-end">
+                          <i className="ph-bold ph-calendar text-blue-500"></i>
+                          {selectedItem.eventDate.substring(0, 10)}
+                        </div>
                       </div>
                     )}
                   </div>
                 </div>
               )}
 
-              {/* Notes / Description */}
-              <div className="flex flex-col">
-                <span className="text-[11px] font-semibold tracking-wider text-[#8E8E93] dark:text-zinc-400 mb-1.5 uppercase">
-                  {selectedItem?.officeId === "registrar" ? "Request Notes" : "Proposal Description"}
-                </span>
-                <div className="w-full min-h-[60px] p-[12px] text-[13px] font-normal text-[#111111] dark:text-zinc-300 bg-[#F5F5F7] dark:bg-zinc-800/40 border border-[#E5E5EA] dark:border-white/10 rounded-[10px]">
-                  {selectedItem?.notes || "No additional notes provided by student."}
+              {/* Row 3: Notes / Remarks */}
+              <div>
+                <label className="block text-[10px] font-bold text-gray-500 dark:text-zinc-400 uppercase tracking-wider mb-1.5">
+                  {selectedItem?.officeId === "registrar" ? "Request Notes / Remarks" : "Proposal Description"}
+                </label>
+                <div className="w-full min-h-[64px] p-3.5 text-[13px] text-gray-800 dark:text-zinc-200 bg-gray-50/70 dark:bg-zinc-800/40 border border-gray-200/80 dark:border-white/10 rounded-xl leading-relaxed">
+                  {selectedItem?.notes || "No additional notes or description provided by the applicant."}
                 </div>
               </div>
 
-              {/* Physical Archive Location (Standardized from DocumentRequestsTab) */}
+              {/* Row 4: Physical Archive Location (for Registrar) */}
               {selectedItem?.officeId === "registrar" && (
-                <div className="rounded-[14px] border border-[#E5E5EA] p-[16px_20px] dark:border-white/10 bg-[#F5F5F7] dark:bg-white/3">
-                  <div className="text-[11px] font-semibold tracking-wider text-[#8E8E93] dark:text-zinc-400 mb-1.5 uppercase">
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-500 dark:text-zinc-400 uppercase tracking-wider mb-1.5">
                     Physical Archive Location
-                  </div>
-                  <div className="text-[13px] font-normal text-[#111111] dark:text-zinc-100">
-                    Room 1 · Cabinet A · Drawer 1
-                  </div>
-                  <div className="text-[11px] text-gray-500 mt-1">
-                    Student physical archive jacket verified in Registrar Records Room.
+                  </label>
+                  <div className="rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/70 dark:bg-zinc-800/40 p-3.5">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2 text-xs font-semibold text-gray-900 dark:text-zinc-100">
+                        <span className="px-2.5 py-1 rounded-lg bg-white dark:bg-zinc-900 border border-gray-200/60 dark:border-white/10 shadow-2xs">
+                          {selectedItem?.storageRoom ? `Room ${selectedItem.storageRoom}` : "Room 1"}
+                        </span>
+                        <span className="text-gray-400">/</span>
+                        <span className="px-2.5 py-1 rounded-lg bg-white dark:bg-zinc-900 border border-gray-200/60 dark:border-white/10 shadow-2xs">
+                          {selectedItem?.storageCabinet ? `Cabinet ${selectedItem.storageCabinet}` : "Cabinet A"}
+                        </span>
+                        <span className="text-gray-400">/</span>
+                        <span className="px-2.5 py-1 rounded-lg bg-white dark:bg-zinc-900 border border-gray-200/60 dark:border-white/10 shadow-2xs">
+                          {selectedItem?.storageDrawer ? `Drawer ${selectedItem.storageDrawer}` : "Drawer 1"}
+                        </span>
+                      </div>
+                      <span className="text-[11px] font-semibold text-pup-maroon dark:text-rose-400 flex items-center gap-1">
+                        <i className="ph-bold ph-archive text-xs"></i> Verified Records Room
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-gray-500 dark:text-zinc-400">
+                      Student physical archive jacket verified in Registrar Records Room.
+                    </p>
                   </div>
                 </div>
               )}
 
-              {/* Retention Policy Notice (Standardized from DocumentRequestsTab) */}
+              {/* Row 5: Retention Policy Alert (for Registrar Ready status) */}
               {selectedItem?.officeId === "registrar" && selectedItem?.status === "Ready" && (
-                <div className="rounded-brand border border-amber-200 bg-amber-50/40 p-3.5 dark:border-amber-950/40 dark:bg-amber-950/10 animate-in fade-in duration-fast">
+                <div className="rounded-xl border border-amber-200/80 bg-amber-50/50 p-3.5 dark:border-amber-900/40 dark:bg-amber-950/20">
                   <div className="flex gap-3">
-                    <i className="ph-bold ph-calendar-blank text-amber-700 dark:text-amber-500 text-lg shrink-0 mt-0.5"></i>
-                    <div className="text-[12px]">
-                      <span className="font-semibold text-amber-950 dark:text-amber-300 block tracking-wider text-[10px] uppercase">
-                        PUP ODRS Retention Policy
+                    <i className="ph-bold ph-warning text-amber-600 dark:text-amber-400 text-lg shrink-0 mt-0.5"></i>
+                    <div className="text-xs">
+                      <span className="font-bold text-amber-950 dark:text-amber-300 uppercase tracking-wider text-[10px] block">
+                        ODRS Document Retention Schedule
                       </span>
-                      <span className="text-gray-600 dark:text-zinc-400 block mt-0.5 leading-normal">
+                      <span className="text-amber-800/90 dark:text-amber-200/80 mt-0.5 block">
                         Unclaimed academic credentials are scheduled for shredding after 90 days according to ODRS retention policy.
                       </span>
                     </div>
@@ -1090,65 +1193,97 @@ export default function SystemHealthTab({ showToast }) {
                 </div>
               )}
 
-              {/* PDF File Attachment (for OSAS proposal) */}
+              {/* Row 6: Attached PDF File */}
               {selectedItem?.originalFilename && (
-                <div className="p-3.5 rounded-[10px] border border-[#E5E5EA] dark:border-white/10 bg-[#F5F5F7] dark:bg-zinc-800/40 flex items-center justify-between">
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <div className="w-8 h-8 rounded-lg bg-red-100 text-red-700 dark:bg-red-950/50 dark:text-red-400 flex items-center justify-center shrink-0">
-                      <i className="ph-bold ph-file-pdf text-base"></i>
-                    </div>
-                    <div className="min-w-0">
-                      <span className="font-semibold text-gray-900 dark:text-zinc-100 text-xs block truncate">
-                        {selectedItem.originalFilename}
-                      </span>
-                      {selectedItem.sizeBytes && (
-                        <span className="text-[10px] text-gray-400 font-mono">
-                          {(selectedItem.sizeBytes / 1024).toFixed(1)} KB · PDF Document
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-500 dark:text-zinc-400 uppercase tracking-wider mb-1.5">
+                    Attached Document File
+                  </label>
+                  <div className="p-3.5 rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/70 dark:bg-zinc-800/40 flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-9 h-9 rounded-lg bg-red-100 text-red-700 dark:bg-red-950/50 dark:text-red-400 flex items-center justify-center shrink-0">
+                        <i className="ph-bold ph-file-pdf text-lg"></i>
+                      </div>
+                      <div className="min-w-0">
+                        <span className="font-semibold text-gray-900 dark:text-zinc-100 text-xs block truncate">
+                          {selectedItem.originalFilename}
                         </span>
-                      )}
+                        {selectedItem.sizeBytes && (
+                          <span className="text-[10px] text-gray-400 dark:text-zinc-500 font-mono">
+                            {(selectedItem.sizeBytes / 1024).toFixed(1)} KB · PDF Document
+                          </span>
+                        )}
+                      </div>
                     </div>
-                  </div>
 
-                  <a
-                    href={`/api/osas/event-proposals/${selectedItem.originalId}?file=1`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 hover:text-blue-700 dark:text-blue-400 hover:underline shrink-0"
-                  >
-                    <i className="ph-bold ph-arrow-square-out"></i> View PDF
-                  </a>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={() => handleOpenPdfPreview(selectedItem)}
+                      className="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-950/40 shrink-0 h-8 px-3 rounded-lg cursor-pointer"
+                    >
+                      <i className="ph-bold ph-eye text-sm"></i> Preview PDF
+                    </Button>
+                  </div>
                 </div>
               )}
             </div>
 
-            {/* Standardized Footer */}
-            <DialogFooter className="p-4 border-t border-gray-100 bg-gray-50 dark:border-white/10 dark:bg-white/5 flex items-center justify-between">
-              <div className="text-[11px] text-gray-400 font-mono">
-                Status: <strong className="text-gray-700 dark:text-zinc-200">{selectedItem?.status}</strong>
+            {/* Standardized SuperAdmin Footer */}
+            <DialogFooter className="p-6 pt-4 bg-white dark:bg-card border-t border-gray-100 dark:border-white/10 flex items-center justify-between gap-2.5">
+              <div className="text-[11px] text-gray-400 dark:text-zinc-500 font-mono">
+                Channel: <strong className="text-gray-700 dark:text-zinc-300 uppercase">{selectedItem?.officeId}</strong>
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setSelectedItem(null)}
-                className="rounded-xl border-gray-300 dark:border-white/10 text-xs font-semibold cursor-pointer"
-              >
-                Close
-              </Button>
+              <div className="flex items-center gap-2">
+                {selectedItem?.originalFilename && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => handleOpenPdfPreview(selectedItem)}
+                    className="h-10 px-4 text-xs font-semibold border-gray-200 dark:border-white/10 rounded-xl cursor-pointer hover:bg-gray-50 dark:hover:bg-white/5"
+                  >
+                    <i className="ph-bold ph-eye mr-1.5"></i>
+                    Preview PDF
+                  </Button>
+                )}
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => setSelectedItem(null)}
+                  className="h-10 px-5 text-xs font-semibold text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:text-zinc-400 dark:hover:bg-white/5 rounded-xl cursor-pointer border-none shadow-none"
+                >
+                  Close
+                </Button>
+              </div>
             </DialogFooter>
           </DialogContent>
         </Dialog>
       )}
 
+      {/* PDF Document Preview Modal */}
+      <PDFPreviewModal
+        open={pdfPreviewOpen}
+        onClose={() => {
+          setPdfPreviewOpen(false)
+          setPdfPreviewData(null)
+        }}
+        preview={pdfPreviewData}
+      />
+
       {/* Confirmation Modal */}
       <ConfirmModal
         open={resetOpen}
+        onCancel={() => setResetOpen(false)}
+        onConfirm={handleResetDb}
+        isLoading={resetLoading}
         title="Wipe & Reset Institutional Database"
         message="This operation will permanently delete ALL office databases, schemas, documents, document requests, event proposals, and audit logs. The system will be bootstrapped back to a clean state. This action is irreversible."
         confirmLabel="Wipe Database"
         variant="danger"
-        onConfirm={handleResetDb}
-        onCancel={() => setResetOpen(false)}
-        isLoading={resetLoading}
+        icon="ph-duotone ph-warning-circle"
+        buttonIcon="ph-bold ph-trash"
+        isAppleStyled={true}
+        isPersonnelModal={true}
       />
     </div>
   )

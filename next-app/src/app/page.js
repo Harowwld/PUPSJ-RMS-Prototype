@@ -241,6 +241,10 @@ export default function Home() {
           router.push("/admin");
           return;
         }
+        if (role.toLowerCase() === "student") {
+          router.push("/student");
+          return;
+        }
 
         router.push("/staff");
       } catch (err) {
@@ -281,6 +285,8 @@ export default function Home() {
       const role = String(json?.data?.role || "");
       if (role === "Admin") {
         router.push("/admin");
+      } else if (role.toLowerCase() === "student") {
+        router.push("/student");
       } else {
         router.push("/staff");
       }
@@ -293,7 +299,13 @@ export default function Home() {
 
   return (
     <TooltipProvider delay={200}>
-      <div className="min-h-screen w-full flex items-center justify-center relative bg-[#ffffff] dark:bg-zinc-950 font-sans p-8">
+      <PageTransition className="min-h-screen w-full flex items-center justify-center relative bg-slate-50 dark:bg-zinc-950 font-sans p-8 overflow-y-auto">
+        {/* Dynamic Liquid Glass Background Blobs */}
+        <div className="liquid-container">
+          <div className="liquid-blob liquid-blob-1"></div>
+          <div className="liquid-blob liquid-blob-2"></div>
+          <div className="liquid-blob liquid-blob-3"></div>
+        </div>
 
         {/* Top-Left Brand Logo & Name */}
         <div className="absolute top-6 left-6 flex items-center gap-1 select-none z-20">
@@ -716,6 +728,44 @@ export default function Home() {
               </div>
             )}
           </div>
+
+          {/* Demo Quick-Fill Bar */}
+          <div className="mt-3.5 w-full flex flex-col items-center gap-2 select-none animate-in fade-in duration-500 pb-12">
+            <div className="flex items-center gap-1.5 text-[11px] font-medium text-gray-500 dark:text-zinc-400">
+              <i className="ph-bold ph-lightning text-amber-500"></i>
+              <span>Demo Accounts (Password: <code className="font-mono bg-gray-200/70 dark:bg-zinc-800 px-1 py-0.5 rounded text-[10px] text-gray-700 dark:text-zinc-300">pupstaff</code>)</span>
+            </div>
+            <div className="flex flex-wrap justify-center gap-1.5 w-full">
+              {[
+                { label: "SuperAdmin", email: "admin.default@pup.local", badge: "Global", color: "hover:border-slate-800 hover:text-slate-900 dark:hover:text-white" },
+                { label: "Registrar Admin", email: "admin.registrar@pup.local", badge: "Registrar", color: "hover:border-orange-500 hover:text-orange-600 dark:hover:text-orange-400" },
+                { label: "Registrar Staff", email: "staff.registrar@pup.local", badge: "Records", color: "hover:border-amber-500 hover:text-amber-600 dark:hover:text-amber-400" },
+                { label: "OSAS Admin", email: "admin.osas@pup.local", badge: "OSAS", color: "hover:border-blue-500 hover:text-blue-600 dark:hover:text-blue-400" },
+                { label: "Student", email: "student@pup.local", badge: "ODRS & Events", color: "hover:border-emerald-500 hover:text-emerald-600 dark:hover:text-emerald-400" },
+              ].map((acc) => (
+                <button
+                  key={acc.label}
+                  type="button"
+                  onClick={() => {
+                    setView("login");
+                    setUsername(acc.email);
+                    setPassword("pupstaff");
+                    setLoginStep(2);
+                    setEmailError("");
+                    setPasswordError("");
+                    setError("");
+                    toast.info(`Selected ${acc.label}`, {
+                      description: `${acc.email} • Ready to sign in`,
+                    });
+                  }}
+                  className={`text-[11px] px-2.5 py-1 rounded-full bg-white/80 dark:bg-zinc-900/80 border border-gray-200/90 dark:border-zinc-700/80 text-gray-600 dark:text-zinc-300 backdrop-blur-md shadow-xs transition-all hover:shadow-sm active:scale-95 flex items-center gap-1.5 cursor-pointer ${acc.color}`}
+                >
+                  <span className="font-semibold text-[11px]">{acc.label}</span>
+                  <span className="text-[9px] font-medium px-1 py-0.2 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-400 dark:text-zinc-400">{acc.badge}</span>
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
 
         {/* FIXED FOOTER */}
@@ -809,6 +859,49 @@ export default function Home() {
                 Contact your admin to create your account.
               </DialogDescription>
             </DialogHeader>
+            <div className="space-y-4 mt-3">
+              <p className="text-sm font-medium text-gray-700 dark:text-zinc-300">
+                To maintain the integrity of student records, self-registration is disabled. New accounts must be provisioned by the administrator.
+              </p>
+              
+              <div className="bg-slate-50 dark:bg-zinc-800/50 rounded-xl p-3.5 space-y-2 border border-slate-100 dark:border-zinc-800">
+                <h4 className="text-xs font-bold text-gray-800 dark:text-zinc-200 uppercase tracking-wider">Required Details</h4>
+                <ul className="text-xs text-gray-600 dark:text-zinc-400 space-y-1.5 list-disc pl-4">
+                  <li><strong>Full Name</strong> (First Name, Last Name)</li>
+                  <li><strong>Staff/Employee ID</strong> (e.g., PUPREGISTRAR-001)</li>
+                  <li><strong>Official Email</strong> Address</li>
+                  <li><strong>Assigned Section/Department</strong></li>
+                </ul>
+              </div>
+
+              <div className="space-y-3 text-xs text-gray-600 dark:text-zinc-400">
+                <div className="flex gap-2">
+                  <i className="ph-bold ph-envelope-simple text-base text-[#E5484D] mt-0.5"></i>
+                  <div>
+                    <span className="font-semibold block text-gray-800 dark:text-zinc-200">Email Submission</span>
+                    Submit requests to: <span className="font-sans text-[11px] bg-slate-100 dark:bg-zinc-800 px-1 py-0.5 rounded text-gray-850 dark:text-zinc-200">registrar.admin@pup.edu.ph</span>
+                  </div>
+                </div>
+
+                <div className="flex gap-2">
+                  <i className="ph-bold ph-map-pin text-base text-[#E5484D] mt-0.5"></i>
+                  <div>
+                    <span className="font-semibold block text-gray-800 dark:text-zinc-200">Office Location</span>
+                    Registrar&apos;s Office, Room 201, Main Academic Building
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-3 border-t border-gray-100 dark:border-zinc-800 flex justify-end">
+                <Button 
+                  type="button" 
+                  onClick={() => setShowCreateAccountModal(false)}
+                  className="h-9 px-4 text-xs font-semibold bg-[#E5484D] hover:bg-[#c93b40] text-white rounded-lg active:scale-95 transition-all"
+                >
+                  Got it, close
+                </Button>
+              </div>
+            </div>
           </DialogContent>
         </Dialog>
       </div>
