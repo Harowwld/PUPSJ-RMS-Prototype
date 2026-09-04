@@ -46,6 +46,11 @@ function getSeverityInfo(sev) {
       classes: "bg-[#FEF3C7] text-[#92400E] dark:bg-amber-950/40 dark:text-amber-400"
     };
   }
+  return {
+    label: sev || "Info",
+    classes: "bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-zinc-300"
+  };
+}
 function formatActionLabel(actionStr) {
   if (!actionStr) return "—";
   if (actionStr === "Rotate Password") return "Password Rotated";
