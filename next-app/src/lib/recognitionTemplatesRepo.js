@@ -4,7 +4,8 @@ const REGION_KEYS = ["firstName", "middleName", "lastName"];
 
 export function validateRecognitionRegions(regions) {
   if (!regions || typeof regions !== "object") throw new Error("Recognition regions are required");
-  for (const key of REGION_KEYS) {
+  const keys = regions.mode === "wholeName" || regions.mode === "whole" ? ["wholeName"] : REGION_KEYS;
+  for (const key of keys) {
     const region = regions[key];
     if (!region || !["x", "y", "width", "height"].every((field) => Number.isFinite(Number(region[field])))) {
       throw new Error(`Missing or invalid ${key} region`);

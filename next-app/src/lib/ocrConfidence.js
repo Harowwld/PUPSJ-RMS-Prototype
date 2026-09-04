@@ -116,7 +116,7 @@ export function calculateOcrConfidence({
     reason = "Exact student number match";
   } else if (best) {
     score = best.score;
-    reason = extractionSource === "template" ? "Template-extracted name match" : "Full-page OCR name match";
+    reason = extractionSource === "template" ? "Template-extracted name match" : extractionSource === "full_document" ? "Full-document OCR student match" : "Full-page OCR name match";
     if (candidateRows.length > 1) {
       score -= Math.min(0.20, (candidateRows.length - 1) * 0.05);
       reason = "Multiple similar student candidates";

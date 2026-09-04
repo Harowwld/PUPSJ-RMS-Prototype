@@ -895,6 +895,17 @@ export function extractNameFromCoordinates(pages, template) {
   if (!page || !template?.regions) return null;
 
   const regions = {};
+  const recognitionMode = template.regions.mode === "wholeName" || template.regions.mode === "whole" ? "whole" : "separate";
+  if (recognitionMode === "whole") {
+    const region = template.regions.wholeName;
+    const observations = (Array.isArray(page.observations) ? page.observations : [])
+      .filter((observation) => observationCenterInsideRegion(observation, region))
+      .sort((a, b) => (Number(a.y) - Number(b.y)) || (Number(a.x) - Number(b.x)));
+    const text = cleanCoordinateFieldText(observations);
+    regions.wholeName = { ...region, text, observations };
+    return { pageIndex, regions, extractedName: text };
+  }
+
   for (const key of ["firstName", "middleName", "lastName"]) {
     const region = template.regions[key];
     const observations = (Array.isArray(page.observations) ? page.observations : [])
@@ -1100,7 +1111,7 @@ export function findStudentsByOcrName(ocrName, students) {
   return [];
 }
 
-export function findStudentsInText(rawText, students) {
+export function findStudentsInText(rawText, students, focusName = "") {
   if (!rawText || !Array.isArray(students)) return [];
   const hay = up(rawText).replace(/\s+/g, " ");
 
@@ -1152,6 +1163,25 @@ export function findStudentsInText(rawText, students) {
       }
     }
   }
+  const focusTokens = up(focusName)
+    .replace(/[^A-Z0-9\s]/g, " ")
+    .split(/\s+/)
+    .filter((token) => token.length > 1);
+
+  // When OCR has already produced a plausible name, ignore unrelated names
+  // elsewhere in the document (parents, informants, registrars, etc.).
+  if (focusTokens.length >= 2) {
+    return matches.filter((student) => {
+      const studentTokens = up(student?.name || student?.Name || "")
+        .replace(/[^A-Z0-9\s]/g, " ")
+        .split(/\s+/)
+        .filter((token) => token.length > 1);
+      return focusTokens.some((focusToken) =>
+        studentTokens.some((studentToken) => levenshteinSimilarity(focusToken, studentToken) >= 0.75)
+      );
+    });
+  }
+
   return matches;
 }
 
@@ -1302,21 +1332,22 @@ export async function scanFileForSuggestion({ file, students, docTypes, rotation
   // ── Load NLP engine if available ──
   const nlp = await loadNlp().catch(() => null);
 
-  const rawExtracted = matchedStudent
-    ? ""
-    : templateApplied ? coordinateRecognition.extractedName : detectName(lines, { engine: ocrEngine, nlp });
+  const templateExtractedName = coordinateRecognition?.extractedName || "";
+  const naturalLanguageName = detectName(lines, { engine: ocrEngine, nlp });
+  const rawExtracted = matchedStudent ? "" : templateExtractedName || naturalLanguageName;
 
   // ── Detect name (fallback when student number did not match) ──
   if (!matchedStudent) {
-    if (templateApplied) {
+    if (templateExtractedName) {
       nameMatchesByName = coordinateNameMatches;
-    } else if (rawExtracted && Array.isArray(students)) {
-      nameMatchesByName = findStudentsByOcrName(rawExtracted, students);
     }
-    if (!templateApplied && (!nameMatchesByName || nameMatchesByName.length === 0) && Array.isArray(students)) {
+    if ((!nameMatchesByName || nameMatchesByName.length === 0) && Array.isArray(students)) {
       nameMatchesByName = findStudentsInText(rawText, students);
     }
-    matchedStudent = templateApplied ? null : nameMatchesByName.length === 1 ? nameMatchesByName[0] : null;
+    if ((!nameMatchesByName || nameMatchesByName.length === 0) && rawExtracted && Array.isArray(students)) {
+      nameMatchesByName = findStudentsByOcrName(rawExtracted, students);
+    }
+    matchedStudent = templateExtractedName ? null : nameMatchesByName.length === 1 ? nameMatchesByName[0] : null;
   }
 
   // ── Build final suggested name ──
@@ -1340,7 +1371,7 @@ export async function scanFileForSuggestion({ file, students, docTypes, rotation
     candidate: matchedStudent || (nameMatchesByName.length === 1 ? nameMatchesByName[0] : null),
     candidates: nameMatchesByName,
     studentNumberMatched: Boolean(extractedStudentNo && matchedStudent),
-    extractionSource: extractedStudentNo && matchedStudent ? "student_number" : templateApplied ? "template" : suggestedName ? "full_page" : "none",
+    extractionSource: extractedStudentNo && matchedStudent ? "student_number" : templateExtractedName && coordinateNameMatches.length ? "template" : nameMatchesByName.length || naturalLanguageName ? "full_document" : "none",
     templateFields: coordinateRecognition?.regions || {},
     text: rawText,
     observations: ocrPages.flatMap((page) => page.observations || []),
@@ -1355,7 +1386,7 @@ export async function scanFileForSuggestion({ file, students, docTypes, rotation
     docType,
     matchedStudent,
     nameMatchesByName,
-    requiresConfirmation: Boolean(coordinateRecognition?.extractedName && nameMatchesByName.length > 0),
+    requiresConfirmation: Boolean(nameMatchesByName.length > 0),
     coordinateRecognition,
     ocrTextPreview: rawText.slice(0, 2000),
     ocrLinesPreview: lines.slice(0, 18),

@@ -90,7 +90,13 @@ export async function processNextBatchItem(batchId, officeId = "registrar") {
     for (const template of templates) {
       const recognition = extractNameFromCoordinates(ocrResult.pages, template);
       if (!coordinateRecognition && recognition) coordinateRecognition = recognition;
-      if (recognition?.extractedName) {
+      if (!recognition?.extractedName) continue;
+
+      // A template may capture unrelated text (for example, "SEX") when its
+      // region does not match this document layout. Keep cycling until the
+      // extracted value produces an actual student match.
+      const templateMatches = findStudentsByOcrName(recognition.extractedName, students);
+      if (templateMatches.length > 0) {
         templateName = recognition.extractedName;
         coordinateRecognition = recognition;
         break;
@@ -99,33 +105,40 @@ export async function processNextBatchItem(batchId, officeId = "registrar") {
 
     const fullPageName = detectName(text.split(/\r?\n/).filter(Boolean), { engine: "apple-vision" }) || extractNameCandidate(text);
     const templateApplied = Boolean(coordinateRecognition);
-    const fallbackName = templateName || (templateApplied ? null : fullPageName);
+    // If the configured template regions are empty, fall back to the
+    // natural-language full-page name detector instead of abandoning the item.
+    const fallbackName = templateName || fullPageName;
     const templateMatches = templateName ? findStudentsByOcrName(templateName, students) : [];
-    const textMatches = findStudentsInText(text, students);
+    const fallbackNameMatches = fallbackName ? findStudentsByOcrName(fallbackName, students) : [];
+    const textMatches = findStudentsInText(text, students, fallbackName);
     const fuzzyMatches = exactStudent
       ? [exactStudent]
       : templateMatches.length
         ? templateMatches
         : templateApplied
-          ? []
-        : textMatches.length
-          ? textMatches
-          : (fallbackName ? findStudentsByOcrName(fallbackName, students) : []);
+            ? (textMatches.length ? textMatches : fallbackNameMatches)
+            : textMatches.length
+              ? textMatches
+              : fallbackNameMatches;
     const candidates = fuzzyMatches.map((student) => ({ studentNo: student.student_no, name: student.name }));
     const proposed = exactStudent || (fuzzyMatches.length === 1 ? fuzzyMatches[0] : null);
     // Preserve the OCR/template extraction for review. The database candidate
     // must not overwrite the name that was actually read from the document.
-    const ocrName = templateName || (templateApplied ? null : proposed?.name || fallbackName);
+    const ocrName = templateName || fallbackName || proposed?.name;
     const conflictingCandidates = templateName
       ? textMatches.filter((student) => String(student.student_no) !== String(proposed?.student_no || ""))
         .map((student) => ({ studentNo: student.student_no, name: student.name }))
       : [];
+    const reviewCandidates = [...new Map([...candidates, ...conflictingCandidates].map((candidate) => [candidate.studentNo, candidate])).values()];
+    const hasMultipleMatches = reviewCandidates.length > 1;
+    const resolvedProposed = hasMultipleMatches ? null : proposed;
+    const fallbackSingleMatch = templateApplied && !templateMatches.length && !hasMultipleMatches && Boolean(resolvedProposed);
     const scored = calculateOcrConfidence({
-      extractedName: templateName || (templateApplied ? "" : fallbackName || ocrName),
-      candidate: proposed,
-      candidates,
+      extractedName: templateName || fallbackName || ocrName,
+      candidate: resolvedProposed,
+      candidates: reviewCandidates,
       studentNumberMatched: Boolean(exactStudent),
-      extractionSource: exactStudent ? "student_number" : templateApplied ? "template" : fallbackName ? "full_page" : "none",
+      extractionSource: exactStudent ? "student_number" : templateName && templateMatches.length ? "template" : templateApplied && (textMatches.length || fallbackNameMatches.length) ? "full_document" : fallbackName ? "full_page" : "none",
       templateFields: coordinateRecognition?.regions || {},
       text,
       observations: ocrResult.pages?.flatMap((page) => page.observations || []) || [],
@@ -136,42 +149,41 @@ export async function processNextBatchItem(batchId, officeId = "registrar") {
     const saved = await saveOcrResult(item.id, {
       text,
       name: ocrName,
-      studentNo: proposed?.student_no || null,
+      studentNo: resolvedProposed?.student_no || null,
       docType: docType || null,
       confidence: scored.matchConfidence,
       qualityScore: scored.ocrQualityScore,
       evidence: scored.evidence,
       method: scored.matchMethod,
-      matchStatus: scored.matchStatus,
-      candidates,
+      matchStatus: hasMultipleMatches ? "Conflict" : fallbackSingleMatch ? "Matched" : scored.matchStatus,
+      candidates: reviewCandidates,
       regions: coordinateRecognition?.regions || null,
       pageIndex: coordinateRecognition?.pageIndex ?? null,
-      status: duplicate ? "Duplicate" : scored.matchStatus === "Conflict" ? "Conflict" : "Needs Review",
+      status: duplicate ? "Duplicate" : hasMultipleMatches ? "Conflict" : fallbackSingleMatch ? "Confirmed" : "Needs Review",
       error: duplicate ? `Duplicate content matches ingest item #${duplicate.id}.` : null,
     });
 
     const canAutoUpload = !duplicate
-      && candidates.length === 1
-      && proposed
-      && scored.matchConfidence > 0.50
+      && reviewCandidates.length === 1
+      && resolvedProposed
       && Boolean(docType);
     if (!canAutoUpload) return saved;
 
     try {
-      const document = await promoteUniqueMatch(item, proposed, docType, officeId);
+      const document = await promoteUniqueMatch(item, resolvedProposed, docType, officeId);
       return { ...saved, status: "promoted", review_status: "Confirmed", promoted_document_id: document.id, auto_promoted: true };
     } catch (error) {
       return saveOcrResult(item.id, {
         text,
         name: ocrName,
-        studentNo: proposed.student_no,
+        studentNo: resolvedProposed.student_no,
         docType: docType || null,
         confidence: scored.matchConfidence,
         qualityScore: scored.ocrQualityScore,
         evidence: { ...scored.evidence, autoUploadError: error.message || "Automatic upload failed." },
         method: scored.matchMethod,
         matchStatus: "Matched",
-        candidates,
+        candidates: reviewCandidates,
         regions: coordinateRecognition?.regions || null,
         pageIndex: coordinateRecognition?.pageIndex ?? null,
         status: "Needs Review",
