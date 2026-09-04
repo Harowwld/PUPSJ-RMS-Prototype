@@ -6,6 +6,7 @@ import {
   detectName,
   detectStudentNo,
   extractNameFromCoordinates,
+  rotateOcrPages,
   findStudentsInText,
   findStudentsByOcrName,
 } from "./ocrClient.js";
@@ -19,6 +20,7 @@ import {
   markIngestPromoted,
   saveOcrResult,
 } from "./ingestQueueRepo.js";
+import { rotateDocumentBuffer } from "./documentOrientation.js";
 
 function extractNameCandidate(text) {
   return String(text || "")
@@ -30,10 +32,11 @@ function extractNameCandidate(text) {
     }) || null;
 }
 
-async function promoteUniqueMatch(item, student, docType, officeId) {
+async function promoteUniqueMatch(item, student, docType, officeId, rotation = 0) {
   const sourcePath = getIngestFilePath(item.storage_filename);
   if (!fs.existsSync(sourcePath)) throw new Error("Ingest source file is missing from disk.");
-  const buffer = fs.readFileSync(sourcePath);
+  const sourceBuffer = fs.readFileSync(sourcePath);
+  const buffer = await rotateDocumentBuffer(sourceBuffer, item.original_filename, rotation);
   const document = await createDocument({
     officeId,
     studentNo: student.student_no,
@@ -87,19 +90,24 @@ export async function processNextBatchItem(batchId, officeId = "registrar") {
       : [];
     let templateName = null;
     let coordinateRecognition = null;
-    for (const template of templates) {
-      const recognition = extractNameFromCoordinates(ocrResult.pages, template);
-      if (!coordinateRecognition && recognition) coordinateRecognition = recognition;
-      if (!recognition?.extractedName) continue;
-
-      // A template may capture unrelated text (for example, "SEX") when its
-      // region does not match this document layout. Keep cycling until the
-      // extracted value produces an actual student match.
-      const templateMatches = findStudentsByOcrName(recognition.extractedName, students);
-      if (templateMatches.length > 0) {
-        templateName = recognition.extractedName;
-        coordinateRecognition = recognition;
-        break;
+    let detectedRotation = 0;
+    const orientationCandidates = [0, 90, 180, 270].flatMap((rotation) =>
+      templates.flatMap((template) => {
+        const recognition = extractNameFromCoordinates(rotateOcrPages(ocrResult.pages, rotation), template);
+        if (!recognition?.extractedName) return [];
+        const templateMatches = findStudentsByOcrName(recognition.extractedName, students);
+        return templateMatches.length > 0 ? [{ rotation, recognition, templateMatches }] : [];
+      })
+    );
+    const selectedOrientation = orientationCandidates[0];
+    if (selectedOrientation) {
+      templateName = selectedOrientation.recognition.extractedName;
+      coordinateRecognition = selectedOrientation.recognition;
+      detectedRotation = selectedOrientation.rotation;
+    } else {
+      for (const template of templates) {
+        const recognition = extractNameFromCoordinates(ocrResult.pages, template);
+        if (!coordinateRecognition && recognition) coordinateRecognition = recognition;
       }
     }
 
@@ -144,6 +152,7 @@ export async function processNextBatchItem(batchId, officeId = "registrar") {
       observations: ocrResult.pages?.flatMap((page) => page.observations || []) || [],
       conflictingCandidates,
     });
+    scored.evidence = { ...scored.evidence, detectedRotation };
     const duplicate = await findDuplicateIngest(item.id, item.content_sha256);
 
     const saved = await saveOcrResult(item.id, {
@@ -170,7 +179,7 @@ export async function processNextBatchItem(batchId, officeId = "registrar") {
     if (!canAutoUpload) return saved;
 
     try {
-      const document = await promoteUniqueMatch(item, resolvedProposed, docType, officeId);
+      const document = await promoteUniqueMatch(item, resolvedProposed, docType, officeId, detectedRotation);
       return { ...saved, status: "promoted", review_status: "Confirmed", promoted_document_id: document.id, auto_promoted: true };
     } catch (error) {
       return saveOcrResult(item.id, {
