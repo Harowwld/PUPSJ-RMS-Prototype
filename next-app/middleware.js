@@ -91,10 +91,20 @@ export async function middleware(req) {
       url.pathname = "/";
       return addSecurityHeaders(NextResponse.redirect(url));
     }
-  } else if (isStudent && !pathname.startsWith("/api/student")) {
-    const url = req.nextUrl.clone();
-    url.pathname = "/student";
-    return addSecurityHeaders(NextResponse.redirect(url));
+  }
+
+  // Prevent students from accessing staff or admin dashboards
+  if (isStudent) {
+    if (
+      pathname.startsWith("/staff") ||
+      pathname.startsWith("/admin") ||
+      pathname.startsWith("/systemadmin") ||
+      pathname.startsWith("/superadmin")
+    ) {
+      const url = req.nextUrl.clone();
+      url.pathname = "/student";
+      return addSecurityHeaders(NextResponse.redirect(url));
+    }
   }
 
   // 5. Role-based routing
@@ -152,6 +162,7 @@ export const config = {
     "/staff/:path*", 
     "/student/:path*",
     "/api/:path*", 
+    "/account",
     "/account/:path*"
   ],
 };

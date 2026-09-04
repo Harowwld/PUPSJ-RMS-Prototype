@@ -48,7 +48,7 @@ export async function POST(req) {
   const drawer = parseInt(body.drawer);
   const status = String(body.status || "Active").trim() || "Active";
 
-  const studentNoPattern = /^\d{4}-\d{5}-[A-Z]{2}-\d$/;
+  const studentNoPattern = /^[A-Z0-9][A-Z0-9\-_/.]{1,30}$/i;
 
   if (!studentNo || !name || !courseCode || !section) {
     return NextResponse.json(

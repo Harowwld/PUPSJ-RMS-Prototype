@@ -180,6 +180,20 @@ async function handleResetDb() {
     ];
 
     for (const [sNo, sName, cCode, yLevel, sSec, sEmail] of demoStudents) {
+      let fName = sName;
+      let lName = "";
+      let mName = "";
+      if (sName.includes(",")) {
+        const parts = sName.split(",");
+        lName = (parts[0] || "").trim();
+        const firstParts = (parts[1] || "").trim().split(" ");
+        if (firstParts.length > 1 && firstParts[firstParts.length - 1].length <= 2) {
+          mName = firstParts.pop();
+        }
+        fName = firstParts.join(" ");
+      }
+      const clientType = cCode === "ALUMNI" || sNo.startsWith("ALUM-") ? "Alumni" : "Student";
+
       await query(
         `INSERT INTO students (student_no, name, course_code, year_level, section, status)
          VALUES ($1, $2, $3, $4, $5, 'Active')
@@ -188,10 +202,12 @@ async function handleResetDb() {
         [sNo, sName, cCode, yLevel, sSec]
       );
       await query(
-        `INSERT INTO student_accounts (student_no, email, password_hash, status)
-         VALUES ($1, $2, $3, 'Active')
-         ON CONFLICT (student_no) DO UPDATE SET email = EXCLUDED.email, password_hash = EXCLUDED.password_hash, status = 'Active', updated_at = NOW()`,
-        [sNo, sEmail, studentHash]
+        `INSERT INTO student_accounts (student_no, email, password_hash, status, first_name, middle_name, last_name, client_type)
+         VALUES ($1, $2, $3, 'Active', $4, $5, $6, $7)
+         ON CONFLICT (student_no) DO UPDATE SET email = EXCLUDED.email, password_hash = EXCLUDED.password_hash,
+           first_name = EXCLUDED.first_name, middle_name = EXCLUDED.middle_name, last_name = EXCLUDED.last_name,
+           client_type = EXCLUDED.client_type, status = 'Active', updated_at = NOW()`,
+        [sNo, sEmail, studentHash, fName, mName, lName, clientType]
       );
     }
 

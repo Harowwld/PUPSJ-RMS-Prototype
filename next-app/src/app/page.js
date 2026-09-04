@@ -16,18 +16,6 @@ import {
 } from "@/components/ui/tooltip";
 import { isSystemAdminRole, isAdminRole } from "@/lib/roleUtils";
 
-const STUDENT_NUMBER_PATTERN = /^\d{4}-\d{5}-[A-Z]{2}-\d$/;
-
-function applyStudentNumberMask(value) {
-  const clean = String(value || "").replace(/[^0-9A-Z]/gi, "").toUpperCase();
-  let masked = "";
-  for (let index = 0; index < Math.min(clean.length, 12); index += 1) {
-    masked += clean[index];
-    if (index === 3 || index === 8 || index === 10) masked += "-";
-  }
-  return masked;
-}
-
 function formatRegistrarStudentName({ firstName, middleName, lastName }) {
   const first = String(firstName || "").trim().replace(/\s+/g, " ").toUpperCase();
   const last = String(lastName || "").trim().replace(/\s+/g, " ").toUpperCase();
@@ -64,11 +52,29 @@ export default function Home() {
   const [twoFactorLoading, setTwoFactorLoading] = useState(false);
   const [twoFactorError, setTwoFactorError] = useState("");
   const [tempToken, setTempToken] = useState("");
-  const [showCreateAccountModal, setShowCreateAccountModal] = useState(false);
-  const [showStudentSignupModal, setShowStudentSignupModal] = useState(false);
-  const [studentSignup, setStudentSignup] = useState({ studentNo: "", firstName: "", middleName: "", lastName: "", password: "", confirmPassword: "" });
+  const [studentSignup, setStudentSignup] = useState({ firstName: "", middleName: "", lastName: "", email: "", password: "", confirmPassword: "" });
   const [studentSignupError, setStudentSignupError] = useState("");
   const [studentSignupLoading, setStudentSignupLoading] = useState(false);
+  const [firstNameFocused, setFirstNameFocused] = useState(false);
+  const [middleNameFocused, setMiddleNameFocused] = useState(false);
+  const [lastNameFocused, setLastNameFocused] = useState(false);
+  const [emailSignupFocused, setEmailSignupFocused] = useState(false);
+  const [signupPassFocused, setSignupPassFocused] = useState(false);
+  const [signupConfirmFocused, setSignupConfirmFocused] = useState(false);
+  const [showSignupPassword, setShowSignupPassword] = useState(false);
+
+  const resetStudentSignupState = () => {
+    setStudentSignup({ firstName: "", middleName: "", lastName: "", email: "", password: "", confirmPassword: "" });
+    setStudentSignupError("");
+    setStudentSignupLoading(false);
+    setFirstNameFocused(false);
+    setMiddleNameFocused(false);
+    setLastNameFocused(false);
+    setEmailSignupFocused(false);
+    setSignupPassFocused(false);
+    setSignupConfirmFocused(false);
+    setShowSignupPassword(false);
+  };
 
   // Forgot Password State
   const [forgotStep, setForgotStep] = useState(1);
@@ -224,19 +230,16 @@ export default function Home() {
 
     const usernameInput = username.trim();
     const passwordInput = password;
-    const isStudentNumber = STUDENT_NUMBER_PATTERN.test(usernameInput.toUpperCase());
 
     setError("");
     setIsLoading(true);
 
     (async () => {
       try {
-        const res = await fetch(isStudentNumber ? "/api/auth/student/login" : "/api/auth/login", {
+        const res = await fetch("/api/auth/login", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(isStudentNumber
-            ? { studentNo: usernameInput, password: passwordInput }
-            : { username: usernameInput, password: passwordInput }),
+          body: JSON.stringify({ username: usernameInput, password: passwordInput }),
         });
         const json = await res.json();
         if (!res.ok || !json?.ok) {
@@ -247,13 +250,6 @@ export default function Home() {
           setTempToken(json.data.tempToken);
           setShow2FAModal(true);
           setIsLoading(false);
-          return;
-        }
-
-        if (isStudentNumber || json?.data?.role === "Student") {
-          localStorage.setItem("pup-session-recovered", Date.now().toString());
-          localStorage.removeItem("pup-logout");
-          router.push("/student");
           return;
         }
 
@@ -286,12 +282,12 @@ export default function Home() {
 
   async function handleStudentSignup(e) {
     e.preventDefault();
-    if (!STUDENT_NUMBER_PATTERN.test(studentSignup.studentNo)) {
-      setStudentSignupError("Use the format YYYY-XXXXX-AA-0.");
-      return;
-    }
     if (!studentSignup.firstName.trim() || !studentSignup.lastName.trim()) {
       setStudentSignupError("First name and last name are required.");
+      return;
+    }
+    if (!studentSignup.email.trim() || !validateEmail(studentSignup.email.trim())) {
+      setStudentSignupError("A valid email address is required.");
       return;
     }
     if (studentSignup.password.length < 8) {
@@ -311,8 +307,11 @@ export default function Home() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          studentNo: studentSignup.studentNo,
           name: formattedName,
+          firstName: studentSignup.firstName.trim(),
+          middleName: studentSignup.middleName.trim(),
+          lastName: studentSignup.lastName.trim(),
+          email: studentSignup.email.trim(),
           password: studentSignup.password,
         }),
       });
@@ -323,28 +322,14 @@ export default function Home() {
 
       localStorage.setItem("pup-session-recovered", Date.now().toString());
       localStorage.removeItem("pup-logout");
-      setShowStudentSignupModal(false);
+      toast.success("Account Created", { description: "Welcome to eManage Student Portal!" });
+      resetStudentSignupState();
       router.push("/student");
     } catch (err) {
       setStudentSignupError(err?.message || "Unable to create student account.");
     } finally {
       setStudentSignupLoading(false);
     }
-  }
-
-  function handleStudentSignupNumberKeyDown(e) {
-    if (e.key !== "Backspace") return;
-    const input = e.currentTarget;
-    const cursor = input.selectionStart;
-    if (cursor !== input.selectionEnd || cursor === 0 || input.value[cursor - 1] !== "-") return;
-
-    e.preventDefault();
-    const nextValue = `${input.value.slice(0, cursor - 2)}${input.value.slice(cursor)}`;
-    const masked = applyStudentNumberMask(nextValue);
-    setStudentSignup((current) => ({ ...current, studentNo: masked }));
-    setTimeout(() => {
-      input.setSelectionRange(Math.min(cursor - 2, masked.length), Math.min(cursor - 2, masked.length));
-    }, 0);
   }
 
   const formattedStudentSignupName = formatRegistrarStudentName(studentSignup);
@@ -412,11 +397,24 @@ export default function Home() {
 
         <div className="w-full max-w-[550px] p-4 z-10">
           <div
-            className="bg-white rounded-[20px] shadow-[0_4px_40px_rgba(0,0,0,0.12)] dark:bg-zinc-900 flex flex-col items-center w-full relative"
-            style={{ padding: "56px 52px", height: "630px" }}
+            className="bg-white rounded-[20px] shadow-[0_4px_40px_rgba(0,0,0,0.12)] dark:bg-zinc-900 flex flex-col items-center w-full relative transition-all duration-300"
+            style={{
+              padding: view === "student-signup" ? "36px 44px 32px 44px" : "56px 52px",
+              minHeight: "630px",
+              height: view === "student-signup" ? "auto" : "630px",
+            }}
           >
             {/* APP ICON WITH CONCENTRIC CIRCLES */}
-            <div className="relative w-[160px] h-[160px] flex items-center justify-center mb-3 select-none shrink-0" style={{ width: '160px', height: '160px', flexShrink: 0 }}>
+            <div
+              className={`relative flex items-center justify-center select-none shrink-0 transition-all duration-300 ${
+                view === "student-signup" ? "w-[100px] h-[100px] mb-2" : "w-[160px] h-[160px] mb-3"
+              }`}
+              style={{
+                width: view === "student-signup" ? "100px" : "160px",
+                height: view === "student-signup" ? "100px" : "160px",
+                flexShrink: 0,
+              }}
+            >
               <svg className="absolute w-full h-full inset-0 pointer-events-none" viewBox="0 0 160 160">
                 {[
                   { r: 72, count: 24, size: 4.2, reverse: false },
@@ -479,7 +477,9 @@ export default function Home() {
             <img 
               src="/login-logo.png" 
               alt="eManage Logo" 
-              className="w-[30px] h-[30px] shrink-0 object-contain p-[2px] z-10 animate-in zoom-in-50 duration-500" 
+              className={`shrink-0 object-contain p-[2px] z-10 animate-in zoom-in-50 duration-500 transition-all duration-300 ${
+                view === "student-signup" ? "w-[22px] h-[22px]" : "w-[30px] h-[30px]"
+              }`} 
             />
             </div>
 
@@ -586,36 +586,32 @@ export default function Home() {
                           </label>
                         )}
 
-                        <a
-                          href="/forgot-password"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-[13px] text-[#E5484D] focus:outline-none flex items-center gap-0.5 group shrink-0"
-                        >
-                          <span className="group-hover:underline">Forgot Password?</span>
-                          <i className="ph-bold ph-arrow-up-right text-[11px] mt-0.5"></i>
-                        </a>
-                      </div>
-                    )}
-
-                    {/* Create Account Link (Step 1 only) */}
-                    {loginStep === 1 && (
-                      <div className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1 animate-in fade-in duration-200">
-                        <button
-                          type="button"
-                          onClick={() => setShowCreateAccountModal(true)}
-                          className="text-[13px] text-[#E5484D] hover:underline focus:outline-none font-normal"
-                        >
-                          Create Your eManage Account
-                        </button>
-                        <span className="text-[12px] text-gray-300 dark:text-zinc-600">|</span>
                         <button
                           type="button"
                           onClick={() => {
-                            setStudentSignupError("");
-                            setShowStudentSignupModal(true);
+                            resetForgotState();
+                            setView("forgot");
                           }}
-                          className="text-[13px] text-[#007AFF] hover:underline focus:outline-none font-normal"
+                          className="text-[13px] text-[#E5484D] hover:underline focus:outline-none shrink-0 font-normal"
+                        >
+                          Forgot Password?
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Student Sign Up Link (Step 1 only) */}
+                    {loginStep === 1 && (
+                      <div className="mt-2.5 flex flex-wrap items-center gap-1.5 animate-in fade-in duration-200">
+                        <span className="text-[13px] text-[#8E8E93] dark:text-zinc-400 font-normal">
+                          Don&apos;t have a student account?
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            resetStudentSignupState();
+                            setView("student-signup");
+                          }}
+                          className="text-[13px] text-[#007AFF] hover:underline focus:outline-none font-medium"
                         >
                           Student Sign Up
                         </button>
@@ -651,7 +647,7 @@ export default function Home() {
                   </div>
                 </form>
               </div>
-            ) : (
+            ) : view === "forgot" ? (
               <div className="w-full text-center flex-1 flex flex-col animate-in fade-in duration-300">
                 <h1 className="login-title text-[25px] font-bold text-[#1D1D1F] dark:text-zinc-50 tracking-tight mb-5">
                   Account Recovery
@@ -836,6 +832,192 @@ export default function Home() {
                   </form>
                 )}
               </div>
+            ) : (
+              <div className="w-full text-center flex-1 flex flex-col animate-in fade-in duration-300">
+                <h1 className="login-title text-[24px] font-bold text-[#1D1D1F] dark:text-zinc-50 tracking-tight mb-1">
+                  Student Sign Up
+                </h1>
+                <p className="text-[12px] text-gray-500 dark:text-zinc-400 mb-3 font-normal">
+                  Sign up to request and track your student or alumni records.
+                </p>
+
+                <form onSubmit={handleStudentSignup} className="w-full flex-1 flex flex-col justify-between">
+                  <div className="w-full text-left">
+                    {/* Merged Field Container */}
+                    <div className={`merged-container bg-white dark:bg-zinc-800 ${
+                      studentSignupError ? "has-error" : ""
+                    }`}>
+                      {/* First Name & Last Name (2 columns) */}
+                      <div className="flex w-full border-b border-gray-100 dark:border-zinc-700/50 divide-x divide-gray-100 dark:divide-zinc-700/50">
+                        <div className="flex-1 min-w-0">
+                          <div className={`field-wrapper ${firstNameFocused || studentSignup.firstName.length > 0 ? "active" : ""}`}>
+                            <label>First Name</label>
+                            <Input
+                              type="text"
+                              placeholder=" "
+                              className="focus-visible:ring-0 focus-visible:ring-offset-0"
+                              value={studentSignup.firstName}
+                              onFocus={() => setFirstNameFocused(true)}
+                              onBlur={() => setFirstNameFocused(false)}
+                              onChange={(e) => {
+                                setStudentSignup(cur => ({ ...cur, firstName: e.target.value }));
+                                if (studentSignupError) setStudentSignupError("");
+                              }}
+                              required
+                            />
+                          </div>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className={`field-wrapper ${lastNameFocused || studentSignup.lastName.length > 0 ? "active" : ""}`}>
+                            <label>Last Name</label>
+                            <Input
+                              type="text"
+                              placeholder=" "
+                              className="focus-visible:ring-0 focus-visible:ring-offset-0"
+                              value={studentSignup.lastName}
+                              onFocus={() => setLastNameFocused(true)}
+                              onBlur={() => setLastNameFocused(false)}
+                              onChange={(e) => {
+                                setStudentSignup(cur => ({ ...cur, lastName: e.target.value }));
+                                if (studentSignupError) setStudentSignupError("");
+                              }}
+                              required
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Middle Name (Optional) */}
+                      <div className={`field-wrapper border-b border-gray-100 dark:border-zinc-700/50 ${middleNameFocused || studentSignup.middleName.length > 0 ? "active" : ""}`}>
+                        <label>Middle Name (Optional)</label>
+                        <Input
+                          type="text"
+                          placeholder=" "
+                          className="pr-11 focus-visible:ring-0 focus-visible:ring-offset-0"
+                          value={studentSignup.middleName}
+                          onFocus={() => setMiddleNameFocused(true)}
+                          onBlur={() => setMiddleNameFocused(false)}
+                          onChange={(e) => {
+                            setStudentSignup(cur => ({ ...cur, middleName: e.target.value }));
+                            if (studentSignupError) setStudentSignupError("");
+                          }}
+                        />
+                      </div>
+
+                      {/* Email Address */}
+                      <div className={`field-wrapper border-b border-gray-100 dark:border-zinc-700/50 ${emailSignupFocused || studentSignup.email.length > 0 ? "active" : ""}`}>
+                        <label>Email Address</label>
+                        <Input
+                          type="email"
+                          placeholder=" "
+                          className="pr-11 focus-visible:ring-0 focus-visible:ring-offset-0"
+                          value={studentSignup.email}
+                          onFocus={() => setEmailSignupFocused(true)}
+                          onBlur={() => setEmailSignupFocused(false)}
+                          onChange={(e) => {
+                            setStudentSignup(cur => ({ ...cur, email: e.target.value }));
+                            if (studentSignupError) setStudentSignupError("");
+                          }}
+                          required
+                        />
+                      </div>
+
+                      {/* Password & Confirm Password (2 columns) */}
+                      <div className="flex w-full divide-x divide-gray-100 dark:divide-zinc-700/50">
+                        <div className="flex-1 min-w-0">
+                          <div className={`field-wrapper ${signupPassFocused || studentSignup.password.length > 0 ? "active" : ""}`}>
+                            <label>Password (8+ chars)</label>
+                            <Input
+                              type={showSignupPassword ? "text" : "password"}
+                              placeholder=" "
+                              className="pr-9 focus-visible:ring-0 focus-visible:ring-offset-0"
+                              value={studentSignup.password}
+                              onFocus={() => setSignupPassFocused(true)}
+                              onBlur={() => setSignupPassFocused(false)}
+                              onChange={(e) => {
+                                setStudentSignup(cur => ({ ...cur, password: e.target.value }));
+                                if (studentSignupError) setStudentSignupError("");
+                              }}
+                              required
+                            />
+                            <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center">
+                              <button
+                                type="button"
+                                onClick={() => setShowSignupPassword(!showSignupPassword)}
+                                className="w-6 h-6 flex items-center justify-center text-[#8E8E93] hover:text-[#1D1D1F] focus:outline-none dark:text-zinc-400 dark:hover:text-zinc-200"
+                              >
+                                <i className={`ph-bold ${showSignupPassword ? "ph-eye-slash" : "ph-eye"} text-[14px]`}></i>
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className={`field-wrapper ${signupConfirmFocused || studentSignup.confirmPassword.length > 0 ? "active" : ""}`}>
+                            <label>Confirm Password</label>
+                            <Input
+                              type={showSignupPassword ? "text" : "password"}
+                              placeholder=" "
+                              className="focus-visible:ring-0 focus-visible:ring-offset-0"
+                              value={studentSignup.confirmPassword}
+                              onFocus={() => setSignupConfirmFocused(true)}
+                              onBlur={() => setSignupConfirmFocused(false)}
+                              onChange={(e) => {
+                                setStudentSignup(cur => ({ ...cur, confirmPassword: e.target.value }));
+                                if (studentSignupError) setStudentSignupError("");
+                              }}
+                              required
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Registrar format helper */}
+                    {formattedStudentSignupName && (
+                      <p className="mt-2 text-[11px] text-gray-500 dark:text-zinc-400">
+                        Registrar format: <span className="font-semibold text-gray-800 dark:text-zinc-200">{formattedStudentSignupName}</span>
+                      </p>
+                    )}
+
+                    {/* Error message */}
+                    {studentSignupError && (
+                      <div className="h-5 mt-1.5 text-left flex items-center gap-1.5 text-[#E5484D] animate-in fade-in duration-200">
+                        <i className="ph-bold ph-warning-circle text-[14px] shrink-0 mt-[1px]"></i>
+                        <p className="text-[12px] font-normal leading-none">
+                          {studentSignupError}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="w-full mt-4 space-y-2.5">
+                    <Button
+                      type="submit"
+                      disabled={studentSignupLoading}
+                      className="w-full h-11 rounded-[8px] btn-brand-red text-[13px] font-medium text-white active:scale-95 disabled:opacity-50 transition-all flex items-center justify-center"
+                    >
+                      {studentSignupLoading ? (
+                        <i className="ph-bold ph-spinner animate-spin text-lg flex items-center justify-center"></i>
+                      ) : (
+                        <span>Create Student Account</span>
+                      )}
+                    </Button>
+                    <div className="text-center">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          resetStudentSignupState();
+                          setView("login");
+                        }}
+                        className="text-[13px] text-[#E5484D] hover:underline focus:outline-none font-normal"
+                      >
+                        Back to Login
+                      </button>
+                    </div>
+                  </div>
+                </form>
+              </div>
             )}
           </div>
 
@@ -957,129 +1139,7 @@ export default function Home() {
           </DialogContent>
         </Dialog>
 
-        {/* Create Account Modal */}
-        <Dialog open={showCreateAccountModal} onOpenChange={setShowCreateAccountModal}>
-          <DialogContent className="max-w-md rounded-[20px] border-gray-100 bg-white dark:border-zinc-800 dark:bg-zinc-900">
-            <DialogHeader>
-              <DialogTitle className="text-lg font-semibold text-gray-900 flex items-center gap-2 dark:text-zinc-50">
-                <i className="ph-fill ph-info text-[#E5484D]"></i>
-                Account Registration
-              </DialogTitle>
-              <DialogDescription className="text-sm font-medium text-gray-600 dark:text-zinc-400 mt-2">
-                Contact your admin to create your account.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4 mt-3">
-              <p className="text-sm font-medium text-gray-700 dark:text-zinc-300">
-                To maintain the integrity of student records, self-registration is disabled. New accounts must be provisioned by the administrator.
-              </p>
-              
-              <div className="bg-slate-50 dark:bg-zinc-800/50 rounded-xl p-3.5 space-y-2 border border-slate-100 dark:border-zinc-800">
-                <h4 className="text-xs font-bold text-gray-800 dark:text-zinc-200 uppercase tracking-wider">Required Details</h4>
-                <ul className="text-xs text-gray-600 dark:text-zinc-400 space-y-1.5 list-disc pl-4">
-                  <li><strong>Full Name</strong> (First Name, Last Name)</li>
-                  <li><strong>Staff/Employee ID</strong> (e.g., PUPREGISTRAR-001)</li>
-                  <li><strong>Official Email</strong> Address</li>
-                  <li><strong>Assigned Section/Department</strong></li>
-                </ul>
-              </div>
 
-              <div className="space-y-3 text-xs text-gray-600 dark:text-zinc-400">
-                <div className="flex gap-2">
-                  <i className="ph-bold ph-envelope-simple text-base text-[#E5484D] mt-0.5"></i>
-                  <div>
-                    <span className="font-semibold block text-gray-800 dark:text-zinc-200">Email Submission</span>
-                    Submit requests to: <span className="font-sans text-[11px] bg-slate-100 dark:bg-zinc-800 px-1 py-0.5 rounded text-gray-850 dark:text-zinc-200">registrar.admin@pup.edu.ph</span>
-                  </div>
-                </div>
-
-                <div className="flex gap-2">
-                  <i className="ph-bold ph-map-pin text-base text-[#E5484D] mt-0.5"></i>
-                  <div>
-                    <span className="font-semibold block text-gray-800 dark:text-zinc-200">Office Location</span>
-                    Registrar&apos;s Office, Room 201, Main Academic Building
-                  </div>
-                </div>
-              </div>
-
-              <div className="pt-3 border-t border-gray-100 dark:border-zinc-800 flex justify-end">
-                <Button 
-                  type="button" 
-                  onClick={() => setShowCreateAccountModal(false)}
-                  className="h-9 px-4 text-xs font-semibold bg-[#E5484D] hover:bg-[#c93b40] text-white rounded-lg active:scale-95 transition-all"
-                >
-                  Got it, close
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
-
-        {/* Student Sign Up Modal */}
-        <Dialog open={showStudentSignupModal} onOpenChange={setShowStudentSignupModal}>
-          <DialogContent className="max-w-md rounded-[20px] border-gray-100 bg-white dark:border-zinc-800 dark:bg-zinc-900">
-            <DialogHeader>
-              <DialogTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">Student Sign Up</DialogTitle>
-              <DialogDescription className="mt-2 text-sm font-medium text-gray-600 dark:text-zinc-400">
-                Use the details registered in the Records Management System.
-              </DialogDescription>
-            </DialogHeader>
-            <form onSubmit={handleStudentSignup} className="mt-3 space-y-3">
-              <Input
-                placeholder="202X-XXXXX-MN-0"
-                value={studentSignup.studentNo}
-                onKeyDown={handleStudentSignupNumberKeyDown}
-                onChange={(e) => setStudentSignup({ ...studentSignup, studentNo: applyStudentNumberMask(e.target.value) })}
-                required
-              />
-              <div className="grid grid-cols-2 gap-3">
-                <Input
-                  placeholder="First name"
-                  value={studentSignup.firstName}
-                  onChange={(e) => setStudentSignup({ ...studentSignup, firstName: e.target.value })}
-                  required
-                />
-                <Input
-                  placeholder="Middle name (optional)"
-                  value={studentSignup.middleName}
-                  onChange={(e) => setStudentSignup({ ...studentSignup, middleName: e.target.value })}
-                />
-              </div>
-              <Input
-                placeholder="Last name"
-                value={studentSignup.lastName}
-                onChange={(e) => setStudentSignup({ ...studentSignup, lastName: e.target.value })}
-                required
-              />
-              {formattedStudentSignupName && (
-                <p className="text-xs font-medium text-gray-500 dark:text-zinc-400">
-                  Registrar format: <span className="font-bold text-gray-800 dark:text-zinc-200">{formattedStudentSignupName}</span>
-                </p>
-              )}
-              <Input
-                type="password"
-                placeholder="Password (minimum 8 characters)"
-                value={studentSignup.password}
-                onChange={(e) => setStudentSignup({ ...studentSignup, password: e.target.value })}
-                required
-              />
-              <Input
-                type="password"
-                placeholder="Confirm password"
-                value={studentSignup.confirmPassword}
-                onChange={(e) => setStudentSignup({ ...studentSignup, confirmPassword: e.target.value })}
-                required
-              />
-              {studentSignupError && <p className="text-xs font-medium text-[#E5484D]">{studentSignupError}</p>}
-              <div className="flex justify-end gap-2 pt-2">
-                <Button type="button" variant="outline" onClick={() => setShowStudentSignupModal(false)}>Cancel</Button>
-                <Button type="submit" disabled={studentSignupLoading} className="bg-[#E5484D] text-white hover:bg-[#c93b40]">
-                  {studentSignupLoading ? "Creating..." : "Create Student Account"}
-                </Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
       </PageTransition>
     </TooltipProvider>
   );

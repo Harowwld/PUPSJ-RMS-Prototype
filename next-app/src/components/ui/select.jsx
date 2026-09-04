@@ -119,7 +119,7 @@ const Select = React.forwardRef(({ className, containerClassName, children, valu
   )
 
   return (
-    <div className={cn("relative w-full min-w-0 h-full", containerClassName)}>
+    <div className={cn("relative w-full min-w-0 h-auto", containerClassName)}>
       <button
         type="button"
         ref={(el) => {

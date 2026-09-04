@@ -60,6 +60,9 @@ function AccountPageContent() {
   // Profile Form State
   const [fname, setFname] = useState("");
   const [lname, setLname] = useState("");
+  const [mname, setMname] = useState("");
+  const [studentNo, setStudentNo] = useState("");
+  const [clientType, setClientType] = useState("Student");
   const [username, setUsername] = useState("");
   const [profileLoading, setProfileLoading] = useState(false);
   const [profileError, setProfileError] = useState("");
@@ -128,7 +131,10 @@ function AccountPageContent() {
         }
         setFname(user.fname || "");
         setLname(user.lname || "");
+        setMname(user.mname || "");
         setUsername(user.email || user.username || "");
+        setStudentNo(user.student_no || "");
+        setClientType(user.client_type || (user.course_code === "ALUMNI" || (user.student_no && user.student_no.startsWith("ALUM-")) ? "Alumni" : "Student"));
         setUserPreferences(user.preferences || {});
 
 
@@ -322,13 +328,8 @@ function AccountPageContent() {
     e.preventDefault();
     if (profileLoading) return;
 
-    if (!(fname || "").trim() || !(lname || "").trim() || !(username || "").trim()) {
+    if (!(fname || "").trim() || !(lname || "").trim()) {
       setProfileError("Please fill all required fields.");
-      return;
-    }
-
-    if (!username.includes("@")) {
-      setProfileError("Username must be a valid email address.");
       return;
     }
 
@@ -336,14 +337,24 @@ function AccountPageContent() {
     setProfileLoading(true);
 
     try {
+      const payload = authUser?.role === "Student"
+        ? {
+            fname: (fname || "").trim(),
+            lname: (lname || "").trim(),
+            mname: (mname || "").trim(),
+            student_no: (studentNo || "").trim(),
+            client_type: clientType,
+          }
+        : {
+            fname: (fname || "").trim(),
+            lname: (lname || "").trim(),
+            email: (username || "").trim(),
+          };
+
       const res = await fetch("/api/auth/update-profile", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          fname: (fname || "").trim(),
-          lname: (lname || "").trim(),
-          email: (username || "").trim(),
-        }),
+        body: JSON.stringify(payload),
       });
       const json = await res.json();
       if (!res.ok || !json?.ok) {
@@ -351,11 +362,11 @@ function AccountPageContent() {
       }
 
       toast.success("Profile Updated", {
-        description: "Your changes will take effect after the page reloads.",
+        description: "Your changes have been saved successfully.",
       });
       setTimeout(() => {
         window.location.reload();
-      }, 1500);
+      }, 1200);
     } catch (err) {
       setProfileError(err?.message || "Failed to update profile");
       toast.error("Update Failed", {
@@ -777,12 +788,16 @@ function AccountPageContent() {
                     </h3>
                     {authUser?.role && (
                       <span className="text-[11px] font-medium px-2.5 py-1 rounded-[4px] bg-red-50 text-pup-maroon dark:bg-red-500/20 dark:text-red-400 tracking-[0.04em]">
-                        {getRoleLabel(authUser.role)}
+                        {authUser.role === "Student" ? (clientType || "Student") : getRoleLabel(authUser.role)}
                       </span>
                     )}
                   </div>
                   <p className="text-[14px] font-normal text-[#8E8E93] dark:text-zinc-400 mt-[4px] truncate">
-                    {authUser?.email || authUser?.username}
+                    {authUser?.role === "Student" && studentNo ? (
+                      <span><span className="font-mono text-xs text-gray-700 dark:text-zinc-300 font-medium">{studentNo}</span> · {username}</span>
+                    ) : (
+                      authUser?.email || authUser?.username
+                    )}
                   </p>
                 </div>
               </div>
@@ -836,49 +851,158 @@ function AccountPageContent() {
                       </div>
                     )}
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="space-y-1">
-                        <label className="text-[11px] font-medium uppercase tracking-[0.04em] text-gray-500 px-1 dark:text-zinc-450 block">
-                          First Name
-                        </label>
-                        <Input
-                          type="text"
-                          className="h-10 rounded-[8px] border-[0.5px] border-gray-200 bg-white px-3 text-[14px] font-normal tracking-[-0.01em] shadow-none transition-all focus-visible:border-gray-400 focus-visible:ring-0 text-gray-900 dark:border-white/10 dark:bg-card dark:text-zinc-50 dark:focus-visible:border-white/20"
-                          placeholder="First Name"
-                          value={fname}
-                          onChange={(e) => setFname(e.target.value)}
-                          required
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <label className="text-[11px] font-medium uppercase tracking-[0.04em] text-gray-500 px-1 dark:text-zinc-450 block">
-                          Last Name
-                        </label>
-                        <Input
-                          type="text"
-                          className="h-10 rounded-[8px] border-[0.5px] border-gray-200 bg-white px-3 text-[14px] font-normal tracking-[-0.01em] shadow-none transition-all focus-visible:border-gray-400 focus-visible:ring-0 text-gray-900 dark:border-white/10 dark:bg-card dark:text-zinc-50 dark:focus-visible:border-white/20"
-                          placeholder="Last Name"
-                          value={lname}
-                          onChange={(e) => setLname(e.target.value)}
-                          required
-                        />
-                      </div>
-                    </div>
+                    {authUser?.role === "Student" ? (
+                      <>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <div className="space-y-1">
+                            <label className="text-[11px] font-medium uppercase tracking-[0.04em] text-gray-500 px-1 dark:text-zinc-450 block">
+                              First Name *
+                            </label>
+                            <Input
+                              type="text"
+                              className="h-10 rounded-[8px] border-[0.5px] border-gray-200 bg-white px-3 text-[14px] font-normal tracking-[-0.01em] shadow-none transition-all focus-visible:border-gray-400 focus-visible:ring-0 text-gray-900 dark:border-white/10 dark:bg-card dark:text-zinc-50 dark:focus-visible:border-white/20"
+                              placeholder="e.g. Juan"
+                              value={fname}
+                              onChange={(e) => setFname(e.target.value)}
+                              required
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <label className="text-[11px] font-medium uppercase tracking-[0.04em] text-gray-500 px-1 dark:text-zinc-450 block">
+                              Middle Name <span className="text-gray-400 font-normal normal-case">(Optional)</span>
+                            </label>
+                            <Input
+                              type="text"
+                              className="h-10 rounded-[8px] border-[0.5px] border-gray-200 bg-white px-3 text-[14px] font-normal tracking-[-0.01em] shadow-none transition-all focus-visible:border-gray-400 focus-visible:ring-0 text-gray-900 dark:border-white/10 dark:bg-card dark:text-zinc-50 dark:focus-visible:border-white/20"
+                              placeholder="e.g. Santos"
+                              value={mname}
+                              onChange={(e) => setMname(e.target.value)}
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <label className="text-[11px] font-medium uppercase tracking-[0.04em] text-gray-500 px-1 dark:text-zinc-450 block">
+                              Last Name *
+                            </label>
+                            <Input
+                              type="text"
+                              className="h-10 rounded-[8px] border-[0.5px] border-gray-200 bg-white px-3 text-[14px] font-normal tracking-[-0.01em] shadow-none transition-all focus-visible:border-gray-400 focus-visible:ring-0 text-gray-900 dark:border-white/10 dark:bg-card dark:text-zinc-50 dark:focus-visible:border-white/20"
+                              placeholder="e.g. Dela Cruz"
+                              value={lname}
+                              onChange={(e) => setLname(e.target.value)}
+                              required
+                            />
+                          </div>
+                        </div>
 
-                    <div className="space-y-1">
-                      <label className="text-[11px] font-medium uppercase tracking-[0.04em] text-gray-500 px-1 dark:text-zinc-450 block">
-                        Email Address
-                      </label>
-                      <Input
-                        type="email"
-                        className="h-10 rounded-[8px] border-[0.5px] border-gray-200 bg-gray-50 px-3 text-[14px] font-normal tracking-[-0.01em] shadow-none text-gray-400 cursor-not-allowed select-none dark:border-white/10 dark:bg-white/5 dark:text-zinc-500"
-                        value={username}
-                        readOnly
-                      />
-                      <p className="text-[11px] text-gray-400 font-normal mt-1.5 ml-1 dark:text-zinc-500">
-                        Your email is managed by administrators and cannot be changed.
-                      </p>
-                    </div>
+                        <div className="space-y-1">
+                          <label className="text-[11px] font-medium uppercase tracking-[0.04em] text-gray-500 px-1 dark:text-zinc-450 block">
+                            Email Address
+                          </label>
+                          <Input
+                            type="email"
+                            className="h-10 rounded-[8px] border-[0.5px] border-gray-200 bg-gray-50 px-3 text-[14px] font-normal tracking-[-0.01em] shadow-none text-gray-400 cursor-not-allowed select-none dark:border-white/10 dark:bg-white/5 dark:text-zinc-500"
+                            value={username}
+                            readOnly
+                          />
+                          <p className="text-[11px] text-gray-400 font-normal mt-1.5 ml-1 dark:text-zinc-500">
+                            Your email is your account identifier and cannot be changed.
+                          </p>
+                        </div>
+
+                        <div className="pt-4 border-t border-gray-100 dark:border-white/10 space-y-4">
+                          <div>
+                            <h3 className="text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
+                              Academic Information
+                            </h3>
+                            <p className="text-[12px] text-gray-500 dark:text-zinc-400 mt-0.5">
+                              Manage your affiliation and student credentials for registrar records.
+                            </p>
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+                            <div className="space-y-1">
+                              <label className="text-[11px] font-medium uppercase tracking-[0.04em] text-gray-500 px-1 dark:text-zinc-450 block">
+                                Client Type *
+                              </label>
+                              <Select
+                                containerClassName="h-auto"
+                                value={clientType}
+                                onChange={(e) => setClientType(e.target.value)}
+                                className="h-10 text-[14px] font-normal tracking-[-0.01em] text-gray-900 dark:text-zinc-50 border-gray-200 dark:border-white/10 dark:bg-card"
+                              >
+                                <option value="Student">Student (Currently Enrolled)</option>
+                                <option value="Alumni">Alumni (Graduate / Former Student)</option>
+                              </Select>
+                              <p className="text-[11px] text-gray-400 font-normal mt-1.5 ml-1 dark:text-zinc-500">
+                                Choose whether you are currently enrolled or requesting as an alumnus.
+                              </p>
+                            </div>
+
+                            <div className="space-y-1">
+                              <label className="text-[11px] font-medium uppercase tracking-[0.04em] text-gray-500 px-1 dark:text-zinc-450 block">
+                                Student Number <span className="text-gray-400 font-normal normal-case">(Optional)</span>
+                              </label>
+                              <Input
+                                type="text"
+                                className="h-10 rounded-[8px] border-[0.5px] border-gray-200 bg-white px-3 text-[14px] font-mono tracking-[-0.01em] shadow-none transition-all focus-visible:border-gray-400 focus-visible:ring-0 text-gray-900 dark:border-white/10 dark:bg-card dark:text-zinc-50 dark:focus-visible:border-white/20"
+                                placeholder="e.g. 2020-00123-TG-0 (optional)"
+                                value={studentNo}
+                                onChange={(e) => setStudentNo(e.target.value)}
+                              />
+                              <p className="text-[11px] text-gray-400 font-normal mt-1.5 ml-1 dark:text-zinc-500">
+                                Optional in your profile. You will type your student number whenever creating a document request.
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div className="space-y-1">
+                            <label className="text-[11px] font-medium uppercase tracking-[0.04em] text-gray-500 px-1 dark:text-zinc-450 block">
+                              First Name
+                            </label>
+                            <Input
+                              type="text"
+                              className="h-10 rounded-[8px] border-[0.5px] border-gray-200 bg-white px-3 text-[14px] font-normal tracking-[-0.01em] shadow-none transition-all focus-visible:border-gray-400 focus-visible:ring-0 text-gray-900 dark:border-white/10 dark:bg-card dark:text-zinc-50 dark:focus-visible:border-white/20"
+                              placeholder="First Name"
+                              value={fname}
+                              onChange={(e) => setFname(e.target.value)}
+                              required
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <label className="text-[11px] font-medium uppercase tracking-[0.04em] text-gray-500 px-1 dark:text-zinc-450 block">
+                              Last Name
+                            </label>
+                            <Input
+                              type="text"
+                              className="h-10 rounded-[8px] border-[0.5px] border-gray-200 bg-white px-3 text-[14px] font-normal tracking-[-0.01em] shadow-none transition-all focus-visible:border-gray-400 focus-visible:ring-0 text-gray-900 dark:border-white/10 dark:bg-card dark:text-zinc-50 dark:focus-visible:border-white/20"
+                              placeholder="Last Name"
+                              value={lname}
+                              onChange={(e) => setLname(e.target.value)}
+                              required
+                            />
+                          </div>
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="text-[11px] font-medium uppercase tracking-[0.04em] text-gray-500 px-1 dark:text-zinc-450 block">
+                            Email Address
+                          </label>
+                          <Input
+                            type="email"
+                            className="h-10 rounded-[8px] border-[0.5px] border-gray-200 bg-gray-50 px-3 text-[14px] font-normal tracking-[-0.01em] shadow-none text-gray-400 cursor-not-allowed select-none dark:border-white/10 dark:bg-white/5 dark:text-zinc-500"
+                            value={username}
+                            readOnly
+                          />
+                          <p className="text-[11px] text-gray-400 font-normal mt-1.5 ml-1 dark:text-zinc-500">
+                            Your email is managed by administrators and cannot be changed.
+                          </p>
+                        </div>
+                      </>
+                    )}
 
                     <div className="flex justify-end pt-4">
                       <LiquidGlassButton

@@ -31,13 +31,82 @@ export async function GET(req) {
     const userId = payload.sub || null;
     authDebug("session_check.token_verified", { staffId: userId, role: payload.role || null, officeId: payload.office_id || null, mustChangePassword: Boolean(payload.mustChangePassword) });
 
-    if (payload.role === "Student" && payload.student_no) {
-      const student = await queryOne("SELECT student_no, name, status FROM students WHERE student_no = $1", [payload.student_no]);
+    if (payload.role === "Student") {
+      const student = await queryOne(`
+        SELECT 
+          sa.id AS account_id,
+          sa.student_no,
+          sa.email, 
+          sa.first_name, 
+          sa.middle_name, 
+          sa.last_name, 
+          sa.client_type,
+          sa.avatar_filename,
+          sa.status AS account_status,
+          s.name, 
+          s.status AS student_status, 
+          s.course_code, 
+          s.year_level, 
+          s.section
+        FROM student_accounts sa
+        LEFT JOIN students s ON s.student_no = sa.student_no
+        WHERE (sa.id = $1 AND $1 IS NOT NULL)
+           OR (lower(sa.email) = lower($2) AND $2 IS NOT NULL)
+           OR (sa.student_no IS NOT NULL AND upper(sa.student_no) = upper($3) AND $3 IS NOT NULL)
+        LIMIT 1
+      `, [payload.account_id || (Number.isFinite(Number(userId)) ? Number(userId) : null), payload.email || payload.username || null, payload.student_no || null]);
+
       if (!student) return addSecurityHeaders(NextResponse.json({ ok: false, error: "Student account not found" }, { status: 401 }));
-      return addSecurityHeaders(NextResponse.json({ ok: true, data: {
-        id: student.student_no, role: "Student", status: student.status, student_no: student.student_no,
-        fname: student.name, lname: "", enabled_modules: [], preferences: { theme: "light", navigation_layout: "sidebar" },
-      } }));
+
+      let fname = student.first_name || "";
+      let lname = student.last_name || "";
+      let mname = student.middle_name || "";
+      if (!fname && !lname && student.name) {
+        if (student.name.includes(",")) {
+          const parts = student.name.split(",");
+          lname = (parts[0] || "").trim();
+          const firstPart = (parts[1] || "").trim();
+          const nameTokens = firstPart.split(" ");
+          if (nameTokens.length > 1 && nameTokens[nameTokens.length - 1].length <= 2) {
+            mname = nameTokens.pop();
+          }
+          fname = nameTokens.join(" ");
+        } else {
+          const tokens = student.name.trim().split(" ");
+          if (tokens.length > 1) {
+            lname = tokens.pop();
+            fname = tokens.join(" ");
+          } else {
+            fname = student.name;
+          }
+        }
+      }
+
+      const clientType = student.client_type || (student.course_code === "ALUMNI" ? "Alumni" : "Student");
+
+      return addSecurityHeaders(NextResponse.json({
+        ok: true,
+        data: {
+          id: student.student_no || String(student.account_id),
+          account_id: student.account_id,
+          role: "Student",
+          status: student.account_status || student.student_status || "Active",
+          student_no: student.student_no || "",
+          name: [fname, lname].filter(Boolean).join(" ") || student.name || student.email || "",
+          fname,
+          lname,
+          mname,
+          email: student.email || "",
+          username: student.email || student.student_no || "",
+          client_type: clientType,
+          course_code: student.course_code || "",
+          year_level: student.year_level || null,
+          section: student.section || "",
+          avatar_filename: student.avatar_filename || null,
+          enabled_modules: [],
+          preferences: { theme: "light", navigation_layout: "sidebar" },
+        },
+      }));
     }
 
     // Fetch fresh user data from database to get current role and status

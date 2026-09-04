@@ -2,12 +2,18 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import Header from "@/components/layout/Header";
 import Sidebar from "@/components/shared/Sidebar";
 import { formatPHDateTime } from "@/lib/timeFormat";
+import { Card } from "@/components/ui/card";
+import PageHeader from "@/components/shared/PageHeader";
+import { RefreshButton } from "@/components/shared/RefreshButton";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { Select } from "@/components/ui/select";
 
 const requestStatuses = ["Pending", "InProgress", "Ready", "Completed", "Cancelled"];
 
@@ -18,7 +24,7 @@ export default function StudentDashboard() {
   const [docTypes, setDocTypes] = useState([]);
   const [authMode, setAuthMode] = useState("login");
   const [auth, setAuth] = useState({ studentNo: "", name: "", password: "" });
-  const [requestForm, setRequestForm] = useState({ docType: "", notes: "" });
+  const [requestForm, setRequestForm] = useState({ studentNo: "", docType: "", notes: "", clientType: "Student" });
   const [proposalForm, setProposalForm] = useState({ title: "", organizationName: "", eventDate: "", file: null });
   const [message, setMessage] = useState("");
   const [view, setView] = useState("odrs");
@@ -26,6 +32,7 @@ export default function StudentDashboard() {
   const [authSubmitting, setAuthSubmitting] = useState(false);
   const [requestSubmitting, setRequestSubmitting] = useState(false);
   const [proposalSubmitting, setProposalSubmitting] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [studentNoFocused, setStudentNoFocused] = useState(false);
   const [studentNameFocused, setStudentNameFocused] = useState(false);
   const [studentPasswordFocused, setStudentPasswordFocused] = useState(false);
@@ -56,6 +63,11 @@ export default function StudentDashboard() {
       return;
     }
     setMe(meJson.data);
+    setRequestForm((prev) => ({
+      ...prev,
+      clientType: meJson.data.client_type || prev.clientType || "Student",
+      studentNo: prev.studentNo || meJson.data.student_no || "",
+    }));
     const [requestRes, proposalRes, typesRes, activityRes] = await Promise.all([
       fetch("/api/student/document-requests", { cache: "no-store" }),
       fetch("/api/student/event-proposals", { cache: "no-store" }),
@@ -98,13 +110,59 @@ export default function StudentDashboard() {
   async function createRequest(event) {
     event.preventDefault(); setMessage(""); setRequestSubmitting(true);
     try {
-      const res = await fetch("/api/student/document-requests", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(requestForm) });
+      const studentNo = String(requestForm.studentNo || "").trim().toUpperCase() || null;
+      const docType = String(requestForm.docType || "").trim();
+      const notes = String(requestForm.notes || "").trim();
+      const clientType = String(requestForm.clientType || me?.client_type || "Student").trim();
+
+      if (!clientType) {
+        setMessage("Client type is required.");
+        showToast("Client type required", "Please select whether you are a Student or Alumni.", true);
+        return;
+      }
+      if (!docType) {
+        setMessage("Document type is required.");
+        showToast("Document type required", "Please select a document type.", true);
+        return;
+      }
+      if (!notes) {
+        setMessage("Description is required to submit a document request.");
+        showToast("Description required", "Please provide the purpose or description of your request.", true);
+        return;
+      }
+
+      const res = await fetch("/api/student/document-requests", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          studentNo,
+          docType,
+          notes,
+          clientType,
+        }),
+      });
       const json = await res.json();
-      if (!res.ok || !json.ok) { const error = json.error || "Unable to submit request."; setMessage(error); showToast("Request failed", error, true); return; }
-      setRequestForm({ docType: "", notes: "" }); showToast("Request submitted", "The Registrar can now review your document request."); await load();
+      if (!res.ok || !json.ok) {
+        const error = json.error || "Unable to submit request.";
+        setMessage(error);
+        showToast("Request failed", error, true);
+        return;
+      }
+      setRequestForm((prev) => ({
+        ...prev,
+        docType: "",
+        notes: "",
+        studentNo: me?.student_no || "",
+      }));
+      showToast("Request submitted", "The Registrar can now review your document request.");
+      await load();
     } catch (error) {
-      const message = error.message || "Unable to submit request."; setMessage(message); showToast("Request failed", message, true);
-    } finally { setRequestSubmitting(false); }
+      const message = error.message || "Unable to submit request.";
+      setMessage(message);
+      showToast("Request failed", message, true);
+    } finally {
+      setRequestSubmitting(false);
+    }
   }
 
   async function submitProposal(event) {
@@ -216,41 +274,228 @@ export default function StudentDashboard() {
   }
 
   const StatusBadge = ({ status }) => {
-    const tone = status === "Approved" || status === "Completed" ? "bg-red-100 text-red-900" : status === "Declined" || status === "Cancelled" ? "bg-red-50 text-red-700" : "bg-red-50 text-red-700";
-    return <span className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold ${tone}`}>{status}</span>;
+    const s = String(status || "").toLowerCase();
+    let badgeClass = "bg-amber-50 text-amber-800 border-amber-200/80 dark:bg-amber-950/30 dark:text-amber-300 dark:border-amber-800/40";
+    if (s === "approved" || s === "completed" || s === "ready") {
+      badgeClass = "bg-emerald-50 text-emerald-800 border-emerald-200/80 dark:bg-emerald-950/30 dark:text-emerald-300 dark:border-emerald-800/40";
+    } else if (s === "inprogress") {
+      badgeClass = "bg-blue-50 text-blue-800 border-blue-200/80 dark:bg-blue-950/30 dark:text-blue-300 dark:border-blue-800/40";
+    } else if (s === "declined" || s === "cancelled") {
+      badgeClass = "bg-rose-50 text-rose-800 border-rose-200/80 dark:bg-rose-950/30 dark:text-rose-300 dark:border-rose-800/40";
+    }
+    return <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${badgeClass}`}>{status}</span>;
   };
 
   return (
-    <div className="relative flex h-screen min-h-0 flex-col overflow-hidden bg-red-50/20 font-inter dark:bg-red-950/10">
-      {/* Shared dashboard liquid-gradient background used by Staff/Admin views. */}
-      <div className="liquid-container">
-        <div className="liquid-blob liquid-blob-1" />
-        <div className="liquid-blob liquid-blob-2" />
-        <div className="liquid-blob liquid-blob-3" />
-      </div>
-      <Header authUser={{ ...me, role: "Student", username: me.email || me.student_no }} onLogout={handleLogout} />
-      <div className="flex min-h-0 flex-1">
-      <Sidebar open={sidebarOpen} items={sidebarItems} activeKey={view} onSelect={(key) => key === "activity" ? router.push("/account/activity") : setView(key)} onLogout={handleLogout} accentColor="#800000" officeName="Student Portal" />
-        <main className="relative w-full min-w-0 min-h-0 flex-1 overflow-y-auto bg-red-50/10 dark:bg-red-950/10 backdrop-blur-xs">
-          <div className="flex min-h-0 w-full flex-1 flex-col p-4 sm:p-6">
-            <div className="mx-auto w-full max-w-7xl space-y-6">
-            <div className="flex items-start justify-between gap-4">
-              <div><p className="text-xs font-semibold uppercase tracking-widest text-pup-maroon">Student Portal</p><h1 className="mt-1 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">{view === "odrs" ? "Document Requests" : "OSAS Submissions"}</h1><p className="mt-1 text-sm text-gray-500">Welcome back, {me.fname || me.name || "Student"}.</p></div>
+    <TooltipProvider delayDuration={200}>
+      <div className="relative flex h-screen min-h-0 flex-col overflow-hidden bg-red-50/20 font-inter dark:bg-red-950/10">
+        {/* Shared dashboard liquid-gradient background used by Staff/Admin views. */}
+        <div className="liquid-container">
+          <div className="liquid-blob liquid-blob-1" />
+          <div className="liquid-blob liquid-blob-2" />
+          <div className="liquid-blob liquid-blob-3" />
+        </div>
+        <Header authUser={me} onLogout={handleLogout} />
+        <div className="flex min-h-0 flex-1">
+        <Sidebar open={sidebarOpen} items={sidebarItems} activeKey={view} onSelect={(key) => key === "activity" ? router.push("/account/activity") : setView(key)} onLogout={handleLogout} accentColor="#800000" officeName="Student Portal" />
+          <main className="relative w-full min-w-0 min-h-0 flex-1 overflow-y-auto bg-red-50/10 dark:bg-red-950/10 backdrop-blur-xs">
+            <div className="flex min-h-0 w-full flex-1 flex-col p-4 sm:p-6">
+              <div className="mx-auto w-full max-w-7xl space-y-6">
+
+              {/* Standardized Card Header aligned with Staff and Admin pages */}
+              <Card className="rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none overflow-hidden">
+                <PageHeader
+                  icon={view === "odrs" ? "ph-tray" : view === "osas" ? "ph-file-text" : "ph-clock-counter-clockwise"}
+                  title={view === "odrs" ? "Document Requests" : view === "osas" ? "OSAS Submissions" : "My Activity"}
+                  description={
+                    view === "odrs"
+                      ? "Request official academic records and track Registrar processing updates."
+                      : view === "osas"
+                      ? "Submit organization event proposals and follow evaluation progress."
+                      : "A history of actions performed on your account."
+                  }
+                  showBorder={false}
+                  titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
+                  descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
+                  actions={
+                    <div className="flex items-center gap-3">
+                      {me?.student_no && (
+                        <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-medium bg-red-50 text-pup-maroon border border-red-100 dark:bg-red-950/30 dark:border-red-900/30">
+                          <i className="ph-fill ph-student text-[13px]"></i>
+                          {me.student_no}
+                        </span>
+                      )}
+                      <RefreshButton
+                        onRefresh={async () => {
+                          setRefreshing(true);
+                          try {
+                            await load();
+                          } finally {
+                            setRefreshing(false);
+                          }
+                        }}
+                        isLoading={refreshing}
+                        title="Refresh Records"
+                      />
+                    </div>
+                  }
+                />
+              </Card>
+
+              {message && <p role="alert" className="rounded-brand border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{message}</p>}
+              {view === "activity" ? <section className="rounded-brand border border-gray-200 bg-white p-5 shadow-sm"><h2 className="text-base font-bold text-gray-900">My Activity</h2><p className="mt-1 text-sm text-gray-500">A history of actions performed on your account.</p><div className="mt-5 space-y-3">{data.activity.length === 0 ? <p className="rounded-brand bg-gray-50 px-4 py-8 text-center text-sm text-gray-500">No activity recorded yet.</p> : data.activity.map((item) => <article key={item.id} className="rounded-brand border border-gray-200 p-4"><div className="flex items-center justify-between gap-3"><p className="text-sm font-semibold text-gray-900">{item.action}</p><time className="text-xs text-gray-500">{formatPHDateTime(item.created_at)}</time></div>{item.details && <p className="mt-1 text-sm text-gray-500">{item.details}</p>}</article>)}</div></section> : view === "odrs" ? <>
+                <section className="grid gap-4 lg:grid-cols-[1fr_1.35fr]">
+                  <div className="rounded-brand border border-gray-200 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-card">
+                    <h2 className="text-base font-bold text-gray-900 dark:text-zinc-50">New document request</h2>
+                    <p className="mt-1 text-sm text-gray-500 dark:text-zinc-400">Request an academic document from the Registrar.</p>
+
+                    {/* Duplicate ticket reminder notice banner */}
+                    <div className="mt-3.5 flex items-start gap-2.5 rounded-brand border border-amber-200 bg-amber-50/80 p-3 text-xs text-amber-900 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-300">
+                      <i className="ph-bold ph-info text-[15px] shrink-0 mt-0.5 text-amber-600 dark:text-amber-400"></i>
+                      <p className="leading-relaxed font-medium">
+                        Please avoid creating duplicate tickets for the same concern to help us process your request promptly.
+                      </p>
+                    </div>
+
+                    <form onSubmit={createRequest} className="mt-4 space-y-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                          <label htmlFor="student-client-type" className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-gray-600 dark:text-zinc-400">
+                            Client Type <span className="text-red-500">*</span>
+                          </label>
+                          <Select
+                            id="student-client-type"
+                            value={requestForm.clientType}
+                            onChange={(e) => setRequestForm({ ...requestForm, clientType: e.target.value })}
+                            className="h-10 text-sm font-normal text-gray-800 dark:text-zinc-100 border-gray-300 dark:border-zinc-700 dark:bg-zinc-800"
+                          >
+                            <option value="Student">Student (Currently Enrolled)</option>
+                            <option value="Alumni">Alumni (Graduate / Former)</option>
+                          </Select>
+                        </div>
+
+                        <div>
+                          <div className="flex items-center justify-between mb-1.5">
+                            <label htmlFor="student-id-input" className="block text-xs font-bold uppercase tracking-wide text-gray-600 dark:text-zinc-400">
+                              Student Number <span className="font-normal normal-case text-gray-400 dark:text-zinc-500">(Optional)</span>
+                            </label>
+                            {me?.student_no ? (
+                              <span className="text-[11px] text-gray-500 font-mono dark:text-zinc-400">
+                                Default: {me.student_no}
+                              </span>
+                            ) : null}
+                          </div>
+                          <Input
+                            id="student-id-input"
+                            type="text"
+                            placeholder="e.g. 2020-00123-TG-0 (optional)"
+                            value={requestForm.studentNo || ""}
+                            onChange={(e) => setRequestForm({ ...requestForm, studentNo: e.target.value })}
+                            className="h-10 w-full rounded-brand border border-gray-300 bg-white px-3 text-sm font-mono text-gray-900 placeholder:text-gray-400 outline-none focus-visible:ring-pup-maroon dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+                          />
+                          <p className="mt-1 text-[11px] text-gray-500 dark:text-zinc-400">
+                            Optional for alumni who do not recall their student number.
+                          </p>
+                        </div>
+                      </div>
+
+                      <div>
+                        <label htmlFor="student-document-type" className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-gray-600 dark:text-zinc-400">
+                          Document Type <span className="text-red-500">*</span>
+                        </label>
+                        <Select
+                          id="student-document-type"
+                          value={requestForm.docType}
+                          placeholder="Select a document type"
+                          onChange={(e) => setRequestForm({ ...requestForm, docType: e.target.value })}
+                          className={`h-10 text-sm font-normal border-gray-300 dark:border-zinc-700 dark:bg-zinc-800 ${
+                            !requestForm.docType ? "text-gray-400 dark:text-zinc-500" : "text-gray-800 dark:text-zinc-100"
+                          }`}
+                        >
+                          <option value="">Select a document type</option>
+                          {docTypes.map((type) => (
+                            <option key={type} value={type}>
+                              {type}
+                            </option>
+                          ))}
+                        </Select>
+                        {docTypes.length === 0 && <p className="mt-1 text-xs text-amber-600">No active Registrar document types are available.</p>}
+                      </div>
+                      <div>
+                        <label htmlFor="student-request-description" className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-gray-600 dark:text-zinc-400">
+                          Description / Purpose <span className="text-red-500">*</span>
+                        </label>
+                        <textarea
+                          id="student-request-description"
+                          required
+                          className="min-h-24 w-full rounded-brand border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:border-pup-maroon focus:ring-2 focus:ring-pup-maroon/10 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+                          placeholder="Provide the purpose of your request (e.g. employment verification, board exam, transfer credentials, etc.)"
+                          value={requestForm.notes}
+                          onChange={(e) => setRequestForm({ ...requestForm, notes: e.target.value })}
+                        />
+                      </div>
+                      <Button
+                        type="submit"
+                        disabled={requestSubmitting || docTypes.length === 0}
+                        className="w-full bg-pup-maroon text-white hover:bg-red-900 font-semibold"
+                      >
+                        {requestSubmitting ? "Submitting..." : "Submit request"}
+                      </Button>
+                    </form>
+                  </div>
+                  <div className="rounded-brand border border-gray-200 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-card">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h2 className="text-base font-bold text-gray-900 dark:text-zinc-50">Request history</h2>
+                        <p className="mt-1 text-sm text-gray-500 dark:text-zinc-400">Track every Registrar update in one place.</p>
+                      </div>
+                      <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-bold text-gray-600 dark:bg-zinc-800 dark:text-zinc-300">{data.requests.length} total</span>
+                    </div>
+                    <div className="mt-5 space-y-3">
+                      {data.requests.map((item) => (
+                        <article key={item.id} className="rounded-brand border border-gray-200 p-4 dark:border-zinc-800 dark:bg-zinc-900/40">
+                          <div className="flex flex-wrap items-center justify-between gap-2">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <h3 className="font-semibold text-gray-900 dark:text-zinc-100">{item.doc_type}</h3>
+                              {item.client_type && (
+                                <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold border ${
+                                  item.client_type === "Alumni"
+                                    ? "bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/30 dark:text-purple-300 dark:border-purple-800/40"
+                                    : "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/30 dark:text-blue-300 dark:border-blue-800/40"
+                                }`}>
+                                  {item.client_type}
+                                </span>
+                              )}
+                            </div>
+                            <StatusBadge status={item.status} />
+                          </div>
+                          <p className="mt-2 text-sm text-gray-500 dark:text-zinc-400">{item.notes || "No notes added."}</p>
+                          <ol className="mt-4 space-y-2 border-l-2 border-gray-200 pl-4 text-xs text-gray-500 dark:border-zinc-700 dark:text-zinc-400">
+                            {item.updates.map((update) => (
+                              <li key={update.id}>
+                                <span className="font-semibold text-gray-700 dark:text-zinc-300">{update.status}</span> — {update.message || "Status updated"}
+                              </li>
+                            ))}
+                          </ol>
+                        </article>
+                      ))}
+                      {data.requests.length === 0 && (
+                        <p className="rounded-brand bg-gray-50 px-4 py-8 text-center text-sm text-gray-500 dark:bg-zinc-800/40 dark:text-zinc-400">
+                          No document requests yet.
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </section>
+              </> : <>
+                <section className="rounded-brand border border-gray-200 bg-white p-5 shadow-sm"><h2 className="text-base font-bold text-gray-900">Submit an Event Proposal</h2><p className="mt-1 text-sm text-gray-500">Upload one PDF proposal for OSAS review.</p><form onSubmit={submitProposal} className="mt-5 grid gap-4 md:grid-cols-2"><div><label className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-gray-600">Event title</label><Input placeholder="Event title" value={proposalForm.title} onChange={(e) => setProposalForm({ ...proposalForm, title: e.target.value })} required /></div><div><label className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-gray-600">Organization</label><Input placeholder="Organization name" value={proposalForm.organizationName} onChange={(e) => setProposalForm({ ...proposalForm, organizationName: e.target.value })} required /></div><div><label htmlFor="event-date" className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-gray-600">Event date</label><Input id="event-date" type="date" aria-label="Event date" value={proposalForm.eventDate} onClick={(e) => e.currentTarget.showPicker?.()} onChange={(e) => setProposalForm({ ...proposalForm, eventDate: e.target.value })} required /></div><div><label className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-gray-600">Proposal PDF</label><Input type="file" accept="application/pdf" onChange={(e) => setProposalForm({ ...proposalForm, file: e.target.files?.[0] || null })} required /></div><div className="md:col-span-2"><Button type="submit" disabled={proposalSubmitting} className="bg-pup-maroon text-white hover:bg-red-900">{proposalSubmitting ? "Submitting..." : "Submit proposal"}</Button></div></form></section>
+                <section className="rounded-brand border border-gray-200 bg-white p-5 shadow-sm"><div className="flex items-center justify-between"><div><h2 className="text-base font-bold text-gray-900">Submission history</h2><p className="mt-1 text-sm text-gray-500">Follow OSAS review updates and requested revisions.</p></div><span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-bold text-gray-600">{data.proposals.length} total</span></div><div className="mt-5 space-y-3">{data.proposals.map((item) => <article key={item.id} className="rounded-brand border border-gray-200 p-4"><div className="flex flex-wrap items-center justify-between gap-2"><h3 className="font-semibold text-gray-900">{item.title}</h3><StatusBadge status={item.status} /></div><p className="mt-2 text-sm text-gray-500">{item.organization_name} · {item.event_date}</p><ol className="mt-4 space-y-2 border-l-2 border-gray-200 pl-4 text-xs text-gray-500">{item.updates.map((update) => <li key={update.id}><span className="font-semibold text-gray-700">{update.status}</span> — {update.message || "Status updated"}</li>)}</ol></article>)}{data.proposals.length === 0 && <p className="rounded-brand bg-gray-50 px-4 py-8 text-center text-sm text-gray-500">No OSAS submissions yet.</p>}</div></section>
+              </>}
+              </div>
             </div>
-            {message && <p role="alert" className="rounded-brand border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{message}</p>}
-            {view === "activity" ? <section className="rounded-brand border border-gray-200 bg-white p-5 shadow-sm"><h2 className="text-base font-bold text-gray-900">My Activity</h2><p className="mt-1 text-sm text-gray-500">A history of actions performed on your account.</p><div className="mt-5 space-y-3">{data.activity.length === 0 ? <p className="rounded-brand bg-gray-50 px-4 py-8 text-center text-sm text-gray-500">No activity recorded yet.</p> : data.activity.map((item) => <article key={item.id} className="rounded-brand border border-gray-200 p-4"><div className="flex items-center justify-between gap-3"><p className="text-sm font-semibold text-gray-900">{item.action}</p><time className="text-xs text-gray-500">{formatPHDateTime(item.created_at)}</time></div>{item.details && <p className="mt-1 text-sm text-gray-500">{item.details}</p>}</article>)}</div></section> : view === "odrs" ? <>
-              <section className="grid gap-4 lg:grid-cols-[1fr_1.35fr]">
-                <div className="rounded-brand border border-gray-200 bg-white p-5 shadow-sm"><h2 className="text-base font-bold text-gray-900">New document request</h2><p className="mt-1 text-sm text-gray-500">Request an academic document from the Registrar.</p><form onSubmit={createRequest} className="mt-5 space-y-4"><div><label htmlFor="student-document-type" className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-gray-600">Document type</label><select id="student-document-type" value={requestForm.docType} onChange={(e) => setRequestForm({ ...requestForm, docType: e.target.value })} required className="h-10 w-full rounded-brand border border-gray-300 bg-white px-3 text-sm outline-none focus:border-pup-maroon focus:ring-2 focus:ring-pup-maroon/10"><option value="">Select a document type</option>{docTypes.map((type) => <option key={type} value={type}>{type}</option>)}</select>{docTypes.length === 0 && <p className="mt-1 text-xs text-amber-600">No active Registrar document types are available.</p>}</div><div><label className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-gray-600">Notes <span className="font-normal normal-case">(optional)</span></label><textarea className="min-h-24 w-full rounded-brand border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:border-pup-maroon focus:ring-2 focus:ring-pup-maroon/10" placeholder="Add details for the Registrar" value={requestForm.notes} onChange={(e) => setRequestForm({ ...requestForm, notes: e.target.value })} /></div><Button type="submit" disabled={requestSubmitting || docTypes.length === 0} className="w-full bg-pup-maroon text-white hover:bg-red-900">{requestSubmitting ? "Submitting..." : "Submit request"}</Button></form></div>
-                <div className="rounded-brand border border-gray-200 bg-white p-5 shadow-sm"><div className="flex items-center justify-between"><div><h2 className="text-base font-bold text-gray-900">Request history</h2><p className="mt-1 text-sm text-gray-500">Track every Registrar update in one place.</p></div><span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-bold text-gray-600">{data.requests.length} total</span></div><div className="mt-5 space-y-3">{data.requests.map((item) => <article key={item.id} className="rounded-brand border border-gray-200 p-4"><div className="flex flex-wrap items-center justify-between gap-2"><h3 className="font-semibold text-gray-900">{item.doc_type}</h3><StatusBadge status={item.status} /></div><p className="mt-2 text-sm text-gray-500">{item.notes || "No notes added."}</p><ol className="mt-4 space-y-2 border-l-2 border-gray-200 pl-4 text-xs text-gray-500">{item.updates.map((update) => <li key={update.id}><span className="font-semibold text-gray-700">{update.status}</span> — {update.message || "Status updated"}</li>)}</ol></article>)}{data.requests.length === 0 && <p className="rounded-brand bg-gray-50 px-4 py-8 text-center text-sm text-gray-500">No document requests yet.</p>}</div></div>
-              </section>
-            </> : <>
-              <section className="rounded-brand border border-gray-200 bg-white p-5 shadow-sm"><h2 className="text-base font-bold text-gray-900">Submit an Event Proposal</h2><p className="mt-1 text-sm text-gray-500">Upload one PDF proposal for OSAS review.</p><form onSubmit={submitProposal} className="mt-5 grid gap-4 md:grid-cols-2"><div><label className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-gray-600">Event title</label><Input placeholder="Event title" value={proposalForm.title} onChange={(e) => setProposalForm({ ...proposalForm, title: e.target.value })} required /></div><div><label className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-gray-600">Organization</label><Input placeholder="Organization name" value={proposalForm.organizationName} onChange={(e) => setProposalForm({ ...proposalForm, organizationName: e.target.value })} required /></div><div><label htmlFor="event-date" className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-gray-600">Event date</label><Input id="event-date" type="date" aria-label="Event date" value={proposalForm.eventDate} onClick={(e) => e.currentTarget.showPicker?.()} onChange={(e) => setProposalForm({ ...proposalForm, eventDate: e.target.value })} required /></div><div><label className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-gray-600">Proposal PDF</label><Input type="file" accept="application/pdf" onChange={(e) => setProposalForm({ ...proposalForm, file: e.target.files?.[0] || null })} required /></div><div className="md:col-span-2"><Button type="submit" disabled={proposalSubmitting} className="bg-pup-maroon text-white hover:bg-red-900">{proposalSubmitting ? "Submitting..." : "Submit proposal"}</Button></div></form></section>
-              <section className="rounded-brand border border-gray-200 bg-white p-5 shadow-sm"><div className="flex items-center justify-between"><div><h2 className="text-base font-bold text-gray-900">Submission history</h2><p className="mt-1 text-sm text-gray-500">Follow OSAS review updates and requested revisions.</p></div><span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-bold text-gray-600">{data.proposals.length} total</span></div><div className="mt-5 space-y-3">{data.proposals.map((item) => <article key={item.id} className="rounded-brand border border-gray-200 p-4"><div className="flex flex-wrap items-center justify-between gap-2"><h3 className="font-semibold text-gray-900">{item.title}</h3><StatusBadge status={item.status} /></div><p className="mt-2 text-sm text-gray-500">{item.organization_name} · {item.event_date}</p><ol className="mt-4 space-y-2 border-l-2 border-gray-200 pl-4 text-xs text-gray-500">{item.updates.map((update) => <li key={update.id}><span className="font-semibold text-gray-700">{update.status}</span> — {update.message || "Status updated"}</li>)}</ol></article>)}{data.proposals.length === 0 && <p className="rounded-brand bg-gray-50 px-4 py-8 text-center text-sm text-gray-500">No OSAS submissions yet.</p>}</div></section>
-            </>}
-            </div>
-          </div>
-        </main>
+          </main>
+        </div>
       </div>
-    </div>
+    </TooltipProvider>
   );
 }

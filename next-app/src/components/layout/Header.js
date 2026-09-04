@@ -35,22 +35,27 @@ export default function Header({ authUser, onLogout, children }) {
   const [showSessionExpired, setShowSessionExpired] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
-  const [isMac, setIsMac] = useState(false);
+  const [isMac] = useState(() => (typeof window !== "undefined" ? /(Mac|iPhone|iPod|iPad)/i.test(navigator.userAgent || navigator.platform) : false));
 
   const [searchQuery, setSearchQuery] = useState("");
   const [focusedIndex, setFocusedIndex] = useState(0);
   const commandInputRef = useRef(null);
 
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      setIsMac(/(Mac|iPhone|iPod|iPad)/i.test(navigator.userAgent || navigator.platform));
-    }
-  }, []);
+  const prevAvatarRef = useRef(authUser?.avatar_filename);
+  if (prevAvatarRef.current !== authUser?.avatar_filename) {
+    prevAvatarRef.current = authUser?.avatar_filename;
+    if (imageError) setImageError(false);
+    if (imageLoaded) setImageLoaded(false);
+  }
 
   useEffect(() => {
-    setImageError(false);
-    setImageLoaded(false);
-  }, [authUser?.avatar_filename]);
+    const handleAvatarChanged = () => {
+      setImageError(false);
+      setImageLoaded(false);
+    };
+    window.addEventListener("avatar-changed", handleAvatarChanged);
+    return () => window.removeEventListener("avatar-changed", handleAvatarChanged);
+  }, []);
 
   // Global shortcut (Ctrl+K on Windows/Linux or Cmd+K on Mac) to toggle command palette modal
   useEffect(() => {
@@ -97,8 +102,10 @@ export default function Header({ authUser, onLogout, children }) {
 
   useEffect(() => {
     if (isSuperAdmin) {
-      setPreferredView("systemadmin");
-      return;
+      const timer = setTimeout(() => {
+        setPreferredView("systemadmin");
+      }, 0);
+      return () => clearTimeout(timer);
     }
     if (hasAdminRights) {
       const stored = localStorage.getItem("pup_admin_view_pref");
@@ -110,9 +117,35 @@ export default function Header({ authUser, onLogout, children }) {
     }
   }, [authUser?.role, pathname, hasAdminRights, isSuperAdmin, isAdmin]);
 
-  const initials = authUser?.fname && authUser?.lname
-    ? (authUser.fname[0] + authUser.lname[0]).toUpperCase()
-    : "AD";
+  const displayName = (() => {
+    const fromParts = [authUser?.fname, authUser?.lname].filter(Boolean).join(" ").trim();
+    if (fromParts) return fromParts;
+    if (authUser?.name && authUser.name.trim()) return authUser.name.trim();
+    if (authUser?.email) return authUser.email;
+    if (authUser?.username) return authUser.username;
+    if (authUser?.student_no) return authUser.student_no;
+    return isStudent ? "Student" : "Account";
+  })();
+
+  const initials = (() => {
+    if (authUser?.fname && authUser?.lname) {
+      return (authUser.fname[0] + authUser.lname[0]).toUpperCase();
+    }
+    if (authUser?.fname) {
+      return authUser.fname.slice(0, 2).toUpperCase();
+    }
+    if (authUser?.name) {
+      const parts = authUser.name.trim().split(/\s+/);
+      if (parts.length >= 2) {
+        return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+      }
+      return authUser.name.slice(0, 2).toUpperCase();
+    }
+    if (authUser?.email) {
+      return authUser.email.slice(0, 2).toUpperCase();
+    }
+    return isStudent ? "ST" : "AD";
+  })();
 
   const activeView = isSuperAdmin
     ? "systemadmin"
@@ -291,7 +324,7 @@ export default function Header({ authUser, onLogout, children }) {
       accountMatches: filteredAccount,
       allSuggestions: [...filteredSidebar, ...filteredAccount]
     };
-  }, [searchQuery, activeView, authUser?.enabled_modules]);
+  }, [searchQuery, activeView, authUser]);
 
   const handleSelectSuggestion = (item) => {
     setSearchQuery("");
@@ -413,7 +446,7 @@ export default function Header({ authUser, onLogout, children }) {
                   ? "bg-gray-100 dark:bg-zinc-850 border-gray-200/80 dark:border-white/10 shadow-2xs" 
                   : "hover:bg-gray-100/70 dark:hover:bg-zinc-900"
               )}>
-                <div className={cn("relative h-8 w-8 rounded-lg bg-white flex items-center justify-center text-xs font-bold border overflow-hidden shadow-2xs shrink-0", isStudent ? "text-pup-maroon border-red-200" : "text-gray-700 dark:bg-zinc-850 dark:text-zinc-300 border-gray-200 dark:border-white/10")}>
+                <div className="relative h-8 w-8 rounded-lg bg-white flex items-center justify-center text-xs font-bold border overflow-hidden shadow-2xs shrink-0 text-gray-700 dark:bg-zinc-850 dark:text-zinc-300 border-gray-200 dark:border-white/10">
                   {authUser?.avatar_filename && !imageError ? (
                     <>
                       <img 
@@ -432,14 +465,14 @@ export default function Header({ authUser, onLogout, children }) {
                   ) : (
                     initials
                   )}
-                  <span className={cn("absolute bottom-0 right-0 h-2 w-2 rounded-full ring-1.5 ring-white", isStudent ? "bg-pup-maroon" : "bg-emerald-500 dark:ring-zinc-950")} />
+                  <span className="absolute bottom-0 right-0 h-2 w-2 rounded-full ring-1.5 ring-white bg-emerald-500 dark:ring-zinc-950" />
                 </div>
 
                 <div className="hidden sm:flex flex-col text-left leading-tight">
-                  <span className={cn("text-[12px] font-semibold truncate max-w-[120px]", isStudent ? "text-pup-maroon" : "text-gray-800 dark:text-zinc-100")}>
-                    {isStudent ? (authUser?.name || authUser?.student_no || "Student") : (authUser?.fname ? `${authUser.fname} ${authUser?.lname || ""}`.trim() : "Account")}
+                  <span className="text-[12px] font-semibold truncate max-w-[140px] text-gray-800 dark:text-zinc-100">
+                    {displayName}
                   </span>
-                  <span className={cn("text-[10px]", isStudent ? "text-red-700" : "text-gray-400 dark:text-zinc-500")}>
+                  <span className="text-[10px] text-gray-400 dark:text-zinc-500">
                     {displayRole}
                   </span>
                 </div>
@@ -452,7 +485,7 @@ export default function Header({ authUser, onLogout, children }) {
             <DropdownMenuContent align="end" sideOffset={8} className="w-72 rounded-2xl border border-gray-200 shadow-2xl p-0 overflow-hidden bg-white dark:bg-zinc-900 dark:border-white/10 dark:shadow-none">
                <div className="bg-gray-50 dark:bg-zinc-800/50 px-5 py-4 border-b border-gray-200 dark:border-white/5 flex flex-col text-left">
                  <span className="font-bold text-[18px] text-gray-900 dark:text-zinc-50 leading-tight">
-                   {authUser?.fname} {authUser?.lname}
+                   {displayName}
                  </span>
                  <span className="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-0.5 truncate">
                    {authUser?.email || authUser?.username}

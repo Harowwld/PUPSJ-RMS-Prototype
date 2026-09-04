@@ -109,7 +109,7 @@ export async function POST(req) {
     const cabinet = String(form.get("cabinet") || "").trim();
     const drawer = parseInt(String(form.get("drawer") || ""), 10);
 
-    const studentNoPattern = /^\d{4}-\d{5}-[A-Z]{2}-\d$/;
+    const studentNoPattern = /^[A-Z0-9][A-Z0-9\-_/.]{1,30}$/i;
     if (!studentNoPattern.test(studentNo)) {
       return NextResponse.json(
         { ok: false, error: "Invalid studentNo format" },

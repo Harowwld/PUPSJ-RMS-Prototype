@@ -2,9 +2,10 @@ import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
 import { NextResponse } from "next/server";
-import { getStaffById, updateStaff } from "../../../../lib/staffRepo";
-import { getSessionCookieName, verifySessionToken } from "../../../../lib/jwt";
-import { writeAuditLog } from "../../../../lib/auditLogRequest";
+import { getStaffById, updateStaff } from "@/lib/staffRepo";
+import { getSessionCookieName, verifySessionToken } from "@/lib/jwt";
+import { writeAuditLog } from "@/lib/auditLogRequest";
+import { query, queryOne } from "@/lib/postgres";
 
 export const runtime = "nodejs";
 
@@ -20,38 +21,102 @@ function getAvatarsDir() {
   return dir;
 }
 
-async function getSessionStaff(req) {
+async function getSessionUser(req) {
   const token = req.cookies.get(getSessionCookieName())?.value || "";
   if (!token) return null;
-  const payload = await verifySessionToken(token);
-  const userId = String(payload?.sub || "").trim();
-  if (!userId) return null;
-  return await getStaffById(userId);
+  try {
+    const payload = await verifySessionToken(token);
+    if (!payload) return null;
+
+    if (payload.role === "Student") {
+      const accountId = payload.account_id || (Number.isFinite(Number(payload.sub)) ? Number(payload.sub) : null);
+      const student = await queryOne(
+        `SELECT sa.*, s.name 
+         FROM student_accounts sa 
+         LEFT JOIN students s ON s.student_no = sa.student_no 
+         WHERE (sa.id = $1 AND $1 IS NOT NULL)
+            OR (sa.student_no IS NOT NULL AND upper(sa.student_no) = upper($2) AND $2 IS NOT NULL)
+            OR (lower(sa.email) = lower($3) AND $3 IS NOT NULL)
+         LIMIT 1`,
+        [accountId, payload.student_no || null, payload.email || payload.username || null]
+      );
+      if (!student) return null;
+      return {
+        type: "student",
+        id: student.student_no || String(student.id),
+        account_id: student.id,
+        avatar_filename: student.avatar_filename || null,
+        user: student,
+      };
+    }
+
+    const userId = String(payload?.sub || "").trim();
+    if (!userId) return null;
+    const staff = await getStaffById(userId);
+    if (!staff) return null;
+    return {
+      type: "staff",
+      id: staff.id,
+      account_id: staff.id,
+      avatar_filename: staff.avatar_filename || null,
+      user: staff,
+    };
+  } catch {
+    return null;
+  }
 }
 
 // GET serves the avatar image
 export async function GET(req) {
   try {
-    const staff = await getSessionStaff(req);
-    if (!staff) {
+    const sessionUser = await getSessionUser(req);
+    if (!sessionUser) {
       return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const { searchParams } = new URL(req.url);
-    const targetId = searchParams.get("id") || staff.id;
+    const targetId = searchParams.get("id") || sessionUser.id;
 
-    const targetUser = await getStaffById(targetId);
-    if (!targetUser || !targetUser.avatar_filename) {
+    let avatarFilename = null;
+    // Check if targetId matches current session
+    if (sessionUser.id === targetId || String(sessionUser.account_id) === targetId) {
+      avatarFilename = sessionUser.avatar_filename;
+    }
+
+    // Try finding staff
+    if (!avatarFilename) {
+      const targetStaff = await getStaffById(targetId);
+      if (targetStaff?.avatar_filename) {
+        avatarFilename = targetStaff.avatar_filename;
+      }
+    }
+
+    // Try finding student
+    if (!avatarFilename && process.env.DATABASE_URL) {
+      const targetStudent = await queryOne(
+        `SELECT avatar_filename FROM student_accounts 
+         WHERE id::text = $1 
+            OR (student_no IS NOT NULL AND upper(student_no) = upper($1))
+            OR lower(email) = lower($1)
+         LIMIT 1`,
+        [targetId]
+      );
+      if (targetStudent?.avatar_filename) {
+        avatarFilename = targetStudent.avatar_filename;
+      }
+    }
+
+    if (!avatarFilename) {
       return NextResponse.json({ ok: false, error: "No avatar uploaded" }, { status: 404 });
     }
 
-    const filePath = path.join(getAvatarsDir(), targetUser.avatar_filename);
+    const filePath = path.join(getAvatarsDir(), avatarFilename);
     if (!fs.existsSync(filePath)) {
       return NextResponse.json({ ok: false, error: "Avatar file not found on server" }, { status: 404 });
     }
 
     const bytes = fs.readFileSync(filePath);
-    const ext = path.extname(targetUser.avatar_filename).toLowerCase();
+    const ext = path.extname(avatarFilename).toLowerCase();
     let contentType = "image/png";
     if (ext === ".jpg" || ext === ".jpeg") contentType = "image/jpeg";
     else if (ext === ".gif") contentType = "image/gif";
@@ -73,8 +138,8 @@ export async function GET(req) {
 // POST uploads a new avatar image
 export async function POST(req) {
   try {
-    const staff = await getSessionStaff(req);
-    if (!staff) {
+    const sessionUser = await getSessionUser(req);
+    if (!sessionUser) {
       return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
     }
 
@@ -106,8 +171,8 @@ export async function POST(req) {
               : path.extname(file.name || "").toLowerCase() || ".png";
 
     // Delete old avatar if any exists
-    if (staff.avatar_filename) {
-      const prevPath = path.join(getAvatarsDir(), staff.avatar_filename);
+    if (sessionUser.avatar_filename) {
+      const prevPath = path.join(getAvatarsDir(), sessionUser.avatar_filename);
       try {
         if (fs.existsSync(prevPath)) {
           fs.unlinkSync(prevPath);
@@ -119,7 +184,8 @@ export async function POST(req) {
 
     // Save new avatar
     const uuid = crypto.randomUUID().replace(/-/g, "").substring(0, 16);
-    const safeId = String(staff.id).trim().toUpperCase().replace(/[^A-Z0-9-]/g, "_");
+    const identifier = sessionUser.type === "student" ? `STUDENT_${sessionUser.account_id}` : sessionUser.id;
+    const safeId = String(identifier).trim().toUpperCase().replace(/[^A-Z0-9-]/g, "_");
     const filename = `avatar_${safeId}_${uuid}${ext}`;
     const absPath = path.join(getAvatarsDir(), filename);
 
@@ -127,14 +193,21 @@ export async function POST(req) {
     fs.writeFileSync(absPath, buf);
 
     // Update DB
-    await updateStaff(staff.id, { avatar_filename: filename });
-
-    // Write audit log
-    await writeAuditLog(req, "Upload Avatar", {
-      details: `uploaded custom profile avatar icon for account`,
-      entity_type: "Staff",
-      entity_id: staff.id,
-    });
+    if (sessionUser.type === "student") {
+      await query("UPDATE student_accounts SET avatar_filename = $1 WHERE id = $2", [filename, sessionUser.account_id]);
+      await writeAuditLog(req, "Upload Avatar", {
+        details: `uploaded custom profile avatar icon for student account`,
+        entity_type: "Student",
+        entity_id: String(sessionUser.account_id),
+      });
+    } else {
+      await updateStaff(sessionUser.id, { avatar_filename: filename });
+      await writeAuditLog(req, "Upload Avatar", {
+        details: `uploaded custom profile avatar icon for account`,
+        entity_type: "Staff",
+        entity_id: sessionUser.id,
+      });
+    }
 
     return NextResponse.json({ ok: true, avatar_filename: filename });
   } catch (err) {
@@ -145,13 +218,13 @@ export async function POST(req) {
 // DELETE removes current custom avatar
 export async function DELETE(req) {
   try {
-    const staff = await getSessionStaff(req);
-    if (!staff) {
+    const sessionUser = await getSessionUser(req);
+    if (!sessionUser) {
       return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
     }
 
-    if (staff.avatar_filename) {
-      const prevPath = path.join(getAvatarsDir(), staff.avatar_filename);
+    if (sessionUser.avatar_filename) {
+      const prevPath = path.join(getAvatarsDir(), sessionUser.avatar_filename);
       try {
         if (fs.existsSync(prevPath)) {
           fs.unlinkSync(prevPath);
@@ -161,13 +234,21 @@ export async function DELETE(req) {
       }
     }
 
-    await updateStaff(staff.id, { avatar_filename: null });
-
-    await writeAuditLog(req, "Delete Avatar", {
-      details: `removed custom profile avatar, reverting to system default`,
-      entity_type: "Staff",
-      entity_id: staff.id,
-    });
+    if (sessionUser.type === "student") {
+      await query("UPDATE student_accounts SET avatar_filename = NULL WHERE id = $1", [sessionUser.account_id]);
+      await writeAuditLog(req, "Delete Avatar", {
+        details: `removed custom profile avatar for student account`,
+        entity_type: "Student",
+        entity_id: String(sessionUser.account_id),
+      });
+    } else {
+      await updateStaff(sessionUser.id, { avatar_filename: null });
+      await writeAuditLog(req, "Delete Avatar", {
+        details: `removed custom profile avatar, reverting to system default`,
+        entity_type: "Staff",
+        entity_id: sessionUser.id,
+      });
+    }
 
     return NextResponse.json({ ok: true });
   } catch (err) {

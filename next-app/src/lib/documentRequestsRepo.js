@@ -59,9 +59,10 @@ export async function listDocumentRequests({
     `
     SELECT
       dr.*,
-      s.name AS student_name
+      COALESCE(s.name, NULLIF(TRIM(CONCAT_WS(' ', sa.first_name, sa.last_name)), ''), sa.email, 'Alumni Requester') AS student_name
     FROM document_requests dr
-    JOIN students s ON s.student_no = dr.student_no
+    LEFT JOIN students s ON s.student_no = dr.student_no
+    LEFT JOIN student_accounts sa ON sa.id = dr.student_account_id
     ${where}
     ORDER BY ${sortCol} ${order}, dr.id DESC
     LIMIT ? OFFSET ?
@@ -99,7 +100,8 @@ export async function countDocumentRequests({
     `
     SELECT COUNT(*) AS c
     FROM document_requests dr
-    JOIN students s ON s.student_no = dr.student_no
+    LEFT JOIN students s ON s.student_no = dr.student_no
+    LEFT JOIN student_accounts sa ON sa.id = dr.student_account_id
     ${where}
     `,
     params
@@ -112,9 +114,10 @@ export async function getDocumentRequestById(id) {
     `
     SELECT
       dr.*,
-      s.name AS student_name
+      COALESCE(s.name, NULLIF(TRIM(CONCAT_WS(' ', sa.first_name, sa.last_name)), ''), sa.email, 'Alumni Requester') AS student_name
     FROM document_requests dr
-    JOIN students s ON s.student_no = dr.student_no
+    LEFT JOIN students s ON s.student_no = dr.student_no
+    LEFT JOIN student_accounts sa ON sa.id = dr.student_account_id
     WHERE dr.id = ?
     `,
     [id]
