@@ -26,6 +26,14 @@ export default function ForgotPasswordPage() {
   const [newPassFocused, setNewPassFocused] = useState(false);
   const [confirmPassFocused, setConfirmPassFocused] = useState(false);
 
+  useEffect(() => {
+    // Dynamic favicon swap
+    const link = document.querySelector("link[rel*='icon']") || document.createElement('link');
+    link.type = 'image/png';
+    link.rel = 'shortcut icon';
+    link.href = '/login-logo.png';
+    document.getElementsByTagName('head')[0].appendChild(link);
+  }, []);
 
   const resetForgotState = () => {
     setForgotStep(1);
@@ -132,7 +140,7 @@ export default function ForgotPasswordPage() {
 
       {/* Top-Left Brand Logo & Name */}
       <div className="absolute top-6 left-6 flex items-center gap-1 select-none z-20">
-        <img src="/assets/branding/black-icon.png" alt="eManage Logo" className="w-[32px] h-[32px] object-contain" />
+        <img src="/login-logo.png" alt="eManage Logo" className="w-[32px] h-[32px] shrink-0 object-contain p-0.5" />
         <span className="text-[26px] font-semibold text-[#1D1D1F] dark:text-zinc-50 tracking-tight leading-none">eManage</span>
       </div>
 
@@ -200,13 +208,13 @@ export default function ForgotPasswordPage() {
               })}
             </svg>
             <img 
-              src="/assets/branding/black-icon.png" 
+              src="/login-logo.png" 
               alt="eManage Logo" 
-              className="w-[30px] h-[30px] object-contain z-10 animate-in zoom-in-50 duration-slow" 
+              className="w-[30px] h-[30px] shrink-0 object-contain p-[2px] z-10 animate-in zoom-in-50 duration-500" 
             />
           </div>
 
-          <div className="w-full text-center flex-1 flex flex-col animate-in fade-in duration-normal">
+          <div className="w-full text-center flex-1 flex flex-col animate-in fade-in duration-300">
             <h1 className="login-title text-[25px] font-bold text-[#1D1D1F] dark:text-zinc-50 tracking-tight mb-5">
               Account Recovery
             </h1>
@@ -238,7 +246,7 @@ export default function ForgotPasswordPage() {
                   </div>
 
                   {forgotError && (
-                    <div className="h-5 mt-1.5 text-left flex items-center gap-1.5 text-[#E5484D] animate-in fade-in duration-fast">
+                    <div className="h-5 mt-1.5 text-left flex items-center gap-1.5 text-[#E5484D] animate-in fade-in duration-200">
                       <i className="ph-bold ph-warning-circle text-[14px] shrink-0 mt-[1px]"></i>
                       <p className="text-[12px] font-normal leading-none">
                         {forgotError}
@@ -350,7 +358,7 @@ export default function ForgotPasswordPage() {
                   </div>
 
                   {forgotError && (
-                    <div className="h-5 mt-1.5 text-left flex items-center gap-1.5 text-[#E5484D] animate-in fade-in duration-fast">
+                    <div className="h-5 mt-1.5 text-left flex items-center gap-1.5 text-[#E5484D] animate-in fade-in duration-200">
                       <i className="ph-bold ph-warning-circle text-[14px] shrink-0 mt-[1px]"></i>
                       <p className="text-[12px] font-normal leading-none">
                         {forgotError}
