@@ -1,64 +1,70 @@
 "use client"
 
+import { Button } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
+
 export default function BackupPagination({
   page,
   setPage,
   totalPages,
   startItem,
   endItem,
-  totalCount,
+  totalCount = 0,
   itemsPerPage,
   handleItemsPerPageChange,
 }) {
+  const displayedCount = totalCount > 0 ? Math.max(0, endItem - startItem + 1) : 0
+
   return (
-    <div className="flex items-center justify-between border-t border-gray-100 bg-white p-6 px-8 dark:border-white/10 dark:bg-card">
-      <div className="flex items-center gap-8">
-        <div className="flex items-center gap-6 text-[12px] font-normal text-gray-400 dark:text-zinc-500">
-          <span>
-            Showing {endItem - startItem + 1} of {totalCount}
-          </span>
-          <div className="flex items-center gap-1.5 border-l border-gray-200 pl-6 dark:border-white/10">
-            <span className="text-[12px] text-gray-400 dark:text-zinc-500">Rows:</span>
-            <div className="flex items-center gap-1">
-              {[10, 20, 50, 100].map((size) => (
-                <button
-                  key={size}
-                  type="button"
-                  onClick={() => handleItemsPerPageChange({ target: { value: size } })}
-                  className={`px-2 py-0.5 rounded-[4px] text-[12px] font-normal cursor-pointer transition-colors border-0 ${
-                    itemsPerPage === size
-                      ? "bg-gray-100 text-[#111111] font-medium dark:bg-white/10 dark:text-zinc-50"
-                      : "bg-transparent text-gray-450 dark:text-zinc-550 hover:text-gray-700 dark:hover:text-zinc-300"
-                  }`}
-                >
-                  {size}
-                </button>
-              ))}
-            </div>
-          </div>
+    <div className="flex items-center justify-between border-t border-[#e5e5ea] dark:border-[#3a3a3c] bg-white dark:bg-[#1c1c1e] p-4 px-6 rounded-b-2xl">
+      <div className="flex items-center gap-6 text-xs text-gray-500 dark:text-zinc-400 select-none">
+        <span>
+          Showing {displayedCount} of {totalCount.toLocaleString()}
+        </span>
+        <div className="flex items-center gap-2">
+          <span>Rows:</span>
+          {[10, 20, 50, 100].map((size) => (
+            <button
+              key={size}
+              type="button"
+              onClick={() => handleItemsPerPageChange?.({ target: { value: size } })}
+              className={cn(
+                "px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer",
+                itemsPerPage === size
+                  ? "bg-gray-100 dark:bg-zinc-800 text-gray-900 dark:text-zinc-100"
+                  : "text-gray-400 hover:text-gray-600 dark:hover:text-zinc-200"
+              )}
+            >
+              {size}
+            </button>
+          ))}
         </div>
       </div>
 
-      <div className="flex shrink-0 items-center gap-3">
-        <button
+      <div className="flex items-center gap-2 select-none">
+        <Button
+          variant="ghost"
+          size="sm"
           disabled={page <= 1}
           onClick={() => setPage((p) => Math.max(1, p - 1))}
-          className="h-8 bg-transparent text-[12px] font-normal text-gray-400 hover:text-pup-maroon dark:text-zinc-500 dark:hover:text-zinc-200 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer border-0 p-0"
+          className="text-xs text-gray-500 dark:text-zinc-400 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
         >
           Prev
-        </button>
+        </Button>
 
-        <div className="flex h-8 min-w-[32px] items-center justify-center rounded-[6px] border border-gray-200/80 bg-white px-2.5 text-[12px] font-medium text-gray-900 dark:border-white/10 dark:bg-card dark:text-zinc-100">
+        <div className="h-8 w-8 rounded-xl border border-[#e5e5ea] dark:border-zinc-800 flex items-center justify-center text-xs font-bold text-gray-800 dark:text-zinc-200 bg-white dark:bg-zinc-900">
           {page}
         </div>
 
-        <button
+        <Button
+          variant="ghost"
+          size="sm"
           disabled={page >= totalPages}
-          onClick={() => setPage((p) => p + 1)}
-          className="h-8 bg-transparent text-[12px] font-normal text-gray-400 hover:text-pup-maroon dark:text-zinc-500 dark:hover:text-zinc-200 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer border-0 p-0"
+          onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+          className="text-xs text-gray-500 dark:text-zinc-400 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
         >
           Next
-        </button>
+        </Button>
       </div>
     </div>
   )

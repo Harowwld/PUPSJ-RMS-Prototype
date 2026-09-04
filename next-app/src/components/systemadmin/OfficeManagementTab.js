@@ -25,6 +25,7 @@ import {
   EmptyDescription,
 } from "@/components/ui/empty"
 import { cn } from "@/lib/utils"
+import { getCachedData, setCachedData, invalidateDataCache } from "@/lib/dataCache"
 
 // Expanded predefined icon palette so SuperAdmins have rich choices for campus offices
 const PRESET_ICONS = [
@@ -170,17 +171,26 @@ export default function OfficeManagementTab({ showToast }) {
 
   const [submitLoading, setSubmitLoading] = useState(false)
 
-  const fetchOffices = useCallback(async () => {
+  const fetchOffices = useCallback(async (isSilent = false) => {
     try {
+      const cached = getCachedData("systemadmin_offices_stats")
+      if (Array.isArray(cached) && !isSilent) {
+        setOffices(cached)
+        setLoading(false)
+      }
+
       const res = await fetch("/api/offices?stats=true")
       const json = await res.json()
-      if (res.ok && json.ok) {
+      if (res.ok && json.ok && Array.isArray(json.data)) {
         setOffices(json.data)
-      } else {
+        setCachedData("systemadmin_offices_stats", json.data, 60000)
+      } else if (!cached) {
         showToast(json.error || "Failed to fetch offices", true)
       }
     } catch (err) {
-      showToast("Network error fetching offices", true)
+      if (!getCachedData("systemadmin_offices_stats")) {
+        showToast("Network error fetching offices", true)
+      }
     } finally {
       setLoading(false)
     }
@@ -188,10 +198,16 @@ export default function OfficeManagementTab({ showToast }) {
 
   const fetchModules = useCallback(async () => {
     try {
+      const cached = getCachedData("systemadmin_modules")
+      if (Array.isArray(cached)) {
+        setAvailableModules(cached)
+      }
+
       const res = await fetch("/api/modules")
       const json = await res.json()
-      if (res.ok && json.ok) {
-        setAvailableModules(json.data || [])
+      if (res.ok && json.ok && Array.isArray(json.data)) {
+        setAvailableModules(json.data)
+        setCachedData("systemadmin_modules", json.data, 120000)
       }
     } catch (err) {
       console.error("Failed to fetch available modules", err)
@@ -318,7 +334,8 @@ export default function OfficeManagementTab({ showToast }) {
           showToast("Office created successfully")
         }
         setDialogOpen(false)
-        fetchOffices()
+        invalidateDataCache("systemadmin_offices")
+        fetchOffices(true)
       } else {
         showToast(json.error || "Failed to save office", true)
       }
@@ -340,7 +357,8 @@ export default function OfficeManagementTab({ showToast }) {
       const json = await res.json()
       if (res.ok && json.ok) {
         showToast(`Office set to ${nextStatus}`)
-        fetchOffices()
+        invalidateDataCache("systemadmin_offices")
+        fetchOffices(true)
       } else {
         showToast(json.error || "Failed to toggle status", true)
       }

@@ -21,6 +21,7 @@ const ICON_MAP = {
   modules: { icon: "ti ti-layout-grid" },
   staff: { icon: "ti ti-users" },
   health: { icon: "ti ti-activity-heartbeat" },
+  backups: { icon: "ti ti-database-backup" },
 
   // Staff views
   requests: { icon: "ti ti-arrow-up-right" },

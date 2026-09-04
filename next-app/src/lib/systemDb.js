@@ -517,13 +517,13 @@ async function seedSystemDefaults(db) {
       INSERT INTO staff (id, office_id, fname, lname, role, section, status, email, password_hash, password_last_changed)
       VALUES (?, NULL, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
     `).run(
-      "PUPREGISTRAR-001",
-      "Elias",
-      "Austria",
-      "SystemAdmin",
-      "Administrative",
+      "PUPSUPERADMIN-001",
+      "System",
+      "Administrator",
+      "SuperAdmin",
+      "System Administration",
       "Active",
-      "admin.default@pup.local",
+      "superadmin@pup.local",
       passwordHash
     );
     console.log("[SystemDB] Seeded default SystemAdmin account.");

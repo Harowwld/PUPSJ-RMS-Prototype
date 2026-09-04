@@ -9,6 +9,7 @@ import {
 } from "../../../../../lib/backupsRepo";
 import { writeAuditLog } from "../../../../../lib/auditLogRequest";
 import { requireAdmin, createAuthErrorResponse } from "../../../../../lib/authHelpers";
+import { isSystemAdminRole } from "../../../../../lib/roleUtils";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -30,6 +31,13 @@ export async function DELETE(req, { params }) {
     if (!backup) {
       console.log(`[DELETE BACKUP] Backup record not found in DB for ID: ${id}`);
       return NextResponse.json({ ok: false, error: "Backup record not found" }, { status: 409 });
+    }
+
+    if (!isSystemAdminRole(user.role)) {
+      const userOffice = String(user.office_id || user.section || "registrar").toLowerCase().trim();
+      if (backup.scope === "system" || (backup.office_id && backup.office_id.toLowerCase() !== userOffice)) {
+        return NextResponse.json({ ok: false, error: "Forbidden: You do not have permission to delete this backup" }, { status: 403 });
+      }
     }
 
     console.log(`[DELETE BACKUP] Found backup in DB: ${backup.filename}`);

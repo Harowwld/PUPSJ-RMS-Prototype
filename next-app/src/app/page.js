@@ -14,6 +14,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { isSystemAdminRole, isAdminRole } from "@/lib/roleUtils";
 
 const STUDENT_NUMBER_PATTERN = /^\d{4}-\d{5}-[A-Z]{2}-\d$/;
 
@@ -262,7 +263,11 @@ export default function Home() {
         localStorage.setItem("pup-session-recovered", Date.now().toString());
         localStorage.removeItem("pup-logout");
 
-        if (role === "Admin") {
+        if (isSystemAdminRole(role)) {
+          router.push("/systemadmin");
+          return;
+        }
+        if (isAdminRole(role)) {
           router.push("/admin");
           return;
         }
@@ -373,7 +378,9 @@ export default function Home() {
       localStorage.removeItem("pup-logout");
 
       const role = String(json?.data?.role || "");
-      if (role === "Admin") {
+      if (isSystemAdminRole(role)) {
+        router.push("/systemadmin");
+      } else if (isAdminRole(role)) {
         router.push("/admin");
       } else if (role.toLowerCase() === "student") {
         router.push("/student");
@@ -840,7 +847,7 @@ export default function Home() {
             </div>
             <div className="flex flex-wrap justify-center gap-1.5 w-full">
               {[
-                { label: "SuperAdmin", email: "admin.default@pup.local", badge: "Global", color: "hover:border-slate-800 hover:text-slate-900 dark:hover:text-white" },
+                { label: "SuperAdmin", email: "superadmin@pup.local", badge: "Global", color: "hover:border-slate-800 hover:text-slate-900 dark:hover:text-white" },
                 { label: "Registrar Admin", email: "admin.registrar@pup.local", badge: "Registrar", color: "hover:border-orange-500 hover:text-orange-600 dark:hover:text-orange-400" },
                 { label: "Registrar Staff", email: "staff.registrar@pup.local", badge: "Records", color: "hover:border-amber-500 hover:text-amber-600 dark:hover:text-amber-400" },
                 { label: "OSAS Admin", email: "admin.osas@pup.local", badge: "OSAS", color: "hover:border-blue-500 hover:text-blue-600 dark:hover:text-blue-400" },

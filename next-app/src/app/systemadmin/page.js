@@ -2,28 +2,58 @@
 
 import { useEffect, useState, useCallback, useRef, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
+import dynamic from "next/dynamic"
 import { toast } from "sonner"
 
 import Header from "@/components/layout/Header"
 import Sidebar from "@/components/shared/Sidebar"
 import ConfirmModal from "@/components/shared/ConfirmModal"
-import { SystemAdminGuard } from "@/components/shared/AuthGuard"
+import { SystemAdminGuard, useAuthUser } from "@/components/shared/AuthGuard"
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
 
-import OfficeManagementTab from "@/components/systemadmin/OfficeManagementTab"
-import ModuleConfigTab from "@/components/systemadmin/ModuleConfigTab"
-import GlobalStaffTab from "@/components/systemadmin/GlobalStaffTab"
-import GlobalAuditLogsTab from "@/components/systemadmin/GlobalAuditLogsTab"
-import SystemHealthTab from "@/components/systemadmin/SystemHealthTab"
+function TabLoadingSkeleton() {
+  return (
+    <div className="space-y-6 w-full animate-pulse">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {[1, 2, 3].map((i) => (
+          <Skeleton key={i} className="h-28 rounded-xl bg-gray-100 dark:bg-muted" />
+        ))}
+      </div>
+      <Skeleton className="h-16 w-full rounded-2xl bg-gray-100 dark:bg-muted" />
+      <Skeleton className="h-96 w-full rounded-2xl bg-gray-100 dark:bg-muted" />
+    </div>
+  )
+}
 
-const VALID_VIEWS = ["offices", "modules", "staff", "logs", "health"]
+const OfficeManagementTab = dynamic(() => import("@/components/systemadmin/OfficeManagementTab"), {
+  loading: () => <TabLoadingSkeleton />,
+})
+const ModuleConfigTab = dynamic(() => import("@/components/systemadmin/ModuleConfigTab"), {
+  loading: () => <TabLoadingSkeleton />,
+})
+const GlobalStaffTab = dynamic(() => import("@/components/systemadmin/GlobalStaffTab"), {
+  loading: () => <TabLoadingSkeleton />,
+})
+const GlobalAuditLogsTab = dynamic(() => import("@/components/systemadmin/GlobalAuditLogsTab"), {
+  loading: () => <TabLoadingSkeleton />,
+})
+const SystemHealthTab = dynamic(() => import("@/components/systemadmin/SystemHealthTab"), {
+  loading: () => <TabLoadingSkeleton />,
+})
+const SystemBackupsTab = dynamic(() => import("@/components/systemadmin/SystemBackupsTab"), {
+  loading: () => <TabLoadingSkeleton />,
+})
 
-function SystemAdminPageContent() {
+const VALID_VIEWS = ["offices", "modules", "staff", "logs", "health", "backups"]
+
+function SystemAdminPageContent({ authUser: propAuthUser }) {
+  const contextUser = useAuthUser()
   const router = useRouter()
   const searchParams = useSearchParams()
-  const [loading, setLoading] = useState(true)
-  const [authUser, setAuthUser] = useState(null)
+  const initialAuth = propAuthUser || contextUser || null
+  const [authUser, setAuthUser] = useState(initialAuth)
+  const [loading, setLoading] = useState(!initialAuth)
   
   const initialView = VALID_VIEWS.includes(searchParams?.get("view"))
     ? searchParams.get("view")
@@ -130,6 +160,11 @@ function SystemAdminPageContent() {
   }, [searchParams])
 
   useEffect(() => {
+    if (initialAuth) {
+      setAuthUser(initialAuth)
+      setLoading(false)
+      return
+    }
     ;(async () => {
       try {
         const res = await fetch("/api/auth/me")
@@ -146,7 +181,7 @@ function SystemAdminPageContent() {
         console.error("[SuperAdminPage] Profile fetch failed:", err)
       }
     })()
-  }, [router])
+  }, [initialAuth, router])
 
   const switchView = useCallback((nextView) => {
     setView(nextView)
@@ -166,7 +201,8 @@ function SystemAdminPageContent() {
     { key: "logs", label: "Platform Audit Trail", iconClass: "ph-bold ph-history" },
     
     { type: "header", label: "Platform Infrastructure" },
-    { key: "health", label: "System Health", iconClass: "ph-bold ph-activity" }
+    { key: "health", label: "System Health", iconClass: "ph-bold ph-activity" },
+    { key: "backups", label: "Platform Backups", iconClass: "ph-bold ph-cloud-arrow-up" }
   ]
 
   if (loading) {
@@ -217,6 +253,7 @@ function SystemAdminPageContent() {
             {view === "staff" && <GlobalStaffTab authUser={authUser} showToast={showToast} />}
             {view === "logs" && <GlobalAuditLogsTab showToast={showToast} />}
             {view === "health" && <SystemHealthTab showToast={showToast} />}
+            {view === "backups" && <SystemBackupsTab showToast={showToast} />}
           </div>
         </main>
       </div>

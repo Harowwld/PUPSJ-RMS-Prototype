@@ -26,6 +26,7 @@ import PageHeader from "@/components/shared/PageHeader"
 import PDFPreviewModal from "@/components/shared/PDFPreviewModal"
 import { formatPHDateTime, formatRelativeTime } from "@/lib/timeFormat"
 import { cn } from "@/lib/utils"
+import { getCachedData, setCachedData, invalidateDataCache } from "@/lib/dataCache"
 
 function SortIndicator({ column, sortBy, sortOrder }) {
   if (sortBy !== column) {
@@ -119,6 +120,13 @@ export default function SystemHealthTab({ showToast }) {
   }, [selectedKpi])
 
   const fetchHealth = useCallback(async (isManual = false) => {
+    if (!isManual) {
+      const cached = getCachedData("systemadmin_health")
+      if (cached) {
+        setHealth(cached)
+        setLoading(false)
+      }
+    }
     if (isManual) setRefreshing(true)
     try {
       const url = isManual ? "/api/system/health?force=true" : "/api/system/health"
@@ -126,6 +134,7 @@ export default function SystemHealthTab({ showToast }) {
       const json = await res.json()
       if (res.ok && json.ok) {
         setHealth(json.data)
+        setCachedData("systemadmin_health", json.data, 15000)
       }
     } catch (err) {
       console.error("[SystemHealth] Telemetry fetch failed:", err)
@@ -150,10 +159,13 @@ export default function SystemHealthTab({ showToast }) {
   const handleSeedData = async () => {
     setSeedLoading(true)
     try {
-      const res = await fetch("/api/system/seed-mock-data?force=true&bypass=pup-secret-fallback")
-      const json = await res.json()
+      const res = await fetch("/api/system/seed-mock-data?force=true&bypass=pup-secret-fallback", {
+        method: "POST",
+      })
+      const json = await res.json().catch(() => ({}))
       if (res.ok && json.ok) {
         showToast("Mock datasets seeded across Registrar and OSAS office partitions.")
+        invalidateDataCache("systemadmin")
         await fetchHealth(true)
       } else {
         showToast(json.error || "Failed to seed mock datasets", true)
@@ -168,8 +180,10 @@ export default function SystemHealthTab({ showToast }) {
   const handleResetDb = async () => {
     setResetLoading(true)
     try {
-      const res = await fetch("/api/system/reset-db")
-      const json = await res.json()
+      const res = await fetch("/api/system/reset-db", {
+        method: "POST",
+      })
+      const json = await res.json().catch(() => ({}))
       if (res.ok && json.ok) {
         showToast("Database wipe and re-bootstrap complete. Reloading in 3s...")
         setResetOpen(false)

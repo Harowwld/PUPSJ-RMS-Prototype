@@ -221,11 +221,12 @@ export default function Header({ authUser, onLogout, children }) {
 
     if (activeView === "systemadmin") {
       currentViewSidebarItems = [
-        { label: "Offices & Departments", view: "offices", icon: "ph-bold ph-buildings", keywords: "offices departments campus registry admin" },
-        { label: "Module Config Matrix", view: "modules", icon: "ph-bold ph-squares-four", keywords: "matrix permissions feature flags modules config" },
-        { label: "Global Staff Directory", view: "staff", icon: "ph-bold ph-users", keywords: "directory personnel users accounts staff global" },
-        { label: "Platform Audit Trail", view: "logs", icon: "ph-bold ph-clock-counter-clockwise", keywords: "audit logs security platform activity" },
-        { label: "System Health", view: "health", icon: "ph-bold ph-heartbeat", keywords: "status memory database health ping metrics" },
+        { label: "Departments & Stations", view: "offices", icon: "ph-bold ph-buildings", keywords: "offices departments stations campus registry admin governance" },
+        { label: "Department Features", view: "modules", icon: "ph-bold ph-squares-four", keywords: "features matrix permissions feature flags modules config" },
+        { label: "Global Directory", view: "staff", icon: "ph-bold ph-users", keywords: "directory personnel users accounts staff global" },
+        { label: "Platform Audit Trail", view: "logs", icon: "ph-bold ph-clock-counter-clockwise", keywords: "audit logs security platform activity history" },
+        { label: "System Health", view: "health", icon: "ph-bold ph-heartbeat", keywords: "status memory database health ping metrics activity" },
+        { label: "Platform Backups", view: "backups", icon: "ph-bold ph-cloud-arrow-up", keywords: "platform backups platforms backups database snapshots postgres dump restore export recovery archive maintenance cloud" },
       ];
     } else if (activeView === "admin") {
       const allAdminTabs = [
@@ -298,8 +299,13 @@ export default function Header({ authUser, onLogout, children }) {
     setFocusedIndex(0);
 
     if (item.view) {
-      if (pathname === "/account" || pathname === "/account/activity") {
-        const targetPath = activeView === "systemadmin" ? "/systemadmin" : (activeView === "admin" ? "/admin" : "/staff");
+      const isSystemAdmin = activeView === "systemadmin";
+      const onSystemAdminPage = pathname?.startsWith("/systemadmin") || pathname?.startsWith("/superadmin");
+
+      if (isSystemAdmin && !onSystemAdminPage) {
+        router.push(`/systemadmin?view=${item.view}`);
+      } else if (pathname === "/account" || pathname === "/account/activity") {
+        const targetPath = isSystemAdmin ? "/systemadmin" : (activeView === "admin" ? "/admin" : "/staff");
         router.push(`${targetPath}?view=${item.view}`);
       } else {
         window.dispatchEvent(new CustomEvent("switch-view", { detail: { view: item.view } }));
