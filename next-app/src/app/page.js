@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { Select } from "@/components/ui/select";
+import { PageTransition } from "@/components/ui/motion";
 import {
   Tooltip,
   TooltipContent,
@@ -904,7 +905,7 @@ export default function Home() {
             </div>
           </DialogContent>
         </Dialog>
-      </div>
+      </PageTransition>
     </TooltipProvider>
   );
 }
