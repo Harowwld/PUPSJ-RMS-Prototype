@@ -933,6 +933,24 @@ export function extractNameFromCoordinates(pages, template) {
   };
 }
 
+export function rotateOcrPages(pages, rotation = 0) {
+  const normalized = ((Number(rotation) % 360) + 360) % 360;
+  if (![0, 90, 180, 270].includes(normalized)) return pages;
+  if (normalized === 0) return pages;
+
+  return (Array.isArray(pages) ? pages : []).map((page) => ({
+    ...page,
+    width: normalized === 90 || normalized === 270 ? page.height : page.width,
+    height: normalized === 90 || normalized === 270 ? page.width : page.height,
+    observations: (Array.isArray(page.observations) ? page.observations : []).map((observation) => {
+      const { x, y, width, height } = observation;
+      if (normalized === 90) return { ...observation, x: 1 - y - height, y: x, width: height, height: width };
+      if (normalized === 180) return { ...observation, x: 1 - x - width, y: 1 - y - height };
+      return { ...observation, x: y, y: 1 - x - width, width: height, height: width };
+    }),
+  }));
+}
+
 
 // ─── 6. STUDENT MATCHING ────────────────────────────────────────────────────
 
@@ -1176,9 +1194,10 @@ export function findStudentsInText(rawText, students, focusName = "") {
         .replace(/[^A-Z0-9\s]/g, " ")
         .split(/\s+/)
         .filter((token) => token.length > 1);
-      return focusTokens.some((focusToken) =>
-        studentTokens.some((studentToken) => levenshteinSimilarity(focusToken, studentToken) >= 0.75)
-      );
+      const matchedTokens = studentTokens.filter((studentToken) =>
+        focusTokens.some((focusToken) => levenshteinSimilarity(focusToken, studentToken) >= 0.75)
+      ).length;
+      return matchedTokens >= Math.min(2, studentTokens.length);
     });
   }
 

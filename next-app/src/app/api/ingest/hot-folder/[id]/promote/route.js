@@ -13,6 +13,7 @@ import {
 } from "@/lib/ingestQueueRepo";
 import { HOT_FOLDER_ALLOWED_MIME_TYPES, isAllowedIngestExtension } from "@/lib/ingestFileTypes";
 import { isUniqueViolation } from "@/lib/dbErrors";
+import { rotateDocumentBuffer } from "@/lib/documentOrientation";
 
 export const runtime = "nodejs";
 
@@ -95,12 +96,14 @@ export async function POST(req, ctx) {
     return NextResponse.json({ ok: false, error: "Ingest file missing on disk" }, { status: 404 });
   }
 
-  const bytes = fs.readFileSync(sourceAbsPath);
+  const sourceBytes = fs.readFileSync(sourceAbsPath);
+  const rotation = Number(ingest.match_evidence?.detectedRotation || 0);
+  const bytes = await rotateDocumentBuffer(sourceBytes, ingest.original_filename, rotation);
   const ext = path.extname(String(ingest.original_filename || "")).toLowerCase();
   const officeId = user.office_id || "registrar";
   const targetStorageFilename = `${sanitizeNameForFs(studentNo)}_${sanitizeNameForFs(docType)}_${Date.now()}${ext || ".pdf"}`;
   const targetAbsPath = path.join(getUploadsDir(officeId), targetStorageFilename);
-  fs.copyFileSync(sourceAbsPath, targetAbsPath);
+  fs.writeFileSync(targetAbsPath, bytes);
 
   const doc = await createDocument({
     officeId: user.office_id || "registrar",

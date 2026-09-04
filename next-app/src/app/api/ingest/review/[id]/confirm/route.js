@@ -5,6 +5,7 @@ import { getIngestById, getIngestFilePath, markIngestPromoted } from "../../../.
 import { createDocument, getDocumentById } from "../../../../../../lib/documentsRepo";
 import { queryOne } from "../../../../../../lib/postgres";
 import { writeAuditLog } from "@/lib/auditLogRequest";
+import { rotateDocumentBuffer } from "@/lib/documentOrientation";
 
 export const runtime = "nodejs";
 
@@ -26,7 +27,9 @@ export async function POST(req, ctx) {
   const sourcePath = getIngestFilePath(item.storage_filename);
   if (!fs.existsSync(sourcePath)) return NextResponse.json({ ok: false, error: "Source file is missing from disk." }, { status: 404 });
   try {
-    const buffer = fs.readFileSync(sourcePath);
+    const sourceBuffer = fs.readFileSync(sourcePath);
+    const rotation = Number(item.match_evidence?.detectedRotation || 0);
+    const buffer = await rotateDocumentBuffer(sourceBuffer, item.original_filename, rotation);
     const document = await createDocument({ officeId: user.office_id || "registrar", studentNo, studentName: studentName || student.name, docType, originalFilename: item.original_filename, mimeType: item.mime_type, sizeBytes: buffer.length, buffer, uploadedBy: user.id });
     await markIngestPromoted(id, document.id, user.id);
     try { fs.unlinkSync(sourcePath); } catch {}
