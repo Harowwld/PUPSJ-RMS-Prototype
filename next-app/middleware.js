@@ -46,6 +46,8 @@ export async function middleware(req) {
     pathname.startsWith("/api/auth/logout") ||
     pathname.startsWith("/api/auth/me") ||
     pathname.startsWith("/api/auth/forgot-password") ||
+    pathname.startsWith("/api/public/") ||
+    pathname === "/api/doc-types" ||
     pathname === "/api/system/reset-db" ||
     pathname === "/api/system/seed-mock-data"
   ) {
@@ -53,7 +55,7 @@ export async function middleware(req) {
   }
 
   // 3. Public routes
-  if (pathname === "/" || pathname === "/student") {
+  if (pathname === "/" || pathname === "/login" || pathname === "/student") {
     return addSecurityHeaders(NextResponse.next());
   }
 
@@ -64,7 +66,7 @@ export async function middleware(req) {
       return addSecurityHeaders(NextResponse.json({ ok: false, error: "Not authenticated (Middleware)" }, { status: 401 }));
     }
     const url = req.nextUrl.clone();
-    url.pathname = "/";
+    url.pathname = "/login";
     return addSecurityHeaders(NextResponse.redirect(url));
   }
 
@@ -76,7 +78,7 @@ export async function middleware(req) {
       return addSecurityHeaders(NextResponse.json({ ok: false, error: "Invalid session (Middleware): " + err.message }, { status: 401 }));
     }
     const url = req.nextUrl.clone();
-    url.pathname = "/";
+    url.pathname = "/login";
     return addSecurityHeaders(NextResponse.redirect(url));
   }
 

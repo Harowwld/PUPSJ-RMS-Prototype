@@ -31,7 +31,7 @@ export default function ForgotPasswordPage() {
     const link = document.querySelector("link[rel*='icon']") || document.createElement('link');
     link.type = 'image/png';
     link.rel = 'shortcut icon';
-    link.href = '/login-logo.png';
+    link.href = '/assets/branding/black-icon.png';
     document.getElementsByTagName('head')[0].appendChild(link);
   }, []);
 
@@ -140,7 +140,8 @@ export default function ForgotPasswordPage() {
 
       {/* Top-Left Brand Logo & Name */}
       <div className="absolute top-6 left-6 flex items-center gap-1 select-none z-20">
-        <img src="/login-logo.png" alt="eManage Logo" className="w-[32px] h-[32px] shrink-0 object-contain p-0.5" />
+        <img src="/assets/branding/black-icon.png" alt="eManage Logo" className="w-[32px] h-[32px] shrink-0 object-contain p-0.5 dark:hidden" />
+        <img src="/assets/branding/white-icon.png" alt="eManage Logo" className="w-[32px] h-[32px] shrink-0 object-contain p-0.5 hidden dark:block" />
         <span className="text-[26px] font-semibold text-[#1D1D1F] dark:text-zinc-50 tracking-tight leading-none">eManage</span>
       </div>
 
@@ -208,9 +209,14 @@ export default function ForgotPasswordPage() {
               })}
             </svg>
             <img 
-              src="/login-logo.png" 
+              src="/assets/branding/black-icon.png" 
               alt="eManage Logo" 
-              className="w-[30px] h-[30px] shrink-0 object-contain p-[2px] z-10 animate-in zoom-in-50 duration-500" 
+              className="w-[30px] h-[30px] shrink-0 object-contain p-[2px] z-10 animate-in zoom-in-50 duration-500 dark:hidden" 
+            />
+            <img 
+              src="/assets/branding/white-icon.png" 
+              alt="eManage Logo" 
+              className="w-[30px] h-[30px] shrink-0 object-contain p-[2px] z-10 animate-in zoom-in-50 duration-500 hidden dark:block" 
             />
           </div>
 

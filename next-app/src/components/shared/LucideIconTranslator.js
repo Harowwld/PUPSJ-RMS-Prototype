@@ -131,6 +131,12 @@ export default function LucideIconTranslator() {
       "tools": "wrench",
       "desktop": "monitor",
       "device-desktop": "monitor",
+      "flow-arrow": "workflow",
+      "workflow": "workflow",
+      "question": "help-circle",
+      "question-circle": "help-circle",
+      "help-circle": "help-circle",
+      "files": "files",
     };
 
     function toCamelCase(str) {
