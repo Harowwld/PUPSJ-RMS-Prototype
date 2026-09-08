@@ -1,27 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Button } from "@/components/ui/button";
 import BevelButton from "@/components/ui/bevel-button";
+import DocumentCardPreview from "./DocumentCardPreview";
 
-const CATEGORIES = [
-  { id: "all", label: "All Records" },
-  { id: "transcripts", label: "Transcripts & Grades" },
-  { id: "certs", label: "Certifications" },
-  { id: "clearances", label: "Clearances & Diplomas" },
-];
-
-const CATALOG_ITEMS = [
+export const CATALOG_ITEMS = [
   {
     id: "tor",
     code: "TOR",
     title: "Transcript of Records",
     category: "transcripts",
-    sla: "5–7 Days SLA",
-    slaColor: "bg-amber-50 text-amber-800 border-amber-200/80 dark:bg-amber-950/30 dark:text-amber-300 dark:border-amber-800/40",
-    description: "Official comprehensive academic transcript for employment, professional board examinations, or graduate studies.",
+    description: "Official comprehensive academic transcript for employment, PRC board examinations, and graduate studies.",
     requirements: [
       "2x2 Formal Photo (White Background, Nametag)",
       "University Clearance Form (Fully Signed)",
@@ -34,8 +25,6 @@ const CATALOG_ITEMS = [
     code: "COG",
     title: "Certificate of Grades",
     category: "transcripts",
-    sla: "2–3 Days SLA",
-    slaColor: "bg-emerald-50 text-emerald-800 border-emerald-200/80 dark:bg-emerald-950/30 dark:text-emerald-300 dark:border-emerald-800/40",
     description: "Certified summary of semester grades requested for scholarships, employer tuition subsidies, and academic evaluation.",
     requirements: [
       "Current Student ID or SIS Portal Profile Printout",
@@ -48,9 +37,7 @@ const CATALOG_ITEMS = [
     code: "COR",
     title: "Certificate of Registration",
     category: "certs",
-    sla: "1–2 Days SLA",
-    slaColor: "bg-emerald-50 text-emerald-800 border-emerald-200/80 dark:bg-emerald-950/30 dark:text-emerald-300 dark:border-emerald-800/40",
-    description: "Official certification of enrollment status for student discounts, government aid, health insurance, and visa applications.",
+    description: "Official certification of enrollment status for student discounts, government aid, and passport/visa requirements.",
     requirements: [
       "Validated Assessment Form / Enrollment Proof",
       "Current Semester Course Load Details"
@@ -62,8 +49,6 @@ const CATALOG_ITEMS = [
     code: "HD",
     title: "Honorable Dismissal",
     category: "clearances",
-    sla: "5–7 Days SLA",
-    slaColor: "bg-amber-50 text-amber-800 border-amber-200/80 dark:bg-amber-950/30 dark:text-amber-300 dark:border-amber-800/40",
     description: "Formal Certificate of Transfer Credential certifying official release from PUP to transfer to another institution.",
     requirements: [
       "Comprehensive Campus University Clearance",
@@ -77,9 +62,7 @@ const CATALOG_ITEMS = [
     code: "GMC",
     title: "Good Moral Character",
     category: "certs",
-    sla: "2–3 Days SLA",
-    slaColor: "bg-emerald-50 text-emerald-800 border-emerald-200/80 dark:bg-emerald-950/30 dark:text-emerald-300 dark:border-emerald-800/40",
-    description: "Issued in coordination with OSAS certifying zero pending disciplinary infractions during academic stay.",
+    description: "Issued in coordination with OSAS certifying zero pending disciplinary infractions during university residency.",
     requirements: [
       "OSAS Disciplinary Clearance Slip",
       "Valid Student ID or Government ID Card"
@@ -91,8 +74,6 @@ const CATALOG_ITEMS = [
     code: "DIP-2",
     title: "Second Copy of Diploma",
     category: "clearances",
-    sla: "10–14 Days SLA",
-    slaColor: "bg-blue-50 text-blue-800 border-blue-200/80 dark:bg-blue-950/30 dark:text-blue-300 dark:border-blue-800/40",
     description: "Official replacement graduation diploma reissued after verified destruction or loss of the original parchment.",
     requirements: [
       "Notarized Affidavit of Loss / Damage",
@@ -106,9 +87,7 @@ const CATALOG_ITEMS = [
     code: "CAV",
     title: "CAV (DFA Apostille / Abroad)",
     category: "certs",
-    sla: "7–10 Days SLA",
-    slaColor: "bg-amber-50 text-amber-800 border-amber-200/80 dark:bg-amber-950/30 dark:text-amber-300 dark:border-amber-800/40",
-    description: "Certification, Authentication, and Verification endorsed directly to the DFA for overseas academic verification.",
+    description: "Certification, Authentication, and Verification endorsed directly to DFA and CHED for international credential recognition.",
     requirements: [
       "Certified True Copies of TOR and Diploma",
       "Passport Identification Copy (Full Legal Name)",
@@ -121,9 +100,7 @@ const CATALOG_ITEMS = [
     code: "CTC",
     title: "Certified True Copy",
     category: "transcripts",
-    sla: "2–3 Days SLA",
-    slaColor: "bg-emerald-50 text-emerald-800 border-emerald-200/80 dark:bg-emerald-950/30 dark:text-emerald-300 dark:border-emerald-800/40",
-    description: "Official Registrar dry seal and verification stamp placed on original photocopies of records.",
+    description: "Official Registrar dry seal and verification stamp placed on original photocopies of university academic records.",
     requirements: [
       "Original Document for Verification Presentation",
       "Clear Photocopy for Dry Seal Stamping"
@@ -134,129 +111,376 @@ const CATALOG_ITEMS = [
 
 export default function DocumentCatalog() {
   const router = useRouter();
-  const [activeCategory, setActiveCategory] = useState("all");
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [isHovered, setIsHovered] = useState(false);
 
-  const filteredItems = CATALOG_ITEMS.filter((item) => {
-    if (activeCategory === "all") return true;
-    return item.category === activeCategory;
+  // Section reference for sizing the giant Ferris Wheel
+  const sectionRef = useRef(null);
+  const [wheelGeometry, setWheelGeometry] = useState({
+    radius: 580,
+    centerX: 1350,
+    centerY: 450,
+    scale: 1,
   });
 
+  const totalItems = CATALOG_ITEMS.length;
+
+  // Responsive Ferris Wheel geometry calculation
+  useEffect(() => {
+    if (!sectionRef.current) return;
+
+    const updateGeometry = () => {
+      if (!sectionRef.current) return;
+      const width = sectionRef.current.clientWidth;
+      const height = sectionRef.current.clientHeight || 800;
+
+      if (width < 640) {
+        // Mobile: Circle center positioned comfortably past right edge
+        setWheelGeometry({
+          radius: 350,
+          centerX: width * 1.05,
+          centerY: height * 0.65,
+          scale: 0.78,
+        });
+      } else if (width < 1024) {
+        // Tablet: Circle center at right edge
+        setWheelGeometry({
+          radius: 460,
+          centerX: width * 1.02,
+          centerY: height * 0.5,
+          scale: 0.88,
+        });
+      } else if (width < 1440) {
+        // Standard Desktop: Center near right edge (~98% of width)
+        setWheelGeometry({
+          radius: 560,
+          centerX: width * 0.98,
+          centerY: height * 0.5,
+          scale: 1,
+        });
+      } else {
+        // Large & Ultrawide Desktop: Center aligned near right edge (~100% of width)
+        setWheelGeometry({
+          radius: 620,
+          centerX: width * 1.00,
+          centerY: height * 0.5,
+          scale: 1.05,
+        });
+      }
+    };
+
+    updateGeometry();
+    const ro = new ResizeObserver(updateGeometry);
+    ro.observe(sectionRef.current);
+    return () => ro.disconnect();
+  }, []);
+
+  // Target angle and smooth interpolated angle
+  // FRONT_ANGLE is PI (9 o'clock position on the Ferris wheel, closest to left inspector)
+  const FRONT_ANGLE = Math.PI;
+  const targetAngleRef = useRef(FRONT_ANGLE);
+  const currentAngleRef = useRef(FRONT_ANGLE);
+  const [renderAngle, setRenderAngle] = useState(FRONT_ANGLE);
+
+  // Drag interaction state
+  const [isDragging, setIsDragging] = useState(false);
+  const isDraggingRef = useRef(false);
+  const dragStartYRef = useRef(0);
+  const dragStartXRef = useRef(0);
+  const dragStartAngleRef = useRef(FRONT_ANGLE);
+
+  // Move directly to target index
+  const rotateToIndex = useCallback((index) => {
+    if (totalItems === 0) return;
+    const step = (2 * Math.PI) / totalItems;
+    const desiredAngle = FRONT_ANGLE - index * step;
+
+    // Find shortest rotational path from current target angle
+    const diff = desiredAngle - targetAngleRef.current;
+    const normalizedDiff = Math.atan2(Math.sin(diff), Math.cos(diff));
+    targetAngleRef.current += normalizedDiff;
+    setActiveIndex(index);
+  }, [totalItems, FRONT_ANGLE]);
+
+  // Continuous animation loop (Ferris Wheel rotation)
+  useEffect(() => {
+    let animId;
+    let lastTime = performance.now();
+
+    const tick = (now) => {
+      const dt = Math.min((now - lastTime) / 1000, 0.1);
+      lastTime = now;
+
+      // Auto rotation: slow majestic Ferris wheel turn (~55 seconds per revolution)
+      if (!isHovered && !isDraggingRef.current) {
+        targetAngleRef.current += 0.12 * dt;
+      }
+
+      // Smooth spring lerp toward target angle
+      const angleDiff = targetAngleRef.current - currentAngleRef.current;
+      currentAngleRef.current += angleDiff * Math.min(dt * 8, 0.3);
+
+      setRenderAngle(currentAngleRef.current);
+
+      // Identify which carriage is closest to focal position (FRONT_ANGLE = PI)
+      if (totalItems > 0) {
+        const step = (2 * Math.PI) / totalItems;
+        let closestIdx = 0;
+        let minDiff = Infinity;
+
+        for (let i = 0; i < totalItems; i++) {
+          const itemAngle = currentAngleRef.current + i * step;
+          const diff = Math.abs(Math.atan2(Math.sin(itemAngle - FRONT_ANGLE), Math.cos(itemAngle - FRONT_ANGLE)));
+          if (diff < minDiff) {
+            minDiff = diff;
+            closestIdx = i;
+          }
+        }
+
+        if (closestIdx !== activeIndex) {
+          setActiveIndex(closestIdx);
+        }
+      }
+
+      animId = requestAnimationFrame(tick);
+    };
+
+    animId = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(animId);
+  }, [isHovered, totalItems, activeIndex, FRONT_ANGLE]);
+
+  // Pointer drag event handlers for the Ferris wheel stage
+  const handlePointerDown = (e) => {
+    isDraggingRef.current = true;
+    setIsDragging(true);
+    dragStartYRef.current = e.clientY;
+    dragStartXRef.current = e.clientX;
+    dragStartAngleRef.current = targetAngleRef.current;
+    e.currentTarget.setPointerCapture(e.pointerId);
+  };
+
+  const handlePointerMove = (e) => {
+    if (!isDraggingRef.current) return;
+    const deltaY = e.clientY - dragStartYRef.current;
+    const deltaX = e.clientX - dragStartXRef.current;
+    // Dragging UP/DOWN on a Ferris wheel rotates the wheel
+    targetAngleRef.current = dragStartAngleRef.current - deltaY * 0.003 - deltaX * 0.002;
+  };
+
+  const handlePointerUp = (e) => {
+    if (!isDraggingRef.current) return;
+    isDraggingRef.current = false;
+    setIsDragging(false);
+    try {
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    } catch {}
+
+    // Snap to nearest carriage on release
+    if (totalItems > 0) {
+      const step = (2 * Math.PI) / totalItems;
+      let closestIdx = 0;
+      let minDiff = Infinity;
+
+      for (let i = 0; i < totalItems; i++) {
+        const itemAngle = targetAngleRef.current + i * step;
+        const diff = Math.abs(Math.atan2(Math.sin(itemAngle - FRONT_ANGLE), Math.cos(itemAngle - FRONT_ANGLE)));
+        if (diff < minDiff) {
+          minDiff = diff;
+          closestIdx = i;
+        }
+      }
+      rotateToIndex(closestIdx);
+    }
+  };
+
+  const activeDoc = CATALOG_ITEMS[activeIndex] || CATALOG_ITEMS[0];
+
   return (
-    <section id="catalog" className="max-w-7xl mx-auto px-4 sm:px-6 pb-20 w-full font-inter select-none">
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: "-60px" }}
-        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-        className="rounded-[2.5rem] bg-white dark:bg-zinc-900 border border-black/[0.06] dark:border-white/[0.08] shadow-[0_20px_50px_-15px_rgba(0,0,0,0.06)] overflow-hidden p-8 sm:p-12"
-      >
-        
-        {/* Header & Filter Switcher */}
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 pb-8 border-b border-gray-100 dark:border-zinc-800/80">
+    <section
+      id="catalog"
+      ref={sectionRef}
+      className="relative w-full py-20 sm:py-28 lg:py-36 overflow-hidden bg-white dark:bg-zinc-950 select-none font-inter min-h-[800px] sm:min-h-[860px] lg:min-h-[940px] flex items-center"
+    >
+      {/* Ambient background glow behind rotating documents on the right */}
+      <div className="absolute top-1/2 right-0 -translate-y-1/2 w-[70vw] h-[90%] pointer-events-none opacity-40 dark:opacity-20 overflow-hidden">
+        <div className="w-full h-full bg-radial from-[#800000]/15 via-transparent to-transparent blur-3xl" />
+      </div>
+
+      {/* Main Content Area: Left Column with Breathing Room */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full relative z-20 pointer-events-none">
+        <div className="max-w-xl lg:max-w-[480px] xl:max-w-[520px] pointer-events-auto space-y-7">
+
+          {/* Section Heading & Subtitle */}
           <div>
-            <span className="text-[11px] font-mono font-semibold uppercase tracking-widest text-[#800000] dark:text-red-400 block mb-1">
-              Official Services
-            </span>
-            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-gray-950 dark:text-white">
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-gray-950 dark:text-white leading-[1.08]">
               Academic Document Catalog
             </h2>
-            <p className="text-sm text-gray-500 dark:text-zinc-400 mt-1 leading-relaxed">
-              Explore available credentials, clearance requirements, and standard university turnaround times.
+            <p className="text-sm sm:text-base text-gray-500 dark:text-zinc-400 mt-2.5 leading-relaxed font-normal">
+              Explore authentic credentials, university clearance protocols, and official registrar records issued by the University.
             </p>
           </div>
 
-          {/* Apple Sliding Pill Filter Bar */}
-          <div className="flex items-center p-1 rounded-full bg-gray-100/80 dark:bg-zinc-800/80 border border-black/[0.04] dark:border-white/[0.06] self-start lg:self-auto overflow-x-auto max-w-full">
-            {CATEGORIES.map((cat) => {
-              const isActive = activeCategory === cat.id;
-              return (
-                <button
-                  key={cat.id}
-                  onClick={() => setActiveCategory(cat.id)}
-                  className={`relative px-4 py-2 rounded-full text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap z-10 ${
-                    isActive ? "text-gray-950 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-800"
-                  }`}
+          {/* Active Document Details Inspector Panel */}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeDoc?.id || "doc-empty"}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -12 }}
+              transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+              className="space-y-5"
+            >
+              {/* Badges */}
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="px-3 py-1 rounded-xl bg-zinc-900 text-white dark:bg-white dark:text-zinc-950 font-mono text-xs font-bold tracking-wider">
+                  {activeDoc?.code}
+                </span>
+                <span className="px-3 py-1 rounded-full text-xs font-semibold bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-black/[0.06] dark:border-white/[0.08]">
+                  {activeDoc?.client}
+                </span>
+                <span className="px-2.5 py-1 rounded-full text-[11px] font-mono font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/60 dark:border-emerald-800/40 inline-flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                  Official Credential
+                </span>
+              </div>
+
+              {/* Title & Description */}
+              <div>
+                <h3 className="text-2xl sm:text-3xl font-extrabold text-gray-950 dark:text-white tracking-tight leading-snug">
+                  {activeDoc?.title}
+                </h3>
+                <p className="text-xs sm:text-sm text-gray-600 dark:text-zinc-300 mt-2 leading-relaxed">
+                  {activeDoc?.description}
+                </p>
+              </div>
+
+              {/* Filing Requirements Checklist */}
+              <div className="p-4 sm:p-5 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-black/[0.05] dark:border-white/[0.06]">
+                <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-gray-900 dark:text-zinc-100 mb-3 font-mono">
+                  <i className="ph-bold ph-shield-check text-[#800000] dark:text-red-400 text-base" />
+                  Mandatory Filing Requirements
+                </div>
+                <ul className="space-y-2 text-xs text-gray-600 dark:text-zinc-300">
+                  {activeDoc?.requirements.map((req, idx) => (
+                    <li key={idx} className="flex items-start gap-2.5 leading-relaxed">
+                      <span className="mt-0.5 flex-shrink-0 w-4 h-4 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 flex items-center justify-center text-[10px] font-bold">
+                        <i className="ph-bold ph-check text-[10px]" />
+                      </span>
+                      <span>{req}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="pt-2 flex flex-wrap items-center gap-3">
+                <BevelButton
+                  onClick={() => router.push("/login")}
+                  className="h-11 px-7 rounded-full text-xs font-bold tracking-wide cursor-pointer flex items-center gap-2 shadow-md hover:scale-[1.02] active:scale-[0.98] transition-transform"
                 >
-                  {isActive && (
-                    <motion.div
-                      layoutId="catalogFilter"
-                      className="absolute inset-0 rounded-full bg-white dark:bg-zinc-700 shadow-sm z-[-1]"
-                      transition={{ type: "spring", stiffness: 350, damping: 25 }}
-                    />
-                  )}
-                  {cat.label}
+                  <span>Request Credential</span>
+                  <i className="ph-bold ph-arrow-right text-xs" />
+                </BevelButton>
+
+                <button
+                  onClick={() => router.push("/login")}
+                  className="h-11 px-6 rounded-full text-xs font-semibold text-gray-700 dark:text-zinc-300 bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 hover:bg-gray-50 dark:hover:bg-zinc-700/80 transition-colors cursor-pointer"
+                >
+                  Track Existing Request
                 </button>
-              );
-            })}
-          </div>
+              </div>
+
+              {/* Document Pagination Status (Minimalist Apple-style) */}
+              <div className="pt-2 flex items-center gap-3">
+                <span className="font-mono text-xs font-bold text-gray-900 dark:text-white">
+                  {String(activeIndex + 1).padStart(2, "0")}{" "}
+                  <span className="text-gray-400 font-normal">/ {String(totalItems).padStart(2, "0")}</span>
+                </span>
+
+                <div className="flex items-center gap-1.5">
+                  {CATALOG_ITEMS.map((item, idx) => (
+                    <button
+                      key={item.id}
+                      onClick={() => rotateToIndex(idx)}
+                      className={`h-1.5 rounded-full transition-all cursor-pointer ${
+                        idx === activeIndex
+                          ? "w-7 bg-[#800000] dark:bg-red-500"
+                          : "w-1.5 bg-gray-300 dark:bg-zinc-700 hover:bg-gray-400"
+                      }`}
+                      aria-label={`Go to ${item.title}`}
+                    />
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+          </AnimatePresence>
+
+        </div>
+      </div>
+
+      {/* Circular Rotating Document Stage: Sweeps across the section and out of the screen */}
+      <div
+        className="absolute inset-0 w-full h-full pointer-events-auto cursor-grab active:cursor-grabbing select-none overflow-visible"
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerUp}
+      >
+        {/* Orbiting Document Cards */}
+        <div className="absolute inset-0 w-full h-full pointer-events-none">
+          {CATALOG_ITEMS.map((item, idx) => {
+            const step = (2 * Math.PI) / totalItems;
+            const angle = renderAngle + idx * step;
+
+            // Position along the circular orbit
+            const x = wheelGeometry.centerX + wheelGeometry.radius * Math.cos(angle);
+            const y = wheelGeometry.centerY + wheelGeometry.radius * Math.sin(angle);
+
+            // Depth calculation: angle = PI is focal station (closest to left column)
+            // depthFactor = 1.0 at FRONT_ANGLE (PI), 0.0 at 0 (far right off-screen)
+            const depthFactor = (1 - Math.cos(angle)) / 2;
+
+            const scale = (0.76 + 0.28 * depthFactor) * wheelGeometry.scale;
+            const opacity = 0.25 + 0.75 * depthFactor;
+            const zIndex = Math.round(10 + 40 * depthFactor);
+
+            // Subtle organic tilt
+            const subtleTilt = Math.sin(angle) * 2.5;
+
+            const isActive = idx === activeIndex;
+
+            return (
+              <div
+                key={item.id}
+                onClick={() => rotateToIndex(idx)}
+                className="absolute pointer-events-auto cursor-pointer select-none active:scale-[0.98] transition-transform duration-150 transform-gpu"
+                style={{
+                  left: `${x}px`,
+                  top: `${y}px`,
+                  transform: `translate(-50%, -50%) scale(${scale}) rotateZ(${subtleTilt}deg)`,
+                  opacity: opacity,
+                  zIndex: zIndex,
+                  filter: depthFactor < 0.2 ? "blur(1px)" : "none",
+                  transition: isDragging
+                    ? "none"
+                    : "box-shadow 250ms cubic-bezier(0.23, 1, 0.32, 1), filter 250ms ease-out",
+                }}
+              >
+                <DocumentCardPreview item={item} isActive={isActive} />
+              </div>
+            );
+          })}
         </div>
 
-        {/* Grid with Animated Presence */}
-        <motion.div 
-          layout
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8"
-        >
-          <AnimatePresence>
-            {filteredItems.map((item) => (
-              <motion.div
-                layout
-                initial={{ opacity: 0, scale: 0.96 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.96 }}
-                transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-                whileHover={{ y: -3 }}
-                key={item.id}
-                className="p-6 rounded-3xl border border-black/[0.06] dark:border-white/[0.08] bg-white dark:bg-zinc-900 shadow-[0_10px_30px_rgba(0,0,0,0.02)] hover:shadow-[0_20px_40px_rgba(0,0,0,0.06)] transition-all flex flex-col justify-between group"
-              >
-                <div>
-                  <div className="flex items-center justify-between mb-4">
-                    <span className="px-2.5 py-1 rounded-xl bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200 font-mono text-xs font-bold tracking-wider border border-gray-200/80 dark:border-zinc-700">
-                      {item.code}
-                    </span>
-                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wide border ${item.slaColor}`}>
-                      {item.sla}
-                    </span>
-                  </div>
+        {/* Interactive Instruction Floating Pill */}
+        <div className="absolute bottom-6 right-8 pointer-events-none hidden sm:flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/85 dark:bg-zinc-900/85 backdrop-blur-md border border-black/[0.06] dark:border-white/[0.08] text-[11px] font-mono text-gray-500 dark:text-zinc-400 shadow-md">
+          <i className="ph-bold ph-hand-pointing text-xs text-[#800000] dark:text-red-400" />
+          <span>Drag or click document to inspect</span>
+        </div>
+      </div>
 
-                  <h3 className="text-base font-bold text-gray-950 dark:text-white group-hover:text-[#800000] dark:group-hover:text-red-400 transition-colors">
-                    {item.title}
-                  </h3>
-                  <p className="text-xs text-gray-500 dark:text-zinc-400 mt-2 leading-relaxed font-normal">
-                    {item.description}
-                  </p>
-
-                  {/* Requirements List */}
-                  <div className="mt-5 pt-4 border-t border-gray-100 dark:border-zinc-800/80 text-[11px] text-gray-500 dark:text-zinc-400 space-y-1.5">
-                    <div className="font-semibold text-gray-700 dark:text-zinc-300">
-                      Filing Requirements:
-                    </div>
-                    {item.requirements.map((req, idx) => (
-                      <div key={idx} className="text-gray-500 dark:text-zinc-400 pl-1 leading-relaxed">
-                        • {req}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Card Bottom CTA */}
-                <div className="mt-6 pt-4 border-t border-gray-100 dark:border-zinc-800/80 flex items-center justify-between">
-                  <span className="text-[10px] font-mono font-medium text-gray-400 dark:text-zinc-500 uppercase tracking-wider">
-                    {item.client}
-                  </span>
-                  <BevelButton
-                    onClick={() => router.push("/login")}
-                    className="h-8 px-4 rounded-full text-xs font-semibold tracking-wide cursor-pointer"
-                  >
-                    Request
-                  </BevelButton>
-                </div>
-              </motion.div>
-            ))}
-          </AnimatePresence>
-        </motion.div>
-
-      </motion.div>
     </section>
   );
 }
-

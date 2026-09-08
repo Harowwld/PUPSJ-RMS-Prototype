@@ -20,7 +20,7 @@ const inter = localFont({
 
 export const metadata = {
   title: "PUP E-Manage",
-  description: "Records Management System",
+  description: "Records Keeping System",
   icons: {
     icon: [
       { url: "/assets/branding/black-icon.png", media: "(prefers-color-scheme: light)" },

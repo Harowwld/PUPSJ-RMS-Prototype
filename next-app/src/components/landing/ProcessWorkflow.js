@@ -1,10 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import BevelButton from "@/components/ui/bevel-button";
 import MorphButton from "@/components/ui/morph-button";
+
+if (typeof window !== "undefined") {
+  gsap.registerPlugin(ScrollTrigger);
+}
 
 const STEPS = [
   {
@@ -53,16 +59,65 @@ export default function ProcessWorkflow() {
   const router = useRouter();
   const [activeStep, setActiveStep] = useState(0);
 
+  const containerRef = useRef(null);
+  const cardRef = useRef(null);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    const card = cardRef.current;
+    if (!container || !card) return;
+
+    const ctx = gsap.context(() => {
+      const isMobile = window.innerWidth < 640;
+      gsap.fromTo(
+        card,
+        {
+          borderRadius: "0px",
+          scale: 1,
+          borderColor: "rgba(255, 255, 255, 0.04)",
+          boxShadow: "0 0 0 rgba(0, 0, 0, 0)",
+        },
+        {
+          borderRadius: isMobile ? "24px" : "40px",
+          scale: isMobile ? 0.975 : 0.955,
+          borderColor: "rgba(255, 255, 255, 0.12)",
+          boxShadow: "0 35px 80px -20px rgba(0, 0, 0, 0.55), 0 0 50px -10px rgba(128, 0, 0, 0.2)",
+          ease: "none",
+          scrollTrigger: {
+            trigger: container,
+            start: "top 85%",
+            end: "top 12%",
+            scrub: 0.8,
+            invalidateOnRefresh: true,
+          },
+        }
+      );
+    }, container);
+
+    return () => ctx.revert();
+  }, []);
+
   return (
     <section 
+      ref={containerRef}
       id="workflow" 
-      className="relative w-full bg-zinc-950 text-white font-inter select-none py-20 sm:py-28 lg:py-32 overflow-hidden border-t border-white/[0.06]"
+      className="relative w-full bg-white dark:bg-zinc-950 py-4 sm:py-8 lg:py-12 transition-colors overflow-hidden"
     >
-      {/* Background ambient lighting effects */}
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-[#800000]/15 rounded-full blur-[140px] pointer-events-none" />
-      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-amber-600/10 rounded-full blur-[160px] pointer-events-none" />
+      {/* Scroll-animated dark canvas card — begins full-bleed, smoothly morphs into a rounded framed showcase */}
+      <div 
+        ref={cardRef}
+        className="relative w-full bg-zinc-950 text-white font-inter select-none py-20 sm:py-28 lg:py-32 overflow-hidden border border-white/[0.06] transition-colors"
+        style={{
+          borderRadius: 0,
+          transformOrigin: "center top",
+          willChange: "transform, border-radius, box-shadow",
+        }}
+      >
+        {/* Background ambient lighting effects */}
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-[#800000]/15 rounded-full blur-[140px] pointer-events-none" />
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-amber-600/10 rounded-full blur-[160px] pointer-events-none" />
 
-      <div className="max-w-7xl mx-auto px-6 sm:px-10 lg:px-16 relative z-10">
+        <div className="max-w-7xl mx-auto px-6 sm:px-10 lg:px-16 relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-start">
           
           {/* =========================================================================
@@ -262,6 +317,7 @@ export default function ProcessWorkflow() {
           </div>
 
         </div>
+      </div>
       </div>
     </section>
   );

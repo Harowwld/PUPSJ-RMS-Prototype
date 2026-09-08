@@ -1,74 +1,142 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function FAQSection() {
+  const [openIndex, setOpenIndex] = useState(0);
+
   const faqs = [
     {
-      q: "Can an authorized representative claim my document on my behalf?",
-      a: "Yes. Your representative must present: (1) A signed Authorization Letter stating their full legal name, (2) A clear photocopy of your valid PUP Student ID or Government ID with signature, and (3) The original and photocopy of the representative's valid government-issued ID."
+      id: "how-to-request",
+      q: "How do I request my school records?",
+      a: "Log in with your Student Number, choose the document you need (like your TOR, grades, or diploma), and submit your request online. No paper forms needed."
     },
     {
-      q: "I am an alumnus and cannot recall my student number. Can I still request?",
-      a: "Yes. When submitting an alumni document request, you can leave the student number optional and provide your full birth/maiden name, course program, and years attended for archive file verification."
+      id: "forgot-student-number",
+      q: "I forgot my student number. Can I still request?",
+      a: "Yes! You can skip the student number and enter your full name, course, and years attended. Our staff will find your file in the records archive."
     },
     {
-      q: "How do I pay for document processing fees?",
-      a: "Payment is made upon document claiming at the PUP San Juan Campus Cashier or via authorized institutional payment channels indicated on your ticket status update."
+      id: "processing-time",
+      q: "How long does it take to process my request?",
+      a: "Regular certificates take 3 working days. Clearances take 7 days, and full transcripts (TOR) take up to 20 days. You will be notified when it is ready for pickup."
     },
     {
-      q: "How long are unclaimed documents kept before disposal?",
-      a: "In accordance with university records management guidelines, processed physical documents not claimed within ninety (90) calendar days from notification are subject to shredding and will require a new request."
+      id: "representative-pickup",
+      q: "Can someone else pick up my document for me?",
+      a: "Yes. They just need to bring: (1) an authorization letter signed by you, (2) a copy of your valid ID, and (3) their own valid ID."
     },
     {
-      q: "Can I request expedited processing for urgent employment or embassy deadlines?",
-      a: "Standard SLA applies to maintain archive retrieval and signature verification integrity. For pressing visa or employment requirements, indicate your deadline in the request notes and present proof during evaluation."
+      id: "cutoff-time",
+      q: "What time does daily evaluation cut off?",
+      a: "Cut-off is 3:00 PM on weekdays (Monday to Friday). Requests submitted after 3:00 PM are evaluated the next working morning."
+    },
+    {
+      id: "claiming-deadline",
+      q: "How long do I have to claim my document?",
+      a: "Please claim your document within 90 days after notification. Unclaimed documents are safely disposed of after 90 days to protect your privacy."
     }
   ];
 
+  const toggleFaq = (idx) => {
+    setOpenIndex((prev) => (prev === idx ? null : idx));
+  };
+
   return (
-    <section id="faq" className="max-w-7xl mx-auto px-4 sm:px-6 pb-24 w-full font-inter select-none">
+    <section 
+      id="faq" 
+      className="max-w-7xl mx-auto px-4 sm:px-6 pt-10 sm:pt-16 lg:pt-20 pb-24 sm:pb-32 w-full font-inter select-none scroll-mt-24"
+    >
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-60px" }}
         transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-        className="rounded-[2.5rem] bg-white dark:bg-zinc-900 border border-black/[0.06] dark:border-white/[0.08] shadow-[0_20px_50px_-15px_rgba(0,0,0,0.06)] overflow-hidden p-8 sm:p-14"
+        className="rounded-[2.5rem] bg-zinc-950 text-white border border-white/[0.08] shadow-[0_30px_70px_-20px_rgba(0,0,0,0.6)] overflow-hidden p-8 sm:p-14 relative"
       >
-        
-        <div className="text-center max-w-xl mx-auto mb-10">
-          <span className="text-xs font-bold uppercase tracking-widest text-[#800000] bg-red-50 dark:bg-red-950/40 px-3 py-1 rounded-full border border-red-100 dark:border-red-900/30">
-            Help Center
-          </span>
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-gray-950 dark:text-white tracking-tight mt-3">
+        {/* Ambient lighting effects */}
+        <div className="absolute top-0 right-1/4 w-96 h-96 bg-[#800000]/15 rounded-full blur-[140px] pointer-events-none" />
+        <div className="absolute bottom-0 left-1/4 w-96 h-96 bg-zinc-800/30 rounded-full blur-[140px] pointer-events-none" />
+
+        {/* Section Header */}
+        <div className="text-center max-w-2xl mx-auto mb-12 relative z-10">
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white tracking-tight leading-tight">
             Frequently Asked Questions
           </h2>
-          <p className="text-sm text-gray-500 dark:text-zinc-400 mt-2 leading-relaxed">
-            Essential procedures regarding authorized representatives, alumni records, and claiming deadlines.
+          <p className="text-xs sm:text-sm text-zinc-400 mt-3 leading-relaxed font-normal">
+            Quick answers on requesting, tracking, and claiming your official school records.
           </p>
         </div>
 
-        <div className="max-w-3xl mx-auto space-y-3.5">
-          {faqs.map((faq, idx) => (
-            <details
-              key={idx}
-              className="group rounded-2xl border border-gray-200/80 dark:border-zinc-800 bg-gray-50/50 dark:bg-zinc-800/40 p-5 transition-all open:bg-white open:dark:bg-zinc-800 open:shadow-xs"
-            >
-              <summary className="flex items-center justify-between cursor-pointer list-none text-sm font-bold text-gray-900 dark:text-zinc-100">
-                <span>{faq.q}</span>
-                <span className="text-gray-400 text-xs group-open:rotate-180 transition-transform shrink-0 ml-3">
-                  ▼
-                </span>
-              </summary>
-              <p className="mt-3.5 text-xs sm:text-sm text-gray-600 dark:text-zinc-400 leading-relaxed border-t border-gray-100 dark:border-zinc-700/60 pt-3.5 font-normal">
-                {faq.a}
-              </p>
-            </details>
-          ))}
+        {/* Scroll-Triggered Accordion List (revealing one by one) */}
+        <div className="max-w-3xl mx-auto space-y-3.5 relative z-10">
+          {faqs.map((faq, idx) => {
+            const isOpen = openIndex === idx;
+
+            return (
+              <motion.div
+                key={faq.id}
+                initial={{ opacity: 0, y: 24 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-30px" }}
+                transition={{
+                  duration: 0.5,
+                  delay: idx * 0.06,
+                  ease: [0.16, 1, 0.3, 1],
+                }}
+                className={`rounded-2xl border transition-all duration-200 overflow-hidden ${
+                  isOpen
+                    ? "bg-zinc-900 border-white/20 shadow-md shadow-black/40"
+                    : "bg-zinc-900/60 border-white/[0.08] hover:bg-zinc-900/90 hover:border-white/15"
+                }`}
+              >
+                <button
+                  type="button"
+                  onClick={() => toggleFaq(idx)}
+                  className="w-full flex items-center justify-between p-5 text-left cursor-pointer select-none transition-colors"
+                  aria-expanded={isOpen}
+                >
+                  <div className="flex items-center gap-3.5 pr-3">
+                    <span className="font-mono text-[11px] font-bold text-red-400 shrink-0">
+                      {String(idx + 1).padStart(2, "0")}
+                    </span>
+                    <span className="text-sm font-bold text-white tracking-tight leading-snug">
+                      {faq.q}
+                    </span>
+                  </div>
+
+                  <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 transition-transform duration-300 ${
+                    isOpen ? "bg-[#800000] text-white rotate-180" : "bg-white/10 text-zinc-400"
+                  }`}>
+                    <i className="ph-bold ph-caret-down text-xs" />
+                  </div>
+                </button>
+
+                <AnimatePresence initial={false}>
+                  {isOpen && (
+                    <motion.div
+                      key="content"
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                      className="overflow-hidden"
+                    >
+                      <div className="px-5 pb-5 pt-1 text-xs sm:text-sm text-zinc-300 leading-relaxed border-t border-white/[0.08] font-normal">
+                        <p className="pt-3.5">{faq.a}</p>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
+            );
+          })}
         </div>
 
       </motion.div>
     </section>
   );
 }
+
 

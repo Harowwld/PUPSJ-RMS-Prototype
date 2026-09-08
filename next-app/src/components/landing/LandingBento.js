@@ -1,27 +1,115 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+
+const PORTAL_DOCUMENTS = [
+  {
+    name: "Transcript of Records (TOR)",
+    purpose: "Employment / Job Application",
+    tag: "Selected",
+  },
+  {
+    name: "Certificate of Grades (COG)",
+    purpose: "Scholarship & Honor Evaluation",
+    tag: "Selected",
+  },
+  {
+    name: "Certificate of Registration",
+    purpose: "PRC Licensure Exam Filing",
+    tag: "Selected",
+  },
+  {
+    name: "Certified True Copy (CTC)",
+    purpose: "Government & Embassy Clearance",
+    tag: "Selected",
+  },
+];
+
+const SLA_CHIPS = [
+  {
+    days: "3 Days",
+    label: "Grades & Reg.",
+    bgClass: "bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200/60 dark:border-emerald-800/40 text-emerald-700 dark:text-emerald-300",
+    activeRing: "ring-2 ring-emerald-500/50 shadow-sm shadow-emerald-500/10 scale-[1.04]",
+  },
+  {
+    days: "7 Days",
+    label: "Clearances",
+    bgClass: "bg-amber-50 dark:bg-amber-950/40 border-amber-200/60 dark:border-amber-800/40 text-amber-700 dark:text-amber-300",
+    activeRing: "ring-2 ring-amber-500/50 shadow-sm shadow-amber-500/10 scale-[1.04]",
+  },
+  {
+    days: "20 Days",
+    label: "Transcripts",
+    bgClass: "bg-red-50 dark:bg-red-950/40 border-red-200/60 dark:border-red-800/40 text-red-700 dark:text-red-300",
+    activeRing: "ring-2 ring-red-500/50 shadow-sm shadow-red-500/10 scale-[1.04]",
+  },
+];
+
+const TAB_DATA = {
+  charter: [
+    { icon: "ph-shield-check", title: "No Unrecorded Delays", desc: "Timestamped upon receipt", bg: "bg-[#800000]" },
+    { icon: "ph-clock", title: "Clear Deadlines", desc: "Always on schedule", bg: "bg-zinc-800 dark:bg-zinc-700" },
+  ],
+  arta: [
+    { icon: "ph-scales", title: "Zero Red Tape", desc: "Strict RA 11032 compliance", bg: "bg-[#800000]" },
+    { icon: "ph-file-text", title: "Citizen's Charter", desc: "Published university SLA standards", bg: "bg-zinc-800 dark:bg-zinc-700" },
+  ],
+  audit: [
+    { icon: "ph-fingerprint", title: "Tamper-Proof Audit Trail", desc: "Every personnel action logged", bg: "bg-[#800000]" },
+    { icon: "ph-check-circle", title: "Live Tracking Updates", desc: "Real-time ticket progression", bg: "bg-zinc-800 dark:bg-zinc-700" },
+  ],
+};
 
 export default function LandingBento() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState("charter");
+  const [docIndex, setDocIndex] = useState(0);
+  const [activeChip, setActiveChip] = useState(0);
+  const [isHoveredTab, setIsHoveredTab] = useState(false);
+
+  // Auto-cycle documents on Card 1 every 3.8 seconds
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setDocIndex((prev) => (prev + 1) % PORTAL_DOCUMENTS.length);
+    }, 3800);
+    return () => clearInterval(timer);
+  }, []);
+
+  // Auto-cycle turnaround chips on Card 2 every 2.5 seconds
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setActiveChip((prev) => (prev + 1) % SLA_CHIPS.length);
+    }, 2500);
+    return () => clearInterval(timer);
+  }, []);
+
+  // Auto-cycle tabs on Card 5 every 3.6 seconds (paused on manual hover)
+  useEffect(() => {
+    if (isHoveredTab) return;
+    const tabs = ["charter", "arta", "audit"];
+    const timer = setInterval(() => {
+      setActiveTab((prev) => tabs[(tabs.indexOf(prev) + 1) % tabs.length]);
+    }, 3600);
+    return () => clearInterval(timer);
+  }, [isHoveredTab]);
 
   return (
     <section className="max-w-7xl mx-auto px-4 sm:px-6 pt-20 sm:pt-28 pb-20 w-full font-inter select-none">
       
       {/* =========================================================================
-          ASYMMETRIC EDITORIAL HEADER (Simple, Relatable & Clear)
+          ASYMMETRIC EDITORIAL HEADER (Slide from Left to Right Entrance)
           ========================================================================= */}
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: "-60px" }}
-        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-        className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-12 items-end mb-12 sm:mb-16"
-      >
-        <div className="lg:col-span-7">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-12 items-end mb-12 sm:mb-16 overflow-hidden">
+        <motion.div 
+          initial={{ opacity: 0, x: -70, filter: "blur(8px)" }}
+          whileInView={{ opacity: 1, x: 0, filter: "blur(0px)" }}
+          viewport={{ once: true, margin: "-70px" }}
+          transition={{ duration: 0.75, ease: [0.16, 1, 0.3, 1] }}
+          className="lg:col-span-7"
+        >
           <span className="text-[11px] font-mono font-bold uppercase tracking-widest text-[#800000] dark:text-red-400 block mb-3">
             Student &amp; Alumni Services
           </span>
@@ -29,14 +117,20 @@ export default function LandingBento() {
             Request, track, and<br />
             <span className="text-zinc-400 dark:text-zinc-500">claim your documents</span>
           </h2>
-        </div>
+        </motion.div>
 
-        <div className="lg:col-span-5">
+        <motion.div 
+          initial={{ opacity: 0, x: -45, filter: "blur(6px)" }}
+          whileInView={{ opacity: 1, x: 0, filter: "blur(0px)" }}
+          viewport={{ once: true, margin: "-70px" }}
+          transition={{ duration: 0.75, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
+          className="lg:col-span-5"
+        >
           <p className="text-sm sm:text-base text-zinc-600 dark:text-zinc-400 leading-relaxed font-normal max-w-lg">
             Submit your request online, track its progress in real time, and pick up your official stamped documents at the Registrar counter without waiting in long lines.
           </p>
-        </div>
-      </motion.div>
+        </motion.div>
+      </div>
 
       {/* =========================================================================
           BENTO CONTAINER (Reduced Padding Frame)
@@ -55,10 +149,10 @@ export default function LandingBento() {
           
           {/* CARD 1: Request Online in Minutes */}
           <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, y: 36, scale: 0.96, filter: "blur(6px)" }}
+            whileInView={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
             viewport={{ once: true, margin: "-60px" }}
-            transition={{ duration: 0.5, delay: 0.05, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: 0.65, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
             whileHover={{ y: -3 }}
             onClick={() => router.push("/login")}
             className="rounded-[1.75rem] bg-white dark:bg-zinc-900 border border-black/[0.06] dark:border-white/[0.08] p-6 sm:p-8 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.03)] flex flex-col justify-between cursor-pointer group"
@@ -84,26 +178,48 @@ export default function LandingBento() {
                     <i className="ph-bold ph-caret-up text-xs" />
                   </div>
 
-                  {/* Clean Form Selection Lines */}
-                  <div className="space-y-2 pt-1">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0" />
-                      <span className="text-xs font-medium text-zinc-800 dark:text-zinc-200">
-                        Transcript of Records (TOR)
-                      </span>
-                      <span className="text-[10px] font-mono text-zinc-400 ml-auto">Selected</span>
-                    </div>
-                    <div className="text-[11px] text-zinc-500 dark:text-zinc-400 pl-4.5">
-                      Purpose: Employment / Job Application
-                    </div>
+                  {/* Clean Form Selection Lines with AnimatePresence crossfade */}
+                  <div className="h-[46px] relative overflow-hidden pt-0.5">
+                    <AnimatePresence mode="wait">
+                      <motion.div
+                        key={docIndex}
+                        initial={{ opacity: 0, y: 5 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -5 }}
+                        transition={{ duration: 0.35, ease: "easeOut" }}
+                        className="space-y-1"
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="relative flex h-2 w-2 shrink-0">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+                          </span>
+                          <span className="text-xs font-medium text-zinc-800 dark:text-zinc-200 truncate">
+                            {PORTAL_DOCUMENTS[docIndex].name}
+                          </span>
+                          <span className="text-[10px] font-mono text-zinc-400 ml-auto shrink-0">
+                            {PORTAL_DOCUMENTS[docIndex].tag}
+                          </span>
+                        </div>
+                        <div className="text-[11px] text-zinc-500 dark:text-zinc-400 pl-4 truncate">
+                          Purpose: {PORTAL_DOCUMENTS[docIndex].purpose}
+                        </div>
+                      </motion.div>
+                    </AnimatePresence>
                   </div>
                 </div>
               </div>
 
-              {/* Status footer pill */}
+              {/* Status footer pill with live breathing dot */}
               <div className="mt-3 flex items-center justify-between text-[11px] font-mono text-zinc-400 pt-2 border-t border-black/[0.03] dark:border-white/[0.04]">
                 <span>Student: 2022-04912-SJ-0</span>
-                <span className="text-emerald-600 dark:text-emerald-400 font-semibold">Verified Student</span>
+                <span className="inline-flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-semibold">
+                  <span className="relative flex h-1.5 w-1.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />
+                  </span>
+                  Verified Student
+                </span>
               </div>
             </div>
 
@@ -120,10 +236,10 @@ export default function LandingBento() {
 
           {/* CARD 2: Know When It's Ready */}
           <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, y: 36, scale: 0.96, filter: "blur(6px)" }}
+            whileInView={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
             viewport={{ once: true, margin: "-60px" }}
-            transition={{ duration: 0.5, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: 0.65, delay: 0.24, ease: [0.16, 1, 0.3, 1] }}
             whileHover={{ y: -3 }}
             onClick={() => router.push("/login")}
             className="rounded-[1.75rem] bg-white dark:bg-zinc-900 border border-black/[0.06] dark:border-white/[0.08] p-6 sm:p-8 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.03)] flex flex-col justify-between cursor-pointer group"
@@ -131,11 +247,15 @@ export default function LandingBento() {
             {/* Simulated UI Area */}
             <div className="rounded-2xl bg-[#f8f9fa] dark:bg-zinc-800/40 p-5 border border-black/[0.03] dark:border-white/[0.04] min-h-[220px] flex flex-col justify-between">
               <div>
-                {/* Header Row */}
+                {/* Header Row with ticking icon */}
                 <div className="flex items-center gap-2.5 mb-3">
-                  <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-[#800000] to-rose-700 text-white flex items-center justify-center text-xs font-bold shadow-xs">
+                  <motion.div 
+                    animate={{ rotate: [0, 15, 0] }}
+                    transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
+                    className="w-6 h-6 rounded-lg bg-gradient-to-br from-[#800000] to-rose-700 text-white flex items-center justify-center text-xs font-bold shadow-xs shrink-0"
+                  >
                     <i className="ph-bold ph-clock text-xs" />
-                  </div>
+                  </motion.div>
                   <span className="text-xs font-bold text-[#1d1d1f] dark:text-white">
                     Clear Pick-Up Schedule
                   </span>
@@ -151,28 +271,38 @@ export default function LandingBento() {
                   Processing times depend on the type of document you requested:
                 </p>
 
-                {/* Simulated Input Search Box */}
+                {/* Simulated Input Search Box with live radar indicator */}
                 <div className="p-2.5 px-3 rounded-xl bg-white dark:bg-zinc-800 border border-black/[0.06] dark:border-white/[0.08] shadow-xs flex items-center gap-2 mb-2.5">
                   <i className="ph-bold ph-magnifying-glass text-zinc-400 text-xs" />
-                  <span className="text-xs text-zinc-700 dark:text-zinc-200 font-mono">
-                    Tracking #2026-SJ · Clearance Verified
+                  <span className="text-xs text-zinc-700 dark:text-zinc-200 font-mono flex items-center justify-between w-full">
+                    <span>Tracking #2026-SJ · Clearance Verified</span>
+                    <span className="relative flex h-2 w-2 shrink-0">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+                    </span>
                   </span>
                 </div>
 
-                {/* 3 Simple Pick-Up Chips */}
+                {/* 3 Simple Pick-Up Chips with sequential spotlight wave */}
                 <div className="grid grid-cols-3 gap-1.5 pt-1">
-                  <div className="p-1.5 px-2 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/60 dark:border-emerald-800/40 text-center">
-                    <div className="text-[10px] font-mono font-bold text-emerald-700 dark:text-emerald-300">3 Days</div>
-                    <div className="text-[9px] text-emerald-600/80 dark:text-emerald-400 truncate">Grades &amp; Reg.</div>
-                  </div>
-                  <div className="p-1.5 px-2 rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-200/60 dark:border-amber-800/40 text-center">
-                    <div className="text-[10px] font-mono font-bold text-amber-700 dark:text-amber-300">7 Days</div>
-                    <div className="text-[9px] text-amber-600/80 dark:text-amber-400 truncate">Clearances</div>
-                  </div>
-                  <div className="p-1.5 px-2 rounded-lg bg-red-50 dark:bg-red-950/40 border border-red-200/60 dark:border-red-800/40 text-center">
-                    <div className="text-[10px] font-mono font-bold text-red-700 dark:text-red-300">20 Days</div>
-                    <div className="text-[9px] text-red-600/80 dark:text-red-400 truncate">Transcripts</div>
-                  </div>
+                  {SLA_CHIPS.map((chip, idx) => {
+                    const isActive = activeChip === idx;
+                    return (
+                      <motion.div
+                        key={chip.days}
+                        animate={{
+                          scale: isActive ? 1.05 : 1,
+                        }}
+                        transition={{ duration: 0.35, ease: "easeOut" }}
+                        className={`p-1.5 px-2 rounded-lg border text-center transition-all duration-300 ${
+                          chip.bgClass
+                        } ${isActive ? chip.activeRing : "opacity-80"}`}
+                      >
+                        <div className="text-[10px] font-mono font-bold">{chip.days}</div>
+                        <div className="text-[9px] opacity-80 truncate">{chip.label}</div>
+                      </motion.div>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -204,47 +334,84 @@ export default function LandingBento() {
           
           {/* CARD 3: Direct from Campus Archives */}
           <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, y: 36, scale: 0.96, filter: "blur(6px)" }}
+            whileInView={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
             viewport={{ once: true, margin: "-60px" }}
-            transition={{ duration: 0.5, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: 0.65, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
             whileHover={{ y: -3 }}
             onClick={() => router.push("/login")}
             className="rounded-[1.75rem] bg-white dark:bg-zinc-900 border border-black/[0.06] dark:border-white/[0.08] p-6 sm:p-7 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.03)] flex flex-col justify-between cursor-pointer group"
           >
-            {/* Simulated UI Area: Archive Node Map */}
+            {/* Simulated UI Area: Archive Node Map with planetary orbit and pulse waves */}
             <div className="rounded-2xl bg-[#f8f9fa] dark:bg-zinc-800/40 p-4 border border-black/[0.03] dark:border-white/[0.04] min-h-[180px] flex items-center justify-center relative overflow-hidden">
+              
+              {/* Concentric Signal Radar Pulses from Central Node */}
+              <motion.div
+                animate={{ scale: [0.9, 2.3], opacity: [0.55, 0] }}
+                transition={{ repeat: Infinity, duration: 2.8, ease: "easeOut" }}
+                className="absolute w-12 h-12 rounded-2xl bg-[#800000]/25 pointer-events-none"
+              />
+              <motion.div
+                animate={{ scale: [0.9, 2.8], opacity: [0.35, 0] }}
+                transition={{ repeat: Infinity, duration: 2.8, delay: 0.9, ease: "easeOut" }}
+                className="absolute w-12 h-12 rounded-2xl bg-[#800000]/15 pointer-events-none"
+              />
+
               {/* Central Node */}
               <div className="relative z-10 flex flex-col items-center">
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#800000] to-red-800 text-white flex items-center justify-center shadow-md border-2 border-white dark:border-zinc-800">
+                <motion.div 
+                  animate={{ scale: [1, 1.05, 1] }}
+                  transition={{ repeat: Infinity, duration: 3.5, ease: "easeInOut" }}
+                  className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#800000] to-red-800 text-white flex items-center justify-center shadow-md border-2 border-white dark:border-zinc-800"
+                >
                   <i className="ph-bold ph-archive text-xl" />
-                </div>
+                </motion.div>
               </div>
 
               {/* Orbiting Physical Archive Nodes */}
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                {/* Node Top: Room 1 */}
-                <div className="absolute top-3 w-8 h-8 rounded-xl bg-white dark:bg-zinc-800 border border-black/[0.06] dark:border-white/[0.08] shadow-xs flex items-center justify-center text-zinc-600 dark:text-zinc-300 text-[10px] font-mono font-bold">
+                {/* Node Top: Room 1 (Gentle vertical float) */}
+                <motion.div 
+                  animate={{ y: [-3, 3, -3] }}
+                  transition={{ repeat: Infinity, duration: 3.6, ease: "easeInOut" }}
+                  className="absolute top-3 w-8 h-8 rounded-xl bg-white dark:bg-zinc-800 border border-black/[0.06] dark:border-white/[0.08] shadow-xs flex items-center justify-center text-zinc-600 dark:text-zinc-300 text-[10px] font-mono font-bold z-10"
+                >
                   R1
-                </div>
+                </motion.div>
 
-                {/* Node Left: Cabinet A */}
-                <div className="absolute left-4 w-8 h-8 rounded-xl bg-white dark:bg-zinc-800 border border-black/[0.06] dark:border-white/[0.08] shadow-xs flex items-center justify-center text-zinc-600 dark:text-zinc-300 text-[10px] font-mono font-bold">
+                {/* Node Left: Cabinet A (Gentle horizontal float) */}
+                <motion.div 
+                  animate={{ x: [-3, 3, -3] }}
+                  transition={{ repeat: Infinity, duration: 4.2, delay: 0.3, ease: "easeInOut" }}
+                  className="absolute left-4 w-8 h-8 rounded-xl bg-white dark:bg-zinc-800 border border-black/[0.06] dark:border-white/[0.08] shadow-xs flex items-center justify-center text-zinc-600 dark:text-zinc-300 text-[10px] font-mono font-bold z-10"
+                >
                   C-A
-                </div>
+                </motion.div>
 
-                {/* Node Right: Drawer 2 */}
-                <div className="absolute right-4 w-8 h-8 rounded-xl bg-white dark:bg-zinc-800 border border-black/[0.06] dark:border-white/[0.08] shadow-xs flex items-center justify-center text-zinc-600 dark:text-zinc-300 text-[10px] font-mono font-bold">
+                {/* Node Right: Drawer 2 (Gentle horizontal float) */}
+                <motion.div 
+                  animate={{ x: [3, -3, 3] }}
+                  transition={{ repeat: Infinity, duration: 3.8, delay: 0.6, ease: "easeInOut" }}
+                  className="absolute right-4 w-8 h-8 rounded-xl bg-white dark:bg-zinc-800 border border-black/[0.06] dark:border-white/[0.08] shadow-xs flex items-center justify-center text-zinc-600 dark:text-zinc-300 text-[10px] font-mono font-bold z-10"
+                >
                   D-2
-                </div>
+                </motion.div>
 
-                {/* Node Bottom: Dry Seal */}
-                <div className="absolute bottom-3 w-8 h-8 rounded-xl bg-white dark:bg-zinc-800 border border-black/[0.06] dark:border-white/[0.08] shadow-xs flex items-center justify-center text-emerald-600 dark:text-emerald-400 text-xs">
+                {/* Node Bottom: Dry Seal (Gentle vertical float + stamp pulse) */}
+                <motion.div 
+                  animate={{ y: [3, -3, 3], scale: [1, 1.08, 1] }}
+                  transition={{ repeat: Infinity, duration: 4.0, delay: 0.9, ease: "easeInOut" }}
+                  className="absolute bottom-3 w-8 h-8 rounded-xl bg-white dark:bg-zinc-800 border border-black/[0.06] dark:border-white/[0.08] shadow-xs flex items-center justify-center text-emerald-600 dark:text-emerald-400 text-xs z-10"
+                >
                   <i className="ph-bold ph-stamp" />
-                </div>
+                </motion.div>
 
-                {/* Circular subtle dashed orbit */}
-                <div className="w-36 h-36 rounded-full border border-dashed border-zinc-300 dark:border-zinc-700/60" />
+                {/* Circular subtle dashed orbit with infinite linear rotation */}
+                <motion.div 
+                  animate={{ rotate: 360 }}
+                  transition={{ repeat: Infinity, duration: 28, ease: "linear" }}
+                  className="w-36 h-36 rounded-full border border-dashed border-zinc-300 dark:border-zinc-700/60" 
+                />
               </div>
             </div>
 
@@ -261,39 +428,51 @@ export default function LandingBento() {
 
           {/* CARD 4: What You Need to Prepare */}
           <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, y: 36, scale: 0.96, filter: "blur(6px)" }}
+            whileInView={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
             viewport={{ once: true, margin: "-60px" }}
-            transition={{ duration: 0.5, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: 0.65, delay: 0.26, ease: [0.16, 1, 0.3, 1] }}
             whileHover={{ y: -3 }}
             onClick={() => router.push("/login")}
             className="rounded-[1.75rem] bg-white dark:bg-zinc-900 border border-black/[0.06] dark:border-white/[0.08] p-6 sm:p-7 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.03)] flex flex-col justify-between cursor-pointer group"
           >
-            {/* Simulated UI Area: Checklist Stack */}
+            {/* Simulated UI Area: Checklist Stack with layered paper float */}
             <div className="rounded-2xl bg-[#f8f9fa] dark:bg-zinc-800/40 p-4 border border-black/[0.03] dark:border-white/[0.04] min-h-[180px] flex flex-col justify-between">
               <div>
                 <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-400 block mb-2">
                   Checklist
                 </span>
 
-                {/* Primary Checklist Item */}
-                <div className="p-3 rounded-xl bg-white dark:bg-zinc-800 border border-black/[0.05] dark:border-white/[0.06] shadow-xs">
+                {/* Primary Checklist Item with floating depth */}
+                <motion.div 
+                  animate={{ y: [0, -3, 0] }}
+                  transition={{ repeat: Infinity, duration: 4.5, ease: "easeInOut" }}
+                  className="p-3 rounded-xl bg-white dark:bg-zinc-800 border border-black/[0.05] dark:border-white/[0.06] shadow-xs"
+                >
                   <div className="flex items-center gap-2 mb-1.5">
-                    <div className="w-5 h-5 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 flex items-center justify-center text-[10px]">
+                    <motion.div 
+                      animate={{ scale: [1, 1.15, 1] }}
+                      transition={{ repeat: Infinity, duration: 3, repeatDelay: 2, ease: "backOut" }}
+                      className="w-5 h-5 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 flex items-center justify-center text-[10px]"
+                    >
                       <i className="ph-bold ph-check" />
-                    </div>
+                    </motion.div>
                     <span className="text-xs font-bold text-[#1d1d1f] dark:text-white">Student Number &amp; Email</span>
                   </div>
                   <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-snug">
                     Your official student number and an active email for notifications.
                   </p>
-                </div>
+                </motion.div>
 
-                {/* Secondary Layer */}
-                <div className="mt-2 p-2 px-3 rounded-xl bg-white/60 dark:bg-zinc-800/60 border border-black/[0.03] dark:border-white/[0.04] flex items-center justify-between text-[11px] text-zinc-500 dark:text-zinc-400">
+                {/* Secondary Layer with subtle offset float */}
+                <motion.div 
+                  animate={{ y: [0, 2, 0] }}
+                  transition={{ repeat: Infinity, duration: 4.5, delay: 0.4, ease: "easeInOut" }}
+                  className="mt-2 p-2 px-3 rounded-xl bg-white/60 dark:bg-zinc-800/60 border border-black/[0.03] dark:border-white/[0.04] flex items-center justify-between text-[11px] text-zinc-500 dark:text-zinc-400"
+                >
                   <span>Campus Clearance Stub</span>
                   <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 font-semibold">Required for TOR</span>
-                </div>
+                </motion.div>
               </div>
 
               <div className="text-[10px] font-mono text-zinc-400 pt-1">
@@ -314,18 +493,22 @@ export default function LandingBento() {
 
           {/* CARD 5: Protected by Law (RA 11032) */}
           <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, y: 36, scale: 0.96, filter: "blur(6px)" }}
+            whileInView={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
             viewport={{ once: true, margin: "-60px" }}
-            transition={{ duration: 0.5, delay: 0.25, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: 0.65, delay: 0.42, ease: [0.16, 1, 0.3, 1] }}
             whileHover={{ y: -3 }}
             onClick={() => router.push("/login")}
             className="rounded-[1.75rem] bg-white dark:bg-zinc-900 border border-black/[0.06] dark:border-white/[0.08] p-6 sm:p-7 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.03)] flex flex-col justify-between cursor-pointer group"
           >
-            {/* Simulated UI Area: Tabs + Safeguard Cards */}
-            <div className="rounded-2xl bg-[#f8f9fa] dark:bg-zinc-800/40 p-4 border border-black/[0.03] dark:border-white/[0.04] min-h-[180px] flex flex-col justify-between">
+            {/* Simulated UI Area: Tabs + Safeguard Cards with animated layoutId pill */}
+            <div 
+              onMouseEnter={() => setIsHoveredTab(true)}
+              onMouseLeave={() => setIsHoveredTab(false)}
+              className="rounded-2xl bg-[#f8f9fa] dark:bg-zinc-800/40 p-4 border border-black/[0.03] dark:border-white/[0.04] min-h-[180px] flex flex-col justify-between"
+            >
               <div>
-                {/* Simple Segmented Tab Bar */}
+                {/* Simple Segmented Tab Bar with layoutId animated pill */}
                 <div className="flex items-center gap-1 p-1 rounded-xl bg-white dark:bg-zinc-800 border border-black/[0.05] dark:border-white/[0.06] mb-3 shadow-2xs">
                   <button
                     type="button"
@@ -333,13 +516,20 @@ export default function LandingBento() {
                       e.stopPropagation();
                       setActiveTab("charter");
                     }}
-                    className={`flex-1 py-1 rounded-lg text-[10px] font-semibold transition-all ${
+                    className={`relative flex-1 py-1 rounded-lg text-[10px] font-semibold transition-colors duration-200 ${
                       activeTab === "charter"
-                        ? "bg-[#800000] text-white shadow-xs"
+                        ? "text-white"
                         : "text-zinc-500 hover:text-zinc-900 dark:hover:text-white"
                     }`}
                   >
-                    Promise
+                    {activeTab === "charter" && (
+                      <motion.div
+                        layoutId="bentoTabPill"
+                        className="absolute inset-0 bg-[#800000] rounded-lg shadow-xs"
+                        transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                      />
+                    )}
+                    <span className="relative z-10">Promise</span>
                   </button>
                   <button
                     type="button"
@@ -347,14 +537,23 @@ export default function LandingBento() {
                       e.stopPropagation();
                       setActiveTab("arta");
                     }}
-                    className={`flex-1 py-1 rounded-lg text-[10px] font-semibold transition-all flex items-center justify-center gap-1 ${
+                    className={`relative flex-1 py-1 rounded-lg text-[10px] font-semibold transition-colors duration-200 flex items-center justify-center gap-1 ${
                       activeTab === "arta"
-                        ? "bg-[#800000] text-white shadow-xs"
+                        ? "text-white"
                         : "text-zinc-500 hover:text-zinc-900 dark:hover:text-white"
                     }`}
                   >
-                    <i className="ph-bold ph-scales text-[10px]" />
-                    <span>RA 11032</span>
+                    {activeTab === "arta" && (
+                      <motion.div
+                        layoutId="bentoTabPill"
+                        className="absolute inset-0 bg-[#800000] rounded-lg shadow-xs"
+                        transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                      />
+                    )}
+                    <span className="relative z-10 flex items-center gap-1">
+                      <i className="ph-bold ph-scales text-[10px]" />
+                      <span>RA 11032</span>
+                    </span>
                   </button>
                   <button
                     type="button"
@@ -362,37 +561,54 @@ export default function LandingBento() {
                       e.stopPropagation();
                       setActiveTab("audit");
                     }}
-                    className={`flex-1 py-1 rounded-lg text-[10px] font-semibold transition-all ${
+                    className={`relative flex-1 py-1 rounded-lg text-[10px] font-semibold transition-colors duration-200 ${
                       activeTab === "audit"
-                        ? "bg-[#800000] text-white shadow-xs"
+                        ? "text-white"
                         : "text-zinc-500 hover:text-zinc-900 dark:hover:text-white"
                     }`}
                   >
-                    Tracking
+                    {activeTab === "audit" && (
+                      <motion.div
+                        layoutId="bentoTabPill"
+                        className="absolute inset-0 bg-[#800000] rounded-lg shadow-xs"
+                        transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                      />
+                    )}
+                    <span className="relative z-10">Tracking</span>
                   </button>
                 </div>
 
-                {/* Visual Status Cards */}
-                <div className="space-y-2 pt-1">
-                  <div className="p-2.5 rounded-xl bg-white dark:bg-zinc-800 border border-black/[0.04] dark:border-white/[0.06] flex items-center gap-2.5 shadow-xs">
-                    <div className="w-8 h-8 rounded-lg bg-[#800000] text-white flex items-center justify-center text-xs shrink-0 font-bold">
-                      <i className="ph-bold ph-shield-check" />
-                    </div>
-                    <div>
-                      <div className="text-xs font-bold text-[#1d1d1f] dark:text-white">No Unrecorded Delays</div>
-                      <div className="text-[10px] text-zinc-500 dark:text-zinc-400">Timestamped upon receipt</div>
-                    </div>
-                  </div>
-
-                  <div className="p-2.5 rounded-xl bg-white dark:bg-zinc-800 border border-black/[0.04] dark:border-white/[0.06] flex items-center gap-2.5 shadow-xs">
-                    <div className="w-8 h-8 rounded-lg bg-zinc-800 dark:bg-zinc-700 text-white flex items-center justify-center text-xs shrink-0 font-bold">
-                      <i className="ph-bold ph-clock" />
-                    </div>
-                    <div>
-                      <div className="text-xs font-bold text-[#1d1d1f] dark:text-white">Clear Deadlines</div>
-                      <div className="text-[10px] text-zinc-500 dark:text-zinc-400">Always on schedule</div>
-                    </div>
-                  </div>
+                {/* Dynamic Visual Status Cards with AnimatePresence */}
+                <div className="h-[96px] relative overflow-hidden">
+                  <AnimatePresence mode="wait">
+                    <motion.div
+                      key={activeTab}
+                      initial={{ opacity: 0, y: 5 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -5 }}
+                      transition={{ duration: 0.3, ease: "easeOut" }}
+                      className="space-y-2"
+                    >
+                      {TAB_DATA[activeTab]?.map((item, idx) => (
+                        <div
+                          key={idx}
+                          className="p-2.5 rounded-xl bg-white dark:bg-zinc-800 border border-black/[0.04] dark:border-white/[0.06] flex items-center gap-2.5 shadow-xs"
+                        >
+                          <div className={`w-8 h-8 rounded-lg ${item.bg} text-white flex items-center justify-center text-xs shrink-0 font-bold`}>
+                            <i className={`ph-bold ${item.icon}`} />
+                          </div>
+                          <div className="overflow-hidden">
+                            <div className="text-xs font-bold text-[#1d1d1f] dark:text-white truncate">
+                              {item.title}
+                            </div>
+                            <div className="text-[10px] text-zinc-500 dark:text-zinc-400 truncate">
+                              {item.desc}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </motion.div>
+                  </AnimatePresence>
                 </div>
               </div>
 

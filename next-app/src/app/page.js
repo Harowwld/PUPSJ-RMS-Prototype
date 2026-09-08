@@ -5,7 +5,6 @@ import LandingHero from "@/components/landing/LandingHero";
 import LandingBento from "@/components/landing/LandingBento";
 import DocumentCatalog from "@/components/landing/DocumentCatalog";
 import ProcessWorkflow from "@/components/landing/ProcessWorkflow";
-import OfficeDirectory from "@/components/landing/OfficeDirectory";
 import FAQSection from "@/components/landing/FAQSection";
 import LandingFooter from "@/components/landing/LandingFooter";
 
@@ -27,12 +26,11 @@ export default function LandingPage() {
       <main className="relative z-10 flex-1 w-full max-w-full overflow-hidden">
         <div className="w-full bg-zinc-950">
           <LandingHero />
-          <ProcessWorkflow />
         </div>
         <div className="w-full bg-white dark:bg-zinc-950">
           <LandingBento />
+          <ProcessWorkflow />
           <DocumentCatalog />
-          <OfficeDirectory />
           <FAQSection />
         </div>
       </main>
