@@ -18,16 +18,16 @@ export default function LandingFooter() {
           {/* Column 1: Campus Identity & Physical Archive Location */}
           <div className="space-y-4">
             <div className="flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-full bg-zinc-900 p-1 flex items-center justify-center border border-white/[0.08]">
+              <div className="w-6 h-6 flex items-center justify-center shrink-0">
                 <Image 
                   src="/assets/branding/white-icon.png" 
                   alt="eManage Logo" 
-                  width={20}
-                  height={20}
+                  width={24}
+                  height={24}
                   className="w-full h-full object-contain"
                 />
               </div>
-              <span className="font-bold text-base text-white tracking-tight">
+              <span className="font-bold text-xl text-white tracking-tight">
                 eManage
               </span>
             </div>

@@ -214,63 +214,60 @@ export default function LandingHero() {
               ref={ctaClusterRef}
               className="flex flex-wrap items-center justify-start gap-4"
             >
-            <BevelButton
-              onClick={() => router.push("/login")}
-              className="h-13 px-9 rounded-full font-semibold text-xs tracking-wide shadow-[0_10px_30px_rgba(128,0,0,0.35)] cursor-pointer"
-            >
-              Request Document
-            </BevelButton>
-
-            <MorphButton
-              variant="secondary"
-              onClick={() => {
-                const el = document.getElementById("catalog");
-                if (el) {
-                  const yOffset = -76;
-                  const y = el.getBoundingClientRect().top + window.pageYOffset + yOffset;
-                  window.scrollTo({ top: y, behavior: "smooth" });
-                }
-              }}
-              className="h-13 px-7 rounded-full text-xs font-medium backdrop-blur-xl border border-white/20 active:scale-[0.98] cursor-pointer"
-            >
-              <span>Explore Services (8)</span>
-              <span className="opacity-70 text-[11px]">↓</span>
-            </MorphButton>
+              <Button
+                onClick={() => router.push("/login")}
+                className="h-11 px-7 rounded-full! btn-brand-red text-[13px] font-medium text-white active:scale-95 transition-all flex items-center justify-center cursor-pointer"
+              >
+                Request Document
+              </Button>
             </div>
           </div>
         </div>
 
         {/* BOTTOM ACCREDITATION BANNER & CAMPUS PHOTO CONTROLS */}
-        <div className="relative z-10 border-t border-white/10 pt-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-white/60">
-          <div className="flex items-center gap-2">
-            <span className="w-1.5 h-1.5 rounded-full bg-red-400" />
-            <span>223 Ortega Street, corner A. Mabini Street, Barangay Addition Hills, San Juan City</span>
+        <div className="relative z-10 border-t border-white/10 pt-4 grid grid-cols-1 md:grid-cols-3 items-center gap-3 text-xs text-white/60">
+          {/* Left: Campus address */}
+          <div className="flex items-center gap-2 justify-start">
+            <span className="truncate">223 Ortega St. cor. A. Mabini St., Addition Hills, San Juan City</span>
           </div>
 
-          {/* Apple-styled Campus Photo Switcher Pill */}
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 bg-black/40 backdrop-blur-md px-3 py-1 rounded-full border border-white/15 text-[10px] font-mono text-white/75">
-              <span>{CAMPUS_SLIDES[currentSlide].label}</span>
-              <div className="flex items-center gap-1.5 ml-1">
-                {CAMPUS_SLIDES.map((_, idx) => (
+          {/* Center: Apple-styled Campus Photo Pagination */}
+          <div className="flex items-center justify-center">
+            <div className="flex items-center gap-2">
+              {CAMPUS_SLIDES.map((_, idx) => {
+                const isActive = idx === currentSlide;
+                return (
                   <button
                     key={idx}
                     type="button"
                     onClick={() => setCurrentSlide(idx)}
                     aria-label={`View campus photo ${idx + 1}`}
-                    className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${
-                      idx === currentSlide ? "w-5 bg-white shadow-xs" : "w-1.5 bg-white/30 hover:bg-white/60"
+                    className={`relative h-2 rounded-full transition-all duration-300 cursor-pointer overflow-hidden ${
+                      isActive 
+                        ? "w-7 bg-white/40" 
+                        : "w-2 bg-white/30 hover:bg-white/60"
                     }`}
-                  />
-                ))}
-              </div>
+                  >
+                    {isActive && (
+                      <div 
+                        key={currentSlide}
+                        className="absolute inset-y-0 left-0 bg-white rounded-full"
+                        style={{
+                          animation: "carouselProgress 5.5s linear forwards",
+                        }}
+                      />
+                    )}
+                  </button>
+                );
+              })}
             </div>
+          </div>
 
-            <div className="hidden sm:flex items-center gap-3 text-[11px] font-mono text-white/50">
-              <span>REGISTRAR: 8:00 AM – 5:00 PM</span>
-              <span className="text-white/30">·</span>
-              <span>MON – FRI</span>
-            </div>
+          {/* Right: Registrar hours */}
+          <div className="hidden md:flex items-center justify-end gap-3 text-[11px] font-mono text-white/50">
+            <span>REGISTRAR: 8:00 AM – 5:00 PM</span>
+            <span className="text-white/30">·</span>
+            <span>MON – FRI</span>
           </div>
         </div>
 

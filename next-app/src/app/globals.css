@@ -209,8 +209,16 @@ input:-webkit-autofill:active {
 
 
 
-html, body {
+html {
   overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior-y: none;
+  background-color: #09090b;
+}
+
+body {
+  overflow-x: hidden;
+  background-color: #09090b;
   scrollbar-color: rgba(156, 163, 175, 0.4) transparent;
 }
 
@@ -1152,5 +1160,14 @@ html {
 @keyframes bevel-button-spin {
   to {
     --bevel-angle: 540deg;
+  }
+}
+
+@keyframes carouselProgress {
+  0% {
+    width: 8px;
+  }
+  100% {
+    width: 100%;
   }
 }

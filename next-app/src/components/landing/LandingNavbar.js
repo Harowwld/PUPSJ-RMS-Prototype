@@ -131,18 +131,18 @@ export default function LandingNavbar() {
           >
             {/* Top Bar Row */}
             <div className={`w-full flex items-center justify-between ${
-              scrolled || mobileMenuOpen ? "h-[58px]" : "h-[64px]"
+              scrolled || mobileMenuOpen ? "h-[46px]" : "h-[50px]"
             }`}>
               {/* BRAND LOGO - Smoothly scrolls back to top */}
               <a 
                 href="#" 
                 onClick={scrollToTop}
-                className="flex items-center gap-2.5 group cursor-pointer shrink-0"
+                className="flex items-center gap-2.5 cursor-pointer shrink-0"
                 aria-label="Back to top"
               >
-                <div className="w-8 h-8 rounded-full bg-white dark:bg-zinc-800 p-1 flex items-center justify-center border border-black/[0.06] shadow-2xs group-hover:scale-105 transition-transform">
+                <div className="w-8 h-8 flex items-center justify-center shrink-0">
                   <img 
-                    src="/assets/branding/black-icon.png" 
+                    src={scrolled || mobileMenuOpen ? "/assets/branding/black-icon.png" : "/assets/branding/white-icon.png"}
                     alt="eManage Logo" 
                     className="w-full h-full object-contain dark:hidden"
                   />
@@ -152,7 +152,7 @@ export default function LandingNavbar() {
                     className="w-full h-full object-contain hidden dark:block"
                   />
                 </div>
-                <span className={`font-bold text-[18px] tracking-tight leading-none transition-colors duration-500 ${
+                <span className={`font-bold text-[22px] tracking-tight leading-none transition-colors duration-500 ${
                   scrolled || mobileMenuOpen ? "text-gray-950 dark:text-white" : "text-white"
                 }`}>
                   eManage
@@ -166,10 +166,10 @@ export default function LandingNavbar() {
                 <button 
                   type="button"
                   onClick={(e) => scrollToSection(e, "catalog")}
-                  className={`px-3.5 py-1.5 rounded-full transition-colors cursor-pointer ${
+                  className={`px-3.5 py-1.5 rounded-full transition-colors cursor-pointer bg-transparent hover:bg-transparent ${
                     scrolled 
-                      ? "hover:text-gray-950 hover:bg-black/[0.04] dark:hover:text-white dark:hover:bg-white/[0.06]" 
-                      : "hover:text-white hover:bg-white/15"
+                      ? "hover:text-gray-950 dark:hover:text-white" 
+                      : "hover:text-white"
                   }`}
                 >
                   Services
@@ -177,10 +177,10 @@ export default function LandingNavbar() {
                 <button 
                   type="button"
                   onClick={(e) => scrollToSection(e, "workflow")}
-                  className={`px-3.5 py-1.5 rounded-full transition-colors cursor-pointer ${
+                  className={`px-3.5 py-1.5 rounded-full transition-colors cursor-pointer bg-transparent hover:bg-transparent ${
                     scrolled 
-                      ? "hover:text-gray-950 hover:bg-black/[0.04] dark:hover:text-white dark:hover:bg-white/[0.06]" 
-                      : "hover:text-white hover:bg-white/15"
+                      ? "hover:text-gray-950 dark:hover:text-white" 
+                      : "hover:text-white"
                   }`}
                 >
                   How It Works
@@ -188,10 +188,10 @@ export default function LandingNavbar() {
                 <button 
                   type="button"
                   onClick={(e) => scrollToSection(e, "office")}
-                  className={`px-3.5 py-1.5 rounded-full transition-colors cursor-pointer ${
+                  className={`px-3.5 py-1.5 rounded-full transition-colors cursor-pointer bg-transparent hover:bg-transparent ${
                     scrolled 
-                      ? "hover:text-gray-950 hover:bg-black/[0.04] dark:hover:text-white dark:hover:bg-white/[0.06]" 
-                      : "hover:text-white hover:bg-white/15"
+                      ? "hover:text-gray-950 dark:hover:text-white" 
+                      : "hover:text-white"
                   }`}
                 >
                   Office Hours
@@ -199,10 +199,10 @@ export default function LandingNavbar() {
                 <button 
                   type="button"
                   onClick={(e) => scrollToSection(e, "faq")}
-                  className={`px-3.5 py-1.5 rounded-full transition-colors cursor-pointer ${
+                  className={`px-3.5 py-1.5 rounded-full transition-colors cursor-pointer bg-transparent hover:bg-transparent ${
                     scrolled 
-                      ? "hover:text-gray-950 hover:bg-black/[0.04] dark:hover:text-white dark:hover:bg-white/[0.06]" 
-                      : "hover:text-white hover:bg-white/15"
+                      ? "hover:text-gray-950 dark:hover:text-white" 
+                      : "hover:text-white"
                   }`}
                 >
                   FAQ
@@ -212,32 +212,24 @@ export default function LandingNavbar() {
               {/* RIGHT ACTION BUTTONS */}
               <div className="flex items-center gap-2 shrink-0">
                 {sessionUser ? (
-                  <BevelButton
+                  <Button
                     onClick={() => router.push(getDashboardPath())}
-                    className="h-9 px-4 rounded-full text-xs font-semibold tracking-wide cursor-pointer"
+                    className="h-9 px-4 rounded-full btn-brand-red text-xs font-semibold tracking-wide cursor-pointer text-white active:scale-95 transition-all"
                   >
                     Dashboard ↗
-                  </BevelButton>
+                  </Button>
                 ) : (
-                  <>
-                    <Button
-                      variant="ghost"
-                      onClick={() => router.push("/login")}
-                      className={`h-9 px-3.5 rounded-full text-xs font-semibold transition-colors duration-500 cursor-pointer ${
-                        scrolled || mobileMenuOpen
-                          ? "text-gray-700 dark:text-zinc-200 hover:bg-black/[0.04] dark:hover:bg-white/[0.06]" 
-                          : "text-white/90 hover:text-white hover:bg-white/15"
-                      }`}
-                    >
-                      Sign In
-                    </Button>
-                    <BevelButton
-                      onClick={() => router.push("/login")}
-                      className="h-9 px-4 rounded-full text-xs font-semibold tracking-wide cursor-pointer"
-                    >
-                      Request
-                    </BevelButton>
-                  </>
+                  <button
+                    type="button"
+                    onClick={() => router.push("/login")}
+                    className={`h-9 px-3 rounded-full text-[13px] font-medium transition-colors duration-300 cursor-pointer bg-transparent hover:bg-transparent ${
+                      scrolled || mobileMenuOpen
+                        ? "text-gray-700 dark:text-zinc-200 hover:text-gray-950 dark:hover:text-white" 
+                        : "text-white/90 hover:text-white"
+                    }`}
+                  >
+                    Sign In
+                  </button>
                 )}
 
                 {/* Mobile Sidebar Trigger */}
