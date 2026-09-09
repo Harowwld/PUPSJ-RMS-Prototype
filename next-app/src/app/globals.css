@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "../../public/assets/fonts/inter/inter.css";
+@import "../../public/assets/fonts/geist/geist.css";
 @plugin "tailwindcss-animate";
 
 @custom-variant dark (&:is(.dark *));
@@ -7,9 +8,9 @@
 @theme {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-inter), "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-heading: var(--font-inter), "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-inter: var(--font-inter), "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-sans: var(--font-geist), Geist, "Geist Fallback", var(--font-inter), Inter, Helvetica, sans-serif;
+  --font-heading: var(--font-geist), Geist, "Geist Fallback", var(--font-inter), Inter, Helvetica, sans-serif;
+  --font-inter: var(--font-geist), Geist, "Geist Fallback", var(--font-inter), Inter, Helvetica, sans-serif;
   --radius-brand: var(--radius);
 
   --color-pup-maroon: var(--brand-accent, #ad2f2f);
@@ -174,7 +175,7 @@
   }
 
   code, kbd, samp, pre, .font-mono {
-    font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif !important;
+    font-family: var(--font-geist), Geist, "Geist Fallback", var(--font-inter), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
   }
 }
 
@@ -187,12 +188,12 @@
     @apply font-sans;
   }
 
-  /* Inter is the only application typeface. Keep icon font faces on their
+  /* Geist is the primary application typeface. Keep icon font faces on their
      dedicated elements so Phosphor icons continue to render correctly. */
   *:not(i):not([class*="ph-"]),
   *:not(i):not([class*="ph-"])::before,
   *:not(i):not([class*="ph-"])::after {
-    font-family: var(--font-inter), "Inter", -apple-system, BlinkMacSystemFont, sans-serif !important;
+    font-family: var(--font-geist), Geist, "Geist Fallback", var(--font-inter), Inter, Helvetica, sans-serif !important;
   }
 
 
@@ -209,16 +210,8 @@ input:-webkit-autofill:active {
 
 
 
-html {
+html, body {
   overflow-x: hidden;
-  overflow-y: auto;
-  overscroll-behavior-y: none;
-  background-color: #09090b;
-}
-
-body {
-  overflow-x: hidden;
-  background-color: #09090b;
   scrollbar-color: rgba(156, 163, 175, 0.4) transparent;
 }
 
@@ -967,6 +960,202 @@ i[data-lucide-translated="true"]::after {
   border: 1px solid rgba(255, 255, 255, 0.18);
   box-shadow: 
     inset 0 1px 0 0 rgba(255, 255, 255, 0.12);
+}
+
+/* ─── Apple Liquid Glass Navbar ─────────────────────────────────────────
+   Color-reactive frosted glass that picks up and tints based on background
+   content. High saturate() lets underlying hues bleed through the frost,
+   while inner refraction borders and specular highlights simulate real glass.
+   ──────────────────────────────────────────────────────────────────────── */
+
+.navbar-liquid-glass {
+  /* Very low white tint so background color bleeds through naturally */
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.52) 0%,
+    rgba(255, 255, 255, 0.38) 100%
+  );
+  /* Heavy saturation pumps the underlying colors through the frost */
+  backdrop-filter: blur(28px) saturate(200%) brightness(1.05) contrast(0.92);
+  -webkit-backdrop-filter: blur(28px) saturate(200%) brightness(1.05) contrast(0.92);
+  /* Inner refraction border — the key to realistic glass edges */
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  /* Multi-layer shadows: top specular highlight + bottom rim + outer depth */
+  box-shadow:
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.7),
+    inset 0 -0.5px 1px 0 rgba(0, 0, 0, 0.04),
+    0 8px 32px -4px rgba(0, 0, 0, 0.08),
+    0 2px 8px -2px rgba(0, 0, 0, 0.04);
+  /* GPU acceleration for smooth scroll performance */
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  will-change: backdrop-filter;
+}
+
+.dark .navbar-liquid-glass {
+  background: linear-gradient(
+    180deg,
+    rgba(24, 24, 27, 0.55) 0%,
+    rgba(24, 24, 27, 0.40) 100%
+  );
+  backdrop-filter: blur(28px) saturate(180%) brightness(0.95);
+  -webkit-backdrop-filter: blur(28px) saturate(180%) brightness(0.95);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow:
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.12),
+    inset 0 -0.5px 1px 0 rgba(0, 0, 0, 0.2),
+    0 8px 32px -4px rgba(0, 0, 0, 0.35),
+    0 2px 8px -2px rgba(0, 0, 0, 0.15);
+}
+
+/* Specular sheen — directional light reflection moving across the glass surface */
+.navbar-glass-shell {
+  position: relative;
+  isolation: isolate;
+}
+
+.navbar-liquid-glass::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  /* Diagonal specular highlight simulating environmental light */
+  background: linear-gradient(
+    115deg,
+    rgba(255, 255, 255, 0.25) 0%,
+    rgba(255, 255, 255, 0.08) 25%,
+    transparent 50%,
+    rgba(255, 255, 255, 0.04) 75%,
+    rgba(255, 255, 255, 0.15) 100%
+  );
+  mix-blend-mode: overlay;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.dark .navbar-liquid-glass::after {
+  background: linear-gradient(
+    115deg,
+    rgba(255, 255, 255, 0.10) 0%,
+    rgba(255, 255, 255, 0.03) 25%,
+    transparent 50%,
+    rgba(255, 255, 255, 0.02) 75%,
+    rgba(255, 255, 255, 0.06) 100%
+  );
+}
+
+/* Reduced motion: tone down the glass complexity */
+@media (prefers-reduced-motion: reduce) {
+  .navbar-liquid-glass {
+    backdrop-filter: blur(16px) saturate(140%);
+    -webkit-backdrop-filter: blur(16px) saturate(140%);
+  }
+  .navbar-liquid-glass::after {
+    display: none;
+  }
+}
+
+/* ─── Reusable Dark Liquid Glass ────────────────────────────────────────
+   For elements floating on dark backgrounds with ambient colored lighting.
+   High saturation lets maroon/amber/zinc ambient glows bleed through.
+   Used by: workflow tags, step badges, FAQ rows, dark section CTAs.
+   ──────────────────────────────────────────────────────────────────────── */
+
+.liquid-glass-dark {
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.06) 0%,
+    rgba(255, 255, 255, 0.03) 100%
+  );
+  backdrop-filter: blur(20px) saturate(180%) brightness(1.08);
+  -webkit-backdrop-filter: blur(20px) saturate(180%) brightness(1.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow:
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.12),
+    inset 0 -0.5px 0 0 rgba(0, 0, 0, 0.15),
+    0 4px 16px -4px rgba(0, 0, 0, 0.2);
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+}
+
+/* Compact pill variant — lighter touch for small tags/badges */
+.liquid-glass-dark-pill {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(16px) saturate(170%);
+  -webkit-backdrop-filter: blur(16px) saturate(170%);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  box-shadow:
+    inset 0 0.5px 0 0 rgba(255, 255, 255, 0.10),
+    0 2px 8px -2px rgba(0, 0, 0, 0.15);
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+}
+
+/* Specular sheen for dark glass (shared ::after pseudo) */
+.liquid-glass-dark::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    120deg,
+    rgba(255, 255, 255, 0.08) 0%,
+    transparent 40%,
+    transparent 60%,
+    rgba(255, 255, 255, 0.04) 100%
+  );
+  mix-blend-mode: overlay;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* ─── Reusable Light Liquid Glass ───────────────────────────────────────
+   For elements floating on white/light backgrounds.
+   Subtler effect — emphasizes depth through frosted translucency.
+   Used by: bento node pills, filing requirements panel, catalog pill.
+   ──────────────────────────────────────────────────────────────────────── */
+
+.liquid-glass-light {
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.70) 0%,
+    rgba(255, 255, 255, 0.50) 100%
+  );
+  backdrop-filter: blur(16px) saturate(160%);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.80);
+  box-shadow:
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.90),
+    inset 0 -0.5px 0 0 rgba(0, 0, 0, 0.03),
+    0 4px 12px -4px rgba(0, 0, 0, 0.06);
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+}
+
+.dark .liquid-glass-light {
+  background: linear-gradient(
+    180deg,
+    rgba(39, 39, 42, 0.60) 0%,
+    rgba(39, 39, 42, 0.40) 100%
+  );
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  box-shadow:
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.08),
+    inset 0 -0.5px 0 0 rgba(0, 0, 0, 0.20),
+    0 4px 12px -4px rgba(0, 0, 0, 0.25);
+}
+
+/* Reduced motion: simplify all liquid glass effects */
+@media (prefers-reduced-motion: reduce) {
+  .liquid-glass-dark,
+  .liquid-glass-dark-pill,
+  .liquid-glass-light {
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+  .liquid-glass-dark::after {
+    display: none;
+  }
 }
 
 /* --- High-Performance Liquid Glass Styling --- */

@@ -14,7 +14,65 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { isSystemAdminRole, isAdminRole } from "@/lib/roleUtils";
+
+const DEMO_ACCOUNTS = [
+  {
+    role: "SuperAdmin",
+    title: "System Administrator",
+    department: "Institutional IT & Systems",
+    email: "superadmin@pup.local",
+    badge: "Global",
+    icon: "ph-shield-check",
+    accent: "text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800/80 border-slate-200/80 dark:border-slate-700",
+    badgeColor: "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300",
+  },
+  {
+    role: "Registrar Admin",
+    title: "Head Registrar Administrator",
+    department: "Academic Records & Approvals",
+    email: "admin.registrar@pup.local",
+    badge: "Registrar",
+    icon: "ph-identification-badge",
+    accent: "text-amber-800 dark:text-amber-200 bg-amber-50 dark:bg-amber-950/40 border-amber-200/80 dark:border-amber-900/60",
+    badgeColor: "bg-amber-100 dark:bg-amber-900/60 text-amber-700 dark:text-amber-300",
+  },
+  {
+    role: "Registrar Staff",
+    title: "Records Keeping Personnel",
+    department: "Archives, Scanning & Drawer Filing",
+    email: "staff.registrar@pup.local",
+    badge: "Records",
+    icon: "ph-folder",
+    accent: "text-orange-800 dark:text-orange-200 bg-orange-50 dark:bg-orange-950/40 border-orange-200/80 dark:border-orange-900/60",
+    badgeColor: "bg-orange-100 dark:bg-orange-900/60 text-orange-700 dark:text-orange-300",
+  },
+  {
+    role: "OSAS Admin",
+    title: "Student Affairs Administrator",
+    department: "Good Moral & Clearance Approvals",
+    email: "admin.osas@pup.local",
+    badge: "OSAS",
+    icon: "ph-users-three",
+    accent: "text-blue-800 dark:text-blue-200 bg-blue-50 dark:bg-blue-950/40 border-blue-200/80 dark:border-blue-900/60",
+    badgeColor: "bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300",
+  },
+  {
+    role: "Student",
+    title: "Undergraduate / Alumni",
+    department: "ODRS Online Document Requests",
+    email: "student@pup.local",
+    badge: "Student",
+    icon: "ph-graduation-cap",
+    accent: "text-emerald-800 dark:text-emerald-200 bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200/80 dark:border-emerald-900/60",
+    badgeColor: "bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300",
+  },
+];
 
 function formatRegistrarStudentName({ firstName, middleName, lastName }) {
   const first = String(firstName || "").trim().replace(/\s+/g, " ").toUpperCase();
@@ -39,6 +97,21 @@ export default function Home() {
   const [emailFocused, setEmailFocused] = useState(false);
   const [passwordFocused, setPasswordFocused] = useState(false);
   const passwordRef = useRef(null);
+  const [demoOpen, setDemoOpen] = useState(false);
+
+  const handleSelectDemoAccount = (acc) => {
+    setView("login");
+    setUsername(acc.email);
+    setPassword("pupstaff");
+    setLoginStep(2);
+    setEmailError("");
+    setPasswordError("");
+    setError("");
+    setDemoOpen(false);
+    toast.info(`Selected ${acc.role}`, {
+      description: `${acc.email} • Ready to sign in`,
+    });
+  };
 
   useEffect(() => {
     if (loginStep === 2) {
@@ -1029,42 +1102,101 @@ export default function Home() {
             )}
           </div>
 
-          {/* Demo Quick-Fill Bar */}
-          <div className="mt-3.5 w-full flex flex-col items-center gap-2 select-none animate-in fade-in duration-500 pb-12">
-            <div className="flex items-center gap-1.5 text-[11px] font-medium text-gray-500 dark:text-zinc-400">
-              <i className="ph-bold ph-lightning text-amber-500"></i>
-              <span>Demo Accounts (Password: <code className="font-mono bg-gray-200/70 dark:bg-zinc-800 px-1 py-0.5 rounded text-[10px] text-gray-700 dark:text-zinc-300">pupstaff</code>)</span>
-            </div>
-            <div className="flex flex-wrap justify-center gap-1.5 w-full">
-              {[
-                { label: "SuperAdmin", email: "superadmin@pup.local", badge: "Global", color: "hover:border-slate-800 hover:text-slate-900 dark:hover:text-white" },
-                { label: "Registrar Admin", email: "admin.registrar@pup.local", badge: "Registrar", color: "hover:border-orange-500 hover:text-orange-600 dark:hover:text-orange-400" },
-                { label: "Registrar Staff", email: "staff.registrar@pup.local", badge: "Records", color: "hover:border-amber-500 hover:text-amber-600 dark:hover:text-amber-400" },
-                { label: "OSAS Admin", email: "admin.osas@pup.local", badge: "OSAS", color: "hover:border-blue-500 hover:text-blue-600 dark:hover:text-blue-400" },
-                { label: "Student", email: "student@pup.local", badge: "ODRS & Events", color: "hover:border-emerald-500 hover:text-emerald-600 dark:hover:text-emerald-400" },
-              ].map((acc) => (
+          {/* Demo Accounts Popover Trigger (Understated & Non-Distracting) */}
+          <div className="mt-3 w-full flex justify-center select-none pb-6">
+            <Popover open={demoOpen} onOpenChange={setDemoOpen}>
+              <PopoverTrigger asChild>
                 <button
-                  key={acc.label}
                   type="button"
-                  onClick={() => {
-                    setView("login");
-                    setUsername(acc.email);
-                    setPassword("pupstaff");
-                    setLoginStep(2);
-                    setEmailError("");
-                    setPasswordError("");
-                    setError("");
-                    toast.info(`Selected ${acc.label}`, {
-                      description: `${acc.email} • Ready to sign in`,
-                    });
-                  }}
-                  className={`text-[11px] px-2.5 py-1 rounded-full bg-white/80 dark:bg-zinc-900/80 border border-gray-200/90 dark:border-zinc-700/80 text-gray-600 dark:text-zinc-300 backdrop-blur-md shadow-xs transition-all hover:shadow-sm active:scale-95 flex items-center gap-1.5 cursor-pointer ${acc.color}`}
+                  className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/70 dark:bg-zinc-900/70 border border-black/[0.06] dark:border-white/[0.08] shadow-[0_2px_8px_rgba(0,0,0,0.04)] dark:shadow-none hover:bg-white dark:hover:bg-zinc-800 text-gray-500 dark:text-zinc-400 hover:text-gray-800 dark:hover:text-zinc-100 text-[11px] font-medium backdrop-blur-xl transition-all duration-200 active:scale-[0.97] cursor-pointer group"
                 >
-                  <span className="font-semibold text-[11px]">{acc.label}</span>
-                  <span className="text-[9px] font-medium px-1 py-0.2 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-400 dark:text-zinc-400">{acc.badge}</span>
+                  <i className="ph-bold ph-lightning text-amber-500 group-hover:scale-110 transition-transform"></i>
+                  <span>Demo Accounts</span>
+                  <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-400 dark:text-zinc-400 group-hover:text-gray-700 dark:group-hover:text-zinc-200 transition-colors">
+                    5
+                  </span>
+                  <i className={`ph-bold ph-caret-up text-[10px] text-gray-400 group-hover:text-gray-600 dark:group-hover:text-zinc-300 transition-transform duration-200 ${demoOpen ? "rotate-180" : ""}`}></i>
                 </button>
-              ))}
-            </div>
+              </PopoverTrigger>
+
+              <PopoverContent
+                side="top"
+                sideOffset={10}
+                align="center"
+                className="w-[370px] p-0 rounded-2xl bg-white/95 dark:bg-zinc-900/95 backdrop-blur-2xl border border-black/[0.08] dark:border-white/[0.12] shadow-[0_24px_48px_-12px_rgba(0,0,0,0.18)] dark:shadow-[0_24px_48px_-12px_rgba(0,0,0,0.4)] overflow-hidden animate-in fade-in-0 zoom-in-95 duration-200"
+              >
+                {/* Header */}
+                <div className="px-4 py-3 border-b border-gray-100 dark:border-zinc-800 flex items-center justify-between bg-gray-50/60 dark:bg-zinc-800/40">
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-500">
+                      <i className="ph-bold ph-lightning text-xs"></i>
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-semibold text-gray-900 dark:text-zinc-100 tracking-tight leading-none">
+                        Demo Personas
+                      </h4>
+                      <p className="text-[10px] text-gray-500 dark:text-zinc-400 mt-0.5">
+                        Select an account to pre-fill credentials
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      navigator.clipboard?.writeText("pupstaff");
+                      toast.success("Password copied: pupstaff");
+                    }}
+                    className="flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 rounded-md bg-gray-200/60 dark:bg-zinc-700/60 hover:bg-gray-200 text-gray-600 dark:text-zinc-300 transition-colors cursor-pointer"
+                    title="Click to copy password"
+                  >
+                    <i className="ph-bold ph-key text-[10px]"></i>
+                    <span>pupstaff</span>
+                  </button>
+                </div>
+
+                {/* Account List */}
+                <div className="p-1.5 space-y-1">
+                  {DEMO_ACCOUNTS.map((acc) => (
+                    <button
+                      key={acc.role}
+                      type="button"
+                      onClick={() => handleSelectDemoAccount(acc)}
+                      className="w-full flex items-center gap-2.5 p-2 rounded-xl text-left hover:bg-gray-100/80 dark:hover:bg-zinc-800/80 transition-all duration-150 active:scale-[0.98] cursor-pointer group"
+                    >
+                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 border ${acc.accent}`}>
+                        <i className={`ph-bold ${acc.icon} text-base`}></i>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-1.5">
+                          <span className="text-xs font-semibold text-gray-800 dark:text-zinc-100 group-hover:text-[#800000] dark:group-hover:text-red-400 transition-colors truncate">
+                            {acc.role}
+                          </span>
+                          <span className={`text-[9px] font-medium px-1.5 py-0.2 rounded-full shrink-0 ${acc.badgeColor}`}>
+                            {acc.badge}
+                          </span>
+                        </div>
+                        <p className="text-[10px] text-gray-500 dark:text-zinc-400 truncate mt-0.5">
+                          {acc.title}
+                        </p>
+                        <p className="text-[9.5px] text-gray-400 dark:text-zinc-400 font-mono truncate">
+                          {acc.email}
+                        </p>
+                      </div>
+                      <i className="ph-bold ph-arrow-right text-xs text-gray-300 dark:text-zinc-600 group-hover:text-gray-700 dark:group-hover:text-zinc-200 group-hover:translate-x-0.5 transition-all"></i>
+                    </button>
+                  ))}
+                </div>
+
+                {/* Footer info tip */}
+                <div className="px-3.5 py-2 bg-gray-50/70 dark:bg-zinc-800/40 border-t border-gray-100 dark:border-zinc-800/60 flex items-center justify-between text-[10px] text-gray-400 dark:text-zinc-400">
+                  <span className="flex items-center gap-1">
+                    <i className="ph-bold ph-info text-xs"></i>
+                    1-click instant fill & sign in
+                  </span>
+                  <span className="font-mono text-[9px] text-gray-400">5 mock accounts</span>
+                </div>
+              </PopoverContent>
+            </Popover>
           </div>
         </div>
 

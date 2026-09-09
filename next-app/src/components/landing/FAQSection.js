@@ -85,10 +85,10 @@ export default function FAQSection() {
                   delay: idx * 0.06,
                   ease: [0.16, 1, 0.3, 1],
                 }}
-                className={`rounded-2xl border transition-all duration-200 overflow-hidden ${
+                className={`rounded-2xl transition-all duration-200 overflow-hidden relative ${
                   isOpen
-                    ? "bg-zinc-900 border-white/20 shadow-md shadow-black/40"
-                    : "bg-zinc-900/60 border-white/[0.08] hover:bg-zinc-900/90 hover:border-white/15"
+                    ? "liquid-glass-dark border-white/20 shadow-md shadow-black/40"
+                    : "liquid-glass-dark-pill hover:border-white/15"
                 }`}
               >
                 <button

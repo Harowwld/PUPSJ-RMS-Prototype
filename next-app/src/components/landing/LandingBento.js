@@ -4,87 +4,162 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 
-const PORTAL_DOCUMENTS = [
-  {
-    name: "Transcript of Records (TOR)",
-    purpose: "Employment / Job Application",
-    tag: "Selected",
+const DEFAULT_BENTO_CONTENT = {
+  eyebrow: "Student & Alumni Services",
+  headingLine1: "Request, track, and",
+  headingLine2: "claim your documents",
+  description:
+    "Submit your request online, track its progress in real time, and pick up your official stamped documents at the Registrar counter without waiting in long lines.",
+  card1: {
+    title: "Request Online in Minutes",
+    description:
+      "Select the document you need, specify your purpose, and submit your request straight from your phone or computer.",
+    portalTag: "Online Request Portal",
+    campusLabel: "PUP San Juan Campus",
+    accordionTitle: "Choose Document & Purpose",
+    documents: [
+      {
+        name: "Transcript of Records (TOR)",
+        purpose: "Employment / Job Application",
+        tag: "Selected",
+      },
+      {
+        name: "Certificate of Grades (COG)",
+        purpose: "Scholarship & Honor Evaluation",
+        tag: "Selected",
+      },
+      {
+        name: "Certificate of Registration",
+        purpose: "PRC Licensure Exam Filing",
+        tag: "Selected",
+      },
+      {
+        name: "Certified True Copy (CTC)",
+        purpose: "Government & Embassy Clearance",
+        tag: "Selected",
+      },
+    ],
+    studentStub: "Student: 2022-04912-SJ-0",
+    verifiedBadge: "Verified Student",
   },
-  {
-    name: "Certificate of Grades (COG)",
-    purpose: "Scholarship & Honor Evaluation",
-    tag: "Selected",
+  card2: {
+    title: "Know Exactly When It's Ready",
+    description:
+      "Every document follows a clear schedule so you know exactly when to visit the Registrar counter.",
+    headerText: "Clear Pick-Up Schedule",
+    subtitleHint: "Counted in working days once cleared",
+    instructionsText: "Processing times depend on the type of document you requested:",
+    trackingSample: "Tracking #2026-SJ · Clearance Verified",
+    slaChips: [
+      { days: "3 Days", label: "Grades & Reg." },
+      { days: "7 Days", label: "Clearances" },
+      { days: "20 Days", label: "Transcripts" },
+    ],
+    sealFooter: "Stamped with the official university dry seal",
   },
-  {
-    name: "Certificate of Registration",
-    purpose: "PRC Licensure Exam Filing",
-    tag: "Selected",
+  card3: {
+    title: "Direct from Campus Archives",
+    description:
+      "Your online request connects directly to Room 1 archive cabinets, so staff can retrieve your folder faster.",
+    roomCode: "R1",
+    cabinetCode: "C-A",
+    drawerCode: "D-2",
   },
-  {
-    name: "Certified True Copy (CTC)",
-    purpose: "Government & Embassy Clearance",
-    tag: "Selected",
+  card4: {
+    title: "What You Need to Prepare",
+    description:
+      "Have your student number, email, and signed clearance ready so your request is evaluated right away.",
+    checklistHeader: "Checklist",
+    primaryItemTitle: "Student Number & Email",
+    primaryItemDesc: "Your official student number and an active email for notifications.",
+    secondaryItemTitle: "Campus Clearance Stub",
+    secondaryItemBadge: "Required for TOR",
+    footerNote: "Bring a valid ID when picking up",
   },
-];
+  card5: {
+    title: "Protected by Law (RA 11032)",
+    description:
+      "Backed by the Ease of Doing Business Act. Transparent tracking with zero hidden delays.",
+    tab1Label: "Promise",
+    tab2Label: "RA 11032",
+    tab3Label: "Tracking",
+    charterItems: [
+      { icon: "ph-shield-check", title: "No Unrecorded Delays", desc: "Timestamped upon receipt", bg: "bg-[#800000]" },
+      { icon: "ph-clock", title: "Clear Deadlines", desc: "Always on schedule", bg: "bg-zinc-800 dark:bg-zinc-700" },
+    ],
+    artaItems: [
+      { icon: "ph-scales", title: "Zero Red Tape", desc: "Strict RA 11032 compliance", bg: "bg-[#800000]" },
+      { icon: "ph-file-text", title: "Citizen's Charter", desc: "Published university SLA standards", bg: "bg-zinc-800 dark:bg-zinc-700" },
+    ],
+    auditItems: [
+      { icon: "ph-fingerprint", title: "Tamper-Proof Audit Trail", desc: "Every personnel action logged", bg: "bg-[#800000]" },
+      { icon: "ph-check-circle", title: "Live Tracking Updates", desc: "Real-time ticket progression", bg: "bg-zinc-800 dark:bg-zinc-700" },
+    ],
+    footerNote: "Fair, transparent university service",
+  },
+};
 
-const SLA_CHIPS = [
+const SLA_CHIP_STYLES = [
   {
-    days: "3 Days",
-    label: "Grades & Reg.",
     bgClass: "bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200/60 dark:border-emerald-800/40 text-emerald-700 dark:text-emerald-300",
     activeRing: "ring-2 ring-emerald-500/50 shadow-sm shadow-emerald-500/10 scale-[1.04]",
   },
   {
-    days: "7 Days",
-    label: "Clearances",
     bgClass: "bg-amber-50 dark:bg-amber-950/40 border-amber-200/60 dark:border-amber-800/40 text-amber-700 dark:text-amber-300",
     activeRing: "ring-2 ring-amber-500/50 shadow-sm shadow-amber-500/10 scale-[1.04]",
   },
   {
-    days: "20 Days",
-    label: "Transcripts",
     bgClass: "bg-red-50 dark:bg-red-950/40 border-red-200/60 dark:border-red-800/40 text-red-700 dark:text-red-300",
     activeRing: "ring-2 ring-red-500/50 shadow-sm shadow-red-500/10 scale-[1.04]",
   },
 ];
 
-const TAB_DATA = {
-  charter: [
-    { icon: "ph-shield-check", title: "No Unrecorded Delays", desc: "Timestamped upon receipt", bg: "bg-[#800000]" },
-    { icon: "ph-clock", title: "Clear Deadlines", desc: "Always on schedule", bg: "bg-zinc-800 dark:bg-zinc-700" },
-  ],
-  arta: [
-    { icon: "ph-scales", title: "Zero Red Tape", desc: "Strict RA 11032 compliance", bg: "bg-[#800000]" },
-    { icon: "ph-file-text", title: "Citizen's Charter", desc: "Published university SLA standards", bg: "bg-zinc-800 dark:bg-zinc-700" },
-  ],
-  audit: [
-    { icon: "ph-fingerprint", title: "Tamper-Proof Audit Trail", desc: "Every personnel action logged", bg: "bg-[#800000]" },
-    { icon: "ph-check-circle", title: "Live Tracking Updates", desc: "Real-time ticket progression", bg: "bg-zinc-800 dark:bg-zinc-700" },
-  ],
-};
-
 export default function LandingBento() {
   const router = useRouter();
+  const [bento, setBento] = useState(DEFAULT_BENTO_CONTENT);
   const [activeTab, setActiveTab] = useState("charter");
   const [docIndex, setDocIndex] = useState(0);
   const [activeChip, setActiveChip] = useState(0);
   const [isHoveredTab, setIsHoveredTab] = useState(false);
 
+  // Fetch dynamic bento configuration
+  useEffect(() => {
+    let isMounted = true;
+    fetch("/api/landing/bento", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((json) => {
+        if (isMounted && json.ok && json.data) {
+          setBento(json.data);
+        }
+      })
+      .catch((err) => {
+        console.warn("[LandingBento] Failed to fetch bento config:", err);
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const currentDocs = bento.card1?.documents?.length ? bento.card1.documents : DEFAULT_BENTO_CONTENT.card1.documents;
+  const currentSlaChips = bento.card2?.slaChips?.length ? bento.card2.slaChips : DEFAULT_BENTO_CONTENT.card2.slaChips;
+
   // Auto-cycle documents on Card 1 every 3.8 seconds
   useEffect(() => {
+    if (!currentDocs.length) return;
     const timer = setInterval(() => {
-      setDocIndex((prev) => (prev + 1) % PORTAL_DOCUMENTS.length);
+      setDocIndex((prev) => (prev + 1) % currentDocs.length);
     }, 3800);
     return () => clearInterval(timer);
-  }, []);
+  }, [currentDocs.length]);
 
   // Auto-cycle turnaround chips on Card 2 every 2.5 seconds
   useEffect(() => {
+    if (!currentSlaChips.length) return;
     const timer = setInterval(() => {
-      setActiveChip((prev) => (prev + 1) % SLA_CHIPS.length);
+      setActiveChip((prev) => (prev + 1) % currentSlaChips.length);
     }, 2500);
     return () => clearInterval(timer);
-  }, []);
+  }, [currentSlaChips.length]);
 
   // Auto-cycle tabs on Card 5 every 3.6 seconds (paused on manual hover)
   useEffect(() => {
@@ -95,6 +170,14 @@ export default function LandingBento() {
     }, 3600);
     return () => clearInterval(timer);
   }, [isHoveredTab]);
+
+  const activeDoc = currentDocs[docIndex % currentDocs.length] || currentDocs[0];
+
+  const tabData = {
+    charter: bento.card5?.charterItems || DEFAULT_BENTO_CONTENT.card5.charterItems,
+    arta: bento.card5?.artaItems || DEFAULT_BENTO_CONTENT.card5.artaItems,
+    audit: bento.card5?.auditItems || DEFAULT_BENTO_CONTENT.card5.auditItems,
+  };
 
   return (
     <section className="max-w-7xl mx-auto px-4 sm:px-6 pt-20 sm:pt-28 pb-20 w-full font-inter select-none">
@@ -111,11 +194,11 @@ export default function LandingBento() {
           className="lg:col-span-7"
         >
           <span className="text-[11px] font-mono font-bold uppercase tracking-widest text-[#800000] dark:text-red-400 block mb-3">
-            Student &amp; Alumni Services
+            {bento.eyebrow}
           </span>
           <h2 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-[#1d1d1f] dark:text-white tracking-tight leading-[1.06]">
-            Request, track, and<br />
-            <span className="text-zinc-400 dark:text-zinc-500">claim your documents</span>
+            {bento.headingLine1}<br />
+            <span className="text-zinc-400 dark:text-zinc-500">{bento.headingLine2}</span>
           </h2>
         </motion.div>
 
@@ -127,7 +210,7 @@ export default function LandingBento() {
           className="lg:col-span-5"
         >
           <p className="text-sm sm:text-base text-zinc-600 dark:text-zinc-400 leading-relaxed font-normal max-w-lg">
-            Submit your request online, track its progress in real time, and pick up your official stamped documents at the Registrar counter without waiting in long lines.
+            {bento.description}
           </p>
         </motion.div>
       </div>
@@ -161,20 +244,20 @@ export default function LandingBento() {
             <div className="rounded-2xl bg-[#f8f9fa] dark:bg-zinc-800/40 p-5 border border-black/[0.03] dark:border-white/[0.04] min-h-[220px] flex flex-col justify-between">
               <div>
                 <div className="flex items-center justify-between mb-3 text-[10px] font-mono uppercase tracking-wider text-zinc-400">
-                  <span>Online Request Portal</span>
+                  <span>{bento.card1?.portalTag || "Online Request Portal"}</span>
                   <span className="text-zinc-500">PUP San Juan</span>
                 </div>
 
                 {/* Dropdown: Campus */}
                 <div className="p-2.5 px-3 rounded-xl bg-white dark:bg-zinc-800 border border-black/[0.05] dark:border-white/[0.06] flex items-center justify-between text-xs font-semibold text-[#1d1d1f] dark:text-zinc-200 mb-2 shadow-xs">
-                  <span>PUP San Juan Campus</span>
+                  <span>{bento.card1?.campusLabel || "PUP San Juan Campus"}</span>
                   <i className="ph-bold ph-caret-down text-zinc-400 text-xs" />
                 </div>
 
                 {/* Expanded Accordion: Document & Purpose */}
                 <div className="p-3 rounded-xl bg-white dark:bg-zinc-800 border border-black/[0.05] dark:border-white/[0.06] shadow-xs">
                   <div className="flex items-center justify-between text-xs font-bold text-[#800000] dark:text-red-400 mb-2">
-                    <span>Choose Document &amp; Purpose</span>
+                    <span>{bento.card1?.accordionTitle || "Choose Document & Purpose"}</span>
                     <i className="ph-bold ph-caret-up text-xs" />
                   </div>
 
@@ -195,14 +278,14 @@ export default function LandingBento() {
                             <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
                           </span>
                           <span className="text-xs font-medium text-zinc-800 dark:text-zinc-200 truncate">
-                            {PORTAL_DOCUMENTS[docIndex].name}
+                            {activeDoc?.name || "Official Document"}
                           </span>
                           <span className="text-[10px] font-mono text-zinc-400 ml-auto shrink-0">
-                            {PORTAL_DOCUMENTS[docIndex].tag}
+                            {activeDoc?.tag || "Selected"}
                           </span>
                         </div>
                         <div className="text-[11px] text-zinc-500 dark:text-zinc-400 pl-4 truncate">
-                          Purpose: {PORTAL_DOCUMENTS[docIndex].purpose}
+                          Purpose: {activeDoc?.purpose || "General Evaluation"}
                         </div>
                       </motion.div>
                     </AnimatePresence>
@@ -212,13 +295,13 @@ export default function LandingBento() {
 
               {/* Status footer pill with live breathing dot */}
               <div className="mt-3 flex items-center justify-between text-[11px] font-mono text-zinc-400 pt-2 border-t border-black/[0.03] dark:border-white/[0.04]">
-                <span>Student: 2022-04912-SJ-0</span>
+                <span>{bento.card1?.studentStub || "Student: 2022-04912-SJ-0"}</span>
                 <span className="inline-flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-semibold">
                   <span className="relative flex h-1.5 w-1.5">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
                     <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />
                   </span>
-                  Verified Student
+                  {bento.card1?.verifiedBadge || "Verified Student"}
                 </span>
               </div>
             </div>
@@ -226,10 +309,10 @@ export default function LandingBento() {
             {/* Typography Section */}
             <div className="mt-6">
               <h3 className="text-lg sm:text-xl font-bold text-[#1d1d1f] dark:text-white tracking-tight group-hover:text-[#800000] dark:group-hover:text-red-400 transition-colors">
-                Request Online in Minutes
+                {bento.card1?.title || "Request Online in Minutes"}
               </h3>
               <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 mt-1.5 leading-relaxed font-normal">
-                Select the document you need, specify your purpose, and submit your request straight from your phone or computer.
+                {bento.card1?.description || "Select the document you need, specify your purpose, and submit your request straight from your phone or computer."}
               </p>
             </div>
           </motion.div>
@@ -257,25 +340,25 @@ export default function LandingBento() {
                     <i className="ph-bold ph-clock text-xs" />
                   </motion.div>
                   <span className="text-xs font-bold text-[#1d1d1f] dark:text-white">
-                    Clear Pick-Up Schedule
+                    {bento.card2?.headerText || "Clear Pick-Up Schedule"}
                   </span>
                 </div>
 
                 {/* Subtitle hint */}
                 <div className="text-[11px] text-zinc-500 dark:text-zinc-400 flex items-center gap-1.5 mb-3 font-mono">
                   <i className="ph-bold ph-caret-down text-[10px]" />
-                  <span>Counted in working days once cleared</span>
+                  <span>{bento.card2?.subtitleHint || "Counted in working days once cleared"}</span>
                 </div>
 
                 <p className="text-xs text-zinc-600 dark:text-zinc-300 leading-snug mb-3">
-                  Processing times depend on the type of document you requested:
+                  {bento.card2?.instructionsText || "Processing times depend on the type of document you requested:"}
                 </p>
 
                 {/* Simulated Input Search Box with live radar indicator */}
                 <div className="p-2.5 px-3 rounded-xl bg-white dark:bg-zinc-800 border border-black/[0.06] dark:border-white/[0.08] shadow-xs flex items-center gap-2 mb-2.5">
                   <i className="ph-bold ph-magnifying-glass text-zinc-400 text-xs" />
                   <span className="text-xs text-zinc-700 dark:text-zinc-200 font-mono flex items-center justify-between w-full">
-                    <span>Tracking #2026-SJ · Clearance Verified</span>
+                    <span>{bento.card2?.trackingSample || "Tracking #2026-SJ · Clearance Verified"}</span>
                     <span className="relative flex h-2 w-2 shrink-0">
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
                       <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
@@ -285,18 +368,19 @@ export default function LandingBento() {
 
                 {/* 3 Simple Pick-Up Chips with sequential spotlight wave */}
                 <div className="grid grid-cols-3 gap-1.5 pt-1">
-                  {SLA_CHIPS.map((chip, idx) => {
+                  {currentSlaChips.map((chip, idx) => {
                     const isActive = activeChip === idx;
+                    const style = SLA_CHIP_STYLES[idx % SLA_CHIP_STYLES.length];
                     return (
                       <motion.div
-                        key={chip.days}
+                        key={chip.days + idx}
                         animate={{
                           scale: isActive ? 1.05 : 1,
                         }}
                         transition={{ duration: 0.35, ease: "easeOut" }}
                         className={`p-1.5 px-2 rounded-lg border text-center transition-all duration-300 ${
-                          chip.bgClass
-                        } ${isActive ? chip.activeRing : "opacity-80"}`}
+                          style.bgClass
+                        } ${isActive ? style.activeRing : "opacity-80"}`}
                       >
                         <div className="text-[10px] font-mono font-bold">{chip.days}</div>
                         <div className="text-[9px] opacity-80 truncate">{chip.label}</div>
@@ -307,17 +391,17 @@ export default function LandingBento() {
               </div>
 
               <div className="text-[10px] font-mono text-zinc-400 pt-2 border-t border-black/[0.03] dark:border-white/[0.04]">
-                Stamped with the official university dry seal
+                {bento.card2?.sealFooter || "Stamped with the official university dry seal"}
               </div>
             </div>
 
             {/* Typography Section */}
             <div className="mt-6">
               <h3 className="text-lg sm:text-xl font-bold text-[#1d1d1f] dark:text-white tracking-tight group-hover:text-[#800000] dark:group-hover:text-red-400 transition-colors">
-                Know Exactly When It&apos;s Ready
+                {bento.card2?.title || "Know Exactly When It's Ready"}
               </h3>
               <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 mt-1.5 leading-relaxed font-normal">
-                Every document follows a clear schedule so you know exactly when to visit the Registrar counter.
+                {bento.card2?.description || "Every document follows a clear schedule so you know exactly when to visit the Registrar counter."}
               </p>
             </div>
           </motion.div>
@@ -374,34 +458,34 @@ export default function LandingBento() {
                 <motion.div 
                   animate={{ y: [-3, 3, -3] }}
                   transition={{ repeat: Infinity, duration: 3.6, ease: "easeInOut" }}
-                  className="absolute top-3 w-8 h-8 rounded-xl bg-white dark:bg-zinc-800 border border-black/[0.06] dark:border-white/[0.08] shadow-xs flex items-center justify-center text-zinc-600 dark:text-zinc-300 text-[10px] font-mono font-bold z-10"
+                  className="absolute top-3 w-8 h-8 rounded-xl liquid-glass-light flex items-center justify-center text-zinc-600 dark:text-zinc-300 text-[10px] font-mono font-bold z-10"
                 >
-                  R1
+                  {bento.card3?.roomCode || "R1"}
                 </motion.div>
 
                 {/* Node Left: Cabinet A (Gentle horizontal float) */}
                 <motion.div 
                   animate={{ x: [-3, 3, -3] }}
                   transition={{ repeat: Infinity, duration: 4.2, delay: 0.3, ease: "easeInOut" }}
-                  className="absolute left-4 w-8 h-8 rounded-xl bg-white dark:bg-zinc-800 border border-black/[0.06] dark:border-white/[0.08] shadow-xs flex items-center justify-center text-zinc-600 dark:text-zinc-300 text-[10px] font-mono font-bold z-10"
+                  className="absolute left-4 w-8 h-8 rounded-xl liquid-glass-light flex items-center justify-center text-zinc-600 dark:text-zinc-300 text-[10px] font-mono font-bold z-10"
                 >
-                  C-A
+                  {bento.card3?.cabinetCode || "C-A"}
                 </motion.div>
 
                 {/* Node Right: Drawer 2 (Gentle horizontal float) */}
                 <motion.div 
                   animate={{ x: [3, -3, 3] }}
                   transition={{ repeat: Infinity, duration: 3.8, delay: 0.6, ease: "easeInOut" }}
-                  className="absolute right-4 w-8 h-8 rounded-xl bg-white dark:bg-zinc-800 border border-black/[0.06] dark:border-white/[0.08] shadow-xs flex items-center justify-center text-zinc-600 dark:text-zinc-300 text-[10px] font-mono font-bold z-10"
+                  className="absolute right-4 w-8 h-8 rounded-xl liquid-glass-light flex items-center justify-center text-zinc-600 dark:text-zinc-300 text-[10px] font-mono font-bold z-10"
                 >
-                  D-2
+                  {bento.card3?.drawerCode || "D-2"}
                 </motion.div>
 
                 {/* Node Bottom: Dry Seal (Gentle vertical float + stamp pulse) */}
                 <motion.div 
                   animate={{ y: [3, -3, 3], scale: [1, 1.08, 1] }}
                   transition={{ repeat: Infinity, duration: 4.0, delay: 0.9, ease: "easeInOut" }}
-                  className="absolute bottom-3 w-8 h-8 rounded-xl bg-white dark:bg-zinc-800 border border-black/[0.06] dark:border-white/[0.08] shadow-xs flex items-center justify-center text-emerald-600 dark:text-emerald-400 text-xs z-10"
+                  className="absolute bottom-3 w-8 h-8 rounded-xl liquid-glass-light flex items-center justify-center text-emerald-600 dark:text-emerald-400 text-xs z-10"
                 >
                   <i className="ph-bold ph-stamp" />
                 </motion.div>
@@ -418,10 +502,10 @@ export default function LandingBento() {
             {/* Typography Section */}
             <div className="mt-5">
               <h3 className="text-base sm:text-lg font-bold text-[#1d1d1f] dark:text-white tracking-tight group-hover:text-[#800000] dark:group-hover:text-red-400 transition-colors">
-                Direct from Campus Archives
+                {bento.card3?.title || "Direct from Campus Archives"}
               </h3>
               <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1.5 leading-relaxed font-normal">
-                Your online request connects directly to Room 1 archive cabinets, so staff can retrieve your folder faster.
+                {bento.card3?.description || "Your online request connects directly to Room 1 archive cabinets, so staff can retrieve your folder faster."}
               </p>
             </div>
           </motion.div>
@@ -440,7 +524,7 @@ export default function LandingBento() {
             <div className="rounded-2xl bg-[#f8f9fa] dark:bg-zinc-800/40 p-4 border border-black/[0.03] dark:border-white/[0.04] min-h-[180px] flex flex-col justify-between">
               <div>
                 <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-400 block mb-2">
-                  Checklist
+                  {bento.card4?.checklistHeader || "Checklist"}
                 </span>
 
                 {/* Primary Checklist Item with floating depth */}
@@ -457,10 +541,12 @@ export default function LandingBento() {
                     >
                       <i className="ph-bold ph-check" />
                     </motion.div>
-                    <span className="text-xs font-bold text-[#1d1d1f] dark:text-white">Student Number &amp; Email</span>
+                    <span className="text-xs font-bold text-[#1d1d1f] dark:text-white">
+                      {bento.card4?.primaryItemTitle || "Student Number & Email"}
+                    </span>
                   </div>
                   <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-snug">
-                    Your official student number and an active email for notifications.
+                    {bento.card4?.primaryItemDesc || "Your official student number and an active email for notifications."}
                   </p>
                 </motion.div>
 
@@ -470,23 +556,25 @@ export default function LandingBento() {
                   transition={{ repeat: Infinity, duration: 4.5, delay: 0.4, ease: "easeInOut" }}
                   className="mt-2 p-2 px-3 rounded-xl bg-white/60 dark:bg-zinc-800/60 border border-black/[0.03] dark:border-white/[0.04] flex items-center justify-between text-[11px] text-zinc-500 dark:text-zinc-400"
                 >
-                  <span>Campus Clearance Stub</span>
-                  <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 font-semibold">Required for TOR</span>
+                  <span>{bento.card4?.secondaryItemTitle || "Campus Clearance Stub"}</span>
+                  <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 font-semibold">
+                    {bento.card4?.secondaryItemBadge || "Required for TOR"}
+                  </span>
                 </motion.div>
               </div>
 
               <div className="text-[10px] font-mono text-zinc-400 pt-1">
-                Bring a valid ID when picking up
+                {bento.card4?.footerNote || "Bring a valid ID when picking up"}
               </div>
             </div>
 
             {/* Typography Section */}
             <div className="mt-5">
               <h3 className="text-base sm:text-lg font-bold text-[#1d1d1f] dark:text-white tracking-tight group-hover:text-[#800000] dark:group-hover:text-red-400 transition-colors">
-                What You Need to Prepare
+                {bento.card4?.title || "What You Need to Prepare"}
               </h3>
               <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1.5 leading-relaxed font-normal">
-                Have your student number, email, and signed clearance ready so your request is evaluated right away.
+                {bento.card4?.description || "Have your student number, email, and signed clearance ready so your request is evaluated right away."}
               </p>
             </div>
           </motion.div>
@@ -529,7 +617,7 @@ export default function LandingBento() {
                         transition={{ type: "spring", stiffness: 380, damping: 30 }}
                       />
                     )}
-                    <span className="relative z-10">Promise</span>
+                    <span className="relative z-10">{bento.card5?.tab1Label || "Promise"}</span>
                   </button>
                   <button
                     type="button"
@@ -552,7 +640,7 @@ export default function LandingBento() {
                     )}
                     <span className="relative z-10 flex items-center gap-1">
                       <i className="ph-bold ph-scales text-[10px]" />
-                      <span>RA 11032</span>
+                      <span>{bento.card5?.tab2Label || "RA 11032"}</span>
                     </span>
                   </button>
                   <button
@@ -574,7 +662,7 @@ export default function LandingBento() {
                         transition={{ type: "spring", stiffness: 380, damping: 30 }}
                       />
                     )}
-                    <span className="relative z-10">Tracking</span>
+                    <span className="relative z-10">{bento.card5?.tab3Label || "Tracking"}</span>
                   </button>
                 </div>
 
@@ -589,12 +677,12 @@ export default function LandingBento() {
                       transition={{ duration: 0.3, ease: "easeOut" }}
                       className="space-y-2"
                     >
-                      {TAB_DATA[activeTab]?.map((item, idx) => (
+                      {tabData[activeTab]?.map((item, idx) => (
                         <div
                           key={idx}
                           className="p-2.5 rounded-xl bg-white dark:bg-zinc-800 border border-black/[0.04] dark:border-white/[0.06] flex items-center gap-2.5 shadow-xs"
                         >
-                          <div className={`w-8 h-8 rounded-lg ${item.bg} text-white flex items-center justify-center text-xs shrink-0 font-bold`}>
+                          <div className={`w-8 h-8 rounded-lg ${item.bg || (idx % 2 === 0 ? "bg-[#800000]" : "bg-zinc-800 dark:bg-zinc-700")} text-white flex items-center justify-center text-xs shrink-0 font-bold`}>
                             <i className={`ph-bold ${item.icon}`} />
                           </div>
                           <div className="overflow-hidden">
@@ -613,17 +701,17 @@ export default function LandingBento() {
               </div>
 
               <div className="text-[10px] font-mono text-zinc-400 pt-1">
-                Fair, transparent university service
+                {bento.card5?.footerNote || "Fair, transparent university service"}
               </div>
             </div>
 
             {/* Typography Section */}
             <div className="mt-5">
               <h3 className="text-base sm:text-lg font-bold text-[#1d1d1f] dark:text-white tracking-tight group-hover:text-[#800000] dark:group-hover:text-red-400 transition-colors">
-                Protected by Law (RA 11032)
+                {bento.card5?.title || "Protected by Law (RA 11032)"}
               </h3>
               <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1.5 leading-relaxed font-normal">
-                Backed by the Ease of Doing Business Act. Transparent tracking with zero hidden delays.
+                {bento.card5?.description || "Backed by the Ease of Doing Business Act. Transparent tracking with zero hidden delays."}
               </p>
             </div>
           </motion.div>

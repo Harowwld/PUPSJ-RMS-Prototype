@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import LandingNavbar from "@/components/landing/LandingNavbar";
 import LandingHero from "@/components/landing/LandingHero";
 import LandingBento from "@/components/landing/LandingBento";
@@ -9,6 +10,17 @@ import FAQSection from "@/components/landing/FAQSection";
 import LandingFooter from "@/components/landing/LandingFooter";
 
 export default function LandingPage() {
+  useEffect(() => {
+    const origHtmlBg = document.documentElement.style.backgroundColor;
+    const origBodyBg = document.body.style.backgroundColor;
+    document.documentElement.style.backgroundColor = "#09090b";
+    document.body.style.backgroundColor = "#09090b";
+    return () => {
+      document.documentElement.style.backgroundColor = origHtmlBg;
+      document.body.style.backgroundColor = origBodyBg;
+    };
+  }, []);
+
   return (
     <div className="relative min-h-[100dvh] w-full max-w-full flex flex-col bg-zinc-950 dark:bg-zinc-950 text-[#1D1D1F] dark:text-zinc-50 selection:bg-red-100 selection:text-red-900 font-inter overflow-x-hidden">
       

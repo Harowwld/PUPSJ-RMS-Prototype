@@ -4,47 +4,80 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { Button } from "@/components/ui/button";
 import BevelButton from "@/components/ui/bevel-button";
-import MorphButton from "@/components/ui/morph-button";
 
 gsap.registerPlugin(ScrollTrigger);
 
-const CAMPUS_SLIDES = [
-  {
-    src: "/assets/pup/landing-1.jpg",
-    alt: "PUP San Juan Campus Building Entrance",
-    label: "Main Campus Entrance",
-  },
-  {
-    src: "/assets/pup/landing-2.jpg",
-    alt: "PUP San Juan Academic Hall & Records Center",
-    label: "Academic & Records Hall",
-  },
-  {
-    src: "/assets/pup/landing-3.jpg",
-    alt: "PUP San Juan Campus Grounds & Facade",
-    label: "Campus Grounds & Courtyard",
-  },
-];
+const DEFAULT_HERO_CONTENT = {
+  headlineLine1: "Tanglaw ng Bayan,",
+  headlineLine2: "Dambana ng Kagitingan.",
+  description:
+    "Official institutional records keeping, archive retrieval, and document verification system for Polytechnic University of the Philippines San Juan Campus.",
+  ctaText: "Request Document",
+  ctaLink: "/login",
+  campusAddress:
+    "223 Ortega St. cor. A. Mabini St., Addition Hills, San Juan City",
+  registrarHours: "REGISTRAR: 8:00 AM – 5:00 PM",
+  operatingDays: "MON – FRI",
+  autoRotateInterval: 5500,
+  slides: [
+    {
+      src: "/assets/pup/landing-1.jpg",
+      alt: "PUP San Juan Campus Building Entrance",
+      label: "Main Campus Entrance",
+    },
+    {
+      src: "/assets/pup/landing-2.jpg",
+      alt: "PUP San Juan Academic Hall & Records Center",
+      label: "Academic & Records Hall",
+    },
+    {
+      src: "/assets/pup/landing-3.jpg",
+      alt: "PUP San Juan Campus Grounds & Facade",
+      label: "Campus Grounds & Courtyard",
+    },
+  ],
+};
 
 export default function LandingHero() {
   const router = useRouter();
+  const [hero, setHero] = useState(DEFAULT_HERO_CONTENT);
   const [currentSlide, setCurrentSlide] = useState(0);
-  
+
   const heroContainerRef = useRef(null);
   const heroInnerRef = useRef(null);
   const headlineRef = useRef(null);
   const descRef = useRef(null);
   const ctaClusterRef = useRef(null);
 
-  // Auto-switch campus background photos every 5.5 seconds
+  // Fetch dynamic CMS settings on mount
   useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % CAMPUS_SLIDES.length);
-    }, 5500);
-    return () => clearInterval(timer);
+    let isMounted = true;
+    fetch("/api/landing/hero")
+      .then((res) => res.json())
+      .then((json) => {
+        if (isMounted && json?.ok && json?.data) {
+          setHero(json.data);
+        }
+      })
+      .catch((err) => {
+        console.warn("[LandingHero] Dynamic content fetch failed, using defaults:", err);
+      });
+    return () => {
+      isMounted = false;
+    };
   }, []);
+
+  const slides = hero.slides && hero.slides.length > 0 ? hero.slides : DEFAULT_HERO_CONTENT.slides;
+
+  // Auto-switch campus background photos
+  useEffect(() => {
+    const interval = hero.autoRotateInterval || 5500;
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % slides.length);
+    }, interval);
+    return () => clearInterval(timer);
+  }, [hero.autoRotateInterval, slides.length]);
 
   // GSAP Orchestration & Entrance Animation (sequenced after navbar slides in)
   useEffect(() => {
@@ -163,16 +196,16 @@ export default function LandingHero() {
         
         {/* BACKGROUND IMAGE CAROUSEL WITH CINEMATIC ATMOSPHERIC MASKS */}
         <div className="absolute inset-0 w-full h-full z-0 select-none pointer-events-none overflow-hidden bg-zinc-950">
-          {CAMPUS_SLIDES.map((slide, idx) => (
+          {slides.map((slide, idx) => (
             <div
-              key={slide.src}
+              key={slide.src || idx}
               className={`absolute inset-0 w-full h-full transition-opacity duration-1000 ease-in-out ${
                 idx === currentSlide ? "opacity-100" : "opacity-0"
               }`}
             >
               <img 
                 src={slide.src} 
-                alt={slide.alt} 
+                alt={slide.alt || "Campus Photo"} 
                 className={`w-full h-full object-cover object-center transform transition-transform duration-[7000ms] ease-out ${
                   idx === currentSlide ? "scale-100" : "scale-108"
                 }`}
@@ -196,9 +229,9 @@ export default function LandingHero() {
               }}
               className="tanglaw-heading font-extrabold text-white tracking-tight sm:tracking-tighter mb-5"
             >
-              <span className="block">Tanglaw ng Bayan,</span>
+              <span className="block">{hero.headlineLine1 || "Tanglaw ng Bayan,"}</span>
               <span className="block">
-                Dambana ng Kagitingan.
+                {hero.headlineLine2 || "Dambana ng Kagitingan."}
               </span>
             </h1>
 
@@ -206,7 +239,8 @@ export default function LandingHero() {
               ref={descRef}
               className="text-xs sm:text-sm md:text-base text-slate-200/85 leading-relaxed max-w-md mb-8 font-normal"
             >
-              Official institutional records keeping, archive retrieval, and document verification system for Polytechnic University of the Philippines San Juan Campus.
+              {hero.description ||
+                "Official institutional records keeping, archive retrieval, and document verification system for Polytechnic University of the Philippines San Juan Campus."}
             </p>
 
             {/* Action Cluster — left-aligned */}
@@ -214,27 +248,30 @@ export default function LandingHero() {
               ref={ctaClusterRef}
               className="flex flex-wrap items-center justify-start gap-4"
             >
-              <Button
+              <BevelButton
                 onClick={() => router.push("/login")}
-                className="h-11 px-7 rounded-full! btn-brand-red text-[13px] font-medium text-white active:scale-95 transition-all flex items-center justify-center cursor-pointer"
+                className="h-11 px-7 rounded-full text-xs font-bold tracking-wide cursor-pointer flex items-center gap-2 shadow-md hover:scale-[1.02] active:scale-[0.98] transition-transform"
               >
-                Request Document
-              </Button>
+                <span>Request Document</span>
+                <i className="ph-bold ph-arrow-right text-xs" />
+              </BevelButton>
             </div>
           </div>
         </div>
 
         {/* BOTTOM ACCREDITATION BANNER & CAMPUS PHOTO CONTROLS */}
-        <div className="relative z-10 border-t border-white/10 pt-4 grid grid-cols-1 md:grid-cols-3 items-center gap-3 text-xs text-white/60">
+        <div className="relative z-10 px-4 sm:px-6 py-3 rounded-2xl liquid-glass-dark-pill bg-zinc-950/40 grid grid-cols-1 md:grid-cols-3 items-center gap-3 text-xs text-white/75">
           {/* Left: Campus address */}
           <div className="flex items-center gap-2 justify-start">
-            <span className="truncate">223 Ortega St. cor. A. Mabini St., Addition Hills, San Juan City</span>
+            <span className="truncate">
+              {hero.campusAddress || "223 Ortega St. cor. A. Mabini St., Addition Hills, San Juan City"}
+            </span>
           </div>
 
           {/* Center: Apple-styled Campus Photo Pagination */}
           <div className="flex items-center justify-center">
             <div className="flex items-center gap-2">
-              {CAMPUS_SLIDES.map((_, idx) => {
+              {slides.map((_, idx) => {
                 const isActive = idx === currentSlide;
                 return (
                   <button
@@ -265,9 +302,9 @@ export default function LandingHero() {
 
           {/* Right: Registrar hours */}
           <div className="hidden md:flex items-center justify-end gap-3 text-[11px] font-mono text-white/50">
-            <span>REGISTRAR: 8:00 AM – 5:00 PM</span>
+            <span>{hero.registrarHours || "REGISTRAR: 8:00 AM – 5:00 PM"}</span>
             <span className="text-white/30">·</span>
-            <span>MON – FRI</span>
+            <span>{hero.operatingDays || "MON – FRI"}</span>
           </div>
         </div>
 

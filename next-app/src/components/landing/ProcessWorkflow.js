@@ -176,7 +176,7 @@ export default function ProcessWorkflow() {
                     window.scrollTo({ top: y, behavior: "smooth" });
                   }
                 }}
-                className="h-11 px-5 rounded-full text-xs font-medium backdrop-blur-xl border border-white/15 active:scale-[0.98] cursor-pointer text-white/90"
+                className="relative h-11 px-5 rounded-full text-xs font-medium liquid-glass-dark active:scale-[0.98] cursor-pointer text-white/90"
               >
                 <span>Explore Services (8)</span>
                 <span className="opacity-70 text-[11px] ml-1">↓</span>
@@ -219,10 +219,10 @@ export default function ProcessWorkflow() {
                           delay: idx * 0.08 + 0.04,
                           ease: [0.16, 1, 0.3, 1],
                         }}
-                        className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center font-mono text-xs sm:text-sm font-extrabold transition-all duration-300 backdrop-blur-xl ${
+                        className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center font-mono text-xs sm:text-sm font-extrabold transition-all duration-300 ${
                           isSelected
                             ? "bg-[#800000] text-white border-2 border-red-400/80 shadow-[0_0_25px_rgba(128,0,0,0.5)] scale-105"
-                            : "bg-zinc-900/90 text-zinc-400 border border-white/15 group-hover:border-white/40 group-hover:text-white"
+                            : "liquid-glass-dark text-zinc-400 group-hover:border-white/25 group-hover:text-white"
                         }`}
                       >
                         {step.num}
@@ -273,7 +273,7 @@ export default function ProcessWorkflow() {
                         {step.tags.map((tag, tIdx) => (
                           <span
                             key={tIdx}
-                            className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-mono font-medium bg-white/[0.04] border border-white/[0.08] text-zinc-300 group-hover:border-white/15 transition-colors"
+                            className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-mono font-medium liquid-glass-dark-pill text-zinc-300 group-hover:border-white/15 transition-colors"
                           >
                             {tag}
                           </span>

@@ -13,7 +13,7 @@ export default function DocumentCardPreview({ item, isActive = false }) {
           : "bg-gradient-to-b from-white/90 via-zinc-50/80 to-zinc-100/75 dark:from-zinc-900/90 dark:via-zinc-900/85 dark:to-zinc-950/85 border border-black/[0.08] dark:border-white/[0.12] text-zinc-900 dark:text-zinc-100 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.8),0_20px_50px_-12px_rgba(0,0,0,0.08),0_0_1px_1px_rgba(0,0,0,0.03)] hover:border-black/25 dark:hover:border-white/30"
       }`}
       style={{
-        fontFamily: 'var(--font-inter), "Inter", -apple-system, BlinkMacSystemFont, sans-serif',
+        fontFamily: 'var(--font-geist), Geist, "Geist Fallback", var(--font-inter), Inter, Helvetica, sans-serif',
       }}
     >
       {/* Liquid Glass Refraction Highlight (Apple-style subtle top gradient sheen) */}
@@ -71,16 +71,6 @@ export default function DocumentCardPreview({ item, isActive = false }) {
               </div>
             </div>
           </div>
-
-          <span
-            className={`px-2.5 py-1 rounded-xl font-mono text-[10px] font-bold border shadow-2xs ${
-              isActive
-                ? "bg-white/15 text-white border-white/25 backdrop-blur-sm"
-                : "bg-zinc-100/90 dark:bg-zinc-800/90 text-zinc-800 dark:text-zinc-200 border-black/[0.05] dark:border-white/[0.08]"
-            }`}
-          >
-            {item.code}
-          </span>
         </div>
 
         {/* Document Title Banner */}

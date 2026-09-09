@@ -18,6 +18,12 @@ const inter = localFont({
   display: "swap",
 });
 
+const geist = localFont({
+  src: "../../public/assets/fonts/geist/Geist-Variable.woff2",
+  variable: "--font-geist",
+  display: "swap",
+});
+
 export const metadata = {
   title: "PUP E-Manage",
   description: "Records Keeping System",
@@ -31,7 +37,7 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" className={inter.variable} suppressHydrationWarning>
+    <html lang="en" className={`${inter.variable} ${geist.variable}`} suppressHydrationWarning>
       <head>
         <link rel="icon" href="/assets/branding/black-icon.png" media="(prefers-color-scheme: light)" />
         <link rel="icon" href="/assets/branding/white-icon.png" media="(prefers-color-scheme: dark)" />

@@ -271,6 +271,7 @@ export default function DocumentCatalog() {
     if (!isDraggingRef.current) return;
     isDraggingRef.current = false;
     setIsDragging(false);
+    setIsHovered(false);
     try {
       e.currentTarget.releasePointerCapture(e.pointerId);
     } catch {}
@@ -320,100 +321,93 @@ export default function DocumentCatalog() {
             </p>
           </div>
 
-          {/* Active Document Details Inspector Panel */}
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={activeDoc?.id || "doc-empty"}
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -12 }}
-              transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-              className="space-y-5"
-            >
-              {/* Badges */}
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="px-3 py-1 rounded-xl bg-zinc-900 text-white dark:bg-white dark:text-zinc-950 font-mono text-xs font-bold tracking-wider">
-                  {activeDoc?.code}
-                </span>
-                <span className="px-3 py-1 rounded-full text-xs font-semibold bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-black/[0.06] dark:border-white/[0.08]">
-                  {activeDoc?.client}
-                </span>
-                <span className="px-2.5 py-1 rounded-full text-[11px] font-mono font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/60 dark:border-emerald-800/40 inline-flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                  Official Credential
-                </span>
-              </div>
-
-              {/* Title & Description */}
-              <div>
-                <h3 className="text-2xl sm:text-3xl font-extrabold text-gray-950 dark:text-white tracking-tight leading-snug">
-                  {activeDoc?.title}
-                </h3>
-                <p className="text-xs sm:text-sm text-gray-600 dark:text-zinc-300 mt-2 leading-relaxed">
-                  {activeDoc?.description}
-                </p>
-              </div>
-
-              {/* Filing Requirements Checklist */}
-              <div className="p-4 sm:p-5 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-black/[0.05] dark:border-white/[0.06]">
-                <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-gray-900 dark:text-zinc-100 mb-3 font-mono">
-                  <i className="ph-bold ph-shield-check text-[#800000] dark:text-red-400 text-base" />
-                  Mandatory Filing Requirements
+          {/* Active Document Details Inspector Panel: Stable Height Container */}
+          <div className="relative min-h-[320px] sm:min-h-[340px]">
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.div
+                key={activeDoc?.id || "doc-empty"}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1, transition: { duration: 0.2, ease: "easeOut" } }}
+                exit={{ opacity: 0, transition: { duration: 0.15, ease: "easeIn" } }}
+                className="w-full space-y-5"
+              >
+                {/* Badges */}
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="px-3 py-1 rounded-full text-xs font-semibold bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-black/[0.06] dark:border-white/[0.08]">
+                    {activeDoc?.client}
+                  </span>
+                  <span className="px-2.5 py-1 rounded-full text-[11px] font-mono font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/60 dark:border-emerald-800/40 inline-flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                    Official Credential
+                  </span>
                 </div>
-                <ul className="space-y-2 text-xs text-gray-600 dark:text-zinc-300">
-                  {activeDoc?.requirements.map((req, idx) => (
-                    <li key={idx} className="flex items-start gap-2.5 leading-relaxed">
-                      <span className="mt-0.5 flex-shrink-0 w-4 h-4 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 flex items-center justify-center text-[10px] font-bold">
-                        <i className="ph-bold ph-check text-[10px]" />
-                      </span>
-                      <span>{req}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
 
-              {/* Action Buttons */}
-              <div className="pt-2 flex flex-wrap items-center gap-3">
-                <BevelButton
-                  onClick={() => router.push("/login")}
-                  className="h-11 px-7 rounded-full text-xs font-bold tracking-wide cursor-pointer flex items-center gap-2 shadow-md hover:scale-[1.02] active:scale-[0.98] transition-transform"
-                >
-                  <span>Request Credential</span>
-                  <i className="ph-bold ph-arrow-right text-xs" />
-                </BevelButton>
-
-                <button
-                  onClick={() => router.push("/login")}
-                  className="h-11 px-6 rounded-full text-xs font-semibold text-gray-700 dark:text-zinc-300 bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 hover:bg-gray-50 dark:hover:bg-zinc-700/80 transition-colors cursor-pointer"
-                >
-                  Track Existing Request
-                </button>
-              </div>
-
-              {/* Document Pagination Status (Minimalist Apple-style) */}
-              <div className="pt-2 flex items-center gap-3">
-                <span className="font-mono text-xs font-bold text-gray-900 dark:text-white">
-                  {String(activeIndex + 1).padStart(2, "0")}{" "}
-                  <span className="text-gray-400 font-normal">/ {String(totalItems).padStart(2, "0")}</span>
-                </span>
-
-                <div className="flex items-center gap-1.5">
-                  {CATALOG_ITEMS.map((item, idx) => (
-                    <button
-                      key={item.id}
-                      onClick={() => rotateToIndex(idx)}
-                      className={`h-1.5 rounded-full transition-all cursor-pointer ${
-                        idx === activeIndex
-                          ? "w-7 bg-[#800000] dark:bg-red-500"
-                          : "w-1.5 bg-gray-300 dark:bg-zinc-700 hover:bg-gray-400"
-                      }`}
-                      aria-label={`Go to ${item.title}`}
-                    />
-                  ))}
+                {/* Title & Description with stable min-height */}
+                <div className="min-h-[80px] sm:min-h-[86px]">
+                  <h3 className="text-2xl sm:text-3xl font-extrabold text-gray-950 dark:text-white tracking-tight leading-snug">
+                    {activeDoc?.title}
+                  </h3>
+                  <p className="text-xs sm:text-sm text-gray-600 dark:text-zinc-300 mt-2 leading-relaxed">
+                    {activeDoc?.description}
+                  </p>
                 </div>
+
+                {/* Filing Requirements Checklist with stable min-height */}
+                <div className="p-4 sm:p-5 rounded-2xl liquid-glass-light min-h-[148px]">
+                  <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-gray-900 dark:text-zinc-100 mb-3 font-mono">
+                    <i className="ph-bold ph-shield-check text-[#800000] dark:text-red-400 text-base" />
+                    Mandatory Filing Requirements
+                  </div>
+                  <ul className="space-y-2 text-xs text-gray-600 dark:text-zinc-300">
+                    {activeDoc?.requirements.map((req, idx) => (
+                      <li key={idx} className="flex items-start gap-2.5 leading-relaxed">
+                        <span className="mt-0.5 flex-shrink-0 w-4 h-4 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 flex items-center justify-center text-[10px] font-bold">
+                          <i className="ph-bold ph-check text-[10px]" />
+                        </span>
+                        <span>{req}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </motion.div>
+            </AnimatePresence>
+          </div>
+
+          {/* Action Buttons & Pagination: Permanently Mounted Without Jitter */}
+          <div className="space-y-4 pt-1">
+            <div>
+              <BevelButton
+                onClick={() => router.push("/login")}
+                className="h-11 px-7 rounded-full text-xs font-bold tracking-wide cursor-pointer flex items-center gap-2 shadow-md hover:scale-[1.02] active:scale-[0.98] transition-transform"
+              >
+                <span>Request Credential</span>
+                <i className="ph-bold ph-arrow-right text-xs" />
+              </BevelButton>
+            </div>
+
+            {/* Document Pagination Status */}
+            <div className="flex items-center gap-3 pt-1">
+              <span className="font-mono text-xs font-bold text-gray-900 dark:text-white">
+                {String(activeIndex + 1).padStart(2, "0")}{" "}
+                <span className="text-gray-400 font-normal">/ {String(totalItems).padStart(2, "0")}</span>
+              </span>
+
+              <div className="flex items-center gap-1.5">
+                {CATALOG_ITEMS.map((item, idx) => (
+                  <button
+                    key={item.id}
+                    onClick={() => rotateToIndex(idx)}
+                    className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${
+                      idx === activeIndex
+                        ? "w-7 bg-[#800000] dark:bg-red-500"
+                        : "w-1.5 bg-gray-300 dark:bg-zinc-700 hover:bg-gray-400"
+                    }`}
+                    aria-label={`Go to ${item.title}`}
+                  />
+                ))}
               </div>
-            </motion.div>
-          </AnimatePresence>
+            </div>
+          </div>
 
         </div>
       </div>
@@ -421,8 +415,6 @@ export default function DocumentCatalog() {
       {/* Circular Rotating Document Stage: Sweeps across the section and out of the screen */}
       <div
         className="absolute inset-0 w-full h-full pointer-events-auto cursor-grab active:cursor-grabbing select-none overflow-visible"
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
@@ -455,6 +447,8 @@ export default function DocumentCatalog() {
               <div
                 key={item.id}
                 onClick={() => rotateToIndex(idx)}
+                onMouseEnter={() => setIsHovered(true)}
+                onMouseLeave={() => setIsHovered(false)}
                 className="absolute pointer-events-auto cursor-pointer select-none active:scale-[0.98] transition-transform duration-150 transform-gpu"
                 style={{
                   left: `${x}px`,
@@ -475,7 +469,7 @@ export default function DocumentCatalog() {
         </div>
 
         {/* Interactive Instruction Floating Pill */}
-        <div className="absolute bottom-6 right-8 pointer-events-none hidden sm:flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/85 dark:bg-zinc-900/85 backdrop-blur-md border border-black/[0.06] dark:border-white/[0.08] text-[11px] font-mono text-gray-500 dark:text-zinc-400 shadow-md">
+        <div className="absolute bottom-6 right-8 pointer-events-none hidden sm:flex items-center gap-2 px-3.5 py-1.5 rounded-full navbar-liquid-glass text-[11px] font-mono text-gray-500 dark:text-zinc-400 shadow-md">
           <i className="ph-bold ph-hand-pointing text-xs text-[#800000] dark:text-red-400" />
           <span>Drag or click document to inspect</span>
         </div>

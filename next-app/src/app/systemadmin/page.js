@@ -44,8 +44,11 @@ const SystemHealthTab = dynamic(() => import("@/components/systemadmin/SystemHea
 const SystemBackupsTab = dynamic(() => import("@/components/systemadmin/SystemBackupsTab"), {
   loading: () => <TabLoadingSkeleton />,
 })
+const LandingPageCmsTab = dynamic(() => import("@/components/systemadmin/LandingPageCmsTab"), {
+  loading: () => <TabLoadingSkeleton />,
+})
 
-const VALID_VIEWS = ["offices", "modules", "staff", "logs", "health", "backups"]
+const VALID_VIEWS = ["offices", "modules", "staff", "logs", "health", "backups", "landing"]
 
 function SystemAdminPageContent({ authUser: propAuthUser }) {
   const contextUser = useAuthUser()
@@ -202,7 +205,10 @@ function SystemAdminPageContent({ authUser: propAuthUser }) {
     
     { type: "header", label: "Platform Infrastructure" },
     { key: "health", label: "System Health", iconClass: "ph-bold ph-activity" },
-    { key: "backups", label: "Platform Backups", iconClass: "ph-bold ph-cloud-arrow-up" }
+    { key: "backups", label: "Platform Backups", iconClass: "ph-bold ph-cloud-arrow-up" },
+
+    { type: "header", label: "Public Portal & Content" },
+    { key: "landing", label: "Landing Page CMS", iconClass: "ph-bold ph-layout" }
   ]
 
   if (loading) {
@@ -254,6 +260,7 @@ function SystemAdminPageContent({ authUser: propAuthUser }) {
             {view === "logs" && <GlobalAuditLogsTab showToast={showToast} />}
             {view === "health" && <SystemHealthTab showToast={showToast} />}
             {view === "backups" && <SystemBackupsTab showToast={showToast} />}
+            {view === "landing" && <LandingPageCmsTab showToast={showToast} />}
           </div>
         </main>
       </div>

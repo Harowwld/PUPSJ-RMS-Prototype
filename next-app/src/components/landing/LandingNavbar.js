@@ -95,6 +95,7 @@ export default function LandingNavbar() {
 
   return (
     <>
+
       <motion.header 
         initial={{ y: -30, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
@@ -109,28 +110,23 @@ export default function LandingNavbar() {
       >
         {/* Padding wrapper — controls the inset spacing smoothly */}
         <div 
-          className={`w-full mx-auto pointer-events-none transition-all duration-[800ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${
+          className={`w-full mx-auto pointer-events-none transition-all duration-700 ease-[cubic-bezier(0.4,0,0.2,1)] ${
             scrolled || mobileMenuOpen
               ? "max-w-5xl px-4 sm:px-6 pt-3 sm:pt-4"
               : "max-w-full px-0 pt-0"
           }`}
         >
-          <motion.div 
-            layout
-            transition={{ 
-              duration: 0.8,
-              ease: [0.16, 1, 0.3, 1]
-            }}
-            className={`w-full flex flex-col pointer-events-auto transition-all duration-[800ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${
+          <div 
+            className={`navbar-glass-shell w-full flex flex-col pointer-events-auto transition-all duration-700 ease-[cubic-bezier(0.4,0,0.2,1)] ${
               scrolled || mobileMenuOpen
-                ? `px-5 sm:px-6 bg-white/85 dark:bg-zinc-950/85 backdrop-blur-2xl border border-black/[0.08] dark:border-white/[0.12] shadow-[0_12px_32px_rgba(0,0,0,0.08)] ${
+                ? `px-5 sm:px-6 navbar-liquid-glass ${
                     mobileMenuOpen ? "rounded-[28px]" : "rounded-full"
                   }`
                 : "px-6 sm:px-10 lg:px-14 rounded-none bg-zinc-950/25 backdrop-blur-md border border-transparent shadow-none"
             }`}
           >
             {/* Top Bar Row */}
-            <div className={`w-full flex items-center justify-between ${
+            <div className={`w-full flex items-center justify-between transition-[height] duration-700 ease-[cubic-bezier(0.4,0,0.2,1)] ${
               scrolled || mobileMenuOpen ? "h-[46px]" : "h-[50px]"
             }`}>
               {/* BRAND LOGO - Smoothly scrolls back to top */}
@@ -140,11 +136,20 @@ export default function LandingNavbar() {
                 className="flex items-center gap-2.5 cursor-pointer shrink-0"
                 aria-label="Back to top"
               >
-                <div className="w-8 h-8 flex items-center justify-center shrink-0">
+                <div className="w-8 h-8 relative flex items-center justify-center shrink-0">
                   <img 
-                    src={scrolled || mobileMenuOpen ? "/assets/branding/black-icon.png" : "/assets/branding/white-icon.png"}
+                    src="/assets/branding/white-icon.png" 
                     alt="eManage Logo" 
-                    className="w-full h-full object-contain dark:hidden"
+                    className={`w-full h-full object-contain dark:hidden transition-opacity duration-700 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+                      scrolled || mobileMenuOpen ? "opacity-0" : "opacity-100"
+                    }`}
+                  />
+                  <img 
+                    src="/assets/branding/black-icon.png" 
+                    alt="eManage Logo" 
+                    className={`w-full h-full object-contain absolute inset-0 dark:hidden transition-opacity duration-700 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+                      scrolled || mobileMenuOpen ? "opacity-100" : "opacity-0"
+                    }`}
                   />
                   <img 
                     src="/assets/branding/white-icon.png" 
@@ -152,7 +157,7 @@ export default function LandingNavbar() {
                     className="w-full h-full object-contain hidden dark:block"
                   />
                 </div>
-                <span className={`font-bold text-[22px] tracking-tight leading-none transition-colors duration-500 ${
+                <span className={`font-bold text-[22px] tracking-tight leading-none transition-colors duration-700 ease-[cubic-bezier(0.4,0,0.2,1)] ${
                   scrolled || mobileMenuOpen ? "text-gray-950 dark:text-white" : "text-white"
                 }`}>
                   eManage
@@ -160,7 +165,7 @@ export default function LandingNavbar() {
               </a>
 
               {/* NAVIGATION LINKS WITH SMOOTH ANIMATION (Desktop) */}
-              <nav className={`hidden md:flex items-center gap-1 text-[13px] font-medium transition-colors duration-500 ${
+              <nav className={`hidden md:flex items-center gap-1 text-[13px] font-medium transition-colors duration-700 ease-[cubic-bezier(0.4,0,0.2,1)] ${
                 scrolled ? "text-gray-600 dark:text-zinc-300" : "text-white/80"
               }`}>
                 <button 
@@ -222,7 +227,7 @@ export default function LandingNavbar() {
                   <button
                     type="button"
                     onClick={() => router.push("/login")}
-                    className={`h-9 px-3 rounded-full text-[13px] font-medium transition-colors duration-300 cursor-pointer bg-transparent hover:bg-transparent ${
+                    className={`h-9 px-3 rounded-full text-[13px] font-medium transition-colors duration-700 ease-[cubic-bezier(0.4,0,0.2,1)] cursor-pointer bg-transparent hover:bg-transparent ${
                       scrolled || mobileMenuOpen
                         ? "text-gray-700 dark:text-zinc-200 hover:text-gray-950 dark:hover:text-white" 
                         : "text-white/90 hover:text-white"
@@ -236,7 +241,7 @@ export default function LandingNavbar() {
                 <button
                   type="button"
                   onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                  className={`md:hidden w-9 h-9 rounded-full flex items-center justify-center transition-colors duration-500 cursor-pointer ${
+                  className={`md:hidden w-9 h-9 rounded-full flex items-center justify-center transition-colors duration-700 ease-[cubic-bezier(0.4,0,0.2,1)] cursor-pointer ${
                     scrolled || mobileMenuOpen
                       ? "text-gray-700 dark:text-zinc-200 hover:bg-black/[0.04] dark:hover:bg-white/[0.06]" 
                       : "text-white hover:bg-white/15"
@@ -248,14 +253,14 @@ export default function LandingNavbar() {
               </div>
             </div>
 
-            {/* MOBILE MENU ACCORDION (Seamlessly shares the default blurred glass background) */}
+            {/* MOBILE MENU ACCORDION (Seamlessly shares the liquid glass background) */}
             <AnimatePresence>
               {mobileMenuOpen && (
                 <motion.div
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: "auto" }}
                   exit={{ opacity: 0, height: 0 }}
-                  transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                  transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
                   className="md:hidden w-full overflow-hidden border-t border-black/[0.06] dark:border-white/[0.08] pt-2 pb-3.5 flex flex-col gap-1"
                 >
                   <button
@@ -293,7 +298,7 @@ export default function LandingNavbar() {
                 </motion.div>
               )}
             </AnimatePresence>
-          </motion.div>
+          </div>
         </div>
     </motion.header>
   </>
