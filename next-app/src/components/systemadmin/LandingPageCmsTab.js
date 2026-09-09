@@ -4,15 +4,19 @@ import { useState, useEffect, useCallback, useRef } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Select } from "@/components/ui/select"
 import { Skeleton } from "@/components/ui/skeleton"
 import PageHeader from "@/components/shared/PageHeader"
 import ConfirmModal from "@/components/shared/ConfirmModal"
 import BevelButton from "@/components/ui/bevel-button"
 import LandingBentoCmsView from "./LandingBentoCmsView"
+import LandingWorkflowCmsView from "./LandingWorkflowCmsView"
+import LandingCatalogCmsView from "./LandingCatalogCmsView"
+import LandingFaqCmsView from "./LandingFaqCmsView"
 import { cn } from "@/lib/utils"
 
 export default function LandingPageCmsTab({ showToast }) {
-  const [currentSection, setCurrentSection] = useState("hero") // 'hero' | 'bento'
+  const [currentSection, setCurrentSection] = useState("hero") // 'hero' | 'bento' | 'workflow' | 'catalog' | 'faq'
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [uploadingIndex, setUploadingIndex] = useState(null)
@@ -295,11 +299,55 @@ export default function LandingPageCmsTab({ showToast }) {
           <i className="ph-bold ph-squares-four text-sm" />
           <span>Features Bento Grid</span>
         </button>
+
+        <button
+          type="button"
+          onClick={() => setCurrentSection("workflow")}
+          className={cn(
+            "flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer border-0",
+            currentSection === "workflow"
+              ? "bg-white dark:bg-zinc-800 text-pup-maroon dark:text-red-400 shadow-sm"
+              : "text-gray-500 hover:text-gray-900 dark:hover:text-white bg-transparent"
+          )}
+        >
+          <i className="ph-bold ph-git-merge text-sm" />
+          <span>Workflow &amp; Steps</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setCurrentSection("catalog")}
+          className={cn(
+            "flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer border-0",
+            currentSection === "catalog"
+              ? "bg-white dark:bg-zinc-800 text-pup-maroon dark:text-red-400 shadow-sm"
+              : "text-gray-500 hover:text-gray-900 dark:hover:text-white bg-transparent"
+          )}
+        >
+          <i className="ph-bold ph-books text-sm" />
+          <span>Academic Catalog</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setCurrentSection("faq")}
+          className={cn(
+            "flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer border-0",
+            currentSection === "faq"
+              ? "bg-white dark:bg-zinc-800 text-pup-maroon dark:text-red-400 shadow-sm"
+              : "text-gray-500 hover:text-gray-900 dark:hover:text-white bg-transparent"
+          )}
+        >
+          <i className="ph-bold ph-question text-sm" />
+          <span>FAQ Section</span>
+        </button>
       </div>
 
-      {currentSection === "bento" ? (
-        <LandingBentoCmsView showToast={showToast} />
-      ) : (
+      {currentSection === "bento" && <LandingBentoCmsView showToast={showToast} />}
+      {currentSection === "workflow" && <LandingWorkflowCmsView showToast={showToast} />}
+      {currentSection === "catalog" && <LandingCatalogCmsView showToast={showToast} />}
+      {currentSection === "faq" && <LandingFaqCmsView showToast={showToast} />}
+      {currentSection === "hero" && (
         <>
           {/* Main Card with Header, Underline Tabs & Form Content */}
           <Card className="rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none overflow-hidden">
@@ -399,7 +447,7 @@ export default function LandingPageCmsTab({ showToast }) {
                 : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
             )}
           >
-            Interactive Preview
+            Interactive Live Preview
           </button>
         </div>
 
@@ -411,9 +459,8 @@ export default function LandingPageCmsTab({ showToast }) {
               {/* Primary Messaging Panel */}
               <div className="lg:col-span-2 rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/30 p-5 space-y-5">
                 <div>
-                  <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50 flex items-center gap-2">
-                    <i className="ph-bold ph-subtitles text-pup-maroon" />
-                    Hero Headlines & Institutional Philosophy
+                  <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">
+                    Hero Headlines &amp; Institutional Philosophy
                   </h3>
                   <p className="text-[12px] font-normal text-gray-500 dark:text-zinc-400 mt-0.5">
                     Primary large display typography rendered over campus background photography.
@@ -496,8 +543,7 @@ export default function LandingPageCmsTab({ showToast }) {
               {/* Campus Information Side Panel */}
               <div className="rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/30 p-5 space-y-4">
                 <div>
-                  <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50 flex items-center gap-2">
-                    <i className="ph-bold ph-buildings text-pup-maroon" />
+                  <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">
                     Campus Information
                   </h3>
                   <p className="text-[12px] font-normal text-gray-500 dark:text-zinc-400 mt-0.5">
@@ -565,16 +611,6 @@ export default function LandingPageCmsTab({ showToast }) {
                       />
                     </div>
                   </div>
-
-                  <div className="p-3.5 rounded-xl bg-white dark:bg-zinc-950/60 border border-gray-200/80 dark:border-white/5 text-xs text-gray-600 dark:text-zinc-400 space-y-1">
-                    <div className="font-semibold text-gray-900 dark:text-zinc-200 flex items-center gap-1.5">
-                      <i className="ph-bold ph-info text-pup-maroon" />
-                      Live Portal Sync
-                    </div>
-                    <p className="text-[11px] leading-relaxed text-gray-500 dark:text-zinc-400">
-                      Changes published here immediately synchronize with public visitors visiting the root landing page.
-                    </p>
-                  </div>
                 </div>
               </div>
             </div>
@@ -585,18 +621,13 @@ export default function LandingPageCmsTab({ showToast }) {
             <div className="space-y-6">
               {/* Controls Bar */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/30 p-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-pup-maroon/10 dark:bg-red-500/10 flex items-center justify-center text-pup-maroon dark:text-red-400 shrink-0">
-                    <i className="ph-bold ph-images text-xl" />
-                  </div>
-                  <div>
-                    <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">
-                      Campus Background Photos ({heroData.slides.length})
-                    </h3>
-                    <p className="text-[12px] font-normal text-gray-500 dark:text-zinc-400">
-                      Upload campus photos for the landing page carousel. Click any image or button to replace it.
-                    </p>
-                  </div>
+                <div>
+                  <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">
+                    Campus Background Photos ({heroData.slides.length})
+                  </h3>
+                  <p className="text-[12px] font-normal text-gray-500 dark:text-zinc-400">
+                    Upload campus photos for the landing page carousel. Click any image or button to replace it.
+                  </p>
                 </div>
 
                 <div className="flex items-center gap-3 flex-wrap">
@@ -604,21 +635,25 @@ export default function LandingPageCmsTab({ showToast }) {
                   <div className="flex items-center gap-2 text-xs font-medium text-gray-600 dark:text-zinc-300">
                     <i className="ph-bold ph-timer text-gray-400" />
                     <span>Slide Pace:</span>
-                    <select
-                      value={heroData.autoRotateInterval}
-                      onChange={(e) =>
-                        setHeroData((prev) => ({
-                          ...prev,
-                          autoRotateInterval: Number(e.target.value),
-                        }))
-                      }
-                      className="h-9 px-2.5 rounded-xl bg-white dark:bg-zinc-950 border border-gray-200 dark:border-white/10 text-xs font-semibold focus:outline-hidden"
-                    >
-                      <option value={3500}>Fast (3.5s)</option>
-                      <option value={5500}>Balanced (5.5s)</option>
-                      <option value={7500}>Relaxed (7.5s)</option>
-                      <option value={10000}>Slow (10s)</option>
-                    </select>
+                    <div className="w-[145px]">
+                      <Select
+                        value={heroData.autoRotateInterval}
+                        onChange={(e) =>
+                          setHeroData((prev) => ({
+                            ...prev,
+                            autoRotateInterval: Number(e.target.value),
+                          }))
+                        }
+                        className="h-9 rounded-xl border border-gray-200 dark:border-white/10 text-xs font-semibold text-gray-700 dark:text-zinc-200 bg-white dark:bg-zinc-900 cursor-pointer shadow-none px-3"
+                        menuClassName="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-900 shadow-2xl p-1.5"
+                        optionClassName="rounded-lg text-xs font-medium py-2 px-3 hover:bg-gray-100 dark:hover:bg-zinc-800"
+                      >
+                        <option value={3500}>Fast (3.5s)</option>
+                        <option value={5500}>Balanced (5.5s)</option>
+                        <option value={7500}>Relaxed (7.5s)</option>
+                        <option value={10000}>Slow (10s)</option>
+                      </Select>
+                    </div>
                   </div>
 
                   {/* Hidden file input for adding a new photo */}
@@ -666,10 +701,6 @@ export default function LandingPageCmsTab({ showToast }) {
                     slide={slide}
                     isUploading={uploadingIndex === idx}
                     onUploadFile={(file) => handleFileUpload(file, idx)}
-                    onUpdateTitle={(val) => {
-                      updateSlide(idx, "label", val)
-                      updateSlide(idx, "alt", val || `PUP San Juan Campus Photo ${idx + 1}`)
-                    }}
                     onMoveUp={() => moveSlide(idx, -1)}
                     onMoveDown={() => moveSlide(idx, 1)}
                     onDelete={() => setDeleteSlideIndex(idx)}
@@ -704,8 +735,7 @@ export default function LandingPageCmsTab({ showToast }) {
             <div className="space-y-4">
               <div className="flex items-center justify-between rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/30 p-4">
                 <div>
-                  <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50 flex items-center gap-2">
-                    <i className="ph-bold ph-devices text-pup-maroon" />
+                  <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">
                     Simulated Hero Portal Preview
                   </h3>
                   <p className="text-[12px] font-normal text-gray-500 dark:text-zinc-400">
@@ -841,26 +871,49 @@ export default function LandingPageCmsTab({ showToast }) {
       {/* Reset Confirmation Modal */}
       <ConfirmModal
         open={resetModalOpen}
+        onCancel={() => setResetModalOpen(false)}
+        onConfirm={handleReset}
+        isLoading={saving}
         title="Reset Hero Section to Defaults"
         message="Are you sure you want to reset all landing page hero content and slides to default PUP institutional branding? Custom text and custom slide sequences will be reverted."
         confirmLabel="Reset to Defaults"
-        variant="danger"
-        onConfirm={handleReset}
-        onCancel={() => setResetModalOpen(false)}
+        icon="ph-duotone ph-arrow-counter-clockwise"
+        buttonIcon="ph-bold ph-arrow-counter-clockwise"
+        selectedItems={[
+          "Reset hero heading, subheadline, and badge chip",
+          "Restore default PUP San Juan campus background photo slides",
+          "Restore default institutional campus information",
+        ]}
+        isPersonnelModal={true}
+        isAppleStyled={true}
+        isArchiveModal={true}
       />
 
       {/* Delete Slide Confirmation Modal */}
       <ConfirmModal
         open={deleteSlideIndex !== null}
-        title="Remove Background Photo"
-        message="Are you sure you want to remove this background photo from the hero carousel?"
-        confirmLabel="Remove Photo"
-        variant="danger"
+        onCancel={() => setDeleteSlideIndex(null)}
         onConfirm={() => {
           if (deleteSlideIndex !== null) {
             removeSlide(deleteSlideIndex)
           }
         }}
+        title="Remove Background Photo"
+        message="Are you sure you want to remove this background photo from the hero carousel?"
+        confirmLabel="Remove Photo"
+        icon="ph-duotone ph-trash"
+        buttonIcon="ph-bold ph-trash"
+        selectedItems={
+          deleteSlideIndex !== null && heroData?.slides?.[deleteSlideIndex]
+            ? [
+                `Slide ${deleteSlideIndex + 1}: ${heroData.slides[deleteSlideIndex].title || "Untitled Slide"}`,
+                `Image URL: ${heroData.slides[deleteSlideIndex].url?.slice(0, 60) || "No URL"}`,
+              ]
+            : []
+        }
+        isPersonnelModal={true}
+        isAppleStyled={true}
+        isArchiveModal={true}
       />
         </>
       )}
@@ -879,7 +932,6 @@ function SlideCard({
   slide,
   isUploading,
   onUploadFile,
-  onUpdateTitle,
   onMoveUp,
   onMoveDown,
   onDelete,
@@ -890,6 +942,7 @@ function SlideCard({
   const fileInputRef = useRef(null)
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setImageError(false)
     setNaturalSize(null)
   }, [slide.src])
@@ -911,7 +964,7 @@ function SlideCard({
             {index + 1}
           </span>
           <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100 truncate max-w-[160px]">
-            {slide.label || `Photo ${index + 1}`}
+            Photo {index + 1}
           </span>
         </div>
 
@@ -941,7 +994,7 @@ function SlideCard({
             type="button"
             onClick={onDelete}
             title="Remove photo"
-            className="h-7 w-7 rounded-lg flex items-center justify-center text-rose-500 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors cursor-pointer border-0 bg-transparent p-0 ml-1"
+            className="h-7 w-7 rounded-lg flex items-center justify-center text-rose-500 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors cursor-pointer border-0 bg-transparent p-0 ml-1"
           >
             <i className="ph-bold ph-trash text-xs" />
           </button>
@@ -1018,20 +1071,8 @@ function SlideCard({
         }}
       />
 
-      {/* Bottom: Optional Title & Change Photo Button */}
-      <div className="p-4 space-y-3 flex-1 flex flex-col justify-between">
-        <div>
-          <label className="block text-[11px] font-semibold text-gray-600 dark:text-zinc-400 uppercase tracking-wider mb-1">
-            Photo Title (Optional)
-          </label>
-          <Input
-            value={slide.label || ""}
-            onChange={(e) => onUpdateTitle(e.target.value)}
-            placeholder="e.g. Main Campus Entrance"
-            className="h-9 rounded-xl text-xs border-gray-200 bg-white dark:border-white/10 dark:bg-card focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5"
-          />
-        </div>
-
+      {/* Bottom: Change Photo Button */}
+      <div className="p-4">
         <Button
           type="button"
           variant="outline"

@@ -297,6 +297,168 @@ function sanitizeBentoContent(raw) {
   };
 }
 
+const WORKFLOW_SETTINGS_KEY = "landing_workflow_content";
+
+export const DEFAULT_WORKFLOW_CONTENT = {
+  eyebrow: "",
+  headingLine1: "How to Request",
+  headingLine2: "Your Documents.",
+  description:
+    "A straightforward guide for students and alumni. See how your document request is submitted online, authenticated from our digital records, and prepared for pick-up at the Registrar counter.",
+  primaryButtonText: "Request Document",
+  primaryButtonLink: "/login",
+  primaryButtonEnabled: true,
+  secondaryButtonText: "Explore Services (8)",
+  secondaryButtonTarget: "catalog",
+  secondaryButtonEnabled: true,
+  autoCurve: true,
+  curveStyle: "gentle", // 'none' | 'gentle' | 'pronounced'
+  steps: [
+    {
+      num: "01",
+      title: "Sign In to Portal",
+      summary: "Log in with your official Student Number",
+      desc: "Log in to the eManage portal using your official Student Number (format: YYYY-XXXXX-SJ-0). Both currently enrolled students and alumni can access the request system directly.",
+      tags: ["Student Portal", "Student Number Login", "Current & Alumni"],
+      actionLabel: "Open Portal",
+      actionType: "link",
+      actionTarget: "/login",
+      actionIcon: "ph-arrow-right",
+    },
+    {
+      num: "02",
+      title: "Select Your Document",
+      summary: "Choose from official academic credentials",
+      desc: "Browse the available documents and select what you need—such as a Transcript of Records (TOR), Certificate of Grades, Certificate of Registration, or Diploma.",
+      tags: ["8 Document Types", "Official Records", "Clear Requirements"],
+      actionLabel: "View Catalog",
+      actionType: "scroll",
+      actionTarget: "catalog",
+      actionIcon: "ph-arrow-down",
+    },
+    {
+      num: "03",
+      title: "Submit Your Request",
+      summary: "State your purpose and submit online",
+      desc: "Indicate why you need the document (for employment, scholarship, transfer, or board exams) and submit your request form right from your phone or computer.",
+      tags: ["Online Submission", "Purpose of Request", "No Paper Forms"],
+      actionLabel: "",
+      actionType: "none",
+      actionTarget: "",
+      actionIcon: "",
+    },
+    {
+      num: "04",
+      title: "Digital Record Retrieval",
+      summary: "Staff pull your records from the system",
+      desc: "Registrar personnel retrieve your digitized student files directly from the system. Your grades, earned units, and credentials are authenticated without having to search physical folders.",
+      tags: ["Digitized Database", "Fast System Pull", "Staff Authentication"],
+      actionLabel: "",
+      actionType: "none",
+      actionTarget: "",
+      actionIcon: "",
+    },
+    {
+      num: "05",
+      title: "Pick Up at Registrar Counter",
+      summary: "Claim your official stamped document",
+      desc: "Once your document is printed and stamped with the university's official dry seal, you'll be notified that it's ready for pick-up at the Ground Floor Registrar counter.",
+      tags: ["Official Dry Seal", "Registrar Counter", "Campus Pick-Up"],
+      actionLabel: "",
+      actionType: "none",
+      actionTarget: "",
+      actionIcon: "",
+    },
+  ],
+};
+
+export const MAX_WORKFLOW_STEPS = 7;
+export const MIN_WORKFLOW_STEPS = 2;
+
+function sanitizeWorkflowContent(raw) {
+  if (!raw || typeof raw !== "object") {
+    return { ...DEFAULT_WORKFLOW_CONTENT };
+  }
+
+  const def = DEFAULT_WORKFLOW_CONTENT;
+
+  const eyebrow = typeof raw.eyebrow === "string" && raw.eyebrow.trim() !== "" ? raw.eyebrow.trim() : def.eyebrow;
+  const headingLine1 = typeof raw.headingLine1 === "string" && raw.headingLine1.trim() !== "" ? raw.headingLine1.trim() : def.headingLine1;
+  const headingLine2 = typeof raw.headingLine2 === "string" && raw.headingLine2.trim() !== "" ? raw.headingLine2.trim() : def.headingLine2;
+  const description = typeof raw.description === "string" && raw.description.trim() !== "" ? raw.description.trim() : def.description;
+
+  const primaryButtonText = typeof raw.primaryButtonText === "string" && raw.primaryButtonText.trim() !== "" ? raw.primaryButtonText.trim() : def.primaryButtonText;
+  const primaryButtonLink = typeof raw.primaryButtonLink === "string" && raw.primaryButtonLink.trim() !== "" ? raw.primaryButtonLink.trim() : def.primaryButtonLink;
+  const primaryButtonEnabled = raw.primaryButtonEnabled !== false;
+
+  const secondaryButtonText = typeof raw.secondaryButtonText === "string" && raw.secondaryButtonText.trim() !== "" ? raw.secondaryButtonText.trim() : def.secondaryButtonText;
+  const secondaryButtonTarget = typeof raw.secondaryButtonTarget === "string" && raw.secondaryButtonTarget.trim() !== "" ? raw.secondaryButtonTarget.trim() : def.secondaryButtonTarget;
+  const secondaryButtonEnabled = raw.secondaryButtonEnabled !== false;
+
+  const autoCurve = raw.autoCurve !== false;
+  const curveStyle = ["none", "gentle", "pronounced"].includes(raw.curveStyle) ? raw.curveStyle : def.curveStyle;
+
+  const rawStepsArray = Array.isArray(raw.steps) ? raw.steps.slice(0, MAX_WORKFLOW_STEPS) : [];
+
+  const steps = rawStepsArray.length >= MIN_WORKFLOW_STEPS
+    ? rawStepsArray.map((s, idx) => {
+        const defaultStep = def.steps[idx] || {};
+        const stepNum = typeof s?.num === "string" && s.num.trim() !== ""
+          ? s.num.trim()
+          : String(idx + 1).padStart(2, "0");
+        const title = typeof s?.title === "string" && s.title.trim() !== ""
+          ? s.title.trim()
+          : defaultStep.title || `Step ${idx + 1}`;
+        const summary = typeof s?.summary === "string" ? s.summary.trim() : (defaultStep.summary || "");
+        const desc = typeof s?.desc === "string" ? s.desc.trim() : (defaultStep.desc || "");
+        
+        let tags = [];
+        if (Array.isArray(s?.tags)) {
+          tags = s.tags
+            .map((t) => (typeof t === "string" ? t.trim() : ""))
+            .filter((t) => t.length > 0);
+        } else if (typeof s?.tags === "string") {
+          tags = s.tags.split(",").map((t) => t.trim()).filter((t) => t.length > 0);
+        } else if (Array.isArray(defaultStep.tags)) {
+          tags = defaultStep.tags;
+        }
+
+        const actionLabel = typeof s?.actionLabel === "string" ? s.actionLabel.trim() : (defaultStep.actionLabel || "");
+        const actionType = ["none", "link", "scroll"].includes(s?.actionType) ? s.actionType : (defaultStep.actionType || "none");
+        const actionTarget = typeof s?.actionTarget === "string" ? s.actionTarget.trim() : (defaultStep.actionTarget || "");
+        const actionIcon = typeof s?.actionIcon === "string" ? s.actionIcon.trim() : (defaultStep.actionIcon || "");
+
+        return {
+          num: stepNum,
+          title,
+          summary,
+          desc,
+          tags,
+          actionLabel,
+          actionType,
+          actionTarget,
+          actionIcon,
+        };
+      })
+    : def.steps;
+
+  return {
+    eyebrow,
+    headingLine1,
+    headingLine2,
+    description,
+    primaryButtonText,
+    primaryButtonLink,
+    primaryButtonEnabled,
+    secondaryButtonText,
+    secondaryButtonTarget,
+    secondaryButtonEnabled,
+    autoCurve,
+    curveStyle,
+    steps,
+  };
+}
+
 export const landingContentRepo = {
   getHeroContent: async () => {
     try {
@@ -347,5 +509,455 @@ export const landingContentRepo = {
     await systemConfigRepo.setSetting(BENTO_SETTINGS_KEY, JSON.stringify(DEFAULT_BENTO_CONTENT));
     return { ...DEFAULT_BENTO_CONTENT };
   },
+
+  getWorkflowContent: async () => {
+    try {
+      const raw = await systemConfigRepo.getSetting(WORKFLOW_SETTINGS_KEY);
+      if (!raw) {
+        return { ...DEFAULT_WORKFLOW_CONTENT };
+      }
+      const parsed = JSON.parse(raw);
+      return sanitizeWorkflowContent(parsed);
+    } catch (err) {
+      console.error("[landingContentRepo] getWorkflowContent error:", err);
+      return { ...DEFAULT_WORKFLOW_CONTENT };
+    }
+  },
+
+  updateWorkflowContent: async (content) => {
+    const sanitized = sanitizeWorkflowContent(content);
+    await systemConfigRepo.setSetting(WORKFLOW_SETTINGS_KEY, JSON.stringify(sanitized));
+    return sanitized;
+  },
+
+  resetWorkflowContent: async () => {
+    await systemConfigRepo.setSetting(WORKFLOW_SETTINGS_KEY, JSON.stringify(DEFAULT_WORKFLOW_CONTENT));
+    return { ...DEFAULT_WORKFLOW_CONTENT };
+  },
+
+  getCatalogContent: async () => {
+    try {
+      const raw = await systemConfigRepo.getSetting(CATALOG_SETTINGS_KEY);
+      if (!raw) {
+        return { ...DEFAULT_CATALOG_CONTENT };
+      }
+      const parsed = JSON.parse(raw);
+      return sanitizeCatalogContent(parsed);
+    } catch (err) {
+      console.error("[landingContentRepo] getCatalogContent error:", err);
+      return { ...DEFAULT_CATALOG_CONTENT };
+    }
+  },
+
+  updateCatalogContent: async (content) => {
+    const sanitized = sanitizeCatalogContent(content);
+    await systemConfigRepo.setSetting(CATALOG_SETTINGS_KEY, JSON.stringify(sanitized));
+    return sanitized;
+  },
+
+  resetCatalogContent: async () => {
+    await systemConfigRepo.setSetting(CATALOG_SETTINGS_KEY, JSON.stringify(DEFAULT_CATALOG_CONTENT));
+    return { ...DEFAULT_CATALOG_CONTENT };
+  },
+
+  getFaqContent: async () => {
+    try {
+      const raw = await systemConfigRepo.getSetting(FAQ_SETTINGS_KEY);
+      if (!raw) {
+        return { ...DEFAULT_FAQ_CONTENT };
+      }
+      const parsed = JSON.parse(raw);
+      return sanitizeFaqContent(parsed);
+    } catch (err) {
+      console.error("[landingContentRepo] getFaqContent error:", err);
+      return { ...DEFAULT_FAQ_CONTENT };
+    }
+  },
+
+  updateFaqContent: async (content) => {
+    const sanitized = sanitizeFaqContent(content);
+    await systemConfigRepo.setSetting(FAQ_SETTINGS_KEY, JSON.stringify(sanitized));
+    return sanitized;
+  },
+
+  resetFaqContent: async () => {
+    await systemConfigRepo.setSetting(FAQ_SETTINGS_KEY, JSON.stringify(DEFAULT_FAQ_CONTENT));
+    return { ...DEFAULT_FAQ_CONTENT };
+  },
 };
+
+const CATALOG_SETTINGS_KEY = "landing_catalog_content";
+
+export const DEFAULT_CATALOG_CONTENT = {
+  eyebrow: "Official University Credentials",
+  heading: "Academic Document Catalog",
+  description:
+    "Explore authentic credentials, university clearance protocols, and official registrar records issued by the University.",
+  badgeText: "Official Credential",
+  primaryButtonText: "Request Credential",
+  primaryButtonLink: "/login",
+  primaryButtonEnabled: true,
+  dragHint: "Drag or click document to inspect",
+  items: [
+    {
+      id: "tor",
+      code: "TOR",
+      title: "Transcript of Records",
+      category: "transcripts",
+      client: "Student & Alumni",
+      description:
+        "Official comprehensive academic transcript for employment, PRC board examinations, and graduate studies.",
+      requirements: [
+        "2x2 Formal Photo (White Background, Nametag)",
+        "University Clearance Form (Fully Signed)",
+        "Documentary Stamp (BIR Compliant)",
+      ],
+      previewStyle: "tor",
+      sealTag: "REGISTRAR SEAL VERIFIED",
+    },
+    {
+      id: "cog",
+      code: "COG",
+      title: "Certificate of Grades",
+      category: "transcripts",
+      client: "Enrolled Students",
+      description:
+        "Certified summary of semester grades requested for scholarships, employer tuition subsidies, and academic evaluation.",
+      requirements: [
+        "Current Student ID or SIS Portal Profile Printout",
+        "Specific Academic Year & Semester Identification",
+      ],
+      previewStyle: "cog",
+      sealTag: "Registrar Certified",
+    },
+    {
+      id: "cor",
+      code: "COR",
+      title: "Certificate of Registration",
+      category: "certs",
+      client: "Enrolled Students",
+      description:
+        "Official certification of enrollment status for student discounts, government aid, and passport/visa requirements.",
+      requirements: [
+        "Validated Assessment Form / Enrollment Proof",
+        "Current Semester Course Load Details",
+      ],
+      previewStyle: "cor",
+      sealTag: "Assessed & Cleared",
+    },
+    {
+      id: "ctc",
+      code: "HD",
+      title: "Honorable Dismissal",
+      category: "clearances",
+      client: "Transferees",
+      description:
+        "Formal Certificate of Transfer Credential certifying official release from PUP to transfer to another institution.",
+      requirements: [
+        "Comprehensive Campus University Clearance",
+        "Surrender of PUP Student ID Card",
+        "Parent / Guardian Consent Form (If Minor)",
+      ],
+      previewStyle: "ctc",
+      sealTag: "Release Approved",
+    },
+    {
+      id: "moral",
+      code: "GMC",
+      title: "Good Moral Character",
+      category: "certs",
+      client: "Student & Alumni",
+      description:
+        "Issued in coordination with OSAS certifying zero pending disciplinary infractions during university residency.",
+      requirements: [
+        "OSAS Disciplinary Clearance Slip",
+        "Valid Student ID or Government ID Card",
+      ],
+      previewStyle: "moral",
+      sealTag: "Cleared",
+    },
+    {
+      id: "diploma",
+      code: "DIP-2",
+      title: "Second Copy of Diploma",
+      category: "clearances",
+      client: "Alumni Only",
+      description:
+        "Official replacement graduation diploma reissued after verified destruction or loss of the original parchment.",
+      requirements: [
+        "Notarized Affidavit of Loss / Damage",
+        "Copy of Official Certificate of Graduation",
+        "Board of Regents Formal Verification",
+      ],
+      previewStyle: "diploma",
+      sealTag: "Gold Seal Certified",
+    },
+    {
+      id: "cav",
+      code: "CAV",
+      title: "CAV (DFA Apostille / Abroad)",
+      category: "certs",
+      client: "Graduates & Alumni",
+      description:
+        "Certification, Authentication, and Verification endorsed directly to DFA and CHED for international credential recognition.",
+      requirements: [
+        "Certified True Copies of TOR and Diploma",
+        "Passport Identification Copy (Full Legal Name)",
+        "CHED / Red Ribbon Endorsement Checklist",
+      ],
+      previewStyle: "cav",
+      sealTag: "Apostille Cleared",
+    },
+    {
+      id: "certified_copy",
+      code: "CTC",
+      title: "Certified True Copy",
+      category: "transcripts",
+      client: "Student & Alumni",
+      description:
+        "Official Registrar dry seal and verification stamp placed on original photocopies of university academic records.",
+      requirements: [
+        "Original Document for Verification Presentation",
+        "Clear Photocopy for Dry Seal Stamping",
+      ],
+      previewStyle: "certified_copy",
+      sealTag: "CERTIFIED TRUE COPY",
+    },
+  ],
+};
+
+export const MAX_CATALOG_ITEMS = 8;
+export const MIN_CATALOG_ITEMS = 2;
+
+function sanitizeCatalogContent(raw) {
+  if (!raw || typeof raw !== "object") {
+    return { ...DEFAULT_CATALOG_CONTENT };
+  }
+
+  const def = DEFAULT_CATALOG_CONTENT;
+
+  const eyebrow = typeof raw.eyebrow === "string" ? raw.eyebrow.trim() : def.eyebrow;
+  const heading = typeof raw.heading === "string" && raw.heading.trim() !== "" ? raw.heading.trim() : def.heading;
+  const description = typeof raw.description === "string" && raw.description.trim() !== "" ? raw.description.trim() : def.description;
+  const badgeText = typeof raw.badgeText === "string" && raw.badgeText.trim() !== "" ? raw.badgeText.trim() : def.badgeText;
+
+  const primaryButtonText = typeof raw.primaryButtonText === "string" && raw.primaryButtonText.trim() !== "" ? raw.primaryButtonText.trim() : def.primaryButtonText;
+  const primaryButtonLink = typeof raw.primaryButtonLink === "string" && raw.primaryButtonLink.trim() !== "" ? raw.primaryButtonLink.trim() : def.primaryButtonLink;
+  const primaryButtonEnabled = raw.primaryButtonEnabled !== false;
+  const dragHint = typeof raw.dragHint === "string" && raw.dragHint.trim() !== "" ? raw.dragHint.trim() : def.dragHint;
+
+  const rawItemsArray = Array.isArray(raw.items) ? raw.items.slice(0, MAX_CATALOG_ITEMS) : [];
+
+  const items = rawItemsArray.length >= MIN_CATALOG_ITEMS
+    ? rawItemsArray.map((item, idx) => {
+        const defaultItem = def.items[idx] || {};
+        const id = typeof item?.id === "string" && item.id.trim() !== ""
+          ? item.id.trim().toLowerCase().replace(/[^a-z0-9_-]/g, "_")
+          : defaultItem.id || `doc_${idx + 1}`;
+        const code = typeof item?.code === "string" && item.code.trim() !== ""
+          ? item.code.trim().toUpperCase()
+          : defaultItem.code || `DOC-${idx + 1}`;
+        const title = typeof item?.title === "string" && item.title.trim() !== ""
+          ? item.title.trim()
+          : defaultItem.title || `Document ${idx + 1}`;
+        const category = typeof item?.category === "string" && item.category.trim() !== ""
+          ? item.category.trim()
+          : defaultItem.category || "transcripts";
+        const client = typeof item?.client === "string" && item.client.trim() !== ""
+          ? item.client.trim()
+          : defaultItem.client || "Student & Alumni";
+        const desc = typeof item?.description === "string" && item.description.trim() !== ""
+          ? item.description.trim()
+          : defaultItem.description || "Official university academic record.";
+
+        let requirements = [];
+        if (Array.isArray(item?.requirements)) {
+          requirements = item.requirements
+            .map((r) => (typeof r === "string" ? r.trim() : ""))
+            .filter((r) => r.length > 0);
+        } else if (typeof item?.requirements === "string") {
+          requirements = item.requirements.split("\n").map((r) => r.trim()).filter((r) => r.length > 0);
+        } else if (Array.isArray(defaultItem.requirements)) {
+          requirements = defaultItem.requirements;
+        }
+        if (requirements.length === 0) {
+          requirements = ["Valid Student ID or Government Issued ID"];
+        }
+
+        const previewStyle = typeof item?.previewStyle === "string" && item.previewStyle.trim() !== ""
+          ? item.previewStyle.trim()
+          : defaultItem.previewStyle || id;
+        const sealTag = typeof item?.sealTag === "string" && item.sealTag.trim() !== ""
+          ? item.sealTag.trim()
+          : defaultItem.sealTag || "REGISTRAR SEAL VERIFIED";
+
+        return {
+          id,
+          code,
+          title,
+          category,
+          client,
+          description: desc,
+          requirements,
+          previewStyle,
+          sealTag,
+        };
+      })
+    : def.items;
+
+  return {
+    eyebrow,
+    heading,
+    description,
+    badgeText,
+    primaryButtonText,
+    primaryButtonLink,
+    primaryButtonEnabled,
+    dragHint,
+    items,
+  };
+}
+
+export const FAQ_SETTINGS_KEY = "landing_faq_content";
+
+export const DEFAULT_FAQ_CONTENT = {
+  eyebrow: "Clear & Direct University Guidelines",
+  heading: "Frequently Asked Questions",
+  description:
+    "Quick answers on requesting, tracking, and claiming your official school records.",
+  supportCardEnabled: false,
+  supportTitle: "",
+  supportDescription: "",
+  supportButtonText: "",
+  supportButtonLink: "#",
+  supportLocation: "",
+  faqs: [
+    {
+      id: "how-to-request",
+      q: "How do I request my school records?",
+      a: "Log in with your Student Number, choose the document you need (like your TOR, grades, or diploma), and submit your request online. No paper forms needed.",
+      category: "Requests",
+    },
+    {
+      id: "forgot-student-number",
+      q: "I forgot my student number. Can I still request?",
+      a: "Yes! You can skip the student number and enter your full name, course, and years attended. Our staff will find your file in the records archive.",
+      category: "Requests",
+    },
+    {
+      id: "processing-time",
+      q: "How long does it take to process my request?",
+      a: "Regular certificates take 3 working days. Clearances take 7 days, and full transcripts (TOR) take up to 20 days. You will be notified when it is ready for pickup.",
+      category: "Processing",
+    },
+    {
+      id: "representative-pickup",
+      q: "Can someone else pick up my document for me?",
+      a: "Yes. They just need to bring: (1) an authorization letter signed by you, (2) a copy of your valid ID, and (3) their own valid ID.",
+      category: "Pickup",
+    },
+    {
+      id: "cutoff-time",
+      q: "What time does daily evaluation cut off?",
+      a: "Cut-off is 3:00 PM on weekdays (Monday to Friday). Requests submitted after 3:00 PM are evaluated the next working morning.",
+      category: "Processing",
+    },
+    {
+      id: "claiming-deadline",
+      q: "How long do I have to claim my document?",
+      a: "Please claim your document within 90 days after notification. Unclaimed documents are safely disposed of after 90 days to protect your privacy.",
+      category: "Pickup",
+    },
+  ],
+};
+
+export const MAX_FAQ_ITEMS = 16;
+export const MIN_FAQ_ITEMS = 2;
+
+function sanitizeFaqContent(raw) {
+  if (!raw || typeof raw !== "object") {
+    return { ...DEFAULT_FAQ_CONTENT };
+  }
+
+  const def = DEFAULT_FAQ_CONTENT;
+
+  const eyebrow = typeof raw.eyebrow === "string" ? raw.eyebrow.trim() : def.eyebrow;
+  const heading =
+    typeof raw.heading === "string" && raw.heading.trim() !== ""
+      ? raw.heading.trim()
+      : def.heading;
+  const description =
+    typeof raw.description === "string" && raw.description.trim() !== ""
+      ? raw.description.trim()
+      : def.description;
+
+  const supportCardEnabled = false;
+  const supportTitle =
+    typeof raw.supportTitle === "string" && raw.supportTitle.trim() !== ""
+      ? raw.supportTitle.trim()
+      : def.supportTitle;
+  const supportDescription =
+    typeof raw.supportDescription === "string" && raw.supportDescription.trim() !== ""
+      ? raw.supportDescription.trim()
+      : def.supportDescription;
+  const supportButtonText =
+    typeof raw.supportButtonText === "string" && raw.supportButtonText.trim() !== ""
+      ? raw.supportButtonText.trim()
+      : def.supportButtonText;
+  const supportButtonLink =
+    typeof raw.supportButtonLink === "string" && raw.supportButtonLink.trim() !== ""
+      ? raw.supportButtonLink.trim()
+      : def.supportButtonLink;
+  const supportLocation =
+    typeof raw.supportLocation === "string" && raw.supportLocation.trim() !== ""
+      ? raw.supportLocation.trim()
+      : def.supportLocation;
+
+  const rawFaqsArray = Array.isArray(raw.faqs) ? raw.faqs.slice(0, MAX_FAQ_ITEMS) : [];
+
+  const faqs =
+    rawFaqsArray.length >= MIN_FAQ_ITEMS
+      ? rawFaqsArray.map((item, idx) => {
+          const defaultItem = def.faqs[idx] || {};
+          const id =
+            typeof item?.id === "string" && item.id.trim() !== ""
+              ? item.id.trim().toLowerCase().replace(/[^a-z0-9_-]/g, "_")
+              : defaultItem.id || `faq_${idx + 1}`;
+          const q =
+            typeof item?.q === "string" && item.q.trim() !== ""
+              ? item.q.trim()
+              : defaultItem.q || `Question ${idx + 1}?`;
+          const a =
+            typeof item?.a === "string" && item.a.trim() !== ""
+              ? item.a.trim()
+              : defaultItem.a || "Official response from the Registrar's Office.";
+          const category =
+            typeof item?.category === "string" && item.category.trim() !== ""
+              ? item.category.trim()
+              : defaultItem.category || "General";
+
+          return {
+            id,
+            q,
+            a,
+            category,
+          };
+        })
+      : def.faqs;
+
+  return {
+    eyebrow,
+    heading,
+    description,
+    supportCardEnabled,
+    supportTitle,
+    supportDescription,
+    supportButtonText,
+    supportButtonLink,
+    supportLocation,
+    faqs,
+  };
+}
+
+
 

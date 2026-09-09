@@ -16,10 +16,13 @@ export default function ConfirmModal({
   open,
   title,
   message,
+  description,
   confirmLabel,
+  confirmText,
   cancelLabel = "Cancel",
   onConfirm,
-  onCancel,
+  onCancel = () => {},
+  onOpenChange,
   isLoading = false,
   disabled = false,
   variant = "danger",
@@ -95,9 +98,27 @@ export default function ConfirmModal({
     },
   };
 
-  const v = variantClasses[variant] || variantClasses.default;
+  const normalizedVariant = variant === "destructive" ? "danger" : variant;
+  const v = variantClasses[normalizedVariant] || variantClasses.default;
   const displayIcon = customIcon || v.icon;
   const displayButtonIcon = customButtonIcon || v.buttonIcon;
+  const displayMessage = message || description;
+  const displayConfirmLabel = confirmLabel || confirmText || "Confirm";
+
+  const handleOpenChange = (isOpen) => {
+    if (!isOpen) {
+      if (typeof onCancel === "function") {
+        onCancel();
+      }
+      if (typeof onOpenChange === "function") {
+        onOpenChange(false);
+      }
+    } else {
+      if (typeof onOpenChange === "function") {
+        onOpenChange(true);
+      }
+    }
+  };
 
   const isVerificationEnabled = !!verificationTarget;
   const isVerified = !isVerificationEnabled || verificationValue === verificationTarget;
@@ -141,7 +162,7 @@ export default function ConfirmModal({
   const isAppleStyled = isAppleStyledProp || isDeleteBackup || isArchiveModal || isRestoreModal || isPersonnelModal || isRegistrationModal || isUnsavedChangesModal;
 
   return (
-    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onCancel()}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent
         className={cn(
           "sm:max-w-lg p-0 overflow-hidden bg-white border border-gray-200 shadow-2xl rounded-2xl dark:bg-card dark:border-white/10"
@@ -169,7 +190,7 @@ export default function ConfirmModal({
                 `text-sm font-medium mt-1.5 ${v.description}`,
                 isAppleStyled && "text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-1"
               )}>
-                {message}
+                {displayMessage}
               </DialogDescription>
               {note && (
                 isRegistrationModal ? (
@@ -361,7 +382,7 @@ export default function ConfirmModal({
           <Button
             type="button"
             variant="ghost"
-            onClick={onCancel}
+            onClick={typeof onCancel === "function" ? onCancel : () => handleOpenChange(false)}
             className={cn(
               "h-11 rounded-brand px-6 text-sm font-semibold text-gray-500 hover:bg-transparent hover:text-gray-700 dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-transparent transition-colors",
               isAppleStyled && "h-10 px-4 text-xs font-semibold text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:text-zinc-400 dark:hover:bg-white/5 rounded-xl cursor-pointer border-none shadow-none"
@@ -380,11 +401,11 @@ export default function ConfirmModal({
             className={cn(
               "px-6 text-sm font-semibold gap-2 flex items-center transition-all active:scale-95 disabled:opacity-30 disabled:grayscale-[0.5] disabled:cursor-not-allowed",
               !isAppleStyled && "shadow-sm",
-              (variant === "success" && !isRestoreModal) && "btn-brand-green",
-              (variant === "warning" && !isUnsavedChangesModal) && (v.confirmStyle || "bg-amber-600 hover:bg-amber-700 text-white"),
-              (variant === "brand") && "btn-brand-red hover:from-red-700 hover:to-red-900",
+              (normalizedVariant === "success" && !isRestoreModal) && "btn-brand-green",
+              (normalizedVariant === "warning" && !isUnsavedChangesModal) && (v.confirmStyle || "bg-amber-600 hover:bg-amber-700 text-white"),
+              (normalizedVariant === "brand") && "btn-brand-red hover:from-red-700 hover:to-red-900",
               (v.confirmVariant === "destructive") && "btn-brand-red",
-              (v.confirmVariant === "default" && !["success", "warning", "brand"].includes(variant)) && "bg-gray-900 hover:bg-gray-800 text-white dark:bg-zinc-800 dark:hover:bg-zinc-700 dark:text-zinc-50 dark:border-white/10",
+              (v.confirmVariant === "default" && !["success", "warning", "brand"].includes(normalizedVariant)) && "bg-gray-900 hover:bg-gray-800 text-white dark:bg-zinc-800 dark:hover:bg-zinc-700 dark:text-zinc-50 dark:border-white/10",
               (isAppleStyled && !isRestoreModal && !isUnsavedChangesModal) && "btn-brand-red rounded-xl! h-10 px-5 text-xs font-semibold text-white shadow-none! border-none! cursor-pointer",
               isRestoreModal && "bg-slate-900 hover:bg-slate-800 active:bg-black text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 rounded-xl! h-10 px-5 text-xs font-semibold shadow-none! border-none! cursor-pointer",
               isUnsavedChangesModal && "bg-[#FF6410] hover:bg-[#e55300] active:bg-[#cc4a00] text-white rounded-xl! h-10 px-5 text-xs font-semibold shadow-none! border-none! cursor-pointer",
@@ -393,7 +414,7 @@ export default function ConfirmModal({
             )}
           >
             {!isAppleStyled && <i className={`${displayButtonIcon} text-lg`}></i>}
-            {isLoading ? "Processing..." : confirmLabel}
+            {isLoading ? "Processing..." : displayConfirmLabel}
           </LiquidGlassButton>
         </div>
       </DialogContent>

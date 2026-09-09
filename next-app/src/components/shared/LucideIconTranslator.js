@@ -137,6 +137,21 @@ export default function LucideIconTranslator() {
       "question-circle": "help-circle",
       "help-circle": "help-circle",
       "files": "files",
+      "scales": "scale",
+      "text-t": "type",
+      "cursor-click": "mouse-pointer-click",
+      "devices": "monitor-smartphone",
+      "hand-pointing": "pointer",
+      "clock-countdown": "hourglass",
+      "globe-hemisphere-east": "globe",
+      "bell-ringing": "bell-ring",
+      "list-dashes": "list",
+      "button": "rectangle-horizontal",
+      "wave-sine": "waves",
+      "paper-plane-tilt": "send",
+      "file-arrow-up": "file-up",
+      "folder-notch-open": "folder-open",
+      "path": "route",
     };
 
     function toCamelCase(str) {

@@ -4,6 +4,7 @@ import React from "react";
 
 export default function DocumentCardPreview({ item, isActive = false }) {
   if (!item) return null;
+  const style = item.previewStyle || item.id;
 
   return (
     <div
@@ -71,6 +72,18 @@ export default function DocumentCardPreview({ item, isActive = false }) {
               </div>
             </div>
           </div>
+
+          {item.code && (
+            <span
+              className={`px-2 py-0.5 rounded-lg text-[9px] font-mono font-bold uppercase tracking-wider border ${
+                isActive
+                  ? "bg-white/15 border-white/25 text-white"
+                  : "bg-black/[0.04] dark:bg-white/[0.06] border-black/[0.06] dark:border-white/[0.08] text-zinc-600 dark:text-zinc-300"
+              }`}
+            >
+              {item.code}
+            </span>
+          )}
         </div>
 
         {/* Document Title Banner */}
@@ -84,7 +97,9 @@ export default function DocumentCardPreview({ item, isActive = false }) {
               ? "Academic Record"
               : item.category === "certs"
               ? "Official Certification"
-              : "Clearance Credential"}
+              : item.category === "clearances"
+              ? "Clearance Credential"
+              : item.category || "Official Credential"}
           </div>
           <h4
             className={`text-[16px] font-extrabold tracking-tight leading-snug line-clamp-1 mt-0.5 ${
@@ -98,7 +113,7 @@ export default function DocumentCardPreview({ item, isActive = false }) {
 
       {/* Center Body: High-End Apple-Style Credential Content */}
       <div className="relative z-10 my-auto py-2.5">
-        {item.id === "tor" && (
+        {style === "tor" && (
           <div className="space-y-2.5">
             <div
               className={`rounded-2xl p-3 border shadow-2xs ${
@@ -158,7 +173,7 @@ export default function DocumentCardPreview({ item, isActive = false }) {
           </div>
         )}
 
-        {item.id === "cog" && (
+        {style === "cog" && (
           <div className="space-y-3">
             <div
               className={`p-3.5 rounded-2xl border shadow-2xs ${
@@ -214,7 +229,7 @@ export default function DocumentCardPreview({ item, isActive = false }) {
           </div>
         )}
 
-        {item.id === "cor" && (
+        {style === "cor" && (
           <div className="space-y-2.5">
             <div
               className={`rounded-2xl p-3.5 border shadow-2xs ${
@@ -264,7 +279,7 @@ export default function DocumentCardPreview({ item, isActive = false }) {
           </div>
         )}
 
-        {item.id === "diploma" && (
+        {style === "diploma" && (
           <div className="space-y-2.5 text-center">
             <div
               className={`p-3.5 rounded-2xl border shadow-2xs ${
@@ -306,7 +321,7 @@ export default function DocumentCardPreview({ item, isActive = false }) {
           </div>
         )}
 
-        {item.id === "moral" && (
+        {style === "moral" && (
           <div className="space-y-2.5">
             <div
               className={`p-3 rounded-2xl border text-center shadow-2xs ${
@@ -346,7 +361,7 @@ export default function DocumentCardPreview({ item, isActive = false }) {
           </div>
         )}
 
-        {item.id === "cav" && (
+        {style === "cav" && (
           <div className="space-y-2.5">
             <div
               className={`p-3 rounded-2xl border shadow-2xs ${
@@ -392,7 +407,7 @@ export default function DocumentCardPreview({ item, isActive = false }) {
           </div>
         )}
 
-        {item.id === "ctc" && (
+        {(style === "ctc" || style === "dismissal") && (
           <div className="space-y-2.5">
             <div
               className={`p-3 rounded-2xl border shadow-2xs ${
@@ -436,7 +451,7 @@ export default function DocumentCardPreview({ item, isActive = false }) {
           </div>
         )}
 
-        {item.id === "certified_copy" && (
+        {(style === "certified_copy" || style === "stamp") && (
           <div className="space-y-2.5 relative">
             <div
               className={`p-3 rounded-2xl border shadow-2xs ${
@@ -478,6 +493,60 @@ export default function DocumentCardPreview({ item, isActive = false }) {
               >
                 CERTIFIED TRUE COPY
               </div>
+            </div>
+          </div>
+        )}
+
+        {!["tor", "cog", "cor", "diploma", "moral", "cav", "ctc", "dismissal", "certified_copy", "stamp"].includes(style) && (
+          <div className="space-y-2.5">
+            <div
+              className={`p-3.5 rounded-2xl border shadow-2xs ${
+                isActive
+                  ? "bg-black/25 border-white/15 backdrop-blur-sm"
+                  : "bg-zinc-50/80 dark:bg-zinc-800/60 border-black/[0.05] dark:border-white/[0.06]"
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <span
+                  className={`text-[9px] font-mono font-bold uppercase tracking-wider ${
+                    isActive ? "text-red-200" : "text-[#800000] dark:text-red-400"
+                  }`}
+                >
+                  {item.client || "Official Credential"}
+                </span>
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              </div>
+              <div
+                className={`text-[12px] font-bold mt-1 tracking-tight line-clamp-1 ${
+                  isActive ? "text-white" : "text-zinc-900 dark:text-white"
+                }`}
+              >
+                {item.title}
+              </div>
+              <div
+                className={`mt-2 pt-2 border-t text-[9px] font-mono leading-relaxed line-clamp-2 ${
+                  isActive
+                    ? "border-white/10 text-red-100/90"
+                    : "border-black/[0.04] dark:border-white/[0.04] text-zinc-600 dark:text-zinc-400"
+                }`}
+              >
+                {item.description}
+              </div>
+            </div>
+            <div className="flex items-center justify-between px-1">
+              <div
+                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9px] font-mono font-bold border ${
+                  isActive
+                    ? "bg-white/15 border-white/25 text-white"
+                    : "bg-emerald-50/80 dark:bg-emerald-950/30 border-emerald-200/60 dark:border-emerald-800/40 text-emerald-800 dark:text-emerald-300"
+                }`}
+              >
+                <span className={`w-1.5 h-1.5 rounded-full ${isActive ? "bg-amber-300" : "bg-emerald-500"}`} />
+                <span>{item.sealTag || "REGISTRAR SEAL VERIFIED"}</span>
+              </div>
+              <span className={`text-[9px] font-mono font-bold ${isActive ? "text-red-200" : "text-zinc-500 dark:text-zinc-400"}`}>
+                {item.code || "PUPSJ"}
+              </span>
             </div>
           </div>
         )}

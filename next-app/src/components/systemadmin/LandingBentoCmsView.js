@@ -345,11 +345,10 @@ export default function LandingBentoCmsView({ showToast }) {
           
           {/* TAB 1: Section Header & Overview */}
           {activeTab === "header" && (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-2 rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/30 p-5 space-y-5">
+            <div className="w-full space-y-6">
+              <div className="w-full rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/30 p-5 sm:p-6 space-y-5">
                 <div>
-                  <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50 flex items-center gap-2">
-                    <i className="ph-bold ph-text-t text-pup-maroon" />
+                  <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">
                     Section Title &amp; Asymmetric Editorial Copy
                   </h3>
                   <p className="text-[12px] font-normal text-gray-500 dark:text-zinc-400 mt-0.5">
@@ -442,37 +441,6 @@ export default function LandingBentoCmsView({ showToast }) {
                   </div>
                 </div>
               </div>
-
-              {/* Info Guide */}
-              <div className="rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/30 p-5 space-y-4 flex flex-col justify-between">
-                <div>
-                  <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50 flex items-center gap-2">
-                    <i className="ph-bold ph-info text-pup-maroon" />
-                    Section Context
-                  </h3>
-                  <p className="text-[12px] font-normal text-gray-500 dark:text-zinc-400 mt-1 leading-relaxed">
-                    This section introduces the core services of the records keeping portal right below the hero photography carousel.
-                  </p>
-
-                  <div className="mt-4 p-3 rounded-xl bg-white dark:bg-zinc-950/60 border border-gray-200/80 dark:border-white/5 space-y-2 text-xs">
-                    <div className="font-semibold text-gray-900 dark:text-zinc-100 flex items-center gap-1.5">
-                      <i className="ph-bold ph-check-circle text-emerald-600" />
-                      5 Structured Pillars
-                    </div>
-                    <ul className="text-[11px] text-gray-600 dark:text-zinc-400 space-y-1 pl-4 list-disc">
-                      <li>Online Request Experience</li>
-                      <li>Clear SLA Pick-Up Turnaround</li>
-                      <li>Physical Archive Cabinet Sync</li>
-                      <li>Checklist Requirements</li>
-                      <li>Legal Assurances (RA 11032)</li>
-                    </ul>
-                  </div>
-                </div>
-
-                <div className="text-[11px] text-gray-400 dark:text-zinc-500 font-mono">
-                  Updates apply instantly to public visitors upon save.
-                </div>
-              </div>
             </div>
           )}
 
@@ -509,8 +477,7 @@ export default function LandingBentoCmsView({ showToast }) {
               {activeCardTab === 1 && (
                 <div className="rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/30 p-5 space-y-5">
                   <div>
-                    <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50 flex items-center gap-2">
-                      <i className="ph-bold ph-cursor-click text-pup-maroon" />
+                    <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">
                       Card 1: Online Request Simulation
                     </h3>
                     <p className="text-[12px] text-gray-500 dark:text-zinc-400 mt-0.5">
@@ -622,8 +589,7 @@ export default function LandingBentoCmsView({ showToast }) {
               {activeCardTab === 2 && (
                 <div className="rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/30 p-5 space-y-5">
                   <div>
-                    <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50 flex items-center gap-2">
-                      <i className="ph-bold ph-clock text-pup-maroon" />
+                    <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">
                       Card 2: Pick-Up Schedule &amp; SLA Chips
                     </h3>
                     <p className="text-[12px] text-gray-500 dark:text-zinc-400 mt-0.5">
@@ -755,8 +721,7 @@ export default function LandingBentoCmsView({ showToast }) {
               {activeCardTab === 3 && (
                 <div className="rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/30 p-5 space-y-5">
                   <div>
-                    <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50 flex items-center gap-2">
-                      <i className="ph-bold ph-archive text-pup-maroon" />
+                    <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">
                       Card 3: Direct Campus Archives Connection
                     </h3>
                     <p className="text-[12px] text-gray-500 dark:text-zinc-400 mt-0.5">
@@ -796,62 +761,6 @@ export default function LandingBentoCmsView({ showToast }) {
                       className="w-full rounded-xl border border-gray-200 bg-white p-3 text-xs leading-relaxed dark:border-white/10 dark:bg-card focus:outline-hidden"
                     />
                   </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div>
-                      <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300 mb-1.5">
-                        Room Node Code
-                      </label>
-                      <Input
-                        value={bentoData.card3.roomCode}
-                        onChange={(e) =>
-                          setBentoData((prev) => ({
-                            ...prev,
-                            card3: { ...prev.card3, roomCode: e.target.value },
-                          }))
-                        }
-                        placeholder="R1"
-                        maxLength={5}
-                        className="h-10 rounded-xl bg-white dark:bg-card text-xs font-mono font-bold"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300 mb-1.5">
-                        Cabinet Node Code
-                      </label>
-                      <Input
-                        value={bentoData.card3.cabinetCode}
-                        onChange={(e) =>
-                          setBentoData((prev) => ({
-                            ...prev,
-                            card3: { ...prev.card3, cabinetCode: e.target.value },
-                          }))
-                        }
-                        placeholder="C-A"
-                        maxLength={5}
-                        className="h-10 rounded-xl bg-white dark:bg-card text-xs font-mono font-bold"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300 mb-1.5">
-                        Drawer Node Code
-                      </label>
-                      <Input
-                        value={bentoData.card3.drawerCode}
-                        onChange={(e) =>
-                          setBentoData((prev) => ({
-                            ...prev,
-                            card3: { ...prev.card3, drawerCode: e.target.value },
-                          }))
-                        }
-                        placeholder="D-2"
-                        maxLength={5}
-                        className="h-10 rounded-xl bg-white dark:bg-card text-xs font-mono font-bold"
-                      />
-                    </div>
-                  </div>
                 </div>
               )}
 
@@ -859,8 +768,7 @@ export default function LandingBentoCmsView({ showToast }) {
               {activeCardTab === 4 && (
                 <div className="rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/30 p-5 space-y-5">
                   <div>
-                    <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50 flex items-center gap-2">
-                      <i className="ph-bold ph-check-square text-pup-maroon" />
+                    <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">
                       Card 4: Preparation Checklist
                     </h3>
                     <p className="text-[12px] text-gray-500 dark:text-zinc-400 mt-0.5">
@@ -981,8 +889,7 @@ export default function LandingBentoCmsView({ showToast }) {
               {activeCardTab === 5 && (
                 <div className="rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/30 p-5 space-y-5">
                   <div>
-                    <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50 flex items-center gap-2">
-                      <i className="ph-bold ph-scales text-pup-maroon" />
+                    <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">
                       Card 5: Legal Safeguards &amp; RA 11032 Compliance
                     </h3>
                     <p className="text-[12px] text-gray-500 dark:text-zinc-400 mt-0.5">
@@ -1023,56 +930,6 @@ export default function LandingBentoCmsView({ showToast }) {
                     />
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div>
-                      <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300 mb-1.5">
-                        Tab 1 Button Label
-                      </label>
-                      <Input
-                        value={bentoData.card5.tab1Label}
-                        onChange={(e) =>
-                          setBentoData((prev) => ({
-                            ...prev,
-                            card5: { ...prev.card5, tab1Label: e.target.value },
-                          }))
-                        }
-                        className="h-10 rounded-xl bg-white dark:bg-card text-xs"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300 mb-1.5">
-                        Tab 2 Button Label
-                      </label>
-                      <Input
-                        value={bentoData.card5.tab2Label}
-                        onChange={(e) =>
-                          setBentoData((prev) => ({
-                            ...prev,
-                            card5: { ...prev.card5, tab2Label: e.target.value },
-                          }))
-                        }
-                        className="h-10 rounded-xl bg-white dark:bg-card text-xs"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300 mb-1.5">
-                        Tab 3 Button Label
-                      </label>
-                      <Input
-                        value={bentoData.card5.tab3Label}
-                        onChange={(e) =>
-                          setBentoData((prev) => ({
-                            ...prev,
-                            card5: { ...prev.card5, tab3Label: e.target.value },
-                          }))
-                        }
-                        className="h-10 rounded-xl bg-white dark:bg-card text-xs"
-                      />
-                    </div>
-                  </div>
-
                   <div>
                     <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300 mb-1.5">
                       Footer Note
@@ -1098,8 +955,7 @@ export default function LandingBentoCmsView({ showToast }) {
             <div className="space-y-6">
               <div className="flex items-center justify-between rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/30 p-4">
                 <div>
-                  <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50 flex items-center gap-2">
-                    <i className="ph-bold ph-devices text-pup-maroon" />
+                  <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">
                     Simulated Bento Grid Preview
                   </h3>
                   <p className="text-[12px] font-normal text-gray-500 dark:text-zinc-400">
@@ -1358,12 +1214,22 @@ export default function LandingBentoCmsView({ showToast }) {
       {/* Reset Confirmation Modal */}
       <ConfirmModal
         open={resetModalOpen}
+        onCancel={() => setResetModalOpen(false)}
+        onConfirm={handleReset}
+        isLoading={saving}
         title="Reset Bento Grid to Defaults"
         message="Are you sure you want to reset all landing page bento grid features, SLA chips, checklist stubs, and legal commitments to default institutional branding?"
         confirmLabel="Reset to Defaults"
-        variant="danger"
-        onConfirm={handleReset}
-        onCancel={() => setResetModalOpen(false)}
+        icon="ph-duotone ph-arrow-counter-clockwise"
+        buttonIcon="ph-bold ph-arrow-counter-clockwise"
+        selectedItems={[
+          "Reset all 4 bento card headers, taglines, and descriptions",
+          "Revert SLA badges, compliance metrics, and checklist items",
+          "Restore official PUP San Juan institutional commitments",
+        ]}
+        isPersonnelModal={true}
+        isAppleStyled={true}
+        isArchiveModal={true}
       />
     </div>
   )

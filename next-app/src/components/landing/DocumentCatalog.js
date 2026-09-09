@@ -113,6 +113,40 @@ export default function DocumentCatalog() {
   const router = useRouter();
   const [activeIndex, setActiveIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
+  const [catalogData, setCatalogData] = useState({
+    eyebrow: "Official University Credentials",
+    heading: "Academic Document Catalog",
+    description:
+      "Explore authentic credentials, university clearance protocols, and official registrar records issued by the University.",
+    badgeText: "Official Credential",
+    primaryButtonText: "Request Credential",
+    primaryButtonLink: "/login",
+    primaryButtonEnabled: true,
+    dragHint: "Drag or click document to inspect",
+    items: CATALOG_ITEMS,
+  });
+
+  // Fetch dynamic catalog configuration
+  useEffect(() => {
+    let isMounted = true;
+    fetch("/api/landing/catalog", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((json) => {
+        if (isMounted && json.ok && json.data) {
+          setCatalogData(json.data);
+        }
+      })
+      .catch((err) => {
+        console.warn("[DocumentCatalog] Failed to fetch catalog config:", err);
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const items = catalogData.items?.length ? catalogData.items : CATALOG_ITEMS;
+  const totalItems = items.length;
+  const safeActiveIndex = activeIndex < totalItems ? activeIndex : 0;
 
   // Section reference for sizing the giant Ferris Wheel
   const sectionRef = useRef(null);
@@ -122,8 +156,6 @@ export default function DocumentCatalog() {
     centerY: 450,
     scale: 1,
   });
-
-  const totalItems = CATALOG_ITEMS.length;
 
   // Responsive Ferris Wheel geometry calculation
   useEffect(() => {
@@ -294,7 +326,7 @@ export default function DocumentCatalog() {
     }
   };
 
-  const activeDoc = CATALOG_ITEMS[activeIndex] || CATALOG_ITEMS[0];
+  const activeDoc = items[safeActiveIndex] || items[0];
 
   return (
     <section
@@ -313,11 +345,16 @@ export default function DocumentCatalog() {
 
           {/* Section Heading & Subtitle */}
           <div>
+            {catalogData.eyebrow && (
+              <div className="text-[11px] font-mono uppercase tracking-widest text-[#800000] dark:text-red-400 font-bold mb-2">
+                {catalogData.eyebrow}
+              </div>
+            )}
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-gray-950 dark:text-white leading-[1.08]">
-              Academic Document Catalog
+              {catalogData.heading || "Academic Document Catalog"}
             </h2>
             <p className="text-sm sm:text-base text-gray-500 dark:text-zinc-400 mt-2.5 leading-relaxed font-normal">
-              Explore authentic credentials, university clearance protocols, and official registrar records issued by the University.
+              {catalogData.description}
             </p>
           </div>
 
@@ -338,7 +375,7 @@ export default function DocumentCatalog() {
                   </span>
                   <span className="px-2.5 py-1 rounded-full text-[11px] font-mono font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/60 dark:border-emerald-800/40 inline-flex items-center gap-1.5">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                    Official Credential
+                    {catalogData.badgeText || "Official Credential"}
                   </span>
                 </div>
 
@@ -359,7 +396,7 @@ export default function DocumentCatalog() {
                     Mandatory Filing Requirements
                   </div>
                   <ul className="space-y-2 text-xs text-gray-600 dark:text-zinc-300">
-                    {activeDoc?.requirements.map((req, idx) => (
+                    {activeDoc?.requirements?.map((req, idx) => (
                       <li key={idx} className="flex items-start gap-2.5 leading-relaxed">
                         <span className="mt-0.5 flex-shrink-0 w-4 h-4 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 flex items-center justify-center text-[10px] font-bold">
                           <i className="ph-bold ph-check text-[10px]" />
@@ -375,30 +412,40 @@ export default function DocumentCatalog() {
 
           {/* Action Buttons & Pagination: Permanently Mounted Without Jitter */}
           <div className="space-y-4 pt-1">
-            <div>
-              <BevelButton
-                onClick={() => router.push("/login")}
-                className="h-11 px-7 rounded-full text-xs font-bold tracking-wide cursor-pointer flex items-center gap-2 shadow-md hover:scale-[1.02] active:scale-[0.98] transition-transform"
-              >
-                <span>Request Credential</span>
-                <i className="ph-bold ph-arrow-right text-xs" />
-              </BevelButton>
-            </div>
+            {catalogData.primaryButtonEnabled !== false && (
+              <div>
+                <BevelButton
+                  onClick={() => {
+                    const link = catalogData.primaryButtonLink || "/login";
+                    if (link.startsWith("#")) {
+                      const el = document.getElementById(link.substring(1));
+                      if (el) el.scrollIntoView({ behavior: "smooth" });
+                    } else {
+                      router.push(link);
+                    }
+                  }}
+                  className="h-11 px-7 rounded-full text-xs font-bold tracking-wide cursor-pointer flex items-center gap-2 shadow-md hover:scale-[1.02] active:scale-[0.98] transition-transform"
+                >
+                  <span>{catalogData.primaryButtonText || "Request Credential"}</span>
+                  <i className="ph-bold ph-arrow-right text-xs" />
+                </BevelButton>
+              </div>
+            )}
 
             {/* Document Pagination Status */}
             <div className="flex items-center gap-3 pt-1">
               <span className="font-mono text-xs font-bold text-gray-900 dark:text-white">
-                {String(activeIndex + 1).padStart(2, "0")}{" "}
+                {String(safeActiveIndex + 1).padStart(2, "0")}{" "}
                 <span className="text-gray-400 font-normal">/ {String(totalItems).padStart(2, "0")}</span>
               </span>
 
               <div className="flex items-center gap-1.5">
-                {CATALOG_ITEMS.map((item, idx) => (
+                {items.map((item, idx) => (
                   <button
                     key={item.id}
                     onClick={() => rotateToIndex(idx)}
                     className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${
-                      idx === activeIndex
+                      idx === safeActiveIndex
                         ? "w-7 bg-[#800000] dark:bg-red-500"
                         : "w-1.5 bg-gray-300 dark:bg-zinc-700 hover:bg-gray-400"
                     }`}
@@ -422,7 +469,7 @@ export default function DocumentCatalog() {
       >
         {/* Orbiting Document Cards */}
         <div className="absolute inset-0 w-full h-full pointer-events-none">
-          {CATALOG_ITEMS.map((item, idx) => {
+          {items.map((item, idx) => {
             const step = (2 * Math.PI) / totalItems;
             const angle = renderAngle + idx * step;
 
@@ -441,7 +488,7 @@ export default function DocumentCatalog() {
             // Subtle organic tilt
             const subtleTilt = Math.sin(angle) * 2.5;
 
-            const isActive = idx === activeIndex;
+            const isActive = idx === safeActiveIndex;
 
             return (
               <div
@@ -469,10 +516,12 @@ export default function DocumentCatalog() {
         </div>
 
         {/* Interactive Instruction Floating Pill */}
-        <div className="absolute bottom-6 right-8 pointer-events-none hidden sm:flex items-center gap-2 px-3.5 py-1.5 rounded-full navbar-liquid-glass text-[11px] font-mono text-gray-500 dark:text-zinc-400 shadow-md">
-          <i className="ph-bold ph-hand-pointing text-xs text-[#800000] dark:text-red-400" />
-          <span>Drag or click document to inspect</span>
-        </div>
+        {catalogData.dragHint && (
+          <div className="absolute bottom-6 right-8 pointer-events-none hidden sm:flex items-center gap-2 px-3.5 py-1.5 rounded-full navbar-liquid-glass text-[11px] font-mono text-gray-500 dark:text-zinc-400 shadow-md">
+            <i className="ph-bold ph-hand-pointing text-xs text-[#800000] dark:text-red-400" />
+            <span>{catalogData.dragHint}</span>
+          </div>
+        )}
       </div>
 
     </section>

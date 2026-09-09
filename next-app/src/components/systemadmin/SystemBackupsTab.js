@@ -20,6 +20,7 @@ import { formatPHDateTime } from "@/lib/timeFormat"
 
 import HealthSidebar from "@/components/admin/backup/HealthSidebar"
 import BackupTable from "@/components/admin/backup/BackupTable"
+import BackupTableSkeleton from "@/components/admin/backup/BackupTableSkeleton"
 import PageHeader from "@/components/shared/PageHeader"
 import FloatingActionBar from "@/components/shared/FloatingActionBar"
 import ConfirmModal from "@/components/shared/ConfirmModal"
@@ -525,14 +526,7 @@ export default function SystemBackupsTab({ showToast }) {
             </div>
 
             {isLoading && !isManualLoading ? (
-              <div className="flex-1 flex h-fit min-h-[600px] flex-col items-center justify-center rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card p-10">
-                <div className="flex flex-col items-center gap-4">
-                  <i className="ph-bold ph-spinner animate-spin text-xl text-indigo-600 dark:text-primary" />
-                  <p className="text-sm font-semibold text-gray-500 tracking-widest dark:text-zinc-400">
-                    Loading...
-                  </p>
-                </div>
-              </div>
+              <BackupTableSkeleton />
             ) : error ? (
               <div className="flex-1 flex h-fit min-h-[600px] flex-col overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card">
                 <CardContent className="flex flex-1 flex-col items-center justify-center p-6">

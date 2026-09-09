@@ -47,6 +47,7 @@ export async function middleware(req) {
     pathname.startsWith("/api/auth/me") ||
     pathname.startsWith("/api/auth/forgot-password") ||
     pathname.startsWith("/api/public/") ||
+    (pathname.startsWith("/api/landing/") && method === "GET") ||
     pathname === "/api/doc-types" ||
     pathname === "/api/system/reset-db" ||
     pathname === "/api/system/seed-mock-data"

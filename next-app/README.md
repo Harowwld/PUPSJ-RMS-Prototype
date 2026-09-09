@@ -50,7 +50,16 @@ Do not commit `.env.local`. The default Docker Compose database values are inten
 
 ## Start PostgreSQL and initialize the database
 
-Start Docker Desktop, then from `next-app/` run:
+### Linux Startup Sequence (AI Agents & Developers)
+On Linux environments, ensure your active shell session has Docker permissions before running services:
+```bash
+newgrp docker
+docker compose up -d
+pnpm dev
+```
+
+### General / Desktop Workflow
+Start Docker Desktop (or the Docker daemon on Linux), then from `next-app/` run:
 
 ```bash
 docker compose up -d --wait postgres
@@ -67,7 +76,7 @@ To start everything in one command, use:
 pnpm dev
 ```
 
-This starts PostgreSQL, waits for it to become healthy, runs migrations, and starts Next.js. The hot-folder watcher starts only when `HOT_FOLDER_INGEST_TOKEN` is set. If Docker is not running, start Docker Desktop and run the command again.
+This starts PostgreSQL, waits for it to become healthy, runs migrations, and starts Next.js. The hot-folder watcher starts only when `HOT_FOLDER_INGEST_TOKEN` is set. If Docker is not running, start Docker Desktop (or verify Docker daemon) and run the command again.
 
 For Next.js without Docker startup or the hot-folder watcher:
 

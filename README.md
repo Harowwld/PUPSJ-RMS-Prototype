@@ -50,7 +50,17 @@ Do not commit `.env.local`. The default Docker Compose database values are inten
 
 ## Start PostgreSQL and initialize the database
 
-Start Docker Desktop, then from `next-app/` run:
+### Linux Startup Sequence (AI Agents & Developers)
+On Linux environments, ensure your active shell session has Docker permissions before running services:
+```bash
+newgrp docker
+cd next-app
+docker compose up -d
+pnpm dev
+```
+
+### General / Desktop Workflow
+Start Docker Desktop (or the Docker daemon on Linux), then from `next-app/` run:
 
 ```bash
 docker compose up -d --wait postgres
@@ -67,7 +77,7 @@ To start everything in one command, use:
 pnpm dev
 ```
 
-This starts PostgreSQL, waits for it to become healthy, runs migrations, and starts Next.js. The hot-folder watcher starts only when `HOT_FOLDER_INGEST_TOKEN` is set. If Docker is not running, start Docker Desktop and run the command again.
+This starts PostgreSQL, waits for it to become healthy, runs migrations, and starts Next.js. The hot-folder watcher starts only when `HOT_FOLDER_INGEST_TOKEN` is set. If Docker is not running, start Docker Desktop (or verify Docker daemon) and run the command again.
 
 For Next.js without Docker startup or the hot-folder watcher:
 
@@ -149,13 +159,27 @@ After a reset, restart the Next.js server and run `pnpm db:seed:sample` again.
 
 ## Project structure
 
-- `src/app/` — Next.js pages and API routes
-- `src/components/admin/` — administrator tabs, including PSA calibration
-- `src/components/staff/` — scanning, upload, archive, and request workflows
-- `src/lib/` — PostgreSQL access, repositories, authentication, OCR, and utilities
-- `migrations/` — ordered PostgreSQL schema and seed migrations
-- `scripts/` — database, OCR, hot-folder, and verification utilities
+- `next-app/src/app/` — Next.js pages and API routes
+- `next-app/src/components/admin/` — administrator tabs, including PSA calibration
+- `next-app/src/components/staff/` — scanning, upload, archive, and request workflows
+- `next-app/src/lib/` — PostgreSQL access, repositories, authentication, OCR, and utilities
+- `next-app/migrations/` — ordered PostgreSQL schema and seed migrations
+- `next-app/scripts/` — database, OCR, hot-folder, and verification utilities
+- `docs/` — consolidated architecture specs, changelogs, and checklists
+- `AGENTS.md` — AI agent rules, environment setup, and maintainer guide
 - `.local/` — local uploads, backups, and runtime data; do not commit it
+
+## Documentation
+
+Comprehensive project documentation is organized in [`docs/`](docs/):
+
+- **[AI Agent & Maintainer Guide](AGENTS.md)** — Mandatory guide for AI agents, rules, and system conventions
+- **[Technology Stack](docs/TECHNOLOGY_STACK.md)** — Complete architecture, libraries, and data layer documentation
+- **[Modal System Specification](docs/MODAL_SPEC.md)** — Design standards for all dialogs and modals
+- **[Implementation Checklist](docs/IMPLEMENTATION_CHECKLIST.md)** — PostgreSQL migration and feature verification status
+- **[Backup & Recovery Specification](docs/BACKUP_SPEC.md)** — Backup lifecycle, encryption, and air-gap sync details
+- **[System Updates Log](docs/SYSTEM_UPDATES.md)** — Feature milestones and security updates
+- **[Changelog](docs/CHANGELOG.md)** — Chronological release notes
 
 ## Troubleshooting
 

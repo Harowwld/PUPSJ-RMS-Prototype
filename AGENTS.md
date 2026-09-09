@@ -4,6 +4,38 @@ This document provides comprehensive orientation to the **PUPSJ Records Manageme
 
 ---
 
+## 0. AI Agent Run & Environment Guide (Linux First)
+
+> [!IMPORTANT]
+> ### Mandatory Startup Sequence on Linux
+> When AI agents or developers execute this project in a Linux environment (e.g., CachyOS, Arch, Ubuntu, Fedora), the environment **MUST** be initialized using this exact 3-step sequence:
+>
+> 1. **Activate Docker Group**:
+>    ```bash
+>    newgrp docker
+>    ```
+>    - **Why**: On Linux, communicating with `/var/run/docker.sock` requires membership in the `docker` group. Subshells spawned by IDEs or terminals may not have this group actively effective. `newgrp docker` activates the group in the active shell.
+>    - **Agent Note for Non-Interactive Tool Executions**: In non-interactive subshells (such as automated agent tool calls or bash scripts without an interactive TTY), running `newgrp` interactively may block waiting for input. Agents should use `sg docker -c "docker compose up -d"` or ensure Docker socket access beforehand.
+>
+> 2. **Start PostgreSQL via Docker Compose**:
+>    ```bash
+>    cd next-app && docker compose up -d
+>    ```
+>    - **Why**: The application uses a local PostgreSQL 16 container (`pupsj-rms-postgres`) exposed on host port `5433` (mapped from container `5432`). Running `docker compose up -d` starts this container in detached mode.
+>    - To wait until PostgreSQL passes healthchecks before proceeding:
+>      ```bash
+>      cd next-app && docker compose up -d --wait postgres
+>      ```
+>
+> 3. **Run Dev Server & Migrations**:
+>    ```bash
+>    cd next-app && pnpm dev
+>    ```
+>    - **Why**: `pnpm dev` launches `scripts/start-local-dev.mjs`, which verifies that the PostgreSQL container is running and healthy, applies pending migrations (`pnpm db:migrate`), and starts Next.js on `http://localhost:3000`.
+>    - **Next.js Only (Fast Restart)**: If Docker Compose and migrations have already been run, you can start Next.js directly with `pnpm dev:next`.
+
+---
+
 ## 1. System Architecture Overview
 
 ### 1.1 High-Level Architecture
@@ -37,11 +69,12 @@ This document provides comprehensive orientation to the **PUPSJ Records Manageme
                               │
 ┌─────────────────────────────────────────────────────────────┐
 │                    Data & Persistence Layer                  │
-│  ┌─────────────────┐  ┌─────────────────────────────────┐  │
-│  │  SQLite (sql.js)│  │  File System                     │  │
-│  │  .local/        │  │  .local/uploads/ (PDFs, scans)   │  │
-│  │  └── db.sqlite  │  │  .local/backups/ (encrypted)     │  │
-│  └─────────────────┘  └─────────────────────────────────┘  │
+│  ┌──────────────────────────────────┐  ┌─────────────────┐  │
+│  │  PostgreSQL 16 (Docker Compose)  │  │  File System    │  │
+│  │  Container: pupsj-rms-postgres   │  │  .local/uploads │  │
+│  │  Port: 5433 (:5432 internal)     │  │  .local/backups │  │
+│  │  Database: pupsj_rms             │  │  (encrypted)    │  │
+│  └──────────────────────────────────┘  └─────────────────┘  │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -89,7 +122,7 @@ All database access goes through `*Repo.js` files in `src/lib/`:
 |-------|------------|
 | **Framework** | Next.js 16 (App Router), React 19 |
 | **Styling** | Tailwind CSS v4 (`@import "tailwindcss"` in `globals.css`) |
-| **Database** | sql.js (SQLite in-process, file-based persistence) |
+| **Database** | PostgreSQL 16 (via Docker Compose container `pupsj-rms-postgres` on port `5433`; `pg` driver) |
 | **Auth** | JWT (HS256) via **jose**, HTTP-only cookie `pup_session` |
 | **UI Components** | shadcn/ui primitives (Radix-based) |
 | **Notifications** | sonner (toast notifications) |
@@ -258,9 +291,10 @@ Create a `.env.local` file in `next-app/` with these variables:
 
 | Variable | Required | Default | Purpose |
 |----------|----------|---------|---------|
+| `DATABASE_URL` | **Yes** | `postgres://pupsj_rms:pupsj_rms_local@localhost:5433/pupsj_rms` | Connection string for PostgreSQL container |
 | `JWT_SECRET` | **Yes** | — | Secret key for JWT signing (HS256). **Must be set for auth to work.** |
 | `SESSION_COOKIE_NAME` | No | `pup_session` | Name of the HTTP-only session cookie |
-| `LOCAL_DATA_DIR` | No | `.local/` | Path to SQLite and uploads directory |
+| `LOCAL_DATA_DIR` | No | `.local/` | Path to uploads and local data directory |
 | `DEFAULT_STAFF_PASSWORD` | No | `pupstaff` | Default password for new staff accounts |
 | `NEXT_PUBLIC_DEFAULT_STAFF_PASSWORD` | No | `pupstaff` | Exposed to UI for display purposes |
 | `BACKUP_ENCRYPTION_KEY` | No | `JWT_SECRET` fallback | AES-256 key for backup encryption |
@@ -667,25 +701,83 @@ const displayTime = formatPHDateTime(isoString);
 
 ---
 
-## 13. Development Commands
+## 13. Development Commands & Environment Setup
 
-From `next-app/` directory:
+### 13.1 Linux Startup Sequence (Mandatory for AI Agents & Developers)
+
+When running the application on Linux (e.g., CachyOS, Arch, Ubuntu, Debian), follow this exact workflow:
 
 ```bash
-# Development (includes hot-folder watcher)
+# 1. Ensure docker group membership is active in current shell
+newgrp docker
+
+# 2. Start PostgreSQL container in detached mode (from next-app/)
+cd next-app
+docker compose up -d
+
+# 3. Start development server, verify DB health, and run migrations
+pnpm dev
+```
+
+#### AI Agent Execution Guidance
+- **Interactive Terminal**: When a human developer or an agent with an interactive TTY starts the workspace, run `newgrp docker`, then `docker compose up -d`, then `pnpm dev`.
+- **Non-Interactive Tool Executions**: When an AI agent executes single-line commands through automated subshells (where `newgrp` may wait on STDIN), use `sg docker -c "<command>"` or ensure docker permissions beforehand:
+  ```bash
+  sg docker -c "docker compose -f /path/to/next-app/docker-compose.yml up -d"
+  ```
+- **Postgres Container Details**:
+  - Service: `postgres:16-alpine`
+  - Container name: `pupsj-rms-postgres`
+  - Port mapping: `5433:5432` (Host: 5433, Container: 5432)
+  - Connection: `postgres://pupsj_rms:pupsj_rms_local@localhost:5433/pupsj_rms`
+
+### 13.2 Command Reference (from `next-app/`)
+
+```bash
+# === Core App Commands ===
+# Full development flow: starts Docker Postgres, applies migrations, starts Next.js + hot-folder watcher
 pnpm dev
 
-# Next.js only (no watcher)
+# Next.js only (skips docker compose up & migration checks - requires DB already running)
 pnpm dev:next
-
-# Hot-folder watcher only (for existing server)
-pnpm hot-folder-watcher
 
 # Production build
 pnpm build
 
-# Linting
+# Production start
+pnpm start
+
+# Code linting
 pnpm lint
+
+# === Database Commands ===
+# Apply all pending PostgreSQL migrations
+pnpm db:migrate
+
+# Seed sample data (safe to rerun, conflict-safe inserts)
+pnpm db:seed:sample
+
+# Seed default test accounts (SuperAdmin, Registrar Admin/Staff, OSAS Admin, Student)
+pnpm db:seed:test
+
+# Verify local PostgreSQL connectivity and table status
+pnpm db:verify
+
+# Create encrypted PostgreSQL backup
+pnpm db:backup
+
+# === Docker Compose Commands ===
+# Start PostgreSQL in background
+docker compose up -d
+
+# Start and wait until PostgreSQL is healthy
+docker compose up -d --wait postgres
+
+# Stop PostgreSQL container
+docker compose down
+
+# View database container logs
+docker compose logs -f postgres
 ```
 
 ---
