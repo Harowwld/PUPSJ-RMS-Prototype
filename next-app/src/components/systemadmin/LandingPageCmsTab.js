@@ -13,15 +13,17 @@ import LandingBentoCmsView from "./LandingBentoCmsView"
 import LandingWorkflowCmsView from "./LandingWorkflowCmsView"
 import LandingCatalogCmsView from "./LandingCatalogCmsView"
 import LandingFaqCmsView from "./LandingFaqCmsView"
+import LandingFooterCmsView from "./LandingFooterCmsView"
+import LandingHeroSkeleton from "@/components/systemadmin/skeletons/LandingHeroSkeleton"
 import { cn } from "@/lib/utils"
 
 export default function LandingPageCmsTab({ showToast }) {
-  const [currentSection, setCurrentSection] = useState("hero") // 'hero' | 'bento' | 'workflow' | 'catalog' | 'faq'
+  const [currentSection, setCurrentSection] = useState("hero") // 'hero' | 'bento' | 'workflow' | 'catalog' | 'faq' | 'footer'
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [uploadingIndex, setUploadingIndex] = useState(null)
   const [isAddingPhoto, setIsAddingPhoto] = useState(false)
-  const [activeTab, setActiveTab] = useState("content") // 'content' | 'slides' | 'preview'
+  const [activeTab, setActiveTab] = useState("slides") // 'slides' | 'content' | 'preview'
   const [previewSlideIdx, setPreviewSlideIdx] = useState(0)
 
   // Form State
@@ -39,6 +41,10 @@ export default function LandingPageCmsTab({ showToast }) {
   // Modal States
   const [resetModalOpen, setResetModalOpen] = useState(false)
   const [deleteSlideIndex, setDeleteSlideIndex] = useState(null)
+
+  // Drag-and-drop slide reordering state
+  const [draggedSlideIdx, setDraggedSlideIdx] = useState(null)
+  const [dragOverSlideIdx, setDragOverSlideIdx] = useState(null)
 
   // File input refs
   const newPhotoInputRef = useRef(null)
@@ -259,13 +265,29 @@ export default function LandingPageCmsTab({ showToast }) {
     })
   }
 
+  const reorderSlide = (fromIndex, toIndex) => {
+    if (fromIndex === toIndex || fromIndex < 0 || toIndex < 0) return
+    if (fromIndex >= heroData.slides.length || toIndex >= heroData.slides.length) return
+
+    setHeroData((prev) => {
+      const nextSlides = [...prev.slides]
+      const [movedItem] = nextSlides.splice(fromIndex, 1)
+      nextSlides.splice(toIndex, 0, movedItem)
+      return { ...prev, slides: nextSlides }
+    })
+
+    setPreviewSlideIdx((prev) => {
+      if (prev === fromIndex) return toIndex
+      if (fromIndex < toIndex && prev > fromIndex && prev <= toIndex) return prev - 1
+      if (fromIndex > toIndex && prev >= toIndex && prev < fromIndex) return prev + 1
+      return prev
+    })
+
+    notify(`Moved Photo ${fromIndex + 1} to position ${toIndex + 1}`)
+  }
+
   if (loading) {
-    return (
-      <div className="flex flex-col gap-6 w-full animate-fade-up font-inter">
-        <Skeleton className="h-20 w-full rounded-2xl" />
-        <Skeleton className="h-96 w-full rounded-2xl" />
-      </div>
-    )
+    return <LandingHeroSkeleton />
   }
 
   return (
@@ -341,12 +363,27 @@ export default function LandingPageCmsTab({ showToast }) {
           <i className="ph-bold ph-question text-sm" />
           <span>FAQ Section</span>
         </button>
+
+        <button
+          type="button"
+          onClick={() => setCurrentSection("footer")}
+          className={cn(
+            "flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer border-0",
+            currentSection === "footer"
+              ? "bg-white dark:bg-zinc-800 text-pup-maroon dark:text-red-400 shadow-sm"
+              : "text-gray-500 hover:text-gray-900 dark:hover:text-white bg-transparent"
+          )}
+        >
+          <i className="ph-bold ph-panel-bottom text-sm" />
+          <span>Footer Section</span>
+        </button>
       </div>
 
       {currentSection === "bento" && <LandingBentoCmsView showToast={showToast} />}
       {currentSection === "workflow" && <LandingWorkflowCmsView showToast={showToast} />}
       {currentSection === "catalog" && <LandingCatalogCmsView showToast={showToast} />}
       {currentSection === "faq" && <LandingFaqCmsView showToast={showToast} />}
+      {currentSection === "footer" && <LandingFooterCmsView showToast={showToast} />}
       {currentSection === "hero" && (
         <>
           {/* Main Card with Header, Underline Tabs & Form Content */}
@@ -413,19 +450,6 @@ export default function LandingPageCmsTab({ showToast }) {
         <div className="flex items-center gap-6 shrink-0 h-10 px-6 border-b border-gray-100 dark:border-white/10 bg-white dark:bg-card select-none">
           <button
             type="button"
-            onClick={() => setActiveTab("content")}
-            className={cn(
-              "relative h-full flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent",
-              activeTab === "content"
-                ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
-                : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
-            )}
-          >
-            Messaging & Information
-          </button>
-
-          <button
-            type="button"
             onClick={() => setActiveTab("slides")}
             className={cn(
               "relative h-full flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent",
@@ -435,6 +459,19 @@ export default function LandingPageCmsTab({ showToast }) {
             )}
           >
             Carousel Photos ({heroData.slides.length})
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab("content")}
+            className={cn(
+              "relative h-full flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent",
+              activeTab === "content"
+                ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
+                : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
+            )}
+          >
+            Messaging Information
           </button>
 
           <button
@@ -453,7 +490,165 @@ export default function LandingPageCmsTab({ showToast }) {
 
         {/* Content Body */}
         <CardContent className="font-inter bg-white p-[24px] dark:bg-card/50 backdrop-blur-md flex flex-col gap-6">
-          {/* TAB 1: Messaging & Information */}
+          {/* TAB 1: Simplified Carousel Photos (Upload & Preview Centric) */}
+          {activeTab === "slides" && (
+            <div className="space-y-6">
+              {/* Controls Bar */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/30 p-4">
+                <div>
+                  <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">
+                    Campus Background Photos ({heroData.slides.length})
+                  </h3>
+                  <p className="text-[12px] font-normal text-gray-500 dark:text-zinc-400">
+                    Upload campus photos for the landing page carousel. Drag cards to reorder, or click any image to replace it.
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-3 flex-wrap">
+                  {/* Rotation pace selector */}
+                  <div className="flex items-center gap-2 text-xs font-medium text-gray-600 dark:text-zinc-300">
+                    <i className="ph-bold ph-timer text-gray-400" />
+                    <span>Slide Pace:</span>
+                    <div className="w-[145px]">
+                      <Select
+                        value={heroData.autoRotateInterval}
+                        onChange={(e) =>
+                          setHeroData((prev) => ({
+                            ...prev,
+                            autoRotateInterval: Number(e.target.value),
+                          }))
+                        }
+                        className="h-9 rounded-xl border border-gray-200 dark:border-white/10 text-xs font-semibold text-gray-700 dark:text-zinc-200 bg-white dark:bg-zinc-900 cursor-pointer shadow-none px-3"
+                        menuClassName="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-900 shadow-2xl p-1.5"
+                        optionClassName="rounded-lg text-xs font-medium py-2 px-3 hover:bg-gray-100 dark:hover:bg-zinc-800"
+                      >
+                        <option value={3500}>Fast (3.5s)</option>
+                        <option value={5500}>Balanced (5.5s)</option>
+                        <option value={7500}>Relaxed (7.5s)</option>
+                        <option value={10000}>Slow (10s)</option>
+                      </Select>
+                    </div>
+                  </div>
+
+                  {/* Hidden file input for adding a new photo */}
+                  <input
+                    type="file"
+                    ref={newPhotoInputRef}
+                    accept="image/jpeg,image/png,image/webp,image/avif"
+                    className="hidden"
+                    onChange={(e) => {
+                      if (e.target.files && e.target.files[0]) {
+                        handleUploadNewSlide(e.target.files[0])
+                        e.target.value = ""
+                      }
+                    }}
+                  />
+
+                  <Button
+                    type="button"
+                    onClick={() => newPhotoInputRef.current?.click()}
+                    disabled={isAddingPhoto}
+                    className="flex h-9 items-center justify-center rounded-xl! btn-brand-red text-white font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs"
+                  >
+                    {isAddingPhoto ? (
+                      <>
+                        <i className="ph-bold ph-spinner animate-spin mr-1.5 text-[13px]" />
+                        Uploading...
+                      </>
+                    ) : (
+                      <>
+                        <i className="ph-bold ph-upload-simple mr-1.5 text-[13px]" />
+                        Upload Photo
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+
+              {/* Photo Cards Grid with Add Card */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {heroData.slides.map((slide, idx) => (
+                  <SlideCard
+                    key={`${slide.src || "slide"}-${idx}`}
+                    index={idx}
+                    total={heroData.slides.length}
+                    slide={slide}
+                    isUploading={uploadingIndex === idx}
+                    isDragging={draggedSlideIdx === idx}
+                    isDragTarget={
+                      dragOverSlideIdx === idx &&
+                      draggedSlideIdx !== null &&
+                      draggedSlideIdx !== idx
+                    }
+                    onUploadFile={(file) => handleFileUpload(file, idx)}
+                    onMoveUp={() => moveSlide(idx, -1)}
+                    onMoveDown={() => moveSlide(idx, 1)}
+                    onDelete={() => setDeleteSlideIndex(idx)}
+                    onDragStartCard={(i) => setDraggedSlideIdx(i)}
+                    onDragOverCard={(i) => {
+                      if (draggedSlideIdx !== null && draggedSlideIdx !== i) {
+                        setDragOverSlideIdx(i)
+                      }
+                    }}
+                    onDragLeaveCard={(i) => {
+                      if (dragOverSlideIdx === i) {
+                        setDragOverSlideIdx(null)
+                      }
+                    }}
+                    onDropCard={(fromIdx, toIdx) => {
+                      reorderSlide(fromIdx, toIdx)
+                      setDraggedSlideIdx(null)
+                      setDragOverSlideIdx(null)
+                    }}
+                    onDragEndCard={() => {
+                      setDraggedSlideIdx(null)
+                      setDragOverSlideIdx(null)
+                    }}
+                  />
+                ))}
+
+                {/* Add Photo Dashed Tile */}
+                <button
+                  type="button"
+                  onClick={() => newPhotoInputRef.current?.click()}
+                  disabled={isAddingPhoto}
+                  onDragOver={(e) => {
+                    if (e.dataTransfer.types.includes("application/x-pup-slide-card")) {
+                      e.preventDefault()
+                      e.dataTransfer.dropEffect = "move"
+                    }
+                  }}
+                  onDrop={(e) => {
+                    if (e.dataTransfer.types.includes("application/x-pup-slide-card")) {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      const fromIdx = Number(e.dataTransfer.getData("application/x-pup-slide-card"))
+                      if (!isNaN(fromIdx) && fromIdx !== heroData.slides.length - 1) {
+                        reorderSlide(fromIdx, heroData.slides.length - 1)
+                      }
+                      setDraggedSlideIdx(null)
+                      setDragOverSlideIdx(null)
+                    }
+                  }}
+                  className="rounded-xl border-2 border-dashed border-gray-200 dark:border-white/10 hover:border-pup-maroon/40 hover:bg-pup-maroon/5 dark:hover:bg-red-500/5 transition-all p-8 flex flex-col items-center justify-center gap-3 text-gray-500 hover:text-pup-maroon dark:hover:text-red-400 min-h-[300px] cursor-pointer group select-none"
+                >
+                  <div className="w-12 h-12 rounded-full bg-gray-100 dark:bg-zinc-800 flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
+                    <i className="ph-bold ph-plus text-gray-500 group-hover:text-pup-maroon dark:group-hover:text-red-400" />
+                  </div>
+                  <div className="text-center">
+                    <span className="block text-xs font-semibold text-gray-800 dark:text-zinc-200">
+                      {isAddingPhoto ? "Uploading Photo..." : "Add Campus Photo"}
+                    </span>
+                    <span className="block text-[11px] text-gray-400 mt-0.5">
+                      Click to choose an image from your computer
+                    </span>
+                  </div>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 2: Messaging & Information */}
           {activeTab === "content" && (
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Primary Messaging Panel */}
@@ -612,120 +807,6 @@ export default function LandingPageCmsTab({ showToast }) {
                     </div>
                   </div>
                 </div>
-              </div>
-            </div>
-          )}
-
-          {/* TAB 2: Simplified Carousel Photos (Upload & Preview Centric) */}
-          {activeTab === "slides" && (
-            <div className="space-y-6">
-              {/* Controls Bar */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/30 p-4">
-                <div>
-                  <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">
-                    Campus Background Photos ({heroData.slides.length})
-                  </h3>
-                  <p className="text-[12px] font-normal text-gray-500 dark:text-zinc-400">
-                    Upload campus photos for the landing page carousel. Click any image or button to replace it.
-                  </p>
-                </div>
-
-                <div className="flex items-center gap-3 flex-wrap">
-                  {/* Rotation pace selector */}
-                  <div className="flex items-center gap-2 text-xs font-medium text-gray-600 dark:text-zinc-300">
-                    <i className="ph-bold ph-timer text-gray-400" />
-                    <span>Slide Pace:</span>
-                    <div className="w-[145px]">
-                      <Select
-                        value={heroData.autoRotateInterval}
-                        onChange={(e) =>
-                          setHeroData((prev) => ({
-                            ...prev,
-                            autoRotateInterval: Number(e.target.value),
-                          }))
-                        }
-                        className="h-9 rounded-xl border border-gray-200 dark:border-white/10 text-xs font-semibold text-gray-700 dark:text-zinc-200 bg-white dark:bg-zinc-900 cursor-pointer shadow-none px-3"
-                        menuClassName="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-900 shadow-2xl p-1.5"
-                        optionClassName="rounded-lg text-xs font-medium py-2 px-3 hover:bg-gray-100 dark:hover:bg-zinc-800"
-                      >
-                        <option value={3500}>Fast (3.5s)</option>
-                        <option value={5500}>Balanced (5.5s)</option>
-                        <option value={7500}>Relaxed (7.5s)</option>
-                        <option value={10000}>Slow (10s)</option>
-                      </Select>
-                    </div>
-                  </div>
-
-                  {/* Hidden file input for adding a new photo */}
-                  <input
-                    type="file"
-                    ref={newPhotoInputRef}
-                    accept="image/jpeg,image/png,image/webp,image/avif"
-                    className="hidden"
-                    onChange={(e) => {
-                      if (e.target.files && e.target.files[0]) {
-                        handleUploadNewSlide(e.target.files[0])
-                        e.target.value = ""
-                      }
-                    }}
-                  />
-
-                  <Button
-                    type="button"
-                    onClick={() => newPhotoInputRef.current?.click()}
-                    disabled={isAddingPhoto}
-                    className="flex h-9 items-center justify-center rounded-xl! btn-brand-red text-white font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs"
-                  >
-                    {isAddingPhoto ? (
-                      <>
-                        <i className="ph-bold ph-spinner animate-spin mr-1.5 text-[13px]" />
-                        Uploading...
-                      </>
-                    ) : (
-                      <>
-                        <i className="ph-bold ph-upload-simple mr-1.5 text-[13px]" />
-                        Upload Photo
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </div>
-
-              {/* Photo Cards Grid with Add Card */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {heroData.slides.map((slide, idx) => (
-                  <SlideCard
-                    key={idx}
-                    index={idx}
-                    total={heroData.slides.length}
-                    slide={slide}
-                    isUploading={uploadingIndex === idx}
-                    onUploadFile={(file) => handleFileUpload(file, idx)}
-                    onMoveUp={() => moveSlide(idx, -1)}
-                    onMoveDown={() => moveSlide(idx, 1)}
-                    onDelete={() => setDeleteSlideIndex(idx)}
-                  />
-                ))}
-
-                {/* Add Photo Dashed Tile */}
-                <button
-                  type="button"
-                  onClick={() => newPhotoInputRef.current?.click()}
-                  disabled={isAddingPhoto}
-                  className="rounded-xl border-2 border-dashed border-gray-200 dark:border-white/10 hover:border-pup-maroon/40 hover:bg-pup-maroon/5 dark:hover:bg-red-500/5 transition-all p-8 flex flex-col items-center justify-center gap-3 text-gray-500 hover:text-pup-maroon dark:hover:text-red-400 min-h-[300px] cursor-pointer group select-none"
-                >
-                  <div className="w-12 h-12 rounded-full bg-gray-100 dark:bg-zinc-800 flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
-                    <i className="ph-bold ph-plus text-gray-500 group-hover:text-pup-maroon dark:group-hover:text-red-400" />
-                  </div>
-                  <div className="text-center">
-                    <span className="block text-xs font-semibold text-gray-800 dark:text-zinc-200">
-                      {isAddingPhoto ? "Uploading Photo..." : "Add Campus Photo"}
-                    </span>
-                    <span className="block text-[11px] text-gray-400 mt-0.5">
-                      Click to choose an image from your computer
-                    </span>
-                  </div>
-                </button>
               </div>
             </div>
           )}
@@ -924,21 +1005,28 @@ export default function LandingPageCmsTab({ showToast }) {
 /**
  * Radically Simplified SlideCard for Non-Technical Users
  * No file paths, no presets, no alt text inputs.
- * Just the photo, dimension badge, click/drag to change, and optional title.
+ * Just the photo, dimension badge, click/drag to change, reorderable card, and order controls.
  */
 function SlideCard({
   index,
   total,
   slide,
   isUploading,
+  isDragging = false,
+  isDragTarget = false,
   onUploadFile,
   onMoveUp,
   onMoveDown,
   onDelete,
+  onDragStartCard,
+  onDragOverCard,
+  onDragLeaveCard,
+  onDropCard,
+  onDragEndCard,
 }) {
   const [imageError, setImageError] = useState(false)
   const [naturalSize, setNaturalSize] = useState(null)
-  const [isDragOver, setIsDragOver] = useState(false)
+  const [isFileDragOver, setIsFileDragOver] = useState(false)
   const fileInputRef = useRef(null)
 
   useEffect(() => {
@@ -947,23 +1035,73 @@ function SlideCard({
     setNaturalSize(null)
   }, [slide.src])
 
-  const handleDrop = (e) => {
-    e.preventDefault()
-    setIsDragOver(false)
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      onUploadFile(e.dataTransfer.files[0])
-    }
-  }
-
   return (
-    <div className="group rounded-xl border border-gray-200/80 dark:border-white/10 bg-white dark:bg-zinc-900/50 overflow-hidden shadow-2xs hover:shadow-xs transition-all flex flex-col justify-between">
-      {/* Top Bar: Number & Order / Delete Controls */}
+    <div
+      draggable={!isUploading}
+      onDragStart={(e) => {
+        // Prevent drag initiation if clicking buttons, inputs, or other interactive elements
+        if (e.target.closest("button, input, label")) {
+          e.preventDefault()
+          return
+        }
+        e.dataTransfer.effectAllowed = "move"
+        e.dataTransfer.setData("application/x-pup-slide-card", String(index))
+        e.dataTransfer.setData("text/plain", String(index))
+        onDragStartCard?.(index)
+      }}
+      onDragEnd={() => {
+        onDragEndCard?.()
+      }}
+      onDragOver={(e) => {
+        if (e.dataTransfer.types.includes("application/x-pup-slide-card")) {
+          e.preventDefault()
+          e.dataTransfer.dropEffect = "move"
+          onDragOverCard?.(index)
+        }
+      }}
+      onDragLeave={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget)) {
+          onDragLeaveCard?.(index)
+        }
+      }}
+      onDrop={(e) => {
+        if (e.dataTransfer.types.includes("application/x-pup-slide-card")) {
+          e.preventDefault()
+          e.stopPropagation()
+          const fromIdx = Number(e.dataTransfer.getData("application/x-pup-slide-card"))
+          if (!isNaN(fromIdx) && fromIdx !== index) {
+            onDropCard?.(fromIdx, index)
+          }
+        }
+      }}
+      className={cn(
+        "group rounded-xl border bg-white dark:bg-zinc-900/50 overflow-hidden shadow-2xs hover:shadow-xs transition-all flex flex-col justify-between select-none relative",
+        isDragging
+          ? "opacity-35 scale-[0.98] border-dashed border-pup-maroon/60 bg-pup-maroon/5 ring-2 ring-pup-maroon/20 cursor-grabbing"
+          : isDragTarget
+          ? "ring-2 ring-pup-maroon ring-offset-2 ring-offset-white dark:ring-offset-zinc-950 scale-[1.01] border-pup-maroon shadow-md"
+          : "border-gray-200/80 dark:border-white/10"
+      )}
+    >
+      {/* Drop Target Position Notice */}
+      {isDragTarget && (
+        <div className="bg-pup-maroon text-white text-[11px] font-semibold py-1.5 px-3 text-center flex items-center justify-center gap-1.5 animate-pulse shadow-inner">
+          <i className="ph-bold ph-arrows-left-right text-xs" />
+          <span>Drop to move photo to Position #{index + 1}</span>
+        </div>
+      )}
+
+      {/* Top Bar: Number, Drag Handle & Order / Delete Controls */}
       <div className="px-4 py-3 bg-gray-50/80 dark:bg-zinc-950/50 border-b border-gray-100 dark:border-white/5 flex items-center justify-between select-none">
-        <div className="flex items-center gap-2">
-          <span className="w-5 h-5 rounded-full bg-pup-maroon text-white text-[10px] font-bold flex items-center justify-center">
+        <div
+          className="flex items-center gap-2 cursor-grab active:cursor-grabbing group/drag"
+          title="Drag card to reorder photos"
+        >
+          <i className="ph-bold ph-dots-six-vertical text-gray-400 group-hover/drag:text-pup-maroon dark:text-zinc-500 dark:group-hover/drag:text-red-400 text-sm transition-colors" />
+          <span className="w-5 h-5 rounded-full bg-pup-maroon text-white text-[10px] font-bold flex items-center justify-center shadow-2xs">
             {index + 1}
           </span>
-          <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100 truncate max-w-[160px]">
+          <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100 truncate max-w-[140px]">
             Photo {index + 1}
           </span>
         </div>
@@ -974,6 +1112,7 @@ function SlideCard({
             type="button"
             disabled={index === 0}
             onClick={onMoveUp}
+            onMouseDown={(e) => e.stopPropagation()}
             title="Move earlier"
             className="h-7 w-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200/60 dark:hover:bg-zinc-800 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer border-0 bg-transparent p-0"
           >
@@ -984,6 +1123,7 @@ function SlideCard({
             type="button"
             disabled={index === total - 1}
             onClick={onMoveDown}
+            onMouseDown={(e) => e.stopPropagation()}
             title="Move later"
             className="h-7 w-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200/60 dark:hover:bg-zinc-800 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer border-0 bg-transparent p-0"
           >
@@ -993,6 +1133,7 @@ function SlideCard({
           <button
             type="button"
             onClick={onDelete}
+            onMouseDown={(e) => e.stopPropagation()}
             title="Remove photo"
             className="h-7 w-7 rounded-lg flex items-center justify-center text-rose-500 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors cursor-pointer border-0 bg-transparent p-0 ml-1"
           >
@@ -1001,20 +1142,44 @@ function SlideCard({
         </div>
       </div>
 
-      {/* Interactive Image Preview Box */}
+      {/* Interactive Image Preview Box (External file dropzone only) */}
       <div
         onDragOver={(e) => {
-          e.preventDefault()
-          setIsDragOver(true)
+          // If an internal slide is being dragged to reorder, ignore here so card drop works
+          if (e.dataTransfer.types.includes("application/x-pup-slide-card")) {
+            return
+          }
+          // Only allow external files from user's OS file manager
+          if (e.dataTransfer.types.includes("Files")) {
+            e.preventDefault()
+            e.stopPropagation()
+            setIsFileDragOver(true)
+          }
         }}
-        onDragLeave={() => setIsDragOver(false)}
-        onDrop={handleDrop}
+        onDragLeave={(e) => {
+          if (!e.currentTarget.contains(e.relatedTarget)) {
+            setIsFileDragOver(false)
+          }
+        }}
+        onDrop={(e) => {
+          // If internal slide drag, do not treat it as a file upload!
+          if (e.dataTransfer.types.includes("application/x-pup-slide-card")) {
+            return
+          }
+          // Only upload if it's an external file
+          if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+            e.preventDefault()
+            e.stopPropagation()
+            setIsFileDragOver(false)
+            onUploadFile(e.dataTransfer.files[0])
+          }
+        }}
         onClick={() => fileInputRef.current?.click()}
         className={cn(
           "relative aspect-video w-full bg-zinc-950 overflow-hidden group/img transition-all cursor-pointer",
-          isDragOver && "ring-2 ring-pup-maroon"
+          isFileDragOver && "ring-2 ring-pup-maroon"
         )}
-        title="Click or drag an image here to change this photo"
+        title="Click to change photo, or drag an image file from your computer"
       >
         {isUploading ? (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-zinc-900/90 text-white gap-2 z-20">
@@ -1030,6 +1195,11 @@ function SlideCard({
           <img
             src={slide.src}
             alt={slide.alt || "Campus Photo"}
+            draggable={false}
+            onDragStart={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+            }}
             onLoad={(e) => {
               setNaturalSize({
                 width: e.currentTarget.naturalWidth,
@@ -1037,19 +1207,23 @@ function SlideCard({
               })
             }}
             onError={() => setImageError(true)}
-            className="w-full h-full object-cover object-center group-hover/img:scale-105 transition-transform duration-500"
+            className="w-full h-full object-cover object-center group-hover/img:scale-105 transition-transform duration-500 pointer-events-none select-none"
+            style={{
+              userSelect: "none",
+              WebkitUserDrag: "none",
+            }}
           />
         )}
 
         {/* Resolution badge */}
-        <div className="absolute top-2 left-2 flex items-center gap-1.5 z-10">
+        <div className="absolute top-2 left-2 flex items-center gap-1.5 z-10 pointer-events-none select-none">
           <span className="rounded-md bg-zinc-900/80 backdrop-blur-md text-white border border-white/10 text-[10px] font-mono px-2 py-0.5">
             {naturalSize ? `${naturalSize.width} × ${naturalSize.height}` : "16:9"}
           </span>
         </div>
 
         {/* Hover overlay hint */}
-        <div className="absolute inset-0 bg-zinc-950/60 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center gap-2 z-10 pointer-events-none">
+        <div className="absolute inset-0 bg-zinc-950/60 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center gap-2 z-10 pointer-events-none select-none">
           <span className="h-8 px-3 rounded-lg bg-white text-gray-900 text-xs font-semibold flex items-center gap-1.5 shadow-sm">
             <i className="ph-bold ph-camera text-xs" />
             Click to Change Photo
@@ -1077,6 +1251,7 @@ function SlideCard({
           type="button"
           variant="outline"
           onClick={() => fileInputRef.current?.click()}
+          onMouseDown={(e) => e.stopPropagation()}
           className="w-full flex items-center justify-center gap-1.5 h-9 rounded-xl! border-gray-200 dark:border-white/10 text-gray-700 dark:text-zinc-300 font-semibold text-xs hover:bg-gray-50 dark:hover:bg-zinc-800 cursor-pointer shadow-2xs"
         >
           <i className="ph-bold ph-upload-simple text-xs" />

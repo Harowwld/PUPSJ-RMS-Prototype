@@ -1,8 +1,12 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef, useState, useMemo } from "react"
 import { cn } from "@/lib/utils"
-import { FOLDER_COLORS } from "@/lib/constants"
+const getEffectiveRect = (c) => {
+  const rot = Number(c?.rotation) === 90 ? 90 : 0
+  if (rot !== 90) return c.rect
+  return { ...c.rect, w: c.rect.h, h: c.rect.w }
+}
 
 export default function RoomMap2D({
   kind, // "cabinets" | "drawers"
@@ -19,11 +23,10 @@ export default function RoomMap2D({
 }) {
   const theme = FOLDER_COLORS[activeStudentColor] || FOLDER_COLORS["yellow"]
   const trailColor = activeStudent ? theme.frontStart : "#06b6d4"
-  const cabinetRects = cabinets || []
+  const cabinetRects = useMemo(() => cabinets || [], [cabinets])
   const containerRef = useRef(null)
   const [modalPosition, setModalPosition] = useState("right")
   const [inspectorPos, setInspectorPos] = useState(null)
-  const [pathCoordinates, setPathCoordinates] = useState([])
   const [drawnLength, setDrawnLength] = useState(0)
 
   const lastChangeTimeRef = useRef(0)
@@ -32,43 +35,26 @@ export default function RoomMap2D({
   const [expandedDrawer, setExpandedDrawer] = useState(null)
 
   useEffect(() => {
-    setInspectorPos(null)
-    if (activeStudent && String(activeStudent.cabinet) === String(selectedCabinetId)) {
-      setExpandedDrawer(activeStudent.drawer)
-    } else {
-      setExpandedDrawer(null)
-    }
+    const timer = setTimeout(() => {
+      setInspectorPos(null)
+      if (activeStudent && String(activeStudent.cabinet) === String(selectedCabinetId)) {
+        setExpandedDrawer(activeStudent.drawer)
+      } else {
+        setExpandedDrawer(null)
+      }
+    }, 0)
+    return () => clearTimeout(timer)
   }, [selectedCabinetId, activeStudent])
 
-  // Sequential Drawing Effect
-  useEffect(() => {
-    setDrawnLength(0)
-    if (pathCoordinates.length === 0) return
-
-    const interval = setInterval(() => {
-      setDrawnLength((prev) => {
-        if (prev >= pathCoordinates.length) {
-          clearInterval(interval)
-          return prev
-        }
-        return prev + 1
-      })
-    }, 25) // Speed of drawing
-
-    return () => clearInterval(interval)
-  }, [pathCoordinates])
-
   // Wayfinder path generation logic
-  useEffect(() => {
+  const pathCoordinates = useMemo(() => {
     if (!selectedCabinetId || kind !== "drawers") {
-      setPathCoordinates([])
-      return
+      return []
     }
 
     const selectedCab = cabinetRects.find((c) => c.cab === selectedCabinetId)
     if (!selectedCab) {
-      setPathCoordinates([])
-      return
+      return []
     }
 
     // Grid configuration (matches CSS background-size: 2.5% 4%)
@@ -218,18 +204,41 @@ export default function RoomMap2D({
     }
 
     // Combine manual stem with path
-    const finalPath = foundTarget ? [...stemPoints, ...reconstructedPath] : []
-    setPathCoordinates(finalPath)
+    return foundTarget ? [...stemPoints, ...reconstructedPath] : []
   }, [selectedCabinetId, cabinetRects, roomDoor, kind])
+
+  // Sequential Drawing Effect
+  useEffect(() => {
+    const timer = setTimeout(() => setDrawnLength(0), 0)
+    if (pathCoordinates.length === 0) return () => clearTimeout(timer)
+
+    const interval = setInterval(() => {
+      setDrawnLength((prev) => {
+        if (prev >= pathCoordinates.length) {
+          clearInterval(interval)
+          return prev
+        }
+        return prev + 1
+      })
+    }, 25) // Speed of drawing
+
+    return () => {
+      clearTimeout(timer)
+      clearInterval(interval)
+    }
+  }, [pathCoordinates])
 
   // Dynamically position modal opposite of the clicked cabinet on selection
   useEffect(() => {
     if (!selectedCabinetId) return
     const selectedCab = cabinetRects.find((c) => c.cab === selectedCabinetId)
     if (selectedCab) {
-      const rect = getEffectiveRect(selectedCab)
-      setModalPosition(rect.x < 0.5 ? "right" : "left")
-      lastChangeTimeRef.current = Date.now() // Reset cooldown on select
+      const timer = setTimeout(() => {
+        const rect = getEffectiveRect(selectedCab)
+        setModalPosition(rect.x < 0.5 ? "right" : "left")
+        lastChangeTimeRef.current = Date.now() // Reset cooldown on select
+      }, 0)
+      return () => clearTimeout(timer)
     }
   }, [selectedCabinetId, cabinetRects])
 
@@ -280,12 +289,6 @@ export default function RoomMap2D({
       } catch {}
       dragStartRef.current = null
     }
-  }
-
-  const getEffectiveRect = (c) => {
-    const rot = Number(c?.rotation) === 90 ? 90 : 0
-    if (rot !== 90) return c.rect
-    return { ...c.rect, w: c.rect.h, h: c.rect.w }
   }
 
   return (

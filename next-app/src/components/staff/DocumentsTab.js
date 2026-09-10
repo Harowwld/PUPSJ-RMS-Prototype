@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import DocumentsMatrixSkeleton from "@/components/staff/skeletons/DocumentsMatrixSkeleton";
 import { formatPHDateTime } from "@/lib/timeFormat";
 import {
   Empty,
@@ -723,52 +724,8 @@ export default function DocumentsTab({
         {/* Main Table Grid & Pagination */}
         <div className="flex flex-col flex-1 h-auto">
           {docsLoading ? (
-            <div className="overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card mb-4">
-              <div className="flex-1 flex flex-col space-y-4 p-6">
-                <div className="bg-gray-50 border border-gray-200 rounded-brand p-5 flex items-center justify-between shadow-xs dark:bg-muted/30 dark:border-white/10">
-                  <div className="space-y-2">
-                    <Skeleton className="h-3 w-48 dark:bg-muted" />
-                    <Skeleton className="h-3 w-32 dark:bg-muted" />
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <Skeleton className="h-6 w-12 dark:bg-muted" />
-                    <Skeleton className="h-2.5 w-32 sm:w-48 rounded-full dark:bg-muted" />
-                  </div>
-                </div>
-
-                <div className="flex-1 border border-gray-200 rounded-brand overflow-hidden flex flex-col dark:border-white/10">
-                  <Skeleton className="h-10 w-full rounded-none dark:bg-muted" />
-                  <div className="divide-y divide-gray-100 dark:divide-white/10 flex-1">
-                    {[1, 2, 3, 4, 5, 6].map((i) => (
-                      <div key={i} className="p-4 flex items-center justify-between">
-                        <div className="flex-1 grid grid-cols-1 lg:grid-cols-5 gap-4">
-                          <div className="space-y-2">
-                            <Skeleton className="h-4 w-24 dark:bg-muted" />
-                            <Skeleton className="h-3 w-32 dark:bg-muted" />
-                          </div>
-                          <div className="hidden lg:block space-y-2">
-                            <Skeleton className="h-4 w-20 dark:bg-muted" />
-                          </div>
-                          <div className="hidden lg:block">
-                            <Skeleton className="h-6 w-20 rounded-full dark:bg-muted" />
-                          </div>
-                          <div className="hidden lg:block space-y-2">
-                            <Skeleton className="h-3 w-24 dark:bg-muted" />
-                            <Skeleton className="h-3 w-16 dark:bg-muted" />
-                          </div>
-                          <div className="hidden lg:block space-y-2">
-                            <Skeleton className="h-4 w-24 dark:bg-muted" />
-                          </div>
-                        </div>
-                        <div className="flex gap-2 ml-4">
-                          <Skeleton className="h-9 w-16 rounded-brand dark:bg-muted" />
-                          <Skeleton className="h-9 w-16 rounded-brand dark:bg-muted" />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
+            <div className="mb-4">
+              <DocumentsMatrixSkeleton rowCount={7} />
             </div>
           ) : docsError ? (
             <div className="overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card p-6 mb-4">

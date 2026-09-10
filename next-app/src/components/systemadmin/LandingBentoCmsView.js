@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
+import LandingBentoSkeleton from "@/components/systemadmin/skeletons/LandingBentoSkeleton"
 import PageHeader from "@/components/shared/PageHeader"
 import ConfirmModal from "@/components/shared/ConfirmModal"
 import { cn } from "@/lib/utils"
@@ -107,7 +108,7 @@ const SLA_CHIP_STYLES = [
 export default function LandingBentoCmsView({ showToast }) {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const [activeTab, setActiveTab] = useState("header") // 'header' | 'cards' | 'preview'
+  const [activeTab, setActiveTab] = useState("cards") // 'cards' | 'header' | 'preview'
   const [activeCardTab, setActiveCardTab] = useState(1) // 1 | 2 | 3 | 4 | 5
   const [bentoData, setBentoData] = useState(DEFAULT_BENTO)
   const [resetModalOpen, setResetModalOpen] = useState(false)
@@ -220,12 +221,7 @@ export default function LandingBentoCmsView({ showToast }) {
   }
 
   if (loading) {
-    return (
-      <div className="flex flex-col gap-6 w-full animate-fade-up font-inter">
-        <Skeleton className="h-20 w-full rounded-2xl" />
-        <Skeleton className="h-96 w-full rounded-2xl" />
-      </div>
-    )
+    return <LandingBentoSkeleton />
   }
 
   const currentDocs = bentoData.card1?.documents || []
@@ -302,19 +298,6 @@ export default function LandingBentoCmsView({ showToast }) {
         <div className="flex items-center gap-6 shrink-0 h-10 px-6 border-b border-gray-100 dark:border-white/10 bg-white dark:bg-card select-none">
           <button
             type="button"
-            onClick={() => setActiveTab("header")}
-            className={cn(
-              "relative h-full flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent",
-              activeTab === "header"
-                ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
-                : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
-            )}
-          >
-            Header &amp; Overview
-          </button>
-
-          <button
-            type="button"
             onClick={() => setActiveTab("cards")}
             className={cn(
               "relative h-full flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent",
@@ -324,6 +307,19 @@ export default function LandingBentoCmsView({ showToast }) {
             )}
           >
             Bento Cards (5)
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab("header")}
+            className={cn(
+              "relative h-full flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent",
+              activeTab === "header"
+                ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
+                : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
+            )}
+          >
+            Header &amp; Overview
           </button>
 
           <button
@@ -342,109 +338,7 @@ export default function LandingBentoCmsView({ showToast }) {
 
         {/* Content Body */}
         <CardContent className="font-inter bg-white p-[24px] dark:bg-card/50 backdrop-blur-md flex flex-col gap-6">
-          
-          {/* TAB 1: Section Header & Overview */}
-          {activeTab === "header" && (
-            <div className="w-full space-y-6">
-              <div className="w-full rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/30 p-5 sm:p-6 space-y-5">
-                <div>
-                  <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">
-                    Section Title &amp; Asymmetric Editorial Copy
-                  </h3>
-                  <p className="text-[12px] font-normal text-gray-500 dark:text-zinc-400 mt-0.5">
-                    Displayed above the bento grid container with animated entrance transitions.
-                  </p>
-                </div>
-
-                <div className="space-y-4">
-                  <div>
-                    <div className="flex justify-between items-center mb-1.5">
-                      <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
-                        Eyebrow Label
-                      </label>
-                      <span className="text-[11px] text-gray-400 font-mono">
-                        {bentoData.eyebrow.length}/40
-                      </span>
-                    </div>
-                    <Input
-                      value={bentoData.eyebrow}
-                      onChange={(e) =>
-                        setBentoData((prev) => ({ ...prev, eyebrow: e.target.value }))
-                      }
-                      placeholder="e.g. Student & Alumni Services"
-                      maxLength={40}
-                      className="h-10 w-full rounded-xl border border-gray-200 bg-white px-3 text-xs font-normal placeholder:text-gray-400 dark:border-white/10 dark:bg-card focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <div className="flex justify-between items-center mb-1.5">
-                        <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
-                          Main Heading Line 1 (Dark)
-                        </label>
-                        <span className="text-[11px] text-gray-400 font-mono">
-                          {bentoData.headingLine1.length}/40
-                        </span>
-                      </div>
-                      <Input
-                        value={bentoData.headingLine1}
-                        onChange={(e) =>
-                          setBentoData((prev) => ({ ...prev, headingLine1: e.target.value }))
-                        }
-                        placeholder="e.g. Request, track, and"
-                        maxLength={40}
-                        className="h-10 w-full rounded-xl border border-gray-200 bg-white px-3 text-xs font-normal placeholder:text-gray-400 dark:border-white/10 dark:bg-card focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5"
-                      />
-                    </div>
-
-                    <div>
-                      <div className="flex justify-between items-center mb-1.5">
-                        <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
-                          Main Heading Line 2 (Subtle)
-                        </label>
-                        <span className="text-[11px] text-gray-400 font-mono">
-                          {bentoData.headingLine2.length}/40
-                        </span>
-                      </div>
-                      <Input
-                        value={bentoData.headingLine2}
-                        onChange={(e) =>
-                          setBentoData((prev) => ({ ...prev, headingLine2: e.target.value }))
-                        }
-                        placeholder="e.g. claim your documents"
-                        maxLength={40}
-                        className="h-10 w-full rounded-xl border border-gray-200 bg-white px-3 text-xs font-normal placeholder:text-gray-400 dark:border-white/10 dark:bg-card focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <div className="flex justify-between items-center mb-1.5">
-                      <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
-                        Section Subtitle &amp; Editorial Description
-                      </label>
-                      <span className="text-[11px] text-gray-400 font-mono">
-                        {bentoData.description.length}/280
-                      </span>
-                    </div>
-                    <textarea
-                      value={bentoData.description}
-                      onChange={(e) =>
-                        setBentoData((prev) => ({ ...prev, description: e.target.value }))
-                      }
-                      rows={3}
-                      maxLength={280}
-                      placeholder="Submit your request online, track its progress in real time..."
-                      className="w-full rounded-xl border border-gray-200 bg-white p-3 text-xs font-normal leading-relaxed placeholder:text-gray-400 dark:border-white/10 dark:bg-card focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 focus:outline-hidden"
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* TAB 2: Bento Cards (5) with Focused Sub-Nav */}
+          {/* TAB 1: Bento Cards (5) with Focused Sub-Nav */}
           {activeTab === "cards" && (
             <div className="space-y-6">
               {/* Card Selection Pills */}
@@ -947,6 +841,107 @@ export default function LandingBentoCmsView({ showToast }) {
                   </div>
                 </div>
               )}
+            </div>
+          )}
+
+          {/* TAB 2: Section Header & Overview */}
+          {activeTab === "header" && (
+            <div className="w-full space-y-6">
+              <div className="w-full rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/30 p-5 sm:p-6 space-y-5">
+                <div>
+                  <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">
+                    Section Title &amp; Asymmetric Editorial Copy
+                  </h3>
+                  <p className="text-[12px] font-normal text-gray-500 dark:text-zinc-400 mt-0.5">
+                    Displayed above the bento grid container with animated entrance transitions.
+                  </p>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <div className="flex justify-between items-center mb-1.5">
+                      <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
+                        Eyebrow Label
+                      </label>
+                      <span className="text-[11px] text-gray-400 font-mono">
+                        {bentoData.eyebrow.length}/40
+                      </span>
+                    </div>
+                    <Input
+                      value={bentoData.eyebrow}
+                      onChange={(e) =>
+                        setBentoData((prev) => ({ ...prev, eyebrow: e.target.value }))
+                      }
+                      placeholder="e.g. Student & Alumni Services"
+                      maxLength={40}
+                      className="h-10 w-full rounded-xl border border-gray-200 bg-white px-3 text-xs font-normal placeholder:text-gray-400 dark:border-white/10 dark:bg-card focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <div className="flex justify-between items-center mb-1.5">
+                        <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
+                          Main Heading Line 1 (Dark)
+                        </label>
+                        <span className="text-[11px] text-gray-400 font-mono">
+                          {bentoData.headingLine1.length}/40
+                        </span>
+                      </div>
+                      <Input
+                        value={bentoData.headingLine1}
+                        onChange={(e) =>
+                          setBentoData((prev) => ({ ...prev, headingLine1: e.target.value }))
+                        }
+                        placeholder="e.g. Request, track, and"
+                        maxLength={40}
+                        className="h-10 w-full rounded-xl border border-gray-200 bg-white px-3 text-xs font-normal placeholder:text-gray-400 dark:border-white/10 dark:bg-card focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5"
+                      />
+                    </div>
+
+                    <div>
+                      <div className="flex justify-between items-center mb-1.5">
+                        <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
+                          Main Heading Line 2 (Subtle)
+                        </label>
+                        <span className="text-[11px] text-gray-400 font-mono">
+                          {bentoData.headingLine2.length}/40
+                        </span>
+                      </div>
+                      <Input
+                        value={bentoData.headingLine2}
+                        onChange={(e) =>
+                          setBentoData((prev) => ({ ...prev, headingLine2: e.target.value }))
+                        }
+                        placeholder="e.g. claim your documents"
+                        maxLength={40}
+                        className="h-10 w-full rounded-xl border border-gray-200 bg-white px-3 text-xs font-normal placeholder:text-gray-400 dark:border-white/10 dark:bg-card focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="flex justify-between items-center mb-1.5">
+                      <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
+                        Section Subtitle &amp; Editorial Description
+                      </label>
+                      <span className="text-[11px] text-gray-400 font-mono">
+                        {bentoData.description.length}/280
+                      </span>
+                    </div>
+                    <textarea
+                      value={bentoData.description}
+                      onChange={(e) =>
+                        setBentoData((prev) => ({ ...prev, description: e.target.value }))
+                      }
+                      rows={3}
+                      maxLength={280}
+                      placeholder="Submit your request online, track its progress in real time..."
+                      className="w-full rounded-xl border border-gray-200 bg-white p-3 text-xs font-normal leading-relaxed placeholder:text-gray-400 dark:border-white/10 dark:bg-card focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 focus:outline-hidden"
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
           )}
 

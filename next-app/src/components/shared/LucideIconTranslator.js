@@ -152,6 +152,8 @@ export default function LucideIconTranslator() {
       "file-arrow-up": "file-up",
       "folder-notch-open": "folder-open",
       "path": "route",
+      "browser": "panel-bottom",
+      "panel-bottom": "panel-bottom",
     };
 
     function toCamelCase(str) {

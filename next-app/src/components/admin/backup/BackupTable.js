@@ -65,13 +65,13 @@ export default function BackupTable({
         )}
       >
         <table className={cn("min-w-full text-sm", sortedAndPaginatedBackups.length === 0 && "h-full")}>
-          <thead className="sticky top-0 z-10 border-b border-gray-200 bg-white dark:bg-card dark:border-white/10">
-            <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">
-              <th className="w-12 p-4 text-center">
+          <thead className="sticky top-0 z-10 border-b-[0.5px] border-black/10 dark:border-white/10 bg-white dark:bg-card">
+            <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500 h-11 select-none">
+              <th className="w-12 py-0 px-4 text-center align-middle">
                 <input
                   type="checkbox"
                   className={cn(
-                    "h-4 w-4 cursor-pointer rounded border border-gray-300 text-pup-maroon dark:text-primary accent-pup-maroon focus:ring-pup-maroon dark:text-primary dark:border-white/10 transition-opacity",
+                    "h-4 w-4 cursor-pointer rounded border border-gray-300 dark:border-white/10 transition-opacity",
                     backups.length > 0 && backups.every((b) => selectedBackupIds.includes(b.id)) ? "opacity-100" : "opacity-50 hover:opacity-85"
                   )}
                   checked={
@@ -82,12 +82,12 @@ export default function BackupTable({
                   disabled={backups.length === 0}
                 />
               </th>
-              <th className="p-4 px-6 min-w-[280px]">
+              <th className="p-4 min-w-[280px]">
                 <button
                   onClick={() => handleSort("filename")}
                   className={cn(
                     "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
-                    sortBy === "filename" ? "text-pup-maroon dark:text-red-500" : "text-gray-400 dark:text-zinc-500 hover:text-pup-maroon dark:hover:text-red-500"
+                    sortBy === "filename" ? "text-[#111111] dark:text-white font-semibold" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
                   )}
                 >
                   Backup Archive{" "}
@@ -98,12 +98,12 @@ export default function BackupTable({
                   />
                 </button>
               </th>
-              <th className="w-32 p-4 px-6 text-center">
+              <th className="p-4 w-32 text-center">
                 <button
                   onClick={() => handleSort("size_bytes")}
                   className={cn(
                     "group mx-auto flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
-                    sortBy === "size_bytes" ? "text-pup-maroon dark:text-red-500" : "text-gray-400 dark:text-zinc-500 hover:text-pup-maroon dark:hover:text-red-500"
+                    sortBy === "size_bytes" ? "text-[#111111] dark:text-white font-semibold" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
                   )}
                 >
                   Size{" "}
@@ -114,12 +114,12 @@ export default function BackupTable({
                   />
                 </button>
               </th>
-              <th className="w-56 p-4 px-6">
+              <th className="p-4 w-56">
                 <button
                   onClick={() => handleSort("created_at")}
                   className={cn(
                     "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
-                    sortBy === "created_at" ? "text-pup-maroon dark:text-red-500" : "text-gray-400 dark:text-zinc-500 hover:text-pup-maroon dark:hover:text-red-500"
+                    sortBy === "created_at" ? "text-[#111111] dark:text-white font-semibold" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
                   )}
                 >
                   Creation Date{" "}
@@ -130,10 +130,12 @@ export default function BackupTable({
                   />
                 </button>
               </th>
-              <th className="w-56 p-4 px-6 text-center font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">
-                Storage Locations
+              <th className="p-4 w-36 text-center text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">
+                Status
               </th>
-              <th className="w-32 p-4 px-6 text-right text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">Action</th>
+              <th className="p-4 pr-6 w-32 text-right text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">
+                Action
+              </th>
             </tr>
           </thead>
           <tbody className={cn("divide-y divide-gray-100 dark:divide-white/10", sortedAndPaginatedBackups.length === 0 && "h-full")}>
@@ -199,121 +201,68 @@ export default function BackupTable({
                       <input
                         type="checkbox"
                         className={cn(
-                          "h-4 w-4 cursor-pointer rounded border border-gray-300 text-pup-maroon dark:text-primary accent-pup-maroon focus:ring-pup-maroon dark:text-primary dark:border-white/10 transition-opacity",
+                          "h-4 w-4 cursor-pointer rounded border border-gray-300 dark:border-white/10 transition-opacity",
                           isSelected ? "opacity-100" : "opacity-50 group-hover:opacity-80"
                         )}
                         checked={isSelected}
                         onChange={() => handleToggleRow(b.id)}
                       />
                     </td>
-                    <td className="py-0 px-6 align-middle">
+                    <td className="py-2 px-4 align-middle">
                       <div className="flex items-center gap-3">
-                        <span className="text-[13px] font-medium tracking-[-0.01em] text-gray-900 dark:text-zinc-50 max-w-[280px] truncate" title={b.filename}>
+                        <span className="text-[13px] font-medium text-[#111111] dark:text-zinc-50 max-w-[280px] truncate" title={b.filename}>
                           {b.filename}
                         </span>
                       </div>
                     </td>
-                    <td className="py-0 px-6 align-middle text-center text-[13px] font-medium tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
+                    <td className="py-2 px-4 align-middle text-center text-[13px] font-normal text-[#111111] dark:text-zinc-300">
                       {formatBytes(b.size_bytes)}
                     </td>
-                    <td className="py-0 px-6 align-middle">
+                    <td className="py-2 px-4 align-middle">
                       <div className="flex flex-col">
-                        <span className="text-[13px] font-medium tracking-[-0.01em] text-gray-900 dark:text-zinc-50 leading-tight">
+                        <span className="text-[13px] font-medium text-[#111111] dark:text-zinc-50 leading-tight">
                           {formatPHDateTime(b.created_at).split(' at ')[0]}
                         </span>
-                        <span className="text-[11px] font-normal text-gray-500 dark:text-zinc-400 mt-0.5 leading-tight">
+                        <span className="text-[12px] font-normal text-[#8E8E93] dark:text-zinc-500 mt-[2px] leading-tight">
                           {formatPHDateTime(b.created_at).split(' at ')[1]}
                         </span>
                       </div>
                     </td>
-                    <td className="py-0 px-6 align-middle">
-                      <div className="flex mx-auto w-fit items-center gap-2">
-                        {/* Local Node */}
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <div
-                              className={cn(
-                                  "inline-flex items-center gap-1.5 rounded-[4px] px-[8px] py-[3px] text-[11px] font-medium tracking-[0.04em]",
-                                  b.status_local === "Success" 
-                                    ? "bg-green-100 text-green-800 dark:bg-emerald-950/40 dark:text-emerald-400" 
-                                    : "bg-gray-100 text-gray-850 dark:bg-zinc-800 dark:text-zinc-400"
-                              )}
-                            >
-                              <span>Local</span>
-                            </div>
-                          </TooltipTrigger>
-                          <TooltipContent className="bg-zinc-900 text-white border-zinc-800">
-                            <p className="text-[10px] font-semibold">Local Storage Status</p>
-                            <p className="text-[9px] opacity-80">
-                              {b.status_local === "Success"
-                                ? "Verified and secured on primary server"
-                                : "Pending / Check node health"}
-                            </p>
-                          </TooltipContent>
-                        </Tooltip>
-
-                        {/* External Node */}
-                        {b.status_external === "Success" ? (
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <div className="inline-flex items-center gap-1.5 rounded-[4px] px-[8px] py-[3px] text-[11px] font-medium tracking-[0.04em] bg-blue-100 text-blue-800 dark:bg-blue-950/40 dark:text-blue-400">
-                                <span>External</span>
-                              </div>
-                            </TooltipTrigger>
-                            <TooltipContent className="bg-zinc-900 text-white border-zinc-800">
-                                <p className="text-[10px] font-semibold">Institutional Redundancy</p>
-                                <p className="text-[9px] opacity-80">Verified on secondary off-site volume</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        ) : (
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <button
-                                onClick={() => handleSyncExternal(b.id)}
-                                disabled={localLoading.syncingId === b.id}
-                                className={cn(
-                                    "inline-flex items-center gap-1.5 rounded-[4px] px-[8px] py-[3px] text-[11px] font-medium tracking-[0.04em] border-0 transition-all active:scale-95 disabled:opacity-50 cursor-pointer",
-                                    b.status_external === "Failed" 
-                                      ? "bg-amber-100 text-amber-800 hover:bg-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:hover:bg-amber-900/40" 
-                                      : "bg-gray-100 text-gray-800 hover:bg-gray-200 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700"
-                                )}
-                              >
-                                {localLoading.syncingId === b.id && (
-                                  <i className="ph-bold ph-arrows-clockwise animate-spin text-[12px]"></i>
-                                )}
-                                <span>
-                                  {localLoading.syncingId === b.id
-                                    ? localLoading.syncStatus || "..."
-                                    : b.status_external === "Failed"
-                                      ? "Retry Sync"
-                                      : "Sync"}
-                                </span>
-                              </button>
-                            </TooltipTrigger>
-                            <TooltipContent className="bg-zinc-900 text-white border-zinc-800">
-                                <p className="text-[10px] font-semibold">Mirroring Sync</p>
-                                <p className="text-[9px] opacity-80">Send backup copy to external storage node</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        )}
+                    <td className="py-2 px-4 align-middle text-center">
+                      <div className="inline-flex w-fit items-center justify-center rounded-[4px] px-[8px] py-[3px] text-[11px] font-medium tracking-[0.04em] select-none bg-[#D1FAE5] text-[#065F46] dark:bg-emerald-950/40 dark:text-emerald-400">
+                        Ready
                       </div>
                     </td>
-                    <td className="py-0 px-6 text-right align-middle">
+                    <td className="py-0 px-4 pr-6 text-right align-middle">
                       <div className="inline-flex items-center justify-end gap-1.5" onClick={e => e.stopPropagation()}>
-                        <button
-                          onClick={() => onDownloadBackup(b.id, b.filename)}
-                          title="Download Backup"
-                          className="w-7 h-7 rounded-[6px] hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/10 border-0 bg-transparent text-[#C7C7CC] dark:text-zinc-650 transition-colors hover:text-blue-500 dark:hover:text-blue-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
-                        >
-                          <i className="ph-bold ph-download-simple text-[16px]"></i>
-                        </button>
-                        <button
-                          onClick={() => onDeleteBackup(b.id)}
-                          title="Delete Backup"
-                          className="w-7 h-7 rounded-[6px] hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/10 border-0 bg-transparent text-[#C7C7CC] dark:text-zinc-650 transition-colors hover:text-red-600 dark:hover:text-red-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
-                        >
-                          <i className="ph-bold ph-trash text-[16px]"></i>
-                        </button>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button
+                              onClick={() => onDownloadBackup(b.id, b.filename)}
+                              aria-label="Download Backup"
+                              className="w-7 h-7 rounded-[6px] hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/10 border-0 bg-transparent text-[#C7C7CC] dark:text-zinc-650 transition-colors hover:text-blue-500 dark:hover:text-blue-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
+                            >
+                              <i className="ph-bold ph-download-simple text-[16px]"></i>
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent className="bg-zinc-900 text-white border-zinc-800">
+                            <p className="text-[10px]">Download to computer</p>
+                          </TooltipContent>
+                        </Tooltip>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button
+                              onClick={() => onDeleteBackup(b.id)}
+                              aria-label="Delete Backup"
+                              className="w-7 h-7 rounded-[6px] hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/10 border-0 bg-transparent text-[#C7C7CC] dark:text-zinc-650 transition-colors hover:text-red-600 dark:hover:text-red-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
+                            >
+                              <i className="ph-bold ph-trash text-[16px]"></i>
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent className="bg-zinc-900 text-white border-zinc-800">
+                            <p className="text-[10px]">Delete backup</p>
+                          </TooltipContent>
+                        </Tooltip>
                       </div>
                     </td>
                   </tr>

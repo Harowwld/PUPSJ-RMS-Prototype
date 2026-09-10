@@ -20,6 +20,7 @@ import { formatPHDateTimeParts } from "@/lib/timeFormat"
 import { cn } from "@/lib/utils"
 
 import LogExpandedRow from "./LogExpandedRow"
+import AuditLogsTableSkeleton from "@/components/systemadmin/skeletons/AuditLogsTableSkeleton"
 
 function SortIndicator({ column, logSortBy, logSortOrder }) {
   if (logSortBy !== column) {
@@ -226,16 +227,7 @@ export default function LogTable({
   }, [])
 
   if (isLoading && (!displayLogs || displayLogs.length === 0)) {
-    return (
-      <div className="overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card animate-pulse">
-        <div className="h-10 border-b border-gray-200 bg-transparent dark:border-white/10 dark:bg-transparent" />
-        <div className="p-4 space-y-4">
-          {[1, 2, 3, 4, 5].map((i) => (
-            <Skeleton key={i} className="h-8 w-full bg-gray-50 dark:bg-muted" />
-          ))}
-        </div>
-      </div>
-    )
+    return <AuditLogsTableSkeleton rowCount={8} />
   }
 
   if (error) {

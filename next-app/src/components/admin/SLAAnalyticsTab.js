@@ -6,6 +6,8 @@ import {
   CardContent,
 } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
+import SlaKpiSkeleton from "@/components/admin/skeletons/SlaKpiSkeleton"
+import SlaChartsSkeleton from "@/components/admin/skeletons/SlaChartsSkeleton"
 import { Button } from "@/components/ui/button"
 import { formatPHDateTime } from "@/lib/timeFormat"
 import { generateExportFilename } from "@/lib/exportHelpers"
@@ -176,11 +178,7 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
     <div className="animate-fade-up font-inter flex w-full flex-col gap-6">
       {/* 1. Color KPI Cards / Skeletons at the Top */}
       {loading && !data ? (
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 animate-pulse">
-          {[1, 2].map((i) => (
-            <Skeleton key={i} className="h-28 rounded-brand dark:bg-muted" />
-          ))}
-        </div>
+        <SlaKpiSkeleton />
       ) : !error && data ? (
         <div className={cn(
           "w-full transition-all duration-500", 
@@ -307,9 +305,7 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
 
         <CardContent className="bg-white p-6 dark:bg-card">
           {loading && !data ? (
-            <div className="space-y-6">
-              <Skeleton className="h-72 w-full rounded-brand dark:bg-muted" />
-            </div>
+            <SlaChartsSkeleton />
           ) : error ? (
             <Empty className="flex h-[400px] flex-col items-center justify-center rounded-brand border border-gray-200 bg-white text-center text-gray-500 shadow-sm dark:border-white/10 dark:bg-card dark:text-zinc-400 dark:shadow-none">
               <EmptyHeader className="flex flex-col items-center gap-0">

@@ -584,6 +584,31 @@ export const landingContentRepo = {
     await systemConfigRepo.setSetting(FAQ_SETTINGS_KEY, JSON.stringify(DEFAULT_FAQ_CONTENT));
     return { ...DEFAULT_FAQ_CONTENT };
   },
+
+  getFooterContent: async () => {
+    try {
+      const raw = await systemConfigRepo.getSetting(FOOTER_SETTINGS_KEY);
+      if (!raw) {
+        return { ...DEFAULT_FOOTER_CONTENT };
+      }
+      const parsed = JSON.parse(raw);
+      return sanitizeFooterContent(parsed);
+    } catch (err) {
+      console.error("[landingContentRepo] getFooterContent error:", err);
+      return { ...DEFAULT_FOOTER_CONTENT };
+    }
+  },
+
+  updateFooterContent: async (content) => {
+    const sanitized = sanitizeFooterContent(content);
+    await systemConfigRepo.setSetting(FOOTER_SETTINGS_KEY, JSON.stringify(sanitized));
+    return sanitized;
+  },
+
+  resetFooterContent: async () => {
+    await systemConfigRepo.setSetting(FOOTER_SETTINGS_KEY, JSON.stringify(DEFAULT_FOOTER_CONTENT));
+    return { ...DEFAULT_FOOTER_CONTENT };
+  },
 };
 
 const CATALOG_SETTINGS_KEY = "landing_catalog_content";
@@ -956,6 +981,260 @@ function sanitizeFaqContent(raw) {
     supportButtonLink,
     supportLocation,
     faqs,
+  };
+}
+
+export const FOOTER_SETTINGS_KEY = "landing_footer_content";
+
+export const DEFAULT_FOOTER_CONTENT = {
+  // Column 1: Institutional Credentials & Location
+  brandName: "eManage",
+  brandSubtitle:
+    "Polytechnic University of the Philippines — San Juan Campus Records Keeping & Online Document Request Platform.",
+  locationHall: "Ground Floor, Admin & Records Hall",
+  locationAddress:
+    "223 Ortega Street, cor. A. Mabini Street, Barangay Addition Hills, San Juan City, Metro Manila 1500",
+  mapsEnabled: true,
+  mapsLabel: "Google Maps Directions",
+  mapsUrl:
+    "https://maps.google.com/?q=Polytechnic+University+of+the+Philippines+San+Juan+Campus",
+
+  // Column 2: Registrar Schedule & Announcements
+  scheduleEyebrow: "Registrar Schedule",
+  scheduleHeading: "Regular Office Hours",
+  scheduleItems: [
+    { label: "Monday – Friday", value: "8:00 AM – 5:00 PM", status: "open" },
+    { label: "Noon Break Shift", value: "12:00 PM – 1:00 PM", status: "break" },
+    { label: "Weekends & Holidays", value: "Closed", status: "closed" },
+  ],
+
+  // Column 3: Contact Channels & Personnel Desk
+  contactsEyebrow: "Official Desk",
+  contactsHeading: "Direct Contact Channels",
+  contactItems: [
+    {
+      label: "Registrar Inquiries",
+      value: "registrar.sanjuan@pup.edu.ph",
+      type: "email",
+    },
+    {
+      label: "Student Affairs (OSAS)",
+      value: "osas.sanjuan@pup.edu.ph",
+      type: "email",
+    },
+    {
+      label: "Campus Trunklines",
+      value: "(02) 8724-4112 / (02) 8724-4113",
+      type: "phone",
+    },
+  ],
+
+  // Giant Brand Watermark
+  watermarkEnabled: true,
+  watermarkText: "EMANAGE",
+
+  // Bottom Sub-Footer
+  copyrightText: "© 2026 PUP San Juan Campus · All rights reserved.",
+  navServicesEnabled: true,
+  navServicesLabel: "Services",
+  navWorkflowEnabled: true,
+  navWorkflowLabel: "Workflow",
+  navFaqEnabled: true,
+  navFaqLabel: "FAQ",
+  navBackToTopEnabled: true,
+  navBackToTopLabel: "Back to Top",
+};
+
+export const MAX_SCHEDULE_ITEMS = 3;
+export const MAX_CONTACT_ITEMS = 3;
+
+function sanitizeFooterContent(raw) {
+  if (!raw || typeof raw !== "object") {
+    return { ...DEFAULT_FOOTER_CONTENT };
+  }
+
+  const def = DEFAULT_FOOTER_CONTENT;
+
+  // Column 1
+  const brandName = "eManage";
+  const brandSubtitle =
+    typeof raw.brandSubtitle === "string" && raw.brandSubtitle.trim() !== ""
+      ? raw.brandSubtitle.trim()
+      : def.brandSubtitle;
+  const locationHall =
+    typeof raw.locationHall === "string" && raw.locationHall.trim() !== ""
+      ? raw.locationHall.trim()
+      : def.locationHall;
+  const locationAddress =
+    typeof raw.locationAddress === "string" && raw.locationAddress.trim() !== ""
+      ? raw.locationAddress.trim()
+      : def.locationAddress;
+  const mapsEnabled =
+    typeof raw.mapsEnabled === "boolean" ? raw.mapsEnabled : def.mapsEnabled;
+  const mapsLabel =
+    typeof raw.mapsLabel === "string" && raw.mapsLabel.trim() !== ""
+      ? raw.mapsLabel.trim()
+      : def.mapsLabel;
+  const mapsUrl =
+    typeof raw.mapsUrl === "string" && raw.mapsUrl.trim() !== ""
+      ? raw.mapsUrl.trim()
+      : def.mapsUrl;
+
+  // Column 2
+  const scheduleEyebrow =
+    typeof raw.scheduleEyebrow === "string" && raw.scheduleEyebrow.trim() !== ""
+      ? raw.scheduleEyebrow.trim()
+      : def.scheduleEyebrow;
+  const scheduleHeading =
+    typeof raw.scheduleHeading === "string" && raw.scheduleHeading.trim() !== ""
+      ? raw.scheduleHeading.trim()
+      : def.scheduleHeading;
+
+  const rawScheduleArray = Array.isArray(raw.scheduleItems)
+    ? raw.scheduleItems.slice(0, MAX_SCHEDULE_ITEMS)
+    : [];
+
+  const scheduleItems =
+    rawScheduleArray.length > 0
+      ? rawScheduleArray.map((item, idx) => {
+          const defaultItem = def.scheduleItems[idx] || {
+            label: `Schedule ${idx + 1}`,
+            value: "8:00 AM – 5:00 PM",
+            status: "open",
+          };
+          const label =
+            typeof item?.label === "string" && item.label.trim() !== ""
+              ? item.label.trim()
+              : defaultItem.label;
+          const value =
+            typeof item?.value === "string" && item.value.trim() !== ""
+              ? item.value.trim()
+              : defaultItem.value;
+          const validStatuses = ["open", "break", "closed"];
+          const status = validStatuses.includes(item?.status)
+            ? item.status
+            : defaultItem.status || "open";
+
+          return { label, value, status };
+        })
+      : def.scheduleItems;
+
+  // Column 3
+  const contactsEyebrow =
+    typeof raw.contactsEyebrow === "string" && raw.contactsEyebrow.trim() !== ""
+      ? raw.contactsEyebrow.trim()
+      : def.contactsEyebrow;
+  const contactsHeading =
+    typeof raw.contactsHeading === "string" && raw.contactsHeading.trim() !== ""
+      ? raw.contactsHeading.trim()
+      : def.contactsHeading;
+
+  const rawContactsArray = Array.isArray(raw.contactItems)
+    ? raw.contactItems.slice(0, MAX_CONTACT_ITEMS)
+    : [];
+
+  const contactItems =
+    rawContactsArray.length > 0
+      ? rawContactsArray.map((item, idx) => {
+          const defaultItem = def.contactItems[idx] || {
+            label: `Contact ${idx + 1}`,
+            value: "info@pup.edu.ph",
+            type: "email",
+          };
+          const label =
+            typeof item?.label === "string" && item.label.trim() !== ""
+              ? item.label.trim()
+              : defaultItem.label;
+          const value =
+            typeof item?.value === "string" && item.value.trim() !== ""
+              ? item.value.trim()
+              : defaultItem.value;
+          const validTypes = ["email", "phone"];
+          const type = validTypes.includes(item?.type)
+            ? item.type
+            : defaultItem.type || "email";
+
+          return { label, value, type };
+        })
+      : def.contactItems;
+
+  // Watermark
+  const watermarkEnabled =
+    typeof raw.watermarkEnabled === "boolean"
+      ? raw.watermarkEnabled
+      : def.watermarkEnabled;
+  const watermarkText =
+    typeof raw.watermarkText === "string" && raw.watermarkText.trim() !== ""
+      ? raw.watermarkText.trim().toUpperCase()
+      : def.watermarkText;
+
+  // Bottom Sub-Footer
+  const copyrightText =
+    typeof raw.copyrightText === "string" && raw.copyrightText.trim() !== ""
+      ? raw.copyrightText.trim()
+      : def.copyrightText;
+
+  const navServicesEnabled =
+    typeof raw.navServicesEnabled === "boolean"
+      ? raw.navServicesEnabled
+      : def.navServicesEnabled;
+  const navServicesLabel =
+    typeof raw.navServicesLabel === "string" && raw.navServicesLabel.trim() !== ""
+      ? raw.navServicesLabel.trim()
+      : def.navServicesLabel;
+
+  const navWorkflowEnabled =
+    typeof raw.navWorkflowEnabled === "boolean"
+      ? raw.navWorkflowEnabled
+      : def.navWorkflowEnabled;
+  const navWorkflowLabel =
+    typeof raw.navWorkflowLabel === "string" && raw.navWorkflowLabel.trim() !== ""
+      ? raw.navWorkflowLabel.trim()
+      : def.navWorkflowLabel;
+
+  const navFaqEnabled =
+    typeof raw.navFaqEnabled === "boolean"
+      ? raw.navFaqEnabled
+      : def.navFaqEnabled;
+  const navFaqLabel =
+    typeof raw.navFaqLabel === "string" && raw.navFaqLabel.trim() !== ""
+      ? raw.navFaqLabel.trim()
+      : def.navFaqLabel;
+
+  const navBackToTopEnabled =
+    typeof raw.navBackToTopEnabled === "boolean"
+      ? raw.navBackToTopEnabled
+      : def.navBackToTopEnabled;
+  const navBackToTopLabel =
+    typeof raw.navBackToTopLabel === "string" && raw.navBackToTopLabel.trim() !== ""
+      ? raw.navBackToTopLabel.trim()
+      : def.navBackToTopLabel;
+
+  return {
+    brandName,
+    brandSubtitle,
+    locationHall,
+    locationAddress,
+    mapsEnabled,
+    mapsLabel,
+    mapsUrl,
+    scheduleEyebrow,
+    scheduleHeading,
+    scheduleItems,
+    contactsEyebrow,
+    contactsHeading,
+    contactItems,
+    watermarkEnabled,
+    watermarkText,
+    copyrightText,
+    navServicesEnabled,
+    navServicesLabel,
+    navWorkflowEnabled,
+    navWorkflowLabel,
+    navFaqEnabled,
+    navFaqLabel,
+    navBackToTopEnabled,
+    navBackToTopLabel,
   };
 }
 

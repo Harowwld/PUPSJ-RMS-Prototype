@@ -5,6 +5,8 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
+import KpiStatCardsSkeleton from "@/components/systemadmin/skeletons/KpiStatCardsSkeleton"
+import OfficeGridSkeleton from "@/components/systemadmin/skeletons/OfficeGridSkeleton"
 import {
   Dialog,
   DialogContent,
@@ -501,11 +503,7 @@ export default function OfficeManagementTab({ showToast }) {
     <div className="flex flex-col gap-6 w-full animate-fade-up font-inter">
       {/* Stat Cards */}
       {loading ? (
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 animate-pulse">
-          {[1, 2, 3].map((i) => (
-            <Skeleton key={i} className="h-28 rounded-xl bg-gray-100 dark:bg-muted" />
-          ))}
-        </div>
+        <KpiStatCardsSkeleton count={3} />
       ) : (
         <div
           ref={statCardsRef}
@@ -784,17 +782,7 @@ export default function OfficeManagementTab({ showToast }) {
 
       {/* Offices Grid */}
       {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[1, 2, 3].map(n => (
-            <Card key={n} className="overflow-hidden border border-gray-200/50 dark:border-white/5 bg-white/50 dark:bg-zinc-900/50">
-              <CardContent className="p-6 space-y-4">
-                <Skeleton className="h-6 w-24 rounded-md" />
-                <Skeleton className="h-4 w-48 rounded-md" />
-                <Skeleton className="h-10 w-full rounded-md" />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        <OfficeGridSkeleton layoutView={layoutView} count={6} />
       ) : filteredOffices.length === 0 ? (
         <div className="flex h-[420px] flex-col items-center justify-center rounded-2xl border border-dashed border-gray-200 dark:border-white/10 bg-white/40 dark:bg-zinc-900/20 text-center">
           <Empty className="flex flex-col items-center justify-center border-0 bg-transparent text-center">

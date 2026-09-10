@@ -5,6 +5,8 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
+import KpiStatCardsSkeleton from "@/components/systemadmin/skeletons/KpiStatCardsSkeleton"
+import TransactionsTableSkeleton from "@/components/systemadmin/skeletons/TransactionsTableSkeleton"
 import { Select } from "@/components/ui/select"
 import {
   Empty,
@@ -317,11 +319,7 @@ export default function SystemHealthTab({ showToast }) {
     <div className="flex flex-col gap-6 w-full animate-fade-up font-inter">
       {/* Signature 3 Stat Cards with expandable details (Matching GlobalStaffTab / OfficeManagementTab) */}
       {loading && !health ? (
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 animate-pulse">
-          {[1, 2, 3].map((i) => (
-            <Skeleton key={i} className="h-28 rounded-xl bg-gray-100 dark:bg-muted" />
-          ))}
-        </div>
+        <KpiStatCardsSkeleton count={3} />
       ) : (
         <div
           ref={statCardsRef}
@@ -595,11 +593,7 @@ export default function SystemHealthTab({ showToast }) {
         {activeView !== "infra" && (
           <div className="overflow-hidden border-t border-gray-200 dark:border-white/10 bg-white dark:bg-card flex flex-col flex-1">
             {loading ? (
-              <div className="p-6 space-y-3">
-                {[1, 2, 3, 4, 5].map((i) => (
-                  <Skeleton key={i} className="h-12 w-full rounded-xl" />
-                ))}
-              </div>
+              <TransactionsTableSkeleton rowCount={8} />
             ) : paginatedTransactions.length === 0 ? (
               <div className="flex h-[360px] flex-col items-center justify-center p-6 text-center">
                 <Empty className="flex flex-col items-center justify-center border-0 bg-transparent text-center">

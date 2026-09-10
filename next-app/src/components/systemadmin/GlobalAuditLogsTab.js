@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
+import AuditLogsTableSkeleton from "@/components/systemadmin/skeletons/AuditLogsTableSkeleton"
 import { Badge } from "@/components/ui/badge"
 import { getCachedData, setCachedData } from "@/lib/dataCache"
 import {
@@ -809,12 +810,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
 
         {/* Table Card */}
         {loading && (!logs || logs.length === 0) ? (
-          <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card animate-pulse p-4 space-y-4">
-            <div className="h-10 border-b border-gray-200 bg-transparent dark:border-white/10" />
-            {[1, 2, 3, 4, 5].map((i) => (
-              <Skeleton key={i} className="h-8 w-full bg-gray-50 dark:bg-muted" />
-            ))}
-          </div>
+          <AuditLogsTableSkeleton rowCount={8} />
         ) : error ? (
           <div className="flex h-[420px] flex-col items-center justify-center rounded-2xl border border-dashed border-gray-200 dark:border-white/10 bg-white/40 dark:bg-zinc-900/20 text-center">
             <Empty className="flex flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400">

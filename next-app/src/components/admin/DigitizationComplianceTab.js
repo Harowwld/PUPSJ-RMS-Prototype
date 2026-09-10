@@ -6,6 +6,9 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import KpiStatCardsSkeleton from "@/components/systemadmin/skeletons/KpiStatCardsSkeleton";
+import ComplianceCalcSkeleton from "@/components/admin/skeletons/ComplianceCalcSkeleton";
+import ComplianceTableSkeleton from "@/components/admin/skeletons/ComplianceTableSkeleton";
 import { Badge } from "@/components/ui/badge";
 import { Toggle } from "@/components/ui/toggle";
 import { Input } from "@/components/ui/input";
@@ -384,11 +387,7 @@ export default function DigitizationComplianceTab({
     <div className="flex flex-col flex-1 h-full min-h-0 w-full gap-6 animate-fade-up font-inter">
       {/* 1. Color Stat Cards / Skeletons at the Top */}
       {loading && !data ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-pulse">
-          {[1, 2, 3].map((i) => (
-            <Skeleton key={i} className="h-28 rounded-xl bg-gray-100 dark:bg-muted" />
-          ))}
-        </div>
+        <KpiStatCardsSkeleton count={3} />
       ) : !error && data ? (
         <div className={cn(
           "transition-all duration-slow", 
@@ -787,9 +786,7 @@ export default function DigitizationComplianceTab({
           {/* Calculation block skeletons or data */}
           <div className="p-6 border-t border-gray-100 dark:border-white/10">
             {loading && !data ? (
-              <div className="animate-pulse">
-                <Skeleton className="h-24 w-full rounded-2xl bg-gray-100 dark:bg-muted" />
-              </div>
+              <ComplianceCalcSkeleton />
             ) : !error && data ? (() => {
               const percent = summary?.totalExpectedDocsCount > 0 
                 ? Math.min(100, Math.round((summary?.totalDigitizedDocsCount / summary?.totalExpectedDocsCount) * 100)) 
@@ -859,14 +856,7 @@ export default function DigitizationComplianceTab({
 
         {/* 3. Table / Empty / Error Area below in separated container */}
         {loading && !data ? (
-          <div className="overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card animate-pulse">
-            <div className="h-10 bg-gray-50 dark:bg-white/5" />
-            <div className="p-4 space-y-4">
-              {[1, 2, 3, 4, 5].map((i) => (
-                <Skeleton key={i} className="h-8 w-full bg-gray-50 dark:bg-muted" />
-              ))}
-            </div>
-          </div>
+          <ComplianceTableSkeleton rowCount={6} />
         ) : error ? (
           <div className="overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card p-6">
             <Empty className="flex h-[400px] flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400">

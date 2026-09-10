@@ -16,8 +16,8 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
-import { Toggle } from "@/components/ui/toggle"
 import { Skeleton } from "@/components/ui/skeleton"
+import RecordsArchiveSkeleton from "@/components/staff/skeletons/RecordsArchiveSkeleton"
 import {
   Popover,
   PopoverContent,
@@ -84,14 +84,17 @@ export default function RecordsArchiveTab({
   const [folderColors, setFolderColors] = useState({})
 
   useEffect(() => {
-    const saved = localStorage.getItem("pup-folder-colors")
-    if (saved) {
-      try {
-        setFolderColors(JSON.parse(saved))
-      } catch (e) {
-        console.error("Failed to parse folder colors", e)
+    const timer = setTimeout(() => {
+      const saved = localStorage.getItem("pup-folder-colors")
+      if (saved) {
+        try {
+          setFolderColors(JSON.parse(saved))
+        } catch (e) {
+          console.error("Failed to parse folder colors", e)
+        }
       }
-    }
+    }, 0)
+    return () => clearTimeout(timer)
   }, [])
 
   const updateFolderColor = (key, colorId) => {
@@ -445,7 +448,9 @@ export default function RecordsArchiveTab({
             </div>
 
             <div className="flex-1 bg-white p-6 dark:bg-card">
-              {students.length === 0 && !showArchived ? (
+              {loading ? (
+                <RecordsArchiveSkeleton />
+              ) : students.length === 0 && !showArchived ? (
                 <Empty className="flex h-full flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400">
                   <EmptyHeader className="flex flex-col items-center gap-0">
                     <div className="relative mb-6">

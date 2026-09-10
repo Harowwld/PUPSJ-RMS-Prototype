@@ -22,6 +22,7 @@ import { formatPHDateTime } from "@/lib/timeFormat"
 
 import HealthSidebar from "./backup/HealthSidebar"
 import BackupTable from "./backup/BackupTable"
+import AutoBackupSchedule from "./backup/AutoBackupSchedule"
 import BackupTableSkeleton from "./backup/BackupTableSkeleton"
 import PageHeader from "@/components/shared/PageHeader"
 import FloatingActionBar from "@/components/shared/FloatingActionBar"
@@ -279,12 +280,7 @@ export default function BackupTab({
               />
             </Card>
 
-            {/* Office Partition Scope Banner */}
-            <div className="rounded-brand border border-emerald-200 bg-emerald-50/70 px-4 py-2.5 text-xs text-emerald-800 dark:border-emerald-900/40 dark:bg-emerald-950/20 dark:text-emerald-400 flex items-center gap-2.5">
-              <i className="ph-fill ph-shield-check text-base text-emerald-600 dark:text-emerald-400" />
-              <span className="font-semibold">Local Partition Archive:</span>
-              <span className="text-emerald-700 dark:text-emerald-300">Office Student Records · Documents Matrix · Local Uploads · 3-2-1 Hardware Vault</span>
-            </div>
+            <AutoBackupSchedule showToast={showToast} scope="office" />
 
             {isLoading && !isManualLoading ? (
               <BackupTableSkeleton />
@@ -422,6 +418,15 @@ export default function BackupTab({
             lastBackupTime={lastBackupTime}
             isLoading={isLoading}
             isManualLoading={isManualLoading}
+            scopeInfo={{
+              title: "Local Partition Archive",
+              items: [
+                "Office Student Records",
+                "Documents Matrix",
+                "Local Uploads",
+                "Hardware Vault",
+              ],
+            }}
           />
         </div>
 

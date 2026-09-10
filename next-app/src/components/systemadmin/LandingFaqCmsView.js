@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select } from "@/components/ui/select"
 import { Skeleton } from "@/components/ui/skeleton"
+import LandingFaqSkeleton from "@/components/systemadmin/skeletons/LandingFaqSkeleton"
 import PageHeader from "@/components/shared/PageHeader"
 import ConfirmModal from "@/components/shared/ConfirmModal"
 import { cn } from "@/lib/utils"
@@ -299,12 +300,7 @@ export default function LandingFaqCmsView({ showToast }) {
   )
 
   if (loading) {
-    return (
-      <div className="flex flex-col gap-6 w-full animate-fade-up font-inter">
-        <Skeleton className="h-20 w-full rounded-2xl" />
-        <Skeleton className="h-96 w-full rounded-2xl" />
-      </div>
-    )
+    return <LandingFaqSkeleton />
   }
 
   return (

@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
+import DirectoryTableSkeleton from "@/components/systemadmin/skeletons/DirectoryTableSkeleton"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import {
   formatPHDateTime,
@@ -533,7 +534,7 @@ export default function StaffDirectoryTab({
           </div>
         )}
 
-        {!isLoading && !error && (
+        {!error && (
           <CardContent className="font-inter bg-white p-[28px] dark:bg-card/50 backdrop-blur-md flex flex-col gap-6">
             {/* Active / Archived Toggle */}
             <div className="flex w-full gap-[24px] select-none">
@@ -576,6 +577,7 @@ export default function StaffDirectoryTab({
                   className="h-[36px] w-full rounded-[8px] border-[0.5px] border-black/15 bg-white pl-9 pr-20 text-[13px] font-normal placeholder:text-[#8E8E93] dark:border-white/15 dark:bg-card"
                   value={localSearch}
                   onChange={(e) => setLocalSearch(e.target.value)}
+                  disabled={isLoading}
                 />
                 <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[12px] font-normal text-gray-400 dark:text-zinc-500">
                   {filteredStaff.length > 0 ? `${filteredStaff.length} results` : "0 results"}
@@ -587,6 +589,7 @@ export default function StaffDirectoryTab({
                 <Select
                   value={roleFilter}
                   onChange={(e) => setRoleFilter(e.target.value)}
+                  disabled={isLoading}
                   className="h-[36px] rounded-[8px] border-[0.5px] border-black/15 text-[13px] font-normal text-[#111111] dark:border-white/15"
                 >
                   <option value="All">Role</option>
@@ -599,7 +602,7 @@ export default function StaffDirectoryTab({
               <div className="shrink-0 w-auto">
                 <Button
                   onClick={() => onSwitchView("create")}
-                  disabled={activeTab === "archived"}
+                  disabled={activeTab === "archived" || isLoading}
                   className="flex h-[36px] items-center justify-center rounded-[8px] btn-brand-red text-white font-medium text-[13px] active:scale-95 disabled:opacity-50 transition-all dark:shadow-none px-6"
                 >
                   Add Staff
@@ -610,31 +613,9 @@ export default function StaffDirectoryTab({
         )}
       </Card>
 
-      {/* Main Table Grid & Pagination (No outer background card) */}
+      {/* Main Table Grid & Pagination */}
       {isLoading ? (
-        <div className="overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card">
-          <div className="h-10 border-b border-gray-200 bg-transparent dark:border-white/10 dark:bg-transparent" />
-          <div className="divide-y divide-gray-100 dark:divide-white/10">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
-              <div key={i} className="flex items-center gap-3 p-4">
-                <div className="flex flex-1 items-center gap-3">
-                  <Skeleton className="h-10 w-10 rounded-full dark:bg-muted" />
-                  <div className="space-y-2">
-                    <Skeleton className="h-4 w-32 dark:bg-muted" />
-                    <Skeleton className="h-3 w-24 dark:bg-muted" />
-                  </div>
-                </div>
-                <Skeleton className="hidden h-4 w-20 lg:block dark:bg-muted" />
-                <Skeleton className="hidden h-6 w-20 rounded-full lg:block dark:bg-muted" />
-                <Skeleton className="hidden h-6 w-24 rounded-full lg:block dark:bg-muted" />
-                <Skeleton className="hidden h-4 w-28 lg:block dark:bg-muted" />
-                <div className="flex gap-3">
-                  <Skeleton className="h-9 w-16 rounded-brand dark:bg-muted" />
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+        <DirectoryTableSkeleton rowCount={8} />
       ) : error ? (
         <div className="overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card p-6">
           <Empty className="flex h-[320px] flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400">

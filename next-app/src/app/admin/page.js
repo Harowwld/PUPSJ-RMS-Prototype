@@ -38,7 +38,9 @@ import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { PageTransition } from "@/components/ui/motion"
 
-const AdminTabLoading = () => <div className="min-h-[360px] animate-pulse rounded-brand bg-gray-50" />
+import AdminTabSkeleton from "@/components/admin/skeletons/AdminTabSkeleton"
+
+const AdminTabLoading = () => <AdminTabSkeleton />
 const StaffDirectoryTab = dynamic(() => import("@/components/admin/StaffDirectoryTab"), { loading: AdminTabLoading })
 const AuditLogsTab = dynamic(() => import("@/components/admin/AuditLogsTab"), { loading: AdminTabLoading })
 const SystemConfigTab = dynamic(() => import("@/components/admin/SystemConfigTab"), { loading: AdminTabLoading })
@@ -47,7 +49,7 @@ const DigitalRecordsReviewTab = dynamic(() => import("@/components/admin/Digital
 const DigitizationComplianceTab = dynamic(() => import("@/components/admin/DigitizationComplianceTab"), { loading: AdminTabLoading })
 const SLAAnalyticsTab = dynamic(() => import("@/components/admin/SLAAnalyticsTab"), { loading: AdminTabLoading })
 const BackupTab = dynamic(() => import("@/components/admin/BackupTab"), { loading: AdminTabLoading })
-const RegisterAccountTab = dynamic(() => import("@/components/admin/RegisterAccountTab"), { loading: AdminTabLoading })
+const RegisterAccountTab = dynamic(() => import("@/components/admin/RegisterAccountTab"), { loading: () => null })
 const EditUserModal = dynamic(() => import("@/components/admin/EditUserModal"), { loading: () => null })
 
 function AdminPageContent({ authUser: propAuthUser = null }) {

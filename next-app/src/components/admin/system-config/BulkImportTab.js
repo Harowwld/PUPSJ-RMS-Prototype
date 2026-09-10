@@ -7,6 +7,7 @@ import PageHeader from "@/components/shared/PageHeader"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
+import BulkImportSkeleton from "@/components/admin/skeletons/BulkImportSkeleton"
 import { Input } from "@/components/ui/input"
 import { Select } from "@/components/ui/select"
 import {
@@ -60,6 +61,7 @@ export default function BulkImportTab({
   const [searchTerm, setSearchTerm] = useState("")
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setSearchTerm("")
     setCurrentPage(1)
   }, [importFile])
@@ -93,6 +95,7 @@ export default function BulkImportTab({
 
   useEffect(() => {
     if (quickAdd.category === "Section" && !quickAdd.code && courses.length > 0) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setQuickAdd(prev => ({ ...prev, code: courses[0].code }))
     }
   }, [courses, quickAdd.category, quickAdd.code])
@@ -109,14 +112,7 @@ export default function BulkImportTab({
     setEditingRowIndex(null)
   }
   if (loading) {
-    return (
-      <div className="flex h-full w-full flex-col">
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-          <Skeleton className="h-[500px] w-full rounded-brand dark:bg-muted" />
-          <Skeleton className="h-[500px] w-full rounded-brand dark:bg-muted" />
-        </div>
-      </div>
-    )
+    return <BulkImportSkeleton />
   }
 
   return (

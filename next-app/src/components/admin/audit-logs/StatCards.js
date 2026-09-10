@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react"
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
+import KpiStatCardsSkeleton from "@/components/systemadmin/skeletons/KpiStatCardsSkeleton"
 
 export default function StatCards({ isLoading, logStats }) {
   const [selectedKpi, setSelectedKpi] = useState(null);
@@ -81,13 +82,7 @@ export default function StatCards({ isLoading, logStats }) {
   };
 
   if (isLoading && !logStats) {
-    return (
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 animate-pulse">
-        {[1, 2, 3].map((i) => (
-          <Skeleton key={i} className="h-28 rounded-xl bg-gray-100 dark:bg-muted" />
-        ))}
-      </div>
-    );
+    return <KpiStatCardsSkeleton count={3} />;
   }
 
   if (!logStats) return null;

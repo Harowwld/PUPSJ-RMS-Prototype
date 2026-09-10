@@ -8,6 +8,7 @@ import {
   Card,
 } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
+import StorageLayoutSkeleton from "@/components/admin/skeletons/StorageLayoutSkeleton"
 import {
   Tooltip,
   TooltipContent,
@@ -1127,18 +1128,7 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
   }
 
   if (loading && !layout) {
-    return (
-      <div className="flex flex-1 flex-col gap-8 p-10 animate-pulse">
-        <div className="flex justify-between items-center">
-          <Skeleton className="h-10 w-64 rounded-xl dark:bg-muted" />
-          <Skeleton className="h-10 w-40 rounded-xl dark:bg-muted" />
-        </div>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 flex-1">
-          <Skeleton className="lg:col-span-2 h-[600px] rounded-2xl dark:bg-muted" />
-          <Skeleton className="lg:col-span-1 h-[600px] rounded-2xl dark:bg-muted" />
-        </div>
-      </div>
-    )
+    return <StorageLayoutSkeleton />
   }
 
   if (!layout) return null

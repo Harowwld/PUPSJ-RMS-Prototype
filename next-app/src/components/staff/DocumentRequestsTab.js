@@ -5,6 +5,7 @@ import { LiquidGlassButton } from "@/components/ui/liquid-glass-button";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import DocumentRequestsTableSkeleton from "@/components/staff/skeletons/DocumentRequestsTableSkeleton";
 import { cn } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -458,7 +459,7 @@ export default function DocumentRequestsTab({
           }
         />
         
-        {!loading && !error && (
+        {!error && (
           <div className="bg-white border-t border-gray-100 p-4 backdrop-blur-md dark:bg-card/50 dark:border-white/10">
             <div className="flex w-full flex-wrap items-center gap-5">
               {/* Search */}
@@ -554,22 +555,7 @@ export default function DocumentRequestsTab({
         <Card className="rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none overflow-hidden flex flex-col w-full p-0 mb-4">
           <CardContent className="p-0 h-auto flex flex-col">
             {(loading && !isManualLoading) ? (
-              <div className="p-6 space-y-4">
-                <div className="border border-gray-100 rounded-brand overflow-hidden dark:border-white/10">
-                  <Skeleton className="h-10 w-full rounded-none dark:bg-muted" />
-                  <div className="divide-y divide-gray-100 dark:divide-white/10">
-                    {[1, 2, 3, 4, 5, 6].map((i) => (
-                      <div key={i} className="p-4 flex items-center justify-between">
-                        <div className="space-y-2 flex-1">
-                          <Skeleton className="h-4 w-1/4 dark:bg-muted" />
-                          <Skeleton className="h-3 w-1/3 dark:bg-muted" />
-                        </div>
-                        <Skeleton className="h-6 w-20 rounded-full dark:bg-muted" />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
+              <DocumentRequestsTableSkeleton rowCount={7} />
             ) : error ? (
               <div className="p-6">
                 <Empty className="h-[320px] flex flex-col items-center justify-center text-center text-gray-500 border-0 dark:text-zinc-400">

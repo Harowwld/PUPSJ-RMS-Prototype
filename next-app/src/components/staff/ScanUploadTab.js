@@ -25,6 +25,7 @@ import {
   CardDescription,
 } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
+import ScanUploadSkeleton from "@/components/staff/skeletons/ScanUploadSkeleton"
 import { Select } from "@/components/ui/select"
 import {
   Empty,
@@ -667,14 +668,7 @@ export default function ScanUploadTab({
 
         <CardContent className="flex flex-col p-[24px] pt-4">
           {loading ? (
-            <div className="flex h-full w-full flex-1 flex-col items-center justify-center bg-white p-10 min-h-[400px] dark:bg-card">
-              <div className="flex flex-col items-center gap-4">
-                <i className="ph-bold ph-spinner animate-spin text-xl text-[#0A84FF] dark:text-primary" />
-                <p className="text-sm font-semibold text-gray-500 tracking-widest dark:text-zinc-400">
-                  Loading...
-                </p>
-              </div>
-            </div>
+            <ScanUploadSkeleton />
           ) : error ? (
             <div className="flex min-h-0 flex-1 flex-col items-center justify-center p-6">
               <Empty className="flex h-[320px] flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400">

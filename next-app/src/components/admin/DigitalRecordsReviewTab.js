@@ -6,6 +6,8 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
+import KpiStatCardsSkeleton from "@/components/systemadmin/skeletons/KpiStatCardsSkeleton"
+import RecordsReviewTableSkeleton from "@/components/admin/skeletons/RecordsReviewTableSkeleton"
 import { format } from "date-fns"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Calendar } from "@/components/ui/calendar"
@@ -640,11 +642,7 @@ export default function DigitalRecordsReviewTab({
       <div className="animate-fade-up font-inter flex flex-1 flex-col h-full min-h-0 w-full gap-6">
         {/* Color Stat Cards / Skeletons at the Top */}
         {(isLoading && !isManualLoading) && !records ? (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-pulse">
-            {[1, 2, 3].map((i) => (
-              <Skeleton key={i} className="h-28 rounded-brand bg-gray-100 dark:bg-muted" />
-            ))}
-          </div>
+          <KpiStatCardsSkeleton count={3} />
         ) : !error ? (
           <div ref={statCardsRef} className="grid grid-cols-1 gap-6 md:grid-cols-3 items-start relative z-20">
             {/* Stat Card 1: Pending Review */}
@@ -862,7 +860,7 @@ export default function DigitalRecordsReviewTab({
                           <div className="space-y-1">
                             {activeKpiDetails.declineReasons.map(({ reason, count }) => (
                               <div key={reason} className="flex justify-between items-center text-[11px] py-0.5 text-white/90">
-                                <span className="truncate max-w-[150px] font-medium" title={reason}>"{reason}"</span>
+                                <span className="truncate max-w-[150px] font-medium" title={reason}>&ldquo;{reason}&rdquo;</span>
                                 <span className="font-bold">{count}</span>
                               </div>
                             ))}
@@ -1143,14 +1141,7 @@ export default function DigitalRecordsReviewTab({
         </div>
       </Card>
        {(isLoading && !isManualLoading) && (!records || records.length === 0) ? (
-        <div className="overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card animate-pulse">
-          <div className="h-10 border-b border-gray-200 bg-transparent dark:border-white/10 dark:bg-transparent" />
-          <div className="p-4 space-y-4">
-            {[1, 2, 3, 4, 5].map((i) => (
-              <Skeleton key={i} className="h-8 w-full bg-gray-50 dark:bg-muted" />
-            ))}
-          </div>
-        </div>
+        <RecordsReviewTableSkeleton rowCount={8} />
       ) : error ? (
         <div className="overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card p-6">
           <Empty className="flex h-[320px] flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400">

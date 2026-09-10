@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react"
 import { Skeleton } from "@/components/ui/skeleton"
+import ModuleConfigSkeleton from "@/components/systemadmin/skeletons/ModuleConfigSkeleton"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -421,18 +422,7 @@ export default function ModuleConfigTab({ showToast }) {
   }
 
   if (loading) {
-    return (
-      <div className="flex flex-col gap-6 w-full animate-fade-up font-inter">
-        <Skeleton className="h-10 w-64 rounded-md" />
-        <Skeleton className="h-4 w-96 rounded-md" />
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          {[1, 2, 3, 4].map((i) => (
-            <Skeleton key={i} className="h-20 rounded-xl" />
-          ))}
-        </div>
-        <Skeleton className="h-80 w-full rounded-2xl" />
-      </div>
-    )
+    return <ModuleConfigSkeleton viewMode={viewMode} />
   }
 
   // Empty State if No Offices exist in the system (Matches OfficeManagementTab design)

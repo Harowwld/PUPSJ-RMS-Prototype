@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select } from "@/components/ui/select"
 import { Skeleton } from "@/components/ui/skeleton"
+import LandingWorkflowSkeleton from "@/components/systemadmin/skeletons/LandingWorkflowSkeleton"
 import PageHeader from "@/components/shared/PageHeader"
 import ConfirmModal from "@/components/shared/ConfirmModal"
 import BevelButton from "@/components/ui/bevel-button"
@@ -305,12 +306,7 @@ export default function LandingWorkflowCmsView({ showToast }) {
   }
 
   if (loading) {
-    return (
-      <div className="flex flex-col gap-6 w-full animate-fade-up font-inter">
-        <Skeleton className="h-20 w-full rounded-2xl" />
-        <Skeleton className="h-96 w-full rounded-2xl" />
-      </div>
-    )
+    return <LandingWorkflowSkeleton />
   }
 
   const currentSteps = workflowData.steps || []
@@ -401,7 +397,7 @@ export default function LandingWorkflowCmsView({ showToast }) {
                 : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
             )}
           >
-            Left Editorial Column
+            Section Header &amp; Editorial
           </button>
 
           <button
@@ -695,7 +691,7 @@ export default function LandingWorkflowCmsView({ showToast }) {
             </div>
           )}
 
-          {/* TAB 2: LEFT EDITORIAL COLUMN */}
+          {/* TAB 2: SECTION HEADER & EDITORIAL */}
           {activeTab === "narrative" && (
             <div className="w-full space-y-6">
               {/* Left Column Text */}

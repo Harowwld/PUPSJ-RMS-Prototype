@@ -30,6 +30,14 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  StudentDashboardSkeleton,
+  StudentRequestsTableRowsSkeleton,
+  StudentRequestsPaginationSkeleton,
+  StudentOsasProposalsListSkeleton,
+  StudentActivityListSkeleton,
+} from "@/components/student/skeletons";
+import { Skeleton } from "@/components/ui/skeleton";
 
 function SortIndicator({ column, sortBy, sortOrder }) {
   if (sortBy !== column) {
@@ -47,6 +55,7 @@ const requestStatuses = ["Pending", "InProgress", "Ready", "Completed", "Cancell
 export default function StudentDashboard() {
   const router = useRouter();
   const [me, setMe] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [data, setData] = useState({ requests: [], documents: [], proposals: [], activity: [] });
   const [docTypes, setDocTypes] = useState([]);
   const [authMode, setAuthMode] = useState("login");
@@ -165,34 +174,39 @@ export default function StudentDashboard() {
   }, []);
 
   const load = useCallback(async () => {
-    const meRes = await fetch("/api/auth/me", { cache: "no-store" });
-    const meJson = await meRes.json().catch(() => null);
-    if (!meRes.ok || meJson?.data?.role !== "Student") {
-      if (meRes.status !== 401) {
-        const error = meJson?.error || "Unable to load your student session.";
-        setMessage(error);
-        showToast("Student session unavailable", error, true);
+    try {
+      setLoading(true);
+      const meRes = await fetch("/api/auth/me", { cache: "no-store" });
+      const meJson = await meRes.json().catch(() => null);
+      if (!meRes.ok || meJson?.data?.role !== "Student") {
+        if (meRes.status !== 401) {
+          const error = meJson?.error || "Unable to load your student session.";
+          setMessage(error);
+          showToast("Student session unavailable", error, true);
+        }
+        return;
       }
-      return;
+      setMe(meJson.data);
+      setRequestForm((prev) => ({
+        ...prev,
+        clientType: meJson.data.client_type || prev.clientType || "Student",
+        studentNo: prev.studentNo || meJson.data.student_no || "",
+      }));
+      const [requestRes, proposalRes, typesRes, activityRes] = await Promise.all([
+        fetch("/api/student/document-requests", { cache: "no-store" }),
+        fetch("/api/student/event-proposals", { cache: "no-store" }),
+        fetch("/api/doc-types", { cache: "no-store" }),
+        fetch("/api/student/activity", { cache: "no-store" }),
+      ]);
+      const [requestJson, proposalJson, typesJson, activityJson] = await Promise.all([requestRes.json(), proposalRes.json(), typesRes.json(), activityRes.json()]);
+      if (!requestRes.ok || !requestJson?.ok || !proposalRes.ok || !proposalJson?.ok) {
+        throw new Error(requestJson?.error || proposalJson?.error || "Unable to load student records.");
+      }
+      setDocTypes(Array.isArray(typesJson?.data) ? typesJson.data : []);
+      setData({ requests: requestJson?.data?.requests || [], documents: requestJson?.data?.documents || [], proposals: proposalJson?.data || [], activity: activityJson?.data || [] });
+    } finally {
+      setLoading(false);
     }
-    setMe(meJson.data);
-    setRequestForm((prev) => ({
-      ...prev,
-      clientType: meJson.data.client_type || prev.clientType || "Student",
-      studentNo: prev.studentNo || meJson.data.student_no || "",
-    }));
-    const [requestRes, proposalRes, typesRes, activityRes] = await Promise.all([
-      fetch("/api/student/document-requests", { cache: "no-store" }),
-      fetch("/api/student/event-proposals", { cache: "no-store" }),
-      fetch("/api/doc-types", { cache: "no-store" }),
-      fetch("/api/student/activity", { cache: "no-store" }),
-    ]);
-    const [requestJson, proposalJson, typesJson, activityJson] = await Promise.all([requestRes.json(), proposalRes.json(), typesRes.json(), activityRes.json()]);
-    if (!requestRes.ok || !requestJson?.ok || !proposalRes.ok || !proposalJson?.ok) {
-      throw new Error(requestJson?.error || proposalJson?.error || "Unable to load student records.");
-    }
-    setDocTypes(Array.isArray(typesJson?.data) ? typesJson.data : []);
-    setData({ requests: requestJson?.data?.requests || [], documents: requestJson?.data?.documents || [], proposals: proposalJson?.data || [], activity: activityJson?.data || [] });
   }, [showToast]);
 
   useEffect(() => { const timer = setTimeout(() => { load().catch((error) => { const message = error.message || "Unable to load student records."; setMessage(message); showToast("Records failed to load", message, true); }); }, 0); return () => clearTimeout(timer); }, [load, showToast]);
@@ -292,90 +306,9 @@ export default function StudentDashboard() {
     } finally { setProposalSubmitting(false); }
   }
 
-  if (!me) return null;
-  if (!me && false) return (
-    <main className="relative flex min-h-screen w-full items-center justify-center overflow-hidden bg-slate-50 p-8 font-sans dark:bg-zinc-950">
-      <div className="liquid-container">
-        <div className="liquid-blob liquid-blob-1" />
-        <div className="liquid-blob liquid-blob-2" />
-        <div className="liquid-blob liquid-blob-3" />
-      </div>
-
-      <div className="absolute left-6 top-6 z-20 flex select-none items-center gap-1">
-        <img src="/assets/branding/black-icon.png" alt="eManage Logo" className="h-8 w-8 object-contain dark:hidden" />
-        <img src="/assets/branding/white-icon.png" alt="eManage Logo" className="h-8 w-8 object-contain hidden dark:block" />
-        <span className="text-[26px] font-semibold leading-none tracking-tight text-[#1D1D1F] dark:text-zinc-50">eManage</span>
-      </div>
-
-      <div className="z-10 w-full max-w-[550px] p-4">
-      <section className="glass-panel relative flex h-[630px] w-full flex-col items-center rounded-[20px] px-[52px] py-[56px]">
-        <div className="mb-3 flex flex-col items-center text-center">
-          <div className="relative mb-3 flex h-[160px] w-[160px] shrink-0 items-center justify-center select-none">
-            <svg className="pointer-events-none absolute inset-0 h-full w-full" viewBox="0 0 160 160" aria-hidden="true">
-              {[{ r: 72, count: 24, size: 4.2, reverse: false }, { r: 63, count: 24, size: 3.4, reverse: true }, { r: 54, count: 24, size: 2.8, reverse: false }, { r: 45, count: 24, size: 2.2, reverse: true }].map((ring, rIdx) => {
-                const dots = [];
-                for (let i = 0; i < ring.count; i += 1) {
-                  const angle = (i * 2 * Math.PI) / ring.count;
-                  const cx = Number((80 + ring.r * Math.cos(angle)).toFixed(4));
-                  const cy = Number((80 + ring.r * Math.sin(angle)).toFixed(4));
-                  const progress = i / ring.count;
-                  const color = `hsl(${(340 + progress * 35) % 360}, ${Math.round(65 + Math.sin(progress * Math.PI) * 25)}%, ${Math.round(28 + progress * 24)}%)`;
-                  dots.push(<circle key={i} cx={cx} cy={cy} r={ring.size} fill={color} />);
-                }
-                return <g key={rIdx} className={ring.reverse ? "origin-center animate-spin-reverse" : "origin-center animate-spin-slow"} style={{ transformOrigin: "80px 80px", animationDuration: rIdx % 2 ? "35s" : "45s" }}>{dots}</g>;
-              })}
-            </svg>
-            <img src="/assets/branding/black-icon.png" alt="" aria-hidden="true" className="relative z-10 h-8 w-8 object-contain animate-in zoom-in-50 duration-500 dark:hidden" />
-            <img src="/assets/branding/white-icon.png" alt="" aria-hidden="true" className="relative z-10 h-8 w-8 object-contain animate-in zoom-in-50 duration-500 hidden dark:block" />
-          </div>
-          <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-[#E5484D]">Student Portal</p>
-          <h1 className="text-[25px] font-bold tracking-tight text-[#1D1D1F] dark:text-zinc-50">Student ODRS</h1>
-          <p className="mt-2 max-w-sm text-sm leading-5 text-[#636366] dark:text-zinc-300">
-            {authMode === "register"
-              ? "Create your account using the student record registered with PUP San Juan."
-              : "Sign in to track document requests and OSAS submissions."}
-          </p>
-        </div>
-
-        <form onSubmit={submitAuth} className="w-full">
-          <div className={`merged-container bg-white dark:bg-zinc-800 ${message ? "has-error" : ""}`}>
-            <div className={`field-wrapper ${studentNoFocused || auth.studentNo ? "active" : ""}`}>
-              <label htmlFor="student-number">Student Number</label>
-              <Input id="student-number" autoComplete="username" placeholder=" " value={auth.studentNo} onFocus={() => setStudentNoFocused(true)} onBlur={() => setStudentNoFocused(false)} onChange={(e) => { const studentNo = e.target.value; setAuth((current) => ({ ...current, studentNo, ...(studentNo.trim() ? {} : { password: "" }) })); }} className="pr-3 focus-visible:ring-0 focus-visible:ring-offset-0" required />
-            </div>
-            {authMode === "register" && (
-              <div className={`field-wrapper border-t border-black/10 dark:border-white/10 ${studentNameFocused || auth.name ? "active" : ""}`}>
-                <label htmlFor="student-name">Full Name</label>
-                <Input id="student-name" autoComplete="name" placeholder=" " value={auth.name} onFocus={() => setStudentNameFocused(true)} onBlur={() => setStudentNameFocused(false)} onChange={(e) => setAuth({ ...auth, name: e.target.value })} className="pr-3 focus-visible:ring-0 focus-visible:ring-offset-0" required />
-              </div>
-            )}
-            {auth.studentNo.trim() && <div className={`field-wrapper border-t border-black/10 dark:border-white/10 ${studentPasswordFocused || auth.password ? "active" : ""}`}>
-              <label htmlFor="student-password">Password</label>
-              <Input id="student-password" type={showStudentPassword ? "text" : "password"} autoComplete={authMode === "register" ? "new-password" : "current-password"} placeholder=" " value={auth.password} onFocus={() => setStudentPasswordFocused(true)} onBlur={() => setStudentPasswordFocused(false)} onChange={(e) => setAuth({ ...auth, password: e.target.value })} className="pr-11 focus-visible:ring-0 focus-visible:ring-offset-0" required />
-              <button type="button" aria-label={showStudentPassword ? "Hide password" : "Show password"} onClick={() => setShowStudentPassword((visible) => !visible)} className="absolute right-2 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center text-[#8E8E93] hover:text-[#1D1D1F] focus:outline-none dark:text-zinc-400 dark:hover:text-zinc-200">
-                <i className={`ph-bold ${showStudentPassword ? "ph-eye-slash" : "ph-eye"} text-[16px]`} aria-hidden="true" />
-              </button>
-            </div>}
-          </div>
-
-          {message && <div role="alert" className="mt-1.5 flex min-h-5 items-center gap-1.5 text-left text-[#E5484D]"><i className="ph-bold ph-warning-circle shrink-0 text-[14px]" aria-hidden="true" /><p className="text-[12px] font-normal leading-none">{message}</p></div>}
-
-          <Button disabled={authSubmitting} className="btn-brand-red mt-8 h-11 w-full rounded-[8px] text-[13px] font-medium text-white active:scale-95 disabled:opacity-50 transition-all" type="submit">
-            {authSubmitting ? "Please wait..." : authMode === "register" ? "Create Student Account" : "Sign In to ODRS"}
-          </Button>
-          <button type="button" className="mx-auto block text-[13px] font-medium text-[#E5484D] hover:underline" onClick={() => { setAuthMode(authMode === "register" ? "login" : "register"); setMessage(""); }}>
-            {authMode === "register" ? "Already registered? Sign in" : "New student? Create your account"}
-          </button>
-        </form>
-
-        <div className="mt-8 flex gap-2 border-t border-black/10 pt-4 text-xs leading-5 text-[#636366] dark:border-white/10 dark:text-zinc-400">
-          <i className="ph-fill ph-shield-check mt-0.5 text-base text-[#007AFF]" aria-hidden="true" />
-          <p>Your account securely connects you to your records and request updates.</p>
-        </div>
-      </section>
-      </div>
-    </main>
-  );
+  if (!me) {
+    return <StudentDashboardSkeleton />;
+  }
 
   const sidebarItems = [
     { type: "header", label: "Student Services" },
@@ -458,7 +391,33 @@ export default function StudentDashboard() {
               </Card>
 
               {message && <p role="alert" className="rounded-brand border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{message}</p>}
-              {view === "activity" ? <section className="rounded-brand border border-gray-200 bg-white p-5 shadow-sm"><h2 className="text-base font-bold text-gray-900">My Activity</h2><p className="mt-1 text-sm text-gray-500">A history of actions performed on your account.</p><div className="mt-5 space-y-3">{data.activity.length === 0 ? <p className="rounded-brand bg-gray-50 px-4 py-8 text-center text-sm text-gray-500">No activity recorded yet.</p> : data.activity.map((item) => <article key={item.id} className="rounded-brand border border-gray-200 p-4"><div className="flex items-center justify-between gap-3"><p className="text-sm font-semibold text-gray-900">{item.action}</p><time className="text-xs text-gray-500">{formatPHDateTime(item.created_at)}</time></div>{item.details && <p className="mt-1 text-sm text-gray-500">{item.details}</p>}</article>)}</div></section> : view === "odrs" ? (
+              {view === "activity" ? (
+                <section className="rounded-brand border border-gray-200 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-card">
+                  <h2 className="text-base font-bold text-gray-900 dark:text-zinc-50">My Activity</h2>
+                  <p className="mt-1 text-sm text-gray-500 dark:text-zinc-400">A history of actions performed on your account.</p>
+                  {loading ? (
+                    <StudentActivityListSkeleton count={4} />
+                  ) : (
+                    <div className="mt-5 space-y-3">
+                      {data.activity.length === 0 ? (
+                        <p className="rounded-brand bg-gray-50 px-4 py-8 text-center text-sm text-gray-500 dark:bg-zinc-800/40 dark:text-zinc-400">
+                          No activity recorded yet.
+                        </p>
+                      ) : (
+                        data.activity.map((item) => (
+                          <article key={item.id} className="rounded-brand border border-gray-200 p-4 dark:border-white/10">
+                            <div className="flex items-center justify-between gap-3">
+                              <p className="text-sm font-semibold text-gray-900 dark:text-zinc-50">{item.action}</p>
+                              <time className="text-xs text-gray-500 dark:text-zinc-400">{formatPHDateTime(item.created_at)}</time>
+                            </div>
+                            {item.details && <p className="mt-1 text-sm text-gray-500 dark:text-zinc-400">{item.details}</p>}
+                          </article>
+                        ))
+                      )}
+                    </div>
+                  )}
+                </section>
+              ) : view === "odrs" ? (
                 <div className="flex flex-col gap-6 w-full">
                   {/* Card 1: New Document Request (Flex layout) */}
                   <Card className="rounded-brand border border-gray-200 bg-white p-5 sm:p-6 shadow-sm dark:border-white/10 dark:bg-card flex flex-col gap-5">
@@ -589,9 +548,13 @@ export default function StudentDashboard() {
                           <h2 className="text-[16px] font-semibold text-gray-900 dark:text-zinc-50">Request History</h2>
                           <p className="mt-0.5 text-xs text-gray-500 dark:text-zinc-400">Track every Registrar update and status change in real time.</p>
                         </div>
-                        <span className="self-start sm:self-auto rounded-full bg-gray-100 px-3 py-1 text-xs font-bold text-gray-600 dark:bg-zinc-800 dark:text-zinc-300">
-                          {data.requests.length} total
-                        </span>
+                        {loading ? (
+                          <Skeleton className="h-6 w-16 rounded-full dark:bg-muted" />
+                        ) : (
+                          <span className="self-start sm:self-auto rounded-full bg-gray-100 px-3 py-1 text-xs font-bold text-gray-600 dark:bg-zinc-800 dark:text-zinc-300">
+                            {data.requests.length} total
+                          </span>
+                        )}
                       </div>
 
                       {/* Toolbar Row: Search + Status Filter */}
@@ -611,7 +574,11 @@ export default function StudentDashboard() {
                             }}
                           />
                           <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[12px] font-normal text-gray-400 dark:text-zinc-500">
-                            {filteredRequests.length} results
+                            {loading ? (
+                              <Skeleton className="h-3.5 w-14 rounded dark:bg-muted" />
+                            ) : (
+                              `${filteredRequests.length} results`
+                            )}
                           </div>
                         </div>
 
@@ -751,7 +718,9 @@ export default function StudentDashboard() {
                           </tr>
                         </thead>
                         <tbody className="bg-transparent">
-                          {sortedRequests.length === 0 ? (
+                          {loading ? (
+                            <StudentRequestsTableRowsSkeleton rowCount={itemsPerPage || 6} />
+                          ) : sortedRequests.length === 0 ? (
                             <tr className="border-0 hover:bg-transparent">
                               <td colSpan={7} className="p-12 text-center">
                                 <Empty className="flex h-[320px] flex-col items-center justify-center border-0 bg-transparent text-center">
@@ -845,7 +814,9 @@ export default function StudentDashboard() {
                     </div>
 
                     {/* Pagination Bar (identical in style to StaffDirectoryTab) */}
-                    {filteredRequests.length > 0 && (
+                    {loading ? (
+                      <StudentRequestsPaginationSkeleton />
+                    ) : filteredRequests.length > 0 ? (
                       <div className="flex items-center justify-between border-t border-gray-100 bg-white p-4 sm:p-6 px-6 sm:px-8 dark:border-white/10 dark:bg-card mt-auto">
                         <div className="flex items-center gap-8">
                           <div className="flex items-center gap-6 text-[12px] font-normal text-gray-400 dark:text-zinc-500">
@@ -899,12 +870,81 @@ export default function StudentDashboard() {
                           </button>
                         </div>
                       </div>
-                    )}
+                    ) : null}
                   </Card>
                 </div>
               ) : <>
-                <section className="rounded-brand border border-gray-200 bg-white p-5 shadow-sm"><h2 className="text-base font-bold text-gray-900">Submit an Event Proposal</h2><p className="mt-1 text-sm text-gray-500">Upload one PDF proposal for OSAS review.</p><form onSubmit={submitProposal} className="mt-5 grid gap-4 md:grid-cols-2"><div><label className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-gray-600">Event title</label><Input placeholder="Event title" value={proposalForm.title} onChange={(e) => setProposalForm({ ...proposalForm, title: e.target.value })} required /></div><div><label className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-gray-600">Organization</label><Input placeholder="Organization name" value={proposalForm.organizationName} onChange={(e) => setProposalForm({ ...proposalForm, organizationName: e.target.value })} required /></div><div><label htmlFor="event-date" className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-gray-600">Event date</label><Input id="event-date" type="date" aria-label="Event date" value={proposalForm.eventDate} onClick={(e) => e.currentTarget.showPicker?.()} onChange={(e) => setProposalForm({ ...proposalForm, eventDate: e.target.value })} required /></div><div><label className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-gray-600">Proposal PDF</label><Input type="file" accept="application/pdf" onChange={(e) => setProposalForm({ ...proposalForm, file: e.target.files?.[0] || null })} required /></div><div className="md:col-span-2"><Button type="submit" disabled={proposalSubmitting} className="bg-pup-maroon text-white hover:bg-red-900">{proposalSubmitting ? "Submitting..." : "Submit proposal"}</Button></div></form></section>
-                <section className="rounded-brand border border-gray-200 bg-white p-5 shadow-sm"><div className="flex items-center justify-between"><div><h2 className="text-base font-bold text-gray-900">Submission history</h2><p className="mt-1 text-sm text-gray-500">Follow OSAS review updates and requested revisions.</p></div><span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-bold text-gray-600">{data.proposals.length} total</span></div><div className="mt-5 space-y-3">{data.proposals.map((item) => <article key={item.id} className="rounded-brand border border-gray-200 p-4"><div className="flex flex-wrap items-center justify-between gap-2"><h3 className="font-semibold text-gray-900">{item.title}</h3><StatusBadge status={item.status} /></div><p className="mt-2 text-sm text-gray-500">{item.organization_name} · {item.event_date}</p><ol className="mt-4 space-y-2 border-l-2 border-gray-200 pl-4 text-xs text-gray-500">{item.updates.map((update) => <li key={update.id}><span className="font-semibold text-gray-700">{update.status}</span> — {update.message || "Status updated"}</li>)}</ol></article>)}{data.proposals.length === 0 && <p className="rounded-brand bg-gray-50 px-4 py-8 text-center text-sm text-gray-500">No OSAS submissions yet.</p>}</div></section>
+                <section className="rounded-brand border border-gray-200 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-card">
+                  <h2 className="text-base font-bold text-gray-900 dark:text-zinc-50">Submit an Event Proposal</h2>
+                  <p className="mt-1 text-sm text-gray-500 dark:text-zinc-400">Upload one PDF proposal for OSAS review.</p>
+                  <form onSubmit={submitProposal} className="mt-5 grid gap-4 md:grid-cols-2">
+                    <div>
+                      <label className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-gray-600 dark:text-zinc-400">Event title</label>
+                      <Input placeholder="Event title" value={proposalForm.title} onChange={(e) => setProposalForm({ ...proposalForm, title: e.target.value })} required />
+                    </div>
+                    <div>
+                      <label className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-gray-600 dark:text-zinc-400">Organization</label>
+                      <Input placeholder="Organization name" value={proposalForm.organizationName} onChange={(e) => setProposalForm({ ...proposalForm, organizationName: e.target.value })} required />
+                    </div>
+                    <div>
+                      <label htmlFor="event-date" className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-gray-600 dark:text-zinc-400">Event date</label>
+                      <Input id="event-date" type="date" aria-label="Event date" value={proposalForm.eventDate} onClick={(e) => e.currentTarget.showPicker?.()} onChange={(e) => setProposalForm({ ...proposalForm, eventDate: e.target.value })} required />
+                    </div>
+                    <div>
+                      <label className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-gray-600 dark:text-zinc-400">Proposal PDF</label>
+                      <Input type="file" accept="application/pdf" onChange={(e) => setProposalForm({ ...proposalForm, file: e.target.files?.[0] || null })} required />
+                    </div>
+                    <div className="md:col-span-2">
+                      <Button type="submit" disabled={proposalSubmitting} className="bg-pup-maroon text-white hover:bg-red-900 font-semibold rounded-brand">
+                        {proposalSubmitting ? "Submitting..." : "Submit proposal"}
+                      </Button>
+                    </div>
+                  </form>
+                </section>
+                <section className="rounded-brand border border-gray-200 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-card">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h2 className="text-base font-bold text-gray-900 dark:text-zinc-50">Submission history</h2>
+                      <p className="mt-1 text-sm text-gray-500 dark:text-zinc-400">Follow OSAS review updates and requested revisions.</p>
+                    </div>
+                    {loading ? (
+                      <Skeleton className="h-6 w-16 rounded-full dark:bg-muted" />
+                    ) : (
+                      <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-bold text-gray-600 dark:bg-zinc-800 dark:text-zinc-300">
+                        {data.proposals.length} total
+                      </span>
+                    )}
+                  </div>
+                  {loading ? (
+                    <StudentOsasProposalsListSkeleton count={3} />
+                  ) : (
+                    <div className="mt-5 space-y-3">
+                      {data.proposals.map((item) => (
+                        <article key={item.id} className="rounded-brand border border-gray-200 p-4 dark:border-white/10">
+                          <div className="flex flex-wrap items-center justify-between gap-2">
+                            <h3 className="font-semibold text-gray-900 dark:text-zinc-50">{item.title}</h3>
+                            <StatusBadge status={item.status} />
+                          </div>
+                          <p className="mt-2 text-sm text-gray-500 dark:text-zinc-400">
+                            {item.organization_name} · {item.event_date}
+                          </p>
+                          <ol className="mt-4 space-y-2 border-l-2 border-gray-200 pl-4 text-xs text-gray-500 dark:border-white/10 dark:text-zinc-400">
+                            {item.updates.map((update) => (
+                              <li key={update.id}>
+                                <span className="font-semibold text-gray-700 dark:text-zinc-300">{update.status}</span> — {update.message || "Status updated"}
+                              </li>
+                            ))}
+                          </ol>
+                        </article>
+                      ))}
+                      {data.proposals.length === 0 && (
+                        <p className="rounded-brand bg-gray-50 px-4 py-8 text-center text-sm text-gray-500 dark:bg-zinc-800/40 dark:text-zinc-400">
+                          No OSAS submissions yet.
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </section>
               </>}
               </div>
             </div>

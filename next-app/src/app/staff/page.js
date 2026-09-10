@@ -23,8 +23,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { canonicalizeCabinetId } from "@/lib/storageLayoutUtils";
 import { cn } from "@/lib/utils";
 import { PageTransition } from "@/components/ui/motion";
+import StaffTabSkeleton from "@/components/staff/skeletons/StaffTabSkeleton";
 
-const StaffTabLoading = () => <div className="min-h-[360px] animate-pulse rounded-brand bg-gray-50" />;
+const StaffTabLoading = () => <StaffTabSkeleton />;
 const RecordsArchiveTab = dynamic(() => import("@/components/staff/RecordsArchiveTab"), { loading: StaffTabLoading });
 const StorageExplorerTab = dynamic(() => import("@/components/staff/StorageExplorerTab"), { loading: StaffTabLoading });
 const ScanUploadTab = dynamic(() => import("@/components/staff/ScanUploadTab"), { loading: StaffTabLoading });

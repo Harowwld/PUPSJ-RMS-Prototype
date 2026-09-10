@@ -13,6 +13,7 @@ import {
   BreadcrumbList,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
+import StorageExplorerSkeleton from "@/components/staff/skeletons/StorageExplorerSkeleton"
 
 function getStudentNoYear(studentNo) {
   const raw = String(studentNo || "").trim();
@@ -39,14 +40,17 @@ export default function StorageExplorerTab({
   const [folderColors, setFolderColors] = useState({})
 
   useEffect(() => {
-    const saved = localStorage.getItem("pup-folder-colors")
-    if (saved) {
-      try {
-        setFolderColors(JSON.parse(saved))
-      } catch (e) {
-        console.error("Failed to parse folder colors", e)
+    const timer = setTimeout(() => {
+      const saved = localStorage.getItem("pup-folder-colors")
+      if (saved) {
+        try {
+          setFolderColors(JSON.parse(saved))
+        } catch (e) {
+          console.error("Failed to parse folder colors", e)
+        }
       }
-    }
+    }, 0)
+    return () => clearTimeout(timer)
   }, [activeStudent])
 
   const activeStudentColor = useMemo(() => {
@@ -64,11 +68,14 @@ export default function StorageExplorerTab({
   const [expandedDrawer, setExpandedDrawer] = useState(null)
 
   useEffect(() => {
-    if (activeStudent && selectedCabinet && String(activeStudent.cabinet) === String(selectedCabinet)) {
-      setExpandedDrawer(activeStudent.drawer)
-    } else {
-      setExpandedDrawer(null)
-    }
+    const timer = setTimeout(() => {
+      if (activeStudent && selectedCabinet && String(activeStudent.cabinet) === String(selectedCabinet)) {
+        setExpandedDrawer(activeStudent.drawer)
+      } else {
+        setExpandedDrawer(null)
+      }
+    }, 0)
+    return () => clearTimeout(timer)
   }, [selectedCabinet, activeStudent])
 
   const totalRoomsPages = useMemo(() => {
@@ -96,16 +103,19 @@ export default function StorageExplorerTab({
 
   // Reset/auto-paginate rooms page when locator model or active student changes
   useEffect(() => {
-    if (activeStudent && locatorModel?.rooms) {
-      const targetRoomId = activeStudent.room;
-      const targetIndex = locatorModel.rooms.findIndex(r => r.room === targetRoomId);
-      if (targetIndex !== -1) {
-        const page = Math.floor(targetIndex / roomsPerPage) + 1;
-        setRoomsPage(page);
-        return;
+    const timer = setTimeout(() => {
+      if (activeStudent && locatorModel?.rooms) {
+        const targetRoomId = activeStudent.room;
+        const targetIndex = locatorModel.rooms.findIndex(r => r.room === targetRoomId);
+        if (targetIndex !== -1) {
+          const page = Math.floor(targetIndex / roomsPerPage) + 1;
+          setRoomsPage(page);
+          return;
+        }
       }
-    }
-    setRoomsPage(1)
+      setRoomsPage(1)
+    }, 0)
+    return () => clearTimeout(timer)
   }, [locatorModel, activeStudent, roomsPerPage])
 
 
@@ -222,7 +232,9 @@ export default function StorageExplorerTab({
             </div>
 
             {/* Level Inner Content */}
-            {locatorModel?.kind === "rooms" ? (
+            {loading ? (
+              <StorageExplorerSkeleton />
+            ) : locatorModel?.kind === "rooms" ? (
               <div className="flex flex-col w-full">
                 <div className="px-8 pb-8 w-full">
                   <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-6 w-full">

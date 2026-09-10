@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
+import TaxonomyTableSkeleton from "@/components/admin/skeletons/TaxonomyTableSkeleton"
 import {
   Empty,
   EmptyHeader,
@@ -255,14 +256,8 @@ export default function DocTypesTab({
 
   if (loading && docTypes.length === 0) {
     return (
-      <div className="flex h-full w-full flex-col">
-        <div className="space-y-4 p-6">
-          <div className="flex items-center justify-between">
-            <Skeleton className="h-10 w-64 rounded-brand dark:bg-muted" />
-            <Skeleton className="h-10 w-48 rounded-brand dark:bg-muted" />
-          </div>
-          <Skeleton className="h-[400px] w-full rounded-brand dark:bg-muted" />
-        </div>
+      <div className="flex h-full w-full flex-col p-6">
+        <TaxonomyTableSkeleton rowCount={6} showSubtext={false} />
       </div>
     )
   }
@@ -402,12 +397,7 @@ export default function DocTypesTab({
 
           <div className="relative z-10 flex-1 overflow-x-auto overflow-y-auto select-none">
               {loading ? (
-                <div className="space-y-4 p-8">
-                  <Skeleton className="h-10 w-full rounded-lg dark:bg-muted" />
-                  {[1, 2, 3, 4, 5].map((i) => (
-                    <Skeleton key={i} className="h-16 w-full rounded-lg dark:bg-muted/50" />
-                  ))}
-                </div>
+                <TaxonomyTableSkeleton rowCount={6} showSubtext={false} />
               ) : (
                  <table className="min-w-full text-sm">
                   <thead className="sticky top-0 z-10 border-b border-gray-200 bg-white dark:bg-card dark:border-white/10">

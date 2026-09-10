@@ -7,6 +7,7 @@ import PageHeader from "@/components/shared/PageHeader";
 import { RefreshButton } from "@/components/shared/RefreshButton";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Select } from "@/components/ui/select";
+import RegistrarODRSSkeleton from "@/components/staff/skeletons/RegistrarODRSSkeleton";
 
 const statuses = ["Pending", "InProgress", "Ready", "Completed", "Cancelled"];
 
@@ -16,12 +17,19 @@ export default function RegistrarODRSTab({ showToast }) {
   const [status, setStatus] = useState("Pending");
   const [message, setMessage] = useState("");
   const [refreshing, setRefreshing] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
-    const res = await fetch("/api/registrar/document-requests", { cache: "no-store" });
-    const json = await res.json();
-    if (res.ok && json.ok) setRows(json.data);
-    else showToast?.({ title: "Load failed", description: json?.error || "Unable to load requests." }, true);
+    try {
+      const res = await fetch("/api/registrar/document-requests", { cache: "no-store" });
+      const json = await res.json();
+      if (res.ok && json.ok) setRows(json.data);
+      else showToast?.({ title: "Load failed", description: json?.error || "Unable to load requests." }, true);
+    } catch {
+      showToast?.({ title: "Load failed", description: "Unable to load requests." }, true);
+    } finally {
+      setLoading(false);
+    }
   }, [showToast]);
 
   useEffect(() => {
@@ -55,6 +63,10 @@ export default function RegistrarODRSTab({ showToast }) {
     }
     return "bg-amber-50 text-amber-800 border-amber-200/80 dark:bg-amber-950/30 dark:text-amber-300 dark:border-amber-800/40";
   };
+
+  if (loading) {
+    return <RegistrarODRSSkeleton />;
+  }
 
   return (
     <TooltipProvider delayDuration={200}>

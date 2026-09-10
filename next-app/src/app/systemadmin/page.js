@@ -10,18 +10,39 @@ import Sidebar from "@/components/shared/Sidebar"
 import ConfirmModal from "@/components/shared/ConfirmModal"
 import { SystemAdminGuard, useAuthUser } from "@/components/shared/AuthGuard"
 import { Skeleton } from "@/components/ui/skeleton"
+import KpiStatCardsSkeleton from "@/components/systemadmin/skeletons/KpiStatCardsSkeleton"
 import { cn } from "@/lib/utils"
 
 function TabLoadingSkeleton() {
   return (
-    <div className="space-y-6 w-full animate-pulse">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {[1, 2, 3].map((i) => (
-          <Skeleton key={i} className="h-28 rounded-xl bg-gray-100 dark:bg-muted" />
+    <div className="flex flex-col gap-6 w-full animate-fade-up font-inter">
+      <KpiStatCardsSkeleton count={3} />
+      <div className="rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card p-6 h-20 flex items-center justify-between">
+        <div className="space-y-1.5">
+          <Skeleton className="h-5 w-48 rounded dark:bg-muted" />
+          <Skeleton className="h-3.5 w-72 rounded dark:bg-muted" />
+        </div>
+        <div className="flex items-center gap-2">
+          <Skeleton className="h-9 w-24 rounded-xl dark:bg-muted" />
+          <Skeleton className="h-9 w-28 rounded-xl dark:bg-muted" />
+        </div>
+      </div>
+      <div className="rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card overflow-hidden p-6 space-y-4 min-h-[400px]">
+        <div className="h-10 border-b border-gray-100 dark:border-white/10 flex items-center justify-between pb-3">
+          <Skeleton className="h-4 w-32 rounded dark:bg-muted" />
+          <Skeleton className="h-4 w-24 rounded dark:bg-muted" />
+        </div>
+        {[1, 2, 3, 4, 5, 6].map((i) => (
+          <div key={i} className="h-12 border-b border-gray-100 dark:border-white/5 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Skeleton className="h-8 w-8 rounded-lg dark:bg-muted" />
+              <Skeleton className="h-4 w-40 rounded dark:bg-muted" />
+            </div>
+            <Skeleton className="h-4 w-24 rounded dark:bg-muted" />
+            <Skeleton className="h-6 w-20 rounded-full dark:bg-muted" />
+          </div>
         ))}
       </div>
-      <Skeleton className="h-16 w-full rounded-2xl bg-gray-100 dark:bg-muted" />
-      <Skeleton className="h-96 w-full rounded-2xl bg-gray-100 dark:bg-muted" />
     </div>
   )
 }
@@ -164,6 +185,7 @@ function SystemAdminPageContent({ authUser: propAuthUser }) {
 
   useEffect(() => {
     if (initialAuth) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setAuthUser(initialAuth)
       setLoading(false)
       return

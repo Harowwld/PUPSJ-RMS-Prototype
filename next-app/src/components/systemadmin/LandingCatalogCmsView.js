@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select } from "@/components/ui/select"
 import { Skeleton } from "@/components/ui/skeleton"
+import LandingCatalogSkeleton from "@/components/systemadmin/skeletons/LandingCatalogSkeleton"
 import PageHeader from "@/components/shared/PageHeader"
 import ConfirmModal from "@/components/shared/ConfirmModal"
 import BevelButton from "@/components/ui/bevel-button"
@@ -415,12 +416,7 @@ export default function LandingCatalogCmsView({ showToast }) {
   }
 
   if (loading) {
-    return (
-      <div className="flex flex-col gap-6 w-full animate-fade-up font-inter">
-        <Skeleton className="h-20 w-full rounded-2xl" />
-        <Skeleton className="h-96 w-full rounded-2xl" />
-      </div>
-    )
+    return <LandingCatalogSkeleton />
   }
 
   const currentItems = catalogData.items || []

@@ -8,24 +8,24 @@ export default function BackupTableSkeleton({ rowCount = 8 }) {
     <div className="flex-1 flex h-fit min-h-[600px] flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card isolate">
       <div className="flex-1 overflow-hidden overflow-x-auto overflow-y-auto select-none min-h-[400px]">
         <table className="min-w-full text-sm">
-          <thead className="sticky top-0 z-10 border-b border-gray-200 bg-white dark:bg-card dark:border-white/10">
-            <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">
-              <th className="w-12 p-4 text-center">
+          <thead className="sticky top-0 z-10 border-b-[0.5px] border-black/10 dark:border-white/10 bg-white dark:bg-card">
+            <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500 h-11 select-none">
+              <th className="w-12 py-0 px-4 text-center align-middle">
                 <Skeleton className="h-4 w-4 rounded mx-auto dark:bg-muted" />
               </th>
-              <th className="p-4 px-6 min-w-[280px]">
+              <th className="p-4 min-w-[280px]">
                 <Skeleton className="h-3.5 w-28 dark:bg-muted" />
               </th>
-              <th className="w-32 p-4 px-6 text-center">
+              <th className="p-4 w-32 text-center">
                 <Skeleton className="h-3.5 w-12 mx-auto dark:bg-muted" />
               </th>
-              <th className="w-56 p-4 px-6">
+              <th className="p-4 w-56">
                 <Skeleton className="h-3.5 w-24 dark:bg-muted" />
               </th>
-              <th className="w-56 p-4 px-6 text-center">
-                <Skeleton className="h-3.5 w-32 mx-auto dark:bg-muted" />
+              <th className="p-4 w-36 text-center">
+                <Skeleton className="h-3.5 w-16 mx-auto dark:bg-muted" />
               </th>
-              <th className="w-32 p-4 px-6 text-right">
+              <th className="p-4 pr-6 w-32 text-right">
                 <Skeleton className="h-3.5 w-14 ml-auto dark:bg-muted" />
               </th>
             </tr>
@@ -39,7 +39,7 @@ export default function BackupTableSkeleton({ rowCount = 8 }) {
                 <td className="py-0 px-4 align-middle text-center">
                   <Skeleton className="h-4 w-4 rounded mx-auto dark:bg-muted" />
                 </td>
-                <td className="py-0 px-6 align-middle">
+                <td className="py-2 px-4 align-middle">
                   <div className="flex items-center gap-3">
                     <Skeleton
                       className={cn(
@@ -49,27 +49,22 @@ export default function BackupTableSkeleton({ rowCount = 8 }) {
                     />
                   </div>
                 </td>
-                <td className="py-0 px-6 align-middle text-center">
+                <td className="py-2 px-4 align-middle text-center">
                   <Skeleton className="h-4 w-14 mx-auto rounded dark:bg-muted" />
                 </td>
-                <td className="py-0 px-6 align-middle">
+                <td className="py-2 px-4 align-middle">
                   <div className="flex flex-col gap-1.5">
                     <Skeleton className="h-3.5 w-24 rounded dark:bg-muted" />
                     <Skeleton className="h-2.5 w-16 rounded dark:bg-muted" />
                   </div>
                 </td>
-                <td className="py-0 px-6 align-middle">
-                  <div className="flex mx-auto w-fit items-center gap-2">
-                    <Skeleton className="h-[22px] w-[58px] rounded-[4px] dark:bg-muted" />
-                    <Skeleton className="h-[22px] w-[58px] rounded-[4px] dark:bg-muted" />
-                    <Skeleton className="h-[22px] w-[58px] rounded-[4px] dark:bg-muted" />
-                  </div>
+                <td className="py-2 px-4 align-middle text-center">
+                  <Skeleton className="h-[22px] w-14 rounded-[4px] mx-auto dark:bg-muted" />
                 </td>
-                <td className="py-0 px-6 align-middle text-right">
-                  <div className="flex items-center justify-end gap-1">
-                    <Skeleton className="h-7 w-7 rounded-lg dark:bg-muted" />
-                    <Skeleton className="h-7 w-7 rounded-lg dark:bg-muted" />
-                    <Skeleton className="h-7 w-7 rounded-lg dark:bg-muted" />
+                <td className="py-0 px-4 pr-6 align-middle text-right">
+                  <div className="flex items-center justify-end gap-1.5">
+                    <Skeleton className="h-7 w-7 rounded-[6px] dark:bg-muted" />
+                    <Skeleton className="h-7 w-7 rounded-[6px] dark:bg-muted" />
                   </div>
                 </td>
               </tr>

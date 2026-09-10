@@ -6,6 +6,8 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
+import KpiStatCardsSkeleton from "@/components/systemadmin/skeletons/KpiStatCardsSkeleton"
+import DirectoryTableSkeleton from "@/components/systemadmin/skeletons/DirectoryTableSkeleton"
 import { Card, CardContent } from "@/components/ui/card"
 import {
   Dialog,
@@ -586,11 +588,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
     <div className="flex flex-col gap-6 w-full animate-fade-up font-inter">
       {/* Stat Cards */}
       {loading ? (
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 animate-pulse">
-          {[1, 2, 3].map((i) => (
-            <Skeleton key={i} className="h-28 rounded-xl bg-gray-100 dark:bg-muted" />
-          ))}
-        </div>
+        <KpiStatCardsSkeleton count={3} />
       ) : (
         <div
           ref={statCardsRef}
@@ -885,11 +883,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
 
       {/* Directory Table */}
       {loading ? (
-        <div className="space-y-3">
-          {[1, 2, 3, 4].map(i => (
-            <Skeleton key={i} className="h-14 w-full rounded-xl" />
-          ))}
-        </div>
+        <DirectoryTableSkeleton rowCount={8} />
       ) : filteredStaff.length === 0 ? (
         <div className="flex h-[420px] flex-col items-center justify-center rounded-2xl border border-dashed border-gray-200 dark:border-white/10 bg-white/40 dark:bg-zinc-900/20 text-center">
           <Empty className="flex flex-col items-center justify-center border-0 bg-transparent text-center">

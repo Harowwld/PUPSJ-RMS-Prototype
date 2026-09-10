@@ -55,6 +55,7 @@ export default function HealthSidebar({
   lastBackupTime,
   isLoading = false,
   isManualLoading = false,
+  scopeInfo = null,
 }) {
   if (isLoading && !isManualLoading) {
     return (
@@ -154,14 +155,14 @@ export default function HealthSidebar({
               </div>
             </div>
 
-            {/* Encryption Row */}
+            {/* Data Protection Row */}
             <div className="flex items-center justify-between h-[44px] border-b border-black/5 dark:border-white/5">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-[8px] flex items-center justify-center bg-[#CCFBF1] text-[#0F766E] shrink-0">
                   <i className="ti ti-shield-check text-[16px]"></i>
                 </div>
-                <span className="text-[13px] font-medium text-[#111111] dark:text-zinc-50">Encryption</span>
-                <span className="text-[13px] font-normal text-[#8E8E93]">AES-256-GCM</span>
+                <span className="text-[13px] font-medium text-[#111111] dark:text-zinc-50">Data Protection</span>
+                <span className="text-[13px] font-normal text-[#8E8E93]">Protected</span>
               </div>
               <div className="flex items-center">
                 <span className="text-[13px] font-normal text-[#111111] dark:text-zinc-50">Active</span>
@@ -177,15 +178,42 @@ export default function HealthSidebar({
               </span>
             </div>
 
-            {/* Backup Node Row */}
+            {/* Last Restored Row */}
             <div className="flex items-center justify-between h-[44px]">
-              <span className="text-[13px] font-normal text-[#8E8E93]">Backup Node</span>
+              <span className="text-[13px] font-normal text-[#8E8E93]">Last Restored</span>
               <span className="text-[13px] font-normal text-[#111111] dark:text-zinc-150">
-                {systemHealth?.lastRestorationAt ? formatLastSync(systemHealth.lastRestorationAt) : "Not configured"}
+                {systemHealth?.lastRestorationAt ? formatLastSync(systemHealth.lastRestorationAt) : "Never"}
               </span>
             </div>
           </div>
         </div>
+
+        {scopeInfo && (
+          <div className="border-t border-gray-100 dark:border-white/10 p-5 bg-gray-50/50 dark:bg-zinc-900/40">
+            <div className="flex items-center gap-2 mb-2.5">
+              <i className="ph-fill ph-shield-check text-[15px] text-indigo-600 dark:text-indigo-400" />
+              <span className="text-[12px] font-semibold text-gray-900 dark:text-zinc-100">
+                {scopeInfo.title || "Platform Governance Scope"}
+              </span>
+            </div>
+            {Array.isArray(scopeInfo.items) ? (
+              <div className="flex flex-wrap gap-1.5">
+                {scopeInfo.items.map((item, idx) => (
+                  <span
+                    key={idx}
+                    className="inline-flex items-center rounded-[6px] bg-indigo-50/80 px-2 py-1 text-[11px] font-medium text-indigo-700 border border-indigo-200/50 dark:bg-indigo-950/40 dark:text-indigo-300 dark:border-indigo-900/40"
+                  >
+                    {item}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <p className="text-[12px] font-normal leading-relaxed text-[#8E8E93] dark:text-zinc-400">
+                {scopeInfo.description}
+              </p>
+            )}
+          </div>
+        )}
       </Card>
     </div>
   )

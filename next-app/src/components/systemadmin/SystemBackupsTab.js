@@ -20,6 +20,7 @@ import { formatPHDateTime } from "@/lib/timeFormat"
 
 import HealthSidebar from "@/components/admin/backup/HealthSidebar"
 import BackupTable from "@/components/admin/backup/BackupTable"
+import AutoBackupSchedule from "@/components/admin/backup/AutoBackupSchedule"
 import BackupTableSkeleton from "@/components/admin/backup/BackupTableSkeleton"
 import PageHeader from "@/components/shared/PageHeader"
 import FloatingActionBar from "@/components/shared/FloatingActionBar"
@@ -518,12 +519,7 @@ export default function SystemBackupsTab({ showToast }) {
               />
             </Card>
 
-            {/* Governance Scope Banner */}
-            <div className="rounded-brand border border-indigo-200 bg-indigo-50/70 px-4 py-2.5 text-xs text-indigo-800 dark:border-indigo-900/40 dark:bg-indigo-950/20 dark:text-indigo-400 flex items-center gap-2.5">
-              <i className="ph-fill ph-shield-check text-base text-indigo-600 dark:text-indigo-400" />
-              <span className="font-semibold">Platform Governance Scope:</span>
-              <span className="text-indigo-700 dark:text-indigo-300">Department Stations · Department Features · Global Directory · Platform Audit Trail · System Settings</span>
-            </div>
+            <AutoBackupSchedule showToast={showToast} scope="system" />
 
             {isLoading && !isManualLoading ? (
               <BackupTableSkeleton />
@@ -662,6 +658,16 @@ export default function SystemBackupsTab({ showToast }) {
             lastBackupTime={lastBackupTime}
             isLoading={isLoading}
             isManualLoading={isManualLoading}
+            scopeInfo={{
+              title: "Platform Governance Scope",
+              items: [
+                "Department Stations",
+                "Department Features",
+                "Global Directory",
+                "Platform Audit Trail",
+                "System Settings",
+              ],
+            }}
           />
         </div>
 

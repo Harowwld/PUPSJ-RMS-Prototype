@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Select } from "@/components/ui/select"
 import { detectDocType } from "@/lib/ocrClient"
 import ConfirmModal from "@/components/shared/ConfirmModal"
+import RecognitionTemplateSkeleton from "@/components/admin/skeletons/RecognitionTemplateSkeleton"
 
 const FIELDS = [
   ["firstName", "First name"],
@@ -232,6 +233,10 @@ export default function RecognitionTemplatesTab({ showToast }) {
     } else {
       showToast?.({ title: "Delete failed", description: data.error || "Unable to delete configuration." }, true)
     }
+  }
+
+  if (loading) {
+    return <RecognitionTemplateSkeleton />
   }
 
   return (
