@@ -9,7 +9,7 @@ export default function TaxonomyTableSkeleton({
   showSubtext = true,
 }) {
   return (
-    <div className="overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card flex flex-col flex-1 isolate select-none animate-fade-up">
+    <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card flex flex-col flex-1 isolate select-none animate-fade-up">
       <div className="overflow-x-auto">
         <table className="min-w-full text-sm">
           <thead className="sticky top-0 z-10 border-b border-gray-200 bg-white dark:bg-card dark:border-white/10">
@@ -73,7 +73,7 @@ export default function TaxonomyTableSkeleton({
       </div>
 
       {/* Pagination Footer */}
-      <div className="flex items-center justify-between border-t border-[#e5e5ea] dark:border-[#3a3a3c] bg-white dark:bg-card p-4 px-6 rounded-b-brand mt-auto">
+      <div className="flex items-center justify-between border-t border-[#e5e5ea] dark:border-[#3a3a3c] bg-white dark:bg-card p-4 px-6 rounded-b-2xl mt-auto">
         <Skeleton className="h-3.5 w-32 rounded dark:bg-muted" />
         <div className="flex items-center gap-2">
           <Skeleton className="h-8 w-16 rounded-xl dark:bg-muted" />

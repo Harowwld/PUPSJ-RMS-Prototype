@@ -313,7 +313,7 @@ export default function LandingWorkflowCmsView({ showToast }) {
 
   return (
     <div className="flex flex-col gap-6 w-full animate-fade-up font-inter">
-      <Card className="rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none overflow-hidden">
+      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
         <PageHeader
           icon="ph-bold ph-git-merge"
           title={
@@ -336,7 +336,6 @@ export default function LandingWorkflowCmsView({ showToast }) {
                 onClick={() => window.open("/#workflow", "_blank")}
                 className="flex h-10 items-center justify-center rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
               >
-                <i className="ph-bold ph-arrow-square-out mr-1.5 text-[14px]" />
                 View Portal
               </Button>
 
@@ -346,7 +345,6 @@ export default function LandingWorkflowCmsView({ showToast }) {
                 onClick={() => setResetModalOpen(true)}
                 className="flex h-10 items-center justify-center rounded-xl! border border-rose-200 dark:border-rose-900/40 bg-white dark:bg-zinc-900 text-rose-600 dark:text-rose-400 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-rose-50 dark:hover:bg-rose-950/20"
               >
-                <i className="ph-bold ph-arrow-counter-clockwise mr-1.5 text-[14px]" />
                 Reset Defaults
               </Button>
 
@@ -362,10 +360,7 @@ export default function LandingWorkflowCmsView({ showToast }) {
                     Saving...
                   </>
                 ) : (
-                  <>
-                    <i className="ph-bold ph-floppy-disk mr-1.5 text-[14px]" />
-                    Save Changes
-                  </>
+                  "Save Changes"
                 )}
               </Button>
             </div>
@@ -466,7 +461,6 @@ export default function LandingWorkflowCmsView({ showToast }) {
                     className="flex h-9 items-center justify-center rounded-xl! btn-brand-red text-white font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs disabled:opacity-40"
                     title={currentSteps.length >= MAX_STEPS ? `Maximum of ${MAX_STEPS} steps reached` : "Add blank step"}
                   >
-                    <i className="ph-bold ph-plus mr-1.5 text-[13px]" />
                     Add Step
                   </Button>
                 </div>

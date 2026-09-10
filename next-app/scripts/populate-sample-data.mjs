@@ -236,7 +236,7 @@ export async function seed({ force: forceOverride } = {}) {
       await run(
         `INSERT INTO student_accounts (student_no, email, password_hash, status, updated_at)
          VALUES ($1, $2, $3, 'Active', NOW())
-         ON CONFLICT (student_no) DO UPDATE SET email=EXCLUDED.email, password_hash=EXCLUDED.password_hash, status='Active', updated_at=NOW()`,
+         ON CONFLICT (email) DO UPDATE SET student_no=EXCLUDED.student_no, password_hash=EXCLUDED.password_hash, status='Active', updated_at=NOW()`,
         [sNo, sEmail, studentPasswordHash],
       );
     }

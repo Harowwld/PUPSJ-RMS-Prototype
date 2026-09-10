@@ -45,7 +45,7 @@ const CabinetCanvas = memo(({
       ref={canvasRef}
       data-slot="storage-canvas"
       className={cn(
-        "relative w-full overflow-hidden border border-gray-300 dark:border-white/10 bg-[#f8fafc] dark:bg-zinc-600/30 shadow-inner dark:shadow-none transition-all duration-normal rounded-brand",
+        "relative w-full overflow-hidden border border-gray-300 dark:border-white/10 bg-[#f8fafc] dark:bg-zinc-600/30 shadow-inner dark:shadow-none transition-all duration-normal rounded-2xl",
         isModalOpen ? "h-full" : ""
       )}
       style={!isModalOpen ? { aspectRatio: "16 / 10" } : {}}

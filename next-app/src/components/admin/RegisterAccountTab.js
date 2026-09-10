@@ -137,7 +137,7 @@ export default function RegisterAccountTab({
               {/* Part 1: Full name */}
               <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
                 <div>
-                  <label className="mb-1 block text-[11px] font-medium uppercase tracking-[0.04em] text-gray-500 dark:text-zinc-400">
+                  <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-gray-500 dark:text-zinc-400">
                     First Name <span className="text-[11px] font-normal text-gray-400 dark:text-zinc-500">*</span>
                   </label>
                   <Input
@@ -145,8 +145,7 @@ export default function RegisterAccountTab({
                     required
                     ref={fnameRef}
                     disabled={isLoading}
-                    className="h-[36px] rounded-[8px] border-[0.5px] border-gray-300 bg-white text-[13px] font-normal tracking-[-0.01em] text-gray-900 focus-visible:border-gray-500 focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none focus:ring-0 focus:border-gray-500 dark:bg-card dark:border-zinc-800 dark:text-zinc-50 dark:focus:border-zinc-600 dark:focus-visible:border-zinc-600"
-                    style={{ borderWidth: '0.5px', borderStyle: 'solid' }}
+                    className="h-10 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon shadow-xs"
                     placeholder="Juan"
                     value={createForm.fname}
                     onChange={(e) =>
@@ -158,15 +157,14 @@ export default function RegisterAccountTab({
                   />
                 </div>
                 <div>
-                  <label className="mb-1 block text-[11px] font-medium uppercase tracking-[0.04em] text-gray-500 dark:text-zinc-400">
+                  <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-gray-500 dark:text-zinc-400">
                     Last Name <span className="text-[11px] font-normal text-gray-400 dark:text-zinc-500">*</span>
                   </label>
                   <Input
                     type="text"
                     required
                     disabled={isLoading}
-                    className="h-[36px] rounded-[8px] border-[0.5px] border-gray-300 bg-white text-[13px] font-normal tracking-[-0.01em] text-gray-900 focus-visible:border-gray-500 focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none focus:ring-0 focus:border-gray-500 dark:bg-card dark:border-zinc-800 dark:text-zinc-50 dark:focus:border-zinc-600 dark:focus-visible:border-zinc-600"
-                    style={{ borderWidth: '0.5px', borderStyle: 'solid' }}
+                    className="h-10 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon shadow-xs"
                     placeholder="Dela Cruz"
                     value={createForm.lname}
                     onChange={(e) =>
@@ -181,7 +179,7 @@ export default function RegisterAccountTab({
 
               {/* Part 2: Role Selection (right side of the card, no separator) */}
               <div className="flex flex-row items-center justify-between pb-1">
-                <label className="block text-[11px] font-medium uppercase tracking-[0.04em] text-gray-500 dark:text-zinc-400">
+                <label className="block text-[11px] font-medium uppercase tracking-wider text-gray-500 dark:text-zinc-400">
                   System Role <span className="text-[11px] font-normal text-gray-400 dark:text-zinc-500">*</span>
                 </label>
                 <div className="flex items-center gap-6">
@@ -218,7 +216,7 @@ export default function RegisterAccountTab({
               {/* Part 3: System Identifiers */}
               <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
                 <div>
-                  <label className="mb-1 block text-[11px] font-medium uppercase tracking-[0.04em] text-gray-500 dark:text-zinc-400">
+                  <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-gray-500 dark:text-zinc-400">
                     Employee ID <span className="text-[11px] font-normal text-gray-400 dark:text-zinc-500">*</span>
                   </label>
                   <Input
@@ -226,10 +224,9 @@ export default function RegisterAccountTab({
                     required
                     disabled={isLoading}
                     className={cn(
-                      "h-[36px] rounded-[8px] border-[0.5px] border-gray-300 bg-white text-[13px] font-normal tracking-[-0.01em] text-gray-900 focus-visible:border-gray-500 focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none focus:ring-0 focus:border-gray-500 dark:bg-card dark:border-zinc-800 dark:text-zinc-50 dark:focus:border-zinc-600 dark:focus-visible:border-zinc-600",
+                      "h-10 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon shadow-xs",
                       lastAutoFilled.id && "border-emerald-500 dark:border-emerald-500"
                     )}
-                    style={{ borderWidth: '0.5px', borderStyle: 'solid' }}
                     placeholder={suggestedId || "PUPREGISTRAR-[XXX]"}
                     value={createForm.id}
                     onChange={(e) => {
@@ -244,7 +241,7 @@ export default function RegisterAccountTab({
                 </div>
 
                 <div>
-                  <label className="mb-1 block text-[11px] font-medium uppercase tracking-[0.04em] text-gray-500 dark:text-zinc-400">
+                  <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-gray-500 dark:text-zinc-400">
                     Email Address <span className="text-[11px] font-normal text-gray-400 dark:text-zinc-500">*</span>
                   </label>
                   <Input
@@ -252,10 +249,9 @@ export default function RegisterAccountTab({
                     required
                     disabled={isLoading}
                     className={cn(
-                      "h-[36px] rounded-[8px] border-[0.5px] border-gray-300 bg-white text-[13px] font-normal tracking-[-0.01em] text-gray-900 focus-visible:border-gray-500 focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none focus:ring-0 focus:border-gray-500 dark:bg-card dark:border-zinc-800 dark:text-zinc-50 dark:focus:border-zinc-600 dark:focus-visible:border-zinc-600",
+                      "h-10 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon shadow-xs",
                       lastAutoFilled.email && "border-emerald-500 dark:border-emerald-500"
                     )}
-                    style={{ borderWidth: '0.5px', borderStyle: 'solid' }}
                     placeholder={suggestedEmail || "[role].[name]@pup.local"}
                     value={createForm.email}
                     onChange={(e) => {
@@ -271,30 +267,30 @@ export default function RegisterAccountTab({
               </div>
             </div>
 
-            <div className="flex flex-row justify-between bg-white p-6 dark:bg-card border-none items-center">
+            <div className="px-6 py-4 border-t border-gray-100 dark:border-white/10 flex items-center justify-between bg-gray-50/50 dark:bg-zinc-900/20">
               <Button
                 type="button"
                 variant="ghost"
                 onClick={handleClearForm}
                 disabled={isLoading}
-                className="text-[13px] font-medium text-gray-500 dark:text-zinc-400 bg-transparent hover:bg-transparent border-none shadow-none p-0 h-auto cursor-pointer focus:outline-none"
+                className="h-10 px-3 text-xs font-medium text-gray-500 hover:text-gray-700 dark:text-zinc-400 dark:hover:text-zinc-200 bg-transparent hover:bg-transparent border-none shadow-none cursor-pointer focus:outline-none"
               >
                 Reset Form
               </Button>
-              <div className="flex items-center gap-6">
+              <div className="flex items-center gap-2">
                 <Button
                   type="button"
-                  variant="ghost"
+                  variant="outline"
                   onClick={onClose}
                   disabled={isLoading}
-                  className="text-[13px] font-medium text-gray-500 dark:text-zinc-400 bg-transparent hover:bg-transparent border-none shadow-none p-0 h-auto cursor-pointer focus:outline-none"
+                  className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                 >
                   Cancel
                 </Button>
                 <Button
                   type="submit"
                   disabled={isLoading}
-                  className="flex h-[36px] items-center justify-center rounded-[8px] btn-brand-red text-white font-medium text-[13px] active:scale-95 disabled:opacity-50 transition-all dark:shadow-none px-[20px] cursor-pointer"
+                  className="h-10 px-5 text-xs font-semibold rounded-xl btn-brand-red text-white shadow-xs cursor-pointer active:scale-95 disabled:opacity-50 transition-all border-0"
                 >
                   {isLoading ? "Creating..." : "Create Account"}
                 </Button>

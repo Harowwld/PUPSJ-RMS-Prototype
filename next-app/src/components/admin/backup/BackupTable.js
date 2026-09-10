@@ -134,7 +134,7 @@ export default function BackupTable({
                 Status
               </th>
               <th className="p-4 pr-6 w-32 text-right text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">
-                Action
+                Actions
               </th>
             </tr>
           </thead>
@@ -163,17 +163,15 @@ export default function BackupTable({
                           variant="outline"
                           size="sm"
                           onClick={onClearFilters}
-                          className="mt-6 flex h-10 items-center gap-2 rounded-brand border border-gray-300 bg-white px-6 text-xs font-semibold text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 tracking-wide dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
+                          className="mt-6 h-10 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-6 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                         >
-                          <i className="ph-bold ph-arrow-counter-clockwise"></i>
                           Clear Search
                         </Button>
                       ) : (
                         <Button
                           onClick={handleGenerateBackup}
-                          className="mt-6 flex h-10 items-center gap-2 rounded-brand btn-brand-red hover:from-red-700 hover:to-red-900 hover:shadow-md px-8 font-semibold tracking-widest text-white shadow-lg active:scale-95 transition-all dark:shadow-none"
+                          className="mt-6 h-10 rounded-xl btn-brand-red px-6 text-xs font-semibold text-white shadow-xs active:scale-95 transition-all cursor-pointer border-0"
                         >
-                          <i className="ph-bold ph-lightning"></i>
                           Create Full Backup
                         </Button>
                       )}
@@ -240,13 +238,13 @@ export default function BackupTable({
                             <button
                               onClick={() => onDownloadBackup(b.id, b.filename)}
                               aria-label="Download Backup"
-                              className="w-7 h-7 rounded-[6px] hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/10 border-0 bg-transparent text-[#C7C7CC] dark:text-zinc-650 transition-colors hover:text-blue-500 dark:hover:text-blue-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
+                              className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 border-0 bg-transparent text-gray-500 hover:text-blue-600 dark:text-zinc-400 dark:hover:text-blue-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors"
                             >
                               <i className="ph-bold ph-download-simple text-[16px]"></i>
                             </button>
                           </TooltipTrigger>
-                          <TooltipContent className="bg-zinc-900 text-white border-zinc-800">
-                            <p className="text-[10px]">Download to computer</p>
+                          <TooltipContent>
+                            Download to computer
                           </TooltipContent>
                         </Tooltip>
                         <Tooltip>
@@ -254,13 +252,13 @@ export default function BackupTable({
                             <button
                               onClick={() => onDeleteBackup(b.id)}
                               aria-label="Delete Backup"
-                              className="w-7 h-7 rounded-[6px] hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/10 border-0 bg-transparent text-[#C7C7CC] dark:text-zinc-650 transition-colors hover:text-red-600 dark:hover:text-red-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
+                              className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 border-0 bg-transparent text-gray-500 hover:text-red-600 dark:text-zinc-400 dark:hover:text-red-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors"
                             >
                               <i className="ph-bold ph-trash text-[16px]"></i>
                             </button>
                           </TooltipTrigger>
-                          <TooltipContent className="bg-zinc-900 text-white border-zinc-800">
-                            <p className="text-[10px]">Delete backup</p>
+                          <TooltipContent>
+                            Delete backup
                           </TooltipContent>
                         </Tooltip>
                       </div>

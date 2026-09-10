@@ -596,7 +596,7 @@ export default function DigitizationComplianceTab({
 
       {/* 2. Header and Filters Card & Table Wrapper */}
       <div className="flex flex-col flex-1 min-h-0 gap-6 w-full">
-        <Card className="p-0 gap-0 overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none w-full">
+        <Card className="p-0 gap-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none w-full">
           <PageHeader
             icon="ph-chart-pie"
             title="Compliance Analysis"
@@ -610,7 +610,6 @@ export default function DigitizationComplianceTab({
                   onRefresh={() => load(true)} 
                   isLoading={manualLoading} 
                   title="Refresh Compliance Data"
-                  className="text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 h-9 w-9 p-0"
                 />
 
                 <div className="h-6 w-px bg-gray-200 dark:bg-zinc-800" />
@@ -618,11 +617,10 @@ export default function DigitizationComplianceTab({
                 <div className="flex items-center gap-2">
                   <Button
                     type="button"
-                    variant="ghost"
-                    size="sm"
+                    variant="outline"
                     onClick={downloadCsv}
                     disabled={loading || !data || isExportingCsv}
-                    className="h-10 w-[68px] justify-center font-semibold text-sm text-gray-600 hover:text-gray-900 hover:bg-transparent dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-transparent transition-colors flex items-center rounded-brand shadow-none! border-0!"
+                    className="flex h-10 items-center justify-center rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
                   >
                     {isExportingCsv ? (
                       <i className="ph-bold ph-spinner animate-spin text-[16px]"></i>
@@ -633,11 +631,9 @@ export default function DigitizationComplianceTab({
 
                   <Button
                     type="button"
-                    variant="default"
-                    size="sm"
                     onClick={handlePreview}
                     disabled={loading || !data || isGeneratingPdf}
-                    className="flex h-[36px] w-[142px] items-center justify-center rounded-[8px] btn-brand-red text-[13px] font-medium text-white active:scale-95 disabled:opacity-50 transition-all dark:shadow-none"
+                    className="flex h-10 items-center justify-center rounded-xl! btn-brand-red text-white font-semibold text-xs active:scale-95 disabled:opacity-50 transition-all cursor-pointer px-5 shadow-xs"
                   >
                     {isGeneratingPdf ? (
                       <i className="ph-bold ph-spinner animate-spin text-[16px] flex items-center justify-center"></i>
@@ -667,7 +663,7 @@ export default function DigitizationComplianceTab({
                     Active filters:
                     </span>
                     {statusFilter !== "Active" && (
-                        <div className="flex items-center gap-[6px] rounded-[6px] bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
+                        <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
                         Status: {statusFilter}
                         <button
                             onClick={() => setStatusFilter("Active")}
@@ -678,7 +674,7 @@ export default function DigitizationComplianceTab({
                         </div>
                     )}
                     {courseFilter !== "" && (
-                        <div className="flex items-center gap-[6px] rounded-[6px] bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
+                        <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
                         Program: {courseFilter}
                         <button
                             onClick={() => setCourseFilter("")}
@@ -689,7 +685,7 @@ export default function DigitizationComplianceTab({
                         </div>
                     )}
                     {requireApproved && (
-                        <div className="flex items-center gap-[6px] rounded-[6px] bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
+                        <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
                         Requirement: Approved Only
                         <button
                             onClick={() => setRequireApproved(false)}
@@ -700,7 +696,7 @@ export default function DigitizationComplianceTab({
                         </div>
                     )}
                     {tableSearch && (
-                        <div className="flex items-center gap-[6px] rounded-[6px] bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
+                        <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
                         Search: {tableSearch}
                         <button
                             onClick={() => setTableSearch("")}
@@ -732,7 +728,7 @@ export default function DigitizationComplianceTab({
                 <Select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
-                  className="h-[38px] rounded-[8px] border-[0.5px] border-gray-200 text-[13px] font-normal"
+                  className="h-10 rounded-xl border-[0.5px] border-gray-200 text-[13px] font-normal"
                 >
                   <option value="Active">Active</option>
                   <option value="All">All</option>
@@ -747,7 +743,7 @@ export default function DigitizationComplianceTab({
                 <Select
                   value={requireApproved ? "1" : "0"}
                   onChange={(e) => setRequireApproved(e.target.value === "1")}
-                  className="h-[38px] rounded-[8px] border-[0.5px] border-gray-200 text-[13px] font-normal"
+                  className="h-10 rounded-xl border-[0.5px] border-gray-200 text-[13px] font-normal"
                 >
                   <option value="0">All Uploads</option>
                   <option value="1">Approved Only</option>
@@ -764,7 +760,7 @@ export default function DigitizationComplianceTab({
                     onChange={(e) => setCourseFilter(e.target.value)}
                     disabled={coursesLoading}
                     placeholder={coursesLoading ? "Loading..." : "All Programs"}
-                    className="h-[38px] rounded-[8px] border-[0.5px] border-gray-200 text-[13px] font-normal"
+                    className="h-10 rounded-xl border-[0.5px] border-gray-200 text-[13px] font-normal"
                   >
                     <option value="">All Programs</option>
                     {courses.map((c) => (
@@ -858,7 +854,7 @@ export default function DigitizationComplianceTab({
         {loading && !data ? (
           <ComplianceTableSkeleton rowCount={6} />
         ) : error ? (
-          <div className="overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card p-6">
+          <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card p-6">
             <Empty className="flex h-[400px] flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400">
               <EmptyHeader className="flex flex-col items-center gap-0">
                 <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
@@ -872,7 +868,7 @@ export default function DigitizationComplianceTab({
                   variant="outline" 
                   size="sm" 
                   onClick={() => load(true)}
-                  className="mt-6 flex h-10 items-center gap-2 rounded-brand border border-gray-300 bg-white px-6 text-xs font-semibold text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 tracking-wide dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10" 
+                  className="mt-6 flex h-10 items-center gap-2 rounded-xl border border-gray-300 bg-white px-6 text-xs font-semibold text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 tracking-wide dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10" 
                 >
                   <i className={cn("ph-bold ph-arrows-clockwise", manualLoading && "animate-spin")}></i>
                   Retry Connection
@@ -882,7 +878,7 @@ export default function DigitizationComplianceTab({
           </div>
         ) : data ? (
           <div className={cn(
-            "flex flex-1 flex-col min-h-0 overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card", 
+            "flex flex-1 flex-col min-h-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card", 
             (loading && !manualLoading) ? "opacity-40 blur-[1px] grayscale-[0.1]" : "opacity-100"
           )}>
             <div className="flex items-center justify-between gap-6 p-4 bg-white border-b border-gray-200 dark:bg-card/50 dark:border-white/10">
@@ -900,7 +896,7 @@ export default function DigitizationComplianceTab({
                 <Input
                   type="text"
                   placeholder="Search course code..."
-                        className="h-[36px] w-full rounded-[8px] border-[0.5px] border-gray-200 bg-white pl-9 pr-4 text-[13px] font-normal transition-all focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 placeholder:text-gray-400 dark:border-white/10 dark:bg-card dark:text-zinc-300 dark:focus:border-primary"
+                  className="h-10 w-full rounded-xl border-[0.5px] border-gray-200 bg-white pl-9 pr-4 text-[13px] font-normal transition-all focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 placeholder:text-gray-400 dark:border-white/10 dark:bg-card dark:text-zinc-300 dark:focus:border-primary"
                   value={tableSearch}
                   onChange={(e) => setTableSearch(e.target.value)}
                 />
@@ -1004,7 +1000,7 @@ export default function DigitizationComplianceTab({
                               variant="outline" 
                               size="sm" 
                               onClick={handleClearAll}
-                              className="mt-6 flex h-10 items-center gap-3 rounded-brand border border-gray-300 bg-white px-6 text-xs font-semibold text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 tracking-wide dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
+                              className="mt-6 flex h-10 items-center gap-3 rounded-xl border border-gray-300 bg-white px-6 text-xs font-semibold text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 tracking-wide dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
                           >
                               <i className="ph-bold ph-arrow-counter-clockwise"></i>
                               CLEAR ALL FILTERS
@@ -1023,17 +1019,17 @@ export default function DigitizationComplianceTab({
         open={reportOpen}
         onOpenChange={(open) => {
           if (!open) {
-            if (pdfBlobUrl) URL.revokeObjectURL(pdfBlobUrl)
-            setPdfPreviewUrl(null)
-            setPreviewFrameReady(false)
-            setIsFullscreenPreview(false)
+            if (pdfBlobUrl) URL.revokeObjectURL(pdfBlobUrl);
+            setPdfPreviewUrl(null);
+            setPreviewFrameReady(false);
+            setIsFullscreenPreview(false);
           }
-          setReportOpen(open)
+          setReportOpen(open);
         }}
       >
-        <DialogContent
+        <DialogContent 
           hideClose={true}
-          className="flex h-[90vh] w-[96vw] max-w-[96vw] flex-col overflow-hidden border border-gray-200 bg-gray-100 p-0 shadow-2xl transition-all duration-normal ease-standard font-inter xl:max-w-[1200px] rounded-2xl dark:border-white/10 dark:bg-muted"
+          className="flex h-[90vh] w-[96vw] max-w-[96vw] flex-col overflow-hidden border border-gray-200 bg-gray-100 p-0 shadow-2xl transition-all duration-normal ease-standard xl:max-w-[1400px] rounded-2xl dark:border-white/10 dark:bg-muted"
         >
           <DialogHeader 
             className="shrink-0 bg-gray-50 dark:bg-white/5"
@@ -1049,11 +1045,11 @@ export default function DigitizationComplianceTab({
           >
             <div className="min-w-0">
               <DialogTitle className="text-left" style={{ fontSize: '15px', fontWeight: 600, color: '#111', letterSpacing: '-0.01em' }}>
-                Compliance Report
+                Compliance Report Preview
               </DialogTitle>
-              <p style={{ marginTop: '2px', fontSize: '12px', fontWeight: 400, color: '#8E8E93' }} className="text-left">
-                Filter: {statusFilter} · {courseFilter || "All"}{requireApproved ? " · Approved Only" : ""}
-              </p>
+              <DialogDescription className="text-left" style={{ marginTop: '2px', fontSize: '12px', fontWeight: 400, color: '#8E8E93' }}>
+                Review the generated document before downloading. Ensure all records and rates are correctly captured.
+              </DialogDescription>
             </div>
             
             <DialogClose asChild>
@@ -1071,9 +1067,10 @@ export default function DigitizationComplianceTab({
               </button>
             </DialogClose>
           </DialogHeader>
-          <div className="relative flex-1 overflow-hidden bg-gray-100 dark:bg-muted">
+
+          <div className="relative flex flex-1 flex-col overflow-hidden bg-gray-100 p-0 dark:bg-muted">
             {pdfBlobUrl ? (
-              <div className={cn("relative h-full w-full transition-all duration-normal", isFullscreenPreview ? "fixed inset-0 z-[9999] bg-white dark:bg-card" : "")}>
+              <div className={cn("relative min-h-0 min-w-0 flex-1 transition-all duration-normal", isFullscreenPreview ? "fixed inset-0 z-[9999] bg-white dark:bg-card" : "")}>
                 {isFullscreenPreview && (
                   <div className="absolute top-4 right-4 z-[10000]">
                     <Button
@@ -1087,26 +1084,28 @@ export default function DigitizationComplianceTab({
                   </div>
                 )}
                 {!previewFrameReady && (
-                  <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white p-10 dark:bg-card">
-                    <div className="w-full max-w-2xl space-y-4">
-                      <Skeleton className="h-8 w-64 dark:bg-muted" />
-                      <Skeleton className="h-4 w-full dark:bg-muted" />
-                      <Skeleton className="h-[60vh] w-full dark:bg-muted" />
+                  <div className="absolute inset-0 z-10 bg-white p-6 dark:bg-card">
+                    <div className="space-y-4">
+                      <Skeleton className="h-6 w-56 dark:bg-muted" />
+                      <Skeleton className="h-4 w-80 dark:bg-muted" />
+                      <Skeleton className="h-[55vh] w-full dark:bg-muted" />
                     </div>
                   </div>
                 )}
                 <iframe
                   src={`${pdfBlobUrl}#toolbar=0&navpanes=0`}
-                  className="h-full w-full border-none"
+                  className="absolute inset-0 h-full w-full border-none bg-gray-200 dark:bg-zinc-700"
+                  title="PDF Report Preview"
                   onLoad={() => setPreviewFrameReady(true)}
-                  title="Compliance Report Preview"
                 />
               </div>
             ) : (
-              <div className="flex h-full w-full flex-col items-center justify-center bg-white p-10 dark:bg-card">
-                <div className="flex flex-col items-center gap-4">
-                  <i className="ph-bold ph-spinner animate-spin text-xl text-pup-maroon dark:text-primary" />
-                  <p className="text-sm font-semibold text-gray-500 tracking-widest dark:text-zinc-400">
+              <div className="flex flex-1 items-center justify-center bg-white p-6 dark:bg-card">
+                <div className="max-w-lg text-center">
+                  <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-gray-50 dark:border-white/10 dark:bg-card">
+                    <i className="ph-bold ph-circle-notch animate-spin text-xl text-pup-maroon dark:text-primary"></i>
+                  </div>
+                  <p className="text-sm font-semibold text-gray-600 dark:text-zinc-300">
                     Generating...
                   </p>
                 </div>
@@ -1114,55 +1113,28 @@ export default function DigitizationComplianceTab({
             )}
           </div>
 
-          <div
-            className="flex shrink-0 items-center bg-white dark:bg-card"
-            style={{
-              padding: '16px 24px',
-              borderTop: '0.5px solid rgba(0,0,0,0.08)'
-            }}
-          >
+          <div className="flex shrink-0 items-center bg-white dark:bg-card px-6 py-4 border-t border-gray-100 dark:border-white/10">
             <Button
               variant="ghost"
               size="icon"
               onClick={() => setIsFullscreenPreview(!isFullscreenPreview)}
-              className="text-[#8E8E93] hover:text-[#111] dark:hover:text-white hover:bg-transparent transition-colors rounded-brand shadow-none border-0 p-0"
-              style={{
-                height: '36px',
-                width: '36px',
-                background: 'none'
-              }}
+              className="text-[#8E8E93] hover:text-[#111] dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/10 transition-colors rounded-xl shadow-none border-0 p-0 h-10 w-10 cursor-pointer"
             >
-              <i className="ti ti-arrows-vertical" style={{ fontSize: '16px' }}></i>
+              <i className="ti ti-arrows-vertical text-[16px]"></i>
             </Button>
 
-            <div className="flex items-center gap-[8px]" style={{ marginLeft: 'auto' }}>
+            <div className="flex items-center gap-2.5 ml-auto">
               <Button
-                variant="ghost"
+                variant="outline"
                 onClick={() => setReportOpen(false)}
-                className="font-semibold text-sm text-gray-600 hover:text-[#111] hover:bg-transparent dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-transparent transition-colors rounded-brand shadow-none border-0"
-                style={{
-                  height: '36px',
-                  fontSize: '13px',
-                  fontWeight: 500,
-                  boxShadow: 'none',
-                  background: 'none'
-                }}
+                className="flex h-10 items-center justify-center rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-5 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
               >
                 Close
               </Button>
               <Button
                 onClick={handlePrint}
                 disabled={!pdfBlobUrl}
-                className="text-white btn-brand-red active:scale-95 disabled:opacity-50 transition-all dark:shadow-none"
-                style={{
-                  height: '36px',
-                  borderRadius: '8px',
-                  fontSize: '13px',
-                  fontWeight: 500,
-                  boxShadow: 'none',
-                  paddingLeft: '24px',
-                  paddingRight: '24px'
-                }}
+                className="h-10 px-5 rounded-xl! text-xs font-semibold text-white btn-brand-red active:scale-95 disabled:opacity-50 transition-all cursor-pointer shadow-xs"
               >
                 Save to Device
               </Button>

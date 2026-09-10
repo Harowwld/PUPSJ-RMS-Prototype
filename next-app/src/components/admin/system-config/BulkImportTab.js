@@ -140,18 +140,18 @@ export default function BulkImportTab({
           </div>
           
           <div className="flex flex-col flex-1 gap-6 w-full min-h-0">
-            <div className="flex items-center gap-[8px] mt-[16px]">
+            <div className="flex items-center gap-2 mt-4">
               <a
                 href="data:text/csv;charset=utf-8,Category,Name,Code%0ADOCUMENT TYPE,Transcript of Records,%0ADOCUMENT TYPE,Diploma,%0ACourse,Bachelor of Science in IT,BSIT%0ACourse,Bachelor of Science in Accountancy,BSA%0ASection,Block 1,BSIT%0ASection,Section 1,BSA"
                 download="PUP-IMPORT-TEMPLATE.csv"
-                className="inline-flex h-[36px] items-center justify-center rounded-[8px] border-[0.5px] border-black/15 dark:border-white/15 bg-transparent px-[16px] text-[13px] font-normal text-[#111111] dark:text-zinc-100 transition-colors hover:bg-[#F5F5F5] dark:hover:bg-white/5 cursor-pointer"
+                className="inline-flex h-10 items-center justify-center rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-4 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 cursor-pointer active:scale-95"
               >
                 Download Template
               </a>
               <button
                 type="button"
                 onClick={handleCopySample}
-                className="inline-flex h-[36px] items-center justify-center rounded-[8px] border-[0.5px] border-black/15 dark:border-white/15 bg-transparent px-[16px] text-[13px] font-normal text-[#111111] dark:text-zinc-100 transition-colors hover:bg-[#F5F5F5] dark:hover:bg-white/5 cursor-pointer"
+                className="inline-flex h-10 items-center justify-center rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-4 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 cursor-pointer active:scale-95"
               >
                 Copy Raw Sample
               </button>
@@ -161,8 +161,8 @@ export default function BulkImportTab({
             <div className="flex flex-col flex-1 items-center justify-center min-h-0 w-full">
               <div
                 className={cn(
-                  "group relative flex flex-1 h-full w-full cursor-pointer flex-col items-center justify-center rounded-[12px] border-[0.5px] border-black/12 bg-[#FAFAFA] dark:border-white/12 dark:bg-zinc-900/50 p-[40px] text-center transition-all duration-150 ease-out min-h-[745px]",
-                  importDropActive && "border-[#E5484D] border bg-[#FFF5F5] dark:bg-red-950/20"
+                  "group relative flex flex-1 h-full w-full cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-gray-300 dark:border-white/15 bg-[#FAFAFA] dark:bg-zinc-900/50 p-10 text-center transition-all duration-150 ease-out min-h-[745px]",
+                  importDropActive && "border-pup-maroon bg-red-50/50 dark:bg-red-950/20"
                 )}
                 onDragOver={(e) => {
                   e.preventDefault()
@@ -185,12 +185,12 @@ export default function BulkImportTab({
                   className="absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0"
                 />
                 <div className="pointer-events-none flex flex-col items-center justify-center text-center w-full h-full">
-                  <i className={cn("ti ti-upload text-[24px] transition-colors duration-fast", importDropActive ? "text-[#E5484D]" : "text-[#C7C7CC]")}></i>
-                  <p className="text-[14px] font-medium text-[#111111] dark:text-zinc-100 mt-[12px] m-0">
+                  <i className={cn("ti ti-upload text-[24px] transition-colors duration-fast", importDropActive ? "text-pup-maroon" : "text-gray-400 dark:text-zinc-500")}></i>
+                  <p className="text-sm font-semibold text-gray-900 dark:text-zinc-100 mt-3 m-0">
                     Drop CSV file here
                   </p>
-                  <p className="text-[13px] font-normal text-[#8E8E93] mt-[4px] m-0">
-                    or click to <span className="text-[#E5484D] cursor-pointer hover:underline">browse</span> local files (.csv)
+                  <p className="text-xs font-normal text-gray-500 dark:text-zinc-400 mt-1 m-0">
+                    or click to <span className="text-pup-maroon font-semibold cursor-pointer hover:underline">browse</span> local files (.csv)
                   </p>
                 </div>
               </div>
@@ -202,11 +202,11 @@ export default function BulkImportTab({
         <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-center mt-[20px]">
           <div className="flex items-center gap-4">
             <Button
-              variant="ghost"
+              variant="outline"
               onClick={resetImport}
-              className="h-10 px-3 font-semibold text-sm text-gray-600 hover:text-gray-900 hover:bg-transparent dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-transparent transition-colors flex items-center gap-2 rounded-brand shadow-none! border-0!"
+              className="flex h-10 items-center justify-center rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
             >
-              <i className="ph-bold ph-arrow-left"></i> BACK
+              Back
             </Button>
             <div className="flex items-center gap-4">
               <div>
@@ -228,7 +228,7 @@ export default function BulkImportTab({
                 <Input
                   type="text"
                   placeholder="Search preview..."
-                  className="h-[32px] w-full rounded-[8px] border-[0.5px] border-black/15 bg-white pl-8 pr-8 text-[12px] font-normal placeholder:text-[#8E8E93] dark:border-white/15 dark:bg-card"
+                  className="h-10 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white pl-8 pr-8 text-xs font-normal placeholder:text-gray-400 dark:placeholder:text-zinc-500 dark:bg-card text-gray-900 dark:text-zinc-100 shadow-xs focus-visible:ring-1 focus-visible:ring-pup-maroon"
                   value={searchTerm}
                   onChange={(e) => {
                     setSearchTerm(e.target.value)
@@ -265,7 +265,7 @@ export default function BulkImportTab({
             </div>
           </div>
 
-          <div className="flex flex-1 flex-col overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:bg-card dark:shadow-none dark:border-white/10">
+          <div className="flex flex-1 flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:bg-card dark:shadow-none dark:border-white/10">
                 {(() => {
                   const q = searchTerm.toLowerCase().trim()
                   const filteredRows = importRows.filter((row) => {
@@ -306,7 +306,7 @@ export default function BulkImportTab({
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100 dark:divide-white/10">
-                  <tr className="bg-gray-50 transition-colors hover:bg-gray-50 dark:bg-card dark:hover:bg-white/10">
+                  <tr className="bg-gray-50/50 transition-colors hover:bg-gray-50 dark:bg-card dark:hover:bg-white/5">
                     <td className="p-4 text-center">
                       <div className="flex h-5 w-5 mx-auto items-center justify-center rounded-full border-2 border-dashed border-gray-300 dark:border-white/10">
                         <i className="ph-bold ph-plus text-[10px] text-gray-400 dark:text-zinc-500"></i>
@@ -317,7 +317,7 @@ export default function BulkImportTab({
                     </td>
                     <td className="p-4">
                       <Select
-                        className="h-8 w-full rounded-md border border-gray-300 bg-white px-2 text-[10px] font-semibold focus:border-gray-300 focus:ring-pup-maroon dark:bg-card dark:focus:border-zinc-700 dark:border-white/10"
+                        className="h-9 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-3 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs focus-visible:ring-1 focus-visible:ring-pup-maroon"
                         value={quickAdd.category}
                         onChange={(e) => {
                           const cat = e.target.value
@@ -335,7 +335,7 @@ export default function BulkImportTab({
                     </td>
                     <td className="p-4">
                       <Input
-                        className="h-8 rounded-md border-gray-300 text-xs font-semibold focus-visible:border-gray-300 focus-visible:ring-pup-maroon dark:border-white/10"
+                        className="h-9 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-xs focus-visible:ring-1 focus-visible:ring-pup-maroon"
                         value={quickAdd.name}
                         onChange={(e) =>
                           setQuickAdd((prev) => ({
@@ -352,7 +352,7 @@ export default function BulkImportTab({
                     <td className="p-4">
                       {quickAdd.category.toLowerCase() === "section" ? (
                         <Select
-                          className="h-8 w-full rounded-md border border-gray-300 bg-white px-2 text-[10px] font-semibold focus:border-gray-300 focus:ring-pup-maroon dark:bg-card dark:focus:border-zinc-700 dark:border-white/10"
+                          className="h-9 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-3 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs focus-visible:ring-1 focus-visible:ring-pup-maroon"
                           value={quickAdd.code}
                           onChange={(e) =>
                             setQuickAdd((prev) => ({
@@ -370,7 +370,7 @@ export default function BulkImportTab({
                         </Select>
                       ) : (
                         <Input
-                          className="h-8 rounded-md border-gray-300 text-xs focus-visible:border-gray-300 focus-visible:ring-pup-maroon dark:border-white/10"
+                          className="h-9 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-xs focus-visible:ring-1 focus-visible:ring-pup-maroon"
                           value={quickAdd.code}
                           onChange={(e) =>
                             setQuickAdd((prev) => ({
@@ -390,9 +390,9 @@ export default function BulkImportTab({
                         size="sm"
                         disabled={!quickAdd.name}
                         onClick={handleQuickAdd}
-                        className="h-8 rounded-md bg-[#FF9500] hover:bg-[#E08200] hover:shadow-md transition-all px-4 text-[10px] font-semibold text-white dark:shadow-none border-0"
+                        className="h-9 px-4 text-xs font-semibold rounded-xl btn-brand-orange text-white shadow-xs cursor-pointer active:scale-95 transition-all border-0"
                       >
-                        <i className="ph-bold ph-plus mr-1"></i> ADD ROW
+                        Add Row
                       </Button>
                     </td>
                   </tr>
@@ -421,7 +421,7 @@ export default function BulkImportTab({
                         <td className="p-4">
                           {isEditing ? (
                             <Select
-                              className="h-8 w-full rounded-md border border-gray-300 bg-white px-2 text-[10px] font-semibold focus:border-gray-300 focus:ring-pup-maroon dark:bg-card dark:focus:border-zinc-700 dark:border-white/10"
+                              className="h-9 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-3 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs focus-visible:ring-1 focus-visible:ring-pup-maroon"
                               value={editData.category}
                               onChange={(e) =>
                                 setEditData((prev) => ({
@@ -452,7 +452,7 @@ export default function BulkImportTab({
                         <td className="p-4">
                           {isEditing ? (
                             <Input
-                              className="h-8 rounded-md border-gray-300 text-xs font-semibold focus-visible:border-gray-300 focus-visible:ring-pup-maroon dark:border-white/10"
+                              className="h-9 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-xs focus-visible:ring-1 focus-visible:ring-pup-maroon"
                               value={editData.name}
                               onChange={(e) =>
                                 setEditData((prev) => ({
@@ -475,7 +475,7 @@ export default function BulkImportTab({
                           {isEditing ? (
                             editData.category.toLowerCase() === "section" ? (
                               <Select
-                                className="h-8 w-full rounded-md border border-gray-300 bg-white px-2 text-[10px] font-semibold focus:border-gray-300 focus:ring-pup-maroon dark:bg-card dark:focus:border-zinc-700 dark:border-white/10"
+                                className="h-9 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-3 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs focus-visible:ring-1 focus-visible:ring-pup-maroon"
                                 value={editData.code}
                                 onChange={(e) =>
                                   setEditData((prev) => ({
@@ -493,7 +493,7 @@ export default function BulkImportTab({
                               </Select>
                             ) : (
                               <Input
-                                className="h-8 rounded-md border-gray-300 text-xs focus-visible:border-gray-300 focus-visible:ring-pup-maroon dark:border-white/10"
+                                className="h-9 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-xs focus-visible:ring-1 focus-visible:ring-pup-maroon"
                                 value={editData.code}
                                 onChange={(e) =>
                                   setEditData((prev) => ({
@@ -512,18 +512,19 @@ export default function BulkImportTab({
                         </td>
                         <td className="p-4 text-right">
                           {isEditing ? (
-                            <div className="flex items-center justify-end gap-1.5">
+                            <div className="flex items-center justify-end gap-2">
                               <Button
                                 size="sm"
                                 onClick={saveEdit}
-                                className="h-8 rounded-md bg-emerald-600 px-2 text-[10px] font-semibold text-white hover:bg-emerald-700"
+                                className="h-8 px-3 text-xs font-semibold rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer active:scale-95"
                               >
-                                <i className="ph-bold ph-check mr-1"></i>Save</Button>
+                                Save
+                              </Button>
                               <Button
-                                variant="ghost"
+                                variant="outline"
                                 size="sm"
                                 onClick={cancelEdit}
-                                className="h-8 rounded-md px-2 text-[10px] font-semibold text-gray-400 hover:text-gray-600 hover:bg-transparent dark:text-zinc-500 dark:hover:text-zinc-300"
+                                className="h-8 px-3 text-xs font-semibold rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 cursor-pointer active:scale-95"
                               >
                                 Cancel
                               </Button>
@@ -543,15 +544,17 @@ export default function BulkImportTab({
                                   </p>
                                 </TooltipContent>
                               </Tooltip>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => startEdit(row)}
-                                className="h-7 w-7 rounded-[6px] p-0 hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/10 text-[#C7C7CC] dark:text-zinc-600 transition-colors hover:text-amber-500 dark:hover:text-amber-400 focus:outline-none cursor-pointer flex items-center justify-center"
-                                title="Fix Entry"
-                              >
-                                <i className="ph-bold ph-pencil-simple text-[16px]"></i>
-                              </Button>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <button
+                                    onClick={() => startEdit(row)}
+                                    className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 transition-colors flex items-center justify-center border-0 bg-transparent cursor-pointer active:scale-95"
+                                  >
+                                    <i className="ph-bold ph-pencil-simple text-sm"></i>
+                                  </button>
+                                </TooltipTrigger>
+                                <TooltipContent side="top">Fix Entry</TooltipContent>
+                              </Tooltip>
                             </div>
                           ) : (
                             <div className="flex items-center justify-end gap-2">
@@ -559,15 +562,17 @@ export default function BulkImportTab({
                                 <i className="ph-bold ph-check-circle text-xs"></i>
                                 <span>Validated</span>
                               </div>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => startEdit(row)}
-                                className="h-7 w-7 rounded-[6px] p-0 hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/10 text-[#C7C7CC] dark:text-zinc-600 transition-colors hover:text-amber-500 dark:hover:text-amber-400 focus:outline-none cursor-pointer flex items-center justify-center"
-                                title="Edit Entry"
-                              >
-                                <i className="ph-bold ph-pencil-simple text-[16px]"></i>
-                              </Button>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <button
+                                    onClick={() => startEdit(row)}
+                                    className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 transition-colors flex items-center justify-center border-0 bg-transparent cursor-pointer active:scale-95"
+                                  >
+                                    <i className="ph-bold ph-pencil-simple text-sm"></i>
+                                  </button>
+                                </TooltipTrigger>
+                                <TooltipContent side="top">Edit Entry</TooltipContent>
+                              </Tooltip>
                             </div>
                           )}
                         </td>
@@ -644,17 +649,17 @@ export default function BulkImportTab({
               </p>
               <div className="flex items-center gap-3">
                 <Button
-                  variant="ghost"
+                  variant="outline"
                   size="sm"
                   onClick={resetImport}
-                  className="px-4 text-xs font-semibold text-gray-500 hover:text-gray-700 hover:bg-transparent dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-transparent transition-colors"
+                  className="flex h-10 items-center justify-center rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
                 >
                   Cancel
                 </Button>
                 <Button
                   onClick={executeBulkImport}
                   disabled={importRows.filter((r) => !r.error && importSelected[r.index]).length === 0}
-                  className="h-10 rounded-brand btn-brand-red active:scale-95 transition-all dark:shadow-none px-6"
+                  className="flex h-10 items-center justify-center rounded-xl! btn-brand-red text-white font-semibold text-xs px-6 active:scale-95 disabled:opacity-50 transition-all cursor-pointer shadow-xs border-0"
                 >
                   Confirm
                 </Button>
@@ -663,10 +668,10 @@ export default function BulkImportTab({
           </div>
         </div>
       ) : importStatus === "importing" ? (
-        <div className="animate-fade-up flex flex-1 min-h-[500px] flex-col items-center justify-center rounded-brand border border-gray-300 bg-white shadow-sm dark:bg-card dark:shadow-none dark:border-white/10">
+        <div className="animate-fade-up flex flex-1 min-h-[500px] flex-col items-center justify-center rounded-2xl border border-gray-200 bg-white shadow-sm dark:bg-card dark:shadow-none dark:border-white/10">
           <div className="flex max-w-sm flex-col items-center gap-6 text-center">
             <div className="relative">
-              <div className="h-20 w-20 animate-spin rounded-full border-4 border-gray-300 border-t-pup-maroon dark:border-white/10"></div>
+              <div className="h-20 w-20 animate-spin rounded-full border-4 border-gray-200 border-t-pup-maroon dark:border-white/10"></div>
               <i className="ph-duotone ph-database absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-xl text-pup-maroon dark:text-primary"></i>
             </div>
             <div>
@@ -678,7 +683,7 @@ export default function BulkImportTab({
           </div>
         </div>
       ) : (
-        <div className="animate-in zoom-in-95 flex flex-1 min-h-[500px] flex-col items-center justify-center rounded-brand border border-gray-300 bg-white shadow-sm duration-normal dark:bg-card dark:shadow-none dark:border-white/10">
+        <div className="animate-in zoom-in-95 flex flex-1 min-h-[500px] flex-col items-center justify-center rounded-2xl border border-gray-200 bg-white shadow-sm duration-normal dark:bg-card dark:shadow-none dark:border-white/10">
           <div className="flex w-full max-w-md flex-col items-center gap-8 px-6 text-center">
             <div className="relative">
               <div className="flex h-20 w-20 items-center justify-center rounded-full bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400">
@@ -717,13 +722,13 @@ export default function BulkImportTab({
             <div className="flex w-full max-w-[280px] flex-col gap-3">
               <Button
                 onClick={resetImport}
-                className="flex h-10 w-full items-center justify-center gap-2 rounded-brand btn-brand-red active:scale-95 transition-all dark:shadow-none"
+                className="flex h-10 w-full items-center justify-center rounded-xl! btn-brand-red text-white font-semibold text-xs active:scale-95 transition-all cursor-pointer shadow-xs border-0"
               >
                 Done
               </Button>
               <button
                 onClick={() => setActiveSubTab("document-types")}
-                className="text-[10px] font-semibold tracking-widest text-gray-400 transition-colors hover:text-pup-maroon dark:hover:text-red-500 dark:text-zinc-500"
+                className="text-[10px] font-semibold tracking-widest text-gray-400 transition-colors hover:text-pup-maroon dark:hover:text-red-500 dark:text-zinc-500 cursor-pointer"
               >
                 Verify Records
               </button>
@@ -732,13 +737,13 @@ export default function BulkImportTab({
         </div>
       )}
       <Dialog open={showInstructions} onOpenChange={setShowInstructions}>
-        <DialogContent className="w-[680px] max-w-[90vw] sm:max-w-[90vw] overflow-hidden rounded-[16px] border border-gray-200 bg-white p-8 shadow-[0_8px_40px_rgba(0,0,0,0.12)] dark:border-white/10 dark:bg-zinc-950 [&>button]:hidden relative flex flex-col max-h-[80vh]">
+        <DialogContent className="w-[680px] max-w-[90vw] sm:max-w-[90vw] overflow-hidden rounded-2xl border border-gray-200 bg-white p-8 shadow-2xl dark:border-white/10 dark:bg-zinc-950 [&>button]:hidden relative flex flex-col max-h-[80vh]">
           {/* Close button */}
           <button
             onClick={() => setShowInstructions(false)}
-            className="absolute right-8 top-8 text-[#8E8E93] hover:text-[#111] transition-colors border-0 bg-transparent p-0 cursor-pointer"
+            className="absolute right-8 top-8 text-gray-400 hover:text-gray-600 dark:text-zinc-400 dark:hover:text-zinc-200 transition-colors border-0 bg-transparent p-0 cursor-pointer"
           >
-            <i className="ph-bold ph-x text-[16px]"></i>
+            <i className="ph-bold ph-x text-base"></i>
           </button>
 
           {/* Modal Header */}
@@ -854,13 +859,13 @@ export default function BulkImportTab({
 
           {/* Modal Footer */}
           <div className="mt-6 flex justify-end">
-            <button
+            <Button
               type="button"
               onClick={() => setShowInstructions(false)}
-              className="flex h-[36px] px-5 items-center justify-center rounded-[8px] btn-brand-red text-[13px] font-medium text-white active:scale-95 disabled:opacity-50 transition-all dark:shadow-none cursor-pointer border-0"
+              className="h-10 px-5 text-xs font-semibold rounded-xl btn-brand-red text-white shadow-xs cursor-pointer active:scale-95 transition-all border-0"
             >
               Done
-            </button>
+            </Button>
           </div>
         </DialogContent>
       </Dialog>

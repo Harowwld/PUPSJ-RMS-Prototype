@@ -109,7 +109,7 @@ export default function LandingBentoCmsView({ showToast }) {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [activeTab, setActiveTab] = useState("cards") // 'cards' | 'header' | 'preview'
-  const [activeCardTab, setActiveCardTab] = useState(1) // 1 | 2 | 3 | 4 | 5
+  const [activeCardTab, setActiveCardTab] = useState(1) // null = all collapsed, 1-5 = expanded card
   const [bentoData, setBentoData] = useState(DEFAULT_BENTO)
   const [resetModalOpen, setResetModalOpen] = useState(false)
 
@@ -235,7 +235,7 @@ export default function LandingBentoCmsView({ showToast }) {
 
   return (
     <div className="flex flex-col gap-6 w-full animate-fade-up font-inter">
-      <Card className="rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none overflow-hidden">
+      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
         <PageHeader
           icon="ph-bold ph-squares-four"
           title={
@@ -258,7 +258,6 @@ export default function LandingBentoCmsView({ showToast }) {
                 onClick={() => window.open("/", "_blank")}
                 className="flex h-10 items-center justify-center rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
               >
-                <i className="ph-bold ph-arrow-square-out mr-1.5 text-[14px]" />
                 View Portal
               </Button>
 
@@ -268,7 +267,6 @@ export default function LandingBentoCmsView({ showToast }) {
                 onClick={() => setResetModalOpen(true)}
                 className="flex h-10 items-center justify-center rounded-xl! border border-rose-200 dark:border-rose-900/40 bg-white dark:bg-zinc-900 text-rose-600 dark:text-rose-400 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-rose-50 dark:hover:bg-rose-950/20"
               >
-                <i className="ph-bold ph-arrow-counter-clockwise mr-1.5 text-[14px]" />
                 Reset Defaults
               </Button>
 
@@ -284,10 +282,7 @@ export default function LandingBentoCmsView({ showToast }) {
                     Saving...
                   </>
                 ) : (
-                  <>
-                    <i className="ph-bold ph-floppy-disk mr-1.5 text-[14px]" />
-                    Save Changes
-                  </>
+                  "Save Changes"
                 )}
               </Button>
             </div>
@@ -340,507 +335,586 @@ export default function LandingBentoCmsView({ showToast }) {
         <CardContent className="font-inter bg-white p-[24px] dark:bg-card/50 backdrop-blur-md flex flex-col gap-6">
           {/* TAB 1: Bento Cards (5) with Focused Sub-Nav */}
           {activeTab === "cards" && (
-            <div className="space-y-6">
-              {/* Card Selection Pills */}
-              <div className="flex items-center gap-2 overflow-x-auto pb-2 select-none">
-                {[
-                  { id: 1, label: "1. Request Online", icon: "ph-cursor-click" },
-                  { id: 2, label: "2. Schedule & SLAs", icon: "ph-clock" },
-                  { id: 3, label: "3. Campus Archives", icon: "ph-archive" },
-                  { id: 4, label: "4. Preparation Checklist", icon: "ph-check-square" },
-                  { id: 5, label: "5. Legal Safeguards", icon: "ph-scales" },
-                ].map((tab) => (
-                  <button
-                    key={tab.id}
-                    type="button"
-                    onClick={() => setActiveCardTab(tab.id)}
-                    className={cn(
-                      "flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold shrink-0 transition-all cursor-pointer border",
-                      activeCardTab === tab.id
-                        ? "bg-pup-maroon text-white border-pup-maroon shadow-xs"
-                        : "bg-gray-50 dark:bg-zinc-900/60 text-gray-600 dark:text-zinc-300 border-gray-200 dark:border-white/10 hover:bg-gray-100 dark:hover:bg-zinc-800"
-                    )}
-                  >
-                    <i className={cn("ph-bold", tab.icon)} />
-                    <span>{tab.label}</span>
-                  </button>
-                ))}
-              </div>
-
-              {/* CARD 1 EDITOR */}
-              {activeCardTab === 1 && (
-                <div className="rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/30 p-5 space-y-5">
-                  <div>
-                    <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">
-                      Card 1: Online Request Simulation
-                    </h3>
-                    <p className="text-[12px] text-gray-500 dark:text-zinc-400 mt-0.5">
-                      Large interactive card showcasing document and purpose selection.
-                    </p>
+            <div className="space-y-3">
+              {/* ACCORDION CARD 1 */}
+              <div className="rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/30 overflow-hidden transition-all">
+                <button
+                  type="button"
+                  onClick={() => setActiveCardTab(activeCardTab === 1 ? null : 1)}
+                  className="w-full flex items-center justify-between gap-3 px-5 py-3.5 text-left cursor-pointer bg-transparent border-0 select-none group transition-colors hover:bg-gray-100/60 dark:hover:bg-white/5"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className={cn(
+                      "w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors",
+                      activeCardTab === 1
+                        ? "bg-pup-maroon text-white"
+                        : "bg-gray-200/80 dark:bg-zinc-800 text-gray-500 dark:text-zinc-400"
+                    )}>
+                      <i className="ph-bold ph-cursor-click text-sm" />
+                    </div>
+                    <div className="min-w-0">
+                      <h3 className="text-[13px] font-semibold text-gray-900 dark:text-zinc-50 truncate">
+                        Card 1: Online Request Simulation
+                      </h3>
+                      <p className="text-[11px] text-gray-500 dark:text-zinc-400 mt-0.5 truncate">
+                        Large interactive card showcasing document and purpose selection.
+                      </p>
+                    </div>
                   </div>
+                  <i className={cn(
+                    "ph-bold ph-caret-down text-gray-400 text-sm shrink-0 transition-transform duration-200",
+                    activeCardTab === 1 && "rotate-180"
+                  )} />
+                </button>
+                {activeCardTab === 1 && (
+                  <div className="px-5 pb-5 pt-1 space-y-5 border-t border-gray-200/60 dark:border-white/5">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300 mb-1.5">
+                          Card Heading Title
+                        </label>
+                        <Input
+                          value={bentoData.card1.title}
+                          onChange={(e) =>
+                            setBentoData((prev) => ({
+                              ...prev,
+                              card1: { ...prev.card1, title: e.target.value },
+                            }))
+                          }
+                          className="h-10 rounded-xl bg-white dark:bg-card text-xs"
+                        />
+                      </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300 mb-1.5">
-                        Card Heading Title
-                      </label>
-                      <Input
-                        value={bentoData.card1.title}
-                        onChange={(e) =>
-                          setBentoData((prev) => ({
-                            ...prev,
-                            card1: { ...prev.card1, title: e.target.value },
-                          }))
-                        }
-                        className="h-10 rounded-xl bg-white dark:bg-card text-xs"
-                      />
+                      <div>
+                        <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300 mb-1.5">
+                          Campus Label
+                        </label>
+                        <Input
+                          value={bentoData.card1.campusLabel}
+                          onChange={(e) =>
+                            setBentoData((prev) => ({
+                              ...prev,
+                              card1: { ...prev.card1, campusLabel: e.target.value },
+                            }))
+                          }
+                          className="h-10 rounded-xl bg-white dark:bg-card text-xs"
+                        />
+                      </div>
                     </div>
 
                     <div>
                       <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300 mb-1.5">
-                        Campus Label
+                        Card Explanatory Description
                       </label>
-                      <Input
-                        value={bentoData.card1.campusLabel}
+                      <textarea
+                        value={bentoData.card1.description}
                         onChange={(e) =>
                           setBentoData((prev) => ({
                             ...prev,
-                            card1: { ...prev.card1, campusLabel: e.target.value },
+                            card1: { ...prev.card1, description: e.target.value },
                           }))
                         }
-                        className="h-10 rounded-xl bg-white dark:bg-card text-xs"
+                        rows={2}
+                        className="w-full rounded-xl border border-gray-200 bg-white p-3 text-xs leading-relaxed dark:border-white/10 dark:bg-card focus:outline-hidden"
                       />
                     </div>
-                  </div>
 
-                  <div>
-                    <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300 mb-1.5">
-                      Card Explanatory Description
-                    </label>
-                    <textarea
-                      value={bentoData.card1.description}
-                      onChange={(e) =>
-                        setBentoData((prev) => ({
-                          ...prev,
-                          card1: { ...prev.card1, description: e.target.value },
-                        }))
-                      }
-                      rows={2}
-                      className="w-full rounded-xl border border-gray-200 bg-white p-3 text-xs leading-relaxed dark:border-white/10 dark:bg-card focus:outline-hidden"
-                    />
-                  </div>
-
-                  {/* Sample Documents List */}
-                  <div>
-                    <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300 mb-2">
-                      Sample Cycled Documents (4 items)
-                    </label>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      {bentoData.card1.documents.map((doc, idx) => (
-                        <div
-                          key={idx}
-                          className="p-3 rounded-xl bg-white dark:bg-zinc-950 border border-gray-200 dark:border-white/10 space-y-2"
-                        >
-                          <div className="flex items-center justify-between">
-                            <span className="text-[10px] font-bold text-pup-maroon uppercase">
-                              Document #{idx + 1}
-                            </span>
-                          </div>
-                          <Input
-                            value={doc.name}
-                            onChange={(e) => {
-                              const nextDocs = [...bentoData.card1.documents]
-                              nextDocs[idx] = { ...nextDocs[idx], name: e.target.value }
-                              setBentoData((prev) => ({
-                                ...prev,
-                                card1: { ...prev.card1, documents: nextDocs },
-                              }))
-                            }}
-                            placeholder="Document name"
-                            className="h-8 rounded-lg text-xs"
-                          />
-                          <Input
-                            value={doc.purpose}
-                            onChange={(e) => {
-                              const nextDocs = [...bentoData.card1.documents]
-                              nextDocs[idx] = { ...nextDocs[idx], purpose: e.target.value }
-                              setBentoData((prev) => ({
-                                ...prev,
-                                card1: { ...prev.card1, documents: nextDocs },
-                              }))
-                            }}
-                            placeholder="Purpose description"
-                            className="h-8 rounded-lg text-[11px] text-gray-500"
-                          />
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* CARD 2 EDITOR */}
-              {activeCardTab === 2 && (
-                <div className="rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/30 p-5 space-y-5">
-                  <div>
-                    <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">
-                      Card 2: Pick-Up Schedule &amp; SLA Chips
-                    </h3>
-                    <p className="text-[12px] text-gray-500 dark:text-zinc-400 mt-0.5">
-                      Turnaround promises and official dry seal stamping notice.
-                    </p>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Sample Documents List */}
                     <div>
-                      <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300 mb-1.5">
-                        Card Heading Title
+                      <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300 mb-2">
+                        Sample Cycled Documents (4 items)
                       </label>
-                      <Input
-                        value={bentoData.card2.title}
-                        onChange={(e) =>
-                          setBentoData((prev) => ({
-                            ...prev,
-                            card2: { ...prev.card2, title: e.target.value },
-                          }))
-                        }
-                        className="h-10 rounded-xl bg-white dark:bg-card text-xs"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300 mb-1.5">
-                        Schedule Header Label
-                      </label>
-                      <Input
-                        value={bentoData.card2.headerText}
-                        onChange={(e) =>
-                          setBentoData((prev) => ({
-                            ...prev,
-                            card2: { ...prev.card2, headerText: e.target.value },
-                          }))
-                        }
-                        className="h-10 rounded-xl bg-white dark:bg-card text-xs"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300 mb-1.5">
-                      Card Explanatory Description
-                    </label>
-                    <textarea
-                      value={bentoData.card2.description}
-                      onChange={(e) =>
-                        setBentoData((prev) => ({
-                          ...prev,
-                          card2: { ...prev.card2, description: e.target.value },
-                        }))
-                      }
-                      rows={2}
-                      className="w-full rounded-xl border border-gray-200 bg-white p-3 text-xs leading-relaxed dark:border-white/10 dark:bg-card focus:outline-hidden"
-                    />
-                  </div>
-
-                  {/* 3 SLA Chips Editor */}
-                  <div>
-                    <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300 mb-2">
-                      3 Pick-Up Turnaround Chips (Working Days &amp; Document Categories)
-                    </label>
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                      {bentoData.card2.slaChips.map((chip, idx) => (
-                        <div
-                          key={idx}
-                          className="p-3 rounded-xl bg-white dark:bg-zinc-950 border border-gray-200 dark:border-white/10 space-y-2"
-                        >
-                          <span className="text-[10px] font-bold text-pup-maroon uppercase">
-                            Tier #{idx + 1}
-                          </span>
-                          <div>
-                            <label className="block text-[10px] text-gray-400 mb-1">Days Target</label>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {bentoData.card1.documents.map((doc, idx) => (
+                          <div
+                            key={idx}
+                            className="p-3 rounded-xl bg-white dark:bg-zinc-950 border border-gray-200 dark:border-white/10 space-y-2"
+                          >
+                            <div className="flex items-center justify-between">
+                              <span className="text-[10px] font-bold text-pup-maroon uppercase">
+                                Document #{idx + 1}
+                              </span>
+                            </div>
                             <Input
-                              value={chip.days}
+                              value={doc.name}
                               onChange={(e) => {
-                                const nextChips = [...bentoData.card2.slaChips]
-                                nextChips[idx] = { ...nextChips[idx], days: e.target.value }
+                                const nextDocs = [...bentoData.card1.documents]
+                                nextDocs[idx] = { ...nextDocs[idx], name: e.target.value }
                                 setBentoData((prev) => ({
                                   ...prev,
-                                  card2: { ...prev.card2, slaChips: nextChips },
+                                  card1: { ...prev.card1, documents: nextDocs },
                                 }))
                               }}
-                              placeholder="e.g. 3 Days"
-                              className="h-8 rounded-lg text-xs font-mono font-bold"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-[10px] text-gray-400 mb-1">Document Types</label>
-                            <Input
-                              value={chip.label}
-                              onChange={(e) => {
-                                const nextChips = [...bentoData.card2.slaChips]
-                                nextChips[idx] = { ...nextChips[idx], label: e.target.value }
-                                setBentoData((prev) => ({
-                                  ...prev,
-                                  card2: { ...prev.card2, slaChips: nextChips },
-                                }))
-                              }}
-                              placeholder="e.g. Grades & Reg."
+                              placeholder="Document name"
                               className="h-8 rounded-lg text-xs"
                             />
+                            <Input
+                              value={doc.purpose}
+                              onChange={(e) => {
+                                const nextDocs = [...bentoData.card1.documents]
+                                nextDocs[idx] = { ...nextDocs[idx], purpose: e.target.value }
+                                setBentoData((prev) => ({
+                                  ...prev,
+                                  card1: { ...prev.card1, documents: nextDocs },
+                                }))
+                              }}
+                              placeholder="Purpose description"
+                              className="h-8 rounded-lg text-[11px] text-gray-500"
+                            />
                           </div>
-                        </div>
-                      ))}
+                        ))}
+                      </div>
                     </div>
                   </div>
+                )}
+              </div>
 
-                  <div>
-                    <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300 mb-1.5">
-                      Dry Seal Accreditation Footer
-                    </label>
-                    <Input
-                      value={bentoData.card2.sealFooter}
-                      onChange={(e) =>
-                        setBentoData((prev) => ({
-                          ...prev,
-                          card2: { ...prev.card2, sealFooter: e.target.value },
-                        }))
-                      }
-                      className="h-10 rounded-xl bg-white dark:bg-card text-xs font-mono text-gray-500"
-                    />
+              {/* ACCORDION CARD 2 */}
+              <div className="rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/30 overflow-hidden transition-all">
+                <button
+                  type="button"
+                  onClick={() => setActiveCardTab(activeCardTab === 2 ? null : 2)}
+                  className="w-full flex items-center justify-between gap-3 px-5 py-3.5 text-left cursor-pointer bg-transparent border-0 select-none group transition-colors hover:bg-gray-100/60 dark:hover:bg-white/5"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className={cn(
+                      "w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors",
+                      activeCardTab === 2
+                        ? "bg-pup-maroon text-white"
+                        : "bg-gray-200/80 dark:bg-zinc-800 text-gray-500 dark:text-zinc-400"
+                    )}>
+                      <i className="ph-bold ph-clock text-sm" />
+                    </div>
+                    <div className="min-w-0">
+                      <h3 className="text-[13px] font-semibold text-gray-900 dark:text-zinc-50 truncate">
+                        Card 2: Pick-Up Schedule & SLA Chips
+                      </h3>
+                      <p className="text-[11px] text-gray-500 dark:text-zinc-400 mt-0.5 truncate">
+                        Turnaround promises and official dry seal stamping notice.
+                      </p>
+                    </div>
                   </div>
-                </div>
-              )}
+                  <i className={cn(
+                    "ph-bold ph-caret-down text-gray-400 text-sm shrink-0 transition-transform duration-200",
+                    activeCardTab === 2 && "rotate-180"
+                  )} />
+                </button>
+                {activeCardTab === 2 && (
+                  <div className="px-5 pb-5 pt-1 space-y-5 border-t border-gray-200/60 dark:border-white/5">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300 mb-1.5">
+                          Card Heading Title
+                        </label>
+                        <Input
+                          value={bentoData.card2.title}
+                          onChange={(e) =>
+                            setBentoData((prev) => ({
+                              ...prev,
+                              card2: { ...prev.card2, title: e.target.value },
+                            }))
+                          }
+                          className="h-10 rounded-xl bg-white dark:bg-card text-xs"
+                        />
+                      </div>
 
-              {/* CARD 3 EDITOR */}
-              {activeCardTab === 3 && (
-                <div className="rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/30 p-5 space-y-5">
-                  <div>
-                    <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">
-                      Card 3: Direct Campus Archives Connection
-                    </h3>
-                    <p className="text-[12px] text-gray-500 dark:text-zinc-400 mt-0.5">
-                      Physical archive drawer, room, and cabinet locator node indicators.
-                    </p>
-                  </div>
+                      <div>
+                        <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300 mb-1.5">
+                          Schedule Header Label
+                        </label>
+                        <Input
+                          value={bentoData.card2.headerText}
+                          onChange={(e) =>
+                            setBentoData((prev) => ({
+                              ...prev,
+                              card2: { ...prev.card2, headerText: e.target.value },
+                            }))
+                          }
+                          className="h-10 rounded-xl bg-white dark:bg-card text-xs"
+                        />
+                      </div>
+                    </div>
 
-                  <div>
-                    <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300 mb-1.5">
-                      Card Heading Title
-                    </label>
-                    <Input
-                      value={bentoData.card3.title}
-                      onChange={(e) =>
-                        setBentoData((prev) => ({
-                          ...prev,
-                          card3: { ...prev.card3, title: e.target.value },
-                        }))
-                      }
-                      className="h-10 rounded-xl bg-white dark:bg-card text-xs"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300 mb-1.5">
-                      Card Explanatory Description
-                    </label>
-                    <textarea
-                      value={bentoData.card3.description}
-                      onChange={(e) =>
-                        setBentoData((prev) => ({
-                          ...prev,
-                          card3: { ...prev.card3, description: e.target.value },
-                        }))
-                      }
-                      rows={2}
-                      className="w-full rounded-xl border border-gray-200 bg-white p-3 text-xs leading-relaxed dark:border-white/10 dark:bg-card focus:outline-hidden"
-                    />
-                  </div>
-                </div>
-              )}
-
-              {/* CARD 4 EDITOR */}
-              {activeCardTab === 4 && (
-                <div className="rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/30 p-5 space-y-5">
-                  <div>
-                    <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">
-                      Card 4: Preparation Checklist
-                    </h3>
-                    <p className="text-[12px] text-gray-500 dark:text-zinc-400 mt-0.5">
-                      Clear reminders of what students must prepare before picking up documents.
-                    </p>
-                  </div>
-
-                  <div>
-                    <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300 mb-1.5">
-                      Card Heading Title
-                    </label>
-                    <Input
-                      value={bentoData.card4.title}
-                      onChange={(e) =>
-                        setBentoData((prev) => ({
-                          ...prev,
-                          card4: { ...prev.card4, title: e.target.value },
-                        }))
-                      }
-                      className="h-10 rounded-xl bg-white dark:bg-card text-xs"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300 mb-1.5">
-                      Card Explanatory Description
-                    </label>
-                    <textarea
-                      value={bentoData.card4.description}
-                      onChange={(e) =>
-                        setBentoData((prev) => ({
-                          ...prev,
-                          card4: { ...prev.card4, description: e.target.value },
-                        }))
-                      }
-                      rows={2}
-                      className="w-full rounded-xl border border-gray-200 bg-white p-3 text-xs leading-relaxed dark:border-white/10 dark:bg-card focus:outline-hidden"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="p-3.5 rounded-xl bg-white dark:bg-zinc-950 border border-gray-200 dark:border-white/10 space-y-2">
-                      <span className="text-[10px] font-bold text-pup-maroon uppercase">
-                        Primary Checklist Item
-                      </span>
-                      <Input
-                        value={bentoData.card4.primaryItemTitle}
+                    <div>
+                      <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300 mb-1.5">
+                        Card Explanatory Description
+                      </label>
+                      <textarea
+                        value={bentoData.card2.description}
                         onChange={(e) =>
                           setBentoData((prev) => ({
                             ...prev,
-                            card4: { ...prev.card4, primaryItemTitle: e.target.value },
+                            card2: { ...prev.card2, description: e.target.value },
                           }))
                         }
-                        placeholder="e.g. Student Number & Email"
-                        className="h-8 rounded-lg text-xs font-semibold"
-                      />
-                      <Input
-                        value={bentoData.card4.primaryItemDesc}
-                        onChange={(e) =>
-                          setBentoData((prev) => ({
-                            ...prev,
-                            card4: { ...prev.card4, primaryItemDesc: e.target.value },
-                          }))
-                        }
-                        placeholder="Explanatory note"
-                        className="h-8 rounded-lg text-xs text-gray-500"
+                        rows={2}
+                        className="w-full rounded-xl border border-gray-200 bg-white p-3 text-xs leading-relaxed dark:border-white/10 dark:bg-card focus:outline-hidden"
                       />
                     </div>
 
-                    <div className="p-3.5 rounded-xl bg-white dark:bg-zinc-950 border border-gray-200 dark:border-white/10 space-y-2">
-                      <span className="text-[10px] font-bold text-pup-maroon uppercase">
-                        Secondary Clearance Stub
-                      </span>
+                    {/* 3 SLA Chips Editor */}
+                    <div>
+                      <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300 mb-2">
+                        3 Pick-Up Turnaround Chips (Working Days &amp; Document Categories)
+                      </label>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        {bentoData.card2.slaChips.map((chip, idx) => (
+                          <div
+                            key={idx}
+                            className="p-3 rounded-xl bg-white dark:bg-zinc-950 border border-gray-200 dark:border-white/10 space-y-2"
+                          >
+                            <span className="text-[10px] font-bold text-pup-maroon uppercase">
+                              Tier #{idx + 1}
+                            </span>
+                            <div>
+                              <label className="block text-[10px] text-gray-400 mb-1">Days Target</label>
+                              <Input
+                                value={chip.days}
+                                onChange={(e) => {
+                                  const nextChips = [...bentoData.card2.slaChips]
+                                  nextChips[idx] = { ...nextChips[idx], days: e.target.value }
+                                  setBentoData((prev) => ({
+                                    ...prev,
+                                    card2: { ...prev.card2, slaChips: nextChips },
+                                  }))
+                                }}
+                                placeholder="e.g. 3 Days"
+                                className="h-8 rounded-lg text-xs font-mono font-bold"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-[10px] text-gray-400 mb-1">Document Types</label>
+                              <Input
+                                value={chip.label}
+                                onChange={(e) => {
+                                  const nextChips = [...bentoData.card2.slaChips]
+                                  nextChips[idx] = { ...nextChips[idx], label: e.target.value }
+                                  setBentoData((prev) => ({
+                                    ...prev,
+                                    card2: { ...prev.card2, slaChips: nextChips },
+                                  }))
+                                }}
+                                placeholder="e.g. Grades & Reg."
+                                className="h-8 rounded-lg text-xs"
+                              />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300 mb-1.5">
+                        Dry Seal Accreditation Footer
+                      </label>
                       <Input
-                        value={bentoData.card4.secondaryItemTitle}
+                        value={bentoData.card2.sealFooter}
                         onChange={(e) =>
                           setBentoData((prev) => ({
                             ...prev,
-                            card4: { ...prev.card4, secondaryItemTitle: e.target.value },
+                            card2: { ...prev.card2, sealFooter: e.target.value },
                           }))
                         }
-                        placeholder="e.g. Campus Clearance Stub"
-                        className="h-8 rounded-lg text-xs font-semibold"
-                      />
-                      <Input
-                        value={bentoData.card4.secondaryItemBadge}
-                        onChange={(e) =>
-                          setBentoData((prev) => ({
-                            ...prev,
-                            card4: { ...prev.card4, secondaryItemBadge: e.target.value },
-                          }))
-                        }
-                        placeholder="e.g. Required for TOR"
-                        className="h-8 rounded-lg text-xs text-emerald-600 font-mono"
+                        className="h-10 rounded-xl bg-white dark:bg-card text-xs font-mono text-gray-500"
                       />
                     </div>
                   </div>
+                )}
+              </div>
 
-                  <div>
-                    <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300 mb-1.5">
-                      Counter Pick-Up ID Reminder
-                    </label>
-                    <Input
-                      value={bentoData.card4.footerNote}
-                      onChange={(e) =>
-                        setBentoData((prev) => ({
-                          ...prev,
-                          card4: { ...prev.card4, footerNote: e.target.value },
-                        }))
-                      }
-                      className="h-10 rounded-xl bg-white dark:bg-card text-xs font-mono text-gray-500"
-                    />
+              {/* ACCORDION CARD 3 */}
+              <div className="rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/30 overflow-hidden transition-all">
+                <button
+                  type="button"
+                  onClick={() => setActiveCardTab(activeCardTab === 3 ? null : 3)}
+                  className="w-full flex items-center justify-between gap-3 px-5 py-3.5 text-left cursor-pointer bg-transparent border-0 select-none group transition-colors hover:bg-gray-100/60 dark:hover:bg-white/5"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className={cn(
+                      "w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors",
+                      activeCardTab === 3
+                        ? "bg-pup-maroon text-white"
+                        : "bg-gray-200/80 dark:bg-zinc-800 text-gray-500 dark:text-zinc-400"
+                    )}>
+                      <i className="ph-bold ph-archive text-sm" />
+                    </div>
+                    <div className="min-w-0">
+                      <h3 className="text-[13px] font-semibold text-gray-900 dark:text-zinc-50 truncate">
+                        Card 3: Direct Campus Archives Connection
+                      </h3>
+                      <p className="text-[11px] text-gray-500 dark:text-zinc-400 mt-0.5 truncate">
+                        Physical archive drawer, room, and cabinet locator node indicators.
+                      </p>
+                    </div>
                   </div>
-                </div>
-              )}
+                  <i className={cn(
+                    "ph-bold ph-caret-down text-gray-400 text-sm shrink-0 transition-transform duration-200",
+                    activeCardTab === 3 && "rotate-180"
+                  )} />
+                </button>
+                {activeCardTab === 3 && (
+                  <div className="px-5 pb-5 pt-1 space-y-5 border-t border-gray-200/60 dark:border-white/5">
+                    <div>
+                      <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300 mb-1.5">
+                        Card Heading Title
+                      </label>
+                      <Input
+                        value={bentoData.card3.title}
+                        onChange={(e) =>
+                          setBentoData((prev) => ({
+                            ...prev,
+                            card3: { ...prev.card3, title: e.target.value },
+                          }))
+                        }
+                        className="h-10 rounded-xl bg-white dark:bg-card text-xs"
+                      />
+                    </div>
 
-              {/* CARD 5 EDITOR */}
-              {activeCardTab === 5 && (
-                <div className="rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/30 p-5 space-y-5">
-                  <div>
-                    <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">
-                      Card 5: Legal Safeguards &amp; RA 11032 Compliance
-                    </h3>
-                    <p className="text-[12px] text-gray-500 dark:text-zinc-400 mt-0.5">
-                      Ease of Doing Business Act standards, audit trail guarantees, and published university turnaround commitments.
-                    </p>
+                    <div>
+                      <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300 mb-1.5">
+                        Card Explanatory Description
+                      </label>
+                      <textarea
+                        value={bentoData.card3.description}
+                        onChange={(e) =>
+                          setBentoData((prev) => ({
+                            ...prev,
+                            card3: { ...prev.card3, description: e.target.value },
+                          }))
+                        }
+                        rows={2}
+                        className="w-full rounded-xl border border-gray-200 bg-white p-3 text-xs leading-relaxed dark:border-white/10 dark:bg-card focus:outline-hidden"
+                      />
+                    </div>
                   </div>
+                )}
+              </div>
 
-                  <div>
-                    <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300 mb-1.5">
-                      Card Heading Title
-                    </label>
-                    <Input
-                      value={bentoData.card5.title}
-                      onChange={(e) =>
-                        setBentoData((prev) => ({
-                          ...prev,
-                          card5: { ...prev.card5, title: e.target.value },
-                        }))
-                      }
-                      className="h-10 rounded-xl bg-white dark:bg-card text-xs"
-                    />
+              {/* ACCORDION CARD 4 */}
+              <div className="rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/30 overflow-hidden transition-all">
+                <button
+                  type="button"
+                  onClick={() => setActiveCardTab(activeCardTab === 4 ? null : 4)}
+                  className="w-full flex items-center justify-between gap-3 px-5 py-3.5 text-left cursor-pointer bg-transparent border-0 select-none group transition-colors hover:bg-gray-100/60 dark:hover:bg-white/5"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className={cn(
+                      "w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors",
+                      activeCardTab === 4
+                        ? "bg-pup-maroon text-white"
+                        : "bg-gray-200/80 dark:bg-zinc-800 text-gray-500 dark:text-zinc-400"
+                    )}>
+                      <i className="ph-bold ph-check-square text-sm" />
+                    </div>
+                    <div className="min-w-0">
+                      <h3 className="text-[13px] font-semibold text-gray-900 dark:text-zinc-50 truncate">
+                        Card 4: Preparation Checklist
+                      </h3>
+                      <p className="text-[11px] text-gray-500 dark:text-zinc-400 mt-0.5 truncate">
+                        Clear reminders of what students must prepare before picking up documents.
+                      </p>
+                    </div>
                   </div>
+                  <i className={cn(
+                    "ph-bold ph-caret-down text-gray-400 text-sm shrink-0 transition-transform duration-200",
+                    activeCardTab === 4 && "rotate-180"
+                  )} />
+                </button>
+                {activeCardTab === 4 && (
+                  <div className="px-5 pb-5 pt-1 space-y-5 border-t border-gray-200/60 dark:border-white/5">
+                    <div>
+                      <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300 mb-1.5">
+                        Card Heading Title
+                      </label>
+                      <Input
+                        value={bentoData.card4.title}
+                        onChange={(e) =>
+                          setBentoData((prev) => ({
+                            ...prev,
+                            card4: { ...prev.card4, title: e.target.value },
+                          }))
+                        }
+                        className="h-10 rounded-xl bg-white dark:bg-card text-xs"
+                      />
+                    </div>
 
-                  <div>
-                    <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300 mb-1.5">
-                      Card Explanatory Description
-                    </label>
-                    <textarea
-                      value={bentoData.card5.description}
-                      onChange={(e) =>
-                        setBentoData((prev) => ({
-                          ...prev,
-                          card5: { ...prev.card5, description: e.target.value },
-                        }))
-                      }
-                      rows={2}
-                      className="w-full rounded-xl border border-gray-200 bg-white p-3 text-xs leading-relaxed dark:border-white/10 dark:bg-card focus:outline-hidden"
-                    />
-                  </div>
+                    <div>
+                      <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300 mb-1.5">
+                        Card Explanatory Description
+                      </label>
+                      <textarea
+                        value={bentoData.card4.description}
+                        onChange={(e) =>
+                          setBentoData((prev) => ({
+                            ...prev,
+                            card4: { ...prev.card4, description: e.target.value },
+                          }))
+                        }
+                        rows={2}
+                        className="w-full rounded-xl border border-gray-200 bg-white p-3 text-xs leading-relaxed dark:border-white/10 dark:bg-card focus:outline-hidden"
+                      />
+                    </div>
 
-                  <div>
-                    <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300 mb-1.5">
-                      Footer Note
-                    </label>
-                    <Input
-                      value={bentoData.card5.footerNote}
-                      onChange={(e) =>
-                        setBentoData((prev) => ({
-                          ...prev,
-                          card5: { ...prev.card5, footerNote: e.target.value },
-                        }))
-                      }
-                      className="h-10 rounded-xl bg-white dark:bg-card text-xs font-mono text-gray-500"
-                    />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="p-3.5 rounded-xl bg-white dark:bg-zinc-950 border border-gray-200 dark:border-white/10 space-y-2">
+                        <span className="text-[10px] font-bold text-pup-maroon uppercase">
+                          Primary Checklist Item
+                        </span>
+                        <Input
+                          value={bentoData.card4.primaryItemTitle}
+                          onChange={(e) =>
+                            setBentoData((prev) => ({
+                              ...prev,
+                              card4: { ...prev.card4, primaryItemTitle: e.target.value },
+                            }))
+                          }
+                          placeholder="e.g. Student Number & Email"
+                          className="h-8 rounded-lg text-xs font-semibold"
+                        />
+                        <Input
+                          value={bentoData.card4.primaryItemDesc}
+                          onChange={(e) =>
+                            setBentoData((prev) => ({
+                              ...prev,
+                              card4: { ...prev.card4, primaryItemDesc: e.target.value },
+                            }))
+                          }
+                          placeholder="Explanatory note"
+                          className="h-8 rounded-lg text-xs text-gray-500"
+                        />
+                      </div>
+
+                      <div className="p-3.5 rounded-xl bg-white dark:bg-zinc-950 border border-gray-200 dark:border-white/10 space-y-2">
+                        <span className="text-[10px] font-bold text-pup-maroon uppercase">
+                          Secondary Clearance Stub
+                        </span>
+                        <Input
+                          value={bentoData.card4.secondaryItemTitle}
+                          onChange={(e) =>
+                            setBentoData((prev) => ({
+                              ...prev,
+                              card4: { ...prev.card4, secondaryItemTitle: e.target.value },
+                            }))
+                          }
+                          placeholder="e.g. Campus Clearance Stub"
+                          className="h-8 rounded-lg text-xs font-semibold"
+                        />
+                        <Input
+                          value={bentoData.card4.secondaryItemBadge}
+                          onChange={(e) =>
+                            setBentoData((prev) => ({
+                              ...prev,
+                              card4: { ...prev.card4, secondaryItemBadge: e.target.value },
+                            }))
+                          }
+                          placeholder="e.g. Required for TOR"
+                          className="h-8 rounded-lg text-xs text-emerald-600 font-mono"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300 mb-1.5">
+                        Counter Pick-Up ID Reminder
+                      </label>
+                      <Input
+                        value={bentoData.card4.footerNote}
+                        onChange={(e) =>
+                          setBentoData((prev) => ({
+                            ...prev,
+                            card4: { ...prev.card4, footerNote: e.target.value },
+                          }))
+                        }
+                        className="h-10 rounded-xl bg-white dark:bg-card text-xs font-mono text-gray-500"
+                      />
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
+
+              {/* ACCORDION CARD 5 */}
+              <div className="rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/30 overflow-hidden transition-all">
+                <button
+                  type="button"
+                  onClick={() => setActiveCardTab(activeCardTab === 5 ? null : 5)}
+                  className="w-full flex items-center justify-between gap-3 px-5 py-3.5 text-left cursor-pointer bg-transparent border-0 select-none group transition-colors hover:bg-gray-100/60 dark:hover:bg-white/5"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className={cn(
+                      "w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors",
+                      activeCardTab === 5
+                        ? "bg-pup-maroon text-white"
+                        : "bg-gray-200/80 dark:bg-zinc-800 text-gray-500 dark:text-zinc-400"
+                    )}>
+                      <i className="ph-bold ph-scales text-sm" />
+                    </div>
+                    <div className="min-w-0">
+                      <h3 className="text-[13px] font-semibold text-gray-900 dark:text-zinc-50 truncate">
+                        Card 5: Legal Safeguards & RA 11032 Compliance
+                      </h3>
+                      <p className="text-[11px] text-gray-500 dark:text-zinc-400 mt-0.5 truncate">
+                        Ease of Doing Business Act standards, audit trail guarantees, and published university turnaround commitments.
+                      </p>
+                    </div>
+                  </div>
+                  <i className={cn(
+                    "ph-bold ph-caret-down text-gray-400 text-sm shrink-0 transition-transform duration-200",
+                    activeCardTab === 5 && "rotate-180"
+                  )} />
+                </button>
+                {activeCardTab === 5 && (
+                  <div className="px-5 pb-5 pt-1 space-y-5 border-t border-gray-200/60 dark:border-white/5">
+                    <div>
+                      <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300 mb-1.5">
+                        Card Heading Title
+                      </label>
+                      <Input
+                        value={bentoData.card5.title}
+                        onChange={(e) =>
+                          setBentoData((prev) => ({
+                            ...prev,
+                            card5: { ...prev.card5, title: e.target.value },
+                          }))
+                        }
+                        className="h-10 rounded-xl bg-white dark:bg-card text-xs"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300 mb-1.5">
+                        Card Explanatory Description
+                      </label>
+                      <textarea
+                        value={bentoData.card5.description}
+                        onChange={(e) =>
+                          setBentoData((prev) => ({
+                            ...prev,
+                            card5: { ...prev.card5, description: e.target.value },
+                          }))
+                        }
+                        rows={2}
+                        className="w-full rounded-xl border border-gray-200 bg-white p-3 text-xs leading-relaxed dark:border-white/10 dark:bg-card focus:outline-hidden"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300 mb-1.5">
+                        Footer Note
+                      </label>
+                      <Input
+                        value={bentoData.card5.footerNote}
+                        onChange={(e) =>
+                          setBentoData((prev) => ({
+                            ...prev,
+                            card5: { ...prev.card5, footerNote: e.target.value },
+                          }))
+                        }
+                        className="h-10 rounded-xl bg-white dark:bg-card text-xs font-mono text-gray-500"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           )}
 

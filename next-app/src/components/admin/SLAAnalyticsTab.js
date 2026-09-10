@@ -189,7 +189,7 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
       ) : null}
 
       {/* 2. Main Page Card */}
-      <Card className="p-0 gap-0 overflow-hidden rounded-brand border border-gray-200 bg-white shadow-2xl shadow-gray-200/50 backdrop-blur-xl dark:border-white/10 dark:bg-card/80 dark:shadow-none w-full">
+      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none isolate">
         <PageHeader
           icon="ph-chart-line-up"
           title="Request Analysis"
@@ -210,11 +210,10 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
               <div className="flex items-center gap-2">
                 <Button
                   type="button"
-                  variant="ghost"
-                  size="sm"
+                  variant="outline"
                   onClick={handleCsvExport}
                   disabled={loading || !data || isExportingCsv}
-                  className="h-10 w-[68px] justify-center font-semibold text-sm text-gray-600 hover:text-gray-900 hover:bg-transparent dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-transparent transition-colors flex items-center rounded-brand shadow-none! border-0!"
+                  className="flex h-10 items-center justify-center rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
                 >
                   {isExportingCsv ? (
                     <i className="ph-bold ph-spinner animate-spin text-[16px]"></i>
@@ -224,11 +223,9 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
                 </Button>
                 <Button
                   type="button"
-                  variant="default"
-                  size="sm"
                   onClick={handlePreview}
                   disabled={loading || !data || isGeneratingPdf}
-                  className="flex h-[36px] w-[142px] items-center justify-center rounded-[8px] btn-brand-red text-[13px] font-medium text-white active:scale-95 disabled:opacity-50 transition-all dark:shadow-none"
+                  className="flex h-10 items-center justify-center rounded-xl! btn-brand-red text-white font-semibold text-xs active:scale-95 disabled:opacity-50 transition-all cursor-pointer px-5 shadow-xs"
                 >
                   {isGeneratingPdf ? (
                     <i className="ph-bold ph-spinner animate-spin text-[16px] flex items-center justify-center"></i>
@@ -252,9 +249,6 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
             }
           }
           const format = (d, fmt) => {
-            // Simple backup formatter since date-fns format is not directly imported in SLAAnalyticsTab
-            // Wait, does SLAAnalyticsTab import format? No, it imports formatPHDateTime.
-            // Let's write a small custom formatter or use standard JS options.
             try {
               const dateObj = new Date(d);
               if (isNaN(dateObj.getTime())) return d;
@@ -268,7 +262,7 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
               <div className="flex flex-wrap items-center gap-2">
                 <span className="mr-1 text-[11px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500">Active filters:</span>
                 {(startDate || endDate) && (
-                  <div className="flex items-center gap-[6px] rounded-[6px] bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
+                  <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
                     {formatChipDate(startDate)} – {formatChipDate(endDate)}
                     <button
                       onClick={() => { setStartDate(""); setEndDate(""); }}
@@ -307,7 +301,7 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
           {loading && !data ? (
             <SlaChartsSkeleton />
           ) : error ? (
-            <Empty className="flex h-[400px] flex-col items-center justify-center rounded-brand border border-gray-200 bg-white text-center text-gray-500 shadow-sm dark:border-white/10 dark:bg-card dark:text-zinc-400 dark:shadow-none">
+            <Empty className="flex h-[400px] flex-col items-center justify-center rounded-2xl border border-gray-200 bg-white text-center text-gray-500 shadow-sm dark:border-white/10 dark:bg-card dark:text-zinc-400 dark:shadow-none">
               <EmptyHeader className="flex flex-col items-center gap-0">
                 <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
                   <i className="ph-duotone ph-warning-circle text-xl text-pup-maroon dark:text-primary" />
@@ -343,7 +337,7 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
       >
         <DialogContent 
           hideClose={true}
-          className="flex h-[90vh] w-[96vw] max-w-[96vw] flex-col overflow-hidden border border-gray-200 bg-gray-100 p-0 shadow-2xl transition-all duration-normal ease-standard font-inter xl:max-w-[1200px] rounded-brand dark:border-white/10 dark:bg-muted"
+          className="flex h-[90vh] w-[96vw] max-w-[96vw] flex-col overflow-hidden border border-gray-200 bg-gray-100 p-0 shadow-2xl transition-all duration-normal ease-standard font-inter xl:max-w-[1400px] rounded-2xl dark:border-white/10 dark:bg-muted"
         >
           <DialogHeader 
             className="shrink-0 bg-gray-50 dark:bg-white/5"
@@ -359,7 +353,7 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
           >
             <div className="min-w-0">
               <DialogTitle className="text-left" style={{ fontSize: '15px', fontWeight: 600, color: '#111', letterSpacing: '-0.01em' }}>
-                SLA Analytics Report
+                SLA Analytics Report Preview
               </DialogTitle>
               <p style={{ marginTop: '2px', fontSize: '12px', fontWeight: 400, color: '#8E8E93' }} className="text-left">
                 Period: {startDate || "All"} · {endDate || "Present"}
@@ -425,55 +419,28 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
             )}
           </div>
 
-          <div
-            className="flex shrink-0 items-center bg-white dark:bg-card"
-            style={{
-              padding: '16px 24px',
-              borderTop: '0.5px solid rgba(0,0,0,0.08)'
-            }}
-          >
+          <div className="flex shrink-0 items-center bg-white dark:bg-card px-6 py-4 border-t border-gray-100 dark:border-white/10">
             <Button
               variant="ghost"
               size="icon"
               onClick={() => setIsFullscreenPreview(!isFullscreenPreview)}
-              className="text-[#8E8E93] hover:text-[#111] dark:hover:text-white hover:bg-transparent transition-colors rounded-brand shadow-none border-0 p-0"
-              style={{
-                height: '36px',
-                width: '36px',
-                background: 'none'
-              }}
+              className="text-[#8E8E93] hover:text-[#111] dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/10 transition-colors rounded-xl shadow-none border-0 p-0 h-10 w-10 cursor-pointer"
             >
-              <i className="ti ti-arrows-vertical" style={{ fontSize: '16px' }}></i>
+              <i className="ti ti-arrows-vertical text-[16px]"></i>
             </Button>
 
-            <div className="flex items-center gap-[8px]" style={{ marginLeft: 'auto' }}>
+            <div className="flex items-center gap-2.5 ml-auto">
               <Button
-                variant="ghost"
+                variant="outline"
                 onClick={() => setReportOpen(false)}
-                className="font-semibold text-sm text-gray-600 hover:text-[#111] hover:bg-transparent dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-transparent transition-colors rounded-brand shadow-none border-0"
-                style={{
-                  height: '36px',
-                  fontSize: '13px',
-                  fontWeight: 500,
-                  boxShadow: 'none',
-                  background: 'none'
-                }}
+                className="flex h-10 items-center justify-center rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-5 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
               >
                 Close
               </Button>
               <Button
                 onClick={handlePrint}
                 disabled={!pdfBlobUrl}
-                className="text-white btn-brand-red active:scale-95 disabled:opacity-50 transition-all dark:shadow-none"
-                style={{
-                  height: '36px',
-                  borderRadius: '8px',
-                  fontSize: '13px',
-                  fontWeight: 500,
-                  boxShadow: 'none',
-                  paddingLeft: '24px',
-                  paddingRight: '24px'
-                }}
+                className="h-10 px-5 rounded-xl! text-xs font-semibold text-white btn-brand-red active:scale-95 disabled:opacity-50 transition-all cursor-pointer shadow-xs"
               >
                 Save to Device
               </Button>

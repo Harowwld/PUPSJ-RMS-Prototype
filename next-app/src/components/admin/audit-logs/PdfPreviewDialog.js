@@ -125,13 +125,7 @@ export default function PdfPreviewDialog({
           )}
         </div>
 
-        <div
-          className="flex shrink-0 items-center bg-white dark:bg-card"
-          style={{
-            padding: '16px 24px',
-            borderTop: '0.5px solid rgba(0,0,0,0.08)'
-          }}
-        >
+        <div className="flex shrink-0 items-center bg-white dark:bg-card px-6 py-4 border-t border-gray-100 dark:border-white/10">
           <Button
             variant="ghost"
             size="icon"
@@ -143,9 +137,9 @@ export default function PdfPreviewDialog({
 
           <div className="flex items-center gap-2.5 ml-auto">
             <Button
-              variant="ghost"
+              variant="outline"
               onClick={() => setPdfPreviewOpen(false)}
-              className="font-semibold text-xs text-gray-600 hover:text-[#111] hover:bg-gray-100 dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-white/10 transition-colors rounded-xl shadow-none border-0 h-10 px-4 cursor-pointer"
+              className="flex h-10 items-center justify-center rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-5 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
             >
               Close
             </Button>

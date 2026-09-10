@@ -59,7 +59,7 @@ const GlobalStaffTab = dynamic(() => import("@/components/systemadmin/GlobalStaf
 const GlobalAuditLogsTab = dynamic(() => import("@/components/systemadmin/GlobalAuditLogsTab"), {
   loading: () => <TabLoadingSkeleton />,
 })
-const SystemHealthTab = dynamic(() => import("@/components/systemadmin/SystemHealthTab"), {
+const CampusOperationsTab = dynamic(() => import("@/components/systemadmin/CampusOperationsTab"), {
   loading: () => <TabLoadingSkeleton />,
 })
 const SystemBackupsTab = dynamic(() => import("@/components/systemadmin/SystemBackupsTab"), {
@@ -225,8 +225,8 @@ function SystemAdminPageContent({ authUser: propAuthUser }) {
     { key: "staff", label: "Global Directory", iconClass: "ph-bold ph-users" },
     { key: "logs", label: "Platform Audit Trail", iconClass: "ph-bold ph-history" },
     
-    { type: "header", label: "Platform Infrastructure" },
-    { key: "health", label: "System Health", iconClass: "ph-bold ph-activity" },
+    { type: "header", label: "Operations & Reliability" },
+    { key: "health", label: "Campus Operations", iconClass: "ph-bold ph-activity" },
     { key: "backups", label: "Platform Backups", iconClass: "ph-bold ph-cloud-arrow-up" },
 
     { type: "header", label: "Public Portal & Content" },
@@ -280,7 +280,7 @@ function SystemAdminPageContent({ authUser: propAuthUser }) {
             {view === "modules" && <ModuleConfigTab showToast={showToast} />}
             {view === "staff" && <GlobalStaffTab authUser={authUser} showToast={showToast} />}
             {view === "logs" && <GlobalAuditLogsTab showToast={showToast} />}
-            {view === "health" && <SystemHealthTab showToast={showToast} />}
+            {view === "health" && <CampusOperationsTab showToast={showToast} />}
             {view === "backups" && <SystemBackupsTab showToast={showToast} />}
             {view === "landing" && <LandingPageCmsTab showToast={showToast} />}
           </div>

@@ -234,7 +234,7 @@ export default function AuditLogsTab({
         <StatCards isLoading={isLoading && !isManualLoading} logStats={logStats} />
 
         {/* Main Table Card */}
-        <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-xl border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
+        <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
           <PageHeader
             icon="ph-shield-check"
             title="Audit Logs"
@@ -254,11 +254,10 @@ export default function AuditLogsTab({
 
                 <div className="flex items-center gap-2">
                   <Button
-                    variant="ghost"
-                    size="sm"
+                    variant="outline"
                     onClick={handleDownloadCSV}
                     disabled={logTotal === 0 || isExporting || isGeneratingPdf}
-                    className="h-10 w-[68px] justify-center font-semibold text-sm text-gray-600 hover:text-gray-900 hover:bg-transparent dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-transparent transition-colors flex items-center rounded-brand shadow-none! border-0!"
+                    className="flex h-10 items-center justify-center rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
                   >
                     {isExporting ? (
                       <i className="ph-bold ph-spinner animate-spin text-[16px]"></i>
@@ -268,11 +267,9 @@ export default function AuditLogsTab({
                   </Button>
                   <Button
                     type="button"
-                    variant="default"
-                    size="sm"
                     onClick={handlePreviewPDF}
                     disabled={logTotal === 0 || isExporting || isGeneratingPdf}
-                    className="flex h-[36px] w-[142px] items-center justify-center rounded-[8px] btn-brand-red text-[13px] font-medium text-white active:scale-95 disabled:opacity-50 transition-all dark:shadow-none"
+                    className="flex h-10 items-center justify-center rounded-xl! btn-brand-red text-white font-semibold text-xs active:scale-95 disabled:opacity-50 transition-all cursor-pointer px-5 shadow-xs"
                   >
                     {isGeneratingPdf ? (
                       <i className="ph-bold ph-spinner animate-spin text-[16px] flex items-center justify-center"></i>
@@ -300,7 +297,7 @@ export default function AuditLogsTab({
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="mr-1 text-[11px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500">Active filters:</span>
                   {localSearch && (
-                    <div className="flex items-center gap-[6px] rounded-[6px] bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
+                    <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
                       Search: {localSearch}
                       <button
                         onClick={() => { setLocalSearch(""); setLogSearch(""); setLogPage(1); }}
@@ -311,7 +308,7 @@ export default function AuditLogsTab({
                     </div>
                   )}
                   {logRoleFilter !== "All" && (
-                    <div className="flex items-center gap-[6px] rounded-[6px] bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
+                    <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
                       Role: {logRoleFilter}
                       <button
                         onClick={() => { setLogRoleFilter("All"); setLogPage(1); }}
@@ -322,7 +319,7 @@ export default function AuditLogsTab({
                     </div>
                   )}
                   {logSeverityFilter !== "All" && (
-                    <div className="flex items-center gap-[6px] rounded-[6px] bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
+                    <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
                       Severity: {logSeverityFilter}
                       <button
                         onClick={() => { setLogSeverityFilter("All"); setLogPage(1); }}
@@ -333,7 +330,7 @@ export default function AuditLogsTab({
                     </div>
                   )}
                   {(logStartDate || logEndDate) && (
-                    <div className="flex items-center gap-[6px] rounded-[6px] bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
+                    <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
                       {formatChipDate(logStartDate)} – {formatChipDate(logEndDate)}
                       <button
                         onClick={() => { setLogStartDate(""); setLogEndDate(""); setLogPage(1); }}

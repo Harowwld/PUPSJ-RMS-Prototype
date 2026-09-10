@@ -53,7 +53,7 @@ export default function BackupFilters({
   }
 
   return (
-    <div className="rounded-t-brand border-b border-gray-200 bg-transparent p-4 dark:border-white/10 dark:bg-transparent">
+    <div className="rounded-t-2xl border-b border-gray-200 bg-transparent p-4 dark:border-white/10 dark:bg-transparent">
       <div className="flex w-full flex-wrap items-end gap-4">
         {/* Search */}
         <div className="min-w-[400px] flex-1">
@@ -65,7 +65,7 @@ export default function BackupFilters({
             <Input
               type="text"
               placeholder="Filename, version..."
-              className="h-10 w-full rounded-brand border border-gray-300 bg-white pl-10 text-sm focus-visible:border-gray-300 focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:outline-none dark:bg-card dark:border-white/10"
+              className="h-10 w-full rounded-xl border border-gray-300 bg-white pl-10 text-sm focus-visible:border-gray-300 focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:outline-none dark:bg-card dark:border-white/10"
               value={localSearch}
               onChange={handleSearchChange}
             />
@@ -115,7 +115,7 @@ export default function BackupFilters({
                   <Button
                     variant={"outline"}
                     className={cn(
-                      "h-10 w-full justify-start rounded-brand border-gray-300 dark:border-white/10 text-left text-xs font-medium",
+                      "h-10 w-full justify-start rounded-xl border-gray-300 dark:border-white/10 text-left text-xs font-medium",
                       !backupStartDate && "text-muted-foreground"
                     )}
                   >
@@ -129,7 +129,7 @@ export default function BackupFilters({
                     )}{" "}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto rounded-brand p-0" align="start">
+                <PopoverContent className="w-auto rounded-2xl p-0" align="start">
                   <Calendar
                     mode="single"
                     selected={backupStartDate ? new Date(backupStartDate) : undefined}
@@ -148,7 +148,7 @@ export default function BackupFilters({
                   <Button
                     variant={"outline"}
                     className={cn(
-                      "h-10 w-full justify-start rounded-brand border-gray-300 dark:border-white/10 text-left text-xs font-medium",
+                      "h-10 w-full justify-start rounded-xl border-gray-300 dark:border-white/10 text-left text-xs font-medium",
                       !backupEndDate && "text-muted-foreground"
                     )}
                   >
@@ -162,7 +162,7 @@ export default function BackupFilters({
                     )}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto rounded-brand p-0" align="start">
+                <PopoverContent className="w-auto rounded-2xl p-0" align="start">
                   <Calendar
                     mode="single"
                     selected={backupEndDate ? new Date(backupEndDate) : undefined}

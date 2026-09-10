@@ -246,17 +246,16 @@ export default function RecognitionTemplatesTab({ showToast }) {
         <p className="mt-1 text-sm text-gray-500 dark:text-zinc-400">Select a document type, choose a name field, load a PSA file, and drag over that field. Repeat for each field, then save the template.</p>
       </div>
       <div className="grid gap-5 xl:grid-cols-[280px_minmax(0,1fr)_280px]">
-        <div className="space-y-4 rounded-brand border border-gray-200 bg-gray-50 p-4 dark:border-white/10 dark:bg-white/5">
+        <div className="space-y-4 rounded-2xl border border-gray-200 bg-gray-50 p-4 dark:border-white/10 dark:bg-white/5">
           <label className="block text-xs font-semibold uppercase text-gray-500">Document type</label>
-          <Select containerClassName="h-auto" value={documentTypeId} onChange={(event) => setDocumentTypeId(event.target.value)}>
+          <Select containerClassName="h-auto" className="h-10 rounded-xl" value={documentTypeId} onChange={(event) => setDocumentTypeId(event.target.value)}>
             <option value="">Select document type</option>
             {docTypes.map((type) => <option key={type.id} value={type.id}>{type.name}</option>)}
           </Select>
           <label className="block text-xs font-semibold uppercase text-gray-500">Document</label>
           <input ref={sampleInputRef} type="file" accept="application/pdf,image/*" onChange={(event) => handleSample(event.target.files?.[0])} className="sr-only" />
-          <Button type="button" variant="outline" className="w-full justify-center border-pup-maroon text-pup-maroon" onClick={chooseSampleFile}>
-            <i className="ph-bold ph-upload-simple mr-2" />
-            {sampleFile ? "Replace document" : "Upload document"}
+          <Button type="button" variant="outline" className="w-full h-10 rounded-xl justify-center border-pup-maroon text-pup-maroon text-xs font-semibold active:scale-95 transition-all shadow-xs" onClick={chooseSampleFile}>
+            {sampleFile ? "Replace Document" : "Upload Document"}
           </Button>
           {sampleFile ? <p className="truncate text-xs text-gray-500">Uploaded: {sampleFile.name}</p> : <p className="text-xs text-gray-500">Upload a representative document before highlighting fields.</p>}
           <div>
@@ -268,27 +267,27 @@ export default function RecognitionTemplatesTab({ showToast }) {
               const plotted = regions[key]?.width > 0 && regions[key]?.height > 0
               const fieldMode = key === "wholeName" ? "whole" : "separate"
               const disabled = Boolean(recognitionMode && recognitionMode !== fieldMode)
-              return <Button key={key} type="button" variant={activeField === key ? "default" : "outline"} disabled={disabled} onClick={() => { if (!recognitionMode) setRecognitionMode(fieldMode); setActiveField(key); setDraftRegion(null) }} className={`justify-between ${disabled ? "cursor-not-allowed opacity-40" : ""}`} style={activeField === key ? { backgroundColor: key === "wholeName" ? "#800000" : COLORS[key] } : undefined}>
+              return <Button key={key} type="button" variant={activeField === key ? "default" : "outline"} disabled={disabled} onClick={() => { if (!recognitionMode) setRecognitionMode(fieldMode); setActiveField(key); setDraftRegion(null) }} className={`h-10 rounded-xl justify-between text-xs font-semibold ${disabled ? "cursor-not-allowed opacity-40" : "active:scale-95 transition-all"}`} style={activeField === key ? { backgroundColor: key === "wholeName" ? "#800000" : COLORS[key] } : undefined}>
                 <span>{label}</span>
                 <span className="text-xs font-normal">{plotted ? "Set" : "Not set"}</span>
               </Button>
             })}
           </div>
-          {recognitionMode && <Button type="button" variant="ghost" className="w-full text-xs text-gray-500" onClick={() => { setRecognitionMode(""); setActiveField("firstName"); setRegions(EMPTY_REGIONS); setDraftRegion(null) }}>Change recognition method</Button>}
-          <div className="rounded border border-gray-200 bg-white p-3 text-xs text-gray-600">
-            <span className="font-semibold text-gray-900">Selected field:</span> {[WHOLE_FIELD, ...FIELDS].find(([key]) => key === activeField)?.[1] || "Choose a recognition method"}
+          {recognitionMode && <Button type="button" variant="ghost" className="w-full text-xs text-gray-500 hover:text-gray-700 dark:hover:text-zinc-200" onClick={() => { setRecognitionMode(""); setActiveField("firstName"); setRegions(EMPTY_REGIONS); setDraftRegion(null) }}>Change recognition method</Button>}
+          <div className="rounded-xl border border-gray-200 bg-white p-3 text-xs text-gray-600 dark:border-white/10 dark:bg-card dark:text-zinc-300">
+            <span className="font-semibold text-gray-900 dark:text-zinc-50">Selected field:</span> {[WHOLE_FIELD, ...FIELDS].find(([key]) => key === activeField)?.[1] || "Choose a recognition method"}
           </div>
-          <div className="border-t border-gray-200 pt-4">
-            <Button className="w-full bg-pup-maroon text-white" onClick={saveTemplate} disabled={saving || loading}>{saving ? "Saving..." : "Save template"}</Button>
+          <div className="border-t border-gray-200 pt-4 dark:border-white/10">
+            <Button className="w-full h-10 rounded-xl btn-brand-red text-white text-xs font-semibold shadow-xs cursor-pointer active:scale-95 transition-all border-0" onClick={saveTemplate} disabled={saving || loading}>{saving ? "Saving..." : "Save Template"}</Button>
           </div>
           <label className="block text-xs font-semibold uppercase text-gray-500">Template name</label>
-          <input className="h-10 w-full rounded border border-gray-300 bg-white px-3 text-sm" value={templateName} onChange={(event) => setTemplateName(event.target.value)} />
+          <input className="h-10 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-3 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon" value={templateName} onChange={(event) => setTemplateName(event.target.value)} />
           <label className="block text-xs font-semibold uppercase text-gray-500">Version</label>
-          <input type="number" min="1" className="h-10 w-full rounded border border-gray-300 bg-white px-3 text-sm" value={version} onChange={(event) => setVersion(event.target.value)} />
-          {ocrPages.length > 1 && <><label className="block text-xs font-semibold uppercase text-gray-500">Page</label><Select containerClassName="h-auto" value={pageIndex} onChange={(event) => handlePageChange(event.target.value)}>{ocrPages.map((page) => <option key={page.pageIndex} value={page.pageIndex}>Page {Number(page.pageIndex) + 1}</option>)}</Select></>}
+          <input type="number" min="1" className="h-10 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-3 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon" value={version} onChange={(event) => setVersion(event.target.value)} />
+          {ocrPages.length > 1 && <><label className="block text-xs font-semibold uppercase text-gray-500">Page</label><Select containerClassName="h-auto" className="h-10 rounded-xl" value={pageIndex} onChange={(event) => handlePageChange(event.target.value)}>{ocrPages.map((page) => <option key={page.pageIndex} value={page.pageIndex}>Page {Number(page.pageIndex) + 1}</option>)}</Select></>}
         </div>
 
-        <div className="min-w-0 rounded-brand border border-gray-200 bg-gray-100 p-4 dark:border-white/10 dark:bg-zinc-900">
+        <div className="min-w-0 rounded-2xl border border-gray-200 bg-gray-100 p-4 dark:border-white/10 dark:bg-zinc-900">
           <div className="mb-3 flex items-center justify-between text-xs text-gray-500"><span>Drag over the printed value area for the selected field.</span><span>Coordinates: 0–1</span></div>
           {pageImage ? <div className="mx-auto w-full max-w-3xl" style={{ aspectRatio: `${pageSize.width} / ${pageSize.height}` }}>
               <div ref={imageRef} className="relative h-full w-full select-none overflow-hidden bg-white shadow" onPointerDown={startDraw} onPointerMove={updateDraw} onPointerUp={finishDraw} onPointerCancel={() => { setDragStart(null); setDraftRegion(null) }}>
@@ -299,27 +298,26 @@ export default function RecognitionTemplatesTab({ showToast }) {
           </div> : <div className="flex h-[520px] flex-col items-center justify-center gap-3 text-center text-sm text-gray-500">
             <i className="ph-duotone ph-file-arrow-up text-4xl text-pup-maroon" />
             <p>Load a representative PSA PDF or image to begin plotting.</p>
-            <Button type="button" className="bg-pup-maroon text-white" onClick={chooseSampleFile}>
-              <i className="ph-bold ph-upload-simple mr-2" />
-              Load PSA file
+            <Button type="button" className="h-10 px-5 text-xs font-semibold rounded-xl btn-brand-red text-white shadow-xs active:scale-95 transition-all border-0 cursor-pointer" onClick={chooseSampleFile}>
+              Load PSA File
             </Button>
             {!documentTypeId && <p className="text-xs text-gray-400">You can load the file now; select the document type before saving.</p>}
           </div>}
-          {pageImage && <div className="mt-4 grid gap-3 rounded-brand border border-gray-200 bg-white p-3 dark:border-white/10 dark:bg-card sm:grid-cols-[minmax(0,1fr)_180px]">
+          {pageImage && <div className="mt-4 grid gap-3 rounded-2xl border border-gray-200 bg-white p-3 dark:border-white/10 dark:bg-card sm:grid-cols-[minmax(0,1fr)_180px]">
             <div>
               <div className="text-xs font-semibold uppercase tracking-wide text-gray-500">Live field check</div>
             <p className="mt-1 text-xs text-gray-500">{[WHOLE_FIELD, ...FIELDS].find(([key]) => key === activeField)?.[1] || "Selected field"}: {previewText || "No OCR text detected inside this box yet."}</p>
             </div>
-            {previewRegion.width > 0 && previewRegion.height > 0 ? <div className="relative h-24 overflow-hidden rounded border border-gray-200 bg-gray-100 dark:border-white/10 dark:bg-zinc-900">
+            {previewRegion.width > 0 && previewRegion.height > 0 ? <div className="relative h-24 overflow-hidden rounded-xl border border-gray-200 bg-gray-100 dark:border-white/10 dark:bg-zinc-900">
               <img src={pageImage} alt="Selected OCR region" className="absolute max-w-none" style={{ left: `${-(previewRegion.x / previewRegion.width) * 100}%`, top: `${-(previewRegion.y / previewRegion.height) * 100}%`, width: `${(1 / previewRegion.width) * 100}%`, height: `${(1 / previewRegion.height) * 100}%` }} draggable="false" />
-            </div> : <div className="flex h-24 items-center justify-center rounded border border-dashed border-gray-300 text-[11px] text-gray-400">Draw a field box</div>}
+            </div> : <div className="flex h-24 items-center justify-center rounded-xl border border-dashed border-gray-300 text-[11px] text-gray-400">Draw a field box</div>}
           </div>}
         </div>
 
-        <div className="space-y-3 rounded-brand border border-gray-200 bg-white p-4 dark:border-white/10 dark:bg-card">
+        <div className="space-y-3 rounded-2xl border border-gray-200 bg-white p-4 dark:border-white/10 dark:bg-card">
           <div className="text-xs font-semibold uppercase tracking-wide text-gray-500">Saved templates</div>
-          {templates.length === 0 ? <p className="text-sm text-gray-500">No templates saved.</p> : templates.map((template) => <div key={template.id} className={`relative rounded border p-3 ${selectedTemplateId === template.id ? "border-pup-maroon" : "border-gray-200"}`}><button type="button" aria-label={`Delete ${template.name}`} title="Delete permanently" onClick={() => setDeleteTemplateId(template.id)} className="absolute right-2 top-2 z-10 flex h-7 w-7 items-center justify-center rounded text-gray-400 hover:bg-red-50 hover:text-red-700"><i className="ph-bold ph-trash" /></button><button type="button" className="block w-full pr-8 text-left" onClick={() => loadTemplate(template)}><div className="text-sm font-semibold">{template.document_type}</div><div className="text-xs text-gray-500">{template.name} · v{template.version} · page {Number(template.page_index) + 1}</div><div className="mt-1 text-xs text-gray-400">{template.status}</div></button>{template.status === "Active" && <button type="button" onClick={() => archiveTemplate(template.id)} className="mt-2 text-xs font-semibold text-red-700">Archive</button>}</div>)}
-          <div className="rounded bg-gray-50 p-3 text-xs text-gray-500">Green boxes are OCR observations. Colored boxes are saved field regions. Use the actual displayed page bounds when plotting.</div>
+          {templates.length === 0 ? <p className="text-sm text-gray-500">No templates saved.</p> : templates.map((template) => <div key={template.id} className={`relative rounded-xl border p-3 ${selectedTemplateId === template.id ? "border-pup-maroon" : "border-gray-200 dark:border-white/10"}`}><button type="button" aria-label={`Delete ${template.name}`} title="Delete permanently" onClick={() => setDeleteTemplateId(template.id)} className="absolute right-2 top-2 z-10 w-7 h-7 rounded-lg text-gray-400 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors flex items-center justify-center cursor-pointer active:scale-95 border-0 bg-transparent"><i className="ph-bold ph-trash text-sm" /></button><button type="button" className="block w-full pr-8 text-left cursor-pointer" onClick={() => loadTemplate(template)}><div className="text-sm font-semibold text-gray-900 dark:text-zinc-50">{template.document_type}</div><div className="text-xs text-gray-500 dark:text-zinc-400">{template.name} · v{template.version} · page {Number(template.page_index) + 1}</div><div className="mt-1 text-xs text-gray-400 dark:text-zinc-500">{template.status}</div></button>{template.status === "Active" && <button type="button" onClick={() => archiveTemplate(template.id)} className="mt-2 text-xs font-semibold text-red-700 dark:text-red-400 cursor-pointer">Archive</button>}</div>)}
+          <div className="rounded-xl bg-gray-50 dark:bg-zinc-800/50 p-3 text-xs text-gray-500 dark:text-zinc-400">Green boxes are OCR observations. Colored boxes are saved field regions. Use the actual displayed page bounds when plotting.</div>
         </div>
       </div>
       <ConfirmModal

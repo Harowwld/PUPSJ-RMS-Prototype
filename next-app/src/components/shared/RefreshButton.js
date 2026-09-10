@@ -23,22 +23,22 @@ export function RefreshButton({
     <Tooltip>
       <TooltipTrigger asChild>
         <Button
-          variant="ghost"
+          type="button"
+          variant="outline"
           size="sm"
           onClick={onRefresh}
           disabled={isLoading}
           className={cn(
-            "flex h-10 w-10 items-center justify-center rounded-full p-0 text-gray-500 hover:text-pup-maroon hover:bg-gray-100 dark:text-zinc-400 dark:hover:text-primary dark:hover:bg-white/5 active:scale-95 disabled:opacity-50",
-            isLoading && "animate-refresh-glow",
+            "flex h-10 w-10 items-center justify-center rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs active:scale-95 transition-all cursor-pointer p-0 disabled:opacity-50",
             className
           )}
         >
           <i
             className={cn(
-              "ti ti-refresh-cw text-[17px] flex items-center justify-center leading-none",
+              "ph-bold ph-arrows-clockwise text-[16px] text-gray-600 dark:text-zinc-300 flex items-center justify-center leading-none",
               isLoading && "animate-spin"
             )}
-          ></i>
+          />
         </Button>
       </TooltipTrigger>
       <TooltipContent className="bg-zinc-900 text-white border-zinc-800">

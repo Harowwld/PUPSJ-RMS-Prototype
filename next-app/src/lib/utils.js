@@ -1,5 +1,23 @@
 import { clsx } from "clsx";
-import { twMerge } from "tailwind-merge"
+import { extendTailwindMerge } from "tailwind-merge"
+
+const customTwMerge = extendTailwindMerge({
+  extend: {
+    classGroups: {
+      rounded: [
+        "rounded-brand",
+        "rounded-t-brand",
+        "rounded-b-brand",
+        "rounded-l-brand",
+        "rounded-r-brand",
+        "rounded-tl-brand",
+        "rounded-tr-brand",
+        "rounded-bl-brand",
+        "rounded-br-brand",
+      ],
+    },
+  },
+})
 
 export function formatBytes(bytes, decimals = 2) {
   if (!+bytes) return '0 Bytes'
@@ -14,5 +32,6 @@ export function formatBytes(bytes, decimals = 2) {
 }
 
 export function cn(...inputs) {
-  return twMerge(clsx(inputs));
+  return customTwMerge(clsx(inputs));
 }
+

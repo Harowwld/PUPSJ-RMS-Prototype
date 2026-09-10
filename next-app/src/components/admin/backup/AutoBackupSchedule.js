@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react"
 import { cn } from "@/lib/utils"
+import { Select } from "@/components/ui/select"
 
 const DAY_LABELS = [
   "Sunday",
@@ -78,7 +79,7 @@ function calculateNextRun(schedule) {
   })
 }
 
-export default function AutoBackupSchedule({ showToast, scope = "system" }) {
+export default function AutoBackupSchedule({ showToast, scope = "system", embedded = false, className = "" }) {
   const [schedule, setSchedule] = useState({
     enabled: false,
     frequency: "daily",
@@ -182,16 +183,24 @@ export default function AutoBackupSchedule({ showToast, scope = "system" }) {
   // Loading skeleton matching Apple card proportions
   if (isLoading) {
     return (
-      <div className="w-full rounded-2xl border border-black/[0.08] dark:border-white/[0.08] bg-white dark:bg-card shadow-sm p-4 animate-pulse">
+      <div
+        className={cn(
+          "w-full p-5 animate-pulse",
+          embedded
+            ? "border-t border-gray-100 dark:border-white/10 bg-gray-50/40 dark:bg-zinc-900/30"
+            : "rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-card shadow-xs",
+          className
+        )}
+      >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3.5">
-            <div className="w-10 h-10 rounded-[10px] bg-[#F2F2F7] dark:bg-zinc-800" />
+            <div className="w-10 h-10 rounded-xl bg-gray-200 dark:bg-zinc-800" />
             <div className="space-y-2">
-              <div className="h-4 w-36 rounded bg-[#F2F2F7] dark:bg-zinc-800" />
-              <div className="h-3 w-56 rounded bg-[#F9F9FB] dark:bg-zinc-850" />
+              <div className="h-4 w-36 rounded-md bg-gray-200 dark:bg-zinc-800" />
+              <div className="h-3 w-56 rounded-md bg-gray-100 dark:bg-zinc-850" />
             </div>
           </div>
-          <div className="w-11 h-6 rounded-full bg-[#E5E5EA] dark:bg-zinc-800" />
+          <div className="w-11 h-6 rounded-full bg-gray-200 dark:bg-zinc-800" />
         </div>
       </div>
     )
@@ -204,17 +213,25 @@ export default function AutoBackupSchedule({ showToast, scope = "system" }) {
   const nextRunFormatted = schedule.enabled ? calculateNextRun(schedule) : null
 
   return (
-    <div className="w-full rounded-2xl border border-black/[0.08] dark:border-white/[0.08] bg-white dark:bg-card shadow-[0_1px_3px_rgba(0,0,0,0.03),0_4px_12px_rgba(0,0,0,0.02)] overflow-hidden transition-colors duration-200">
-      {/* Group Header Row with macOS Squircle Icon & Switch */}
-      <div className="flex items-center justify-between px-5 py-3.5">
+    <div
+      className={cn(
+        "w-full overflow-hidden transition-colors duration-200",
+        embedded
+          ? "border-t border-gray-100 dark:border-white/10 bg-gray-50/40 dark:bg-zinc-900/30"
+          : "rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-card shadow-xs",
+        className
+      )}
+    >
+      {/* Group Header Row with Apple Squircle Icon & Switch */}
+      <div className="flex items-center justify-between px-5 py-4">
         <div className="flex items-center gap-3.5">
           {/* Apple Squircle Tile */}
           <div
             className={cn(
-              "w-10 h-10 rounded-[10px] flex items-center justify-center shrink-0 transition-[background-color,box-shadow,color] duration-200",
+              "w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-all duration-200 shadow-xs",
               schedule.enabled
-                ? "bg-gradient-to-b from-[#34C759] to-[#28CD41] text-white shadow-[0_2px_6px_rgba(52,199,89,0.35)]"
-                : "bg-[#E5E5EA] dark:bg-zinc-800 text-[#8E8E93] dark:text-zinc-500"
+                ? "bg-gradient-to-b from-[#34C759] to-[#28CD41] text-white"
+                : "bg-gray-100 dark:bg-zinc-800 text-gray-400 dark:text-zinc-500 border border-gray-200/60 dark:border-white/5"
             )}
           >
             <i className="ph-bold ph-arrows-clockwise text-[18px]" />
@@ -222,20 +239,20 @@ export default function AutoBackupSchedule({ showToast, scope = "system" }) {
 
           <div>
             <div className="flex items-center gap-2">
-              <h4 className="text-[14px] font-semibold text-[#111111] dark:text-zinc-50 tracking-[-0.01em] leading-tight">
+              <h4 className="text-sm font-semibold text-gray-900 dark:text-zinc-50 tracking-[-0.01em] leading-tight">
                 Automatic Backups
               </h4>
               {schedule.enabled && (
-                <span className="inline-flex items-center gap-1 rounded-full bg-[#D1FAE5] dark:bg-emerald-950/40 px-2 py-0.5 text-[10px] font-semibold text-[#065F46] dark:text-emerald-400">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#34C759] animate-pulse" />
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200/60 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/40 px-2.5 py-0.5 text-[11px] font-semibold">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                   Active
                 </span>
               )}
             </div>
-            <p className="text-[12px] font-normal text-[#8E8E93] dark:text-zinc-400 mt-0.5 leading-normal">
+            <p className="text-xs font-normal text-gray-500 dark:text-zinc-400 mt-0.5 leading-normal">
               {schedule.enabled
                 ? `Securing archives ${schedule.frequency === "weekly" ? `every ${selectedDayLabel}` : "daily"} at ${selectedTimeLabel}`
-                : "Automatically create and secure backup archives on a schedule"}
+                : "Automatically create and secure backup archives on a recurring schedule"}
             </p>
           </div>
         </div>
@@ -249,17 +266,17 @@ export default function AutoBackupSchedule({ showToast, scope = "system" }) {
           disabled={isSaving}
           aria-label="Toggle automatic backups"
           className={cn(
-            "relative inline-flex h-[26px] w-[46px] shrink-0 cursor-pointer items-center rounded-full p-[2px] transition-colors duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#007AFF]/50",
+            "relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full p-0.5 transition-colors duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50 active:scale-95",
             schedule.enabled
               ? "bg-[#34C759]"
-              : "bg-[#E9E9EA] dark:bg-zinc-700",
+              : "bg-gray-200 dark:bg-zinc-700",
             isSaving && "opacity-50 cursor-not-allowed"
           )}
         >
           <span
             className={cn(
-              "pointer-events-none inline-block h-[22px] w-[22px] rounded-full bg-white shadow-[0_1px_3px_rgba(0,0,0,0.18),0_2px_4px_rgba(0,0,0,0.06)] transition-transform duration-200 ease-out",
-              schedule.enabled ? "translate-x-[20px]" : "translate-x-0"
+              "pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-xs transition-transform duration-200 ease-out",
+              schedule.enabled ? "translate-x-5" : "translate-x-0"
             )}
           />
         </button>
@@ -267,25 +284,29 @@ export default function AutoBackupSchedule({ showToast, scope = "system" }) {
 
       {/* macOS Settings Grouped Rows — Expands when enabled */}
       {schedule.enabled && (
-        <div className="border-t border-black/[0.06] dark:border-white/[0.06] divide-y divide-black/[0.05] dark:divide-white/[0.05] animate-in fade-in slide-in-from-top-1 duration-200">
-          {/* Row 1: Frequency with Apple Segmented Control */}
-          <div className="h-12 px-5 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="text-[13px] font-medium text-[#111111] dark:text-zinc-100">
+        <div className="border-t border-gray-100 dark:border-white/10 divide-y divide-gray-100 dark:divide-white/10 bg-white/70 dark:bg-card/70 animate-in fade-in slide-in-from-top-1 duration-200">
+          {/* Row 1: Frequency with Apple Segmented Control / Tabs */}
+          <div className="min-h-[52px] px-5 py-2.5 flex items-center justify-between gap-4 flex-wrap sm:flex-nowrap">
+            <div className="flex flex-col">
+              <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
                 Frequency
+              </span>
+              <span className="text-[11px] text-gray-500 dark:text-zinc-400">
+                Choose how frequently backups run automatically
               </span>
             </div>
 
-            <div className="inline-flex p-0.5 bg-[#F2F2F7] dark:bg-zinc-800/90 rounded-[8px] border border-black/[0.03] dark:border-white/[0.04]">
+            {/* Apple Segmented Tabs */}
+            <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-gray-200/60 dark:border-white/5">
               <button
                 type="button"
                 onClick={() => handleFrequencySelect("daily")}
                 disabled={isSaving}
                 className={cn(
-                  "px-3.5 py-1 text-[12px] font-medium rounded-[6px] transition-[background-color,color,box-shadow] duration-150 cursor-pointer active:scale-[0.98]",
+                  "px-4 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer select-none",
                   schedule.frequency === "daily"
-                    ? "bg-white dark:bg-zinc-700 text-[#111111] dark:text-white shadow-[0_1px_2px_rgba(0,0,0,0.08)] font-semibold"
-                    : "text-[#8E8E93] dark:text-zinc-400 hover:text-[#111111] dark:hover:text-white"
+                    ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
+                    : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
                 )}
               >
                 Daily
@@ -295,10 +316,10 @@ export default function AutoBackupSchedule({ showToast, scope = "system" }) {
                 onClick={() => handleFrequencySelect("weekly")}
                 disabled={isSaving}
                 className={cn(
-                  "px-3.5 py-1 text-[12px] font-medium rounded-[6px] transition-[background-color,color,box-shadow] duration-150 cursor-pointer active:scale-[0.98]",
+                  "px-4 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer select-none",
                   schedule.frequency === "weekly"
-                    ? "bg-white dark:bg-zinc-700 text-[#111111] dark:text-white shadow-[0_1px_2px_rgba(0,0,0,0.08)] font-semibold"
-                    : "text-[#8E8E93] dark:text-zinc-400 hover:text-[#111111] dark:hover:text-white"
+                    ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
+                    : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
                 )}
               >
                 Weekly
@@ -308,88 +329,94 @@ export default function AutoBackupSchedule({ showToast, scope = "system" }) {
 
           {/* Row 2: Day of Week (Weekly only) */}
           {schedule.frequency === "weekly" && (
-            <div className="h-12 px-5 flex items-center justify-between animate-in fade-in duration-150">
-              <span className="text-[13px] font-medium text-[#111111] dark:text-zinc-100">
-                Scheduled Day
-              </span>
+            <div className="min-h-[52px] px-5 py-2.5 flex items-center justify-between gap-4 flex-wrap sm:flex-nowrap animate-in fade-in duration-150">
+              <div className="flex flex-col">
+                <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
+                  Scheduled Day
+                </span>
+                <span className="text-[11px] text-gray-500 dark:text-zinc-400">
+                  Day of the week to trigger weekly archives
+                </span>
+              </div>
 
-              {/* Apple-styled popup pill */}
-              <div className="relative inline-flex items-center gap-1.5 bg-[#F2F2F7] dark:bg-zinc-800 hover:bg-[#E5E5EA] dark:hover:bg-zinc-750 px-3 py-1.5 rounded-[8px] text-[12px] font-medium text-[#111111] dark:text-zinc-100 border border-black/[0.04] dark:border-white/[0.06] transition-[background-color] duration-150 cursor-pointer group active:scale-[0.98]">
-                <i className="ph-duotone ph-calendar text-[13px] text-[#8E8E93]" />
-                <span>{selectedDayLabel}</span>
-                <i className="ph-bold ph-caret-up-down text-[10px] text-[#8E8E93] ml-0.5 group-hover:text-[#111111] dark:group-hover:text-white" />
-                <select
+              {/* Standardized Select Dropdown */}
+              <div className="w-48 shrink-0">
+                <Select
                   value={schedule.dayOfWeek}
                   onChange={handleDayChange}
                   disabled={isSaving}
-                  aria-label="Select day of week"
-                  className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                  className="h-9 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-xs font-semibold text-gray-700 dark:text-zinc-200 cursor-pointer shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
+                  menuClassName="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-900 shadow-2xl p-1.5"
+                  optionClassName="rounded-lg text-xs font-semibold py-1.5 px-2.5 hover:bg-gray-100 dark:hover:bg-zinc-800"
                 >
                   {DAY_LABELS.map((day, idx) => (
                     <option key={idx} value={idx}>
                       {day}
                     </option>
                   ))}
-                </select>
+                </Select>
               </div>
             </div>
           )}
 
           {/* Row 3: Scheduled Time */}
-          <div className="h-12 px-5 flex items-center justify-between">
-            <span className="text-[13px] font-medium text-[#111111] dark:text-zinc-100">
-              Backup Time
-            </span>
+          <div className="min-h-[52px] px-5 py-2.5 flex items-center justify-between gap-4 flex-wrap sm:flex-nowrap">
+            <div className="flex flex-col">
+              <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
+                Backup Time
+              </span>
+              <span className="text-[11px] text-gray-500 dark:text-zinc-400">
+                Optimal non-peak hour to run archival processes
+              </span>
+            </div>
 
-            {/* Apple-styled time picker pill */}
-            <div className="relative inline-flex items-center gap-1.5 bg-[#F2F2F7] dark:bg-zinc-800 hover:bg-[#E5E5EA] dark:hover:bg-zinc-750 px-3 py-1.5 rounded-[8px] text-[12px] font-medium text-[#111111] dark:text-zinc-100 border border-black/[0.04] dark:border-white/[0.06] transition-[background-color] duration-150 cursor-pointer group active:scale-[0.98]">
-              <i className="ph-duotone ph-clock text-[13px] text-[#8E8E93]" />
-              <span>{selectedTimeLabel}</span>
-              <i className="ph-bold ph-caret-up-down text-[10px] text-[#8E8E93] ml-0.5 group-hover:text-[#111111] dark:group-hover:text-white" />
-              <select
+            {/* Standardized Select Dropdown */}
+            <div className="w-48 shrink-0">
+              <Select
                 value={schedule.time}
                 onChange={handleTimeChange}
                 disabled={isSaving}
-                aria-label="Select backup time"
-                className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                className="h-9 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-xs font-semibold text-gray-700 dark:text-zinc-200 cursor-pointer shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
+                menuClassName="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-900 shadow-2xl p-1.5"
+                optionClassName="rounded-lg text-xs font-semibold py-1.5 px-2.5 hover:bg-gray-100 dark:hover:bg-zinc-800"
               >
                 {HOUR_OPTIONS.map((opt) => (
                   <option key={opt.value} value={opt.value}>
                     {opt.label}
                   </option>
                 ))}
-              </select>
+              </Select>
             </div>
           </div>
 
           {/* Apple Time Machine Status Strip */}
-          <div className="bg-[#FBFBFD] dark:bg-zinc-900/40 px-5 py-2.5 flex items-center justify-between text-[11px]">
+          <div className="bg-gray-50/80 dark:bg-zinc-900/60 border-t border-gray-100 dark:border-white/10 px-5 py-3 flex items-center justify-between flex-wrap gap-3 text-xs">
             {/* Left: Last Backup State */}
             <div className="flex items-center gap-2">
               <span
                 className={cn(
                   "w-2 h-2 rounded-full shrink-0",
                   schedule.lastRunStatus === "success"
-                    ? "bg-[#34C759]"
+                    ? "bg-emerald-500"
                     : schedule.lastRunStatus === "failed"
-                    ? "bg-[#FF3B30]"
-                    : "bg-[#8E8E93]"
+                    ? "bg-rose-500"
+                    : "bg-gray-400 dark:text-zinc-500"
                 )}
               />
-              <span className="text-[#8E8E93]">Last Backup:</span>
-              <span className="font-medium text-[#111111] dark:text-zinc-200">
+              <span className="text-gray-500 dark:text-zinc-400">Last Run:</span>
+              <span className="font-semibold text-gray-900 dark:text-zinc-200 font-mono text-[11px]">
                 {lastRunFormatted || "Never"}
               </span>
 
               {schedule.lastRunStatus === "success" && (
-                <span className="inline-flex items-center gap-1 rounded-[4px] px-1.5 py-0.5 text-[10px] font-medium bg-[#D1FAE5] text-[#065F46] dark:bg-emerald-950/40 dark:text-emerald-400">
-                  <i className="ph-bold ph-check text-[8px]" />
+                <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/60 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/40">
+                  <i className="ph-bold ph-check text-[9px]" />
                   Successful
                 </span>
               )}
               {schedule.lastRunStatus === "failed" && (
-                <span className="inline-flex items-center gap-1 rounded-[4px] px-1.5 py-0.5 text-[10px] font-medium bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-400">
-                  <i className="ph-bold ph-x text-[8px]" />
+                <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold bg-rose-50 text-rose-700 border border-rose-200/60 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800/40">
+                  <i className="ph-bold ph-x text-[9px]" />
                   Failed
                 </span>
               )}
@@ -397,15 +424,15 @@ export default function AutoBackupSchedule({ showToast, scope = "system" }) {
 
             {/* Right: Next Scheduled Run */}
             {nextRunFormatted ? (
-              <div className="flex items-center gap-1.5 text-[#8E8E93]">
-                <i className="ph-duotone ph-calendar-blank text-[12px]" />
-                <span>Next:</span>
-                <span className="font-medium text-[#111111] dark:text-zinc-200">
+              <div className="flex items-center gap-1.5 text-gray-500 dark:text-zinc-400">
+                <i className="ph-bold ph-calendar-blank text-[13px] text-gray-400 dark:text-zinc-500" />
+                <span>Next Run:</span>
+                <span className="font-semibold text-gray-900 dark:text-zinc-200 font-mono text-[11px]">
                   {nextRunFormatted}
                 </span>
               </div>
             ) : (
-              <span className="text-[#8E8E93]">Awaiting initial cycle</span>
+              <span className="text-gray-400 dark:text-zinc-500 text-[11px]">Awaiting initial cycle</span>
             )}
           </div>
         </div>

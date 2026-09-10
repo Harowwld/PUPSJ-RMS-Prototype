@@ -1629,10 +1629,10 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
   if (loading) {
     return (
       <div className="font-inter flex min-h-screen flex-col gap-4 bg-gray-50 p-4 transition-colors duration-300 dark:bg-background">
-        <Skeleton className="h-16 w-full shrink-0 rounded-brand" />
+        <Skeleton className="h-16 w-full shrink-0 rounded-2xl" />
         <div className="flex flex-1 gap-4">
-          <Skeleton className="h-full w-[30%] rounded-brand" />
-          <Skeleton className="h-full w-[70%] rounded-brand" />
+          <Skeleton className="h-full w-[30%] rounded-2xl" />
+          <Skeleton className="h-full w-[70%] rounded-2xl" />
         </div>
       </div>
     )
@@ -2100,7 +2100,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
       />
 
       <Dialog open={defaultPwOpen} onOpenChange={setDefaultPwOpen}>
-        <DialogContent className="w-full max-w-2xl overflow-hidden rounded-brand border border-gray-200 bg-white p-0 shadow-2xl sm:max-w-2xl dark:border-white/10 dark:bg-card">
+        <DialogContent className="w-full max-w-2xl overflow-hidden rounded-2xl border border-gray-200 bg-white p-0 shadow-2xl sm:max-w-2xl dark:border-white/10 dark:bg-card flex flex-col gap-0">
           <DialogHeader className="bg-white p-6 pb-0 dark:bg-card border-none">
             <div className="flex items-start gap-4">
               <div className="min-w-0">
@@ -2124,8 +2124,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
               </label>
 
               <div 
-                className="flex items-center justify-between rounded-[8px] border-[0.5px] border-gray-300 bg-white p-[10px_14px] dark:border-zinc-800 dark:bg-zinc-900/30"
-                style={{ borderWidth: '0.5px', borderStyle: 'solid' }}
+                className="flex items-center justify-between rounded-xl border border-gray-200 bg-white p-[10px_14px] dark:border-zinc-800 dark:bg-zinc-900/30"
               >
                 <code className="text-[14px] font-bold text-pup-maroon dark:text-red-400 tracking-wider">
                   {defaultReturnedPw}
@@ -2150,18 +2149,18 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
             </div>
           </div>
 
-          <div className="flex flex-row justify-end gap-2 bg-white p-6 dark:bg-card border-none">
+          <div className="px-6 py-4 border-t border-gray-100 dark:border-white/10 flex items-center justify-end gap-2 bg-gray-50/50 dark:bg-zinc-900/20">
             <Button
               type="button"
-              variant="ghost"
+              variant="outline"
               onClick={() => setDefaultPwOpen(false)}
-              className="text-[13px] font-medium text-gray-500 dark:text-zinc-400 bg-transparent hover:bg-transparent border-none shadow-none p-0 h-auto cursor-pointer focus:outline-none"
+              className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
             >
               Close
             </Button>
             <Button
               onClick={() => setDefaultPwOpen(false)}
-              className="flex h-[36px] items-center justify-center rounded-[8px] btn-brand-red text-[13px] font-medium text-white shadow-none border-none py-0 px-4 cursor-pointer"
+              className="flex h-10 items-center justify-center rounded-xl! btn-brand-red text-xs font-semibold text-white px-5 shadow-xs cursor-pointer active:scale-95 transition-all"
             >
               Acknowledge
             </Button>
@@ -2180,7 +2179,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
 
       {/* Global External Drive Detection Modal */}
       <Dialog open={extDriveModalOpen} onOpenChange={setExtDriveModalOpen}>
-        <DialogContent className="w-full max-w-lg overflow-hidden rounded-brand border border-gray-200 bg-white p-0 shadow-2xl sm:max-w-lg dark:border-white/10 dark:bg-card">
+        <DialogContent className="w-full max-w-lg overflow-hidden rounded-2xl border border-gray-200 bg-white p-0 shadow-2xl sm:max-w-lg dark:border-white/10 dark:bg-card flex flex-col gap-0">
           <DialogHeader className={cn(
             "border-b p-6",
             extDriveEvent?.type === "connected"
@@ -2267,12 +2266,12 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
             </div>
           </div>
 
-          <div className="flex flex-col-reverse gap-2.5 border-t border-gray-100 bg-white p-4 sm:flex-row sm:justify-end dark:border-white/10 dark:bg-card">
+          <div className="px-6 py-4 border-t border-gray-100 dark:border-white/10 flex items-center justify-end gap-2 bg-gray-50/50 dark:bg-zinc-900/20">
             <Button
               type="button"
               variant="outline"
               onClick={() => setExtDriveModalOpen(false)}
-              className="h-10 rounded-brand border border-gray-300 px-5 text-sm font-semibold text-gray-700 hover:bg-gray-50 dark:border-white/10 dark:text-zinc-200 dark:hover:bg-white/5 dark:bg-white/2"
+              className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
             >
               Dismiss
             </Button>
@@ -2282,9 +2281,8 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
                   setExtDriveModalOpen(false)
                   switchView("backup")
                 }}
-                className="flex h-10 items-center gap-2 rounded-brand btn-brand-red px-5 font-semibold text-white shadow-sm"
+                className="flex h-10 items-center justify-center rounded-xl! btn-brand-red px-5 text-xs font-semibold text-white shadow-xs cursor-pointer active:scale-95 transition-all"
               >
-                <i className="ph-bold ph-hard-drives" />
                 Go to Backup & Maintenance
               </Button>
             )}

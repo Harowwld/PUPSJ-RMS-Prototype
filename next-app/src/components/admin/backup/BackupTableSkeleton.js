@@ -3,9 +3,17 @@
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
 
-export default function BackupTableSkeleton({ rowCount = 8 }) {
+export default function BackupTableSkeleton({ rowCount = 8, embedded = false, className = "" }) {
   return (
-    <div className="flex-1 flex h-fit min-h-[600px] flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card isolate">
+    <div
+      className={cn(
+        "flex-1 flex h-fit min-h-[600px] flex-col overflow-hidden isolate",
+        embedded
+          ? ""
+          : "rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card",
+        className
+      )}
+    >
       <div className="flex-1 overflow-hidden overflow-x-auto overflow-y-auto select-none min-h-[400px]">
         <table className="min-w-full text-sm">
           <thead className="sticky top-0 z-10 border-b-[0.5px] border-black/10 dark:border-white/10 bg-white dark:bg-card">
@@ -63,8 +71,8 @@ export default function BackupTableSkeleton({ rowCount = 8 }) {
                 </td>
                 <td className="py-0 px-4 pr-6 align-middle text-right">
                   <div className="flex items-center justify-end gap-1.5">
-                    <Skeleton className="h-7 w-7 rounded-[6px] dark:bg-muted" />
-                    <Skeleton className="h-7 w-7 rounded-[6px] dark:bg-muted" />
+                    <Skeleton className="h-7 w-7 rounded-lg dark:bg-muted" />
+                    <Skeleton className="h-7 w-7 rounded-lg dark:bg-muted" />
                   </div>
                 </td>
               </tr>

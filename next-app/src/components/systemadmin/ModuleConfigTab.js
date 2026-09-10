@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Select } from "@/components/ui/select"
 import PageHeader from "@/components/shared/PageHeader"
+import { RefreshButton } from "@/components/shared/RefreshButton"
 import ConfirmModal from "@/components/shared/ConfirmModal"
 import {
   Empty,
@@ -98,6 +99,7 @@ function SortIndicator({ column, sortBy, sortOrder }) {
 export default function ModuleConfigTab({ showToast }) {
   const [matrix, setMatrix] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [isManualLoading, setIsManualLoading] = useState(false)
   const [toggling, setToggling] = useState({}) // { [key]: boolean }
   const [searchQuery, setSearchQuery] = useState("")
   const [categoryFilter, setCategoryFilter] = useState("All") // "All" | "admin" | "staff"
@@ -150,6 +152,15 @@ export default function ModuleConfigTab({ showToast }) {
       setLoading(false)
     }
   }, [showToast])
+
+  const handleManualRefresh = useCallback(async () => {
+    setIsManualLoading(true)
+    try {
+      await fetchMatrix(true)
+    } finally {
+      setIsManualLoading(false)
+    }
+  }, [fetchMatrix])
 
   useEffect(() => {
     fetchMatrix()
@@ -302,12 +313,16 @@ export default function ModuleConfigTab({ showToast }) {
   const handleBatchToggle = (officeId, category, enable) => {
     const targetOffice = matrix?.offices?.find((o) => o.id === officeId)
     if (targetOffice && (targetOffice.status === "Inactive" || targetOffice.status === "Archived")) {
-      showToast("Archived departments cannot be modified. Please reactivate the department first.", true)
+      showToast("Archived departments cannot be modified. Please restore the department first.", true)
       return
     }
 
     if (!enable) {
       const isAll = category === "all"
+      // Build selectedItems list: the affected office
+      const affectedItems = targetOffice
+        ? [`${targetOffice.short_name} (${targetOffice.id})`]
+        : []
       setConfirmModalState({
         open: true,
         title: isAll ? "Keep Essential Features Only?" : `Turn Off Optional ${category === "admin" ? "Supervisor" : "Staff"} Features?`,
@@ -316,6 +331,9 @@ export default function ModuleConfigTab({ showToast }) {
           : `Are you sure you want to turn off all optional ${category === "admin" ? "supervisor and department head" : "staff"} features for ${targetOffice?.short_name || "this department"}?`,
         confirmLabel: isAll ? "Keep Essentials Only" : "Turn Off Features",
         variant: "danger",
+        icon: "ph-duotone ph-toggle-left",
+        buttonIcon: "ph-bold ph-prohibit",
+        selectedItems: affectedItems,
         action: () => executeBatchToggle(officeId, category, false),
       })
     } else {
@@ -454,9 +472,8 @@ export default function ModuleConfigTab({ showToast }) {
               </EmptyDescription>
               <Button
                 onClick={() => window.dispatchEvent(new CustomEvent("switch-view", { detail: { view: "offices" } }))}
-                className="mt-6 flex h-10 items-center gap-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white px-5 text-xs font-semibold shadow-xs dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200 cursor-pointer"
+                className="mt-6 flex h-10 items-center justify-center rounded-xl bg-slate-900 hover:bg-slate-800 text-white px-5 text-xs font-semibold shadow-xs dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200 cursor-pointer"
               >
-                <i className="ph-bold ph-plus"></i>
                 Go to Departments & Stations
               </Button>
             </EmptyHeader>
@@ -465,13 +482,12 @@ export default function ModuleConfigTab({ showToast }) {
       </div>
     )
   }
-
   const { offices, modules } = matrix
 
   return (
     <div className="flex flex-col gap-6 w-full animate-fade-up font-inter">
-      {/* Main Card with Header, Active Filter Chips & Toolbar (Matches Department & Stations) */}
-      <Card className="rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none overflow-hidden">
+      {/* Main Card with Header, Toolbar & Active Filter Chips */}
+      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
         <PageHeader
           icon="ph-bold ph-squares-four"
           title={
@@ -489,40 +505,129 @@ export default function ModuleConfigTab({ showToast }) {
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
           descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
           actions={
-            <div className="flex items-center gap-2 bg-gray-100 dark:bg-zinc-800/70 p-1 rounded-xl border border-gray-200/60 dark:border-white/5">
-              <button
-                type="button"
-                onClick={() => setViewMode("office")}
-                className={cn(
-                  "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer border-0",
-                  viewMode === "office"
-                    ? "bg-white dark:bg-zinc-900 text-gray-900 dark:text-zinc-50 shadow-xs"
-                    : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 bg-transparent"
-                )}
-              >
-                <i className="ph-bold ph-buildings text-sm"></i>
-                By Department
-              </button>
-              <button
-                type="button"
-                onClick={() => setViewMode("matrix")}
-                className={cn(
-                  "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer border-0",
-                  viewMode === "matrix"
-                    ? "bg-white dark:bg-zinc-900 text-gray-900 dark:text-zinc-50 shadow-xs"
-                    : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 bg-transparent"
-                )}
-              >
-                <i className="ph-bold ph-table text-sm"></i>
-                Summary Table
-              </button>
+            <div className="flex items-center gap-6">
+              <RefreshButton
+                onRefresh={handleManualRefresh}
+                isLoading={isManualLoading}
+                title="Refresh Module Configuration"
+              />
+
+              <div className="h-6 w-px bg-gray-200 dark:bg-zinc-800" />
+
+              <div className="flex items-center gap-2 bg-gray-100 dark:bg-zinc-800/70 p-1 rounded-xl border border-gray-200/60 dark:border-white/5">
+                <button
+                  type="button"
+                  onClick={() => setViewMode("office")}
+                  className={cn(
+                    "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer border-0",
+                    viewMode === "office"
+                      ? "bg-white dark:bg-zinc-900 text-gray-900 dark:text-zinc-50 shadow-xs"
+                      : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 bg-transparent"
+                  )}
+                >
+                  <i className="ph-bold ph-buildings text-sm"></i>
+                  By Department
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setViewMode("matrix")}
+                  className={cn(
+                    "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer border-0",
+                    viewMode === "matrix"
+                      ? "bg-white dark:bg-zinc-900 text-gray-900 dark:text-zinc-50 shadow-xs"
+                      : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 bg-transparent"
+                  )}
+                >
+                  <i className="ph-bold ph-table text-sm"></i>
+                  Summary Table
+                </button>
+              </div>
             </div>
           }
         />
 
-        {/* Active Filter Chips Row (Matches Department & Stations Chip Style) */}
+        {/* Navigation Toolbar */}
+        <div className="border-t border-gray-100 dark:border-white/10 p-5 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
+          {/* Left: Active vs Archived Tabs */}
+          <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-gray-200/60 dark:border-white/5 shrink-0 overflow-x-auto">
+            <button
+              type="button"
+              onClick={() => setOfficeFilter("Active")}
+              className={cn(
+                "px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap",
+                officeFilter === "Active"
+                  ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
+                  : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
+              )}
+            >
+              Active Departments ({officeFilterCounts.active})
+            </button>
+            <button
+              type="button"
+              onClick={() => setOfficeFilter("Archived")}
+              className={cn(
+                "px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap",
+                officeFilter === "Archived"
+                  ? "bg-white dark:bg-zinc-700 text-pup-maroon dark:text-rose-400 shadow-xs"
+                  : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
+              )}
+            >
+              Archived ({officeFilterCounts.archived})
+            </button>
+          </div>
+
+          {/* Right: Search Input & Dropdown Popovers Group */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0">
+            <div className="w-full sm:w-[280px] lg:w-[340px] relative group shrink-0">
+              <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                <i className="ph-bold ph-magnifying-glass text-gray-400 transition-colors group-focus-within:text-pup-maroon dark:text-zinc-500 text-sm"></i>
+              </div>
+              <Input
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search features by name, description..."
+                className="h-9 w-full rounded-xl border border-gray-200 bg-white pl-8 pr-20 text-xs font-normal placeholder:text-gray-400 dark:border-white/10 dark:bg-card focus-visible:ring-pup-maroon shadow-none"
+              />
+              <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] text-gray-400 dark:text-zinc-500 font-mono">
+                {filteredModules.length} features
+              </div>
+            </div>
+
+            {/* Role Select Popover */}
+            <div className="w-full sm:w-[170px] shrink-0">
+              <Select
+                value={categoryFilter}
+                onChange={(e) => setCategoryFilter(e.target.value)}
+                className="h-9 rounded-xl border border-gray-200 dark:border-white/10 text-xs font-normal text-[#111111] dark:text-zinc-200 cursor-pointer shadow-none"
+                menuClassName="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-900 shadow-2xl p-1.5"
+                optionClassName="rounded-lg text-xs font-medium py-1.5 px-2.5 hover:bg-gray-100 dark:hover:bg-zinc-800"
+              >
+                <option value="All">All Roles ({modules.length})</option>
+                <option value="admin">Supervisors ({modules.filter((m) => m.category === "admin").length})</option>
+                <option value="staff">Staff Tools ({modules.filter((m) => m.category === "staff").length})</option>
+              </Select>
+            </div>
+
+            {/* Status Select Popover */}
+            <div className="w-full sm:w-[140px] shrink-0">
+              <Select
+                value={moduleStatusFilter}
+                onChange={(e) => setModuleStatusFilter(e.target.value)}
+                className="h-9 rounded-xl border border-gray-200 dark:border-white/10 text-xs font-normal text-[#111111] dark:text-zinc-200 cursor-pointer shadow-none"
+                menuClassName="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-900 shadow-2xl p-1.5"
+                optionClassName="rounded-lg text-xs font-medium py-1.5 px-2.5 hover:bg-gray-100 dark:hover:bg-zinc-800"
+              >
+                <option value="All">All Status</option>
+                <option value="enabled">Enabled Only</option>
+                <option value="disabled">Disabled Only</option>
+              </Select>
+            </div>
+          </div>
+        </div>
+
+        {/* Active Filter Chips Row */}
         {hasActiveFilters && (
-          <div className="flex-none border-b border-gray-100 bg-white px-6 py-3 animate-in fade-in slide-in-from-top-1 duration-normal dark:border-white/10 dark:bg-card">
+          <div className="flex-none border-t border-gray-100 dark:border-white/10 bg-white dark:bg-card px-6 py-2.5 animate-in fade-in slide-in-from-top-1 duration-normal">
             <div className="flex flex-wrap items-center gap-2">
               <span className="mr-1 text-[11px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500">
                 Active filters:
@@ -572,90 +677,13 @@ export default function ModuleConfigTab({ showToast }) {
           </div>
         )}
 
-        {/* Toolbar with Department Tabs, Search Input & Dropdown Filters inside CardContent */}
-        <CardContent className="font-inter bg-white p-[24px] dark:bg-card/50 backdrop-blur-md flex flex-col gap-5">
-          <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 w-full select-none">
-            {/* Left: Active vs Archived Underline Tabs */}
-            <div className="flex items-center gap-6 shrink-0 h-10 px-1 self-start lg:self-auto">
-              <button
-                type="button"
-                onClick={() => setOfficeFilter("Active")}
-                className={cn(
-                  "relative h-full flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent",
-                  officeFilter === "Active"
-                    ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
-                    : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
-                )}
-              >
-                Active ({officeFilterCounts.active})
-              </button>
-              <button
-                type="button"
-                onClick={() => setOfficeFilter("Archived")}
-                className={cn(
-                  "relative h-full flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent",
-                  officeFilter === "Archived"
-                    ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
-                    : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
-                )}
-              >
-                Archived ({officeFilterCounts.archived})
-              </button>
-            </div>
-
-            {/* Right: Search Input & Dropdown Popovers Group */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0 w-full lg:w-auto">
-              {/* Search Input with increased width */}
-              <div className="w-full sm:w-[360px] lg:w-[420px] relative group shrink-0">
-                <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                  <i className="ph-bold ph-magnifying-glass text-gray-400 transition-colors group-focus-within:text-pup-maroon dark:text-zinc-500 text-sm"></i>
-                </div>
-                <Input
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search features by name, description, or keyword..."
-                  className="h-10 w-full rounded-xl border border-gray-200 bg-white pl-9 pr-24 text-xs font-normal placeholder:text-gray-400 dark:border-white/10 dark:bg-card focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5"
-                />
-                <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[12px] font-normal text-gray-400 dark:text-zinc-500">
-                  {filteredModules.length > 0 ? `${filteredModules.length} features` : "0 features"}
-                </div>
-              </div>
-
-              {/* Role Select Popover */}
-              <div className="w-full sm:w-[185px] shrink-0">
-                <Select
-                  value={categoryFilter}
-                  onChange={(e) => setCategoryFilter(e.target.value)}
-                  className="h-10 rounded-xl border border-gray-200 text-xs font-normal bg-white dark:bg-card dark:border-white/10"
-                >
-                  <option value="All">All Roles ({modules.length})</option>
-                  <option value="admin">Supervisors & Heads ({modules.filter((m) => m.category === "admin").length})</option>
-                  <option value="staff">Staff Tools ({modules.filter((m) => m.category === "staff").length})</option>
-                </Select>
-              </div>
-
-              {/* Status Select Popover */}
-              <div className="w-full sm:w-[145px] shrink-0">
-                <Select
-                  value={moduleStatusFilter}
-                  onChange={(e) => setModuleStatusFilter(e.target.value)}
-                  className="h-10 rounded-xl border border-gray-200 text-xs font-normal bg-white dark:bg-card dark:border-white/10"
-                >
-                  <option value="All">All Status</option>
-                  <option value="enabled">Enabled Only</option>
-                  <option value="disabled">Disabled Only</option>
-                </Select>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* VIEW 1: BY OFFICE */}
-      {viewMode === "office" && (
-        <div className="flex flex-col gap-6">
-          {filteredOffices.length === 0 ? (
-            <div className="flex h-[420px] flex-col items-center justify-center rounded-2xl border border-dashed border-gray-200 dark:border-white/10 bg-white/40 dark:bg-zinc-900/20 text-center">
+        {/* Content Section: By Office or Matrix inside the single Card */}
+        <div className="overflow-hidden border-t border-gray-200 dark:border-white/10 bg-white dark:bg-card flex flex-col flex-1">
+          {/* VIEW 1: BY OFFICE */}
+          {viewMode === "office" && (
+            <div className="flex flex-col flex-1">
+              {filteredOffices.length === 0 ? (
+                <div className="flex h-[380px] flex-col items-center justify-center p-6 text-center">
               <Empty className="flex flex-col items-center justify-center border-0 bg-transparent text-center">
                 <EmptyHeader className="flex flex-col items-center gap-0">
                   <div className="relative mb-6">
@@ -672,7 +700,7 @@ export default function ModuleConfigTab({ showToast }) {
                   </EmptyTitle>
                   <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400 mt-1">
                     {officeFilter === "Archived"
-                      ? "There are currently no archived or deactivated departments in the system."
+                      ? "There are currently no archived departments in the system."
                       : "No departments matching your current filter were found."}
                   </EmptyDescription>
                   {officeFilter === "Archived" && (
@@ -691,95 +719,97 @@ export default function ModuleConfigTab({ showToast }) {
             </div>
           ) : (
             <>
-              {/* Department Selector Carousel */}
-              <div className="flex flex-col gap-2.5">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between text-xs font-semibold text-gray-500 dark:text-zinc-400 px-1 gap-1">
-                  <span>Select Department ({filteredOffices.length}):</span>
-                  <span className="text-[11px] font-normal text-gray-400">
-                    Click a department to customize the features its staff can use
-                  </span>
-                </div>
+              {/* Department Selector Bar */}
+              <div className="p-5 border-b border-gray-100 dark:border-white/10 bg-gray-50/40 dark:bg-zinc-900/30">
+                <div className="flex flex-col gap-2.5">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between text-xs font-semibold text-gray-500 dark:text-zinc-400 px-1 gap-1">
+                    <span>Select Department ({filteredOffices.length}):</span>
+                    <span className="text-[11px] font-normal text-gray-400">
+                      Click a department to customize the features its staff can use
+                    </span>
+                  </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-                {filteredOffices.map((o) => {
-                  const isSelected = o.id === selectedOfficeId
-                  const isOfficeArchived = o.status === "Inactive" || o.status === "Archived"
-                  const activeCount = officeCounts[o.id] || 0
-                  const accent = o.accent_color || "#800000"
-                  const officeIconClass = getOfficeIcon(o)
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+                  {filteredOffices.map((o) => {
+                    const isSelected = o.id === selectedOfficeId
+                    const isOfficeArchived = o.status === "Inactive" || o.status === "Archived"
+                    const activeCount = officeCounts[o.id] || 0
+                    const accent = o.accent_color || "#800000"
+                    const officeIconClass = getOfficeIcon(o)
 
-                  return (
-                    <button
-                      key={o.id}
-                      type="button"
-                      onClick={() => setSelectedOfficeId(o.id)}
-                      className={cn(
-                        "p-3.5 rounded-xl border text-left transition-all relative flex flex-col justify-between gap-3 cursor-pointer group select-none",
-                        isSelected
-                          ? "bg-white dark:bg-zinc-900 shadow-md ring-2 ring-pup-maroon/20 dark:ring-white/20 border-pup-maroon dark:border-white/30"
-                          : "bg-white/60 dark:bg-zinc-900/40 border-gray-200/80 dark:border-white/5 hover:border-gray-300 dark:hover:border-white/10 hover:bg-white dark:hover:bg-zinc-900",
-                        isOfficeArchived && !isSelected && "opacity-75"
-                      )}
-                    >
-                      <div className="flex items-center justify-between w-full">
-                        <div className="flex items-center gap-2">
-                          <div
-                            className="h-8 w-8 rounded-lg flex items-center justify-center text-sm shadow-2xs shrink-0"
-                            style={{
-                              backgroundColor: `${accent}15`,
-                              color: accent,
-                            }}
-                          >
-                            <i className={cn(officeIconClass, "text-base")}></i>
+                    return (
+                      <button
+                        key={o.id}
+                        type="button"
+                        onClick={() => setSelectedOfficeId(o.id)}
+                        className={cn(
+                          "p-3.5 rounded-xl border text-left transition-all relative flex flex-col justify-between gap-3 cursor-pointer group select-none",
+                          isSelected
+                            ? "bg-white dark:bg-zinc-900 shadow-md ring-2 ring-pup-maroon/20 dark:ring-white/20 border-pup-maroon dark:border-white/30"
+                            : "bg-white/60 dark:bg-zinc-900/40 border-gray-200/80 dark:border-white/5 hover:border-gray-300 dark:hover:border-white/10 hover:bg-white dark:hover:bg-zinc-900",
+                          isOfficeArchived && !isSelected && "opacity-75"
+                        )}
+                      >
+                        <div className="flex items-center justify-between w-full">
+                          <div className="flex items-center gap-2">
+                            <div
+                              className="h-8 w-8 rounded-lg flex items-center justify-center text-sm shadow-2xs shrink-0"
+                              style={{
+                                backgroundColor: `${accent}15`,
+                                color: accent,
+                              }}
+                            >
+                              <i className={cn(officeIconClass, "text-base")}></i>
+                            </div>
+                            <div>
+                              <div className="text-xs font-bold text-gray-900 dark:text-zinc-50 group-hover:text-pup-maroon transition-colors">
+                                {o.short_name}
+                              </div>
+                              <div className="text-[10px] text-gray-400">
+                                ID: {o.id}
+                              </div>
+                            </div>
                           </div>
-                          <div>
-                            <div className="text-xs font-bold text-gray-900 dark:text-zinc-50 group-hover:text-pup-maroon transition-colors">
-                              {o.short_name}
-                            </div>
-                            <div className="text-[10px] text-gray-400">
-                              ID: {o.id}
-                            </div>
+
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            {isOfficeArchived ? (
+                              <span className="rounded-[4px] px-[6px] py-[2px] text-[10px] font-medium tracking-[0.04em] bg-gray-100 text-[#8E8E93] dark:bg-zinc-800 dark:text-zinc-400">
+                                Archived
+                              </span>
+                            ) : (
+                              <Badge
+                                variant="secondary"
+                                className={cn(
+                                  "text-[10px] px-2 py-0.5 rounded-full border-0 font-bold",
+                                  isSelected
+                                    ? "bg-pup-maroon text-white dark:bg-zinc-100 dark:text-zinc-900"
+                                    : "bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-zinc-300"
+                                )}
+                              >
+                                {activeCount}/{modules.length}
+                              </Badge>
+                            )}
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-1.5 shrink-0">
-                          {isOfficeArchived ? (
-                            <span className="rounded-[4px] px-[6px] py-[2px] text-[10px] font-medium tracking-[0.04em] bg-gray-100 text-[#8E8E93] dark:bg-zinc-800 dark:text-zinc-400">
-                              Archived
+                        <div className="flex items-center justify-between text-[11px] text-gray-500 dark:text-zinc-400 truncate w-full">
+                          <span className="truncate">{o.name || o.short_name}</span>
+                          {isOfficeArchived && (
+                            <span className="text-[10px] text-gray-400 ml-1 shrink-0 font-medium">
+                              {activeCount} active
                             </span>
-                          ) : (
-                            <Badge
-                              variant="secondary"
-                              className={cn(
-                                "text-[10px] px-2 py-0.5 rounded-full border-0 font-bold",
-                                isSelected
-                                  ? "bg-pup-maroon text-white dark:bg-zinc-100 dark:text-zinc-900"
-                                  : "bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-zinc-300"
-                              )}
-                            >
-                              {activeCount}/{modules.length}
-                            </Badge>
                           )}
                         </div>
-                      </div>
-
-                      <div className="flex items-center justify-between text-[11px] text-gray-500 dark:text-zinc-400 truncate w-full">
-                        <span className="truncate">{o.name || o.short_name}</span>
-                        {isOfficeArchived && (
-                          <span className="text-[10px] text-gray-400 ml-1 shrink-0 font-medium">
-                            {activeCount} active
-                          </span>
-                        )}
-                      </div>
-                    </button>
-                  )
-                })}
+                      </button>
+                    )
+                  })}
+                </div>
               </div>
-          </div>
+            </div>
 
-          {/* Active Office Banner & Module Grid */}
-          {currentOffice && (
-            <Card className="rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card overflow-hidden">
+            {/* Active Office Banner & Module Grid */}
+            {currentOffice && (
+              <div className="overflow-hidden bg-white dark:bg-card">
               <div className="p-5 border-b border-gray-100 dark:border-white/5 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-950/20">
                 <div className="flex items-center gap-3.5">
                   <div
@@ -839,7 +869,7 @@ export default function ModuleConfigTab({ showToast }) {
                   <div className="flex items-center gap-3">
                     <i className="ph-bold ph-warning-circle text-base text-amber-600 dark:text-amber-400 shrink-0"></i>
                     <span className="leading-relaxed">
-                      <strong>Archived Department Notice:</strong> This department is currently inactive. Its features cannot be modified while it is archived. Reactivate this department in <strong>Departments & Stations</strong> to change feature access.
+                      <strong>Archived Department Notice:</strong> This department is currently archived. Its features cannot be modified while it is archived. Restore this department in <strong>Departments & Stations</strong> to change feature access.
                     </span>
                   </div>
                   <button
@@ -847,7 +877,7 @@ export default function ModuleConfigTab({ showToast }) {
                     onClick={() => window.dispatchEvent(new CustomEvent("switch-view", { detail: { view: "offices", officeId: currentOffice.id } }))}
                     className="px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white dark:bg-amber-500 dark:hover:bg-amber-600 text-xs font-semibold shrink-0 cursor-pointer transition-colors shadow-2xs flex items-center gap-1.5 self-start sm:self-auto"
                   >
-                    <span>Reactivate Department</span>
+                    <span>Restore Department</span>
                     <i className="ph-bold ph-arrow-right text-xs"></i>
                   </button>
                 </div>
@@ -1050,7 +1080,7 @@ export default function ModuleConfigTab({ showToast }) {
                   </>
                 )}
               </CardContent>
-            </Card>
+            </div>
           )}
             </>
           )}
@@ -1061,7 +1091,7 @@ export default function ModuleConfigTab({ showToast }) {
       {viewMode === "matrix" && (
         <>
           {filteredOffices.length === 0 ? (
-            <div className="flex h-[420px] flex-col items-center justify-center rounded-2xl border border-dashed border-gray-200 dark:border-white/10 bg-white/40 dark:bg-zinc-900/20 text-center">
+            <div className="flex h-[380px] flex-col items-center justify-center p-6 text-center">
               <Empty className="flex flex-col items-center justify-center border-0 bg-transparent text-center">
                 <EmptyHeader className="flex flex-col items-center gap-0">
                   <div className="relative mb-6">
@@ -1078,7 +1108,7 @@ export default function ModuleConfigTab({ showToast }) {
                   </EmptyTitle>
                   <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400 mt-1">
                     {officeFilter === "Archived"
-                      ? "There are currently no archived or deactivated departments in the system."
+                      ? "There are currently no archived departments in the system."
                       : "No departments matching your current filter were found."}
                   </EmptyDescription>
                   {officeFilter === "Archived" && (
@@ -1096,7 +1126,7 @@ export default function ModuleConfigTab({ showToast }) {
               </Empty>
             </div>
           ) : filteredModules.length === 0 ? (
-            <div className="flex h-[380px] flex-col items-center justify-center rounded-2xl border border-dashed border-gray-200 dark:border-white/10 bg-white/40 dark:bg-zinc-900/20 text-center">
+            <div className="flex h-[380px] flex-col items-center justify-center p-6 text-center">
               <Empty className="flex flex-col items-center justify-center border-0 bg-transparent text-center">
                 <EmptyHeader className="flex flex-col items-center gap-0">
                   <div className="relative mb-6">
@@ -1124,7 +1154,7 @@ export default function ModuleConfigTab({ showToast }) {
               </Empty>
             </div>
           ) : (
-            <div className="overflow-x-auto rounded-2xl border border-gray-200/80 dark:border-white/5 bg-white dark:bg-zinc-900 shadow-sm">
+            <div className="overflow-x-auto">
               <table className="w-full border-collapse text-left">
                 <thead className="sticky top-0 z-20 border-b-[0.5px] border-black/10 dark:border-white/10 bg-white dark:bg-card">
                   <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500 select-none">
@@ -1227,6 +1257,8 @@ export default function ModuleConfigTab({ showToast }) {
           )}
         </>
       )}
+      </div>
+    </Card>
 
       {/* Confirmation Modal for Destructive Batch Actions */}
       {confirmModalState && (
@@ -1236,10 +1268,14 @@ export default function ModuleConfigTab({ showToast }) {
           message={confirmModalState.message}
           confirmLabel={confirmModalState.confirmLabel}
           variant={confirmModalState.variant || "danger"}
+          icon={confirmModalState.icon}
+          buttonIcon={confirmModalState.buttonIcon}
+          selectedItems={confirmModalState.selectedItems || []}
           onConfirm={confirmModalState.action}
           onCancel={() => setConfirmModalState(null)}
           isLoading={confirmModalState.isLoading}
           isAppleStyled={true}
+          isPersonnelModal={true}
         />
       )}
     </div>

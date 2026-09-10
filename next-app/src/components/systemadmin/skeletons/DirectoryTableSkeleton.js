@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils"
 
 export default function DirectoryTableSkeleton({ rowCount = 8 }) {
   return (
-    <div className="rounded-2xl border border-gray-200 dark:border-white/10 overflow-hidden bg-white dark:bg-card shadow-sm isolate flex flex-col">
+    <div className="overflow-hidden bg-white dark:bg-card flex flex-col flex-1 isolate">
       <div className="overflow-x-auto">
         <table className="min-w-full text-sm">
           <thead className="sticky top-0 z-10 border-b-[0.5px] border-black/10 dark:border-white/10 bg-white dark:bg-card">

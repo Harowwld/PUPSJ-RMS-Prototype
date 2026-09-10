@@ -39,7 +39,7 @@ const CabinetSidebar = memo(({
   const [activeTab, setActiveTab] = React.useState("properties")
 
   return (
-    <Card className="overflow-hidden rounded-brand border border-gray-200 shadow-sm select-none dark:border-white/10 dark:shadow-none">
+    <Card className="overflow-hidden rounded-2xl border border-gray-200 shadow-sm select-none dark:border-white/10 dark:shadow-none">
       <CardHeader className="border-b-[0.5px] border-black/[0.08] dark:border-white/[0.08] bg-transparent p-6">
         <div>
           <CardTitle className="text-[15px] font-semibold tracking-[-0.01em] text-[#111111] dark:text-zinc-50 mb-[4px]">

@@ -243,7 +243,7 @@ function StatCards({ isLoading, stats }) {
                 <>
                   <div className="grid grid-cols-2 gap-2 text-white">
                     <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg text-white">
-                      <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Today's Logs</span>
+                      <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Today&apos;s Logs</span>
                       <span className="text-lg font-black">{(stats.logsToday || 0).toLocaleString()}</span>
                     </div>
                     <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg text-white">

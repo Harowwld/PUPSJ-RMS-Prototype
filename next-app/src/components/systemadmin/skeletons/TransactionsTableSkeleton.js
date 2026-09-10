@@ -74,7 +74,7 @@ export default function TransactionsTableSkeleton({ rowCount = 8 }) {
                   </div>
                 </td>
                 <td className="py-0 pr-6 align-middle text-right">
-                  <Skeleton className="h-7 w-16 ml-auto rounded-lg dark:bg-muted" />
+                  <Skeleton className="h-7 w-7 ml-auto rounded-lg dark:bg-muted" />
                 </td>
               </tr>
             ))}

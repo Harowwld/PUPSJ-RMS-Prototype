@@ -103,7 +103,7 @@ export default function SlaFilters({
                 <Button
                   variant="outline"
                   className={cn(
-                    "h-[36px] w-full justify-start rounded-[8px] border-[0.5px] border-gray-200 dark:border-white/10 bg-white dark:bg-card text-left text-[13px] font-normal shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-white/10",
+                    "h-10 w-full justify-start rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-card text-left text-xs font-normal shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-white/10",
                     !startDate ? "text-gray-400 dark:text-zinc-500" : "text-gray-700 dark:text-zinc-200"
                   )}
                 >
@@ -131,7 +131,7 @@ export default function SlaFilters({
                 <Button
                   variant="outline"
                   className={cn(
-                    "h-[36px] w-full justify-start rounded-[8px] border-[0.5px] border-gray-200 dark:border-white/10 bg-white dark:bg-card text-left text-[13px] font-normal shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-white/10",
+                    "h-10 w-full justify-start rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-card text-left text-xs font-normal shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-white/10",
                     !endDate ? "text-gray-400 dark:text-zinc-500" : "text-gray-700 dark:text-zinc-200"
                   )}
                 >

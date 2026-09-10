@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils"
 
 export default function ComplianceTableSkeleton({ rowCount = 6 }) {
   return (
-    <div className="overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card flex flex-col flex-1 isolate select-none">
+    <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card flex flex-col flex-1 isolate select-none">
       {/* Table Toolbar Header */}
       <div className="flex items-center justify-between p-4 px-6 border-b border-gray-100 dark:border-white/10 bg-white dark:bg-card">
         <div className="flex items-center gap-3">

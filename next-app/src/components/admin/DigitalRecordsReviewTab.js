@@ -891,7 +891,7 @@ export default function DigitalRecordsReviewTab({
           </div>
         ) : null}
 
-      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-xl border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
+      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none isolate">
         <PageHeader
           icon="ph-seal-check"
           title="Records Review"
@@ -911,13 +911,16 @@ export default function DigitalRecordsReviewTab({
 
               <div className="flex items-center gap-2">
                 <Button
-                  variant="ghost"
-                  size="sm"
+                  variant="outline"
                   onClick={handleExportCSV}
                   disabled={isLoading || isExporting}
-                  className="h-10 px-3 font-semibold text-sm text-gray-600 hover:text-gray-900 hover:bg-transparent dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-transparent transition-colors flex items-center gap-2 rounded-brand shadow-none! border-0!"
+                  className="flex h-10 items-center justify-center rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
                 >
-                  {isExporting ? "Preparing..." : "Export"}
+                  {isExporting ? (
+                    <i className="ph-bold ph-spinner animate-spin text-[16px]"></i>
+                  ) : (
+                    "Export"
+                  )}
                 </Button>
               </div>
             </div>
@@ -939,7 +942,7 @@ export default function DigitalRecordsReviewTab({
               <div className="flex flex-wrap items-center gap-2">
                 <span className="mr-1 text-[11px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500">Active filters:</span>
                 {localSearch && (
-                  <div className="flex items-center gap-[6px] rounded-[6px] bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
+                  <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
                     Search: {localSearch}
                     <button
                       onClick={() => { setSearchQuery(""); setLocalSearch(""); setCurrentPage(1); }}
@@ -950,7 +953,7 @@ export default function DigitalRecordsReviewTab({
                   </div>
                 )}
                 {statusFilter !== "All" && (
-                  <div className="flex items-center gap-[6px] rounded-[6px] bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
+                  <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
                     Status: {statusFilter}
                     <button
                       onClick={() => { setStatusFilter("All"); setCurrentPage(1); }}
@@ -961,7 +964,7 @@ export default function DigitalRecordsReviewTab({
                   </div>
                 )}
                 {docTypeFilter !== "All" && (
-                  <div className="flex items-center gap-[6px] rounded-[6px] bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
+                  <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
                     Type: {docTypeFilter}
                     <button
                       onClick={() => { setDocTypeFilter("All"); setCurrentPage(1); }}
@@ -972,7 +975,7 @@ export default function DigitalRecordsReviewTab({
                   </div>
                 )}
                 {(dateFrom || dateTo) && (
-                  <div className="flex items-center gap-[6px] rounded-[6px] bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
+                  <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
                     {formatChipDate(dateFrom)} – {formatChipDate(dateTo)}
                     <button
                       onClick={() => { setDateFrom(""); setDateTo(""); setCurrentPage(1); }}
@@ -1014,7 +1017,7 @@ export default function DigitalRecordsReviewTab({
               <Input
                 type="text"
                 placeholder="Search Student"
-                className="h-[36px] w-full rounded-[8px] border-[0.5px] border-gray-200 bg-white pl-9 pr-20 text-[13px] font-normal transition-all focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 placeholder:text-gray-400 dark:border-white/10 dark:bg-card dark:text-zinc-300 dark:focus:border-primary"
+                className="h-10 w-full rounded-xl border-[0.5px] border-gray-200 bg-white pl-9 pr-20 text-[13px] font-normal transition-all focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 placeholder:text-gray-400 dark:border-white/10 dark:bg-card dark:text-zinc-300 dark:focus:border-primary"
                 value={localSearch}
                 onChange={(e) => setLocalSearch(e.target.value)}
               />
@@ -1031,7 +1034,7 @@ export default function DigitalRecordsReviewTab({
                   setStatusFilter(e.target.value); 
                   setCurrentPage(1);
                 }}
-                className="h-[36px] rounded-[8px] border-[0.5px] border-gray-200 text-[13px] font-normal"
+                className="h-10 rounded-xl border-[0.5px] border-gray-200 text-[13px] font-normal"
               >
                 <option value="All">Status</option>
                 <option value="Pending">Pending</option>
@@ -1048,7 +1051,7 @@ export default function DigitalRecordsReviewTab({
                   setDocTypeFilter(e.target.value); 
                   setCurrentPage(1);
                 }}
-                className="h-[36px] rounded-[8px] border-[0.5px] border-gray-200 text-[13px] font-normal"
+                className="h-10 rounded-xl border-[0.5px] border-gray-200 text-[13px] font-normal"
               >
                 <option value="All">Document type</option>
                 {activeDocTypes.map((docTypeName) => (
@@ -1142,8 +1145,8 @@ export default function DigitalRecordsReviewTab({
       </Card>
        {(isLoading && !isManualLoading) && (!records || records.length === 0) ? (
         <RecordsReviewTableSkeleton rowCount={8} />
-      ) : error ? (
-        <div className="overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card p-6">
+       ) : error ? (
+        <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card p-6">
           <Empty className="flex h-[320px] flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400">
             <EmptyHeader className="flex flex-col items-center gap-0">
               <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
@@ -1160,7 +1163,7 @@ export default function DigitalRecordsReviewTab({
         </div>
       ) : records ? (
         <div className="flex flex-1 flex-col min-h-0 gap-6">
-          <div className="flex-1 min-h-0 flex flex-col overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card">
+          <div className="flex-1 min-h-0 flex flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card">
             <div className="flex-1 overflow-visible rounded-[inherit]">
               <table className="min-w-full text-sm">
                 <thead className="sticky top-0 z-10 border-b border-gray-200 bg-white dark:bg-card dark:border-white/10">
@@ -1236,7 +1239,7 @@ export default function DigitalRecordsReviewTab({
                         />
                       </button>
                     </th>
-                    <th className="p-4 text-right text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">Action</th>
+                    <th className="p-4 text-right text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="bg-transparent">
@@ -1272,9 +1275,8 @@ export default function DigitalRecordsReviewTab({
                                   setDateTo("")
                                   setCurrentPage(1)
                                 }}
-                                className="mt-6 flex h-10 items-center gap-3 rounded-brand border border-gray-300 bg-white px-6 text-xs font-semibold text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 tracking-wide dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
+                                className="mt-6 h-10 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-6 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                               >
-                                <i className="ph-bold ph-arrow-counter-clockwise"></i>
                                 Clear Search
                               </Button>
                             )}
@@ -1363,49 +1365,61 @@ export default function DigitalRecordsReviewTab({
                           </td>
                           <td className="py-0 px-4 align-middle text-right">
                             <div className="flex items-center justify-end gap-[12px]" onClick={(e) => e.stopPropagation()}>
-                              <button
-                                onClick={() => handlePreview(r)}
-                                title="Preview Document"
-                                className="w-7 h-7 rounded-[6px] hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/10 text-[#C7C7CC] dark:text-zinc-600 transition-colors hover:text-[#E5484D] dark:hover:text-red-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
-                              >
-                                <i className="ph-bold ph-eye text-[16px]"></i>
-                              </button>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <button
+                                    onClick={() => handlePreview(r)}
+                                    aria-label="Preview Document"
+                                    className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 transition-colors flex items-center justify-center border-0 bg-transparent cursor-pointer active:scale-95"
+                                  >
+                                    <i className="ph-bold ph-eye text-[16px]"></i>
+                                  </button>
+                                </TooltipTrigger>
+                                <TooltipContent side="top">Preview</TooltipContent>
+                              </Tooltip>
 
                               {r.approval_status === "Pending" ? (
                                  <>
-                                   <button
-                                     onClick={() => handleApprove(r.id)}
-                                     title="Approve Document"
-                                     className="w-7 h-7 rounded-[6px] hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/10 text-[#C7C7CC] dark:text-zinc-600 transition-colors hover:text-green-600 dark:hover:text-green-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
-                                   >
-                                     <i className="ph-bold ph-check text-[16px]"></i>
-                                   </button>
+                                   <Tooltip>
+                                     <TooltipTrigger asChild>
+                                       <button
+                                         onClick={() => handleApprove(r.id)}
+                                         aria-label="Approve Document"
+                                         className="w-7 h-7 rounded-lg hover:bg-green-50 dark:hover:bg-green-950/30 text-gray-500 hover:text-green-600 dark:text-zinc-400 dark:hover:text-green-400 transition-colors flex items-center justify-center border-0 bg-transparent cursor-pointer active:scale-95"
+                                       >
+                                         <i className="ph-bold ph-check text-[16px]"></i>
+                                       </button>
+                                     </TooltipTrigger>
+                                     <TooltipContent side="top">Approve</TooltipContent>
+                                   </Tooltip>
 
-                                   <button
-                                     onClick={() => onDecline(r.id)}
-                                     title="Decline Document"
-                                     className="w-7 h-7 rounded-[6px] hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/10 text-[#C7C7CC] dark:text-zinc-600 transition-colors hover:text-red-600 dark:hover:text-red-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
-                                   >
-                                     <i className="ph-bold ph-x text-[16px]"></i>
-                                   </button>
+                                   <Tooltip>
+                                     <TooltipTrigger asChild>
+                                       <button
+                                         onClick={() => onDecline(r.id)}
+                                         aria-label="Decline Document"
+                                         className="w-7 h-7 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/30 text-gray-500 hover:text-red-600 dark:text-zinc-400 dark:hover:text-red-400 transition-colors flex items-center justify-center border-0 bg-transparent cursor-pointer active:scale-95"
+                                       >
+                                         <i className="ph-bold ph-x text-[16px]"></i>
+                                       </button>
+                                     </TooltipTrigger>
+                                     <TooltipContent side="top">Decline</TooltipContent>
+                                   </Tooltip>
                                  </>
                               ) : (
                                 // Revert/Undo Action
-                                (() => {
-                                  return (
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
-                                        <button
-                                          onClick={() => onSetStatus(r.id, "Pending", "Undo review action")}
-                                          className="w-7 h-7 rounded-[6px] hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/10 text-[#C7C7CC] dark:text-zinc-600 transition-colors hover:text-[#E5484D] dark:hover:text-red-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
-                                        >
-                                          <i className="ph-bold ph-arrow-counter-clockwise text-[16px]"></i>
-                                        </button>
-                                      </TooltipTrigger>
-                                      <TooltipContent side="top">Undo</TooltipContent>
-                                    </Tooltip>
-                                  )
-                                })()
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <button
+                                      onClick={() => onSetStatus(r.id, "Pending", "Undo review action")}
+                                      aria-label="Undo Review Action"
+                                      className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 transition-colors flex items-center justify-center border-0 bg-transparent cursor-pointer active:scale-95"
+                                    >
+                                      <i className="ph-bold ph-arrow-counter-clockwise text-[16px]"></i>
+                                    </button>
+                                  </TooltipTrigger>
+                                  <TooltipContent side="top">Undo</TooltipContent>
+                                </Tooltip>
                               )}
                             </div>
                           </td>

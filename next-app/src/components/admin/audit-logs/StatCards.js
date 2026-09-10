@@ -101,14 +101,14 @@ export default function StatCards({ isLoading, logStats }) {
           <div
             key={i}
             className={cn(
-              "relative group rounded-xl",
+              "relative group rounded-2xl",
               selectedKpi === stat.key ? "z-30" : "z-10"
             )}
           >
             <div
               onClick={() => setSelectedKpi(selectedKpi === stat.key ? null : stat.key)}
               className={cn(
-                "relative overflow-hidden rounded-xl border-none p-5 cursor-pointer bg-gradient-to-br select-none",
+                "relative overflow-hidden rounded-2xl border-none p-5 cursor-pointer bg-gradient-to-br select-none shadow-sm hover:shadow-md transition-shadow",
                 classes.bg,
                 stat.color === "blue" ? "glass-stat-card-blue" :
                 stat.color === "emerald" ? "glass-stat-card-green" :
@@ -116,7 +116,7 @@ export default function StatCards({ isLoading, logStats }) {
               )}
             >
               {/* iCloud diagonal overlay vectors */}
-              <div className="absolute inset-0 overflow-hidden rounded-xl pointer-events-none z-0">
+              <div className="absolute inset-0 overflow-hidden rounded-2xl pointer-events-none z-0">
                 <div className={cn("absolute bottom-0 left-0 w-[70%] h-[80%] bg-gradient-to-tr pointer-events-none", classes.shape1)} style={{ clipPath: 'polygon(0% 100%, 100% 100%, 0% 0%)' }} />
                 <div className={cn("absolute bottom-0 left-0 w-[50%] h-[60%] bg-gradient-to-tr pointer-events-none", classes.shape2)} style={{ clipPath: 'polygon(0% 100%, 100% 100%, 0% 25%)' }} />
               </div>
@@ -140,7 +140,7 @@ export default function StatCards({ isLoading, logStats }) {
 
             {/* Absolute details container */}
             <div className={cn(
-              "absolute top-full left-0 right-0 z-[100] mt-2 rounded-xl bg-gradient-to-br p-5 shadow-2xl transition-all duration-300 ease-in-out origin-top",
+              "absolute top-full left-0 right-0 z-[100] mt-2 rounded-2xl bg-gradient-to-br p-5 shadow-2xl transition-all duration-300 ease-in-out origin-top",
               classes.bg,
               selectedKpi === stat.key ? "scale-y-100 opacity-100 translate-y-0" : "scale-y-95 opacity-0 -translate-y-2 pointer-events-none"
             )} onClick={(e) => e.stopPropagation()}>

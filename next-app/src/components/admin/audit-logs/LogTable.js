@@ -164,9 +164,10 @@ const LogRow = React.memo(function LogRow({
               <TooltipTrigger asChild>
                 <button
                   onClick={() => setSelectedLog(log)}
-                  className="w-7 h-7 rounded-[6px] hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/10 text-[#C7C7CC] hover:text-[#E5484D] dark:hover:text-red-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors"
+                  aria-label="View Details"
+                  className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
                 >
-                  <i className="ti ti-eye text-[16px]"></i>
+                  <i className="ph-bold ph-eye text-[16px]"></i>
                 </button>
               </TooltipTrigger>
               <TooltipContent>View Details</TooltipContent>
@@ -232,7 +233,7 @@ export default function LogTable({
 
   if (error) {
     return (
-      <div className="overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card p-6">
+      <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card p-6">
         <Empty className="flex h-[320px] flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400">
           <EmptyHeader className="flex flex-col items-center gap-0">
             <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
@@ -255,7 +256,7 @@ export default function LogTable({
 
   return (
     <div className="flex flex-1 flex-col min-h-0 gap-6">
-      <div className="flex-1 min-h-0 flex flex-col overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card isolate">
+      <div className="flex-1 min-h-0 flex flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card isolate">
         <div className="flex-1 overflow-hidden rounded-[inherit] isolate">
           <table className={cn("min-w-full text-sm", displayLogs.length === 0 && "h-full")}>
             <thead className="sticky top-0 z-10 border-b border-gray-200 bg-white dark:bg-card dark:border-white/10">
@@ -352,9 +353,8 @@ export default function LogTable({
                               setLogEndDate("")
                               setLogPage(1)
                             }}
-                            className="mt-6 flex h-10 items-center gap-3 rounded-brand border border-gray-300 bg-white px-6 text-xs font-semibold text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 tracking-wide dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
+                            className="mt-6 h-10 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-6 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                           >
-                            <i className="ph-bold ph-arrow-counter-clockwise"></i>
                             Clear Search
                           </Button>
                         )}

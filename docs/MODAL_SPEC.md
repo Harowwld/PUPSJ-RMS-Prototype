@@ -24,18 +24,19 @@ All modals use the shadcn/ui `Dialog` component with this consistent structure:
 
 ```jsx
 <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
-  <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-white border border-gray-200 shadow-2xl rounded-brand">
+  {/* Always use flex flex-col gap-0 on DialogContent when p-0 is applied */}
+  <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-white border border-gray-200 shadow-2xl rounded-2xl dark:border-white/10 dark:bg-card flex flex-col gap-0">
     {/* Header */}
-    <DialogHeader className="p-6 border-b border-gray-100 bg-gray-50/50">
+    <DialogHeader className="p-6 border-b border-gray-100 dark:border-white/10 bg-gray-50/50 dark:bg-white/5">
       <div className="flex items-start gap-4">
-        <div className="w-12 h-12 rounded-full border border-red-100 bg-red-50 text-pup-maroon shadow-sm flex items-center justify-center shrink-0">
+        <div className="w-12 h-12 rounded-xl border border-red-100 bg-red-50 text-pup-maroon shadow-sm flex items-center justify-center shrink-0 dark:border-white/10 dark:bg-red-950/40 dark:text-red-400">
           <i className="ph-duotone ph-icon-name text-2xl"></i>
         </div>
         <div className="min-w-0">
-          <DialogTitle className="text-lg font-black tracking-tight text-gray-900 leading-tight">
+          <DialogTitle className="text-[16px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50 leading-tight">
             Modal Title
           </DialogTitle>
-          <DialogDescription className="text-sm font-medium mt-1.5 text-gray-600 leading-relaxed">
+          <DialogDescription className="text-xs font-normal mt-1 text-gray-500 dark:text-zinc-400 leading-relaxed">
             Description text here.
           </DialogDescription>
         </div>
@@ -43,22 +44,27 @@ All modals use the shadcn/ui `Dialog` component with this consistent structure:
     </DialogHeader>
 
     {/* Content Body */}
-    <div className="p-6">
+    <div className="p-6 space-y-4 max-h-[65vh] overflow-y-auto">
       {/* Form fields, messages, or other content */}
     </div>
 
-    {/* Footer */}
-    <div className="p-4 border-t border-gray-100 bg-white flex flex-col-reverse sm:flex-row sm:justify-end gap-2.5">
-      <Button variant="outline" className="h-11 px-6 text-sm font-bold border-gray-300 text-gray-700 hover:bg-gray-50 rounded-brand">
+    {/* Footer: Use dedicated <div> with px-6 py-4. Avoid raw <DialogFooter> which has -mx-4 -mb-4 */}
+    <div className="px-6 py-4 border-t border-gray-100 dark:border-white/10 bg-white dark:bg-card flex flex-col-reverse sm:flex-row sm:justify-end gap-2.5">
+      <Button variant="outline" className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all">
         Cancel
       </Button>
-      <Button className="h-11 px-6 bg-pup-maroon text-white hover:bg-red-900 shadow-sm font-bold rounded-brand">
+      <Button className="h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all">
         Confirm
       </Button>
     </div>
   </DialogContent>
 </Dialog>
 ```
+
+> [!WARNING]
+> **Dialog Spacing Trap for AI Agents**:
+> Do NOT use `<DialogFooter>` inside `p-0 overflow-hidden` dialogs without resetting margins. Base UI's `<DialogFooter>` defaults to `-mx-4 -mb-4`. This negative margin shifts the footer 16px past container borders, cancelling out `p-4` padding and jamming the rightmost action button flush into the bottom-right corner with 0 space. Always use `<div className="px-6 py-4 ...">` or apply `m-0 px-6 py-4`.
+
 
 ---
 

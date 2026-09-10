@@ -8,7 +8,7 @@ export default function ModuleConfigSkeleton({ viewMode = "office" }) {
   return (
     <div className="flex flex-col gap-6 w-full animate-fade-up font-inter">
       {/* Header Card matching real PageHeader layout */}
-      <Card className="rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none overflow-hidden">
+      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
         <PageHeader
           icon="ph-bold ph-squares-four"
           title="Department Features & Permissions"

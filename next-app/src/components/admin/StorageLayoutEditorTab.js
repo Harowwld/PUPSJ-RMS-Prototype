@@ -1134,15 +1134,15 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
   if (!layout) return null
 
   const renderToolbar = () => (
-    <div className="flex h-[52px] items-center px-4 border-b-[0.5px] border-black/[0.08] dark:border-white/[0.08] bg-gray-50/50 dark:bg-muted/10 select-none">
+    <div className="flex h-[56px] items-center px-6 border-b border-gray-100 dark:border-white/10 bg-gray-50/50 dark:bg-muted/10 select-none">
       {/* Left group: Undo + Redo */}
-      <div className="flex items-center gap-[4px] flex-none">
+      <div className="flex items-center gap-1 flex-none">
         <Button
           type="button"
           variant="ghost"
           onClick={undo}
           disabled={historyIndex <= 0}
-          className="h-[36px] bg-transparent hover:bg-transparent border-0 px-2 text-[13px] font-normal text-[#8E8E93] hover:text-[#111111] dark:text-zinc-500 dark:hover:text-zinc-300 disabled:text-[#C7C7CC] dark:disabled:text-zinc-700 disabled:pointer-events-none transition-colors cursor-pointer flex items-center justify-center shadow-none!"
+          className="h-9 bg-transparent hover:bg-transparent border-0 px-2.5 text-xs font-semibold text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-200 disabled:text-gray-300 dark:disabled:text-zinc-700 disabled:pointer-events-none transition-colors cursor-pointer flex items-center justify-center shadow-none!"
         >
           Undo
         </Button>
@@ -1151,7 +1151,7 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
           variant="ghost"
           onClick={redo}
           disabled={historyIndex >= history.length - 1}
-          className="h-[36px] bg-transparent hover:bg-transparent border-0 px-2 text-[13px] font-normal text-[#8E8E93] hover:text-[#111111] dark:text-zinc-500 dark:hover:text-zinc-300 disabled:text-[#C7C7CC] dark:disabled:text-zinc-700 disabled:pointer-events-none transition-colors cursor-pointer flex items-center justify-center shadow-none!"
+          className="h-9 bg-transparent hover:bg-transparent border-0 px-2.5 text-xs font-semibold text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-200 disabled:text-gray-300 dark:disabled:text-zinc-700 disabled:pointer-events-none transition-colors cursor-pointer flex items-center justify-center shadow-none!"
         >
           Redo
         </Button>
@@ -1161,9 +1161,9 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
       <div className="w-4 flex-none" />
 
       {/* Center-left group: Room dropdown + add icon + trash icon */}
-      <div className="flex items-center gap-[8px] flex-none">
+      <div className="flex items-center gap-2 flex-none">
         <Select
-          className="h-[36px] min-w-[120px] w-fit cursor-pointer rounded-brand border-[0.5px] border-black/15 bg-white px-3 text-[13px] font-normal text-[#111111] dark:border-white/10 dark:bg-card dark:text-zinc-100 [&_i]:text-[12px] [&_i]:text-[#8E8E93] dark:[&_i]:text-zinc-500"
+          className="h-10 min-w-[130px] w-fit cursor-pointer rounded-xl border border-gray-200 dark:border-white/10 bg-white px-3 text-xs font-semibold text-gray-700 dark:border-white/10 dark:bg-zinc-800 dark:text-zinc-200 shadow-xs"
           value={String(activeRoomId ?? "")}
           disabled={!layout?.rooms?.length}
           onChange={(e) => setActiveRoomId(Number(e.target.value))}
@@ -1176,18 +1176,20 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
         <button
           type="button"
           onClick={addRoom}
-          className="p-0 border-0 bg-transparent text-[#8E8E93] hover:text-[#30D158] transition-colors cursor-pointer focus:outline-none flex items-center justify-center"
+          className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-emerald-600 dark:text-zinc-400 dark:hover:text-emerald-400 transition-colors cursor-pointer focus:outline-none flex items-center justify-center border-0 bg-transparent active:scale-95"
+          title="Add Room"
         >
-          <i className="ph-bold ph-plus text-[16px]" />
+          <i className="ph-bold ph-plus text-sm" />
         </button>
 
         <button
           type="button"
           onClick={() => setDeleteRoomConfirmOpen(true)}
           disabled={!activeRoom || activeRoomStudentCount > 0}
-          className="p-0 border-0 bg-transparent text-[#8E8E93] hover:text-[#E5484D] disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer focus:outline-none flex items-center justify-center"
+          className="w-7 h-7 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/30 text-gray-500 hover:text-red-600 dark:text-zinc-400 dark:hover:text-red-400 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer focus:outline-none flex items-center justify-center border-0 bg-transparent active:scale-95"
+          title="Delete Room"
         >
-          <i className="ph-bold ph-trash text-[16px]" />
+          <i className="ph-bold ph-trash text-sm" />
         </button>
       </div>
 
@@ -1195,24 +1197,24 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
       <div className="flex-1" />
 
       {/* Right group + Save button */}
-      <div className="flex items-center gap-[8px] flex-none">
+      <div className="flex items-center gap-2 flex-none">
         <Button
           type="button"
-          variant="ghost"
+          variant="outline"
           onClick={addCabinet}
-          className="h-[36px] bg-transparent hover:bg-black/[0.04] dark:hover:bg-white/5 border-0 rounded-brand px-4 text-[13px] font-normal text-[#111111] dark:text-zinc-300 shadow-none flex items-center justify-center cursor-pointer gap-1.5"
+          className="flex h-10 items-center justify-center rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
           disabled={!activeRoom}
         >
-          <i className="ph-bold ph-plus text-[12px] text-[#8E8E93] dark:text-zinc-500" /> Cabinet
+          Add Cabinet
         </Button>
 
         {/* Unified Right Group Container */}
-        <div className="relative flex items-center h-[36px] rounded-brand border-[0.5px] border-black/15 bg-white dark:border-white/10 dark:bg-card">
+        <div className="relative flex items-center h-10 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 shadow-xs">
           <Select
             usePortal={false}
-            className="h-full w-auto min-w-0 cursor-pointer rounded-none! rounded-l-brand! border-0 bg-transparent pl-[12px] pr-[12px] gap-[6px] [&_i]:ml-0 [&_i]:text-[12px] [&_i]:text-[#8E8E93]! dark:[&_i]:text-zinc-500! shadow-none hover:bg-black/[0.02]! text-[13px] font-normal text-[#111111] dark:text-zinc-100 focus:ring-0! focus:border-0! focus:outline-none! focus-visible:ring-0! focus-visible:border-0! focus:bg-transparent! active:bg-transparent! focus-visible:bg-transparent!"
-            menuClassName="bg-white! border-[0.5px]! border-black/15! rounded-brand! shadow-none! dark:border-white/10 dark:bg-card"
-            optionClassName="text-[13px]! font-normal! text-[#111111]! h-[36px]! px-[12px]! bg-transparent! hover:bg-[#F5F5F5]! dark:text-zinc-300 dark:hover:bg-white/5 rounded-none!"
+            className="h-full w-auto min-w-0 cursor-pointer rounded-none! rounded-l-xl! border-0 bg-transparent pl-3 pr-3 gap-1.5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-none hover:bg-black/[0.02]! focus:ring-0! focus:border-0! focus:outline-none! focus-visible:ring-0! focus-visible:border-0! focus:bg-transparent! active:bg-transparent! focus-visible:bg-transparent!"
+            menuClassName="bg-white! border border-gray-200! rounded-xl! shadow-md! dark:border-white/10 dark:bg-card"
+            optionClassName="text-xs! font-medium! text-gray-900! h-9! px-3! bg-transparent! hover:bg-gray-50! dark:text-zinc-200 dark:hover:bg-white/5 rounded-none!"
             value={selectedTemplateId}
             onChange={(e) => setSelectedTemplateId(e.target.value)}
             disabled={!activeRoom || templates.length === 0}
@@ -1224,7 +1226,7 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
             type="button"
             variant="ghost"
             onClick={() => setTemplateApplyConfirmOpen(true)}
-            className="h-full bg-transparent hover:bg-black/[0.02] border-0 rounded-none! rounded-r-brand! px-[12px] text-[13px] font-normal text-[#111111] dark:text-zinc-300 disabled:text-[#C7C7CC] dark:disabled:text-zinc-700 disabled:pointer-events-none transition-colors cursor-pointer flex items-center justify-center shadow-none!"
+            className="h-full bg-transparent hover:bg-black/[0.02] border-0 rounded-none! rounded-r-xl! px-3 text-xs font-semibold text-gray-700 dark:text-zinc-200 disabled:text-gray-400 dark:disabled:text-zinc-600 disabled:pointer-events-none transition-colors cursor-pointer flex items-center justify-center shadow-none!"
             disabled={!activeRoom || !selectedTemplateId}
           >
             Apply
@@ -1236,9 +1238,9 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
           <DropdownMenuTrigger asChild>
             <button
               type="button"
-              className="p-0 border-0 bg-transparent text-[#8E8E93] hover:text-[#111111] dark:hover:text-white transition-colors cursor-pointer focus:outline-none flex items-center justify-center w-[24px] h-[36px]"
+              className="p-0 border-0 bg-transparent text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer focus:outline-none flex items-center justify-center w-7 h-10"
             >
-              <i className="ti ti-ellipsis-vertical text-[16px]" />
+              <i className="ti ti-ellipsis-vertical text-base" />
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48 rounded-xl border border-gray-200 bg-white shadow-md dark:bg-zinc-900 dark:border-white/10">
@@ -1258,10 +1260,10 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
         <Button
           onClick={saveLayout}
           disabled={saving || hasAnyCollisions}
-          className="flex h-[36px] w-[90px] items-center justify-center rounded-brand btn-brand-red text-white font-medium text-[13px] active:scale-95 disabled:opacity-30 disabled:grayscale transition-all dark:shadow-none cursor-pointer"
+          className="flex h-10 w-[90px] items-center justify-center rounded-xl! btn-brand-red text-white font-semibold text-xs active:scale-95 disabled:opacity-30 disabled:grayscale transition-all dark:shadow-none cursor-pointer border-0 shadow-xs"
         >
           {saving ? (
-            <i className="ph-bold ph-spinner animate-spin text-[16px]"></i>
+            <i className="ph-bold ph-spinner animate-spin text-sm"></i>
           ) : (
             "Save"
           )}
@@ -1328,7 +1330,7 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
         applyTemplateWithMappings={applyTemplateWithMappings}
       />
 
-      <Card className="rounded-brand border border-gray-200 bg-white shadow-sm p-0 gap-0 dark:border-white/10 dark:bg-card dark:shadow-none w-full overflow-hidden">
+      <Card className="rounded-2xl border border-gray-200 bg-white shadow-sm p-0 gap-0 dark:border-white/10 dark:bg-card dark:shadow-none w-full overflow-hidden">
         {renderEditorContent()}
       </Card>
 

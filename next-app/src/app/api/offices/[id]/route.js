@@ -94,9 +94,9 @@ export async function PATCH(req, { params }) {
       let action = "Update Office Configuration";
       if (body.status !== undefined && body.status !== original.status) {
         if (body.status === "Inactive") {
-          action = "Deactivate Administrative Office";
+          action = "Archive Administrative Office";
         } else if (body.status === "Active") {
-          action = "Activate Administrative Office";
+          action = "Restore Administrative Office";
         }
       }
 
@@ -128,17 +128,17 @@ export async function DELETE(req, { params }) {
 
     const updated = await deactivateOffice(id);
     if (!updated) {
-      return NextResponse.json({ ok: false, error: "Office not found or failed to deactivate" }, { status: 404 });
+      return NextResponse.json({ ok: false, error: "Office not found or failed to archive" }, { status: 404 });
     }
 
-    await writeGlobalAuditLog(req, "Deactivate Administrative Office", {
+    await writeGlobalAuditLog(req, "Archive Administrative Office", {
       officeId: id,
       entity_type: "Office",
       entity_id: id,
-      details: `Deactivated office '${original.short_name}' (${id}) via DELETE API.`
+      details: `Archived office '${original.short_name}' (${id}) via DELETE API.`
     });
 
-    return NextResponse.json({ ok: true, message: "Office deactivated successfully", data: updated });
+    return NextResponse.json({ ok: true, message: "Office archived successfully", data: updated });
   } catch (err) {
     return NextResponse.json({ ok: false, error: err.message }, { status: 500 });
   }

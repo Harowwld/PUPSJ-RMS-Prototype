@@ -217,16 +217,15 @@ export default function BackupTab({
       <div className="animate-fade-up font-inter flex w-full flex-col gap-6">
         <div className="relative flex min-h-[600px] w-full items-stretch gap-5">
           {/* MAIN CONTENT */}
-          <div className="flex-1 flex flex-col gap-6">
-            {/* Page Header Card */}
-            <Card className="p-0 gap-0 overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none w-full">
+          <div className="flex-1 flex flex-col">
+            <Card className="flex-1 flex flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none isolate">
               <PageHeader
                 icon="ph-hard-drives"
                 title="Backup & Maintenance"
                 description="Manage system archives and secure copies."
                 showBorder={false}
-                titleClassName="text-[15px] font-bold text-gray-900 dark:text-zinc-50"
-                descriptionClassName="text-[14px] font-normal text-[#8E8E93] dark:text-zinc-400 mt-[2px]"
+                titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
+                descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
                 actions={
                   <div className="flex items-center gap-6">
                     <RefreshButton 
@@ -238,14 +237,15 @@ export default function BackupTab({
                     <div className="h-6 w-px bg-gray-200 dark:bg-zinc-800" />
 
                     <div className="flex items-center gap-2">
-                       <Button
-                        variant="ghost"
+                      <Button
+                        type="button"
+                        variant="outline"
                         onClick={() =>
                           restoreFileRef.current &&
                           restoreFileRef.current.click()
                         }
                         disabled={localLoading.uploading}
-                        className="h-10 w-[130px] justify-center font-semibold text-sm text-gray-600 hover:text-[#111] hover:bg-transparent dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-transparent transition-colors flex items-center rounded-brand shadow-none border-0"
+                        className="flex h-10 items-center justify-center rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
                       >
                         {localLoading.uploading ? (
                           <i className="ph-bold ph-spinner animate-spin text-[16px]"></i>
@@ -256,10 +256,10 @@ export default function BackupTab({
                       <LiquidGlassButton
                         onClick={handleGenerateBackup}
                         disabled={localLoading.generating}
-                        height={36}
-                        radius={18}
+                        height={40}
+                        radius={12}
                         glassColor="rgba(10, 132, 255, 0.15)"
-                        className="w-[130px] active:scale-95 transition-all dark:shadow-none text-[13px] font-medium text-white cursor-pointer"
+                        className="flex h-10 items-center justify-center rounded-xl! px-5 active:scale-95 transition-all dark:shadow-none text-xs font-semibold text-white cursor-pointer"
                       >
                         {localLoading.generating ? (
                           <i className="ph-bold ph-spinner animate-spin text-[16px]"></i>
@@ -278,16 +278,17 @@ export default function BackupTab({
                   </div>
                 }
               />
-            </Card>
 
-            <AutoBackupSchedule showToast={showToast} scope="office" />
+              {/* Automatic Backup Configuration Section */}
+              <AutoBackupSchedule showToast={showToast} scope="office" embedded={true} />
 
-            {isLoading && !isManualLoading ? (
-              <BackupTableSkeleton />
-            ) : error ? (
-              <div className="flex-1 flex h-fit min-h-[600px] flex-col overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card">
-                <CardContent className="flex flex-1 flex-col items-center justify-center p-6">
-                  <Empty className="flex h-[450px] flex-col items-center justify-center border-0 bg-transparent text-center">
+              {isLoading && !isManualLoading ? (
+                <div className="p-6">
+                  <BackupTableSkeleton />
+                </div>
+              ) : error ? (
+                <div className="flex-1 flex min-h-[400px] flex-col items-center justify-center p-6">
+                  <Empty className="flex h-[350px] flex-col items-center justify-center border-0 bg-transparent text-center">
                     <EmptyHeader className="flex flex-col items-center gap-0">
                       <div className="relative mb-6">
                         <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
@@ -304,114 +305,114 @@ export default function BackupTab({
                       <Button 
                         variant="outline" 
                         onClick={onRefresh}
-                        className="mt-6 rounded-full border-gray-200 font-semibold hover:bg-gray-50 dark:border-white/10 dark:hover:bg-white/10 dark:bg-card"
+                        className="mt-6 flex h-10 items-center justify-center rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-5 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
                       >
                         <i className="ph-bold ph-arrows-clockwise mr-2"></i>
                         Retry Loading
                       </Button>
                     </EmptyHeader>
                   </Empty>
-                </CardContent>
-              </div>
-            ) : (
-              <div className="flex-1 flex h-fit min-h-[600px] flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card isolate">
-              {/* Active Filter Chips Row */}
-              {(localSearch !== "" ||
-                backupStartDate !== "" ||
-                backupEndDate !== "") && (
-                <div className="flex-none border-b border-gray-100 bg-white px-4 py-3 animate-in fade-in slide-in-from-top-1 duration-normal dark:border-white/10 dark:bg-card">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="mr-1 text-[10px] font-semibold tracking-widest text-gray-400 dark:text-zinc-550">
-                      Active filters:
-                    </span>
-                    {localSearch && (
-                      <div className="flex items-center gap-1 rounded-full border border-gray-300 bg-pup-maroon/10 px-2.5 py-1 text-[10px] font-semibold tracking-widest text-pup-maroon dark:text-primary dark:border-white/10 dark:text-primary">
-                        Search: {localSearch}
-                        <button
+                </div>
+              ) : (
+                <>
+                  {/* Active Filter Chips Row */}
+                  {(localSearch !== "" ||
+                    backupStartDate !== "" ||
+                    backupEndDate !== "") && (
+                    <div className="flex-none border-t border-gray-100 dark:border-white/10 bg-white dark:bg-card px-6 py-3 animate-in fade-in slide-in-from-top-1 duration-normal">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="mr-1 text-[11px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500">
+                          Active filters:
+                        </span>
+                        {localSearch && (
+                          <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
+                            Search: {localSearch}
+                            <button
+                              onClick={() => {
+                                setLocalSearch("")
+                                setBackupSearch("")
+                                setPage(1)
+                              }}
+                              className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
+                            >
+                              ×
+                            </button>
+                          </div>
+                        )}
+                        {(backupStartDate || backupEndDate) && (
+                          <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
+                            Range: {backupStartDate || "..."} to{" "}
+                            {backupEndDate || "..."}
+                            <button
+                              onClick={() => {
+                                setBackupStartDate("")
+                                setBackupEndDate("")
+                                setPage(1)
+                              }}
+                              className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
+                            >
+                              ×
+                            </button>
+                          </div>
+                        )}
+                        <Button
+                          variant="ghost"
+                          size="sm"
                           onClick={() => {
                             setLocalSearch("")
                             setBackupSearch("")
-                            setPage(1)
-                          }}
-                          className="ml-1 hover:text-pup-darkMaroon transition-colors"
-                        >
-                          <i className="ph-bold ph-x text-[8px]"></i>
-                        </button>
-                      </div>
-                    )}
-                    {(backupStartDate || backupEndDate) && (
-                      <div className="flex items-center gap-1 rounded-full border border-emerald-100/30 bg-emerald-50 px-2.5 py-1 text-[10px] font-semibold tracking-widest text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-400">
-                        Range: {backupStartDate || "..."} to{" "}
-                        {backupEndDate || "..."}
-                        <button
-                          onClick={() => {
                             setBackupStartDate("")
                             setBackupEndDate("")
                             setPage(1)
                           }}
-                          className="ml-1 hover:text-emerald-800 transition-colors"
+                          className="h-auto text-[12px] font-medium text-gray-400 dark:text-zinc-500 border-0 bg-transparent hover:bg-transparent shadow-none p-0 hover:text-red-600 dark:hover:text-red-500 transition-colors cursor-pointer"
                         >
-                          <i className="ph-bold ph-x text-[8px]"></i>
-                        </button>
+                          Clear
+                        </Button>
                       </div>
-                    )}
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
+                    </div>
+                  )}
+
+                  <div className="flex-1 flex flex-col min-h-0">
+                    <BackupTable
+                      backups={backups}
+                      sortedAndPaginatedBackups={sortedAndPaginatedBackups}
+                      selectedBackupIds={selectedBackupIds}
+                      handleToggleRow={handleToggleRow}
+                      handleSelectAll={handleSelectAll}
+                      handleSort={handleSort}
+                      sortBy={sortBy}
+                      sortOrder={sortOrder}
+                      localLoading={localLoading}
+                      handleSyncExternal={handleSyncExternal}
+                      onDownloadBackup={handleDownloadBackup}
+                      onDeleteBackup={onDeleteBackup}
+                      handleGenerateBackup={handleGenerateBackup}
+                      isFilterActive={isFilterActive}
+                      onClearFilters={() => {
                         setLocalSearch("")
                         setBackupSearch("")
                         setBackupStartDate("")
                         setBackupEndDate("")
                         setPage(1)
                       }}
-                      className="h-6 rounded-full border border-dashed border-gray-300 px-3 text-[10px] font-semibold tracking-widest text-pup-maroon dark:text-primary hover:bg-red-50 hover:text-pup-darkMaroon dark:border-white/10 dark:text-primary dark:bg-red-950/30"
-                    >
-                      Clear All Filters
-                    </Button>
+                      page={page}
+                      setPage={setPage}
+                      totalPages={totalPages}
+                      startItem={startItem}
+                      endItem={endItem}
+                      totalCount={(backups || []).length}
+                      itemsPerPage={itemsPerPage}
+                      jumpPage={jumpPage}
+                      setJumpPage={setJumpPage}
+                      handleJumpPage={handleJumpPage}
+                      handleItemsPerPageChange={handleItemsPerPageChange}
+                    />
                   </div>
-                </div>
+                </>
               )}
-
-              <div className="flex-1 flex flex-col min-h-0">
-                <BackupTable
-                  backups={backups}
-                  sortedAndPaginatedBackups={sortedAndPaginatedBackups}
-                  selectedBackupIds={selectedBackupIds}
-                  handleToggleRow={handleToggleRow}
-                  handleSelectAll={handleSelectAll}
-                  handleSort={handleSort}
-                  sortBy={sortBy}
-                  sortOrder={sortOrder}
-                  localLoading={localLoading}
-                  handleSyncExternal={handleSyncExternal}
-                  onDownloadBackup={handleDownloadBackup}
-                  onDeleteBackup={onDeleteBackup}
-                  handleGenerateBackup={handleGenerateBackup}
-                  isFilterActive={isFilterActive}
-                  onClearFilters={() => {
-                    setLocalSearch("")
-                    setBackupSearch("")
-                    setBackupStartDate("")
-                    setBackupEndDate("")
-                    setPage(1)
-                  }}
-                  page={page}
-                  setPage={setPage}
-                  totalPages={totalPages}
-                  startItem={startItem}
-                  endItem={endItem}
-                  totalCount={(backups || []).length}
-                  itemsPerPage={itemsPerPage}
-                  jumpPage={jumpPage}
-                  setJumpPage={setJumpPage}
-                  handleJumpPage={handleJumpPage}
-                  handleItemsPerPageChange={handleItemsPerPageChange}
-                />
-              </div>
-            </div>
-          )}
-        </div>
+            </Card>
+          </div>
 
           <HealthSidebar
             systemHealth={systemHealth}

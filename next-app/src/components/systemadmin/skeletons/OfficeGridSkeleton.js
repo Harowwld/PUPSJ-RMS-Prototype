@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils"
 export default function OfficeGridSkeleton({ layoutView = "grid", count = 6 }) {
   if (layoutView === "table") {
     return (
-      <div className="rounded-2xl border border-gray-200 dark:border-white/10 overflow-hidden bg-white dark:bg-card shadow-sm isolate flex flex-col">
+      <div className="overflow-hidden bg-white dark:bg-card flex flex-col flex-1 isolate">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs text-gray-600 dark:text-zinc-400">
             <thead className="sticky top-0 z-10 border-b-[0.5px] border-black/10 dark:border-white/10 bg-white dark:bg-card">
@@ -75,8 +75,8 @@ export default function OfficeGridSkeleton({ layoutView = "grid", count = 6 }) {
                   </td>
                   <td className="py-0 pr-6 align-middle text-right">
                     <div className="flex items-center justify-end gap-1.5">
-                      <Skeleton className="h-7 w-16 rounded-xl dark:bg-muted" />
-                      <Skeleton className="h-7 w-7 rounded-xl dark:bg-muted" />
+                      <Skeleton className="h-7 w-7 rounded-lg dark:bg-muted" />
+                      <Skeleton className="h-7 w-7 rounded-lg dark:bg-muted" />
                     </div>
                   </td>
                 </tr>

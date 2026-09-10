@@ -18,9 +18,11 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import PageHeader from "@/components/shared/PageHeader"
+import { RefreshButton } from "@/components/shared/RefreshButton"
 import ConfirmModal from "@/components/shared/ConfirmModal"
 import FloatingActionBar from "@/components/shared/FloatingActionBar"
 import { Select } from "@/components/ui/select"
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip"
 import {
   Empty,
   EmptyHeader,
@@ -47,6 +49,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
   const [staff, setStaff] = useState([])
   const [offices, setOffices] = useState([])
   const [loading, setLoading] = useState(true)
+  const [isManualLoading, setIsManualLoading] = useState(false)
   
   // Filters & Search
   const [search, setSearch] = useState("")
@@ -147,6 +150,15 @@ export default function GlobalStaffTab({ authUser, showToast }) {
       setLoading(false)
     }
   }, [showToast])
+
+  const handleManualRefresh = useCallback(async () => {
+    setIsManualLoading(true)
+    try {
+      await fetchData()
+    } finally {
+      setIsManualLoading(false)
+    }
+  }, [fetchData])
 
   useEffect(() => {
     fetchData()
@@ -704,8 +716,8 @@ export default function GlobalStaffTab({ authUser, showToast }) {
         </div>
       )}
 
-      {/* Main Table Card with Header, Active Filter Chips & Toolbar */}
-      <Card className="rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none overflow-hidden">
+      {/* Main Table Card with Header, Toolbar & Active Filter Chips */}
+      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
         <PageHeader
           icon="ph-users"
           title={
@@ -723,19 +735,112 @@ export default function GlobalStaffTab({ authUser, showToast }) {
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
           descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
           actions={
-            <Button
-              onClick={handleOpenCreate}
-              className="flex h-10 items-center justify-center rounded-xl! btn-brand-red text-white font-semibold text-xs active:scale-95 transition-all cursor-pointer px-5 shadow-xs"
-            >
-              <i className="ph-bold ph-user-plus mr-1.5 text-[14px]"></i>
-              Register Staff
-            </Button>
+            <div className="flex items-center gap-6">
+              <RefreshButton
+                onRefresh={handleManualRefresh}
+                isLoading={isManualLoading}
+                title="Refresh Staff Directory"
+              />
+
+              <div className="h-6 w-px bg-gray-200 dark:bg-zinc-800" />
+
+              <Button
+                onClick={handleOpenCreate}
+                className="flex h-10 items-center justify-center rounded-xl! btn-brand-red text-white font-semibold text-xs active:scale-95 transition-all cursor-pointer px-5 shadow-xs"
+              >
+                Register Staff
+              </Button>
+            </div>
           }
         />
 
+        {/* Navigation Toolbar */}
+        <div className="border-t border-gray-100 dark:border-white/10 p-5 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
+          {/* Left: Active vs Archived Tabs */}
+          <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-gray-200/60 dark:border-white/5 shrink-0 overflow-x-auto">
+            <button
+              type="button"
+              onClick={() => setStatusFilter("Active")}
+              className={cn(
+                "px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap",
+                statusFilter === "Active"
+                  ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
+                  : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
+              )}
+            >
+              Active Personnel ({stats.active})
+            </button>
+            <button
+              type="button"
+              onClick={() => setStatusFilter("Inactive")}
+              className={cn(
+                "px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap",
+                statusFilter === "Inactive"
+                  ? "bg-white dark:bg-zinc-700 text-pup-maroon dark:text-rose-400 shadow-xs"
+                  : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
+              )}
+            >
+              Archived ({stats.inactive})
+            </button>
+          </div>
+
+          {/* Right: Search Input & Dropdown Popovers Group */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0">
+            <div className="w-full sm:w-[260px] lg:w-[300px] relative group shrink-0">
+              <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                <i className="ph-bold ph-magnifying-glass text-gray-400 transition-colors group-focus-within:text-pup-maroon dark:text-zinc-500 text-sm"></i>
+              </div>
+              <Input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search by name, ID or email..."
+                className="h-9 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white pl-8 pr-16 text-xs font-normal placeholder:text-[#8E8E93] dark:bg-card focus-visible:ring-pup-maroon shadow-none"
+              />
+              <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] text-gray-400 dark:text-zinc-500 font-mono">
+                {filteredStaff.length}
+              </div>
+            </div>
+
+            {/* Office Partition Select */}
+            <div className="w-full sm:w-[165px] shrink-0">
+              <Select
+                value={officeFilter}
+                onChange={(e) => setOfficeFilter(e.target.value)}
+                className="h-9 rounded-xl border border-gray-200 dark:border-white/10 text-xs font-normal text-[#111111] dark:text-zinc-200 cursor-pointer shadow-none"
+                menuClassName="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-900 shadow-2xl p-1.5"
+                optionClassName="rounded-lg text-xs font-medium py-1.5 px-2.5 hover:bg-gray-100 dark:hover:bg-zinc-800"
+              >
+                <option value="All">All Offices</option>
+                <option value="global">System Admin</option>
+                {(Array.isArray(offices) ? offices : []).map((o) => (
+                  <option key={o.id} value={o.id}>
+                    {o.short_name}
+                  </option>
+                ))}
+              </Select>
+            </div>
+
+            {/* Role Select */}
+            <div className="w-full sm:w-[145px] shrink-0">
+              <Select
+                value={roleFilter}
+                onChange={(e) => setRoleFilter(e.target.value)}
+                className="h-9 rounded-xl border border-gray-200 dark:border-white/10 text-xs font-normal text-[#111111] dark:text-zinc-200 cursor-pointer shadow-none"
+                menuClassName="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-900 shadow-2xl p-1.5"
+                optionClassName="rounded-lg text-xs font-medium py-1.5 px-2.5 hover:bg-gray-100 dark:hover:bg-zinc-800"
+              >
+                <option value="All">All Roles</option>
+                <option value="SystemAdmin">System Admin</option>
+                <option value="Admin">Administrator</option>
+                <option value="Staff">Regular Staff</option>
+              </Select>
+            </div>
+          </div>
+        </div>
+
         {/* Active Filter Chips Row */}
         {hasActiveFilters && (
-          <div className="flex-none border-b border-gray-100 bg-white px-6 py-3 animate-in fade-in slide-in-from-top-1 duration-normal dark:border-white/10 dark:bg-card">
+          <div className="flex-none border-t border-gray-100 dark:border-white/10 bg-white dark:bg-card px-6 py-2.5 animate-in fade-in slide-in-from-top-1 duration-normal">
             <div className="flex flex-wrap items-center gap-2">
               <span className="mr-1 text-[11px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500">
                 Active filters:
@@ -794,98 +899,12 @@ export default function GlobalStaffTab({ authUser, showToast }) {
           </div>
         )}
 
-        <CardContent className="font-inter bg-white p-[24px] dark:bg-card/50 backdrop-blur-md flex flex-col gap-5">
-          <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 w-full select-none">
-            {/* Left: Active vs Archived Underline Tabs */}
-            <div className="flex items-center gap-6 shrink-0 h-10 px-1 self-start lg:self-auto">
-              <button
-                type="button"
-                onClick={() => setStatusFilter("Active")}
-                className={cn(
-                  "relative h-full flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent",
-                  statusFilter === "Active"
-                    ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
-                    : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
-                )}
-              >
-                Active ({stats.active})
-              </button>
-              <button
-                type="button"
-                onClick={() => setStatusFilter("Inactive")}
-                className={cn(
-                  "relative h-full flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent",
-                  statusFilter === "Inactive"
-                    ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
-                    : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
-                )}
-              >
-                Archived ({stats.inactive})
-              </button>
-            </div>
-
-            {/* Right: Search Input & Dropdown Popovers Group */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0 w-full lg:w-auto">
-              {/* Search Input with increased width */}
-              <div className="w-full sm:w-[320px] lg:w-[380px] relative group shrink-0">
-                <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                  <i className="ph-bold ph-magnifying-glass text-gray-400 transition-colors group-focus-within:text-pup-maroon dark:text-zinc-500 text-sm"></i>
-                </div>
-                <Input
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search by name, ID or email..."
-                  className="h-10 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white pl-9 pr-24 text-xs font-normal placeholder:text-[#8E8E93] dark:bg-card focus-visible:ring-pup-maroon shadow-none"
-                />
-                <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[12px] font-normal text-gray-400 dark:text-zinc-500">
-                  {filteredStaff.length > 0 ? `${filteredStaff.length} results` : "0 results"}
-                </div>
-              </div>
-
-              {/* Office Partition Select */}
-              <div className="w-full sm:w-[185px] shrink-0">
-                <Select
-                  value={officeFilter}
-                  onChange={(e) => setOfficeFilter(e.target.value)}
-                  className="h-10 rounded-xl border border-gray-200 dark:border-white/10 text-xs font-normal text-[#111111] dark:text-zinc-200 cursor-pointer shadow-none"
-                  menuClassName="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-900 shadow-2xl p-1.5"
-                  optionClassName="rounded-lg text-xs font-medium py-2 px-3 hover:bg-gray-100 dark:hover:bg-zinc-800"
-                >
-                  <option value="All">All Offices</option>
-                  <option value="global">System Administration</option>
-                  {(Array.isArray(offices) ? offices : []).map((o) => (
-                    <option key={o.id} value={o.id}>
-                      {o.short_name}
-                    </option>
-                  ))}
-                </Select>
-              </div>
-
-              {/* Role Select */}
-              <div className="w-full sm:w-[165px] shrink-0">
-                <Select
-                  value={roleFilter}
-                  onChange={(e) => setRoleFilter(e.target.value)}
-                  className="h-10 rounded-xl border border-gray-200 dark:border-white/10 text-xs font-normal text-[#111111] dark:text-zinc-200 cursor-pointer shadow-none"
-                  menuClassName="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-900 shadow-2xl p-1.5"
-                  optionClassName="rounded-lg text-xs font-medium py-2 px-3 hover:bg-gray-100 dark:hover:bg-zinc-800"
-                >
-                  <option value="All">All Roles</option>
-                  <option value="SystemAdmin">System Admin</option>
-                  <option value="Admin">Administrator</option>
-                  <option value="Staff">Regular Staff</option>
-                </Select>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Directory Table */}
-      {loading ? (
-        <DirectoryTableSkeleton rowCount={8} />
-      ) : filteredStaff.length === 0 ? (
-        <div className="flex h-[420px] flex-col items-center justify-center rounded-2xl border border-dashed border-gray-200 dark:border-white/10 bg-white/40 dark:bg-zinc-900/20 text-center">
+        {/* Content Section: Directory Table inside the single Card */}
+        <div className="overflow-hidden border-t border-gray-200 dark:border-white/10 bg-white dark:bg-card flex flex-col flex-1">
+          {loading ? (
+            <DirectoryTableSkeleton rowCount={8} />
+          ) : filteredStaff.length === 0 ? (
+            <div className="flex h-[380px] flex-col items-center justify-center p-6 text-center">
           <Empty className="flex flex-col items-center justify-center border-0 bg-transparent text-center">
             <EmptyHeader className="flex flex-col items-center gap-0">
               <div className="relative mb-6">
@@ -922,9 +941,8 @@ export default function GlobalStaffTab({ authUser, showToast }) {
               ) : statusFilter === "Active" ? (
                 <Button
                   onClick={handleOpenCreate}
-                  className="mt-6 flex h-10 items-center gap-2 rounded-xl btn-brand-red text-white px-5 text-xs font-semibold shadow-xs cursor-pointer"
+                  className="mt-6 flex h-10 items-center justify-center rounded-xl btn-brand-red text-white px-5 text-xs font-semibold shadow-xs cursor-pointer active:scale-95 transition-all"
                 >
-                  <i className="ph-bold ph-plus"></i>
                   Register First Staff
                 </Button>
               ) : null}
@@ -932,7 +950,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
           </Empty>
         </div>
       ) : (
-        <div className="overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card flex flex-col flex-1">
+        <div className="overflow-x-auto">
           <table className="min-w-full text-sm">
             <thead className="sticky top-0 z-10 border-b-[0.5px] border-black/10 dark:border-white/10 bg-white dark:bg-card">
               <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500 h-11 select-none">
@@ -1086,41 +1104,61 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                         onClick={(e) => e.stopPropagation()}
                       >
                         {isSelf ? (
-                          <button
-                            onClick={() => router.push("/account")}
-                            title="My Account Settings"
-                            className="w-7 h-7 rounded-[6px] hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/10 text-[#C7C7CC] dark:text-zinc-600 transition-colors hover:text-blue-500 dark:hover:text-blue-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
-                          >
-                            <i className="ph-bold ph-gear-six text-[16px]"></i>
-                          </button>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <button
+                                onClick={() => router.push("/account")}
+                                aria-label="My Account Settings"
+                                className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 dark:text-zinc-400 hover:text-blue-600 dark:hover:text-blue-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
+                              >
+                                <i className="ph-bold ph-gear-six text-[16px]"></i>
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent>My Account Settings</TooltipContent>
+                          </Tooltip>
                         ) : (
                           <div className="flex items-center gap-1.5">
                             {statusFilter === "Active" && (
-                              <button
-                                onClick={() => handleOpenEdit(member)}
-                                title="Edit Staff Member"
-                                className="w-7 h-7 rounded-[6px] hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/10 text-[#C7C7CC] dark:text-zinc-600 transition-colors hover:text-amber-500 dark:hover:text-amber-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
-                              >
-                                <i className="ph-bold ph-pencil-simple text-[16px]"></i>
-                              </button>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <button
+                                    onClick={() => handleOpenEdit(member)}
+                                    aria-label="Edit Staff Member"
+                                    className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 dark:text-zinc-400 hover:text-amber-600 dark:hover:text-amber-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
+                                  >
+                                    <i className="ph-bold ph-pencil-simple text-[16px]"></i>
+                                  </button>
+                                </TooltipTrigger>
+                                <TooltipContent>Edit Staff</TooltipContent>
+                              </Tooltip>
                             )}
 
                             {statusFilter === "Inactive" || member.status === "Inactive" || member.status === "Archived" ? (
-                              <button
-                                onClick={() => setRestoreTarget(member)}
-                                title="Restore Staff Member"
-                                className="w-7 h-7 rounded-[6px] hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/10 text-[#C7C7CC] dark:text-zinc-600 transition-colors hover:text-emerald-600 dark:hover:text-emerald-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
-                              >
-                                <i className="ph-bold ph-archive-restore text-[16px]"></i>
-                              </button>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <button
+                                    onClick={() => setRestoreTarget(member)}
+                                    aria-label="Restore Staff Member"
+                                    className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 dark:text-zinc-400 hover:text-emerald-600 dark:hover:text-emerald-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
+                                  >
+                                    <i className="ph-bold ph-archive-restore text-[16px]"></i>
+                                  </button>
+                                </TooltipTrigger>
+                                <TooltipContent>Restore Staff</TooltipContent>
+                              </Tooltip>
                             ) : (
-                              <button
-                                onClick={() => setArchiveTarget(member)}
-                                title="Archive Staff Member"
-                                className="w-7 h-7 rounded-[6px] hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/10 text-[#C7C7CC] dark:text-zinc-600 transition-colors hover:text-red-600 dark:hover:text-red-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
-                              >
-                                <i className="ph-bold ph-archive text-[16px]"></i>
-                              </button>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <button
+                                    onClick={() => setArchiveTarget(member)}
+                                    aria-label="Archive Staff Member"
+                                    className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 dark:text-zinc-400 hover:text-red-600 dark:hover:text-red-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
+                                  >
+                                    <i className="ph-bold ph-archive text-[16px]"></i>
+                                  </button>
+                                </TooltipTrigger>
+                                <TooltipContent>Archive Staff</TooltipContent>
+                              </Tooltip>
                             )}
                           </div>
                         )}
@@ -1133,7 +1171,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
           </table>
 
           {/* Pagination Footer */}
-          <div className="flex items-center justify-between border-t border-[#e5e5ea] dark:border-[#3a3a3c] bg-white dark:bg-[#1c1c1e] p-4 px-6 rounded-b-2xl">
+          <div className="flex items-center justify-between border-t border-gray-100 dark:border-white/10 bg-gray-50/30 dark:bg-zinc-900/20 p-4 px-6">
             <div className="flex items-center gap-6 text-xs text-gray-500 dark:text-zinc-400 select-none">
               <span>Showing {paginatedStaff.length} of {filteredStaff.length}</span>
               <div className="flex items-center gap-2">
@@ -1183,6 +1221,8 @@ export default function GlobalStaffTab({ authUser, showToast }) {
           </div>
         </div>
       )}
+      </div>
+    </Card>
 
       {/* Register / Edit Form Dialog */}
       <Dialog open={formOpen} onOpenChange={setFormOpen}>
@@ -1316,9 +1356,9 @@ export default function GlobalStaffTab({ authUser, showToast }) {
             <DialogFooter className="p-6 pt-0 bg-white dark:bg-card border-none flex items-center justify-end gap-2.5">
               <Button
                 type="button"
-                variant="ghost"
+                variant="outline"
                 onClick={() => setFormOpen(false)}
-                className="text-xs text-gray-500 dark:text-zinc-400 font-semibold cursor-pointer h-10 px-4 hover:bg-gray-100 dark:hover:bg-white/5 rounded-xl border-none shadow-none"
+                className="h-10 px-4 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
               >
                 Cancel
               </Button>

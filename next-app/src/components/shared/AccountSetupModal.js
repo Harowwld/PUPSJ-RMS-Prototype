@@ -274,7 +274,7 @@ export default function AccountSetupModal({ authUser }) {
                     Update Default Password
                   </h3>
                   <p className="mt-1 text-[13px] font-normal text-gray-500 dark:text-zinc-400 leading-normal">
-                    You're logging in for the first time. Change your default password to continue.
+                    You&apos;re logging in for the first time. Change your default password to continue.
                   </p>
                 </div>
 

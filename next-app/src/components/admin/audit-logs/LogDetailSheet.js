@@ -193,7 +193,8 @@ export default function LogDetailSheet({
                     </p>
                     <button
                       onClick={() => handleCopy(selectedLog.details || "No description", "Description")}
-                      className="w-7 h-7 rounded-[6px] hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/10 text-[#C7C7CC] hover:text-[#111111] dark:hover:text-zinc-100 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors"
+                      aria-label="Copy Description"
+                      className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-400 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
                     >
                       <i className="ti ti-copy text-[14px]" style={{ fontSize: '14px' }}></i>
                     </button>
@@ -221,7 +222,8 @@ export default function LogDetailSheet({
                         {selectedLog.entityId && (
                           <button
                             onClick={() => handleCopy(selectedLog.entityId, "Reference ID")}
-                            className="w-7 h-7 rounded-[6px] hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/10 text-[#C7C7CC] hover:text-[#111111] dark:hover:text-zinc-100 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors"
+                            aria-label="Copy Reference ID"
+                            className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-400 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
                           >
                             <i className="ti ti-copy text-[14px]" style={{ fontSize: '14px' }}></i>
                           </button>
@@ -263,13 +265,15 @@ export default function LogDetailSheet({
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => onSearchSimilar(selectedLog.ip)}
-                        className="w-7 h-7 rounded-[6px] hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/10 text-[#C7C7CC] hover:text-[#111111] dark:hover:text-zinc-100 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors"
+                        aria-label="Search Similar IP"
+                        className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-400 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
                       >
                         <i className="ti ti-search text-[14px]" style={{ fontSize: '14px' }}></i>
                       </button>
                       <button
                         onClick={() => handleCopy(selectedLog.ip, "IP Address")}
-                        className="w-7 h-7 rounded-[6px] hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/10 text-[#C7C7CC] hover:text-[#111111] dark:hover:text-zinc-100 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors"
+                        aria-label="Copy IP Address"
+                        className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-400 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
                       >
                         <i className="ti ti-copy text-[14px]" style={{ fontSize: '14px' }}></i>
                       </button>

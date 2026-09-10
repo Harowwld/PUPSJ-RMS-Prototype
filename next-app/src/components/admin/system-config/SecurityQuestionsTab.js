@@ -60,9 +60,9 @@ export default function SecurityQuestionsTab({
                 <Button
                   onClick={handleSaveSecurityQuestions}
                   disabled={securitySaving}
-                  className="btn-brand-red active:scale-95 sm:w-auto transition-all dark:shadow-none"
+                  className="flex h-10 items-center justify-center rounded-xl! btn-brand-red text-white font-semibold text-xs px-5 active:scale-95 disabled:opacity-50 transition-all cursor-pointer shadow-xs border-0"
                 >
-                  <i className={`ph-bold ${securitySaving ? "ph-spinner animate-spin" : "ph-check"} mr-1.5`}></i>
+                  {securitySaving && <i className="ph-bold ph-spinner animate-spin mr-1.5 text-xs"></i>}
                   {securitySaving ? "Saving..." : "Save Questions"}
                 </Button>
               }
@@ -71,7 +71,7 @@ export default function SecurityQuestionsTab({
           </div>
 
           <div className="max-w-4xl mt-2">
-            <div className="flex flex-col gap-[20px]">
+            <div className="flex flex-col gap-5">
               {securityQuestions.map((q, i) => (
                 <div key={i} className="group flex flex-col">
                   <div className="flex items-center justify-between gap-2">
@@ -125,7 +125,7 @@ export default function SecurityQuestionsTab({
                   <Input
                     type="text"
                     placeholder="e.g. What was the name of your first elementary school?"
-                    className={`mt-[4px] h-[36px] rounded-[8px] border-[0.5px] bg-white text-[13px] font-normal text-[#111111] dark:text-zinc-100 px-[12px] transition-all focus-visible:ring-0 focus-visible:border-black/35 dark:focus-visible:border-white/35 ${ q && q.trim().length > 0 && (q.trim().length < 10 || new Set(q.toLowerCase().replace(/\s/g, "")).size < 5) ? "border-amber-300 dark:border-amber-600" : "border-black/15 dark:border-white/15" } dark:bg-card`}
+                    className={`mt-1.5 h-10 rounded-xl border bg-white dark:bg-zinc-800 text-xs font-normal text-gray-900 dark:text-zinc-100 px-3 transition-all focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon shadow-xs ${ q && q.trim().length > 0 && (q.trim().length < 10 || new Set(q.toLowerCase().replace(/\s/g, "")).size < 5) ? "border-amber-400 dark:border-amber-600" : "border-gray-200 dark:border-white/10" }`}
                     value={q}
                     onChange={(e) => {
                       const updated = [...securityQuestions]
@@ -136,14 +136,14 @@ export default function SecurityQuestionsTab({
                 </div>
               ))}
 
-              <button
+              <Button
                 type="button"
+                variant="outline"
                 onClick={handleAddQuestion}
-                className="mt-[8px] flex h-[36px] w-fit items-center rounded-[8px] border-[0.5px] border-black/15 bg-transparent px-[16px] text-[13px] font-normal text-[#8E8E93] transition-colors hover:text-[#111111] hover:border-black/30 dark:hover:text-zinc-200 dark:hover:border-white/30 cursor-pointer"
+                className="mt-2 flex h-10 w-fit items-center justify-center rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-4 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700 cursor-pointer active:scale-95 transition-all"
               >
-                <i className="ph-bold ph-plus text-[13px] text-[#8E8E93]"></i>
-                <span className="ml-[6px]">Add another question</span>
-              </button>
+                Add another question
+              </Button>
             </div>
           </div>
         </>

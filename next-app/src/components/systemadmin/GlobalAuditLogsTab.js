@@ -556,10 +556,11 @@ export default function GlobalAuditLogsTab({ showToast }) {
 
                 <div className="flex items-center gap-2">
                   <Button
-                    variant="ghost"
+                    type="button"
+                    variant="outline"
                     onClick={handleDownloadCSV}
                     disabled={total === 0 || isExporting || isGeneratingPdf}
-                    className="flex h-10 items-center justify-center rounded-xl! font-semibold text-xs text-gray-700 hover:text-gray-900 hover:bg-gray-100 dark:text-zinc-300 dark:hover:text-white dark:hover:bg-white/10 transition-colors px-4 cursor-pointer active:scale-95 border-0!"
+                    className="flex h-10 items-center justify-center rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
                   >
                     {isExporting ? (
                       <i className="ph-bold ph-spinner animate-spin text-[16px]"></i>
@@ -585,9 +586,198 @@ export default function GlobalAuditLogsTab({ showToast }) {
             }
           />
 
+          {/* Navigation Toolbar */}
+          <div className="border-t border-gray-100 dark:border-white/10 p-5 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
+            {/* Severity Filter Pills */}
+            <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-gray-200/60 dark:border-white/5 shrink-0 overflow-x-auto">
+              <button
+                type="button"
+                onClick={() => {
+                  setSeverityFilter("All")
+                  setPage(1)
+                }}
+                className={cn(
+                  "px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap",
+                  severityFilter === "All"
+                    ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
+                    : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
+                )}
+              >
+                All Events ({total > 0 ? total.toLocaleString() : 0})
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setSeverityFilter("INFO")
+                  setPage(1)
+                }}
+                className={cn(
+                  "px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap",
+                  severityFilter === "INFO"
+                    ? "bg-white dark:bg-zinc-700 text-emerald-700 dark:text-emerald-400 shadow-xs"
+                    : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
+                )}
+              >
+                Information
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setSeverityFilter("WARNING")
+                  setPage(1)
+                }}
+                className={cn(
+                  "px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap",
+                  severityFilter === "WARNING"
+                    ? "bg-white dark:bg-zinc-700 text-amber-700 dark:text-amber-400 shadow-xs"
+                    : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
+                )}
+              >
+                Warnings
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setSeverityFilter("CRITICAL")
+                  setPage(1)
+                }}
+                className={cn(
+                  "px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap",
+                  severityFilter === "CRITICAL"
+                    ? "bg-white dark:bg-zinc-700 text-red-700 dark:text-red-400 shadow-xs"
+                    : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
+                )}
+              >
+                Critical
+              </button>
+            </div>
+
+            {/* Search, Scope, Time, and Date Range Controls */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 flex-wrap">
+              {/* Search */}
+              <div className="relative flex-1 sm:w-64 min-w-[200px]">
+                <i className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+                <Input
+                  type="text"
+                  placeholder="Search logs by actor, action..."
+                  className="pl-8 h-9 text-xs w-full bg-white dark:bg-zinc-800 border-gray-200 dark:border-white/10 rounded-xl"
+                  value={localSearch}
+                  onChange={(e) => setLocalSearch(e.target.value)}
+                />
+              </div>
+
+              {/* Scope Select */}
+              <div className="w-[140px]">
+                <Select
+                  value={officeFilter}
+                  onChange={(e) => {
+                    setOfficeFilter(e.target.value)
+                    setPage(1)
+                  }}
+                  className="h-9 rounded-xl border border-gray-200 text-xs font-normal bg-white dark:bg-zinc-800 dark:border-white/10"
+                >
+                  <option value="All">All Scopes</option>
+                  <option value="global">Global (Platform)</option>
+                  {(Array.isArray(offices) ? offices : []).map((o) => (
+                    <option key={o.id} value={o.id}>
+                      {o.short_name}
+                    </option>
+                  ))}
+                </Select>
+              </div>
+
+              {/* Time Shortcuts */}
+              <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-gray-200/60 dark:border-white/5">
+                {[
+                  { key: "today", label: "Today" },
+                  { key: "yesterday", label: "Yest." },
+                  { key: "last7", label: "7d" },
+                  { key: "last30", label: "30d" },
+                ].map((range) => {
+                  const isActive = activeShortcut === range.key
+                  return (
+                    <button
+                      key={range.key}
+                      type="button"
+                      onClick={() => handleQuickRange(range.key)}
+                      className={cn(
+                        "px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all cursor-pointer whitespace-nowrap",
+                        isActive
+                          ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
+                          : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
+                      )}
+                    >
+                      {range.label}
+                    </button>
+                  )
+                })}
+              </div>
+
+              {/* Date pickers */}
+              <div className="flex items-center gap-1.5">
+                <div className="w-[105px]">
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "h-9 w-full justify-start rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-left text-xs font-normal shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-white/10 px-2.5",
+                          !startDate ? "text-gray-400 dark:text-zinc-500" : "text-gray-700 dark:text-zinc-200"
+                        )}
+                      >
+                        {startDate ? format(parseDateLocal(startDate), "MMM d") : "Start"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto rounded-2xl border border-gray-200 bg-white p-0 shadow-2xl dark:border-white/10 dark:bg-card" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={startDate ? parseDateLocal(startDate) : undefined}
+                        onSelect={(date) => {
+                          setStartDate(date ? format(date, "yyyy-MM-dd") : "")
+                          setPage(1)
+                        }}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+                <span className="text-[11px] text-gray-400 dark:text-zinc-500">→</span>
+                <div className="w-[105px]">
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "h-9 w-full justify-start rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-left text-xs font-normal shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-white/10 px-2.5",
+                          !endDate ? "text-gray-400 dark:text-zinc-500" : "text-gray-700 dark:text-zinc-200"
+                        )}
+                      >
+                        {endDate ? format(parseDateLocal(endDate), "MMM d") : "End"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto rounded-2xl border border-gray-200 bg-white p-0 shadow-2xl dark:border-white/10 dark:bg-card" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={endDate ? parseDateLocal(endDate) : undefined}
+                        onSelect={(date) => {
+                          setEndDate(date ? format(date, "yyyy-MM-dd") : "")
+                          setPage(1)
+                        }}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* Active Filter Chips Row */}
           {hasActiveFilters && (
-            <div className="flex-none border-b border-gray-100 bg-white px-6 py-3 animate-in fade-in slide-in-from-top-1 duration-normal dark:border-white/10 dark:bg-card">
+            <div className="flex-none border-t border-gray-100 dark:border-white/10 bg-white dark:bg-card px-6 py-3 animate-in fade-in slide-in-from-top-1 duration-normal">
               <div className="flex flex-wrap items-center gap-2">
                 <span className="mr-1 text-[11px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500">
                   Active filters:
@@ -662,208 +852,61 @@ export default function GlobalAuditLogsTab({ showToast }) {
             </div>
           )}
 
-          {/* Filters Toolbar */}
-          <div className="bg-white border-t border-gray-100 p-4 backdrop-blur-md dark:bg-card/50 dark:border-white/10">
-            <div className="flex w-full flex-wrap items-center gap-4">
-              {/* Search */}
-              <div className="flex-[2] min-w-[280px] group relative">
-                <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                  <i className="ph-bold ph-magnifying-glass text-gray-400 transition-colors group-focus-within:text-pup-maroon dark:text-zinc-500 text-sm"></i>
-                </div>
-                <Input
-                  type="text"
-                  placeholder="Search logs by actor, action, details, or IP..."
-                  className="h-10 w-full rounded-xl border border-gray-200 bg-white pl-9 pr-20 text-xs font-normal transition-all focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 placeholder:text-gray-400 dark:border-white/10 dark:bg-card dark:text-zinc-300 dark:focus:border-primary"
-                  value={localSearch}
-                  onChange={(e) => setLocalSearch(e.target.value)}
-                />
-                <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[12px] font-normal text-gray-400 dark:text-zinc-500">
-                  {total > 0 ? `${total.toLocaleString()} results` : "0 results"}
-                </div>
-              </div>
-
-              {/* Scope Select */}
-              <div className="min-w-[140px] flex-1">
-                <Select
-                  value={officeFilter}
-                  onChange={(e) => {
-                    setOfficeFilter(e.target.value)
-                    setPage(1)
-                  }}
-                  className="h-10 rounded-xl border border-gray-200 text-xs font-normal bg-white dark:bg-card dark:border-white/10"
-                >
-                  <option value="All">All Scopes</option>
-                  <option value="global">Global (Platform)</option>
-                  {(Array.isArray(offices) ? offices : []).map((o) => (
-                    <option key={o.id} value={o.id}>
-                      {o.short_name}
-                    </option>
-                  ))}
-                </Select>
-              </div>
-
-              {/* Severity Select */}
-              <div className="min-w-[130px] flex-1">
-                <Select
-                  value={severityFilter}
-                  onChange={(e) => {
-                    setSeverityFilter(e.target.value)
-                    setPage(1)
-                  }}
-                  className="h-10 rounded-xl border border-gray-200 text-xs font-normal bg-white dark:bg-card dark:border-white/10"
-                >
-                  <option value="All">Severity</option>
-                  <option value="INFO">Information</option>
-                  <option value="WARNING">Warning</option>
-                  <option value="CRITICAL">Critical</option>
-                </Select>
-              </div>
-
-              {/* Time shortcuts */}
-              <div className="flex items-center gap-[12px] h-[36px] flex-none">
-                {[
-                  { key: "today", label: "Today" },
-                  { key: "yesterday", label: "Yesterday" },
-                  { key: "last7", label: "7 days" },
-                  { key: "last30", label: "30 days" },
-                ].map((range) => {
-                  const isActive = activeShortcut === range.key
-                  return (
-                    <button
-                      key={range.key}
-                      type="button"
-                      onClick={() => handleQuickRange(range.key)}
-                      className={cn(
-                        "text-[12px] font-normal transition-all bg-transparent border-0 cursor-pointer shadow-none focus:outline-none focus:ring-0 pb-1",
-                        isActive
-                          ? "text-[#03a10e] dark:text-[#03a10e] border-b-[2px] border-[#03a10e] dark:border-[#03a10e] font-medium"
-                          : "text-gray-400 dark:text-zinc-500 hover:text-gray-600 dark:hover:text-zinc-300"
-                      )}
-                    >
-                      {range.label}
-                    </button>
-                  )
-                })}
-              </div>
-
-              {/* Date pickers */}
-              <div className="flex items-center gap-2 flex-none">
-                <div className="w-[125px]">
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className={cn(
-                          "h-10 w-full justify-start rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-card text-left text-xs font-normal shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-white/10",
-                          !startDate ? "text-gray-400 dark:text-zinc-500" : "text-gray-700 dark:text-zinc-200"
-                        )}
-                      >
-                        {startDate ? format(parseDateLocal(startDate), "MMM d, yyyy") : "Start Date"}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto rounded-2xl border border-gray-200 bg-white p-0 shadow-2xl dark:border-white/10 dark:bg-card" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={startDate ? parseDateLocal(startDate) : undefined}
-                        onSelect={(date) => {
-                          setStartDate(date ? format(date, "yyyy-MM-dd") : "")
-                          setPage(1)
-                        }}
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </div>
-                <div className="text-[12px] text-gray-400 dark:text-zinc-500 shrink-0">
-                  →
-                </div>
-                <div className="w-[125px]">
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className={cn(
-                          "h-10 w-full justify-start rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-card text-left text-xs font-normal shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-white/10",
-                          !endDate ? "text-gray-400 dark:text-zinc-500" : "text-gray-700 dark:text-zinc-200"
-                        )}
-                      >
-                        {endDate ? format(parseDateLocal(endDate), "MMM d, yyyy") : "End Date"}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto rounded-2xl border border-gray-200 bg-white p-0 shadow-2xl dark:border-white/10 dark:bg-card" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={endDate ? parseDateLocal(endDate) : undefined}
-                        onSelect={(date) => {
-                          setEndDate(date ? format(date, "yyyy-MM-dd") : "")
-                          setPage(1)
-                        }}
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </div>
-              </div>
+          {/* Content Area inside Single Card */}
+          {loading && (!logs || logs.length === 0) ? (
+            <AuditLogsTableSkeleton rowCount={8} embedded={true} />
+          ) : error ? (
+            <div className="flex min-h-[420px] flex-col items-center justify-center border-t border-gray-100 dark:border-white/10 bg-transparent text-center p-6">
+              <Empty className="flex flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400">
+                <EmptyHeader className="flex flex-col items-center gap-0">
+                  <div className="relative mb-6">
+                    <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
+                    <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
+                      <i className="ph-duotone ph-warning-circle text-3xl text-red-500 dark:text-red-400" />
+                    </EmptyMedia>
+                  </div>
+                  <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
+                    Load failed
+                  </EmptyTitle>
+                  <EmptyDescription className="mt-1 max-w-md text-sm font-medium text-gray-600 dark:text-zinc-300">
+                    {error}
+                  </EmptyDescription>
+                </EmptyHeader>
+              </Empty>
             </div>
-          </div>
-        </Card>
-
-        {/* Table Card */}
-        {loading && (!logs || logs.length === 0) ? (
-          <AuditLogsTableSkeleton rowCount={8} />
-        ) : error ? (
-          <div className="flex h-[420px] flex-col items-center justify-center rounded-2xl border border-dashed border-gray-200 dark:border-white/10 bg-white/40 dark:bg-zinc-900/20 text-center">
-            <Empty className="flex flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400">
-              <EmptyHeader className="flex flex-col items-center gap-0">
-                <div className="relative mb-6">
-                  <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                  <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
-                    <i className="ph-duotone ph-warning-circle text-3xl text-red-500 dark:text-red-400" />
-                  </EmptyMedia>
-                </div>
-                <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
-                  Load failed
-                </EmptyTitle>
-                <EmptyDescription className="mt-1 max-w-md text-sm font-medium text-gray-600 dark:text-zinc-300">
-                  {error}
-                </EmptyDescription>
-              </EmptyHeader>
-            </Empty>
-          </div>
-        ) : logs.length === 0 ? (
-          <div className="flex h-[420px] flex-col items-center justify-center rounded-2xl border border-dashed border-gray-200 dark:border-white/10 bg-white/40 dark:bg-zinc-900/20 text-center">
-            <Empty className="flex flex-col items-center justify-center border-0 bg-transparent text-center">
-              <EmptyHeader className="flex flex-col items-center gap-0">
-                <div className="relative mb-6">
-                  <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                  <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
-                    <i className="ph-duotone ph-magnifying-glass text-3xl text-gray-400 dark:text-zinc-500"></i>
-                  </EmptyMedia>
-                </div>
-                <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
-                  No Activity Found
-                </EmptyTitle>
-                <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400 mt-1">
-                  Try adjusting your search filters to find what you&apos;re looking for.
-                </EmptyDescription>
-                {hasActiveFilters && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleClearFilters}
-                    className="mt-6 flex h-10 items-center gap-2 rounded-xl border border-gray-300 bg-white px-5 text-xs font-semibold text-gray-700 shadow-xs transition-colors hover:bg-gray-50 dark:bg-zinc-900 dark:border-white/10 dark:text-zinc-300 cursor-pointer"
-                  >
-                    <i className="ph-bold ph-arrow-counter-clockwise"></i>
-                    Clear Search
-                  </Button>
-                )}
-              </EmptyHeader>
-            </Empty>
-          </div>
-        ) : (
-          <div className="flex flex-1 flex-col min-h-0">
-            <div className="flex-1 min-h-0 flex flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card isolate">
-              <div className="flex-1 overflow-auto rounded-[inherit] isolate">
+          ) : logs.length === 0 ? (
+            <div className="flex min-h-[420px] flex-col items-center justify-center border-t border-gray-100 dark:border-white/10 bg-transparent text-center p-6">
+              <Empty className="flex flex-col items-center justify-center border-0 bg-transparent text-center">
+                <EmptyHeader className="flex flex-col items-center gap-0">
+                  <div className="relative mb-6">
+                    <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
+                    <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
+                      <i className="ph-duotone ph-magnifying-glass text-3xl text-gray-400 dark:text-zinc-500"></i>
+                    </EmptyMedia>
+                  </div>
+                  <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
+                    No Activity Found
+                  </EmptyTitle>
+                  <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400 mt-1">
+                    Try adjusting your search filters to find what you&apos;re looking for.
+                  </EmptyDescription>
+                  {hasActiveFilters && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleClearFilters}
+                      className="mt-6 flex h-10 items-center gap-2 rounded-xl border border-gray-300 bg-white px-5 text-xs font-semibold text-gray-700 shadow-xs transition-colors hover:bg-gray-50 dark:bg-zinc-900 dark:border-white/10 dark:text-zinc-300 cursor-pointer"
+                    >
+                      <i className="ph-bold ph-arrow-counter-clockwise"></i>
+                      Clear Search
+                    </Button>
+                  )}
+                </EmptyHeader>
+              </Empty>
+            </div>
+          ) : (
+            <div className="overflow-hidden border-t border-gray-200 dark:border-white/10 bg-white dark:bg-card flex flex-col flex-1">
+              <div className="overflow-x-auto">
                 <table className="min-w-full text-sm">
               <thead className="sticky top-0 z-10 border-b-[0.5px] border-black/10 dark:border-white/10 bg-white dark:bg-card">
                 <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500 h-11 select-none">
@@ -1054,9 +1097,10 @@ export default function GlobalAuditLogsTab({ showToast }) {
                                 <TooltipTrigger asChild>
                                   <button
                                     onClick={() => setSelectedLog(log)}
-                                    className="w-7 h-7 rounded-lg hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/10 text-[#C7C7CC] hover:text-[#E5484D] dark:hover:text-red-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors"
+                                    aria-label="View Details"
+                                    className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
                                   >
-                                    <i className="ti ti-eye text-[16px]"></i>
+                                    <i className="ph-bold ph-eye text-[16px]"></i>
                                   </button>
                                 </TooltipTrigger>
                                 <TooltipContent>View Details</TooltipContent>
@@ -1136,8 +1180,8 @@ export default function GlobalAuditLogsTab({ showToast }) {
             </div>
           )}
         </div>
-      </div>
-    )}
+      )}
+    </Card>
 
         {/* Log Detail Side Sheet */}
         <LogDetailSheet

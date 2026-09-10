@@ -155,9 +155,9 @@ export default function PromptModal({
         <div className="flex flex-row justify-end gap-2.5 bg-white p-6 pt-0 dark:bg-card border-none">
           <Button
             type="button"
-            variant="ghost"
+            variant="outline"
             onClick={onCancel}
-            className="h-10 px-4 text-xs font-semibold text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:text-zinc-400 dark:hover:bg-white/5 rounded-xl cursor-pointer border-none shadow-none"
+            className="h-10 px-4 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
             disabled={isLoading}
           >
             {cancelLabel}

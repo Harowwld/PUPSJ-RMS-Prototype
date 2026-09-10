@@ -16,9 +16,11 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog"
 import PageHeader from "@/components/shared/PageHeader"
+import { RefreshButton } from "@/components/shared/RefreshButton"
 import ConfirmModal from "@/components/shared/ConfirmModal"
 import { Badge } from "@/components/ui/badge"
 import { Select } from "@/components/ui/select"
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip"
 import {
   Empty,
   EmptyHeader,
@@ -105,13 +107,14 @@ export default function OfficeManagementTab({ showToast }) {
   const [offices, setOffices] = useState([])
   const [availableModules, setAvailableModules] = useState([])
   const [loading, setLoading] = useState(true)
+  const [isManualLoading, setIsManualLoading] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState("Active")
   const [selectedKpi, setSelectedKpi] = useState(null)
-  const [deactivateOfficeTarget, setDeactivateOfficeTarget] = useState(null)
-  const [isDeactivating, setIsDeactivating] = useState(false)
-  const [activateOfficeTarget, setActivateOfficeTarget] = useState(null)
-  const [isActivating, setIsActivating] = useState(false)
+  const [archiveOfficeTarget, setArchiveOfficeTarget] = useState(null)
+  const [isArchiving, setIsArchiving] = useState(false)
+  const [restoreOfficeTarget, setRestoreOfficeTarget] = useState(null)
+  const [isRestoring, setIsRestoring] = useState(false)
   const [copiedTokenId, setCopiedTokenId] = useState(null)
   const [revealedTokens, setRevealedTokens] = useState({})
   const [showModalToken, setShowModalToken] = useState(false)
@@ -215,6 +218,15 @@ export default function OfficeManagementTab({ showToast }) {
       console.error("Failed to fetch available modules", err)
     }
   }, [])
+
+  const handleManualRefresh = useCallback(async () => {
+    setIsManualLoading(true)
+    try {
+      await Promise.all([fetchOffices(true), fetchModules()])
+    } finally {
+      setIsManualLoading(false)
+    }
+  }, [fetchOffices, fetchModules])
 
   useEffect(() => {
     fetchOffices()
@@ -358,7 +370,11 @@ export default function OfficeManagementTab({ showToast }) {
       })
       const json = await res.json()
       if (res.ok && json.ok) {
-        showToast(`Office set to ${nextStatus}`)
+        showToast(
+          nextStatus === "Active"
+            ? "Department restored successfully"
+            : "Department archived successfully"
+        )
         invalidateDataCache("systemadmin_offices")
         fetchOffices(true)
       } else {
@@ -385,25 +401,25 @@ export default function OfficeManagementTab({ showToast }) {
     }
   }, [offices])
 
-  const confirmDeactivateOffice = async () => {
-    if (!deactivateOfficeTarget) return
-    setIsDeactivating(true)
+  const confirmArchiveOffice = async () => {
+    if (!archiveOfficeTarget) return
+    setIsArchiving(true)
     try {
-      await handleToggleStatus(deactivateOfficeTarget)
-      setDeactivateOfficeTarget(null)
+      await handleToggleStatus(archiveOfficeTarget)
+      setArchiveOfficeTarget(null)
     } finally {
-      setIsDeactivating(false)
+      setIsArchiving(false)
     }
   }
 
-  const confirmActivateOffice = async () => {
-    if (!activateOfficeTarget) return
-    setIsActivating(true)
+  const confirmRestoreOffice = async () => {
+    if (!restoreOfficeTarget) return
+    setIsRestoring(true)
     try {
-      await handleToggleStatus(activateOfficeTarget)
-      setActivateOfficeTarget(null)
+      await handleToggleStatus(restoreOfficeTarget)
+      setRestoreOfficeTarget(null)
     } finally {
-      setIsActivating(false)
+      setIsRestoring(false)
     }
   }
 
@@ -473,7 +489,7 @@ export default function OfficeManagementTab({ showToast }) {
       key: "active",
       label: "Active Departments",
       value: stats.active,
-      sublabel: `${stats.inactive} archived or inactive`,
+      sublabel: `${stats.inactive} archived departments`,
       color: "emerald",
       shape1: "from-[#047857]/40 to-[#059669]/0",
       shape2: "from-[#34d399]/30 to-[#059669]/0",
@@ -513,19 +529,19 @@ export default function OfficeManagementTab({ showToast }) {
             <div
               key={stat.key}
               className={cn(
-                "relative group rounded-xl",
+                "relative group rounded-2xl",
                 selectedKpi === stat.key ? "z-30" : "z-10"
               )}
             >
               <div
                 onClick={() => setSelectedKpi(selectedKpi === stat.key ? null : stat.key)}
                 className={cn(
-                  "relative overflow-hidden rounded-xl border-none p-5 cursor-pointer bg-gradient-to-br select-none",
+                  "relative overflow-hidden rounded-2xl border-none p-5 cursor-pointer bg-gradient-to-br select-none shadow-sm hover:shadow-md transition-shadow",
                   stat.bg,
                   stat.glass
                 )}
               >
-                <div className="absolute inset-0 overflow-hidden rounded-xl pointer-events-none z-0">
+                <div className="absolute inset-0 overflow-hidden rounded-2xl pointer-events-none z-0">
                   <div
                     className={cn("absolute bottom-0 left-0 w-[70%] h-[80%] bg-gradient-to-tr pointer-events-none", stat.shape1)}
                     style={{ clipPath: "polygon(0% 100%, 100% 100%, 0% 0%)" }}
@@ -556,7 +572,7 @@ export default function OfficeManagementTab({ showToast }) {
               {/* Absolute details container */}
               <div
                 className={cn(
-                  "absolute top-full left-0 right-0 z-[100] mt-2 rounded-xl bg-gradient-to-br p-5 shadow-2xl transition-all duration-300 ease-in-out origin-top",
+                  "absolute top-full left-0 right-0 z-[100] mt-2 rounded-2xl bg-gradient-to-br p-5 shadow-2xl transition-all duration-300 ease-in-out origin-top",
                   stat.bg,
                   selectedKpi === stat.key ? "scale-y-100 opacity-100 translate-y-0" : "scale-y-95 opacity-0 -translate-y-2 pointer-events-none"
                 )}
@@ -637,8 +653,8 @@ export default function OfficeManagementTab({ showToast }) {
         </div>
       )}
 
-      {/* Main Card with Header, Active Filter Chips & Toolbar */}
-      <Card className="rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none overflow-hidden">
+      {/* Main Card with Header, Toolbar & Active Filter Chips */}
+      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
         <PageHeader
           icon="ph-bold ph-buildings"
           title={
@@ -656,19 +672,109 @@ export default function OfficeManagementTab({ showToast }) {
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
           descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
           actions={
-            <Button
-              onClick={handleOpenCreate}
-              className="flex h-10 items-center justify-center rounded-xl! btn-brand-red text-white font-semibold text-xs active:scale-95 transition-all cursor-pointer px-5 shadow-xs"
-            >
-              <i className="ph-bold ph-plus mr-1.5 text-[14px]"></i>
-              Add Department
-            </Button>
+            <div className="flex items-center gap-6">
+              <RefreshButton
+                onRefresh={handleManualRefresh}
+                isLoading={isManualLoading}
+                title="Refresh Offices & Modules"
+              />
+
+              <div className="h-6 w-px bg-gray-200 dark:bg-zinc-800" />
+
+              <Button
+                onClick={handleOpenCreate}
+                className="flex h-10 items-center justify-center rounded-xl! btn-brand-red text-white font-semibold text-xs active:scale-95 transition-all cursor-pointer px-5 shadow-xs"
+              >
+                Add Department
+              </Button>
+            </div>
           }
         />
 
+        {/* Navigation Toolbar */}
+        <div className="border-t border-gray-100 dark:border-white/10 p-5 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
+          {/* Left: Active vs Archived Tabs */}
+          <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-gray-200/60 dark:border-white/5 shrink-0 overflow-x-auto">
+            <button
+              type="button"
+              onClick={() => setStatusFilter("Active")}
+              className={cn(
+                "px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap",
+                statusFilter === "Active"
+                  ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
+                  : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
+              )}
+            >
+              Active Departments ({stats.active})
+            </button>
+            <button
+              type="button"
+              onClick={() => setStatusFilter("Inactive")}
+              className={cn(
+                "px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap",
+                statusFilter === "Inactive"
+                  ? "bg-white dark:bg-zinc-700 text-pup-maroon dark:text-rose-400 shadow-xs"
+                  : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
+              )}
+            >
+              Archived ({stats.inactive})
+            </button>
+          </div>
+
+          {/* Right: Search Input & View Switcher Group */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0">
+            <div className="w-full sm:w-[320px] lg:w-[380px] relative group shrink-0">
+              <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                <i className="ph-bold ph-magnifying-glass text-gray-400 transition-colors group-focus-within:text-pup-maroon dark:text-zinc-500 text-sm"></i>
+              </div>
+              <Input
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search offices by name, acronym, ID..."
+                className="h-9 w-full rounded-xl border border-gray-200 bg-white pl-8 pr-20 text-xs font-normal placeholder:text-gray-400 dark:border-white/10 dark:bg-card focus-visible:ring-pup-maroon shadow-none"
+              />
+              <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] text-gray-400 dark:text-zinc-500 font-mono">
+                {filteredOffices.length > 0 ? `${filteredOffices.length} results` : "0 results"}
+              </div>
+            </div>
+
+            {/* View Switcher: Grid vs Table */}
+            <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl shrink-0 border border-gray-200/60 dark:border-white/5">
+              <button
+                type="button"
+                onClick={() => setLayoutView("grid")}
+                title="Grid Card View"
+                className={cn(
+                  "h-7 px-3 rounded-lg flex items-center gap-1.5 text-xs font-semibold transition-all cursor-pointer border-0",
+                  layoutView === "grid"
+                    ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-zinc-50 shadow-xs"
+                    : "text-gray-500 hover:text-gray-800 dark:text-zinc-400 dark:hover:text-zinc-200 bg-transparent"
+                )}
+              >
+                <i className="ph-bold ph-squares-four text-sm"></i>
+                <span className="hidden sm:inline">Grid</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setLayoutView("table")}
+                title="Compact Table View"
+                className={cn(
+                  "h-7 px-3 rounded-lg flex items-center gap-1.5 text-xs font-semibold transition-all cursor-pointer border-0",
+                  layoutView === "table"
+                    ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-zinc-50 shadow-xs"
+                    : "text-gray-500 hover:text-gray-800 dark:text-zinc-400 dark:hover:text-zinc-200 bg-transparent"
+                )}
+              >
+                <i className="ph-bold ph-list-dashes text-sm"></i>
+                <span className="hidden sm:inline">Table</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
         {/* Active Filter Chips Row */}
         {hasActiveFilters && (
-          <div className="flex-none border-b border-gray-100 bg-white px-6 py-3 animate-in fade-in slide-in-from-top-1 duration-normal dark:border-white/10 dark:bg-card">
+          <div className="flex-none border-t border-gray-100 dark:border-white/10 bg-white dark:bg-card px-6 py-2.5 animate-in fade-in slide-in-from-top-1 duration-normal">
             <div className="flex flex-wrap items-center gap-2">
               <span className="mr-1 text-[11px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500">
                 Active filters:
@@ -696,95 +802,12 @@ export default function OfficeManagementTab({ showToast }) {
           </div>
         )}
 
-        <CardContent className="font-inter bg-white p-[24px] dark:bg-card/50 backdrop-blur-md flex flex-col gap-5">
-          <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 w-full select-none">
-            {/* Left: Active vs Archived Underline Tabs */}
-            <div className="flex items-center gap-6 shrink-0 h-10 px-1 self-start lg:self-auto">
-              <button
-                type="button"
-                onClick={() => setStatusFilter("Active")}
-                className={cn(
-                  "relative h-full flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent",
-                  statusFilter === "Active"
-                    ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
-                    : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
-                )}
-              >
-                Active ({stats.active})
-              </button>
-              <button
-                type="button"
-                onClick={() => setStatusFilter("Inactive")}
-                className={cn(
-                  "relative h-full flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent",
-                  statusFilter === "Inactive"
-                    ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
-                    : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
-                )}
-              >
-                Archived ({stats.inactive})
-              </button>
-            </div>
-
-            {/* Right: Search Input & View Switcher Group */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0 w-full lg:w-auto">
-              {/* Search Input with increased width */}
-              <div className="w-full sm:w-[360px] lg:w-[420px] relative group shrink-0">
-                <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                  <i className="ph-bold ph-magnifying-glass text-gray-400 transition-colors group-focus-within:text-pup-maroon dark:text-zinc-500 text-sm"></i>
-                </div>
-                <Input
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search offices by name, acronym, ID..."
-                  className="h-10 w-full rounded-xl border border-gray-200 bg-white pl-9 pr-24 text-xs font-normal placeholder:text-gray-400 dark:border-white/10 dark:bg-card focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5"
-                />
-                <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[12px] font-normal text-gray-400 dark:text-zinc-500">
-                  {filteredOffices.length > 0 ? `${filteredOffices.length} results` : "0 results"}
-                </div>
-              </div>
-
-              {/* View Switcher: Grid vs Table */}
-              <div className="flex items-center gap-1 bg-gray-100 dark:bg-zinc-800/80 p-1 rounded-xl shrink-0 border border-gray-200/60 dark:border-white/5">
-                <button
-                  type="button"
-                  onClick={() => setLayoutView("grid")}
-                  title="Grid Card View"
-                  className={cn(
-                    "h-8 px-3 rounded-lg flex items-center gap-1.5 text-xs font-semibold transition-all cursor-pointer border-0",
-                    layoutView === "grid"
-                      ? "bg-white dark:bg-zinc-900 text-gray-900 dark:text-zinc-50 shadow-2xs"
-                      : "text-gray-500 hover:text-gray-800 dark:text-zinc-400 dark:hover:text-zinc-200 bg-transparent"
-                  )}
-                >
-                  <i className="ph-bold ph-squares-four text-sm"></i>
-                  <span className="hidden sm:inline">Grid</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setLayoutView("table")}
-                  title="Compact Table View"
-                  className={cn(
-                    "h-8 px-3 rounded-lg flex items-center gap-1.5 text-xs font-semibold transition-all cursor-pointer border-0",
-                    layoutView === "table"
-                      ? "bg-white dark:bg-zinc-900 text-gray-900 dark:text-zinc-50 shadow-2xs"
-                      : "text-gray-500 hover:text-gray-800 dark:text-zinc-400 dark:hover:text-zinc-200 bg-transparent"
-                  )}
-                >
-                  <i className="ph-bold ph-list-dashes text-sm"></i>
-                  <span className="hidden sm:inline">Table</span>
-                </button>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Offices Grid */}
-      {loading ? (
-        <OfficeGridSkeleton layoutView={layoutView} count={6} />
-      ) : filteredOffices.length === 0 ? (
-        <div className="flex h-[420px] flex-col items-center justify-center rounded-2xl border border-dashed border-gray-200 dark:border-white/10 bg-white/40 dark:bg-zinc-900/20 text-center">
+        {/* Content Section inside the single card */}
+        <div className="overflow-hidden border-t border-gray-200 dark:border-white/10 bg-white dark:bg-card flex flex-col flex-1">
+          {loading ? (
+            <OfficeGridSkeleton layoutView={layoutView} count={6} />
+          ) : filteredOffices.length === 0 ? (
+            <div className="flex h-[400px] flex-col items-center justify-center p-6 text-center">
           <Empty className="flex flex-col items-center justify-center border-0 bg-transparent text-center">
             <EmptyHeader className="flex flex-col items-center gap-0">
               <div className="relative mb-6">
@@ -805,7 +828,7 @@ export default function OfficeManagementTab({ showToast }) {
                 {searchQuery
                   ? "We couldn't find any offices matching your search criteria. Try adjusting your keywords."
                   : (statusFilter === "Inactive"
-                    ? "There are currently no archived or deactivated offices in the system."
+                    ? "There are currently no archived departments in the system."
                     : "There are currently no administrative offices or campus departments configured in the system.")}
               </EmptyDescription>
               {searchQuery ? (
@@ -813,17 +836,15 @@ export default function OfficeManagementTab({ showToast }) {
                   variant="outline"
                   size="sm"
                   onClick={() => setSearchQuery("")}
-                  className="mt-6 flex h-10 items-center gap-2 rounded-xl border border-gray-300 bg-white px-5 text-xs font-semibold text-gray-700 shadow-xs transition-colors hover:bg-gray-50 dark:bg-zinc-900 dark:border-white/10 dark:text-zinc-300 cursor-pointer"
+                  className="mt-6 flex h-10 items-center justify-center rounded-xl border border-gray-300 bg-white px-5 text-xs font-semibold text-gray-700 shadow-xs transition-all active:scale-95 hover:bg-gray-50 dark:bg-zinc-900 dark:border-white/10 dark:text-zinc-300 cursor-pointer"
                 >
-                  <i className="ph-bold ph-arrow-counter-clockwise"></i>
                   Clear Search
                 </Button>
               ) : statusFilter === "Active" ? (
                 <Button
                   onClick={handleOpenCreate}
-                  className="mt-6 flex h-10 items-center gap-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white px-5 text-xs font-semibold shadow-xs dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200 cursor-pointer"
+                  className="mt-6 flex h-10 items-center justify-center rounded-xl bg-slate-900 hover:bg-slate-800 text-white px-5 text-xs font-semibold shadow-xs dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200 cursor-pointer active:scale-95 transition-all"
                 >
-                  <i className="ph-bold ph-plus"></i>
                   Create First Office
                 </Button>
               ) : null}
@@ -831,7 +852,8 @@ export default function OfficeManagementTab({ showToast }) {
           </Empty>
         </div>
       ) : layoutView === "grid" ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="p-6 bg-gray-50/30 dark:bg-zinc-900/20">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredOffices.map((office) => {
             const accent = office.accent_color || "#800000"
             const isActive = office.status === "Active"
@@ -851,9 +873,9 @@ export default function OfficeManagementTab({ showToast }) {
                       <div className="mb-3 px-2.5 py-1.5 rounded-lg bg-gray-100 dark:bg-zinc-800/80 text-[11px] font-medium text-gray-600 dark:text-zinc-300 flex items-center justify-between border border-gray-200/60 dark:border-white/5">
                         <span className="flex items-center gap-1.5">
                           <i className="ph-bold ph-archive text-gray-400"></i>
-                          <span>Archived Office</span>
+                          <span>Archived Department</span>
                         </span>
-                        <span className="text-[10px] uppercase tracking-wider text-gray-400 font-medium">Inactive</span>
+                        <span className="text-[10px] uppercase tracking-wider text-gray-400 font-medium">Archived</span>
                       </div>
                     )}
 
@@ -1007,20 +1029,21 @@ export default function OfficeManagementTab({ showToast }) {
                           Configure
                         </Button>
                         <Button
-                          variant="ghost"
-                          onClick={() => setDeactivateOfficeTarget(office)}
-                          className="h-8 px-3 rounded-xl text-xs font-semibold cursor-pointer border-0 shadow-none transition-colors text-[#ff3b30] hover:bg-[#ff3b30]/10 dark:text-[#ff453a] dark:hover:bg-[#ff453a]/15"
+                          type="button"
+                          variant="outline"
+                          onClick={() => setArchiveOfficeTarget(office)}
+                          className="h-8 px-3 rounded-xl text-xs font-semibold cursor-pointer border border-rose-200 dark:border-rose-900/40 text-[#ff3b30] dark:text-[#ff453a] hover:bg-rose-50 dark:hover:bg-rose-950/20 shadow-xs transition-all active:scale-95"
                         >
-                          Deactivate
+                          Archive
                         </Button>
                       </>
                     ) : (
                       <Button
-                        onClick={() => setActivateOfficeTarget(office)}
-                        className="w-full bg-[#34c759]/10 hover:bg-[#34c759]/20 text-[#28a745] dark:bg-[#30d158]/15 dark:hover:bg-[#30d158]/25 dark:text-[#30d158] font-semibold text-xs h-8 cursor-pointer rounded-xl border-0 shadow-none transition-colors flex items-center justify-center gap-1.5"
+                        type="button"
+                        onClick={() => setRestoreOfficeTarget(office)}
+                        className="w-full bg-[#34c759]/10 hover:bg-[#34c759]/20 text-[#28a745] dark:bg-[#30d158]/15 dark:hover:bg-[#30d158]/25 dark:text-[#30d158] font-semibold text-xs h-8 cursor-pointer rounded-xl border-0 shadow-none transition-all active:scale-95 flex items-center justify-center"
                       >
-                        <i className="ph-bold ph-arrow-counter-clockwise text-[13px]"></i>
-                        <span>Activate Department</span>
+                        Restore Department
                       </Button>
                     )}
                   </div>
@@ -1028,11 +1051,11 @@ export default function OfficeManagementTab({ showToast }) {
               </Card>
             )
           })}
+          </div>
         </div>
       ) : (
         /* Compact Table View */
-        <div className="rounded-2xl border border-gray-200 dark:border-white/10 overflow-hidden bg-white dark:bg-card shadow-sm">
-          <div className="overflow-x-auto">
+        <div className="overflow-x-auto">
             <table className="w-full text-left text-xs text-gray-600 dark:text-zinc-400">
               <thead className="sticky top-0 z-10 border-b-[0.5px] border-black/10 dark:border-white/10 bg-white dark:bg-card">
                 <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500 h-11 select-none">
@@ -1204,71 +1227,106 @@ export default function OfficeManagementTab({ showToast }) {
                               : "bg-gray-100 text-[#8E8E93] dark:bg-zinc-800 dark:text-zinc-400"
                           )}
                         >
-                          {isActive ? "Active" : "Inactive"}
+                          {isActive ? "Active" : "Archived"}
                         </div>
                       </td>
 
                       <td className="px-5 py-3.5 text-right whitespace-nowrap">
-                        <div className="flex items-center justify-end gap-1.5">
+                        <div className="flex items-center justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
                           {office.ingest_token && (
-                            <div className="flex items-center gap-0.5 mr-1">
-                              <span className="text-[10px] text-gray-400 dark:text-zinc-500 tracking-wider">
+                            <div className="flex items-center gap-1 mr-1">
+                              <span className="text-[10px] text-gray-400 dark:text-zinc-500 tracking-wider font-mono">
                                 {revealedTokens[office.id] ? office.ingest_token.slice(0, 10) + "..." : "••••••••"}
                               </span>
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  setRevealedTokens(prev => ({ ...prev, [office.id]: !prev[office.id] }))
-                                }}
-                                title={revealedTokens[office.id] ? "Hide Security Key" : "Show Security Key"}
-                                className="h-7 w-7 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-700 dark:hover:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer border-0 bg-transparent"
-                              >
-                                <i className={cn("text-xs", revealedTokens[office.id] ? "ph-bold ph-eye-slash" : "ph-bold ph-eye")}></i>
-                              </button>
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  navigator.clipboard.writeText(office.ingest_token)
-                                  setCopiedTokenId(office.id)
-                                  showToast("Scanner security key copied to clipboard")
-                                  setTimeout(() => setCopiedTokenId(null), 2000)
-                                }}
-                                title="Copy Scanner Security Key"
-                                className="h-7 w-7 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-700 dark:hover:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer border-0 bg-transparent"
-                              >
-                                <i className={cn("text-xs", copiedTokenId === office.id ? "ph-bold ph-check text-emerald-600" : "ph-bold ph-copy")}></i>
-                              </button>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation()
+                                      setRevealedTokens(prev => ({ ...prev, [office.id]: !prev[office.id] }))
+                                    }}
+                                    aria-label={revealedTokens[office.id] ? "Hide Security Key" : "Show Security Key"}
+                                    className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer active:scale-95 border-0 bg-transparent"
+                                  >
+                                    <i className={cn("text-[15px]", revealedTokens[office.id] ? "ph-bold ph-eye-slash" : "ph-bold ph-eye")}></i>
+                                  </button>
+                                </TooltipTrigger>
+                                <TooltipContent>{revealedTokens[office.id] ? "Hide Key" : "Show Key"}</TooltipContent>
+                              </Tooltip>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation()
+                                      navigator.clipboard.writeText(office.ingest_token)
+                                      setCopiedTokenId(office.id)
+                                      showToast("Scanner security key copied to clipboard")
+                                      setTimeout(() => setCopiedTokenId(null), 2000)
+                                    }}
+                                    aria-label="Copy Scanner Security Key"
+                                    className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer active:scale-95 border-0 bg-transparent"
+                                  >
+                                    <i className={cn("text-[15px]", copiedTokenId === office.id ? "ph-bold ph-check text-emerald-600" : "ph-bold ph-copy")}></i>
+                                  </button>
+                                </TooltipTrigger>
+                                <TooltipContent>{copiedTokenId === office.id ? "Copied!" : "Copy Key"}</TooltipContent>
+                              </Tooltip>
                             </div>
                           )}
                           {isActive ? (
                             <>
-                              <Button
-                                size="sm"
-                                onClick={() => handleOpenEdit(office)}
-                                className="h-7 px-2.5 rounded-lg bg-[#f2f2f7] hover:bg-[#e5e5ea] dark:bg-[#2c2c2e] dark:hover:bg-[#3a3a3c] text-gray-800 dark:text-[#f2f2f7] font-semibold text-[11px] cursor-pointer border-0 shadow-none"
-                              >
-                                Configure
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => setDeactivateOfficeTarget(office)}
-                                className="h-7 px-2 rounded-lg text-[11px] font-semibold text-[#ff3b30] hover:bg-[#ff3b30]/10 dark:text-[#ff453a] cursor-pointer border-0 shadow-none"
-                              >
-                                Deactivate
-                              </Button>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation()
+                                      handleOpenEdit(office)
+                                    }}
+                                    aria-label="Configure Department"
+                                    className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-amber-600 dark:text-zinc-400 dark:hover:text-amber-400 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer active:scale-95 border-0 bg-transparent"
+                                  >
+                                    <i className="ph-bold ph-gear-six text-[16px]"></i>
+                                  </button>
+                                </TooltipTrigger>
+                                <TooltipContent>Configure</TooltipContent>
+                              </Tooltip>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation()
+                                      setArchiveOfficeTarget(office)
+                                    }}
+                                    aria-label="Archive Department"
+                                    className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-red-600 dark:text-zinc-400 dark:hover:text-red-400 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer active:scale-95 border-0 bg-transparent"
+                                  >
+                                    <i className="ph-bold ph-archive text-[16px]"></i>
+                                  </button>
+                                </TooltipTrigger>
+                                <TooltipContent>Archive</TooltipContent>
+                              </Tooltip>
                             </>
                           ) : (
-                            <Button
-                              size="sm"
-                              onClick={() => setActivateOfficeTarget(office)}
-                              className="h-7 px-3 rounded-lg bg-[#34c759]/10 hover:bg-[#34c759]/20 text-[#28a745] dark:bg-[#30d158]/15 dark:hover:bg-[#30d158]/25 dark:text-[#30d158] font-semibold text-[11px] cursor-pointer border-0 shadow-none flex items-center gap-1"
-                            >
-                              <i className="ph-bold ph-arrow-counter-clockwise text-xs"></i>
-                              <span>Activate</span>
-                            </Button>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    setRestoreOfficeTarget(office)
+                                  }}
+                                  aria-label="Restore Department"
+                                  className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-emerald-600 dark:text-zinc-400 dark:hover:text-emerald-400 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer active:scale-95 border-0 bg-transparent"
+                                >
+                                  <i className="ph-bold ph-arrow-counter-clockwise text-[16px]"></i>
+                                </button>
+                              </TooltipTrigger>
+                              <TooltipContent>Restore</TooltipContent>
+                            </Tooltip>
                           )}
                         </div>
                       </td>
@@ -1278,8 +1336,9 @@ export default function OfficeManagementTab({ showToast }) {
               </tbody>
             </table>
           </div>
+        )}
         </div>
-      )}
+      </Card>
 
       {/* Create / Edit Dialog - Wide & Spacious Layout with Collapsible Accordion */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -1773,9 +1832,9 @@ export default function OfficeManagementTab({ showToast }) {
             <DialogFooter className="p-6 pt-0 bg-white dark:bg-card border-none flex items-center justify-end gap-2.5">
               <Button
                 type="button"
-                variant="ghost"
+                variant="outline"
                 onClick={() => setDialogOpen(false)}
-                className="h-10 px-4 text-xs font-semibold text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:text-zinc-400 dark:hover:bg-white/5 rounded-xl cursor-pointer border-none shadow-none"
+                className="h-10 px-4 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
               >
                 Cancel
               </Button>
@@ -1791,34 +1850,34 @@ export default function OfficeManagementTab({ showToast }) {
         </DialogContent>
       </Dialog>
 
-      {/* Deactivate Confirmation Modal */}
+      {/* Archive Confirmation Modal */}
       <ConfirmModal
-        open={!!deactivateOfficeTarget}
-        onCancel={() => setDeactivateOfficeTarget(null)}
-        onConfirm={confirmDeactivateOffice}
-        isLoading={isDeactivating}
-        title="Deactivate Office"
-        message={`Are you sure you want to deactivate ${deactivateOfficeTarget?.name || "this office"}? Staff members assigned to this office will not have access until it is reactivated.`}
-        confirmLabel="Deactivate Office"
+        open={!!archiveOfficeTarget}
+        onCancel={() => setArchiveOfficeTarget(null)}
+        onConfirm={confirmArchiveOffice}
+        isLoading={isArchiving}
+        title="Archive Department"
+        message={`Are you sure you want to archive ${archiveOfficeTarget?.name || "this department"}? Staff members assigned to this department will not have access until it is restored.`}
+        confirmLabel="Archive Department"
         variant="danger"
         isAppleStyled={true}
         isPersonnelModal={true}
-        selectedItems={deactivateOfficeTarget ? [`${deactivateOfficeTarget.short_name} (${deactivateOfficeTarget.id}) — ${deactivateOfficeTarget.staff_count || 0} Staff assigned`] : []}
+        selectedItems={archiveOfficeTarget ? [`${archiveOfficeTarget.short_name} (${archiveOfficeTarget.id}) — ${archiveOfficeTarget.staff_count || 0} Staff assigned`] : []}
       />
 
-      {/* Activate Confirmation Modal */}
+      {/* Restore Confirmation Modal */}
       <ConfirmModal
-        open={!!activateOfficeTarget}
-        onCancel={() => setActivateOfficeTarget(null)}
-        onConfirm={confirmActivateOffice}
-        isLoading={isActivating}
-        title="Reactivate Office"
-        message={`Are you sure you want to reactivate ${activateOfficeTarget?.name || "this office"}? Assigned staff members will regain access to their office workspace.`}
-        confirmLabel="Reactivate Office"
+        open={!!restoreOfficeTarget}
+        onCancel={() => setRestoreOfficeTarget(null)}
+        onConfirm={confirmRestoreOffice}
+        isLoading={isRestoring}
+        title="Restore Department"
+        message={`Are you sure you want to restore ${restoreOfficeTarget?.name || "this department"}? Assigned staff members will regain access to their department workspace.`}
+        confirmLabel="Restore Department"
         variant="primary"
         isAppleStyled={true}
         isPersonnelModal={true}
-        selectedItems={activateOfficeTarget ? [`${activateOfficeTarget.short_name} (${activateOfficeTarget.id}) — ${activateOfficeTarget.staff_count || 0} Staff assigned`] : []}
+        selectedItems={restoreOfficeTarget ? [`${restoreOfficeTarget.short_name} (${restoreOfficeTarget.id}) — ${restoreOfficeTarget.staff_count || 0} Staff assigned`] : []}
       />
     </div>
   )

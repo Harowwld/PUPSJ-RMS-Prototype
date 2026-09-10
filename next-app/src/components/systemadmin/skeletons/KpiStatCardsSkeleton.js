@@ -16,7 +16,7 @@ export default function KpiStatCardsSkeleton({ count = 3, className = "" }) {
       {Array.from({ length: count }).map((_, i) => (
         <Card
           key={i}
-          className="overflow-hidden rounded-xl border border-gray-200/80 bg-white shadow-sm p-5 dark:border-white/10 dark:bg-card/60 backdrop-blur-xs"
+          className="overflow-hidden rounded-2xl border border-gray-200/80 bg-white shadow-sm p-5 dark:border-white/10 dark:bg-card/60 backdrop-blur-xs"
         >
           <div className="flex flex-col justify-between h-full gap-1.5">
             <div className="flex items-center justify-between">

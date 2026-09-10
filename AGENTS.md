@@ -470,36 +470,95 @@ Common patterns:
 - Empty states: `ph-duotone ph-icon-name` (larger, `text-3xl`)
 - Status indicators: `ph-fill ph-icon-name` (solid)
 
-### 8.4 Button Conventions
+### 8.4 Button Conventions & Apple HIG Standards
+
+Buttons follow clean Apple Human Interface Guidelines (HIG) with standardized dimensions, typography, and variants:
 
 ```jsx
-// Primary action
-<Button className="bg-pup-maroon hover:bg-red-900 text-white font-bold">
-  Save
+// 1. Primary Action Button: Text-only (no static leading icons like plus/upload)
+<Button className="h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all">
+  Register Staff
 </Button>
 
-// Secondary/Outline
-<Button variant="outline" className="border-gray-300 text-gray-700">
+// 2. Secondary / Dismissive Action Button: Outlined (NOT borderless ghost)
+<Button variant="outline" className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all">
   Cancel
 </Button>
 
-// Size: sm for tables/toolbars (h-9), default for forms (h-10)
+// 3. Universal Refresh Action: Icon-only squircle button with accessible tooltip
+<RefreshButton onRefresh={() => fetchData(true)} isLoading={isLoading} title="Refresh Records" />
+// Note: Never use text-only "Refresh" buttons in headers. RefreshButton renders a 40x40px rounded-xl squircle.
 ```
 
-### 8.5 Form Input Pattern
+- **Sizing Standards**: Standard forms/headers use `h-10 px-5 text-xs font-semibold rounded-xl`. Compact tables/toolbars use `h-9 px-4 text-xs font-semibold rounded-xl` (or `h-8` for inline action badges).
+- **Icons on Buttons**: Keep primary action buttons text-only to maintain visual focus. Dynamic icons (e.g. `ph-spinner animate-spin`) are permitted only during loading/saving states.
 
-```jsx
-<div>
-  <label className="block text-xs font-bold text-gray-700 mb-1 uppercase">
-    Field Label
-  </label>
-  <div className="relative">
-    <i className="ph-bold ph-icon absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
-    <Input className="pl-10 h-10 w-full bg-white border border-gray-300 rounded-brand 
-                      focus-visible:ring-pup-maroon focus-visible:border-pup-maroon" />
+### 8.5 Border Radius Hierarchy (Apple HIG Tokens)
+
+| Scope | Token | Usage |
+|---|---|---|
+| **Outer Page Containers** | `rounded-2xl` | Standalone cards, single-card views, sheets, dialog popups |
+| **Controls & Tiles** | `rounded-xl` | Buttons, text inputs, `<Select>` dropdown triggers, squircle icon tiles |
+| **Segmented Items & Badges** | `rounded-lg` | Segmented control buttons, dropdown menu items, table action buttons (`w-7 h-7`), active filter chips |
+| **Switches & Indicators** | `rounded-full` | Apple toggle switches, status pill badges, presence dot indicators |
+
+### 8.6 Segmented Controls & Dropdowns (`<Select>`)
+
+- **Segmented Control / Frequency Tabs**:
+  ```jsx
+  <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-gray-200/60 dark:border-white/5">
+    <button type="button" className="px-4 py-1.5 text-xs font-semibold rounded-lg bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs">
+      Daily
+    </button>
+    <button type="button" className="px-4 py-1.5 text-xs font-semibold rounded-lg text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white">
+      Weekly
+    </button>
   </div>
-</div>
-```
+  ```
+- **`<Select>` Dropdown Component (`@/components/ui/select`)**:
+  - Always use the project's `<Select>` component.
+  - **CRITICAL AGENT RULE ON SCROLLBARS**: Never add `max-h-* overflow-y-auto` to `menuClassName`. The inner options container already manages scrolling (`max-h-60 overflow-y-auto`). Adding scroll classes to `menuClassName` creates nested double scrollbars!
+  - Standard `<Select>` usage:
+    ```jsx
+    <Select
+      value={value}
+      onChange={(e) => setValue(e.target.value)}
+      className="h-9 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs"
+      menuClassName="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-900 shadow-2xl p-1.5"
+      optionClassName="rounded-lg text-xs font-semibold py-1.5 px-2.5 hover:bg-gray-100 dark:hover:bg-zinc-800"
+    >
+      <option value="1">Option 1</option>
+    </Select>
+    ```
+
+### 8.7 Table Action Columns & Filter Chips
+
+- **Action Column Squircle Buttons**: Standardized to 28x28px squircle buttons with accessible `<Tooltip>`:
+  ```jsx
+  <Tooltip>
+    <TooltipTrigger asChild>
+      <button className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 transition-colors flex items-center justify-center border-0 bg-transparent cursor-pointer active:scale-95">
+        <i className="ph-bold ph-eye text-[16px]" />
+      </button>
+    </TooltipTrigger>
+    <TooltipContent>View Details</TooltipContent>
+  </Tooltip>
+  ```
+- **Active Filter Chips**: Standardized pattern used across all data tables:
+  ```jsx
+  <div className="flex-none border-t border-gray-100 dark:border-white/10 bg-white dark:bg-card px-6 py-3">
+    <div className="flex flex-wrap items-center gap-2">
+      <span className="mr-1 text-[11px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500">Active filters:</span>
+      <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
+        Search: {search}
+        <button onClick={clearSearch} className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 cursor-pointer">×</button>
+      </div>
+      <Button variant="ghost" size="sm" onClick={clearAll} className="h-auto text-[12px] font-medium text-gray-400 dark:text-zinc-500 border-0 bg-transparent p-0 hover:text-red-600 dark:hover:text-red-500 cursor-pointer">
+        Clear
+      </Button>
+    </div>
+  </div>
+  ```
 
 ---
 
@@ -517,8 +576,17 @@ src/components/
 │   ├── SLAAnalyticsTab.js           # Request analytics
 │   ├── StaffDirectoryTab.js
 │   ├── StorageLayoutEditorTab.js    # 2D room editor
-│   ├── SystemAnalyticsTab.js          # Compliance dashboard
-│   └── SystemConfigTab.js             # Courses, doc types, sections
+│   ├── SystemAnalyticsTab.js        # Compliance dashboard
+│   ├── SystemConfigTab.js           # Courses, doc types, sections
+│   └── backup/AutoBackupSchedule.js # Recurring automated backup schedule
+├── systemadmin/              # Superadmin views
+│   ├── CampusOperationsTab.js       # Live campus operations & services
+│   ├── GlobalAuditLogsTab.js        # Platform-wide security audit trail
+│   ├── GlobalStaffTab.js            # Unified staff directory
+│   ├── OfficeManagementTab.js       # Campus offices & departments
+│   ├── ModuleConfigTab.js           # Platform module matrices
+│   ├── SystemBackupsTab.js          # System governance archives & automated backups
+│   └── LandingPageCmsTab.js         # Public portal CMS
 ├── staff/                    # Staff views
 │   ├── DocumentRequestsTab.js # Alumni request management
 │   ├── DocumentsTab.js        # Student document matrix
@@ -530,6 +598,7 @@ src/components/
 │   ├── ConfirmModal.js
 │   ├── PDFPreviewModal.js
 │   ├── PromptModal.js
+│   ├── RefreshButton.js      # Standard Apple squircle reload button
 │   ├── RoomMap2D.js          # Storage visualization
 │   ├── Sidebar.js            # Navigation sidebar
 │   └── UserGuideModal.js
@@ -540,50 +609,73 @@ src/components/
     ├── badge.js
     ├── button.js
     ├── card.js
-    ├── dialog.js
+    ├── dialog.jsx
+    ├── select.jsx
     ├── skeleton.js
     ├── toast.jsx (sonner wrapper)
     └── tooltip.jsx
 ```
 
-### 9.2 Tab Component Pattern
+### 9.2 Unified Single-Card Layout Pattern
 
-Admin and staff pages use a **tab-based navigation** with shared state:
+In SuperAdmin dashboards, views consolidate the Page Header, Tabs/Segmented controls, Filter Bars, Active Filter Chips, and Data Table into a **single unified Card container**:
 
-```javascript
-// In page.js
-const [view, setView] = useState("directory");
-const sidebarItems = [
-  { type: "header", label: "User Management" },
-  { key: "directory", label: "Staff Directory", iconClass: "ph-bold ph-users" },
-  // ...
-];
+```jsx
+<Card className="flex-1 flex flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none isolate">
+  {/* 1. Header with icon, title, description, and action toolbar */}
+  <PageHeader title="Campus Operations" actions={<RefreshButton ... />} showBorder={false} />
+  
+  {/* 2. Embedded Segmented Controls / Frequency Switchers */}
+  <div className="px-6 py-3 border-t border-gray-100 dark:border-white/10 ...">...</div>
+  
+  {/* 3. Search & Filter Toolbar */}
+  <div className="px-6 py-3 border-t border-gray-100 dark:border-white/10 ...">...</div>
 
-// Render based on view
-{view === "directory" && <StaffDirectoryTab ... />}
+  {/* 4. Active Filter Chips */}
+  {hasFilters && <div className="px-6 py-3 border-t ...">...</div>}
+
+  {/* 5. Seamless Table or Scrollable Content */}
+  <div className="flex-1 overflow-x-auto border-t border-gray-100 dark:border-white/10">...</div>
+</Card>
 ```
+- **Rationale**: Eliminates disjointed card boundaries and reduces wasted vertical/horizontal whitespace while keeping the viewport unified and clean.
 
-### 9.3 Modal Patterns
+### 9.3 Modal Patterns & The Dialog Spacing Trap
 
-Use `Dialog` from `@/components/ui/dialog`:
+When building custom modals with `Dialog` (`@/components/ui/dialog`):
 
 ```jsx
 <Dialog open={isOpen} onOpenChange={setIsOpen}>
-  <DialogContent className="rounded-brand">
-    <DialogHeader>
-      <DialogTitle>Modal Title</DialogTitle>
-      <DialogDescription>Context about the action</DialogDescription>
+  {/* 1. Always pass flex flex-col gap-0 to override default grid gap-4 */}
+  <DialogContent className="sm:max-w-xl w-full rounded-2xl bg-white border border-gray-200 dark:bg-zinc-900 dark:border-white/10 p-0 shadow-2xl overflow-hidden flex flex-col gap-0">
+    
+    {/* 2. Header with generous 24px padding and bottom border */}
+    <DialogHeader className="p-6 pb-4 bg-white dark:bg-card border-b border-gray-100 dark:border-white/10 text-left">
+      <DialogTitle className="text-[16px] font-semibold tracking-[-0.01em]">Modal Title</DialogTitle>
+      <DialogDescription className="text-xs text-gray-500 mt-1">Modal context</DialogDescription>
     </DialogHeader>
-    {/* Content */}
-    <DialogFooter>
-      <Button variant="outline" onClick={() => setIsOpen(false)}>Cancel</Button>
-      <Button onClick={handleAction}>Confirm</Button>
-    </DialogFooter>
+
+    {/* 3. Scrollable Body with matching 24px padding */}
+    <div className="p-6 space-y-4 max-h-[65vh] overflow-y-auto">
+      {children}
+    </div>
+
+    {/* 4. Footer: DO NOT USE raw <DialogFooter> without resetting margins! */}
+    {/* Reason: DialogFooter in Base UI has hardcoded -mx-4 -mb-4 which pulls the footer out of bounds by 16px, cancelling p-4 padding and slamming the Close button flush into the bottom-right corner with 0 space. */}
+    <div className="px-6 py-4 bg-white dark:bg-card border-t border-gray-100 dark:border-white/10 flex items-center justify-between">
+      <span className="text-xs text-gray-500">Metadata</span>
+      <Button variant="outline" onClick={() => setIsOpen(false)} className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all">
+        Close
+      </Button>
+    </div>
   </DialogContent>
 </Dialog>
 ```
 
-**Important**: Do not pass `asChild` to DOM elements. Use `Button` or plain `<a>` tags.
+**Important Rules for AI Agents**:
+1. **Never use raw `<DialogFooter>` inside `p-0` card modals** unless you explicitly clear its negative margins with `m-0`, or prefer using a standard `<div className="px-6 py-4 ...">`.
+2. **Always include `flex flex-col gap-0` on `<DialogContent>`** when designing full-bleed modals with header/body/footer divisions.
+3. **Do not pass `asChild` to raw DOM elements**. Use `Button` or standard anchor tags.
 
 ---
 

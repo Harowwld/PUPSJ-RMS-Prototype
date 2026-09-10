@@ -14,6 +14,9 @@ import {
   EmptyMedia,
 } from "@/components/ui/empty"
 import {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
   TooltipProvider,
 } from "@/components/ui/tooltip"
 import PageHeader from "@/components/shared/PageHeader"
@@ -360,7 +363,7 @@ export default function CoursesTab({
               <Input
                 type="text"
                 placeholder="Search code or program name..."
-                className="h-[36px] w-full rounded-[8px] border-[0.5px] border-black/15 bg-white pl-9 pr-20 text-[13px] font-normal placeholder:text-[#8E8E93] dark:border-white/15 dark:bg-card focus-visible:ring-0 focus-visible:border-black/30"
+                className="h-10 w-full rounded-xl border-[0.5px] border-black/15 bg-white pl-9 pr-20 text-[13px] font-normal placeholder:text-[#8E8E93] dark:border-white/15 dark:bg-card focus-visible:ring-0 focus-visible:border-black/30"
                 value={localSearch}
                 onChange={(e) => setLocalSearch(e.target.value)}
               />
@@ -371,11 +374,10 @@ export default function CoursesTab({
 
             <Button
               type="button"
-              variant="ghost"
-              size="sm"
+              variant="outline"
               onClick={onExportClick}
               disabled={isExporting}
-              className="h-10 w-[68px] justify-center font-semibold text-sm text-gray-600 hover:text-[#111] hover:bg-transparent dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-transparent transition-colors flex items-center rounded-brand shadow-none border-0"
+              className="flex h-10 items-center justify-center rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
             >
               {isExporting ? (
                 <i className="ph-bold ph-spinner animate-spin text-[16px]"></i>
@@ -387,7 +389,7 @@ export default function CoursesTab({
             <Button
               onClick={() => setIsAddCourseOpen(true)}
               disabled={showArchived}
-              className="flex h-[36px] items-center justify-center rounded-[8px] btn-brand-red text-white text-[13px] font-medium px-6 active:scale-95 disabled:opacity-50 transition-all dark:shadow-none"
+              className="flex h-10 items-center justify-center rounded-xl! btn-brand-red text-white font-semibold text-xs px-5 active:scale-95 disabled:opacity-50 transition-all cursor-pointer shadow-xs"
             >
               Add
             </Button>
@@ -396,7 +398,7 @@ export default function CoursesTab({
       </div>
 
       {/* Main Table Container (No outer card background/shadow) */}
-      <div key={showArchived} className="overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card w-full animate-fade-up">
+      <div key={showArchived} className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card w-full animate-fade-up">
 
         {/* Active Filter Chips Row */}
         {(localSearch !== "") && (
@@ -404,7 +406,7 @@ export default function CoursesTab({
             <div className="flex flex-wrap items-center gap-2">
               <span className="mr-1 text-[11px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500">Active filters:</span>
               {localSearch && (
-                <div className="flex items-center gap-[6px] rounded-[6px] bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
+                <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
                   Search: {localSearch}
                   <button
                     onClick={() => { setLocalSearch(""); setCourseSearch(""); setPageCourse(1); }}
@@ -472,7 +474,7 @@ export default function CoursesTab({
                         </button>
                       </th>
                       <th className="w-40 p-4 px-6 text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">Status</th>
-                      <th className="w-32 p-4 px-6 text-right text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">Action</th>
+                      <th className="w-32 p-4 px-6 text-right text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100 dark:divide-white/10">
@@ -506,7 +508,7 @@ export default function CoursesTab({
                               setNewCourseCode(e.target.value.toUpperCase())
                             }
                             className={cn(
-                              "h-9 w-40 rounded-brand border border-gray-300 bg-white text-xs font-semibold transition-all focus-visible:ring-pup-maroon",
+                              "h-10 w-40 rounded-xl border border-gray-300 bg-white text-xs font-semibold transition-all focus-visible:ring-pup-maroon",
                               newCourseCode.trim() || newCourseName.trim() ? "ring-1 ring-amber-100" : "focus-visible:border-gray-300 dark:border-white/10 dark:bg-card"
                             )}
                           />
@@ -527,7 +529,7 @@ export default function CoursesTab({
                                 }
                               }}
                               className={cn(
-                                "h-9 flex-1 rounded-brand border border-gray-300 bg-white text-sm transition-all focus-visible:ring-pup-maroon",
+                                "h-10 flex-1 rounded-xl border border-gray-300 bg-white text-sm transition-all focus-visible:ring-pup-maroon",
                                 newCourseCode.trim() || newCourseName.trim() ? "ring-2 ring-amber-100" : "focus-visible:border-gray-300 dark:border-white/10 dark:bg-card"
                               )}
                             />
@@ -635,74 +637,89 @@ export default function CoursesTab({
                               onClick={(e) => e.stopPropagation()}
                             >
                                {!showArchived && (
-                                <button
-                                  disabled={c.status === "Archived"}
-                                  onClick={() => {
-                                    setEditCourse({
-                                      id: c.id,
-                                      code: c.code,
-                                      name: c.name,
-                                    })
-                                    const currentBlocks = sections
-                                      .filter((s) => s.course_code === c.code)
-                                      .map((s) => s.name)
-                                    setEditCourseBlocks(
-                                      currentBlocks.length > 0
-                                        ? currentBlocks
-                                        : [""]
-                                    )
-                                    setIsEditCourseOpen(true)
-                                  }}
-                                  title="Edit Degree Program"
-                                  className="w-7 h-7 rounded-[6px] hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/10 border-0 bg-transparent text-[#C7C7CC] dark:text-zinc-600 transition-colors hover:text-amber-500 dark:hover:text-amber-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
-                                >
-                                  <i className="ph-bold ph-pencil-simple text-[16px]"></i>
-                                </button>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <button
+                                      disabled={c.status === "Archived"}
+                                      onClick={() => {
+                                        setEditCourse({
+                                          id: c.id,
+                                          code: c.code,
+                                          name: c.name,
+                                        })
+                                        const currentBlocks = sections
+                                          .filter((s) => s.course_code === c.code)
+                                          .map((s) => s.name)
+                                        setEditCourseBlocks(
+                                          currentBlocks.length > 0
+                                            ? currentBlocks
+                                            : [""]
+                                        )
+                                        setIsEditCourseOpen(true)
+                                      }}
+                                      aria-label="Edit Degree Program"
+                                      className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 transition-colors flex items-center justify-center border-0 bg-transparent cursor-pointer active:scale-95"
+                                    >
+                                      <i className="ph-bold ph-pencil-simple text-[16px]"></i>
+                                    </button>
+                                  </TooltipTrigger>
+                                  <TooltipContent side="top">Edit</TooltipContent>
+                                </Tooltip>
                               )}
 
                             {c.status === "Archived" ? (
-                              <button
-                                onClick={() => {
-                                  setConfirmPayload({
-                                    title: "Restore Degree Program",
-                                    message:
-                                      "This degree program will be visible for new records again.",
-                                    confirmLabel: "Restore",
-                                    variant: "success",
-                                    buttonIcon:
-                                      "ph-bold ph-archive-restore",
-                                    icon: "ph-duotone ph-archive-restore",
-                                    selectedItems: [`${c.code} - ${c.name}`],
-                                    onConfirm: () => resCourse(c.id, c.code),
-                                  })
-                                  setConfirmOpen(true)
-                                }}
-                                title="Restore Degree Program"
-                                className="w-7 h-7 rounded-[6px] hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/10 border-0 bg-transparent text-[#C7C7CC] dark:text-zinc-600 transition-colors hover:text-emerald-600 dark:hover:text-emerald-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
-                              >
-                                <i className="ph-bold ph-archive-restore text-[16px]"></i>
-                              </button>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <button
+                                    onClick={() => {
+                                      setConfirmPayload({
+                                        title: "Restore Degree Program",
+                                        message:
+                                          "This degree program will be visible for new records again.",
+                                        confirmLabel: "Restore",
+                                        variant: "success",
+                                        buttonIcon:
+                                          "ph-bold ph-archive-restore",
+                                        icon: "ph-duotone ph-archive-restore",
+                                        selectedItems: [`${c.code} - ${c.name}`],
+                                        onConfirm: () => resCourse(c.id, c.code),
+                                      })
+                                      setConfirmOpen(true)
+                                    }}
+                                    aria-label="Restore Degree Program"
+                                    className="w-7 h-7 rounded-lg hover:bg-green-50 dark:hover:bg-green-950/30 text-gray-500 hover:text-green-600 dark:text-zinc-400 dark:hover:text-green-400 transition-colors flex items-center justify-center border-0 bg-transparent cursor-pointer active:scale-95"
+                                  >
+                                    <i className="ph-bold ph-archive-restore text-[16px]"></i>
+                                  </button>
+                                </TooltipTrigger>
+                                <TooltipContent side="top">Restore</TooltipContent>
+                              </Tooltip>
                             ) : (
-                              <button
-                                onClick={() => {
-                                  setConfirmPayload({
-                                    title: "Archive Degree Program",
-                                    message:
-                                      "This degree program will be hidden from new registrations but its history will be preserved.",
-                                    confirmLabel: "Archive",
-                                    variant: "danger",
-                                    buttonIcon: "ph-bold ph-archive",
-                                    icon: "ph-duotone ph-archive",
-                                    selectedItems: [`${c.code} - ${c.name}`],
-                                    onConfirm: () => delCourse(c.id, c.code),
-                                  })
-                                  setConfirmOpen(true)
-                                }}
-                                title="Archive Degree Program"
-                                className="w-7 h-7 rounded-[6px] hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/10 border-0 bg-transparent text-[#C7C7CC] dark:text-zinc-600 transition-colors hover:text-red-600 dark:hover:text-red-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
-                              >
-                                <i className="ph-bold ph-archive text-[16px]"></i>
-                              </button>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <button
+                                    onClick={() => {
+                                      setConfirmPayload({
+                                        title: "Archive Degree Program",
+                                        message:
+                                          "This degree program will be hidden from new registrations but its history will be preserved.",
+                                        confirmLabel: "Archive",
+                                        variant: "danger",
+                                        buttonIcon: "ph-bold ph-archive",
+                                        icon: "ph-duotone ph-archive",
+                                        selectedItems: [`${c.code} - ${c.name}`],
+                                        onConfirm: () => delCourse(c.id, c.code),
+                                      })
+                                      setConfirmOpen(true)
+                                    }}
+                                    aria-label="Archive Degree Program"
+                                    className="w-7 h-7 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/30 text-gray-500 hover:text-red-600 dark:text-zinc-400 dark:hover:text-red-400 transition-colors flex items-center justify-center border-0 bg-transparent cursor-pointer active:scale-95"
+                                  >
+                                    <i className="ph-bold ph-archive text-[16px]"></i>
+                                  </button>
+                                </TooltipTrigger>
+                                <TooltipContent side="top">Archive</TooltipContent>
+                              </Tooltip>
                             )}
                           </div>
                         </td>
@@ -736,7 +753,7 @@ export default function CoursesTab({
                                     setCourseSearch("")
                                     setLocalSearch("")
                                   }}
-                                  className="mt-4 flex h-9 items-center gap-2 rounded-brand border border-gray-300 bg-white px-4 text-xs font-semibold text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
+                                  className="mt-4 flex h-9 items-center gap-2 rounded-xl border border-gray-300 bg-white px-4 text-xs font-semibold text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
                                 >
                                   <i className="ph-bold ph-archive-restore"></i>
                                   CLEAR SEARCH
@@ -745,10 +762,9 @@ export default function CoursesTab({
                                 !showArchived && (
                                   <Button
                                     onClick={() => setIsAddCourseOpen(true)}
-                                    className="mt-4 flex h-10 items-center gap-2 rounded-brand btn-brand-red hover:from-red-700 hover:to-red-900 hover:shadow-md px-8 font-semibold tracking-widest text-white shadow-lg shadow-red-900/20 active:scale-95 transition-all dark:shadow-none"
+                                    className="mt-4 flex h-10 items-center justify-center rounded-xl! btn-brand-red px-8 font-semibold text-xs text-white shadow-sm active:scale-95 transition-all cursor-pointer"
                                   >
-                                    <i className="ph-bold ph-plus text-lg"></i>
-                                    ADD
+                                    Add
                                   </Button>
                                 )
                               )}
@@ -837,7 +853,7 @@ export default function CoursesTab({
           }
         }}
       >
-        <DialogContent className="overflow-hidden rounded-brand border border-gray-200 bg-white p-0 shadow-2xl sm:max-w-md dark:border-white/10 dark:bg-card">
+        <DialogContent className="overflow-hidden rounded-2xl border border-gray-200 bg-white p-0 shadow-2xl sm:max-w-md dark:border-white/10 dark:bg-card">
           <DialogHeader className="bg-white p-6 pb-0 dark:bg-card border-none">
             <div className="flex items-start gap-4">
               <div className="min-w-0">
@@ -851,16 +867,15 @@ export default function CoursesTab({
             </div>
           </DialogHeader>
           <form onSubmit={addCourse}>
-            <div className="max-h-[60vh] overflow-y-auto p-6 pb-4 flex flex-col gap-[16px]">
+            <div className="max-h-[60vh] overflow-y-auto p-6 pb-4 flex flex-col gap-4">
               <div>
-                <label className="mb-1 block text-[11px] font-medium uppercase tracking-[0.04em] text-gray-500 dark:text-zinc-400">
+                <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-gray-500 dark:text-zinc-400">
                   Code <span className="text-[11px] font-normal text-gray-400 dark:text-zinc-500">*</span>
                 </label>
                 <Input
                   type="text"
                   placeholder="BSIT"
-                  className="h-[40px] rounded-[8px] border-[0.5px] border-gray-300 bg-white text-[13px] font-normal tracking-[-0.01em] text-gray-900 focus-visible:border-gray-500 focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none focus:ring-0 focus:border-gray-500 dark:bg-card dark:border-zinc-800 dark:text-zinc-50 dark:focus:border-zinc-600 dark:focus-visible:border-zinc-600"
-                  style={{ borderWidth: '0.5px', borderStyle: 'solid' }}
+                  className="h-10 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon shadow-xs"
                   value={newCourseCode}
                   onChange={(e) =>
                     setNewCourseCode(e.target.value.toUpperCase())
@@ -869,14 +884,13 @@ export default function CoursesTab({
                 />
               </div>
               <div>
-                <label className="mb-1 block text-[11px] font-medium uppercase tracking-[0.04em] text-gray-500 dark:text-zinc-400">
+                <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-gray-500 dark:text-zinc-400">
                   Designation <span className="text-[11px] font-normal text-gray-400 dark:text-zinc-500">*</span>
                 </label>
                 <Input
                   type="text"
                   placeholder="Bachelor of Science in Information Technology"
-                  className="h-[40px] rounded-[8px] border-[0.5px] border-gray-300 bg-white text-[13px] font-normal tracking-[-0.01em] text-gray-900 focus-visible:border-gray-500 focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none focus:ring-0 focus:border-gray-500 dark:bg-card dark:border-zinc-800 dark:text-zinc-50 dark:focus:border-zinc-600 dark:focus-visible:border-zinc-600"
-                  style={{ borderWidth: '0.5px', borderStyle: 'solid' }}
+                  className="h-10 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon shadow-xs"
                   value={newCourseName}
                   onChange={(e) => setNewCourseName(e.target.value)}
                   required
@@ -885,7 +899,7 @@ export default function CoursesTab({
 
               <div className="flex flex-col gap-3">
                 <div className="flex items-center justify-between">
-                  <label className="text-[11px] font-medium uppercase tracking-[0.04em] text-gray-500 dark:text-zinc-400">
+                  <label className="text-[11px] font-medium uppercase tracking-wider text-gray-500 dark:text-zinc-400">
                     Course Blocks
                   </label>
                   <Button
@@ -893,7 +907,7 @@ export default function CoursesTab({
                     variant="ghost"
                     size="sm"
                     onClick={() => setNewCourseBlocks([...newCourseBlocks, ""])}
-                    className="h-auto p-0 bg-transparent text-[12px] font-medium text-red-600 hover:bg-transparent shadow-none border-0 focus:outline-none cursor-pointer"
+                    className="h-auto p-0 bg-transparent text-xs font-medium text-red-600 hover:bg-transparent shadow-none border-0 focus:outline-none cursor-pointer"
                   >
                     + Add Block
                   </Button>
@@ -904,8 +918,7 @@ export default function CoursesTab({
                       <Input
                         type="text"
                         placeholder={`Block ${idx + 1} Name`}
-                        className="h-[40px] flex-1 min-w-0 rounded-[8px] border-[0.5px] border-gray-300 bg-white text-[13px] font-normal tracking-[-0.01em] text-gray-900 focus-visible:border-gray-500 focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none focus:ring-0 focus:border-gray-500 dark:bg-card dark:border-zinc-800 dark:text-zinc-50 dark:focus:border-zinc-600 dark:focus-visible:border-zinc-600"
-                        style={{ borderWidth: '0.5px', borderStyle: 'solid' }}
+                        className="h-10 flex-1 min-w-0 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon shadow-xs"
                         value={block}
                         onChange={(e) => {
                           const updated = [...newCourseBlocks]
@@ -924,9 +937,9 @@ export default function CoursesTab({
                             )
                             setNewCourseBlocks(updated)
                           }}
-                          className="h-[40px] w-[40px] shrink-0 text-gray-400 hover:text-red-600 dark:text-zinc-500"
+                          className="h-10 w-10 shrink-0 rounded-xl text-gray-400 hover:text-red-600 dark:text-zinc-500"
                         >
-                          <i className="ph-bold ph-trash"></i>
+                          <i className="ph-bold ph-trash text-sm"></i>
                         </Button>
                       )}
                     </div>
@@ -934,23 +947,23 @@ export default function CoursesTab({
                 </div>
               </div>
             </div>
-            <div className="flex items-center justify-end gap-2 border-t border-gray-100 bg-white p-4 dark:border-white/10 dark:bg-card">
+            <div className="px-6 py-4 border-t border-gray-100 dark:border-white/10 flex items-center justify-end gap-2 bg-gray-50/50 dark:bg-zinc-900/20">
               <Button
                 type="button"
-                variant="ghost"
+                variant="outline"
                 onClick={() => {
                   setIsAddCourseOpen(false)
                   setNewCourseCode("")
                   setNewCourseName("")
                   setNewCourseBlocks([""])
                 }}
-                className="h-[36px] bg-transparent text-[13px] font-medium text-gray-500 hover:bg-transparent hover:text-gray-700 dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-transparent transition-colors border-0 shadow-none px-4"
+                className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
-                className="flex h-[36px] items-center justify-center rounded-[8px] btn-brand-red text-[13px] font-medium text-white active:scale-95 disabled:opacity-50 transition-all px-4 dark:shadow-none border-0"
+                className="h-10 px-5 text-xs font-semibold rounded-xl btn-brand-red text-white shadow-xs cursor-pointer active:scale-95 transition-all border-0"
               >
                 Create Program
               </Button>
@@ -969,7 +982,7 @@ export default function CoursesTab({
           }
         }}
       >
-        <DialogContent className="overflow-hidden rounded-brand border border-gray-200 bg-white p-0 shadow-2xl sm:max-w-md dark:border-white/10 dark:bg-card">
+        <DialogContent className="overflow-hidden rounded-2xl border border-gray-200 bg-white p-0 shadow-2xl sm:max-w-md dark:border-white/10 dark:bg-card">
           <DialogHeader className="bg-white p-6 pb-0 dark:bg-card border-none">
             <div className="flex items-start gap-4">
               <div className="min-w-0">
@@ -983,16 +996,15 @@ export default function CoursesTab({
             </div>
           </DialogHeader>
           <form onSubmit={updCourse}>
-            <div className="max-h-[60vh] space-y-5 overflow-y-auto p-6 pb-4">
-              <div className="space-y-5">
+            <div className="max-h-[60vh] space-y-4 overflow-y-auto p-6 pb-4">
+              <div className="space-y-4">
                 <div>
-                  <label className="mb-1 block text-[11px] font-medium uppercase tracking-[0.04em] text-gray-500 dark:text-zinc-400">
+                  <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-gray-500 dark:text-zinc-400">
                     Code <span className="text-[11px] font-normal text-gray-400 dark:text-zinc-500">*</span>
                   </label>
                   <Input
                     type="text"
-                    className="h-[36px] rounded-[8px] border-[0.5px] border-gray-300 bg-white text-[13px] font-normal tracking-[-0.01em] text-gray-900 focus-visible:border-gray-500 focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none focus:ring-0 focus:border-gray-500 dark:bg-card dark:border-zinc-800 dark:text-zinc-50 dark:focus:border-zinc-600 dark:focus-visible:border-zinc-600"
-                    style={{ borderWidth: '0.5px', borderStyle: 'solid' }}
+                    className="h-10 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon shadow-xs"
                     value={editCourse.code}
                     onChange={(e) =>
                       setEditCourse((prev) => ({
@@ -1004,13 +1016,12 @@ export default function CoursesTab({
                   />
                 </div>
                 <div>
-                  <label className="mb-1 block text-[11px] font-medium uppercase tracking-[0.04em] text-gray-500 dark:text-zinc-400">
+                  <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-gray-500 dark:text-zinc-400">
                     Program Designation <span className="text-[11px] font-normal text-gray-400 dark:text-zinc-500">*</span>
                   </label>
                   <Input
                     type="text"
-                    className="h-[36px] rounded-[8px] border-[0.5px] border-gray-300 bg-white text-[13px] font-normal tracking-[-0.01em] text-gray-900 focus-visible:border-gray-500 focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none focus:ring-0 focus:border-gray-500 dark:bg-card dark:border-zinc-800 dark:text-zinc-50 dark:focus:border-zinc-600 dark:focus-visible:border-zinc-600"
-                    style={{ borderWidth: '0.5px', borderStyle: 'solid' }}
+                    className="h-10 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon shadow-xs"
                     value={editCourse.name}
                     onChange={(e) =>
                       setEditCourse((prev) => ({
@@ -1025,7 +1036,7 @@ export default function CoursesTab({
 
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <label className="text-[11px] font-medium uppercase tracking-[0.04em] text-gray-500 dark:text-zinc-400">
+                  <label className="text-[11px] font-medium uppercase tracking-wider text-gray-500 dark:text-zinc-400">
                     Manage Course Blocks
                   </label>
                   <Button
@@ -1035,9 +1046,9 @@ export default function CoursesTab({
                     onClick={() =>
                       setEditCourseBlocks([...editCourseBlocks, ""])
                     }
-                    className="h-7 rounded-md px-2 text-[10px] font-semibold text-pup-maroon dark:text-primary hover:bg-red-50 dark:bg-red-950/30"
+                    className="h-auto p-0 bg-transparent text-xs font-medium text-red-600 hover:bg-transparent shadow-none border-0 focus:outline-none cursor-pointer"
                   >
-                    <i className="ph-bold ph-plus mr-1"></i> ADD BLOCK
+                    + Add Block
                   </Button>
                 </div>
                 <div className="space-y-2">
@@ -1046,8 +1057,7 @@ export default function CoursesTab({
                       <Input
                         type="text"
                         placeholder={`Block ${idx + 1} Name`}
-                        className="h-[36px] flex-1 min-w-0 rounded-[8px] border-[0.5px] border-gray-300 bg-white text-[13px] font-normal tracking-[-0.01em] text-gray-900 focus-visible:border-gray-500 focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none focus:ring-0 focus:border-gray-500 dark:bg-card dark:border-zinc-800 dark:text-zinc-50 dark:focus:border-zinc-600 dark:focus-visible:border-zinc-600"
-                        style={{ borderWidth: '0.5px', borderStyle: 'solid' }}
+                        className="h-10 flex-1 min-w-0 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon shadow-xs"
                         value={block}
                         onChange={(e) => {
                           const updated = [...editCourseBlocks]
@@ -1066,9 +1076,9 @@ export default function CoursesTab({
                             )
                             setEditCourseBlocks(updated)
                           }}
-                          className="h-[36px] w-[36px] shrink-0 text-gray-400 hover:text-red-600 dark:text-zinc-500"
+                          className="h-10 w-10 shrink-0 rounded-xl text-gray-400 hover:text-red-600 dark:text-zinc-500"
                         >
-                          <i className="ph-bold ph-archive"></i>
+                          <i className="ph-bold ph-archive text-sm"></i>
                         </Button>
                       )}
                     </div>
@@ -1076,20 +1086,22 @@ export default function CoursesTab({
                 </div>
               </div>
             </div>
-            <div className="flex flex-row justify-end gap-2 bg-white p-6 dark:bg-card border-none">
+            <div className="px-6 py-4 border-t border-gray-100 dark:border-white/10 flex items-center justify-end gap-2 bg-gray-50/50 dark:bg-zinc-900/20">
               <Button
                 type="button"
-                variant="ghost"
+                variant="outline"
                 onClick={() => {
                   setIsEditCourseOpen(false)
                   setEditCourse({ id: null, code: "", name: "" })
                   setEditCourseBlocks([""])
                 }}
-                className="text-[13px] font-medium text-gray-500 dark:text-zinc-400 bg-transparent hover:bg-transparent border-none shadow-none p-0 h-auto cursor-pointer focus:outline-none"
-              >Cancel</Button>
+                className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+              >
+                Cancel
+              </Button>
               <Button
                 type="submit"
-                className="flex h-[36px] items-center justify-center rounded-[8px] btn-brand-red text-[13px] font-medium text-white shadow-none border-none py-0 px-4 cursor-pointer"
+                className="h-10 px-5 text-xs font-semibold rounded-xl btn-brand-red text-white shadow-xs cursor-pointer active:scale-95 transition-all border-0"
               >
                 Save
               </Button>

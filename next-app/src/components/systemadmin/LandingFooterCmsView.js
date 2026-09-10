@@ -284,7 +284,7 @@ export default function LandingFooterCmsView({ showToast }) {
   return (
     <div className="flex flex-col gap-6 w-full animate-fade-up font-inter">
       {/* Main Card */}
-      <Card className="rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none overflow-hidden">
+      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
         <PageHeader
           icon="ph-bold ph-panel-bottom"
           title={
@@ -307,7 +307,6 @@ export default function LandingFooterCmsView({ showToast }) {
                 onClick={() => window.open("/#office", "_blank")}
                 className="flex h-10 items-center justify-center rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
               >
-                <i className="ph-bold ph-arrow-square-out mr-1.5 text-[14px]" />
                 View Portal
               </Button>
 
@@ -317,7 +316,6 @@ export default function LandingFooterCmsView({ showToast }) {
                 onClick={() => setResetModalOpen(true)}
                 className="flex h-10 items-center justify-center rounded-xl! border border-rose-200 dark:border-rose-900/40 bg-white dark:bg-zinc-900 text-rose-600 dark:text-rose-400 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-rose-50 dark:hover:bg-rose-950/20"
               >
-                <i className="ph-bold ph-arrow-counter-clockwise mr-1.5 text-[14px]" />
                 Reset Defaults
               </Button>
 
@@ -333,10 +331,7 @@ export default function LandingFooterCmsView({ showToast }) {
                     Saving...
                   </>
                 ) : (
-                  <>
-                    <i className="ph-bold ph-floppy-disk mr-1.5 text-[14px]" />
-                    Save Changes
-                  </>
+                  "Save Changes"
                 )}
               </Button>
             </div>
@@ -663,7 +658,6 @@ export default function LandingFooterCmsView({ showToast }) {
                       disabled={footerData.scheduleItems.length >= MAX_SCHEDULE_ITEMS}
                       className="h-8 rounded-xl bg-pup-maroon hover:bg-[#600000] text-white text-xs font-semibold px-3 cursor-pointer shadow-xs active:scale-95 transition-all disabled:opacity-40"
                     >
-                      <i className="ph-bold ph-plus mr-1" />
                       Add Row
                     </Button>
                   </div>
@@ -826,7 +820,6 @@ export default function LandingFooterCmsView({ showToast }) {
                       disabled={footerData.contactItems.length >= MAX_CONTACT_ITEMS}
                       className="h-8 rounded-xl bg-pup-maroon hover:bg-[#600000] text-white text-xs font-semibold px-3 cursor-pointer shadow-xs active:scale-95 transition-all disabled:opacity-40"
                     >
-                      <i className="ph-bold ph-plus mr-1" />
                       Add Channel
                     </Button>
                   </div>
@@ -988,9 +981,8 @@ export default function LandingFooterCmsView({ showToast }) {
                   variant="outline"
                   size="sm"
                   onClick={() => window.open("/#office", "_blank")}
-                  className="rounded-xl! text-xs font-semibold gap-1.5"
+                  className="rounded-xl! text-xs font-semibold"
                 >
-                  <i className="ph-bold ph-arrow-square-out text-xs" />
                   Test on Portal
                 </Button>
               </div>

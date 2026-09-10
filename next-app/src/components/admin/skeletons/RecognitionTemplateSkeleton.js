@@ -14,7 +14,7 @@ export default function RecognitionTemplateSkeleton() {
       {/* 3-Column Grid */}
       <div className="grid gap-5 xl:grid-cols-[280px_minmax(0,1fr)_280px]">
         {/* Left Panel */}
-        <div className="space-y-4 rounded-brand border border-gray-200 bg-gray-50 p-4 dark:border-white/10 dark:bg-white/5">
+        <div className="space-y-4 rounded-2xl border border-gray-200 bg-gray-50 p-4 dark:border-white/10 dark:bg-white/5">
           <div className="space-y-1.5">
             <Skeleton className="h-3 w-24 rounded dark:bg-muted" />
             <Skeleton className="h-9 w-full rounded-md dark:bg-muted" />
@@ -37,7 +37,7 @@ export default function RecognitionTemplateSkeleton() {
         </div>
 
         {/* Center Panel (Document View / Canvas) */}
-        <div className="min-h-[520px] rounded-brand border border-gray-200 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-card flex flex-col justify-between">
+        <div className="min-h-[520px] rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-card flex flex-col justify-between">
           <div className="flex justify-between items-center pb-4 border-b border-gray-100 dark:border-white/10">
             <div className="flex items-center gap-2">
               <Skeleton className="h-8 w-24 rounded-lg dark:bg-muted" />
@@ -58,7 +58,7 @@ export default function RecognitionTemplateSkeleton() {
         </div>
 
         {/* Right Panel (Saved Templates List) */}
-        <div className="space-y-3 rounded-brand border border-gray-200 bg-gray-50 p-4 dark:border-white/10 dark:bg-white/5">
+        <div className="space-y-3 rounded-2xl border border-gray-200 bg-gray-50 p-4 dark:border-white/10 dark:bg-white/5">
           <Skeleton className="h-4 w-32 rounded dark:bg-muted mb-3" />
           <div className="space-y-2.5">
             {[1, 2, 3].map((t) => (

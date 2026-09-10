@@ -60,7 +60,7 @@ export default function HealthSidebar({
   if (isLoading && !isManualLoading) {
     return (
       <div className="w-[350px] shrink-0 flex flex-col gap-4">
-        <Card className="flex flex-col border border-gray-200 bg-white shadow-sm h-full rounded-brand overflow-hidden p-6 space-y-6 dark:border-white/10 dark:bg-card dark:shadow-none">
+        <Card className="flex flex-col border border-gray-200 bg-white shadow-sm h-full rounded-2xl overflow-hidden p-6 space-y-6 dark:border-white/10 dark:bg-card dark:shadow-none">
            <Skeleton className="h-12 w-full rounded-xl dark:bg-muted" />
            <Skeleton className="h-[180px] w-full rounded-2xl dark:bg-muted" />
            <div className="space-y-4">
@@ -81,7 +81,7 @@ export default function HealthSidebar({
 
   return (
     <div className="w-[350px] shrink-0 flex flex-col gap-4 h-fit">
-      <Card className="flex flex-col border border-gray-200 bg-white shadow-sm rounded-brand overflow-hidden dark:border-white/10 dark:bg-card dark:shadow-none">
+      <Card className="flex flex-col border border-gray-200 bg-white shadow-sm rounded-2xl overflow-hidden dark:border-white/10 dark:bg-card dark:shadow-none">
         {/* Page Header */}
         <div className="border-b border-gray-100 bg-transparent p-6 dark:border-white/10 dark:bg-transparent">
           <div className="flex flex-col">

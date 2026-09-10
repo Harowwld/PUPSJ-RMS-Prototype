@@ -274,7 +274,8 @@ async function readOdrsStats() {
           COUNT(*) FILTER (WHERE status = 'Ready')::int AS ready,
           COUNT(*) FILTER (WHERE status = 'Completed')::int AS completed,
           COUNT(*) FILTER (WHERE status = 'Cancelled')::int AS cancelled,
-          COUNT(*) FILTER (WHERE created_at >= NOW() - INTERVAL '24 hours')::int AS today
+          COUNT(*) FILTER (WHERE created_at >= NOW() - INTERVAL '24 hours')::int AS today,
+          MAX(created_at) AS latest_at
         FROM document_requests
       `),
       query(`
@@ -293,6 +294,7 @@ async function readOdrsStats() {
     const completed = Number(counts?.completed || 0);
     const cancelled = Number(counts?.cancelled || 0);
     const today = Number(counts?.today || 0);
+    const latestAt = counts?.latest_at || null;
 
     return {
       status: "Operational",
@@ -304,6 +306,7 @@ async function readOdrsStats() {
       cancelled,
       today,
       activeBacklog: pending + inProgress,
+      latestAt,
       topDocTypes: topTypes || [],
     };
   } catch (err) {
@@ -318,6 +321,7 @@ async function readOdrsStats() {
       cancelled: 0,
       today: 0,
       activeBacklog: 0,
+      latestAt: null,
       topDocTypes: [],
     };
   }
@@ -335,7 +339,8 @@ async function readOsasStats() {
           COUNT(*) FILTER (WHERE status = 'Approved')::int AS approved,
           COUNT(*) FILTER (WHERE status = 'Declined')::int AS declined,
           COUNT(*) FILTER (WHERE created_at >= NOW() - INTERVAL '24 hours')::int AS today,
-          COUNT(DISTINCT organization_name)::int AS total_orgs
+          COUNT(DISTINCT organization_name)::int AS total_orgs,
+          MAX(created_at) AS latest_at
         FROM event_proposals
       `),
       query(`
@@ -355,6 +360,7 @@ async function readOsasStats() {
     const declined = Number(counts?.declined || 0);
     const today = Number(counts?.today || 0);
     const totalOrgs = Number(counts?.total_orgs || 0);
+    const latestAt = counts?.latest_at || null;
 
     return {
       status: "Operational",
@@ -367,6 +373,7 @@ async function readOsasStats() {
       today,
       activePending: submitted + underReview + needsRevision,
       totalOrgs,
+      latestAt,
       topOrganizations: topOrgs || [],
     };
   } catch (err) {
@@ -382,7 +389,120 @@ async function readOsasStats() {
       today: 0,
       activePending: 0,
       totalOrgs: 0,
+      latestAt: null,
       topOrganizations: [],
+    };
+  }
+}
+
+async function readStudentPortalStats() {
+  try {
+    const row = await queryOne(`
+      SELECT 
+        COUNT(*)::int AS total_accounts,
+        COUNT(*) FILTER (WHERE status = 'Active')::int AS active_accounts,
+        MAX(last_active) AS last_active_at,
+        MAX(created_at) AS latest_registered_at
+      FROM student_accounts
+    `);
+    const total = Number(row?.total_accounts || 0);
+    const active = Number(row?.active_accounts || 0);
+    return {
+      status: active > 0 || total > 0 ? "Operational" : "Idle",
+      totalAccounts: total,
+      activeAccounts: active,
+      lastActiveAt: row?.last_active_at || null,
+      latestRegisteredAt: row?.latest_registered_at || null,
+    };
+  } catch (err) {
+    console.error("[readStudentPortalStats Error]:", err);
+    return {
+      status: "Operational",
+      totalAccounts: 0,
+      activeAccounts: 0,
+      lastActiveAt: null,
+      latestRegisteredAt: null,
+    };
+  }
+}
+
+async function readOfficeModuleStatuses() {
+  try {
+    const rows = await query(`
+      SELECT 
+        o.id AS office_id,
+        o.name AS office_name,
+        o.short_name,
+        o.status AS office_status,
+        o.station_name,
+        o.last_station_ping,
+        COALESCE(bool_or(om.enabled) FILTER (WHERE om.module_id = 'alumni_requests'), false) AS odrs_enabled,
+        COALESCE(bool_or(om.enabled) FILTER (WHERE om.module_id = 'osas_monitoring'), false) AS osas_enabled,
+        COALESCE(bool_or(om.enabled) FILTER (WHERE om.module_id = 'records_review'), false) AS review_enabled
+      FROM offices o
+      LEFT JOIN office_modules om ON om.office_id = o.id
+      GROUP BY o.id, o.name, o.short_name, o.status, o.station_name, o.last_station_ping
+      ORDER BY o.created_at ASC
+    `);
+    return rows || [];
+  } catch (err) {
+    console.error("[readOfficeModuleStatuses Error]:", err);
+    return [];
+  }
+}
+
+async function readArchiveStats() {
+  try {
+    const [docRow, studentRow, backupRow] = await Promise.all([
+      queryOne(`
+        SELECT 
+          COUNT(*)::int AS total_documents,
+          COUNT(*) FILTER (WHERE approval_status = 'Approved')::int AS approved_documents,
+          COUNT(*) FILTER (WHERE approval_status = 'Pending')::int AS pending_documents,
+          MAX(created_at) AS latest_document_at
+        FROM documents
+      `),
+      queryOne(`
+        SELECT 
+          COUNT(*)::int AS total_students,
+          COUNT(*) FILTER (WHERE status = 'Active')::int AS active_students
+        FROM students
+      `),
+      queryOne(`
+        SELECT 
+          COUNT(*)::int AS total_backups,
+          MAX(created_at) AS last_backup_at,
+          (SELECT filename FROM backups ORDER BY created_at DESC LIMIT 1) AS latest_filename,
+          (SELECT status_local FROM backups ORDER BY created_at DESC LIMIT 1) AS latest_status
+        FROM backups
+      `),
+    ]);
+
+    return {
+      totalDocuments: Number(docRow?.total_documents || 0),
+      approvedDocuments: Number(docRow?.approved_documents || 0),
+      pendingDocuments: Number(docRow?.pending_documents || 0),
+      latestDocumentAt: docRow?.latest_document_at || null,
+      totalStudents: Number(studentRow?.total_students || 0),
+      activeStudents: Number(studentRow?.active_students || 0),
+      totalBackups: Number(backupRow?.total_backups || 0),
+      lastBackupAt: backupRow?.last_backup_at || null,
+      latestBackupFilename: backupRow?.latest_filename || null,
+      latestBackupStatus: backupRow?.latest_status || "Secure",
+    };
+  } catch (err) {
+    console.error("[readArchiveStats Error]:", err);
+    return {
+      totalDocuments: 0,
+      approvedDocuments: 0,
+      pendingDocuments: 0,
+      latestDocumentAt: null,
+      totalStudents: 0,
+      activeStudents: 0,
+      totalBackups: 0,
+      lastBackupAt: null,
+      latestBackupFilename: null,
+      latestBackupStatus: "Secure",
     };
   }
 }
@@ -481,6 +601,9 @@ async function buildHealthData() {
     osas,
     transactions,
     allOffices,
+    studentPortal,
+    officeModules,
+    archiveStats,
   ] = await Promise.all([
     readCpuUsage(),
     readDiskStats(),
@@ -490,6 +613,9 @@ async function buildHealthData() {
     readOsasStats(),
     readRecentTransactions(),
     query("SELECT id, name, short_name, storage_path FROM offices ORDER BY created_at ASC").catch(() => []),
+    readStudentPortalStats(),
+    readOfficeModuleStatuses(),
+    readArchiveStats(),
   ]);
 
   const resolveAbs = (p) => {
@@ -549,16 +675,98 @@ async function buildHealthData() {
   const usedMem = totalMem - freeMem;
   const memPercent = Math.round((usedMem / totalMem) * 100);
 
+  // Compute live departmental module and portal statuses from DB
+  const regOffice = (officeModules || []).find((o) => o.office_id === "registrar") || {};
+  const osasOffice = (officeModules || []).find((o) => o.office_id === "osas") || {};
+
+  const isOdrsActive = (regOffice.office_status !== "Inactive") && (regOffice.odrs_enabled !== false);
+  const isOsasActive = (osasOffice.office_status !== "Inactive") && (osasOffice.osas_enabled !== false);
+  const isPortalActive = studentPortal.activeAccounts > 0 || studentPortal.totalAccounts > 0;
+  const isArchiveActive = archiveStats.totalDocuments > 0 || archiveStats.totalStudents > 0;
+
+  const servicesList = [
+    { key: "portal", active: isPortalActive },
+    { key: "odrs", active: isOdrsActive },
+    { key: "osas", active: isOsasActive },
+    { key: "archive", active: isArchiveActive },
+  ];
+
+  const activeServicesCount = servicesList.filter((s) => s.active).length;
+  const totalServicesCount = servicesList.length;
+  const allActive = activeServicesCount === totalServicesCount;
+
+  const onlineServices = {
+    allActive,
+    activeCount: activeServicesCount,
+    totalCount: totalServicesCount,
+    studentPortal: {
+      status: isPortalActive ? "Operational" : "Offline",
+      totalAccounts: studentPortal.totalAccounts,
+      activeAccounts: studentPortal.activeAccounts,
+      lastActiveAt: studentPortal.lastActiveAt,
+      latestRegisteredAt: studentPortal.latestRegisteredAt,
+    },
+    odrs: {
+      status: !isOdrsActive ? "Offline" : odrs.status,
+      enabled: isOdrsActive,
+      officeStatus: regOffice.office_status || "Active",
+      stationName: regOffice.station_name || "Registrar Terminal",
+      lastStationPing: regOffice.last_station_ping || null,
+      totalRequests: odrs.total,
+      activeBacklog: odrs.activeBacklog,
+      pending: odrs.pending,
+      inProgress: odrs.inProgress,
+      ready: odrs.ready,
+      completed: odrs.completed,
+      cancelled: odrs.cancelled,
+      today: odrs.today,
+      latestRequestAt: odrs.latestAt,
+      topDocTypes: odrs.topDocTypes,
+    },
+    osas: {
+      status: !isOsasActive ? "Offline" : osas.status,
+      enabled: isOsasActive,
+      officeStatus: osasOffice.office_status || "Active",
+      stationName: osasOffice.station_name || "OSAS Terminal",
+      lastStationPing: osasOffice.last_station_ping || null,
+      totalProposals: osas.total,
+      activePending: osas.activePending,
+      submitted: osas.submitted,
+      underReview: osas.underReview,
+      needsRevision: osas.needsRevision,
+      approved: osas.approved,
+      declined: osas.declined,
+      today: osas.today,
+      totalOrgs: osas.totalOrgs,
+      latestProposalAt: osas.latestAt,
+      topOrganizations: osas.topOrganizations,
+    },
+    archive: {
+      status: isArchiveActive ? "Operational" : "Idle",
+      totalDocuments: archiveStats.totalDocuments,
+      approvedDocuments: archiveStats.approvedDocuments,
+      pendingDocuments: archiveStats.pendingDocuments,
+      latestDocumentAt: archiveStats.latestDocumentAt,
+      totalStudents: archiveStats.totalStudents,
+      activeStudents: archiveStats.activeStudents,
+      totalBackups: archiveStats.totalBackups,
+      lastBackupAt: archiveStats.lastBackupAt,
+      latestBackupFilename: archiveStats.latestBackupFilename,
+      latestBackupStatus: archiveStats.latestBackupStatus,
+    },
+    lastVerifiedAt: new Date().toISOString(),
+  };
+
   const services = {
     gateway: {
       name: "Institutional Online Gateway",
       status: "Operational",
       latencyMs: dbInfo.latencyMs,
     },
-    odrs: { name: "Registrar Document Request Service", status: odrs.status, office: "Registrar" },
-    osas: { name: "OSAS Student Org Proposal Gateway", status: osas.status, office: "OSAS" },
-    studentPortal: { name: "Student Online Portal & Auth", status: "Operational", office: "Campus-wide" },
-    storage: { name: "Uploads & Artifact Subsystem", status: "Operational", office: "System-wide" },
+    odrs: { name: "Registrar Document Request Service", status: onlineServices.odrs.status, office: "Registrar" },
+    osas: { name: "OSAS Student Org Proposal Gateway", status: onlineServices.osas.status, office: "OSAS" },
+    studentPortal: { name: "Student Online Portal & Auth", status: onlineServices.studentPortal.status, office: "Campus-wide" },
+    storage: { name: "Uploads & Artifact Subsystem", status: onlineServices.archive.status, office: "System-wide" },
     database: { name: `${dbInfo.dbEngine} Connection Pool`, status: dbInfo.dbStatus, office: "System-wide" },
   };
 
@@ -585,6 +793,7 @@ async function buildHealthData() {
     dbStatus: dbInfo.dbStatus,
     lastRestorationAt,
     services,
+    onlineServices,
     odrs,
     osas,
     transactions,

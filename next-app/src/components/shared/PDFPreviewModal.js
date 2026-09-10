@@ -77,24 +77,23 @@ export default function PDFPreviewModal({ open, onClose, preview }) {
     >
       <DialogContent 
         hideClose={true}
-        className="flex h-[90vh] w-[96vw] max-w-[96vw] flex-col overflow-hidden border border-gray-200 bg-gray-100 p-0 shadow-2xl transition-all duration-normal ease-standard xl:max-w-[1400px] rounded-2xl dark:border-white/10 dark:bg-muted z-[60]"
+        className="flex h-[90vh] w-[96vw] max-w-[96vw] flex-col overflow-hidden border border-gray-200 bg-gray-100 p-0 shadow-2xl transition-all duration-normal ease-standard xl:max-w-[1400px] rounded-2xl dark:border-white/10 dark:bg-muted z-[60] gap-0"
       >
-        <DialogHeader className="shrink-0 border-b bg-gray-50 dark:bg-white/5" style={{ padding: '20px 24px', borderBottomWidth: '0.5px', borderBottomColor: 'rgba(0,0,0,0.08)' }}>
+        <DialogHeader className="shrink-0 border-b border-gray-100 dark:border-white/10 bg-gray-50 dark:bg-white/5 px-6 py-4">
           <div className="flex items-center justify-between w-full">
             <div className="min-w-0">
-              <DialogTitle className="text-left font-semibold text-[#111111] dark:text-zinc-50" style={{ fontSize: '15px', letterSpacing: '-0.01em' }}>
+              <DialogTitle className="text-left font-semibold text-gray-900 dark:text-zinc-50 text-[15px] tracking-[-0.01em]">
                 Document Preview: {preview?.title || preview?.docType || preview?.originalFilename || "Preview"}
               </DialogTitle>
-              <p className="text-left font-normal text-[#8E8E93] dark:text-zinc-400" style={{ fontSize: '12px', marginTop: '2px' }}>
-                Reviewing digitized record for <span className="font-semibold" style={{ color: '#E5484D' }}>{preview?.studentName || "student"}</span>. Ensure all identifiers and data are clearly legible.
+              <p className="text-left font-normal text-gray-500 dark:text-zinc-400 text-xs mt-0.5">
+                Reviewing digitized record for <span className="font-semibold text-pup-maroon dark:text-rose-400">{preview?.studentName || "student"}</span>. Ensure all identifiers and data are clearly legible.
               </p>
             </div>
             <button
               onClick={onClose}
-              className="p-0 border-0 bg-transparent text-[#8E8E93] hover:text-[#111111] dark:hover:text-zinc-100 focus:outline-none cursor-pointer transition-colors flex items-center justify-center"
-              style={{ width: '28px', height: '28px' }}
+              className="p-0 border-0 bg-transparent text-gray-400 hover:text-gray-900 dark:text-zinc-500 dark:hover:text-zinc-100 focus:outline-none cursor-pointer transition-colors flex items-center justify-center w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800"
             >
-              <i className="ti ti-x" style={{ fontSize: '16px' }}></i>
+              <i className="ph-bold ph-x text-[16px]"></i>
             </button>
           </div>
         </DialogHeader>
@@ -134,25 +133,14 @@ export default function PDFPreviewModal({ open, onClose, preview }) {
         </div>
 
         <div 
-          className="flex shrink-0 justify-end items-center bg-white dark:bg-card"
-          style={{ 
-            padding: '16px 24px', 
-            borderTopWidth: '0.5px', 
-            borderTopColor: 'rgba(0,0,0,0.08)',
-            gap: '8px'
-          }}
+          className="flex shrink-0 justify-end items-center bg-white dark:bg-card px-6 py-4 border-t border-gray-100 dark:border-white/10 gap-3"
         >
           <DialogClose asChild>
             <Button
-              variant="ghost"
+              type="button"
+              variant="outline"
               onClick={onClose}
-              className="px-4 text-[#8E8E93] hover:text-[#111111] dark:text-zinc-400 dark:hover:text-zinc-200 shadow-none bg-transparent hover:bg-[rgba(0,0,0,0.06)]"
-              style={{ 
-                height: '36px', 
-                borderRadius: '8px', 
-                fontSize: '13px', 
-                fontWeight: 400 
-              }}
+              className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
             >
               Close
             </Button>
@@ -162,16 +150,10 @@ export default function PDFPreviewModal({ open, onClose, preview }) {
               href={fileUrl}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center text-[#E5484D] hover:text-[#c93b40] font-medium group"
-              style={{ 
-                height: '36px', 
-                paddingLeft: '8px', 
-                paddingRight: '8px', 
-                fontSize: '13px' 
-              }}
+              className="inline-flex items-center gap-1.5 h-10 px-4 text-xs font-semibold rounded-xl text-pup-maroon dark:text-red-400 hover:bg-red-50/60 dark:hover:bg-red-950/30 transition-colors"
             >
-              <span className="group-hover:underline">Open Full View</span>
-              <i className="ti ti-arrow-up-right ml-1" style={{ fontSize: '14px', textDecoration: 'none' }}></i>
+              <span className="hover:underline">Open Full View</span>
+              <i className="ph-bold ph-arrow-square-out text-sm"></i>
             </a>
           ) : null}
         </div>
