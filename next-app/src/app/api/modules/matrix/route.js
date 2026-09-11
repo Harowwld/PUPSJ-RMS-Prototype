@@ -44,7 +44,7 @@ export async function GET(req) {
         if (m.id === "system_config") return { ...m, icon: "ph-bold ph-gear" };
         if (m.id === "backup") return { ...m, icon: "ph-bold ph-database-backup" };
         if (m.id === "audit_logs") return { ...m, icon: "ph-bold ph-shield-check" };
-        if (m.id === "alumni_requests") return { ...m, icon: "ph-bold ph-tray-arrow-up" };
+        if (m.id === "document_requests") return { ...m, icon: "ph-bold ph-tray-arrow-up" };
         if (m.id === "scan_upload") return { ...m, icon: "ph-bold ph-scan" };
         if (m.id === "documents") return { ...m, icon: "ph-bold ph-file-text" };
         if (m.id === "notifications") return { ...m, icon: "ph-bold ph-bell" };

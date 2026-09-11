@@ -278,7 +278,7 @@ export default function Header({ authUser, onLogout, children }) {
     } else if (activeView === "staff") {
       const allStaffTabs = [
         // Operations
-        { label: "Document Requests", view: "requests", icon: "ph-bold ph-tray-arrow-up", module: "alumni_requests", badge: "Operations", keywords: "document requests odrs alumni transcript diploma certification operations" },
+        { label: "Document Requests", view: "requests", icon: "ph-bold ph-tray-arrow-up", module: "document_requests", badge: "Operations", keywords: "document requests odrs transcript diploma certification operations" },
         { label: "OSAS Monitoring", view: "osas_monitoring", icon: "ph-bold ph-student", module: "osas_monitoring", badge: "Operations", keywords: "osas student affairs proposals events monitoring activities organizations" },
         { label: "Scan & Upload", view: "upload", icon: "ph-bold ph-scan", module: "scan_upload", badge: "Operations", keywords: "scan upload ocr document new ingest single upload file" },
         { label: "Batch Review", view: "batch_review", icon: "ph-bold ph-check-square", module: "scan_upload", badge: "Operations", keywords: "batch review scan queue bulk verification inspect documents" },

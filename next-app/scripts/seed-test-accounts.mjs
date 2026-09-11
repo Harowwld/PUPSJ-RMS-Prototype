@@ -15,10 +15,11 @@ const staff = [
   ["PUPREGISTRAR-003", "registrar", "Elias", "Austria", "Admin", "Administrative", "admin.registrar@pup.local"],
   ["PUPREGISTRAR-002", "registrar", "Marcus", "Reyes", "Staff", "Records", "staff.registrar@pup.local"],
   ["PUPOSAS-001", "osas", "Sandra", "Gomez", "Admin", "OSAS Admin", "admin.osas@pup.local"],
+  ["PUPOSAS-002", "osas", "Juanito", "Rizal", "Staff", "Student Affairs", "staff.osas@pup.local"],
 ];
 
 try {
-  // 1. Seed the 4 official demo personnel accounts
+  // 1. Seed the official demo personnel accounts
   for (const [id, office, fname, lname, role, section, email] of staff) {
     await pool.query(`
       INSERT INTO staff (id, office_id, fname, lname, role, section, status, email, password_hash, password_last_changed, updated_at)
@@ -42,7 +43,6 @@ try {
   await pool.query(`UPDATE document_requests SET updated_by = 'PUPREGISTRAR-002' WHERE updated_by = 'records.marcus@pup.local' OR updated_by = 'PUPREGISTRAR-001'`);
   await pool.query(`DELETE FROM staff_security_answers WHERE staff_id = 'PUPREGISTRAR-001'`);
   await pool.query(`DELETE FROM staff WHERE id = 'records.marcus@pup.local' OR email = 'records.marcus@pup.local' OR id = 'PUPREGISTRAR-001' OR email = 'admin.default@pup.local'`);
-  await pool.query(`DELETE FROM staff WHERE id = 'PUPOSAS-002' OR email = 'staff.osas@pup.local'`);
 
   // 3. Ensure security questions and pre-seed recovery answers so demo accounts skip setup modals
   const securityQuestions = [

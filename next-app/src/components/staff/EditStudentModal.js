@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -13,7 +13,6 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
 import { canonicalizeCabinetId } from "@/lib/storageLayoutUtils";
-import { getRoleBranding } from "@/lib/roleBranding";
 
 export default function EditStudentModal({
   open,
@@ -26,7 +25,6 @@ export default function EditStudentModal({
   showToast,
   authUser = null,
 }) {
-  const branding = useMemo(() => getRoleBranding(authUser), [authUser]);
   const [name, setName] = useState("");
   const [courseCode, setCourseCode] = useState("");
   const [yearLevel, setYearLevel] = useState("");
@@ -153,21 +151,22 @@ export default function EditStudentModal({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-full max-w-4xl sm:max-w-4xl overflow-hidden rounded-2xl border border-gray-200 bg-white p-0 shadow-2xl dark:border-white/10 dark:bg-card">
-        <DialogHeader className="bg-white p-6 pb-2 dark:bg-card border-none">
-          <DialogTitle className="text-[17px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
-            Edit Student Profile
-          </DialogTitle>
-          <DialogDescription className="mt-1 text-[13px] font-normal text-gray-500 dark:text-zinc-400">
-            Update registry details and archive drawer coordinates for student{" "}
-            <span className="font-mono font-semibold text-gray-900 dark:text-zinc-200">
-              {student?.studentNo}
-            </span>
-            .
-          </DialogDescription>
-        </DialogHeader>
+        <form onSubmit={handleSubmit}>
+          <DialogHeader className="bg-white p-6 pb-2 dark:bg-card border-none text-left">
+            <DialogTitle className="text-[17px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
+              Edit Student Profile
+            </DialogTitle>
+            <DialogDescription className="mt-1 text-[13px] font-normal text-gray-500 dark:text-zinc-400">
+              Update registry details and archive drawer coordinates for student{" "}
+              <span className="font-mono font-semibold text-gray-900 dark:text-zinc-200">
+                {student?.studentNo}
+              </span>
+              .
+            </DialogDescription>
+          </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="p-6 pt-2 space-y-5">
-          {formError && (
+          <div className="p-6 pt-2 space-y-5">
+            {formError && (
             <div className="rounded-xl border border-red-200 bg-red-50 p-3.5 text-xs font-medium text-red-700 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-400">
               <i className="ph-bold ph-warning-circle mr-1.5 text-sm inline-block align-sub"></i>
               {formError}
@@ -332,25 +331,22 @@ export default function EditStudentModal({
               </div>
             </div>
           </div>
+          </div>
 
-          <DialogFooter className="pt-4 border-t border-gray-100 dark:border-white/5 flex items-center justify-end gap-3">
+          <DialogFooter className="p-6 pt-0 bg-white dark:bg-card border-none flex items-center justify-end gap-2.5">
             <Button
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
               disabled={isSubmitting}
-              className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+              className="h-10 px-4 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
             >
               Cancel
             </Button>
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="flex h-10 px-5 text-xs font-semibold rounded-xl! btn-brand-red active:scale-95 disabled:opacity-50 transition-all cursor-pointer shadow-xs"
-              style={{
-                backgroundColor: authUser?.accent_color || branding.color || "var(--brand-accent)",
-                color: branding.foreground || "var(--brand-foreground, #ffffff)",
-              }}
+              className="flex h-10 px-5 text-xs font-semibold rounded-xl! btn-brand-red text-white! active:scale-95 disabled:opacity-50 transition-all cursor-pointer shadow-xs"
             >
               {isSubmitting ? (
                 <span className="flex items-center gap-2">

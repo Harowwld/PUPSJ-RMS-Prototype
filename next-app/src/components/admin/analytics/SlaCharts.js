@@ -416,7 +416,7 @@ const SlaCharts = React.memo(function SlaCharts({ data, pieData, onSwitchView })
           
           <div className="mt-4 flex flex-col pt-4 border-t border-gray-100 dark:border-white/5">
             {pieData.map((d, index) => {
-              const percent = totalSlaRequests > 0 ? ((d.value / totalSlaRequests) * 100).toFixed(0) : 0
+              const percent = totalSlaRequests > 0 ? Math.round((d.value / totalSlaRequests) * 100) : 0
               const displayName = d.name === "InProgress" ? "In Progress" : d.name
               const color = APPLE_STATUS_COLORS[d.name] || "#ccc"
               const isHovered = activePieIndex === index

@@ -75,7 +75,7 @@ export async function listDocumentRequests({
     `
     SELECT
       dr.*,
-      COALESCE(dr.requester_name, s.name, NULLIF(TRIM(CONCAT_WS(' ', sa.first_name, sa.last_name)), ''), sa.email, 'Alumni Requester') AS student_name,
+      COALESCE(dr.requester_name, s.name, NULLIF(TRIM(CONCAT_WS(' ', sa.first_name, sa.last_name)), ''), sa.email, 'Requester') AS student_name,
       COALESCE(dr.course_code, s.course_code) AS course_code,
       c.name AS course_name,
       sa.email AS requester_email,
@@ -159,7 +159,7 @@ export async function getDocumentRequestById(id, { officeId } = {}) {
     `
     SELECT
       dr.*,
-      COALESCE(dr.requester_name, s.name, NULLIF(TRIM(CONCAT_WS(' ', sa.first_name, sa.last_name)), ''), sa.email, 'Alumni Requester') AS student_name,
+      COALESCE(dr.requester_name, s.name, NULLIF(TRIM(CONCAT_WS(' ', sa.first_name, sa.last_name)), ''), sa.email, 'Requester') AS student_name,
       COALESCE(dr.course_code, s.course_code) AS course_code,
       c.name AS course_name,
       sa.email AS requester_email,

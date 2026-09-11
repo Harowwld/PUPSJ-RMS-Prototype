@@ -528,17 +528,15 @@ export default function GlobalAuditLogsTab({ showToast }) {
 
   return (
     <TooltipProvider delay={200}>
-      <div className="animate-fade-up font-inter flex w-full flex-col gap-6">
-        {/* Stat Cards */}
-        <StatCards isLoading={loading} logStats={logStats} />
-
-        {/* Main Table Card */}
-        <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
+      <div className="animate-fade-up font-inter flex flex-1 flex-col h-full min-h-0 w-full gap-6">
+        {/* ONE Single Card Container encapsulating Header, Metrics, Toolbar, Table & Pagination */}
+        <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none isolate font-inter mb-4 min-h-0 flex-1">
           <PageHeader
             icon="ph-shield-check"
             title="Platform Audit Trail"
             description="Inspect administrative actions, office configuration updates, and security logs across all database environments."
             showBorder={false}
+            className="p-6"
             titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
             descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
             actions={
@@ -585,6 +583,11 @@ export default function GlobalAuditLogsTab({ showToast }) {
               </div>
             }
           />
+
+          {/* Stat Cards */}
+          <div className="px-6 pb-6">
+            <StatCards isLoading={loading} logStats={logStats} />
+          </div>
 
           {/* Navigation Toolbar */}
           <div className="border-t border-gray-100 dark:border-white/10 p-5 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
@@ -856,7 +859,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
           {loading && (!logs || logs.length === 0) ? (
             <AuditLogsTableSkeleton rowCount={8} embedded={true} />
           ) : error ? (
-            <div className="flex min-h-[420px] flex-col items-center justify-center border-t border-gray-100 dark:border-white/10 bg-transparent text-center p-6">
+            <div className="flex min-h-[420px] flex-col items-center justify-center border-t border-gray-100 dark:border-white/10 bg-transparent text-center p-6 rounded-b-2xl">
               <Empty className="flex flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400">
                 <EmptyHeader className="flex flex-col items-center gap-0">
                   <div className="relative mb-6">
@@ -875,7 +878,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
               </Empty>
             </div>
           ) : logs.length === 0 ? (
-            <div className="flex min-h-[420px] flex-col items-center justify-center border-t border-gray-100 dark:border-white/10 bg-transparent text-center p-6">
+            <div className="flex min-h-[420px] flex-col items-center justify-center border-t border-gray-100 dark:border-white/10 bg-transparent text-center p-6 rounded-b-2xl">
               <Empty className="flex flex-col items-center justify-center border-0 bg-transparent text-center">
                 <EmptyHeader className="flex flex-col items-center gap-0">
                   <div className="relative mb-6">
@@ -905,7 +908,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
               </Empty>
             </div>
           ) : (
-            <div className="overflow-hidden border-t border-gray-200 dark:border-white/10 bg-white dark:bg-card flex flex-col flex-1">
+            <div className="overflow-hidden rounded-b-2xl border-t border-gray-200 dark:border-white/10 bg-white dark:bg-card flex flex-col flex-1">
               <div className="overflow-x-auto">
                 <table className="min-w-full text-sm">
               <thead className="sticky top-0 z-10 border-b-[0.5px] border-black/10 dark:border-white/10 bg-white dark:bg-card">

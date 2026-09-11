@@ -45,7 +45,7 @@ async function requireDocumentAccess(req, rawId) {
   if (!canAccessDocument(user, row)) {
     return { response: NextResponse.json({ ok: false, error: "Forbidden" }, { status: 403 }) };
   }
-  return { user, row };
+  return { user, row, id };
 }
 
 export async function GET(req, ctx) {
@@ -53,7 +53,8 @@ export async function GET(req, ctx) {
   const raw = params.id;
   const access = await requireDocumentAccess(req, raw);
   if (access.response) return access.response;
-  const { id, row } = access;
+  const { row } = access;
+  const id = access.id ?? Number(row.id);
 
   const filePath = getDocumentFilePath(row);
 
@@ -88,7 +89,8 @@ export async function PATCH(req, ctx) {
   const raw = params.id;
   const access = await requireDocumentAccess(req, raw);
   if (access.response) return access.response;
-  const { id } = access;
+  const { row: accessRow } = access;
+  const id = access.id ?? Number(accessRow.id);
 
   const contentType = String(req.headers.get("content-type") || "").toLowerCase();
   let body = null;
@@ -155,9 +157,9 @@ export async function PATCH(req, ctx) {
 
     if (approvalStatus === "Declined") {
       const declined = await declineDocumentAndRemoveFile(id, {
-        reviewedBy: reviewer.id || reviewer.email || "admin",
+        reviewedBy: reviewer.id || null,
         reviewNote: reviewNote || null,
-      }, { officeId: access.row.office_id });
+      }, { officeId: accessRow.office_id });
       if (!declined) {
         return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
       }
@@ -176,9 +178,9 @@ export async function PATCH(req, ctx) {
 
     const row = await reviewDocument(id, {
       approvalStatus,
-      reviewedBy: reviewer.id || reviewer.email || "admin",
+      reviewedBy: reviewer.id || null,
       reviewNote: reviewNote || null,
-    }, { officeId: access.row.office_id });
+    }, { officeId: accessRow.office_id });
     if (!row) {
       return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
     }
@@ -191,11 +193,16 @@ export async function PATCH(req, ctx) {
     return NextResponse.json({ ok: true, data: row });
   }
 
-  let row = await updateDocumentMetadata(
-    id,
-    { studentNo, studentName, docType, isPreviewed },
-    { officeId: access.row.office_id },
-  );
+  let row;
+  try {
+    row = await updateDocumentMetadata(
+      id,
+      { studentNo, studentName, docType, isPreviewed },
+      { officeId: accessRow.office_id },
+    );
+  } catch (err) {
+    return NextResponse.json({ ok: false, error: err.message || "Failed to update document" }, { status: 400 });
+  }
   if (!row) {
     return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
   }
@@ -208,12 +215,16 @@ export async function PATCH(req, ctx) {
       );
     }
     const buf = Buffer.from(await replacementFile.arrayBuffer());
-    row = await replaceDocumentFile(id, {
-      originalFilename: replacementFile.name || "document.pdf",
-      mimeType: replacementFile.type || "application/pdf",
-      sizeBytes: replacementFile.size || buf.length,
-      buffer: buf,
-    }, { officeId: access.row.office_id });
+    try {
+      row = await replaceDocumentFile(id, {
+        originalFilename: replacementFile.name || "document.pdf",
+        mimeType: replacementFile.type || "application/pdf",
+        sizeBytes: replacementFile.size || buf.length,
+        buffer: buf,
+      }, { officeId: accessRow.office_id });
+    } catch (err) {
+      return NextResponse.json({ ok: false, error: err.message || "Failed to replace file" }, { status: 400 });
+    }
     replaced = true;
   }
   await writeAuditLog(req, replaced ? `Replace Document File` : `Update Document`, {
@@ -233,9 +244,10 @@ export async function DELETE(req, ctx) {
   const raw = params.id;
   const access = await requireDocumentAccess(req, raw);
   if (access.response) return access.response;
-  const { id } = access;
+  const { row: accessRow } = access;
+  const id = access.id ?? Number(accessRow.id);
 
-  const row = await deleteDocument(id, { officeId: access.row.office_id });
+  const row = await deleteDocument(id, { officeId: accessRow.office_id });
   if (!row) {
     return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
   }

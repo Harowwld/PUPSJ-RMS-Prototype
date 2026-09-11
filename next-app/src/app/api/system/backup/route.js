@@ -85,8 +85,20 @@ export async function POST(req) {
     return createAuthErrorResponse(error || "Admin access required", 403);
   }
 
-  if (!isSystemAdminRole(user.role)) {
-    return createAuthErrorResponse("System Administrator authorization required", 403);
+  const isSuper = isSystemAdminRole(user.role);
+  const userOffice = getUserOfficeId(user);
+
+  // Parse request body for scope/office preferences
+  const body = await req.json().catch(() => ({}));
+  const requestedScope = body?.scope || (isSuper ? "system" : "office");
+
+  if (!isSuper) {
+    if (requestedScope === "system") {
+      return createAuthErrorResponse("System Administrator authorization required for platform governance backups", 403);
+    }
+    if (!userOffice) {
+      return createAuthErrorResponse("Office scope is required", 403);
+    }
   }
 
   const totpToken = extractTOTPToken(req.headers);
@@ -97,32 +109,27 @@ export async function POST(req) {
       { 
         ok: false, 
         error: "TOTP verification required: " + totpResult.error, 
-        requiresTOTP: true,
+        requiresTOTP: !totpResult.notConfigured,
+        totpNotConfigured: !!totpResult.notConfigured,
         missingToken: !!totpResult.missing
       },
       { status: 403 }
     );
   }
 
-  // Parse request body for scope/office preferences
-  const body = await req.json().catch(() => ({}));
-  const isSuper = isSystemAdminRole(user.role);
-
-
   try {
     let record = null;
     let logDescription = "";
 
-    if (isSuper) {
-      const requestedScope = body?.scope || "system";
-      if (requestedScope === "system") {
-        record = await executeSystemBackup({ actorId: user.id });
-        logDescription = `initiated platform governance backup (Package: ${record?.filename})`;
-      } else {
-        const targetOffice = (body?.officeId || "registrar").toLowerCase();
-        record = await executeOfficeBackup({ officeId: targetOffice, actorId: user.id });
-        logDescription = `initiated [${targetOffice}] office partition backup (Package: ${record?.filename})`;
-      }
+    if (isSuper && requestedScope === "system") {
+      record = await executeSystemBackup({ actorId: user.id });
+      logDescription = `initiated platform governance backup (Package: ${record?.filename})`;
+    } else {
+      const targetOffice = isSuper
+        ? (body?.officeId || userOffice || "registrar").toLowerCase()
+        : (userOffice || "registrar").toLowerCase();
+      record = await executeOfficeBackup({ officeId: targetOffice, actorId: user.id });
+      logDescription = `initiated [${targetOffice}] office partition backup (Package: ${record?.filename})`;
     }
 
     if (!record || !canAccessResource(user, "backup", record)) {
@@ -185,7 +192,13 @@ export async function DELETE(req) {
     const totpResult = await requireTOTP(user.id, totpToken, { requireEnabled: true });
     if (!totpResult.valid) {
       return NextResponse.json(
-        { ok: false, error: "TOTP verification required", requiresTOTP: true, missingToken: !!totpResult.missing },
+        { 
+          ok: false, 
+          error: "TOTP verification required: " + totpResult.error, 
+          requiresTOTP: !totpResult.notConfigured, 
+          totpNotConfigured: !!totpResult.notConfigured,
+          missingToken: !!totpResult.missing 
+        },
         { status: 403 }
       );
     }

@@ -43,7 +43,7 @@ function getModuleIcon(m) {
   if (m?.id === "system_config") return "ph-bold ph-gear"
   if (m?.id === "backup") return "ph-bold ph-database-backup"
   if (m?.id === "audit_logs") return "ph-bold ph-shield-check"
-  if (m?.id === "alumni_requests") return "ph-bold ph-tray-arrow-up"
+  if (m?.id === "document_requests") return "ph-bold ph-tray-arrow-up"
   if (m?.id === "scan_upload") return "ph-bold ph-scan"
   if (m?.id === "documents") return "ph-bold ph-file-text"
   if (m?.id === "notifications") return "ph-bold ph-bell"
@@ -57,7 +57,7 @@ function getModuleTargetText(m) {
   if (m?.id === "scan_upload") return "Document Scanning Station"
   if (m?.id === "documents") return "Student Records Search"
   if (m?.id === "records_review") return "Document Approvals"
-  if (m?.id === "alumni_requests") return "Student Document Requests"
+  if (m?.id === "document_requests") return "Student Document Requests"
   if (m?.id === "compliance_analytics") return "Digitization Progress Reports"
   if (m?.id === "request_analytics") return "Request Turnaround Reports"
   if (m?.id === "records_archive" || m?.id === "storage_explorer") return "Physical File Archive Finder"
@@ -678,12 +678,12 @@ export default function ModuleConfigTab({ showToast }) {
         )}
 
         {/* Content Section: By Office or Matrix inside the single Card */}
-        <div className="overflow-hidden border-t border-gray-200 dark:border-white/10 bg-white dark:bg-card flex flex-col flex-1">
+        <div className="overflow-hidden rounded-b-2xl border-t border-gray-200 dark:border-white/10 bg-white dark:bg-card flex flex-col flex-1">
           {/* VIEW 1: BY OFFICE */}
           {viewMode === "office" && (
             <div className="flex flex-col flex-1">
               {filteredOffices.length === 0 ? (
-                <div className="flex h-[380px] flex-col items-center justify-center p-6 text-center">
+                <div className="flex h-[380px] flex-col items-center justify-center p-6 text-center rounded-b-2xl">
               <Empty className="flex flex-col items-center justify-center border-0 bg-transparent text-center">
                 <EmptyHeader className="flex flex-col items-center gap-0">
                   <div className="relative mb-6">

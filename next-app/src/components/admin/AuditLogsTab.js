@@ -236,17 +236,15 @@ export default function AuditLogsTab({
 
   return (
     <TooltipProvider delay={200}>
-      <div className="animate-fade-up font-inter flex w-full flex-col gap-6">
-        {/* Stat Cards */}
-        <StatCards isLoading={isLoading} logStats={logStats} />
-
-        {/* Main Table Card */}
-        <Card className="flex-1 flex flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none isolate">
+      <div className="animate-fade-up font-inter flex flex-1 flex-col h-full min-h-0 w-full gap-6">
+        {/* ONE Single Card Container encapsulating Header, Metrics, Toolbar, Table & Pagination */}
+        <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none isolate font-inter mb-4 min-h-0 flex-1">
           <PageHeader
             icon="ph-shield-check"
             title="Audit Logs"
             description="Trace system activities, security events, and administrative actions with precision."
             showBorder={false}
+            className="p-6"
             titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
             descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
             actions={
@@ -288,6 +286,11 @@ export default function AuditLogsTab({
               </div>
             }
           />
+
+          {/* Stat Cards */}
+          <div className="px-6 pb-6">
+            <StatCards isLoading={isLoading} logStats={logStats} />
+          </div>
 
           <LogFilters
             localSearch={localSearch}

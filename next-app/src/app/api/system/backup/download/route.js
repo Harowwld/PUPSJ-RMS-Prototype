@@ -16,10 +16,6 @@ export async function GET(req) {
       return createAuthErrorResponse(error || "Admin access required", 403);
     }
 
-    if (!isSystemAdminRole(user.role)) {
-      return createAuthErrorResponse("System Administrator authorization required", 403);
-    }
-
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
     if (!id) return NextResponse.json({ ok: false, error: "Missing ID" }, { status: 400 });

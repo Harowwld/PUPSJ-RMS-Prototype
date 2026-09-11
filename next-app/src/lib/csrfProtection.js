@@ -24,9 +24,11 @@ function signCSRFToken(sessionId, expiresAt, nonce) {
     .digest("hex");
 }
 
-export function generateCSRFToken(sessionId, maxAge = 3600000) {
+const DEFAULT_CSRF_MAX_AGE_MS = 8 * 60 * 60 * 1000; // 8 hours (matches session token lifetime)
+
+export function generateCSRFToken(sessionId, maxAge = DEFAULT_CSRF_MAX_AGE_MS) {
   const requestedAge = Number(maxAge);
-  const expiresAt = Date.now() + (Number.isFinite(requestedAge) ? requestedAge : 3600000);
+  const expiresAt = Date.now() + (Number.isFinite(requestedAge) ? requestedAge : DEFAULT_CSRF_MAX_AGE_MS);
   const nonce = randomBytes(32).toString("hex");
   const signature = signCSRFToken(sessionId, expiresAt, nonce);
   return `${expiresAt}.${nonce}.${signature}`;
@@ -36,10 +38,10 @@ export function generateCSRFToken(sessionId, maxAge = 3600000) {
  * Validates a CSRF token against the session
  * @param {string} token - The CSRF token to validate
  * @param {string} sessionId - The session identifier
- * @param {number} [maxAge=3600000] - Maximum age in milliseconds (default: 1 hour)
+ * @param {number} [maxAge=28800000] - Maximum age in milliseconds (default: 8 hours)
  * @returns {boolean} True if valid, false otherwise
  */
-export function validateCSRFToken(token, sessionId, maxAge = 3600000) {
+export function validateCSRFToken(token, sessionId, maxAge = DEFAULT_CSRF_MAX_AGE_MS) {
   if (!token || !sessionId) return false;
   
   try {
@@ -101,7 +103,7 @@ export function setCSRFTokenCookie(response, sessionToken) {
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
     path: "/",
-    maxAge: 60 * 60,
+    maxAge: 8 * 60 * 60, // 8 hours (matches session token lifetime)
   });
   return response;
 }

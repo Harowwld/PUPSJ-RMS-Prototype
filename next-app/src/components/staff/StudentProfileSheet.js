@@ -245,11 +245,7 @@ export default function StudentProfileSheet({
                     onOpenChange(false);
                     onLocateStudent?.(student);
                   }}
-                  className="flex h-9 px-4 text-xs font-semibold rounded-xl! btn-brand-red active:scale-95 disabled:opacity-50 transition-all cursor-pointer shadow-xs whitespace-nowrap self-start sm:self-auto"
-                  style={{
-                    backgroundColor: authUser?.accent_color || branding.color || "var(--brand-accent)",
-                    color: branding.foreground || "var(--brand-foreground, #ffffff)",
-                  }}
+                  className="flex h-9 px-4 text-xs font-semibold rounded-xl! btn-brand-red text-white! active:scale-95 disabled:opacity-50 transition-all cursor-pointer shadow-xs whitespace-nowrap self-start sm:self-auto"
                 >
                   <i className="ph-bold ph-compass mr-1.5 text-sm"></i>
                   View in Map
@@ -340,7 +336,7 @@ export default function StudentProfileSheet({
               <div className="p-4 text-center text-xs text-gray-400">Loading requests...</div>
             ) : requests.length === 0 ? (
               <div className="p-4 text-center rounded-xl border border-dashed border-gray-200 dark:border-white/10 text-xs text-gray-400 dark:text-zinc-500">
-                No alumni or student document requests recorded.
+                No document requests recorded.
               </div>
             ) : (
               <div className="rounded-xl border border-gray-200 dark:border-white/10 overflow-hidden divide-y divide-gray-100 dark:divide-white/5">
@@ -388,7 +384,7 @@ export default function StudentProfileSheet({
                   onOpenChange(false);
                   onArchiveStudent?.(student.studentNo);
                 }}
-                className="h-9 px-4 text-xs font-semibold rounded-xl border border-red-200 bg-red-50 text-red-700 hover:bg-red-100 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-400 shadow-xs cursor-pointer active:scale-95 transition-all"
+                className="h-9 px-4 text-xs font-semibold rounded-xl border border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-400 shadow-xs cursor-pointer active:scale-95 transition-all"
               >
                 <i className="ph-bold ph-archive mr-1.5 text-sm"></i>
                 Archive

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getPrincipalOfficeId, requireAdmin, createAuthErrorResponse } from "../../../../../lib/authHelpers";
 import { isSystemAdminRole } from "../../../../../lib/roleUtils";
-import { archiveRecognitionTemplate, deleteRecognitionTemplate, getRecognitionTemplateById, updateRecognitionTemplate } from "../../../../../lib/recognitionTemplatesRepo";
+import { archiveRecognitionTemplate, deleteRecognitionTemplate, getRecognitionTemplateById, restoreRecognitionTemplate, updateRecognitionTemplate } from "../../../../../lib/recognitionTemplatesRepo";
 import { canAccessResource } from "../../../../../lib/resourceAuthorization";
 
 export const runtime = "nodejs";
@@ -17,11 +17,17 @@ export async function PATCH(req, { params }) {
   if (error || !user) return createAuthErrorResponse(error || "Admin access required", 403);
   const officeId = resolveOfficeId(user, req);
   if (!officeId) return createAuthErrorResponse("Office scope is required", 403);
-  const existing = await getRecognitionTemplateById((await params).id, officeId);
+  const templateId = (await params).id;
+  const existing = await getRecognitionTemplateById(templateId, officeId);
   if (!existing || !canAccessResource(user, "recognitionTemplate", existing)) return NextResponse.json({ ok: false, error: "Template not found" }, { status: 404 });
   const body = await req.json().catch(() => null);
   try {
-    const row = await updateRecognitionTemplate((await params).id, { ...body, officeId, actorId: user.id });
+    if (body?.status === "Active" || body?.action === "restore") {
+      const restored = await restoreRecognitionTemplate(templateId, user.id, officeId);
+      if (!restored) return NextResponse.json({ ok: false, error: "Template not found" }, { status: 404 });
+      return NextResponse.json({ ok: true, data: restored });
+    }
+    const row = await updateRecognitionTemplate(templateId, { ...body, officeId, actorId: user.id });
     if (!row) return NextResponse.json({ ok: false, error: "Template not found" }, { status: 404 });
     return NextResponse.json({ ok: true, data: row });
   } catch (err) {

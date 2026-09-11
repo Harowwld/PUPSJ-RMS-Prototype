@@ -7,6 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
+  DialogFooter,
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 
@@ -30,7 +31,7 @@ export default function DefaultPasswordModal({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="overflow-hidden rounded-2xl border border-gray-200 bg-white p-0 shadow-2xl sm:max-w-md dark:border-white/10 dark:bg-card">
+      <DialogContent className="overflow-hidden rounded-2xl border border-gray-200 bg-white p-0 shadow-2xl sm:max-w-md dark:border-white/10 dark:bg-card gap-0">
         <DialogHeader className="bg-white p-6 pb-0 dark:bg-card border-none">
           <div className="flex items-start gap-4">
             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-red-100 bg-red-50 text-pup-maroon dark:text-primary shadow-sm dark:bg-red-950/30">
@@ -93,22 +94,23 @@ export default function DefaultPasswordModal({
           </div>
         </div>
 
-        <div className="flex flex-col-reverse gap-2.5 border-none bg-white p-6 pt-0 sm:flex-row sm:justify-end dark:bg-card">
+        <DialogFooter className="p-6 pt-0 bg-white dark:bg-card border-none flex items-center justify-end gap-2.5">
           <Button
             type="button"
-            variant="ghost"
+            variant="outline"
             onClick={onClose}
-            className="h-10 px-4 text-xs font-semibold text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:text-zinc-400 dark:hover:bg-white/5 rounded-xl cursor-pointer border-none shadow-none"
+            className="h-10 px-4 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
           >
             Close
           </Button>
           <Button
+            type="button"
             onClick={onClose}
-            className="btn-brand-red h-10 px-5 text-xs font-semibold text-white rounded-xl shadow-none cursor-pointer flex items-center gap-1.5"
+            className="h-10 px-5 text-xs font-semibold rounded-xl! btn-brand-red text-white shadow-xs cursor-pointer active:scale-95 transition-all border-0"
           >
             Acknowledge
           </Button>
-        </div>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   )

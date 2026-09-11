@@ -24,7 +24,10 @@ function isSecondaryOffice(officeId, officeName) {
 
 /** Resolve the supplied color/icon branding from the authenticated context. */
 export function getRoleBranding(context = {}) {
-  const { role, officeId = context.office_id, officeName = context.office_name } = context;
+  const ctx = context || {};
+  const role = ctx.role;
+  const officeId = ctx.officeId ?? ctx.office_id;
+  const officeName = ctx.officeName ?? ctx.office_name;
 
   if (String(role || "").toLowerCase().trim() === "student") return ROLE_BRANDING.red;
 

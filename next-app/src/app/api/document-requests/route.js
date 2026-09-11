@@ -159,7 +159,7 @@ export async function POST(req) {
     );
   }
 
-  const displayName = requesterName || student?.name || studentNo || "Alumni Requester";
+  const displayName = requesterName || student?.name || studentNo || "Requester";
   if (!canAccessResource(staff, "request", row)) {
     return NextResponse.json({ ok: false, error: "Request could not be created" }, { status: 500 });
   }

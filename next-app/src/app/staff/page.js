@@ -81,7 +81,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
   const validViews = ["requests", "osas_monitoring", "students", "upload", "batch_review", "documents", "notifications", "search", "storage"];
   const initialView = validViews.includes(searchParams?.get("view"))
     ? searchParams.get("view")
-    : "requests";
+    : (initialAuthUser?.office_id === "osas" ? "osas_monitoring" : "requests");
 
   const [view, setView] = useState(initialView);
   const [authUser, setAuthUser] = useState(initialAuthUser);
@@ -151,7 +151,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
     const enabled = new Set(authUser.enabled_modules)
     
     const MODULE_KEY_MAP = {
-      requests: "alumni_requests",
+      requests: "document_requests",
       osas_monitoring: "osas_monitoring",
       students: "student_directory",
       upload: "scan_upload",
@@ -225,6 +225,28 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
   const [bulkArchiveLoading, setBulkArchiveLoading] = useState(false);
   const [bulkRestoreOpen, setBulkRestoreOpen] = useState(false);
   const [bulkRestoreLoading, setBulkRestoreLoading] = useState(false);
+
+  // Prune any stale selectedStudentIds when students datasets update
+  useEffect(() => {
+    setSelectedStudentIds((prev) => {
+      if (prev.size === 0) return prev;
+      const allAvailable = [...students, ...archivedStudents];
+      const validIds = new Set(allAvailable.map((s) => s.studentNo));
+      let needsPruning = false;
+      for (const id of prev) {
+        if (!validIds.has(id)) {
+          needsPruning = true;
+          break;
+        }
+      }
+      if (!needsPruning) return prev;
+      const next = new Set();
+      for (const id of prev) {
+        if (validIds.has(id)) next.add(id);
+      }
+      return next;
+    });
+  }, [students, archivedStudents]);
 
   const [currentLocatorLevel, setCurrentLocatorLevel] = useState("rooms");
   const [selectedRoom, setSelectedRoom] = useState(null);
@@ -1068,7 +1090,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
     if (!authUser) return
     const enabled = new Set(authUser.enabled_modules || [])
     const MODULE_KEY_MAP = {
-      requests: "alumni_requests",
+      requests: "document_requests",
       osas_monitoring: "osas_monitoring",
       students: "student_directory",
       upload: "scan_upload",
@@ -1664,6 +1686,12 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
                   if (!res.ok || !json?.ok) {
                     throw new Error(json?.error || "Failed to restore student record");
                   }
+                  setSelectedStudentIds((prev) => {
+                    if (!prev.has(studentNo)) return prev;
+                    const next = new Set(prev);
+                    next.delete(studentNo);
+                    return next;
+                  });
                   showToast({ title: "Record Restored", description: `Student ${studentNo} is now active.` });
                   fetchData();
                 } catch (err) {
@@ -2023,6 +2051,12 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
                   if (!res.ok || !json?.ok) {
                     throw new Error(json?.error || "Failed to archive student record");
                   }
+                  setSelectedStudentIds((prev) => {
+                    if (!prev.has(studentNo)) return prev;
+                    const next = new Set(prev);
+                    next.delete(studentNo);
+                    return next;
+                  });
                   showToast({ title: "Record Archived", description: `Student ${studentNo} and their documents are now hidden.` });
                   // Clear search to hide the archived student
                   const cleared = { studentNo: "", studentName: "", docType: "" };
@@ -2033,7 +2067,6 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
                   showToast({ title: "Archive Failed", description: err.message }, true);
                 }
               }}
-              archivedStudents={archivedStudents}
               currentStudent={(() => {
                 const uniqueNo = Array.from(new Set(docsRows.map(r => r.student_no)));
                 const targetNo = uniqueNo.length === 1 ? uniqueNo[0] : docsForm.studentNo;

@@ -48,7 +48,7 @@ function buildStudentWhere({ studentStatus, courseCode, officeId }) {
 
 function roundPercent(ratio) {
   if (!Number.isFinite(ratio)) return null;
-  return Math.round(ratio * 10000) / 100;
+  return Math.round(ratio * 100);
 }
 
 export async function getDigitizationComplianceSummary({
@@ -144,8 +144,8 @@ export async function getDigitizationComplianceSummary({
   }).sort((a, b) => a.courseCode.localeCompare(b.courseCode));
 
   const totalCompletenessRatio = expectedCountPerStudent > 0 ? (totalDigitizedDocsCount / expectedCountPerStudent) : totalStudents;
-  const avgCompleteness = totalStudents > 0 ? roundPercent(totalCompletenessRatio / totalStudents) : null;
-  const fullyDigitizedRate = totalStudents > 0 ? roundPercent(fullyDigitizedCount / totalStudents) : null;
+  const avgCompleteness = totalStudents > 0 ? roundPercent(totalCompletenessRatio / totalStudents) : 0;
+  const fullyDigitizedRate = totalStudents > 0 ? roundPercent(fullyDigitizedCount / totalStudents) : 0;
   const totalExpectedDocsCount = totalStudents * expectedCountPerStudent;
 
   const byYear = yearRows.map((row) => ({
@@ -160,9 +160,10 @@ export async function getDigitizationComplianceSummary({
     summary: {
       totalStudents,
       digitizedStudents: fullyDigitizedCount,
+      fullyDigitizedStudents: fullyDigitizedCount,
       notDigitizedStudents: Math.max(0, totalStudents - fullyDigitizedCount),
-      percentDigitized: avgCompleteness,
-      fullyDigitizedRate,
+      percentDigitized: avgCompleteness ?? 0,
+      fullyDigitizedRate: fullyDigitizedRate ?? 0,
       totalDigitizedDocsCount,
       totalExpectedDocsCount,
     },

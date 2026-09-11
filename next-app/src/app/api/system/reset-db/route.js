@@ -90,6 +90,19 @@ async function handleResetDb(req) {
       password: defaultPassword,
     });
 
+    // 5. OSAS Staff
+    await createStaff({
+      id: "PUPOSAS-002",
+      officeId: "osas",
+      fname: "Juanito",
+      lname: "Rizal",
+      role: "Staff",
+      section: "Student Affairs",
+      status: "Active",
+      email: "staff.osas@pup.local",
+      password: defaultPassword,
+    });
+
     // Baseline courses, sections, and document types
     for (const [code, name] of [
       ["BSIT", "Bachelor of Science in Information Technology"],

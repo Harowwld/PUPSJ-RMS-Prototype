@@ -8,16 +8,13 @@ import { toast } from "sonner";
 import Header from "@/components/layout/Header";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
-import { LiquidGlassButton } from "@/components/ui/liquid-glass-button";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
 import { Select } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Separator } from "@/components/ui/separator";
 import {
   Dialog,
   DialogContent,
@@ -34,6 +31,7 @@ import {
   getDefaultDashboardPath,
 } from "@/lib/roleUtils";
 import PageHeader from "@/components/shared/PageHeader";
+import { RefreshButton } from "@/components/shared/RefreshButton";
 import { cn } from "@/lib/utils";
 import { generateAuditLogsPdf } from "@/lib/pdfGenerator";
 import { generateExportFilename } from "@/lib/exportHelpers";
@@ -144,9 +142,7 @@ function StatCards({ isLoading, stats }) {
       label: "Total Events",
       value: stats.totalLogs || 0,
       sublabel: "Cumulative personal logs",
-      bgClass: "from-[#14C8FF] via-[#007AFF] to-[#0055FF] dark:from-[#007AFF] dark:to-[#0033aa]",
-      shape1: "from-[#0055FF]/40 to-[#007AFF]/0",
-      shape2: "from-[#14C8FF]/30 to-[#007AFF]/0",
+      color: "blue",
       iconClass: "ph-database",
     },
     {
@@ -154,9 +150,7 @@ function StatCards({ isLoading, stats }) {
       label: "Activity Today",
       value: stats.logsToday || 0,
       sublabel: "Events recorded today",
-      bgClass: "from-[#34d399] via-[#059669] to-[#047857] dark:from-[#059669] dark:to-[#024e37]",
-      shape1: "from-[#047857]/40 to-[#059669]/0",
-      shape2: "from-[#34d399]/30 to-[#059669]/0",
+      color: "emerald",
       iconClass: "ph-calendar-check",
     },
     {
@@ -164,16 +158,32 @@ function StatCards({ isLoading, stats }) {
       label: "Auth Attempts",
       value: stats.authEvents || 0,
       sublabel: "Logins & access events",
-      bgClass: "from-[#fbbf24] via-[#d97706] to-[#b45309] dark:from-[#d97706] dark:to-[#78350f]",
-      shape1: "from-[#b45309]/40 to-[#d97706]/0",
-      shape2: "from-[#fbbf24]/30 to-[#d97706]/0",
+      color: "amber",
       iconClass: "ph-fingerprint",
     },
   ];
 
+  const getSubColor = (color) => {
+    switch (color) {
+      case "blue": return "text-blue-600 dark:text-blue-400";
+      case "emerald": return "text-emerald-600 dark:text-emerald-400";
+      case "amber": return "text-amber-600 dark:text-amber-400";
+      default: return "text-gray-500";
+    }
+  };
+
+  const getRingColor = (color) => {
+    switch (color) {
+      case "blue": return "border-blue-500/40 dark:border-blue-500/40 ring-1 ring-blue-500/20";
+      case "emerald": return "border-emerald-500/40 dark:border-emerald-500/40 ring-1 ring-emerald-500/20";
+      case "amber": return "border-amber-500/40 dark:border-amber-500/40 ring-1 ring-amber-500/20";
+      default: return "";
+    }
+  };
+
   return (
     <div ref={containerRef}>
-      <StaggerContainer className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 items-start relative z-20 transition-all duration-500">
+      <StaggerContainer className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 items-start relative z-20 transition-all duration-500">
       {cards.map((stat, i) => (
         <StaggerItem
           key={i}
@@ -185,55 +195,49 @@ function StatCards({ isLoading, stats }) {
           <div 
             onClick={() => setSelectedKpi(selectedKpi === stat.key ? null : stat.key)}
             className={cn(
-              "relative overflow-hidden rounded-xl border-none p-5 cursor-pointer bg-gradient-to-br select-none",
-              stat.bgClass,
-              i === 0 ? "glass-stat-card-blue" :
-              i === 1 ? "glass-stat-card-green" :
-              i === 2 ? "glass-stat-card-orange" : ""
+              "relative overflow-hidden rounded-xl border p-4 cursor-pointer select-none transition-all",
+              "border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-zinc-900/30 hover:border-gray-200 dark:hover:border-white/10",
+              selectedKpi === stat.key && getRingColor(stat.color)
             )}
           >
-            <div className="absolute inset-0 overflow-hidden rounded-xl pointer-events-none z-0">
-              <div className={cn("rms-style-clip-one absolute bottom-0 left-0 w-[70%] h-[80%] bg-gradient-to-tr pointer-events-none", stat.shape1)} />
-              <div className={cn("rms-style-clip-two absolute bottom-0 left-0 w-[50%] h-[60%] bg-gradient-to-tr pointer-events-none", stat.shape2)} />
-            </div>
             <div className="relative z-10">
-              <div className="flex items-end justify-between">
-                <div>
-                  <div className="mb-1 flex items-center gap-1.5 text-[14px] font-medium text-white">
-                    {stat.label}
-                  </div>
-                  <div className="text-[48px] font-semibold text-white tracking-tight">
-                    {stat.value.toLocaleString()}
-                  </div>
-                  <div className="mt-1 text-[13px] font-normal text-white">
-                    {stat.sublabel}
-                  </div>
-                </div>
+              <div className="mb-1 flex items-center justify-between">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
+                  {stat.label}
+                </span>
+                <i className={cn("ph-bold ph-caret-down text-xs text-gray-400 transition-transform duration-300", selectedKpi === stat.key && "rotate-180")} />
+              </div>
+              <div className="flex items-baseline gap-2">
+                <span className="text-2xl font-black text-gray-900 dark:text-zinc-50 tracking-tight">
+                  {stat.value.toLocaleString()}
+                </span>
+                <span className={cn("text-xs font-medium", getSubColor(stat.color))}>
+                  {stat.sublabel}
+                </span>
               </div>
             </div>
           </div>
 
           {/* Absolute details container */}
           <div className={cn(
-            "absolute top-full left-0 right-0 z-[100] mt-2 rounded-xl bg-gradient-to-br p-5 shadow-2xl transition-all duration-300 ease-in-out origin-top",
-            stat.bgClass,
+            "absolute top-full left-0 right-0 z-[100] mt-2 rounded-xl border border-gray-200 bg-white p-4 shadow-xl dark:border-white/10 dark:bg-zinc-900 transition-all duration-300 ease-in-out origin-top",
             selectedKpi === stat.key ? "scale-y-100 opacity-100 translate-y-0" : "scale-y-95 opacity-0 -translate-y-2 pointer-events-none"
           )} onClick={(e) => e.stopPropagation()}>
-            <div className="space-y-4">
+            <div className="space-y-3">
               {stat.key === "total" && (
                 <>
-                  <div className="grid grid-cols-2 gap-2 text-white">
-                    <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg text-white">
-                      <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Total Logs</span>
-                      <span className="text-lg font-black">{(stats.totalLogs || 0).toLocaleString()}</span>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-gray-100 dark:border-white/5">
+                      <span className="block text-[9px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">Total Logs</span>
+                      <span className="text-lg font-black text-gray-900 dark:text-zinc-50">{(stats.totalLogs || 0).toLocaleString()}</span>
                     </div>
-                    <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg text-white">
-                      <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Session Scope</span>
-                      <span className="text-lg font-black">Active</span>
+                    <div className="bg-blue-50 dark:bg-blue-950/30 p-2.5 rounded-lg border border-blue-100 dark:border-blue-900/30">
+                      <span className="block text-[9px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider">Session Scope</span>
+                      <span className="text-lg font-black text-blue-700 dark:text-blue-400">Active</span>
                     </div>
                   </div>
 
-                  <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg text-xs text-white/90 leading-relaxed">
+                  <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-gray-100 dark:border-white/5 text-xs text-gray-600 dark:text-zinc-300 leading-relaxed">
                     Cumulative count of actions logged by your account across databases.
                   </div>
                 </>
@@ -241,18 +245,18 @@ function StatCards({ isLoading, stats }) {
 
               {stat.key === "today" && (
                 <>
-                  <div className="grid grid-cols-2 gap-2 text-white">
-                    <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg text-white">
-                      <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Today&apos;s Logs</span>
-                      <span className="text-lg font-black">{(stats.logsToday || 0).toLocaleString()}</span>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-gray-100 dark:border-white/5">
+                      <span className="block text-[9px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">Today&apos;s Logs</span>
+                      <span className="text-lg font-black text-gray-900 dark:text-zinc-50">{(stats.logsToday || 0).toLocaleString()}</span>
                     </div>
-                    <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg text-white">
-                      <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Hourly Peak</span>
-                      <span className="text-lg font-black">{Math.round((stats.logsToday || 0) / 8).toLocaleString()}</span>
+                    <div className="bg-emerald-50 dark:bg-emerald-950/30 p-2.5 rounded-lg border border-emerald-100 dark:border-emerald-900/30">
+                      <span className="block text-[9px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Hourly Peak</span>
+                      <span className="text-lg font-black text-emerald-700 dark:text-emerald-400">{Math.round((stats.logsToday || 0) / 8).toLocaleString()}</span>
                     </div>
                   </div>
 
-                  <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg text-xs text-white/90 leading-relaxed">
+                  <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-gray-100 dark:border-white/5 text-xs text-gray-600 dark:text-zinc-300 leading-relaxed">
                     Total audited actions performed by your user account today.
                   </div>
                 </>
@@ -260,18 +264,18 @@ function StatCards({ isLoading, stats }) {
 
               {stat.key === "auth" && (
                 <>
-                  <div className="grid grid-cols-2 gap-2 text-white">
-                    <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg text-white">
-                      <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Auth Events</span>
-                      <span className="text-lg font-black">{(stats.authEvents || 0).toLocaleString()}</span>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-gray-100 dark:border-white/5">
+                      <span className="block text-[9px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">Auth Events</span>
+                      <span className="text-lg font-black text-gray-900 dark:text-zinc-50">{(stats.authEvents || 0).toLocaleString()}</span>
                     </div>
-                    <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg text-white">
-                      <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Failures</span>
-                      <span className="text-lg font-black">0</span>
+                    <div className="bg-amber-50 dark:bg-amber-950/30 p-2.5 rounded-lg border border-amber-100 dark:border-amber-900/30">
+                      <span className="block text-[9px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider">Failures</span>
+                      <span className="text-lg font-black text-amber-700 dark:text-amber-400">0</span>
                     </div>
                   </div>
 
-                  <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg text-xs text-white/90 leading-relaxed">
+                  <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-gray-100 dark:border-white/5 text-xs text-gray-600 dark:text-zinc-300 leading-relaxed">
                     Logins and session verifications generated for this user account.
                   </div>
                 </>
@@ -727,6 +731,7 @@ function LogTable({
   setLogStartDate,
   setLogEndDate,
   handleCopy,
+  embedded = true,
 }) {
   const [expandedRows, setExpandedRows] = useState({});
 
@@ -757,8 +762,13 @@ function LogTable({
 
   if (isLoading && !displayLogs.length) {
     return (
-      <div className="animate-pulse space-y-4">
-        <div className="overflow-visible rounded-brand border border-gray-100 bg-white dark:border-white/10 dark:bg-card">
+      <div className={cn("space-y-0", embedded ? "flex flex-1 flex-col min-h-0" : "")}>
+        <div className={cn(
+          "overflow-visible bg-white dark:bg-card",
+          embedded
+            ? "flex-1 min-h-0 flex flex-col border-t border-gray-100 dark:border-white/10 rounded-b-2xl"
+            : "rounded-2xl border border-gray-100 dark:border-white/10"
+        )}>
           <table className="min-w-full">
             <thead className="bg-transparent dark:bg-transparent">
               <tr>
@@ -789,30 +799,37 @@ function LogTable({
 
   if (error) {
     return (
-      <Empty className="flex h-[400px] flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-100 bg-gray-50 text-center dark:border-white/10 dark:bg-muted/30">
-        <EmptyHeader className="flex flex-col items-center gap-2">
-          <div className="relative mb-4">
-            <div className="absolute inset-0 animate-ping rounded-full bg-red-100 opacity-20"></div>
-            <EmptyMedia className="relative z-10 flex h-20 w-20 items-center justify-center rounded-full border border-red-100 bg-white shadow-xl dark:bg-card dark:shadow-none">
-              <i className="ph-duotone ph-warning-circle text-xl text-red-600" />
-            </EmptyMedia>
-          </div>
-          <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
-            Activity Log Error
-          </EmptyTitle>
-          <EmptyDescription className="max-w-md text-sm font-medium text-gray-500 dark:text-zinc-400">
-            {error}
-          </EmptyDescription>
-          <Button 
-            variant="outline" 
-            onClick={() => window.location.reload()}
-            className="mt-6 rounded-full border-gray-200 font-semibold hover:bg-gray-50 dark:border-white/10 dark:hover:bg-white/10 dark:bg-card"
-          >
-            <i className="ph-bold ph-arrows-clockwise mr-2 animate-spin"></i>
-            Retry
-          </Button>
-        </EmptyHeader>
-      </Empty>
+      <div className={cn(
+        "flex flex-1 min-h-[320px] flex-col items-center justify-center p-6 text-center text-gray-500 dark:text-zinc-400",
+        embedded
+          ? "border-t border-gray-100 dark:border-white/10 rounded-b-2xl bg-white dark:bg-card"
+          : "overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card"
+      )}>
+        <Empty className="flex flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400">
+          <EmptyHeader className="flex flex-col items-center gap-2">
+            <div className="relative mb-4">
+              <div className="absolute inset-0 animate-ping rounded-full bg-red-100 opacity-20"></div>
+              <EmptyMedia className="relative z-10 flex h-20 w-20 items-center justify-center rounded-full border border-red-100 bg-white shadow-xl dark:bg-card dark:shadow-none">
+                <i className="ph-duotone ph-warning-circle text-xl text-red-600" />
+              </EmptyMedia>
+            </div>
+            <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
+              Activity Log Error
+            </EmptyTitle>
+            <EmptyDescription className="max-w-md text-sm font-medium text-gray-500 dark:text-zinc-400">
+              {error}
+            </EmptyDescription>
+            <Button 
+              variant="outline" 
+              onClick={() => window.location.reload()}
+              className="mt-6 h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+            >
+              <i className="ph-bold ph-arrows-clockwise mr-2 animate-spin"></i>
+              Retry
+            </Button>
+          </EmptyHeader>
+        </Empty>
+      </div>
     );
   }
 
@@ -821,10 +838,12 @@ function LogTable({
   const totalPages = Math.max(1, Math.ceil(logTotal / itemsPerPage));
 
   return (
-    <div className="space-y-0">
+    <div className={cn("space-y-0", embedded ? "flex flex-1 flex-col min-h-0" : "")}>
       <div
         className={cn(
-          "overflow-visible rounded-brand border border-gray-200 dark:border-white/10 bg-white dark:bg-card shadow-sm dark:shadow-none transition-all duration-slow animate-fade-up",
+          embedded
+            ? "flex-1 min-h-0 flex flex-col overflow-visible isolate border-t border-gray-100 dark:border-white/10 rounded-b-2xl bg-white dark:bg-card transition-all duration-slow"
+            : "overflow-visible rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-card shadow-sm dark:shadow-none transition-all duration-slow animate-fade-up",
           isLoading ? "opacity-40 blur-[1px] grayscale-[0.1]" : "opacity-100"
         )}
       >
@@ -900,7 +919,6 @@ function LogTable({
                           logEndDate !== "") && (
                           <Button
                             variant="outline"
-                            size="sm"
                             onClick={() => {
                               setLocalSearch("");
                               setLogSearch("");
@@ -909,10 +927,9 @@ function LogTable({
                               setLogEndDate("");
                               setLogPage(1);
                             }}
-                            className="mt-6 flex h-10 items-center gap-3 rounded-brand border border-gray-300 bg-white px-6 text-xs font-semibold text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 tracking-wide dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10 cursor-pointer"
+                            className="mt-6 h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                           >
-                            <i className="ph-bold ph-arrow-counter-clockwise"></i>
-                            Clear
+                            Clear Filters
                           </Button>
                         )}
                       </EmptyHeader>
@@ -938,7 +955,7 @@ function LogTable({
 
         {/* Pagination */}
         {logTotal > 0 && (
-          <div className="flex items-center justify-between border-t border-gray-100 bg-white p-6 px-8 rounded-b-brand dark:border-white/10 dark:bg-card">
+          <div className="flex items-center justify-between border-t border-gray-100 bg-white p-6 px-8 rounded-b-2xl dark:border-white/10 dark:bg-card">
             <div className="flex items-center gap-8 select-none cursor-default">
               <div className="flex items-center gap-6 text-[12px] font-normal text-gray-400 dark:text-zinc-500">
                 <span>
@@ -1118,6 +1135,10 @@ export default function AccountActivityPage() {
     refreshStats();
   }, [loadingUser, authUser, refresh, refreshStats]);
 
+  const handleRefresh = useCallback(async () => {
+    await Promise.all([refresh(), refreshStats()]);
+  }, [refresh, refreshStats]);
+
   // Search Similar handler (called from expanded row/detail sheet actions)
   const handleSearchSimilar = (term) => {
     setLocalSearch(term);
@@ -1281,72 +1302,92 @@ export default function AccountActivityPage() {
       <PageTransition className="flex-1 min-h-0 overflow-y-auto w-full">
         <div className="max-w-[1400px] mx-auto py-10 px-6">
           <TooltipProvider delayDuration={200}>
-          <PageHeader
-            icon="ph-clock-counter-clockwise"
-            title="My Activity"
-            description="Review a complete audit history of actions performed by your account."
-            showBorder={false}
-            actions={
-              <div className="flex items-center gap-6">
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleDownloadCSV}
-                    disabled={total === 0 || isExporting || isGeneratingPdf}
-                    className="h-10 w-[68px] justify-center font-semibold text-sm text-gray-600 hover:text-gray-900 hover:bg-transparent dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-transparent transition-colors flex items-center rounded-brand shadow-none! border-0! cursor-pointer"
-                  >
-                    {isExporting ? (
-                      <i className="ph-bold ph-spinner animate-spin text-[16px]"></i>
-                    ) : (
-                      "Export"
-                    )}
-                  </Button>
-                  <LiquidGlassButton
-                    type="button"
-                    onClick={handlePreviewPDF}
-                    disabled={total === 0 || isExporting || isGeneratingPdf}
-                    height={36}
-                    radius={18}
-                    glassColor="rgba(10, 132, 255, 0.15)"
-                    className="w-[142px] text-[13px] font-medium text-white active:scale-95 disabled:opacity-50 transition-all dark:shadow-none cursor-pointer"
-                  >
-                    {isGeneratingPdf ? (
-                      <i className="ph-bold ph-spinner animate-spin text-[16px] flex items-center justify-center"></i>
-                    ) : (
-                      "Get Report"
-                    )}
-                  </LiquidGlassButton>
+          {/* ONE Single Card Container encapsulating Header, Metrics, Toolbar, Table & Pagination */}
+          <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none isolate font-inter mb-4 min-h-0 flex-1">
+            <PageHeader
+              icon="ph-clock-counter-clockwise"
+              title="My Activity"
+              description="Review a complete audit history of actions performed by your account."
+              showBorder={false}
+              className="p-6"
+              titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
+              descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
+              actions={
+                <div className="flex items-center gap-6">
+                  <RefreshButton
+                    onRefresh={handleRefresh}
+                    isLoading={loading}
+                    title="Refresh Activity"
+                  />
+
+                  <div className="h-6 w-px bg-gray-200 dark:bg-zinc-800" />
+
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      onClick={handleDownloadCSV}
+                      disabled={total === 0 || isExporting || isGeneratingPdf}
+                      className="flex h-10 items-center justify-center rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-5 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
+                    >
+                      {isExporting ? (
+                        <i className="ph-bold ph-spinner animate-spin text-sm"></i>
+                      ) : (
+                        "Export"
+                      )}
+                    </Button>
+                    <Button
+                      type="button"
+                      onClick={handlePreviewPDF}
+                      disabled={total === 0 || isExporting || isGeneratingPdf}
+                      className="flex h-10 items-center justify-center gap-2 rounded-xl! btn-brand-red text-white font-semibold text-xs active:scale-95 disabled:opacity-50 transition-all cursor-pointer px-5 shadow-xs border-0"
+                    >
+                      {isGeneratingPdf ? (
+                        <i className="ph-bold ph-spinner animate-spin text-sm"></i>
+                      ) : (
+                        "Get Report"
+                      )}
+                    </Button>
+                  </div>
+
+                  <div className="h-6 w-px bg-gray-200 dark:bg-zinc-800" />
+
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        const path = getDefaultDashboardPath(authUser?.role);
+                        router.push(path);
+                      }}
+                      className="flex h-10 items-center justify-center gap-2 rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
+                    >
+                      <i className="ph-bold ph-arrow-left text-sm"></i>
+                      Dashboard
+                    </Button>
+                  </div>
                 </div>
+              }
+            />
 
-                <div className="h-6 w-px bg-gray-200 dark:bg-zinc-800" />
+            {/* Stats Bar */}
+            <div className="px-6 pb-6">
+              <StatCards isLoading={loading && !stats} stats={stats} />
+            </div>
 
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="ghost"
-                    onClick={() => {
-                      const path = getDefaultDashboardPath(authUser?.role);
-                      router.push(path);
-                    }}
-                    className="h-10 px-3 font-semibold text-sm text-gray-600 hover:text-gray-900 hover:bg-transparent dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-transparent transition-colors flex items-center gap-2 rounded-brand shadow-none! border-0! cursor-pointer"
-                  >
-                    <i className="ph-bold ph-arrow-left"></i>
-                    Dashboard
-                  </Button>
-                </div>
-              </div>
-            }
-          />
+            {/* Filter Bar */}
+            <LogFilters
+              localSearch={localSearch}
+              handleSearchChange={handleSearchChange}
+              logSeverityFilter={severityFilter}
+              handleSeverityChange={handleSeverityChange}
+              logStartDate={startDate}
+              setLogStartDate={setStartDate}
+              logEndDate={endDate}
+              setLogEndDate={setEndDate}
+              setLogPage={setPage}
+              logTotal={total}
+              isLoading={loading}
+            />
 
-          <Separator className="mt-8 bg-gray-200 dark:bg-zinc-800" />
-
-          {/* Stats Bar */}
-          <div className="mt-8">
-            <StatCards isLoading={loading && !stats} stats={stats} />
-          </div>
-
-          {/* Table & Filter Card wrapper */}
-          <Card className="mt-8 flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
             {/* Active Filter Chips Row */}
             {hasActiveFilters && (() => {
               const formatChipDate = (dateStr) => {
@@ -1359,13 +1400,13 @@ export default function AccountActivityPage() {
               }
               return (
                 <div className={cn(
-                  "flex-none border-b border-gray-100 bg-white px-6 py-3 transition-all duration-slow animate-in fade-in slide-in-from-top-1 dark:border-white/10 dark:bg-card",
+                  "flex-none border-t border-gray-100 bg-white px-6 py-3 transition-all duration-slow animate-in fade-in slide-in-from-top-1 dark:border-white/10 dark:bg-card",
                   loading ? "opacity-40 blur-[1px] grayscale-[0.1]" : "opacity-100"
                 )}>
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="mr-1 text-[11px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500">Active filters:</span>
                     {localSearch && (
-                      <div className="flex items-center gap-[6px] rounded-[6px] bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
+                      <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
                         Search: {localSearch}
                         <button
                           onClick={() => { setLocalSearch(""); setSearch(""); setPage(1); }}
@@ -1376,7 +1417,7 @@ export default function AccountActivityPage() {
                       </div>
                     )}
                     {severityFilter !== "All" && (
-                      <div className="flex items-center gap-[6px] rounded-[6px] bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
+                      <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
                         Severity: {severityFilter}
                         <button
                           onClick={() => { setSeverityFilter("All"); setPage(1); }}
@@ -1387,7 +1428,7 @@ export default function AccountActivityPage() {
                       </div>
                     )}
                     {(startDate || endDate) && (
-                      <div className="flex items-center gap-[6px] rounded-[6px] bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
+                      <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
                         {formatChipDate(startDate)} – {formatChipDate(endDate)}
                         <button
                           onClick={() => { setStartDate(""); setEndDate(""); setPage(1); }}
@@ -1417,24 +1458,7 @@ export default function AccountActivityPage() {
               )
             })()}
 
-            {/* Filter Bar */}
-            <LogFilters
-              localSearch={localSearch}
-              handleSearchChange={handleSearchChange}
-              logSeverityFilter={severityFilter}
-              handleSeverityChange={handleSeverityChange}
-              logStartDate={startDate}
-              setLogStartDate={setStartDate}
-              logEndDate={endDate}
-              setLogEndDate={setEndDate}
-              setLogPage={setPage}
-              logTotal={total}
-              isLoading={loading}
-            />
-          </Card>
-
-          {/* Table */}
-          <div className="mt-6">
+            {/* Table */}
             <LogTable
               isLoading={loading}
               error={null}
@@ -1461,8 +1485,9 @@ export default function AccountActivityPage() {
               setLogStartDate={setStartDate}
               setLogEndDate={setEndDate}
               handleCopy={handleCopy}
+              embedded={true}
             />
-          </div>
+          </Card>
 
           {/* Log Detail Sheet */}
           <LogDetailSheet

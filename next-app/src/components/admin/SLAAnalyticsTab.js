@@ -175,26 +175,15 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
   const hasActiveFilters = startDate !== "" || endDate !== ""
 
   return (
-    <div className="animate-fade-up font-inter flex w-full flex-col gap-6">
-      {/* 1. Color KPI Cards / Skeletons at the Top */}
-      {loading && !data ? (
-        <SlaKpiSkeleton />
-      ) : !error && data ? (
-        <div className={cn(
-          "w-full transition-all duration-500", 
-          (loading && !manualLoading) ? "opacity-40 blur-[1px] grayscale-[0.1]" : "opacity-100"
-        )}>
-          <SlaKpiCards total={total} completionRate={completionRate} />
-        </div>
-      ) : null}
-
-      {/* 2. Main Page Card */}
-      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none isolate">
+    <div className="animate-fade-up font-inter flex flex-1 flex-col h-full min-h-0 w-full gap-6">
+      {/* ONE Single Card Container encapsulating Header, Metrics, Toolbar, & Charts */}
+      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none isolate font-inter mb-4 min-h-0 flex-1">
         <PageHeader
           icon="ph-chart-line-up"
           title="Request Analysis"
           description="Monitor request metrics and turnaround times."
           showBorder={false}
+          className="p-6"
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
           descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
           actions={
@@ -237,6 +226,22 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
             </div>
           }
         />
+
+        {/* Color KPI Cards / Skeletons at the Top */}
+        {loading && !data ? (
+          <div className="px-6 pb-6">
+            <SlaKpiSkeleton />
+          </div>
+        ) : !error && data ? (
+          <div className="px-6 pb-6">
+            <div className={cn(
+              "w-full transition-all duration-500", 
+              (loading && !manualLoading) ? "opacity-40 blur-[1px] grayscale-[0.1]" : "opacity-100"
+            )}>
+              <SlaKpiCards total={total} completionRate={completionRate} completed={completed} sla={data?.sla} />
+            </div>
+          </div>
+        ) : null}
 
         {/* Navigation Toolbar */}
         <SlaFilters 
@@ -291,7 +296,7 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
           )
         })()}
 
-        <CardContent className="bg-white p-6 dark:bg-card border-t border-gray-100 dark:border-white/10">
+        <CardContent className="bg-white p-6 dark:bg-card border-t border-gray-100 dark:border-white/10 rounded-b-2xl">
           {loading && !data ? (
             <SlaChartsSkeleton />
           ) : error ? (

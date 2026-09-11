@@ -1163,7 +1163,8 @@ export default function LandingFooterCmsView({ showToast }) {
         }
         isPersonnelModal={true}
         isAppleStyled={true}
-        isArchiveModal={true}
+        variant="danger"
+        isDeleteModal={true}
       />
 
       {/* Delete Contact Channel Modal */}
@@ -1190,7 +1191,8 @@ export default function LandingFooterCmsView({ showToast }) {
         }
         isPersonnelModal={true}
         isAppleStyled={true}
-        isArchiveModal={true}
+        variant="danger"
+        isDeleteModal={true}
       />
     </div>
   )

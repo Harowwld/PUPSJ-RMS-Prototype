@@ -10,6 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { Card } from "@/components/ui/card";
 import DocumentsMatrixSkeleton from "@/components/staff/skeletons/DocumentsMatrixSkeleton";
@@ -33,6 +34,14 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+
+const STATUS_TABS = [
+  { label: "All Documents", value: "" },
+  { label: "Uploaded", value: "Uploaded" },
+  { label: "Verified", value: "Verified" },
+  { label: "Unverified", value: "Unverified" },
+  { label: "Missing", value: "Missing" },
+];
 
 function SortIndicator({ column, sortBy, sortOrder }) {
   if (sortBy !== column)
@@ -342,16 +351,13 @@ export default function DocumentsTab({
   onRescan,
   onUpdateStudent,
   onArchiveStudent,
-  archivedStudents = [],
   currentStudent,
 }) {
   const [isManualRefreshing, setIsManualRefreshing] = useState(false);
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [selectedDoc, setSelectedDoc] = useState(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [subtab, setSubtab] = useState("active");
   const [statusFilter, setStatusFilter] = useState("");
-  const [archiveSearch, setArchiveSearch] = useState("");
 
   const searchQuery = docsForm.studentName || docsForm.studentNo || "";
 
@@ -539,16 +545,28 @@ export default function DocumentsTab({
     setEditStudentOpen(true);
   };
 
-  const filteredArchivedStudents = useMemo(() => {
-    if (!archiveSearch.trim()) return archivedStudents;
-    const q = archiveSearch.trim().toLowerCase();
-    return archivedStudents.filter((s) => {
-      const no = String(s.studentNo || s.student_no || "").toLowerCase();
-      const name = String(s.name || "").toLowerCase();
-      const course = String(s.courseCode || s.course_code || "").toLowerCase();
-      return no.includes(q) || name.includes(q) || course.includes(q);
-    });
-  }, [archivedStudents, archiveSearch]);
+  const statusCounts = useMemo(() => {
+    let uploaded = 0;
+    let verified = 0;
+    let unverified = 0;
+    let missing = 0;
+    for (const r of docsRows) {
+      if (r.status === "uploaded") {
+        uploaded++;
+        if (r.verificationStatus === "verified") verified++;
+        else if (r.verificationStatus === "unverified") unverified++;
+      } else if (r.status === "missing") {
+        missing++;
+      }
+    }
+    return {
+      "": docsRows.length,
+      Uploaded: uploaded,
+      Verified: verified,
+      Unverified: unverified,
+      Missing: missing,
+    };
+  }, [docsRows]);
 
   return (
     <TooltipProvider delayDuration={200}>
@@ -593,119 +611,88 @@ export default function DocumentsTab({
 
           {/* 2. Navigation Toolbar */}
           <div className="border-t border-gray-100 dark:border-white/10 p-5 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
-            {/* Left: Line Tabs */}
+            {/* Left: Status Line Tabs */}
             <div className="flex items-center gap-6 shrink-0 select-none overflow-x-auto">
-              <button
-                type="button"
-                onClick={() => setSubtab("active")}
-                className={cn(
-                  "relative h-9 flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent whitespace-nowrap",
-                  subtab === "active"
-                    ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
-                    : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
-                )}
-              >
-                Active Documents ({docsRows.length})
-              </button>
-              <button
-                type="button"
-                onClick={() => setSubtab("archive")}
-                className={cn(
-                  "relative h-9 flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent whitespace-nowrap",
-                  subtab === "archive"
-                    ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
-                    : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
-                )}
-              >
-                Archive ({archivedStudents.length})
-              </button>
+              {STATUS_TABS.map((tab) => {
+                const isActive = statusFilter === tab.value;
+                const count = statusCounts[tab.value] ?? 0;
+                return (
+                  <button
+                    key={tab.value}
+                    type="button"
+                    onClick={() => {
+                      setStatusFilter(tab.value);
+                      setPage(1);
+                    }}
+                    className={cn(
+                      "relative h-9 flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent whitespace-nowrap",
+                      isActive
+                        ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
+                        : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
+                    )}
+                  >
+                    {tab.label}
+                    <span
+                      className={cn(
+                        "ml-1.5 text-xs",
+                        isActive
+                          ? "text-gray-900 dark:text-zinc-100 font-semibold"
+                          : "text-gray-400 dark:text-zinc-500 font-normal"
+                      )}
+                    >
+                      ({count})
+                    </span>
+                  </button>
+                );
+              })}
             </div>
 
             {/* Right: Search & Filters */}
-            {subtab === "active" ? (
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0">
-                {/* Search Input */}
-                <div className="w-full sm:w-[260px] lg:w-[300px] relative group shrink-0">
-                  <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                    <i className="ph-bold ph-magnifying-glass text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm"></i>
-                  </div>
-                  <Input
-                    value={searchQuery}
-                    onChange={(e) => handleSearchChange(e.target.value)}
-                    placeholder="Search student number or name..."
-                    className="h-9 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 pl-8 pr-16 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
-                  />
-                  <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] text-gray-400 dark:text-zinc-500">
-                    {filteredRows.length > 0 ? filteredRows.length.toLocaleString() : "0"}
-                  </div>
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0">
+              {/* Search Input */}
+              <div className="w-full sm:w-[260px] lg:w-[300px] relative group shrink-0">
+                <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                  <i className="ph-bold ph-magnifying-glass text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm"></i>
                 </div>
-
-                {/* Status Filter */}
-                <div className="w-full sm:w-[155px] shrink-0">
-                  <Select
-                    value={statusFilter}
-                    onChange={(e) => {
-                      setStatusFilter(e.target.value);
-                      setPage(1);
-                    }}
-                    className="h-9 rounded-xl border border-gray-200 dark:border-white/10 text-xs font-normal text-[#111111] dark:text-zinc-200 cursor-pointer shadow-none"
-                    menuClassName="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-900 shadow-2xl p-1.5"
-                    optionClassName="rounded-lg text-xs font-normal py-1.5 px-2.5 hover:bg-gray-100 dark:hover:bg-zinc-800"
-                  >
-                    <option value="">All Statuses</option>
-                    <option value="Uploaded">Uploaded</option>
-                    <option value="Verified">Verified</option>
-                    <option value="Unverified">Unverified</option>
-                    <option value="Missing">Missing</option>
-                  </Select>
-                </div>
-
-                {/* Document Type Filter */}
-                <div className="w-full sm:w-[185px] shrink-0">
-                  <Select
-                    value={docsForm.docType}
-                    onChange={(e) => {
-                      const v = e.target.value;
-                      const next = { ...docsForm, docType: v };
-                      setDocsForm(next);
-                      refreshDocuments(next);
-                      setPage(1);
-                    }}
-                    className="h-9 rounded-xl border border-gray-200 dark:border-white/10 text-xs font-normal text-[#111111] dark:text-zinc-200 cursor-pointer shadow-none"
-                    menuClassName="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-900 shadow-2xl p-1.5"
-                    optionClassName="rounded-lg text-xs font-normal py-1.5 px-2.5 hover:bg-gray-100 dark:hover:bg-zinc-800"
-                  >
-                    <option value="">All Document Types</option>
-                    {docTypes.map((t) => (
-                      <option key={t} value={t}>
-                        {t}
-                      </option>
-                    ))}
-                  </Select>
+                <Input
+                  value={searchQuery}
+                  onChange={(e) => handleSearchChange(e.target.value)}
+                  placeholder="Search student number or name..."
+                  className="h-9 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 pl-8 pr-16 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
+                />
+                <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] text-gray-400 dark:text-zinc-500">
+                  {filteredRows.length > 0 ? filteredRows.length.toLocaleString() : "0"}
                 </div>
               </div>
-            ) : (
-              <div className="flex items-center gap-3 shrink-0">
-                <div className="w-full sm:w-[260px] lg:w-[300px] relative group shrink-0">
-                  <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                    <i className="ph-bold ph-magnifying-glass text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm"></i>
-                  </div>
-                  <Input
-                    value={archiveSearch}
-                    onChange={(e) => setArchiveSearch(e.target.value)}
-                    placeholder="Search archived students..."
-                    className="h-9 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 pl-8 pr-16 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
-                  />
-                  <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] text-gray-400 dark:text-zinc-500">
-                    {filteredArchivedStudents.length}
-                  </div>
-                </div>
+
+              {/* Document Type Filter */}
+              <div className="w-full sm:w-[185px] shrink-0">
+                <Select
+                  value={docsForm.docType}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    const next = { ...docsForm, docType: v };
+                    setDocsForm(next);
+                    refreshDocuments(next);
+                    setPage(1);
+                  }}
+                  className="h-9 rounded-xl border border-gray-200 dark:border-white/10 text-xs font-normal text-[#111111] dark:text-zinc-200 cursor-pointer shadow-none"
+                  menuClassName="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-900 shadow-2xl p-1.5"
+                  optionClassName="rounded-lg text-xs font-normal py-1.5 px-2.5 hover:bg-gray-100 dark:hover:bg-zinc-800"
+                >
+                  <option value="">All Document Types</option>
+                  {docTypes.map((t) => (
+                    <option key={t} value={t}>
+                      {t}
+                    </option>
+                  ))}
+                </Select>
               </div>
-            )}
+            </div>
           </div>
 
           {/* 3. Active Filters Chips Row */}
-          {subtab === "active" && hasActiveFilters && (
+          {hasActiveFilters && (
             <div className="flex-none border-t border-gray-100 dark:border-white/10 bg-white dark:bg-card px-6 py-2.5 animate-in fade-in slide-in-from-top-1 duration-normal">
               <div className="flex flex-wrap items-center gap-2">
                 <span className="mr-1 text-[11px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500">
@@ -764,13 +751,12 @@ export default function DocumentsTab({
             </div>
           )}
 
-          {/* 4. Active Subtab Content */}
-          {subtab === "active" ? (
-            <div className="flex flex-col flex-1 w-full min-h-0">
+          {/* 4. Documents Table Content */}
+          <div className="flex flex-col flex-1 w-full min-h-0">
               {docsLoading ? (
                 <DocumentsMatrixSkeleton rowCount={7} embedded={true} />
               ) : docsError ? (
-                <div className="p-8">
+                <div className="p-8 rounded-b-2xl">
                   <Empty className="h-[320px] flex flex-col items-center justify-center text-center text-gray-500 border-0 dark:text-zinc-400">
                     <EmptyHeader className="flex flex-col items-center gap-0">
                       <EmptyMedia className="w-16 h-16 rounded-2xl bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm dark:bg-card dark:border-white/10 dark:shadow-none">
@@ -784,7 +770,7 @@ export default function DocumentsTab({
                   </Empty>
                 </div>
               ) : (
-                <div className="flex flex-col flex-1 w-full min-h-0 border-t border-gray-100 dark:border-white/10">
+                <div className="flex flex-col flex-1 w-full min-h-0 border-t border-gray-100 dark:border-white/10 rounded-b-2xl overflow-hidden">
                   {isSingleStudentView && (
                     <div className="p-4 border-b border-gray-100 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/20">
                       <div className="bg-white border border-gray-200 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xs dark:bg-card dark:border-white/10">
@@ -835,7 +821,7 @@ export default function DocumentsTab({
                   </div>
 
                   {filteredRows.length > 0 && (
-                    <div className="flex items-center justify-between border-t border-gray-100 bg-white p-4 px-6 dark:border-white/10 dark:bg-card mt-auto select-none">
+                    <div className="flex items-center justify-between border-t border-gray-100 bg-white p-4 px-6 dark:border-white/10 dark:bg-card mt-auto select-none rounded-b-2xl">
                       <div className="flex items-center gap-6 text-xs text-gray-500 dark:text-zinc-400">
                         <span>
                           Showing {paginatedRows.length} of {filteredRows.length.toLocaleString()}
@@ -902,65 +888,18 @@ export default function DocumentsTab({
                 </div>
               )}
             </div>
-          ) : (
-            /* Archive Subtab View */
-            <div className="flex flex-col flex-1 w-full min-h-0 border-t border-gray-100 dark:border-white/10">
-              <div className="p-6">
-                {filteredArchivedStudents.length > 0 ? (
-                  <div className="space-y-3">
-                    {filteredArchivedStudents.map((student) => (
-                      <div
-                        key={student.studentNo || student.student_no}
-                        className="flex items-center justify-between rounded-xl border border-gray-200 bg-white p-4 dark:border-white/10 dark:bg-card"
-                      >
-                        <div>
-                          <p className="text-sm font-semibold text-gray-900 dark:text-zinc-50">
-                            {student.name || "Unnamed student"}
-                          </p>
-                          <p className="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">
-                            {student.studentNo || student.student_no} • {student.courseCode || student.course_code || "No Program"}
-                          </p>
-                        </div>
-                        <span className="rounded-full bg-gray-100 px-3 py-1 text-[10px] font-semibold text-gray-600 dark:bg-white/10 dark:text-zinc-300">
-                          Archived
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <Empty className="h-[320px] flex flex-col items-center justify-center text-center text-gray-500 border-0 dark:text-zinc-400">
-                    <EmptyHeader className="flex flex-col items-center gap-0">
-                      <div className="relative mb-4">
-                        <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                        <EmptyMedia className="relative z-10 flex h-20 w-20 items-center justify-center rounded-2xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
-                          <i className="ph-duotone ph-archive-box text-3xl text-gray-400 dark:text-zinc-500"></i>
-                        </EmptyMedia>
-                      </div>
-                      <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">No Archived Records</EmptyTitle>
-                      <EmptyDescription className="max-w-xs text-xs font-normal text-gray-500 dark:text-zinc-400 mt-1">
-                        There are currently no student records in the archive.
-                      </EmptyDescription>
-                    </EmptyHeader>
-                  </Empty>
-                )}
-              </div>
-            </div>
-          )}
-        </Card>
+          </Card>
 
         {/* STUDENT PROFILE EDIT MODAL */}
         <Dialog open={editStudentOpen} onOpenChange={setEditStudentOpen}>
-          <DialogContent className="sm:max-w-2xl p-0 overflow-hidden bg-white border border-gray-200 shadow-2xl rounded-2xl dark:bg-card dark:border-white/10">
-            <DialogHeader className="p-6 border-b border-gray-100 bg-gray-50 dark:border-white/10 dark:bg-white/5">
+          <DialogContent className="w-full max-w-2xl overflow-hidden rounded-2xl border border-gray-200 bg-white p-0 shadow-2xl sm:max-w-2xl dark:border-white/10 dark:bg-card flex flex-col gap-0">
+            <DialogHeader className="bg-white p-6 pb-0 dark:bg-card border-none text-left">
               <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-xl border border-red-100 bg-red-50 text-pup-maroon dark:text-primary shadow-sm flex items-center justify-center shrink-0 dark:bg-red-950/30 dark:text-primary dark:shadow-none">
-                  <i className="ph-duotone ph-user-circle-gear text-xl"></i>
-                </div>
-                <div className="min-w-0">
-                  <DialogTitle className="text-lg font-semibold tracking-tight text-gray-900 dark:text-zinc-50">
+                <div className="min-w-0 pr-8">
+                  <DialogTitle className="text-[16px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
                     Manage Student Profile
                   </DialogTitle>
-                  <DialogDescription className="text-sm font-medium mt-1.5 text-gray-600 dark:text-zinc-300">
+                  <DialogDescription className="mt-1 text-[13px] font-normal text-gray-500 dark:text-zinc-400">
                     Update student info and storage location.
                   </DialogDescription>
                 </div>
@@ -1097,7 +1036,7 @@ export default function DocumentsTab({
               </div>
             </div>
 
-            <div className="p-4 border-t border-gray-100 bg-white flex flex-col-reverse sm:flex-row sm:justify-end gap-2.5 dark:border-white/10 dark:bg-card">
+            <DialogFooter className="m-0 p-6 pt-0 bg-white dark:bg-card border-none flex items-center justify-end gap-2.5">
               <Button
                 type="button"
                 variant="outline"
@@ -1130,7 +1069,7 @@ export default function DocumentsTab({
                   "Save"
                 )}
               </Button>
-            </div>
+            </DialogFooter>
           </DialogContent>
         </Dialog>
 
@@ -1140,7 +1079,8 @@ export default function DocumentsTab({
           title="Archive Student Record"
           message={`Are you sure you want to archive student ${currentStudent?.studentNo}? This will hide all their documents from the system.`}
           confirmLabel="Archive"
-          variant="danger"
+          variant="warning"
+          isArchiveModal={true}
           onConfirm={async () => {
             setConfirmArchiveOpen(false);
             setEditStudentOpen(false);
@@ -1159,21 +1099,16 @@ export default function DocumentsTab({
             }
           }}
         >
-          <DialogContent className="flex h-[90vh] w-[96vw] max-w-[96vw] flex-col overflow-hidden border border-gray-200 bg-gray-100 p-0 shadow-2xl transition-all duration-300 xl:max-w-[1400px] rounded-2xl dark:border-white/10 dark:bg-muted">
-            <DialogHeader className="shrink-0 border-b border-gray-100 bg-gray-50 p-6 dark:border-white/10 dark:bg-white/5">
-              <div className="flex items-center justify-between gap-4">
-                <div className="flex items-center gap-4">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-gray-200 bg-white text-pup-maroon dark:text-primary shadow-sm dark:border-white/10 dark:bg-card">
-                    <i className="ph-duotone ph-file-pdf text-xl"></i>
-                  </div>
-                  <div className="min-w-0 text-left">
-                    <DialogTitle className="text-xl font-semibold tracking-tight text-gray-900 dark:text-zinc-50">
-                      Document View: {selectedDoc?.doc_type || "Loading..."}
-                    </DialogTitle>
-                    <p className="mt-1.5 text-sm font-medium text-gray-500 dark:text-zinc-400">
-                      Viewing details for student {selectedDoc?.student_no}.
-                    </p>
-                  </div>
+          <DialogContent className="flex h-[90vh] w-[96vw] max-w-[96vw] flex-col overflow-hidden border border-gray-200 bg-gray-100 p-0 shadow-2xl transition-all duration-300 xl:max-w-[1400px] rounded-2xl dark:border-white/10 dark:bg-muted gap-0">
+            <DialogHeader className="shrink-0 border-b border-gray-100 bg-white p-6 pb-4 dark:border-white/10 dark:bg-card text-left">
+              <div className="flex items-start gap-4">
+                <div className="min-w-0 pr-10">
+                  <DialogTitle className="text-[16px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
+                    Document View: {selectedDoc?.doc_type || "Loading..."}
+                  </DialogTitle>
+                  <DialogDescription className="mt-1 text-[13px] font-normal text-gray-500 dark:text-zinc-400">
+                    Viewing details for student {selectedDoc?.student_no}.
+                  </DialogDescription>
                 </div>
               </div>
             </DialogHeader>

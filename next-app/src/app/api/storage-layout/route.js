@@ -100,12 +100,16 @@ export async function PUT(req) {
     // Prevent deleting locations that are still referenced by student records.
     const proposedSet = buildLayoutLocationSet(incomingLayout);
     if (!skipUsageCheck) {
+      const existingLayout = await getStorageLayout({ officeId });
+      const existingSet = buildLayoutLocationSet(existingLayout);
       const usage = await listStudentLocationUsage({ officeId });
       const orphaned = usage.filter((u) => {
         const roomId = Number(u.room);
         const cabId = normalizeCabinetId(u.cabinet);
         const drawerId = Number(u.drawer);
-        return !proposedSet.has(`${roomId}|${cabId}|${drawerId}`);
+        if (!roomId || !cabId || !drawerId) return false;
+        const key = `${roomId}|${cabId}|${drawerId}`;
+        return existingSet.has(key) && !proposedSet.has(key);
       });
       if (orphaned.length > 0) {
         const preview = orphaned
@@ -173,8 +177,9 @@ export async function PUT(req) {
       movedBreakdown,
     });
   } catch (err) {
+    console.error("[PUT /api/storage-layout Error]:", err);
     return NextResponse.json(
-      { ok: false, error: "Failed to update storage layout" },
+      { ok: false, error: err?.message || "Failed to update storage layout" },
       { status: 400 }
     );
   }

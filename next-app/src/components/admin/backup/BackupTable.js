@@ -299,7 +299,7 @@ export default function BackupTable({
                               <TooltipContent className="text-xs">
                                 <p className="font-semibold">External Drive Disconnected</p>
                                 <p className="text-[11px] opacity-80">
-                                  Connect an external USB drive and click &quot;Detect Drive&quot; to copy this backup.
+                                  Connect an external USB drive and click &quot;Detect&quot; to copy this backup.
                                 </p>
                               </TooltipContent>
                             </Tooltip>
@@ -326,10 +326,7 @@ export default function BackupTable({
                                       <span>Copying...</span>
                                     </>
                                   ) : (
-                                    <>
-                                      <i className="ph-bold ph-hard-drives text-[11px]" />
-                                      <span>{b.status_external === "Failed" ? "Retry Copy" : "Copy to Drive"}</span>
-                                    </>
+                                    <span>{b.status_external === "Failed" ? "Retry" : "Copy"}</span>
                                   )}
                                 </button>
                               </TooltipTrigger>

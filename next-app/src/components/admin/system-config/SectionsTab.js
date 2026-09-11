@@ -30,6 +30,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
+  DialogFooter,
 } from "@/components/ui/dialog"
 
 export default function SectionsTab({
@@ -138,6 +139,14 @@ export default function SectionsTab({
       const json = await res.json()
       if (!res.ok || !json.ok) throw new Error(json.error || "Archive failed")
       setConfirmOpen(false)
+      if (setSelectedSections) {
+        setSelectedSections((prev) => {
+          if (!prev || !prev[id]) return prev
+          const next = { ...prev }
+          delete next[id]
+          return next
+        })
+      }
       showToast({ title: "Course Block Archived", description: "The selected course block has been successfully moved to the archive." })
       if (loadAll) loadAll()
     } catch (err) {
@@ -153,6 +162,14 @@ export default function SectionsTab({
       const json = await res.json()
       if (!res.ok || !json.ok) throw new Error(json.error || "Restore failed")
       setConfirmOpen(false)
+      if (setSelectedSections) {
+        setSelectedSections((prev) => {
+          if (!prev || !prev[id]) return prev
+          const next = { ...prev }
+          delete next[id]
+          return next
+        })
+      }
       showToast({ title: "Course Block Restored", description: "The course block has been successfully restored from the archive." })
       if (loadAll) loadAll()
     } catch (err) {
@@ -255,7 +272,7 @@ export default function SectionsTab({
         ? "These course blocks will be visible for new records again."
         : "These course blocks will be hidden from new registrations but their history will be preserved.",
       confirmLabel: showArchived ? "Restore" : "Archive",
-      variant: showArchived ? "success" : "danger",
+      variant: showArchived ? "success" : "warning",
       buttonIcon: showArchived ? "ph-bold ph-archive-restore" : "ph-bold ph-archive",
       icon: showArchived ? "ph-duotone ph-archive-restore" : "ph-duotone ph-archive",
       selectedItems: selectedNames,
@@ -303,7 +320,10 @@ export default function SectionsTab({
           <div className="flex items-center gap-6 select-none">
             <button
               type="button"
-              onClick={() => setShowArchived(false)}
+              onClick={() => {
+                setShowArchived(false)
+                setPageSection(1)
+              }}
               className={cn(
                 "relative pb-4 -mb-[17px] text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent",
                 !showArchived
@@ -315,7 +335,10 @@ export default function SectionsTab({
             </button>
             <button
               type="button"
-              onClick={() => setShowArchived(true)}
+              onClick={() => {
+                setShowArchived(true)
+                setPageSection(1)
+              }}
               className={cn(
                 "relative pb-4 -mb-[17px] text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent",
                 showArchived
@@ -705,7 +728,7 @@ export default function SectionsTab({
                                         message:
                                           "This course block will be hidden from new registrations but its history will be preserved.",
                                         confirmLabel: "Archive",
-                                        variant: "danger",
+                                        variant: "warning",
                                         buttonIcon: "ph-bold ph-archive",
                                         icon: "ph-duotone ph-archive",
                                         selectedItems: [sec.name],
@@ -718,7 +741,7 @@ export default function SectionsTab({
                                       })
                                       setConfirmOpen(true)
                                     }}
-                                    className="w-7 h-7 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/30 text-gray-500 hover:text-red-600 dark:text-zinc-400 dark:hover:text-red-400 transition-colors flex items-center justify-center border-0 bg-transparent cursor-pointer active:scale-95"
+                                    className="w-7 h-7 rounded-lg hover:bg-amber-50 dark:hover:bg-amber-950/30 text-gray-500 hover:text-amber-600 dark:text-zinc-400 dark:hover:text-amber-400 transition-colors flex items-center justify-center border-0 bg-transparent cursor-pointer active:scale-95"
                                   >
                                     <i className="ph-bold ph-archive text-sm"></i>
                                   </button>
@@ -903,7 +926,7 @@ export default function SectionsTab({
                 />
               </div>
             </div>
-            <div className="px-6 py-4 border-t border-gray-100 dark:border-white/10 flex items-center justify-end gap-2 bg-gray-50/50 dark:bg-zinc-900/20">
+            <DialogFooter className="p-6 pt-0 bg-white dark:bg-card border-none flex items-center justify-end gap-2.5">
               <Button
                 type="button"
                 variant="outline"
@@ -912,17 +935,17 @@ export default function SectionsTab({
                   setNewSectionName("")
                   setSecCourseCode("")
                 }}
-                className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                className="h-10 px-4 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
-                className="h-10 px-5 text-xs font-semibold rounded-xl btn-brand-red text-white shadow-xs cursor-pointer active:scale-95 transition-all border-0"
+                className="h-10 px-5 text-xs font-semibold rounded-xl! btn-brand-red text-white shadow-xs cursor-pointer active:scale-95 transition-all border-0"
               >
                 Create
               </Button>
-            </div>
+            </DialogFooter>
           </form>
         </DialogContent>
       </Dialog>
@@ -990,7 +1013,7 @@ export default function SectionsTab({
                 />
               </div>
             </div>
-            <div className="px-6 py-4 border-t border-gray-100 dark:border-white/10 flex items-center justify-end gap-2 bg-gray-50/50 dark:bg-zinc-900/20">
+            <DialogFooter className="p-6 pt-0 bg-white dark:bg-card border-none flex items-center justify-end gap-2.5">
               <Button
                 type="button"
                 variant="outline"
@@ -998,17 +1021,17 @@ export default function SectionsTab({
                   setIsEditSectionOpen(false)
                   setEditSection({ id: null, name: "", courseCode: "" })
                 }}
-                className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                className="h-10 px-4 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
-                className="h-10 px-5 text-xs font-semibold rounded-xl btn-brand-red text-white shadow-xs cursor-pointer active:scale-95 transition-all border-0"
+                className="h-10 px-5 text-xs font-semibold rounded-xl! btn-brand-red text-white shadow-xs cursor-pointer active:scale-95 transition-all border-0"
               >
                 Save
               </Button>
-            </div>
+            </DialogFooter>
           </form>
         </DialogContent>
       </Dialog>

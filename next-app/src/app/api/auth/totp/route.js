@@ -140,7 +140,7 @@ async function handleVerify(req, user, body) {
   }
 
   await dbRun(
-    "UPDATE staff SET totp_enabled = 1, updated_at = datetime('now') WHERE id = ?",
+    "UPDATE staff SET totp_enabled = TRUE, updated_at = datetime('now') WHERE id = ?",
     [user.userId]
   );
 
@@ -174,7 +174,7 @@ async function handleDisable(req, user, body) {
   }
 
   const recoveryCodesCount = await getRecoveryCodesCount(user.userId);
-  const nextTotpEnabled = recoveryCodesCount > 0 ? 1 : 0;
+  const nextTotpEnabled = recoveryCodesCount > 0;
 
   await dbRun(
     "UPDATE staff SET totp_secret = NULL, totp_enabled = ?, updated_at = datetime('now') WHERE id = ?",
@@ -218,7 +218,7 @@ async function handleGenerateRecoveryCodes(req, user, body) {
   const codes = await generateRecoveryCodes(user.userId);
 
   await dbRun(
-    "UPDATE staff SET totp_enabled = 1, updated_at = datetime('now') WHERE id = ?",
+    "UPDATE staff SET totp_enabled = TRUE, updated_at = datetime('now') WHERE id = ?",
     [user.userId]
   );
 
@@ -245,7 +245,7 @@ async function handleDisableRecoveryCodes(req, user, body) {
 
   if (!staff.totp_secret) {
     await dbRun(
-      "UPDATE staff SET totp_enabled = 0, updated_at = datetime('now') WHERE id = ?",
+      "UPDATE staff SET totp_enabled = FALSE, updated_at = datetime('now') WHERE id = ?",
       [user.userId]
     );
   }

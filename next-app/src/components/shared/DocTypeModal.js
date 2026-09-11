@@ -6,6 +6,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
+  DialogFooter,
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -24,58 +25,57 @@ export default function DocTypeModal({
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
-      <DialogContent className="overflow-hidden rounded-2xl border border-gray-200 bg-white p-0 shadow-2xl sm:max-w-md dark:border-white/10 dark:bg-card">
-        <DialogHeader className="border-b border-gray-100 bg-transparent p-6 dark:border-white/10 dark:bg-transparent">
+      <DialogContent className="overflow-hidden rounded-2xl border border-gray-200 bg-white p-0 shadow-2xl sm:max-w-md dark:border-white/10 dark:bg-card gap-0">
+        <DialogHeader className="bg-white p-6 pb-0 dark:bg-card border-none text-left">
           <div className="flex items-start gap-4">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-red-100 bg-red-50 text-pup-maroon dark:text-primary shadow-sm dark:bg-red-950/30">
-              <i className="ph-duotone ph-pencil-line text-xl"></i>
-            </div>
             <div className="min-w-0">
-              <DialogTitle className="text-lg font-semibold tracking-tight text-gray-900 dark:text-zinc-50">
+              <DialogTitle className="text-[16px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
                 Create Document Type
               </DialogTitle>
-              <DialogDescription className="mt-1 text-sm font-medium text-gray-600 dark:text-zinc-300">
+              <DialogDescription className="mt-1 text-[13px] font-normal text-gray-500 dark:text-zinc-400">
                 Create a new document type to categorize uploaded records.
               </DialogDescription>
             </div>
           </div>
         </DialogHeader>
 
-        <div className="p-6">
-          <label className="mb-1 block text-xs font-semibold text-gray-700 dark:text-zinc-200">
-            Document Type
-          </label>
-          <Input
-            type="text"
-            className="h-11 rounded-brand border border-gray-300 bg-white text-sm focus-visible:border-gray-300 focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:outline-none dark:border-white/10 dark:bg-card"
-            placeholder="Enter new document type..."
-            value={value}
-            onChange={(e) => {
-              setError("")
-              setValue(e.target.value)
-            }}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault()
-                onSave()
-              }
-            }}
-            autoFocus
-          />
+        <div className="p-6 space-y-4">
+          <div>
+            <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-gray-500 dark:text-zinc-400">
+              Document Type Name <span className="text-[11px] font-normal text-gray-400 dark:text-zinc-500">*</span>
+            </label>
+            <Input
+              type="text"
+              className="h-10 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon shadow-xs"
+              placeholder="e.g. Honorable Dismissal"
+              value={value}
+              onChange={(e) => {
+                setError("")
+                setValue(e.target.value)
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault()
+                  onSave()
+                }
+              }}
+              autoFocus
+            />
 
-          {error ? (
-            <div className="mt-3 rounded-brand border border-red-200 bg-red-50 p-3 text-sm font-semibold text-red-800 dark:bg-red-950/30">
-              {error}
-            </div>
-          ) : null}
+            {error ? (
+              <div className="mt-3 rounded-xl border border-red-200 bg-red-50 p-3 text-xs font-medium text-red-700 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-400">
+                {error}
+              </div>
+            ) : null}
+          </div>
         </div>
 
-        <div className="flex flex-col-reverse gap-2 border-t border-gray-100 bg-white p-4 sm:flex-row sm:justify-end dark:border-white/10 dark:bg-card">
+        <DialogFooter className="p-6 pt-0 bg-white dark:bg-card border-none flex items-center justify-end gap-2.5">
           <Button
             type="button"
             variant="outline"
             onClick={onClose}
-            className="h-11 rounded-brand border-gray-300 px-5 text-sm font-semibold text-gray-700 hover:bg-gray-50 dark:border-white/10 dark:text-zinc-200 dark:hover:bg-white/10 dark:bg-card"
+            className="h-10 px-4 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
             disabled={isLoading}
           >
             Cancel
@@ -83,12 +83,12 @@ export default function DocTypeModal({
           <Button
             type="button"
             onClick={onSave}
-            className="btn-brand-red px-5 shadow-sm dark:shadow-none"
+            className="h-10 px-5 text-xs font-semibold rounded-xl! btn-brand-red text-white shadow-xs cursor-pointer active:scale-95 disabled:opacity-50 transition-all border-0"
             disabled={isLoading}
           >
             {isLoading ? "Saving..." : "Save"}
           </Button>
-        </div>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   )

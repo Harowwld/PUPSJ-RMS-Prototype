@@ -1,71 +1,77 @@
 "use client"
 
 import { Skeleton } from "@/components/ui/skeleton"
+import { Card } from "@/components/ui/card"
 
 export default function OsasMonitoringSkeleton() {
   return (
-    <div className="grid h-full gap-4 lg:grid-cols-[1fr_420px] animate-fade-up font-inter select-none">
-      {/* Left Column: Proposals List */}
-      <section className="rounded-brand border border-gray-200 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-card flex flex-col">
-        <div className="space-y-1 mb-4">
-          <Skeleton className="h-5 w-40 rounded dark:bg-muted" />
-          <Skeleton className="h-3.5 w-64 rounded dark:bg-muted" />
+    <div className="font-inter w-full flex flex-1 flex-col h-full min-h-0 gap-6 focus:outline-none animate-fade-up select-none">
+      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none isolate font-inter mb-4 min-h-0 flex-1">
+        {/* PageHeader Skeleton */}
+        <div className="flex items-center justify-between p-6">
+          <div className="flex items-center gap-3">
+            <Skeleton className="h-10 w-10 rounded-xl" />
+            <div className="space-y-1.5">
+              <Skeleton className="h-5 w-40 rounded" />
+              <Skeleton className="h-3.5 w-64 rounded" />
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <Skeleton className="h-9 w-32 rounded-xl" />
+            <div className="h-6 w-px bg-gray-200 dark:bg-zinc-800" />
+            <Skeleton className="h-10 w-10 rounded-xl" />
+          </div>
         </div>
 
-        {/* Subtabs: Active / Archive */}
-        <div className="mb-4 flex gap-8 border-b border-gray-100 dark:border-white/5 pb-2">
-          <Skeleton className="h-5 w-20 rounded dark:bg-muted" />
-          <Skeleton className="h-5 w-20 rounded dark:bg-muted" />
+        {/* Toolbar Skeleton */}
+        <div className="border-t border-gray-100 dark:border-white/10 p-5 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
+          <div className="flex gap-1.5 overflow-x-auto">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <Skeleton key={i} className="h-8 w-20 rounded-lg shrink-0" />
+            ))}
+          </div>
+          <Skeleton className="h-9 w-full md:w-80 rounded-xl shrink-0" />
         </div>
 
-        {/* Proposal Rows */}
-        <div className="space-y-2.5 flex-1">
-          {Array.from({ length: 5 }).map((_, i) => (
+        {/* Table Rows Skeleton */}
+        <div className="border-t border-gray-100 dark:border-white/10 divide-y divide-gray-100 dark:divide-white/5 flex-1 bg-white dark:bg-card">
+          {Array.from({ length: 6 }).map((_, i) => (
             <div
               key={i}
-              className="flex items-center justify-between gap-3 rounded-brand border border-gray-200 p-3.5 dark:border-white/10"
+              className="flex items-center justify-between gap-4 py-3.5 px-6"
             >
-              <div className="space-y-2 flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <Skeleton className="h-4 w-44 rounded dark:bg-muted" />
-                  <Skeleton className="h-5 w-16 rounded-full dark:bg-muted" />
-                </div>
-                <Skeleton className="h-3 w-36 rounded dark:bg-muted" />
+              <div className="space-y-2 flex-1">
+                <Skeleton className="h-4 w-56 rounded" />
+                <Skeleton className="h-3 w-36 rounded" />
               </div>
-              <Skeleton className="h-8 w-16 rounded-lg dark:bg-muted shrink-0" />
+              <Skeleton className="h-4 w-32 rounded hidden md:block" />
+              <Skeleton className="h-6 w-24 rounded-full" />
+              <Skeleton className="h-8 w-18 rounded-lg" />
             </div>
           ))}
         </div>
-      </section>
 
-      {/* Right Column: Proposal Inspector & Canvas Preview */}
-      <aside className="rounded-brand border border-gray-200 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-card flex flex-col justify-between">
-        <div className="space-y-4">
-          <div className="space-y-1">
-            <Skeleton className="h-5 w-48 rounded dark:bg-muted" />
-            <Skeleton className="h-3 w-28 rounded dark:bg-muted" />
+        {/* Footer Skeleton */}
+        <div className="border-t border-gray-100 dark:border-white/10 p-4 px-6 flex items-center justify-between bg-white dark:bg-card mt-auto rounded-b-2xl select-none">
+          <div className="flex items-center gap-6">
+            <Skeleton className="h-3.5 w-36 rounded" />
+            <div className="hidden sm:flex items-center gap-2">
+              <Skeleton className="h-3.5 w-10 rounded" />
+              <div className="flex items-center gap-1">
+                <Skeleton className="h-6 w-8 rounded-lg" />
+                <Skeleton className="h-6 w-8 rounded-lg" />
+                <Skeleton className="h-6 w-8 rounded-lg" />
+                <Skeleton className="h-6 w-8 rounded-lg" />
+              </div>
+            </div>
           </div>
-
-          {/* PDF First Page Preview Canvas Placeholder */}
-          <div className="w-full h-48 rounded-lg border border-dashed border-gray-200 dark:border-zinc-800 bg-gray-50/50 dark:bg-zinc-900/40 flex flex-col items-center justify-center p-4">
-            <Skeleton className="h-10 w-10 rounded-xl dark:bg-muted mb-2" />
-            <Skeleton className="h-3 w-32 rounded dark:bg-muted" />
-          </div>
-
-          {/* Form Fields */}
-          <div className="space-y-3">
-            <Skeleton className="h-9 w-full rounded-lg dark:bg-muted" />
-            <Skeleton className="h-20 w-full rounded-lg dark:bg-muted" />
-            <Skeleton className="h-9 w-full rounded-lg dark:bg-muted" />
-          </div>
-
-          {/* Updates Timeline placeholder */}
-          <div className="border-l border-gray-200 dark:border-zinc-800 pl-3 space-y-2 pt-2">
-            <Skeleton className="h-3 w-40 rounded dark:bg-muted" />
-            <Skeleton className="h-3 w-32 rounded dark:bg-muted" />
+          <div className="flex items-center gap-2">
+            <Skeleton className="h-8 w-14 rounded-xl" />
+            <Skeleton className="h-8 w-8 rounded-xl" />
+            <Skeleton className="h-8 w-14 rounded-xl" />
           </div>
         </div>
-      </aside>
+      </Card>
     </div>
   )
 }

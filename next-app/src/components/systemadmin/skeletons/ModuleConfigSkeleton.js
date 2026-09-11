@@ -25,7 +25,7 @@ export default function ModuleConfigSkeleton({ viewMode = "office" }) {
         />
 
         {/* Toolbar Skeleton */}
-        <CardContent className="font-inter bg-white p-[24px] dark:bg-card/50 backdrop-blur-md flex flex-col gap-5 border-t border-gray-100 dark:border-white/10">
+        <CardContent className="font-inter bg-white p-[24px] dark:bg-card/50 backdrop-blur-md flex flex-col gap-5 border-t border-gray-100 dark:border-white/10 rounded-b-2xl">
           <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 w-full select-none">
             <div className="flex items-center gap-6 h-10">
               <Skeleton className="h-5 w-24 rounded dark:bg-muted" />

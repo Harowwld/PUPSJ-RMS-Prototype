@@ -1210,7 +1210,8 @@ export default function LandingCatalogCmsView({ showToast }) {
         }
         isPersonnelModal={true}
         isAppleStyled={true}
-        isArchiveModal={true}
+        variant="danger"
+        isDeleteModal={true}
       />
     </div>
   )

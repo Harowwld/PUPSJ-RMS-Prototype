@@ -508,7 +508,7 @@ export default function LandingPageCmsTab({ showToast }) {
         </div>
 
         {/* Content Body */}
-        <CardContent className="font-inter bg-white p-[24px] dark:bg-card/50 backdrop-blur-md flex flex-col gap-6">
+        <CardContent className="font-inter bg-white p-[24px] dark:bg-card/50 backdrop-blur-md flex flex-col gap-6 rounded-b-2xl">
           {/* TAB 1: Simplified Carousel Photos (Upload & Preview Centric) */}
           {activeTab === "slides" && (
             <div className="space-y-6">
@@ -1010,7 +1010,8 @@ export default function LandingPageCmsTab({ showToast }) {
         }
         isPersonnelModal={true}
         isAppleStyled={true}
-        isArchiveModal={true}
+        variant="danger"
+        isDeleteModal={true}
       />
         </>
       )}

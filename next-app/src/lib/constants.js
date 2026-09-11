@@ -16,9 +16,11 @@ export const STATUS_COLORS = {
   Archived: "#d97706",
 };
 
-export const TARGET_SLA_HOURS = 72;
+export const TARGET_SLA_HOURS = 72; // Default 3 working days (Simple Transactions)
 export const STANDARD_PROCESSING_DAYS_MIN = 3;
-export const STANDARD_PROCESSING_DAYS_MAX = 5;
+export const STANDARD_PROCESSING_DAYS_MAX = 20;
+
+export { ARTA_TIERS, getArtaClassification } from "./citizenCharter.js";
 
 export const REQUEST_STATUSES = [
   "Pending",

@@ -7,7 +7,6 @@ import Header from "@/components/layout/Header";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AuthGuard } from "@/components/shared/AuthGuard";
-import { LiquidGlassButton } from "@/components/ui/liquid-glass-button";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -17,13 +16,7 @@ import {
   TabsTrigger,
   TabsContent,
 } from "@/components/ui/tabs";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-} from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -33,7 +26,6 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import { Select } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
 import PageHeader from "@/components/shared/PageHeader";
 import { formatPHDateTime } from "@/lib/timeFormat";
 import { cn } from "@/lib/utils";
@@ -667,19 +659,39 @@ function AccountPageContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-white/5">
-        <header className="bg-white border-b border-gray-200 h-16 flex items-center px-4 shrink-0 dark:bg-card dark:border-white/10">
-          <Skeleton className="w-10 h-10 rounded-full" />
-          <Skeleton className="w-48 h-6 ml-3" />
-        </header>
-        <main className="flex-1 p-8 w-full max-w-[1200px] mx-auto space-y-8">
-          <div className="flex flex-col gap-2">
-            <Skeleton className="w-64 h-8" />
-            <Skeleton className="w-96 h-4" />
-          </div>
-          <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-8">
-            <Skeleton className="h-[300px] rounded-brand" />
-            <Skeleton className="h-[500px] rounded-brand" />
+      <div className="h-screen overflow-hidden flex flex-col bg-gray-50 dark:bg-background font-inter">
+        <Header authUser={authUser} onLogout={handleLogout} />
+        <main className="flex-1 min-h-0 overflow-y-auto w-full">
+          <div className="max-w-[1280px] mx-auto py-10 px-6">
+            <Card className="flex flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none min-h-[600px]">
+              <div className="p-6 border-b border-gray-100 dark:border-white/10 flex items-center justify-between">
+                <div className="space-y-2">
+                  <Skeleton className="w-48 h-6" />
+                  <Skeleton className="w-72 h-4" />
+                </div>
+                <Skeleton className="w-28 h-10 rounded-xl" />
+              </div>
+              <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] flex-1">
+                <div className="p-6 border-b lg:border-b-0 lg:border-r border-gray-100 dark:border-white/10 space-y-6 bg-gray-50/40 dark:bg-white/[0.02]">
+                  <div className="flex items-center gap-4">
+                    <Skeleton className="w-16 h-16 rounded-full shrink-0" />
+                    <div className="space-y-2 flex-1">
+                      <Skeleton className="w-28 h-4" />
+                      <Skeleton className="w-20 h-3" />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Skeleton className="w-full h-10 rounded-xl" />
+                    <Skeleton className="w-full h-10 rounded-xl" />
+                  </div>
+                </div>
+                <div className="p-8 space-y-6">
+                  <Skeleton className="w-40 h-6" />
+                  <Skeleton className="w-full h-32 rounded-xl" />
+                  <Skeleton className="w-full h-32 rounded-xl" />
+                </div>
+              </div>
+            </Card>
           </div>
         </main>
       </div>
@@ -699,150 +711,152 @@ function AccountPageContent() {
       <Header authUser={authUser} onLogout={handleLogout} />
 
       <PageTransition className="flex-1 min-h-0 overflow-y-auto w-full">
-        <div className="max-w-[1200px] mx-auto py-10 px-4">
-        <PageHeader
-          title="Account Settings"
-          description="Update your personal info and security settings."
-          actions={
-            <Button
-              variant="ghost"
-              onClick={() => {
-                const path = getDefaultDashboardPath(authUser?.role);
-                router.push(path);
-              }}
-              className="h-10 px-3 font-semibold text-sm text-gray-600 hover:text-gray-900 hover:bg-transparent dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-transparent transition-colors flex items-center gap-2 rounded-brand shadow-none! border-0! cursor-pointer"
+        <div className="max-w-[1280px] mx-auto py-10 px-6">
+          {/* ONE Single Card Container encapsulating Header, Sidebar & Tab Content */}
+          <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none isolate font-inter mb-4 min-h-0 flex-1">
+            <PageHeader
+              icon="ph-user-gear"
+              title="Account Settings"
+              description="Update your personal info and security settings."
+              showBorder={false}
+              className="p-6 border-b border-gray-100 dark:border-white/10"
+              titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
+              descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
+              actions={
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    const path = getDefaultDashboardPath(authUser?.role);
+                    router.push(path);
+                  }}
+                  className="flex h-10 items-center justify-center gap-2 rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
+                >
+                  <i className="ph-bold ph-arrow-left text-sm"></i>
+                  Dashboard
+                </Button>
+              }
+            />
+
+            <Tabs
+              defaultValue="profile"
+              value={activeTab}
+              onValueChange={setActiveTab}
+              className="grid grid-cols-1 lg:grid-cols-[280px_1fr] flex-1 items-stretch min-h-[600px]"
             >
-              <i className="ph-bold ph-arrow-left"></i>
-              Dashboard
-            </Button>
-          }
-        />
-
-        <Separator className="mt-8 bg-gray-200 dark:bg-zinc-800" />
-
-        <div className="mt-8">
-          <Tabs
-            defaultValue="profile"
-            value={activeTab}
-            onValueChange={setActiveTab}
-            className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-10 items-stretch"
-          >
-          {/* Sidebar Navigation */}
-          <aside className="lg:sticky lg:top-24 h-full flex flex-col justify-stretch">
-            <div className="bg-transparent p-0 flex flex-col h-full w-full">
-              
-              {/* Header Section */}
-              <div className="flex items-center gap-4 w-full mb-[24px] px-1">
-                {/* Avatar: 68px, circular */}
-                <div className="flex flex-col items-center shrink-0">
-                  <div 
-                    onClick={handleAvatarClick}
-                    className="relative group w-[68px] h-[68px] shrink-0 rounded-full bg-gray-200 dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 flex items-center justify-center text-[22px] font-semibold shadow-inner cursor-pointer overflow-hidden transition-all duration-normal hover:ring-2 hover:ring-pup-maroon/20"
-                  >
-                    {avatarUrl ? (
-                      <>
-                        <img 
-                          src={avatarUrl} 
-                          alt="" 
-                          className={`w-full h-full object-cover ${avatarLoaded ? "block" : "hidden"}`}
-                          onLoad={() => setAvatarLoaded(true)}
-                          onError={() => setAvatarUrl(null)}
-                        />
-                        {!avatarLoaded && (
-                          <div className="flex h-full w-full items-center justify-center bg-gray-200 dark:bg-zinc-800 animate-pulse">
-                            <i className="ph-bold ph-user text-[24px] text-gray-400 dark:text-zinc-500" />
-                          </div>
+              {/* Sidebar Navigation */}
+              <aside className="border-b lg:border-b-0 lg:border-r border-gray-100 dark:border-white/10 p-6 flex flex-col bg-gray-50/40 dark:bg-white/[0.02]">
+                <div className="flex flex-col h-full w-full">
+                  {/* Header Section */}
+                  <div className="flex items-center gap-4 w-full mb-6 px-1">
+                    {/* Avatar: 64px, circular */}
+                    <div className="flex flex-col items-center shrink-0">
+                      <div 
+                        onClick={handleAvatarClick}
+                        className="relative group w-16 h-16 shrink-0 rounded-full bg-gray-200 dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 flex items-center justify-center text-xl font-semibold shadow-inner cursor-pointer overflow-hidden transition-all duration-normal hover:ring-2 hover:ring-pup-maroon/20"
+                      >
+                        {avatarUrl ? (
+                          <>
+                            <img 
+                              src={avatarUrl} 
+                              alt="" 
+                              className={`w-full h-full object-cover ${avatarLoaded ? "block" : "hidden"}`}
+                              onLoad={() => setAvatarLoaded(true)}
+                              onError={() => setAvatarUrl(null)}
+                            />
+                            {!avatarLoaded && (
+                              <div className="flex h-full w-full items-center justify-center bg-gray-200 dark:bg-zinc-800 animate-pulse">
+                                <i className="ph-bold ph-user text-[24px] text-gray-400 dark:text-zinc-500" />
+                              </div>
+                            )}
+                          </>
+                        ) : (
+                          <span>{initials}</span>
                         )}
-                      </>
-                    ) : (
-                      <span>{initials}</span>
-                    )}
-                    {/* Hover overlay */}
-                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-fast">
-                      <i className="ph-bold ph-camera text-white text-base"></i>
+                        {/* Hover overlay */}
+                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-fast">
+                          <i className="ph-bold ph-camera text-white text-base"></i>
+                        </div>
+                      </div>
+                      <input
+                        type="file"
+                        ref={fileInputRef}
+                        onChange={handleAvatarChange}
+                        accept="image/*"
+                        className="hidden"
+                      />
+                      {avatarUrl && (
+                        <button
+                          type="button"
+                          onClick={handleRemoveAvatar}
+                          className="mt-1.5 text-[11px] font-medium text-red-500 hover:text-red-700 cursor-pointer bg-transparent border-none p-0 focus:outline-none"
+                        >
+                          Remove
+                        </button>
+                      )}
+                    </div>
+                    
+                    {/* Identity Info */}
+                    <div className="min-w-0 flex flex-col items-start justify-center">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h3 className="text-base font-semibold text-gray-900 tracking-[-0.01em] dark:text-zinc-50 leading-tight">
+                          {fname} {lname}
+                        </h3>
+                        {authUser?.role && (
+                          <span className="text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-red-50 text-pup-maroon dark:bg-red-500/20 dark:text-red-400 tracking-[0.04em]">
+                            {authUser.role === "Student" ? (clientType || "Student") : getRoleLabel(authUser.role)}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs font-normal text-gray-500 dark:text-zinc-400 mt-1 truncate max-w-[180px]">
+                        {authUser?.role === "Student" && studentNo ? (
+                          <span><span className="font-mono text-xs text-gray-700 dark:text-zinc-300 font-medium">{studentNo}</span> · {username}</span>
+                        ) : (
+                          authUser?.email || authUser?.username
+                        )}
+                      </p>
                     </div>
                   </div>
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    onChange={handleAvatarChange}
-                    accept="image/*"
-                    className="hidden"
-                  />
-                  {avatarUrl && (
-                    <button
-                      type="button"
-                      onClick={handleRemoveAvatar}
-                      className="mt-1.5 text-[11px] font-medium text-red-500 hover:text-red-700 cursor-pointer bg-transparent border-none p-0 focus:outline-none"
-                    >
-                      Remove
-                    </button>
-                  )}
-                </div>
-                
-                {/* Identity Info */}
-                <div className="min-w-0 flex flex-col items-start justify-center">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <h3 className="text-[18px] font-semibold text-gray-900 tracking-[-0.01em] dark:text-zinc-50 leading-tight">
-                      {fname} {lname}
-                    </h3>
-                    {authUser?.role && (
-                      <span className="text-[11px] font-medium px-3 py-1 rounded-full bg-red-50 text-pup-maroon dark:bg-red-500/20 dark:text-red-400 tracking-[0.04em]">
-                        {authUser.role === "Student" ? (clientType || "Student") : getRoleLabel(authUser.role)}
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-[14px] font-normal text-[#8E8E93] dark:text-zinc-400 mt-[4px] truncate">
-                    {authUser?.role === "Student" && studentNo ? (
-                      <span><span className="font-mono text-xs text-gray-700 dark:text-zinc-300 font-medium">{studentNo}</span> · {username}</span>
-                    ) : (
-                      authUser?.email || authUser?.username
-                    )}
-                  </p>
-                </div>
-              </div>
 
-              {/* Navigation Menu */}
-              <TabsList className="w-full flex flex-col h-auto bg-transparent p-0 gap-[4px]">
-                {[
-                  { id: "profile", label: "Profile", icon: "ph-identification-card" },
-                  { id: "security", label: "Security", icon: "ph-shield-star" }
-                ].map((tab) => (
-                  <TabsTrigger
-                    key={tab.id}
-                    value={tab.id}
-                    className="group flex items-center justify-start gap-3 w-full px-4 py-3 rounded-[10px] text-[15px] font-medium tracking-[-0.01em] whitespace-nowrap transition-colors outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon/20 cursor-pointer data-[state=active]:bg-[#F0F0F2] data-[state=active]:text-[#1C1C1E] data-[state=active]:font-semibold dark:data-[state=active]:bg-zinc-800 dark:data-[state=active]:text-zinc-100 text-[#8E8E93] hover:bg-[#F5F5F7] dark:hover:bg-zinc-850 dark:text-zinc-400 dark:hover:text-zinc-200"
-                  >
-                    <i className={cn(
-                      "ph-bold text-[18px] shrink-0 transition-colors",
-                      "text-[#8E8E93] group-data-[state=active]:text-[#1C1C1E] dark:text-zinc-500 dark:group-data-[state=active]:text-zinc-100"
-                    )}></i>
-                    <span className="truncate text-left">{tab.label}</span>
-                    <div className="shrink-0 ml-auto w-5 h-5 flex items-center justify-center opacity-0 group-data-[state=active]:opacity-100 transition-opacity">
-                      <i className="ph-bold ph-caret-right text-sm text-[#1C1C1E] dark:text-zinc-100"></i>
+                  {/* Navigation Menu */}
+                  <TabsList className="w-full flex flex-col h-auto bg-transparent p-0 gap-1.5">
+                    {[
+                      { id: "profile", label: "Profile", icon: "ph-identification-card" },
+                      { id: "security", label: "Security", icon: "ph-shield-star" }
+                    ].map((tab) => (
+                      <TabsTrigger
+                        key={tab.id}
+                        value={tab.id}
+                        className="group flex items-center justify-start gap-3 w-full px-3.5 py-2.5 rounded-xl text-xs font-semibold tracking-[-0.01em] whitespace-nowrap transition-all outline-none cursor-pointer data-[state=active]:bg-white dark:data-[state=active]:bg-zinc-800 data-[state=active]:text-gray-900 dark:data-[state=active]:text-zinc-50 data-[state=active]:shadow-xs text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 hover:bg-gray-100/60 dark:hover:bg-zinc-800/40 border border-transparent data-[state=active]:border-gray-200/60 dark:data-[state=active]:border-white/5"
+                      >
+                        <i className={cn(
+                          "ph-bold text-base shrink-0 transition-colors",
+                          "text-gray-400 group-data-[state=active]:text-pup-maroon dark:text-zinc-500 dark:group-data-[state=active]:text-red-400",
+                          tab.icon
+                        )}></i>
+                        <span className="truncate text-left">{tab.label}</span>
+                        <div className="shrink-0 ml-auto w-4 h-4 flex items-center justify-center opacity-0 group-data-[state=active]:opacity-100 transition-opacity">
+                          <i className="ph-bold ph-caret-right text-xs text-gray-400 dark:text-zinc-400"></i>
+                        </div>
+                      </TabsTrigger>
+                    ))}
+                  </TabsList>
+                </div>
+              </aside>
+
+              {/* Content Area */}
+              <div className="min-w-0 flex-1">
+                <TabsContent value="profile" className="m-0 border-0 focus-visible:ring-0">
+                  <div className="p-8">
+                    <div>
+                      <h3 className="text-base font-semibold tracking-[-0.01em] text-gray-900 transition-colors dark:text-zinc-50">
+                        Profile
+                      </h3>
+                      <p className="mt-1 text-xs font-normal text-gray-500 transition-colors dark:text-zinc-400">
+                        Your name appears across the platform and generated audit certificates.
+                      </p>
                     </div>
-                  </TabsTrigger>
-                ))}
-              </TabsList>
-            </div>
-          </aside>
 
-          {/* Content Area */}
-          <div className="min-w-0 space-y-8 flex-1">
-            <TabsContent value="profile" className="m-0 border-0 focus-visible:ring-0">
-              <Card className="rounded-2xl border-gray-200 shadow-xs overflow-hidden bg-white dark:border-white/10 dark:bg-card">
-                <CardHeader className="bg-transparent p-[28px] pb-0">
-                  <div>
-                    <CardTitle className="!text-[20px] font-semibold tracking-[-0.01em] text-gray-900 transition-colors dark:text-zinc-50">
-                      Profile
-                    </CardTitle>
-                    <CardDescription className="mt-1 text-[14px] font-normal text-gray-500 transition-colors dark:text-zinc-400">
-                      Your name appears across the platform.
-                    </CardDescription>
-                  </div>
-                </CardHeader>
-
-                <CardContent className="p-[28px] pt-6">
+                    <div className="mt-6">
                   <form onSubmit={submitProfile} className="space-y-6">
                     {profileError && (
                       <div className="p-4 bg-red-50 border border-red-100 text-red-700 text-xs font-semibold rounded-lg flex items-center gap-3 animate-in shake-1 dark:bg-red-500/10 dark:border-red-500/20">
@@ -860,7 +874,7 @@ function AccountPageContent() {
                             </label>
                             <Input
                               type="text"
-                              className="h-10 rounded-[8px] border-[0.5px] border-gray-200 bg-white px-3 text-[14px] font-normal tracking-[-0.01em] shadow-none transition-all focus-visible:border-gray-400 focus-visible:ring-0 text-gray-900 dark:border-white/10 dark:bg-card dark:text-zinc-50 dark:focus-visible:border-white/20"
+                              className="h-10 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-3.5 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
                               placeholder="e.g. Juan"
                               value={fname}
                               onChange={(e) => setFname(e.target.value)}
@@ -873,7 +887,7 @@ function AccountPageContent() {
                             </label>
                             <Input
                               type="text"
-                              className="h-10 rounded-[8px] border-[0.5px] border-gray-200 bg-white px-3 text-[14px] font-normal tracking-[-0.01em] shadow-none transition-all focus-visible:border-gray-400 focus-visible:ring-0 text-gray-900 dark:border-white/10 dark:bg-card dark:text-zinc-50 dark:focus-visible:border-white/20"
+                              className="h-10 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-3.5 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
                               placeholder="e.g. Santos"
                               value={mname}
                               onChange={(e) => setMname(e.target.value)}
@@ -885,7 +899,7 @@ function AccountPageContent() {
                             </label>
                             <Input
                               type="text"
-                              className="h-10 rounded-[8px] border-[0.5px] border-gray-200 bg-white px-3 text-[14px] font-normal tracking-[-0.01em] shadow-none transition-all focus-visible:border-gray-400 focus-visible:ring-0 text-gray-900 dark:border-white/10 dark:bg-card dark:text-zinc-50 dark:focus-visible:border-white/20"
+                              className="h-10 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-3.5 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
                               placeholder="e.g. Dela Cruz"
                               value={lname}
                               onChange={(e) => setLname(e.target.value)}
@@ -900,7 +914,7 @@ function AccountPageContent() {
                           </label>
                           <Input
                             type="email"
-                            className="h-10 rounded-[8px] border-[0.5px] border-gray-200 bg-gray-50 px-3 text-[14px] font-normal tracking-[-0.01em] shadow-none text-gray-400 cursor-not-allowed select-none dark:border-white/10 dark:bg-white/5 dark:text-zinc-500"
+                            className="h-10 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50/70 dark:bg-white/5 px-3.5 text-xs font-normal text-gray-400 dark:text-zinc-500 cursor-not-allowed select-none shadow-none"
                             value={username}
                             readOnly
                           />
@@ -911,9 +925,9 @@ function AccountPageContent() {
 
                         <div className="pt-4 border-t border-gray-100 dark:border-white/10 space-y-4">
                           <div>
-                            <h3 className="text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
+                            <h4 className="text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
                               Academic Information
-                            </h3>
+                            </h4>
                             <p className="text-[12px] text-gray-500 dark:text-zinc-400 mt-0.5">
                               Manage your affiliation and student credentials for registrar records.
                             </p>
@@ -928,7 +942,7 @@ function AccountPageContent() {
                                 containerClassName="h-auto"
                                 value={clientType}
                                 onChange={(e) => setClientType(e.target.value)}
-                                className="h-10 text-[14px] font-normal tracking-[-0.01em] text-gray-900 dark:text-zinc-50 border-gray-200 dark:border-white/10 dark:bg-card"
+                                className="h-10 rounded-xl border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-xs font-normal text-gray-900 dark:text-zinc-100 cursor-pointer shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
                               >
                                 <option value="Student">Student (Currently Enrolled)</option>
                                 <option value="Alumni">Alumni (Graduate / Former Student)</option>
@@ -944,7 +958,7 @@ function AccountPageContent() {
                               </label>
                               <Input
                                 type="text"
-                                className="h-10 rounded-[8px] border-[0.5px] border-gray-200 bg-white px-3 text-[14px] font-mono tracking-[-0.01em] shadow-none transition-all focus-visible:border-gray-400 focus-visible:ring-0 text-gray-900 dark:border-white/10 dark:bg-card dark:text-zinc-50 dark:focus-visible:border-white/20"
+                                className="h-10 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-3.5 text-xs font-mono font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
                                 placeholder="e.g. 2020-00123-TG-0 (optional)"
                                 value={studentNo}
                                 onChange={(e) => setStudentNo(e.target.value)}
@@ -965,7 +979,7 @@ function AccountPageContent() {
                             </label>
                             <Input
                               type="text"
-                              className="h-10 rounded-[8px] border-[0.5px] border-gray-200 bg-white px-3 text-[14px] font-normal tracking-[-0.01em] shadow-none transition-all focus-visible:border-gray-400 focus-visible:ring-0 text-gray-900 dark:border-white/10 dark:bg-card dark:text-zinc-50 dark:focus-visible:border-white/20"
+                              className="h-10 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-3.5 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
                               placeholder="First Name"
                               value={fname}
                               onChange={(e) => setFname(e.target.value)}
@@ -978,7 +992,7 @@ function AccountPageContent() {
                             </label>
                             <Input
                               type="text"
-                              className="h-10 rounded-[8px] border-[0.5px] border-gray-200 bg-white px-3 text-[14px] font-normal tracking-[-0.01em] shadow-none transition-all focus-visible:border-gray-400 focus-visible:ring-0 text-gray-900 dark:border-white/10 dark:bg-card dark:text-zinc-50 dark:focus-visible:border-white/20"
+                              className="h-10 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-3.5 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
                               placeholder="Last Name"
                               value={lname}
                               onChange={(e) => setLname(e.target.value)}
@@ -993,7 +1007,7 @@ function AccountPageContent() {
                           </label>
                           <Input
                             type="email"
-                            className="h-10 rounded-[8px] border-[0.5px] border-gray-200 bg-gray-50 px-3 text-[14px] font-normal tracking-[-0.01em] shadow-none text-gray-400 cursor-not-allowed select-none dark:border-white/10 dark:bg-white/5 dark:text-zinc-500"
+                            className="h-10 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50/70 dark:bg-white/5 px-3.5 text-xs font-normal text-gray-400 dark:text-zinc-500 cursor-not-allowed select-none shadow-none"
                             value={username}
                             readOnly
                           />
@@ -1005,48 +1019,41 @@ function AccountPageContent() {
                     )}
 
                     <div className="flex justify-end pt-4">
-                      <LiquidGlassButton
+                      <Button
                         type="submit"
                         disabled={profileLoading}
-                        height={40}
-                        radius={20}
-                        glassColor="rgba(10, 132, 255, 0.15)"
-                        className="px-6 text-[13px] font-medium tracking-[-0.01em] flex items-center gap-2 active:scale-95 disabled:opacity-50 text-white"
+                        className="flex h-10 items-center justify-center gap-2 rounded-xl! text-xs font-semibold text-white btn-brand-red active:scale-95 disabled:opacity-50 transition-all cursor-pointer px-5 shadow-xs border-0"
                       >
-                        {profileLoading ? (
-                          <i className="ph-bold ph-spinner animate-spin text-base"></i>
-                        ) : (
-                          <i className="ph-bold ph-check text-base"></i>
+                        {profileLoading && (
+                          <i className="ph-bold ph-spinner animate-spin text-sm"></i>
                         )}
                         {profileLoading ? "Saving..." : "Save"}
-                      </LiquidGlassButton>
+                      </Button>
                     </div>
                   </form>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             </TabsContent>
 
             <TabsContent value="security" className="m-0 border-0 focus-visible:ring-0">
-              <div className="space-y-8">
-                {/* Password Rotation Card */}
-                <Card className="rounded-2xl border-gray-200 shadow-xs overflow-hidden bg-white dark:border-white/10 dark:bg-card">
-                  <CardHeader className="bg-transparent p-[28px] pb-0">
-                    <div>
-                      <CardTitle className="!text-[20px] font-semibold tracking-[-0.01em] text-gray-900 transition-colors dark:text-zinc-50">
-                        Password
-                      </CardTitle>
-                      <CardDescription className="mt-1 text-[14px] font-normal text-gray-500 transition-colors dark:text-zinc-400">
-                        Keep your account secure with a strong password.
-                        {authUser?.password_last_changed && (
-                          <p className="text-[11px] font-normal text-gray-400 dark:text-zinc-550 mt-2">
-                            Last changed {new Date(authUser.password_last_changed).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
-                          </p>
-                        )}
-                      </CardDescription>
-                    </div>
-                  </CardHeader>
+              <div className="p-8 space-y-8 divide-y divide-gray-100 dark:divide-white/10">
+                {/* Password Rotation Section */}
+                <div>
+                  <div>
+                    <h3 className="text-base font-semibold tracking-[-0.01em] text-gray-900 transition-colors dark:text-zinc-50">
+                      Password
+                    </h3>
+                    <p className="mt-1 text-xs font-normal text-gray-500 transition-colors dark:text-zinc-400">
+                      Keep your account secure with a strong password.
+                      {authUser?.password_last_changed && (
+                        <span className="block text-[11px] font-normal text-gray-400 dark:text-zinc-550 mt-1">
+                          Last changed {new Date(authUser.password_last_changed).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
+                        </span>
+                      )}
+                    </p>
+                  </div>
 
-                  <CardContent className="p-[28px] pt-6">
+                  <div className="mt-6">
                     <form onSubmit={submitPassword} className="space-y-6">
                       {pwError && (
                         <div className="p-4 bg-red-50 border border-red-100 text-red-700 text-xs font-semibold rounded-lg flex items-center gap-3 animate-in shake-1 dark:bg-red-500/10 dark:border-red-500/20">
@@ -1063,7 +1070,7 @@ function AccountPageContent() {
                           <div className="relative group">
                             <Input
                               type={showPw.current ? "text" : "password"}
-                              className="h-10 rounded-[8px] border-[0.5px] border-gray-200 bg-white pr-10 pl-3 text-[14px] font-normal tracking-[-0.01em] shadow-none transition-all focus-visible:border-gray-400 focus-visible:ring-0 text-gray-900 dark:border-white/10 dark:bg-card dark:text-zinc-50 dark:focus-visible:border-white/20"
+                              className="h-10 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 pr-10 pl-3.5 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
                               placeholder="••••••••"
                               value={pwCurrent}
                               onChange={(e) => setPwCurrent(e.target.value)}
@@ -1072,7 +1079,7 @@ function AccountPageContent() {
                             <button
                               type="button"
                               onClick={() => setShowPw(prev => ({ ...prev, current: !prev.current }))}
-                              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-650 transition-colors dark:text-zinc-500 dark:hover:text-zinc-350"
+                              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-650 transition-colors dark:text-zinc-500 dark:hover:text-zinc-350 cursor-pointer"
                             >
                               <i className={cn("ph-bold", showPw.current ? "ph-eye-slash" : "ph-eye")}></i>
                             </button>
@@ -1087,7 +1094,7 @@ function AccountPageContent() {
                             <div className="relative group">
                               <Input
                                 type={showPw.next ? "text" : "password"}
-                                className="h-10 rounded-[8px] border-[0.5px] border-gray-200 bg-white pr-10 pl-3 text-[14px] font-normal tracking-[-0.01em] shadow-none transition-all focus-visible:border-gray-400 focus-visible:ring-0 text-gray-900 dark:border-white/10 dark:bg-card dark:text-zinc-50 dark:focus-visible:border-white/20"
+                                className="h-10 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 pr-10 pl-3.5 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
                                 placeholder="••••••••"
                                 value={pwNext}
                                 onChange={(e) => setPwNext(e.target.value)}
@@ -1096,7 +1103,7 @@ function AccountPageContent() {
                               <button
                                 type="button"
                                 onClick={() => setShowPw(prev => ({ ...prev, next: !prev.next }))}
-                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-650 transition-colors dark:text-zinc-500 dark:hover:text-zinc-350"
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-650 transition-colors dark:text-zinc-500 dark:hover:text-zinc-350 cursor-pointer"
                               >
                                 <i className={cn("ph-bold", showPw.next ? "ph-eye-slash" : "ph-eye")}></i>
                               </button>
@@ -1109,7 +1116,7 @@ function AccountPageContent() {
                             <div className="relative group">
                               <Input
                                 type={showPw.confirm ? "text" : "password"}
-                                className="h-10 rounded-[8px] border-[0.5px] border-gray-200 bg-white pr-10 pl-3 text-[14px] font-normal tracking-[-0.01em] shadow-none transition-all focus-visible:border-gray-400 focus-visible:ring-0 text-gray-900 dark:border-white/10 dark:bg-card dark:text-zinc-50 dark:focus-visible:border-white/20"
+                                className="h-10 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 pr-10 pl-3.5 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
                                 placeholder="••••••••"
                                 value={pwConfirm}
                                 onChange={(e) => setPwConfirm(e.target.value)}
@@ -1118,7 +1125,7 @@ function AccountPageContent() {
                               <button
                                 type="button"
                                 onClick={() => setShowPw(prev => ({ ...prev, confirm: !prev.confirm }))}
-                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-650 transition-colors dark:text-zinc-500 dark:hover:text-zinc-350"
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-650 transition-colors dark:text-zinc-500 dark:hover:text-zinc-350 cursor-pointer"
                               >
                                 <i className={cn("ph-bold", showPw.confirm ? "ph-eye-slash" : "ph-eye")}></i>
                               </button>
@@ -1128,43 +1135,38 @@ function AccountPageContent() {
                       </div>
 
                       <div className="flex justify-end pt-4">
-                        <LiquidGlassButton
+                        <Button
                           type="submit"
                           disabled={pwLoading}
-                          height={40}
-                          radius={20}
-                          glassColor="rgba(10, 132, 255, 0.15)"
-                          className="px-6 text-[13px] font-medium tracking-[-0.01em] flex items-center active:scale-95 disabled:opacity-50 text-white"
+                          className="flex h-10 items-center justify-center gap-2 rounded-xl! text-xs font-semibold text-white btn-brand-red active:scale-95 disabled:opacity-50 transition-all cursor-pointer px-5 shadow-xs border-0"
                         >
                           {pwLoading && (
-                            <i className="ph-bold ph-spinner animate-spin text-base"></i>
+                            <i className="ph-bold ph-spinner animate-spin text-sm"></i>
                           )}
                           {pwLoading ? "Updating..." : "Update"}
-                        </LiquidGlassButton>
+                        </Button>
                       </div>
                     </form>
-                  </CardContent>
-                </Card>
+                  </div>
+                </div>
 
-                {/* Security Questions Card */}
-                <Card className="rounded-2xl border-gray-200 shadow-xs overflow-hidden bg-white dark:border-white/10 dark:bg-card">
-                  <CardHeader className="bg-transparent p-[28px] pb-0">
-                    <div>
-                      <CardTitle className="!text-[20px] font-semibold tracking-[-0.01em] text-gray-900 transition-colors dark:text-zinc-50">
-                        Security Questions
-                      </CardTitle>
-                      <CardDescription className="mt-1 text-[14px] font-normal text-gray-500 transition-colors dark:text-zinc-400">
-                        Set up questions to help recover your account.
-                        {hasSetSecurity && (
-                          <p className="text-[11px] font-normal text-emerald-600 dark:text-emerald-400 mt-2">
-                            Recovery questions are active.
-                          </p>
-                        )}
-                      </CardDescription>
-                    </div>
-                  </CardHeader>
+                {/* Security Questions Section */}
+                <div className="pt-8">
+                  <div>
+                    <h3 className="text-base font-semibold tracking-[-0.01em] text-gray-900 transition-colors dark:text-zinc-50">
+                      Security Questions
+                    </h3>
+                    <p className="mt-1 text-xs font-normal text-gray-500 transition-colors dark:text-zinc-400">
+                      Set up questions to help recover your account.
+                      {hasSetSecurity && (
+                        <span className="block text-[11px] font-normal text-emerald-600 dark:text-emerald-400 mt-1">
+                          Recovery questions are active.
+                        </span>
+                      )}
+                    </p>
+                  </div>
 
-                  <CardContent className="p-[28px] pt-6">
+                  <div className="mt-6">
                     <form onSubmit={submitSecurity} className="space-y-6">
                       {secError && (
                         <div className="p-4 bg-red-50 border border-red-100 text-red-700 text-xs font-semibold rounded-lg flex items-center gap-3 animate-in shake-1 dark:bg-red-500/10 dark:border-red-500/20">
@@ -1175,8 +1177,8 @@ function AccountPageContent() {
 
                       <div className="space-y-6">
                         {globalQuestions.length === 0 ? (
-                          <div className="p-8 text-center bg-gray-50 rounded-2xl border border-dashed border-gray-200 text-gray-400 font-semibold text-sm dark:bg-card dark:border-white/10 dark:text-zinc-500">
-                            <i className="ph-duotone ph-mask-sad text-xl mb-3 block opacity-20"></i>
+                          <div className="p-8 text-center bg-gray-50/50 rounded-2xl border border-dashed border-gray-200 text-gray-400 font-medium text-xs dark:bg-card dark:border-white/10 dark:text-zinc-500">
+                            <i className="ph-duotone ph-mask-sad text-xl mb-3 block opacity-40"></i>
                             No recovery questions configured.
                           </div>
                         ) : (
@@ -1214,14 +1216,14 @@ function AccountPageContent() {
                                   {showInput ? (
                                     <Input
                                       type="text"
-                                      className="h-10 rounded-[8px] border-[0.5px] border-gray-200 bg-white px-3 text-[14px] font-normal tracking-[-0.01em] shadow-none transition-all focus-visible:border-gray-400 focus-visible:ring-0 text-gray-900 dark:border-white/10 dark:bg-card dark:text-zinc-50 dark:focus-visible:border-white/20 animate-in fade-in slide-in-from-top-1 duration-normal"
+                                      className="h-10 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-3.5 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all animate-in fade-in slide-in-from-top-1 duration-normal"
                                       placeholder="••••••••"
                                       value={secAnswers[q.id] || ""}
                                       onChange={(e) => setSecAnswers({ ...secAnswers, [q.id]: e.target.value })}
                                       autoFocus={isEditing}
                                     />
                                   ) : (
-                                    <div className="h-10 flex items-center px-3 bg-gray-50 border-[0.5px] border-gray-200 rounded-[8px] text-[11px] font-normal text-gray-400 select-none dark:bg-white/5 dark:border-white/10 dark:text-zinc-500">
+                                    <div className="h-10 flex items-center px-3.5 bg-gray-50/70 border border-gray-200 dark:border-white/10 rounded-xl text-xs font-normal text-gray-400 select-none dark:bg-white/5 dark:text-zinc-500">
                                       Answer saved and encrypted.
                                     </div>
                                   )}
@@ -1233,38 +1235,33 @@ function AccountPageContent() {
                       </div>
 
                       <div className="flex justify-end pt-4">
-                        <LiquidGlassButton
+                        <Button
                           type="submit"
                           disabled={secLoading || globalQuestions.length === 0}
-                          height={40}
-                          radius={20}
-                          glassColor="rgba(10, 132, 255, 0.15)"
-                          className="px-6 text-[13px] font-medium tracking-[-0.01em] flex items-center active:scale-95 disabled:opacity-50 text-white"
+                          className="flex h-10 items-center justify-center gap-2 rounded-xl! text-xs font-semibold text-white btn-brand-red active:scale-95 disabled:opacity-50 transition-all cursor-pointer px-5 shadow-xs border-0"
                         >
                           {secLoading && (
-                            <i className="ph-bold ph-spinner animate-spin text-base"></i>
+                            <i className="ph-bold ph-spinner animate-spin text-sm"></i>
                           )}
                           {secLoading ? "Saving..." : "Save"}
-                        </LiquidGlassButton>
+                        </Button>
                       </div>
                     </form>
-                  </CardContent>
-                </Card>
+                  </div>
+                </div>
 
-                {/* 2FA Card */}
-                <Card className="rounded-2xl border-gray-200 shadow-xs overflow-hidden bg-white dark:border-white/10 dark:bg-card">
-                  <CardHeader className="bg-transparent p-[28px] pb-0">
-                    <div>
-                      <CardTitle className="!text-[20px] font-semibold tracking-[-0.01em] text-gray-900 transition-colors dark:text-zinc-50">
-                        Two-Factor Authentication
-                      </CardTitle>
-                      <CardDescription className="mt-1 text-[14px] font-normal text-gray-500 transition-colors dark:text-zinc-400">
-                        Add an extra layer of security to your account.
-                      </CardDescription>
-                    </div>
-                  </CardHeader>
+                {/* Two-Factor Authentication Section */}
+                <div className="pt-8">
+                  <div>
+                    <h3 className="text-base font-semibold tracking-[-0.01em] text-gray-900 transition-colors dark:text-zinc-50">
+                      Two-Factor Authentication
+                    </h3>
+                    <p className="mt-1 text-xs font-normal text-gray-500 transition-colors dark:text-zinc-400">
+                      Add an extra layer of security to your account with time-based OTP and backup recovery codes.
+                    </p>
+                  </div>
 
-                  <CardContent className="p-[28px] pt-6">
+                  <div className="mt-6">
                     {totpStep === "setup" && totpSetupData ? (
                       <div className="space-y-6 animate-in zoom-in-95 duration-slow">
                         <div className="grid grid-cols-1 md:grid-cols-[1fr_300px] gap-8 bg-gray-50 rounded-2xl border border-gray-100 p-8 items-center dark:bg-card dark:border-white/10">
@@ -1318,25 +1315,27 @@ function AccountPageContent() {
                           </div>
                         )}
 
-                        <div className="pt-8 border-t border-gray-100 flex justify-end gap-2 dark:border-white/10">
+                        <div className="pt-8 border-t border-gray-100 flex justify-end gap-2.5 dark:border-white/10">
                           <Button
+                            type="button"
                             onClick={cancelTOTPSetup}
                             disabled={totpLoading}
-                            variant="ghost"
-                            className="h-12 px-8 font-semibold text-sm text-gray-600 hover:text-gray-900 hover:bg-transparent dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-transparent transition-colors flex items-center justify-center rounded-xl shadow-none! border-0!"
+                            variant="outline"
+                            className="flex h-10 items-center justify-center rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
                           >
                             Cancel
                           </Button>
                           <Button
-                             onClick={verifyTOTP}
-                             disabled={totpLoading || totpToken.length !== 6}
-                             className="h-12 px-10 btn-brand-red font-semibold text-sm shadow-md flex items-center justify-center gap-2"
-                           >
-                             {totpLoading && (
-                               <i className="ph-bold ph-spinner animate-spin text-xl"></i>
-                             )}
-                             Activate 2FA
-                           </Button>
+                            type="button"
+                            onClick={verifyTOTP}
+                            disabled={totpLoading || totpToken.length !== 6}
+                            className="flex h-10 items-center justify-center gap-2 rounded-xl! text-xs font-semibold text-white btn-brand-red active:scale-95 disabled:opacity-50 transition-all cursor-pointer px-5 shadow-xs border-0"
+                          >
+                            {totpLoading && (
+                              <i className="ph-bold ph-spinner animate-spin text-sm"></i>
+                            )}
+                            Activate 2FA
+                          </Button>
                         </div>
                       </div>
                     ) : (
@@ -1364,23 +1363,24 @@ function AccountPageContent() {
                           <div className="shrink-0 w-full md:w-auto flex justify-end">
                              {totpEnabled && hasTotpSecret ? (
                                <Button
+                                 type="button"
                                  onClick={() => setTotpStep("disable-flow")}
                                  variant="outline"
-                                 className="h-10 px-4 font-medium text-[13px] tracking-[-0.01em] border-gray-300 rounded-[8px]"
+                                 className="flex h-10 items-center justify-center rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
                                >
                                  Disable
                                </Button>
                              ) : (
                                <Button
+                                 type="button"
                                  onClick={startTOTPSetup}
                                  disabled={totpSetupLoading}
-                                 className="h-10 px-6 btn-brand-red !rounded-[8px] text-[13px] font-medium tracking-[-0.01em] active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
+                                 className="flex h-10 items-center justify-center gap-2 rounded-xl! text-xs font-semibold text-white btn-brand-red active:scale-95 disabled:opacity-50 transition-all cursor-pointer px-5 shadow-xs border-0"
                                >
-                                 {totpSetupLoading ? (
-                                   <i className="ph-bold ph-spinner animate-spin text-base"></i>
-                                 ) : (
-                                   "Set Up"
+                                 {totpSetupLoading && (
+                                   <i className="ph-bold ph-spinner animate-spin text-sm"></i>
                                  )}
+                                 Set Up
                                </Button>
                              )}
                            </div>
@@ -1408,28 +1408,32 @@ function AccountPageContent() {
                                <div className="p-5 bg-red-50 border-2 border-red-100 text-red-700 text-sm font-semibold rounded-xl flex items-center gap-4 animate-in shake-1 dark:bg-red-500/10">
                                  <i className="ph-fill ph-warning-circle text-xl"></i>
                                  {totpError}
-                                </div>
+                               </div>
                              )}
 
-                             <div className="flex justify-end gap-3">
+                             <div className="flex justify-end gap-2.5">
                                 <Button
+                                  type="button"
                                   onClick={() => { setTotpStep("idle"); setTotpToken(""); setTotpError(""); }}
-                                  variant="ghost"
-                                  className="h-12 px-6 font-semibold text-sm text-gray-600 hover:text-gray-900 hover:bg-transparent dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-transparent transition-colors flex items-center justify-center rounded-xl shadow-none! border-0!"
+                                  variant="outline"
+                                  className="flex h-10 items-center justify-center rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
                                 >
                                   Cancel
                                 </Button>
-                                 <Button
-                                   onClick={async (e) => {
-                                     await disableTOTP();
-                                     setTotpStep("idle");
-                                   }}
-                                   disabled={totpLoading || totpToken.length !== 6}
-                                   className="h-12 px-8 btn-brand-red font-semibold text-sm shadow-md"
-                                 >
-                                   {totpLoading ? <i className="ph-bold ph-spinner animate-spin text-xl" /> : <i className="ph-bold ph-shield-slash text-xl" />}
-                                   Confirm Disable
-                                 </Button>
+                                <Button
+                                  type="button"
+                                  onClick={async () => {
+                                    await disableTOTP();
+                                    setTotpStep("idle");
+                                  }}
+                                  disabled={totpLoading || totpToken.length !== 6}
+                                  className="flex h-10 items-center justify-center gap-2 rounded-xl! text-xs font-semibold text-white btn-brand-red active:scale-95 disabled:opacity-50 transition-all cursor-pointer px-5 shadow-xs border-0"
+                                >
+                                  {totpLoading && (
+                                    <i className="ph-bold ph-spinner animate-spin text-sm"></i>
+                                  )}
+                                  Confirm Disable
+                                </Button>
                              </div>
                           </div>
                         )}
@@ -1454,9 +1458,10 @@ function AccountPageContent() {
                               </p>
                             </div>
                           </div>
-                          <div className="shrink-0 w-full md:w-auto flex justify-end gap-3">
+                          <div className="shrink-0 w-full md:w-auto flex justify-end gap-2.5">
                             {recoveryCodesCount > 0 && (
                               <Button
+                                type="button"
                                 onClick={async () => {
                                   setRecoveryCodesLoading(true);
                                   try {
@@ -1486,41 +1491,41 @@ function AccountPageContent() {
                                 }}
                                 disabled={recoveryCodesLoading}
                                 variant="outline"
-                                className="h-10 px-4 font-medium text-[13px] tracking-[-0.01em] border-gray-300 rounded-[8px]"
+                                className="flex h-10 items-center justify-center rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
                               >
                                 Disable
                               </Button>
                             )}
                             <Button
-                               onClick={generateNewRecoveryCodes}
-                               disabled={recoveryCodesLoading}
-                               className="h-10 px-6 btn-brand-red !rounded-[8px] text-[13px] font-medium tracking-[-0.01em] active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
-                             >
-                               {recoveryCodesLoading ? (
-                                 <i className="ph-bold ph-spinner animate-spin text-base"></i>
-                               ) : (
-                                 recoveryCodesCount > 0 ? "Regenerate" : "Generate"
-                               )}
-                             </Button>
+                              type="button"
+                              onClick={generateNewRecoveryCodes}
+                              disabled={recoveryCodesLoading}
+                              className="flex h-10 items-center justify-center gap-2 rounded-xl! text-xs font-semibold text-white btn-brand-red active:scale-95 disabled:opacity-50 transition-all cursor-pointer px-5 shadow-xs border-0"
+                            >
+                              {recoveryCodesLoading && (
+                                <i className="ph-bold ph-spinner animate-spin text-sm"></i>
+                              )}
+                              {recoveryCodesCount > 0 ? "Regenerate" : "Generate"}
+                            </Button>
                           </div>
                         </div>
                       </div>
                     )}
-                  </CardContent>
-                </Card>
+                  </div>
+                </div>
               </div>
             </TabsContent>
           </div>
         </Tabs>
-        </div>
+      </Card>
 
         {/* Recovery Codes Modal */}
         <Dialog open={showRecoveryCodesDialog} onOpenChange={setShowRecoveryCodesDialog}>
           <DialogContent hideClose={true} className="max-w-[560px] sm:max-w-[560px] rounded-[20px] border-[#E5E5EA] dark:border-zinc-800 p-6 overflow-hidden bg-white shadow-2xl dark:bg-card">
             <div className="relative pb-4">
                <DialogClose asChild>
-                 <button className="absolute top-0 right-0 w-8 h-8 flex items-center justify-center rounded-full text-[#8E8E93] hover:bg-[#F5F5F7] dark:hover:bg-zinc-800 transition-colors focus:outline-none">
-                   <i className="ph-bold ph-x text-[16px]"></i>
+                 <button className="absolute top-0 right-0 w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-zinc-800 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors focus:outline-none cursor-pointer">
+                   <i className="ph-bold ph-x text-sm"></i>
                  </button>
                </DialogClose>
                <DialogTitle className="text-[20px] font-bold text-[#1C1C1E] dark:text-zinc-100 tracking-tight">Recovery Codes</DialogTitle>
@@ -1548,25 +1553,28 @@ function AccountPageContent() {
               </div>
 
               <div className="flex flex-col gap-4">
-                <div className="flex gap-4">
+                <div className="flex gap-2.5">
                   <Button 
+                    type="button"
                     onClick={copyRecoveryCodes}
                     variant="outline" 
-                    className="flex-1 h-11 px-5 font-semibold text-[13px] text-[#1C1C1E] dark:text-zinc-200 border-[#E5E5EA] dark:border-zinc-800 bg-white dark:bg-zinc-900 rounded-[10px] hover:bg-[#F5F5F7] dark:hover:bg-zinc-800 hover:text-[#1C1C1E] transition-all shadow-none flex items-center justify-center gap-2"
+                    className="flex-1 flex h-10 items-center justify-center gap-2 rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
                   >
-                    <i className="ph-bold ph-copy text-base"></i> Clipboard
+                    <i className="ph-bold ph-copy text-sm"></i> Copy
                   </Button>
                   <Button 
+                    type="button"
                     onClick={downloadRecoveryCodes}
                     variant="outline" 
-                    className="flex-1 h-11 px-5 font-semibold text-[13px] text-[#1C1C1E] dark:text-zinc-200 border-[#E5E5EA] dark:border-zinc-800 bg-white dark:bg-zinc-900 rounded-[10px] hover:bg-[#F5F5F7] dark:hover:bg-zinc-800 hover:text-[#1C1C1E] transition-all shadow-none flex items-center justify-center gap-2"
+                    className="flex-1 flex h-10 items-center justify-center gap-2 rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
                   >
-                    <i className="ph-bold ph-download-simple text-base"></i> Save
+                    <i className="ph-bold ph-download-simple text-sm"></i> Save
                   </Button>
                 </div>
                 <Button 
+                  type="button"
                   onClick={() => setShowRecoveryCodesDialog(false)}
-                  className="w-full h-11 btn-brand-red text-white font-semibold text-[14px] rounded-[12px] transition-colors shadow-none active:scale-95 border-0"
+                  className="w-full flex h-10 items-center justify-center rounded-xl! text-xs font-semibold text-white btn-brand-red active:scale-95 transition-all cursor-pointer px-5 shadow-xs border-0"
                 >
                   Done
                 </Button>

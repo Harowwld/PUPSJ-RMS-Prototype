@@ -568,8 +568,9 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
         ? `&endDate=${encodeURIComponent(backupEndDate)}`
         : ""
 
+      const office = authUser?.office_id || "registrar"
       const [res, driveRes] = await Promise.all([
-        fetch(`/api/system/backup?scope=office&officeId=registrar&t=${Date.now()}${searchQuery}${startQuery}${endQuery}`, {
+        fetch(`/api/system/backup?scope=office&officeId=${encodeURIComponent(office)}&t=${Date.now()}${searchQuery}${startQuery}${endQuery}`, {
           cache: "no-store",
         }),
         fetch("/api/system/external-drive", { cache: "no-store" }).catch(() => null),
@@ -886,8 +887,10 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
         const json = await res.json()
         if (!res.ok || !json?.ok || cancelled) return
 
-        const { configured, connected, label, path: drivePath } = json.data
-        if (!configured) return // No drive configured — nothing to detect
+        const { configured, connected, label, path: drivePath, isEmulated } = json.data
+        setExternalDrive(json.data)
+
+        if (!configured && !isEmulated) return // No drive configured and not emulated — nothing to detect
 
         const prev = extDrivePrevConnectedRef.current
 
@@ -899,12 +902,14 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
 
         if (prev !== connected) {
           extDrivePrevConnectedRef.current = connected
-          setExtDriveEvent({
-            type: connected ? "connected" : "disconnected",
-            label: label || drivePath || "External Drive",
-            path: drivePath,
-          })
-          setExtDriveModalOpen(true)
+          if (!isEmulated) {
+            setExtDriveEvent({
+              type: connected ? "connected" : "disconnected",
+              label: label || drivePath || "External Drive",
+              path: drivePath,
+            })
+            setExtDriveModalOpen(true)
+          }
         }
       } catch {
         // silently ignore network errors
@@ -976,6 +981,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
           },
           true
         )
+        throw err
       }
     },
     [refreshReviewRecords, showToast]
@@ -1013,9 +1019,30 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
       
       if (!suppressToast) {
         if (results.failed === 0) {
-          showToast({
-            title: "Batch Action Complete",
+          toast.success("Batch Action Complete", {
             description: `Successfully ${approvalStatus.toLowerCase()} ${results.success} records.`,
+            action: {
+              label: "UNDO",
+              onClick: async () => {
+                const undoToastId = toast.loading(`Undoing batch action...`, {
+                  description: `Reverting ${ids.length} records back to Pending...`,
+                })
+                let reverted = 0
+                for (const id of ids) {
+                  try {
+                    await reviewDocumentStatus(id, "Pending", `Undo bulk ${approvalStatus.toLowerCase()}`, true)
+                    reverted++
+                  } catch {
+                    /* ignore error on single undo */
+                  }
+                }
+                toast.dismiss(undoToastId)
+                toast.success("Batch Action Undone", {
+                  description: `Reverted ${reverted} records back to Pending.`,
+                })
+                refreshReviewRecords()
+              },
+            },
           })
         } else {
           showToast(
@@ -1071,7 +1098,18 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
     setDeclinePromptOpen(false)
     setPendingDeclineDocId(null)
     setDeclineReason("")
-    await reviewDocumentStatus(id, "Declined", note)
+    try {
+      await reviewDocumentStatus(id, "Declined", note, true)
+      toast.success("Record Declined", {
+        description: "The digital record has been marked as declined.",
+        action: {
+          label: "UNDO",
+          onClick: () => reviewDocumentStatus(id, "Pending", "Undo accidental decline"),
+        },
+      })
+    } catch {
+      // error handled by reviewDocumentStatus
+    }
   }, [pendingDeclineDocId, declineReason, reviewDocumentStatus])
 
   const handlePreviewDocument = useCallback((preview) => {
@@ -1423,13 +1461,22 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
       headers.set("x-totp-token", totpToken)
     }
 
+    const office = authUser?.office_id || "registrar"
     const promise = (async () => {
       const res = await fetch("/api/system/backup", {
         method: "POST",
         headers,
-        body: JSON.stringify({ scope: "office", officeId: "registrar" }),
+        body: JSON.stringify({ scope: "office", officeId: office }),
       })
       const json = await res.json()
+
+      if (res.status === 403 && json?.totpNotConfigured) {
+        showToast({
+          title: "Two-Factor Auth Required",
+          description: "Two-Factor Authentication (TOTP) must be enabled on your account before creating backups. Please configure 2FA in your Account settings.",
+        }, "warning")
+        return null
+      }
 
       if (res.status === 403 && json?.requiresTOTP) {
         if (totpToken) {
@@ -1458,7 +1505,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
     })()
 
     toast.promise(promise, {
-      loading: "Creating full system snapshot...",
+      loading: "Creating office partition snapshot...",
       success: (json) => {
         return (
           <div className="flex flex-col gap-1">
@@ -1475,7 +1522,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
           <div className="flex flex-col gap-1">
             <p className="text-sm font-semibold text-red-600">Backup Failed</p>
             <p className="text-xs font-medium opacity-80">
-              {err.message || "Unable to complete system snapshot."}
+              {err.message || "Unable to complete office backup snapshot."}
             </p>
           </div>
         )
@@ -1485,14 +1532,25 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
     return promise
   }
 
-  const syncExternal = async (id) => {
+  const syncExternal = async (id, totpToken = null) => {
     const promise = (async () => {
+      const headers = { "Content-Type": "application/json" }
+      if (totpToken) headers["X-TOTP-Token"] = totpToken
       const res = await fetch("/api/system/backup/sync-external", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({ id }),
       })
-      const json = await res.json()
+      const json = await res.json().catch(() => null)
+      if (res.status === 403 && json?.requiresTOTP) {
+        if (totpToken) throw new Error(json?.error || "Invalid verification code")
+        executeWithTOTP(
+          (token) => syncExternal(id, token),
+          "Sync Hardware",
+          true
+        )
+        return
+      }
       if (!res.ok || !json?.ok) throw new Error(json?.error || "Sync failed")
       refreshBackups()
       return json
@@ -1586,7 +1644,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
           setRestoreLoading(false)
           await executeWithTOTP(
             (token) => confirmRestore(token),
-            "Restore System",
+            "Restore Office Partition",
             true
           )
           throw new Error("TOTP_REQUIRED")
@@ -1595,18 +1653,18 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
       }
 
       if (!res.ok || !json?.ok)
-        throw new Error(json?.error || "Failed to restore system")
+        throw new Error(json?.error || "Failed to restore office partition")
 
       setTimeout(() => location.reload(), 3000)
       return json
     })()
 
     toast.promise(promise, {
-      loading: "Restoring system from encrypted archive...",
+      loading: "Restoring office records from encrypted archive...",
       success: {
-        title: "System Restored",
+        title: "Office Records Restored",
         description:
-          "Database recovered successfully. Reloading system in 3s...",
+          "Partition database recovered successfully. Reloading workspace in 3s...",
       },
       error: (err) => {
         setRestoreLoading(false)
@@ -1835,9 +1893,6 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
             <SystemConfigTab
               showToast={showToast}
               logAdminAction={logAdminAction}
-              onVerifyTOTP={(action) =>
-                executeWithTOTP(action, "Save Security Questions", true)
-              }
             />
           )}
 
@@ -1987,6 +2042,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
         title="Archive Personnel Account"
         message="This account will be restricted immediately but can be restored later."
         confirmLabel="Archive"
+        variant="warning"
         icon="ph-duotone ph-archive"
         buttonIcon="ph-bold ph-archive"
         selectedItems={[
@@ -1996,6 +2052,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
         onCancel={() => setDeleteOpen(false)}
         isLoading={deleteLoading}
         isPersonnelModal={true}
+        isArchiveModal={true}
       />
 
       <ConfirmModal
@@ -2038,9 +2095,9 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
 
       <ConfirmModal
         open={restoreConfirmOpen}
-        title="Restore System Image"
-        variant="warning"
-        message={`Overwrite all repository data with the following backup archive? This action is irreversible.`}
+        title="Restore Office Partition"
+        variant="success"
+        message="Overwrite office repository data with the selected partition backup archive? This will restore documents, student records, and office configurations from this snapshot."
         selectedItems={[restoreFile?.name]}
         confirmLabel="Restore"
         icon="ph-duotone ph-arrow-counter-clockwise"
@@ -2048,6 +2105,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
         onConfirm={() => confirmRestore()}
         onCancel={() => setRestoreConfirmOpen(false)}
         isLoading={restoreLoading}
+        isRestoreModal={true}
       />
 
       <PromptModal
@@ -2096,6 +2154,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
         title="Batch Archive Personnel"
         message={`${selectedStaffIds.size} personnel profiles will be archived and their system access revoked immediately.`}
         confirmLabel="Archive"
+        variant="warning"
         icon="ph-duotone ph-archive"
         buttonIcon="ph-bold ph-archive"
         selectedItems={Array.from(selectedStaffIds).map((id) => {
@@ -2118,6 +2177,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
         }}
         isLoading={bulkArchiveLoading}
         isPersonnelModal={true}
+        isArchiveModal={true}
       />
 
       <ConfirmModal
@@ -2195,12 +2255,12 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
             </div>
           </div>
 
-          <div className="px-6 py-4 border-t border-gray-100 dark:border-white/10 flex items-center justify-end gap-2 bg-gray-50/50 dark:bg-zinc-900/20">
+          <DialogFooter className="p-6 pt-0 bg-white dark:bg-card border-none flex items-center justify-end gap-2.5">
             <Button
               type="button"
               variant="outline"
               onClick={() => setDefaultPwOpen(false)}
-              className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+              className="h-10 px-4 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
             >
               Close
             </Button>
@@ -2210,7 +2270,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
             >
               Acknowledge
             </Button>
-          </div>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 
@@ -2225,86 +2285,54 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
 
       {/* Global External Drive Detection Modal */}
       <Dialog open={extDriveModalOpen} onOpenChange={setExtDriveModalOpen}>
-        <DialogContent className="w-full max-w-lg overflow-hidden rounded-2xl border border-gray-200 bg-white p-0 shadow-2xl sm:max-w-lg dark:border-white/10 dark:bg-card flex flex-col gap-0">
-          <DialogHeader className={cn(
-            "border-b p-6",
-            extDriveEvent?.type === "connected"
-              ? "border-emerald-100 bg-emerald-50 dark:border-emerald-900/30 dark:bg-emerald-950/40"
-              : "border-amber-100 bg-amber-50 dark:border-amber-900/30 dark:bg-amber-950/40"
-          )}>
-            <div className="flex items-start gap-4">
-              <div className={cn(
-                "flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border shadow-sm",
-                extDriveEvent?.type === "connected"
-                  ? "border-emerald-200 bg-white text-emerald-600 dark:border-emerald-800/50 dark:bg-emerald-900/30 dark:text-emerald-400"
-                  : "border-amber-200 bg-white text-amber-600 dark:border-amber-800/50 dark:bg-amber-900/30 dark:text-amber-400"
-              )}>
-                <i className={cn(
-                  "ph-duotone text-xl",
-                  extDriveEvent?.type === "connected" ? "ph-usb" : "ph-usb-slash"
-                )} />
-              </div>
-              <div className="min-w-0">
-                <DialogTitle className="text-lg font-semibold tracking-tight text-gray-900 dark:text-zinc-50">
-                  {extDriveEvent?.type === "connected"
-                    ? "External Drive Connected"
-                    : "External Drive Disconnected"}
-                </DialogTitle>
-                <DialogDescription className="mt-1.5 text-sm font-medium text-gray-600 dark:text-zinc-300">
-                  {extDriveEvent?.type === "connected"
-                    ? "An external backup storage device has been detected and is ready for use."
-                    : "The external backup drive is no longer reachable. Backup synchronization is unavailable."}
-                </DialogDescription>
-              </div>
+        <DialogContent className="w-full max-w-md overflow-hidden rounded-2xl border border-gray-200 bg-white p-0 shadow-2xl sm:max-w-md dark:border-white/10 dark:bg-card flex flex-col gap-0">
+          <DialogHeader className="bg-white p-6 pb-0 dark:bg-card border-none text-left">
+            <div className="min-w-0">
+              <DialogTitle className="text-[16px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
+                {extDriveEvent?.type === "connected"
+                  ? "External Drive Connected"
+                  : "External Drive Disconnected"}
+              </DialogTitle>
+              <DialogDescription className="mt-1 text-[13px] font-normal text-gray-500 dark:text-zinc-400">
+                {extDriveEvent?.type === "connected"
+                  ? "An external backup storage device has been detected and is ready for use."
+                  : "The external backup drive is no longer reachable. Backup synchronization is unavailable."}
+              </DialogDescription>
             </div>
           </DialogHeader>
 
           <div className="space-y-4 p-6">
             {/* Drive Info Card */}
             <div className={cn(
-              "flex items-center gap-4 rounded-xl border p-4",
+              "flex items-center gap-3.5 rounded-xl border p-3.5",
               extDriveEvent?.type === "connected"
-                ? "border-emerald-100 bg-emerald-50/50 dark:border-emerald-900/20 dark:bg-emerald-950/20"
-                : "border-amber-100 bg-amber-50/50 dark:border-amber-900/20 dark:bg-amber-950/20"
+                ? "border-gray-200 bg-gray-50/60 dark:border-white/10 dark:bg-zinc-800/40"
+                : "border-amber-200/60 bg-amber-50/40 dark:border-amber-900/30 dark:bg-amber-950/20"
             )}>
-              <div className={cn(
-                "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border",
-                extDriveEvent?.type === "connected"
-                  ? "border-emerald-200 bg-white dark:border-emerald-800/40 dark:bg-card"
-                  : "border-amber-200 bg-white dark:border-amber-800/40 dark:bg-card"
-              )}>
-                <i className="ph-bold ph-hard-drive text-base text-gray-500 dark:text-zinc-400" />
-              </div>
               <div className="min-w-0 flex-1">
-                <p className="text-xs font-semibold tracking-widest text-gray-400 dark:text-zinc-500">Drive Label</p>
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 dark:text-zinc-500">Connected Drive</p>
                 <p className="mt-0.5 text-sm font-semibold text-gray-900 truncate dark:text-zinc-50">
                   {extDriveEvent?.label || "External Storage Device"}
                 </p>
                 {extDriveEvent?.path && (
-                  <p className="mt-0.5 text-[10px] text-gray-400 truncate dark:text-zinc-500 font-medium">
+                  <p className="mt-0.5 text-[11px] text-gray-400 truncate dark:text-zinc-500 font-mono">
                     {extDriveEvent.path}
                   </p>
                 )}
               </div>
               <div className={cn(
-                "shrink-0 rounded-full px-2.5 py-1 text-[10px] font-semibold  tracking-widest",
+                "shrink-0 rounded-full px-2.5 py-0.5 text-[10px] font-semibold tracking-wide border",
                 extDriveEvent?.type === "connected"
-                  ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400"
-                  : "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400"
+                  ? "bg-emerald-50 text-emerald-700 border-emerald-200/60 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800/30"
+                  : "bg-amber-50 text-amber-700 border-amber-200/60 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800/30"
               )}>
                 {extDriveEvent?.type === "connected" ? "Online" : "Offline"}
               </div>
             </div>
 
             {/* Contextual hint */}
-            <div className="flex items-start gap-2 rounded-lg border border-gray-100 bg-gray-50 p-3 dark:border-white/10 dark:bg-white/5">
-              <i className={cn(
-                "ph-fill text-sm mt-0.5 shrink-0",
-                extDriveEvent?.type === "connected"
-                  ? "ph-info text-blue-500"
-                  : "ph-warning-circle text-amber-500"
-              )} />
-              <p className="text-[11px] font-medium text-gray-600 dark:text-zinc-400">
+            <div className="rounded-xl border border-gray-100 bg-gray-50/70 p-3 dark:border-white/5 dark:bg-white/5">
+              <p className="text-[12px] font-normal text-gray-600 dark:text-zinc-400 leading-relaxed">
                 {extDriveEvent?.type === "connected"
                   ? "Backup archives can now be synchronized to this external drive from the Backup & Maintenance panel."
                   : "Any pending or future backup synchronization to this drive will fail until it is reconnected."}
@@ -2312,7 +2340,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
             </div>
           </div>
 
-          <div className="px-6 py-4 border-t border-gray-100 dark:border-white/10 flex items-center justify-end gap-2 bg-gray-50/50 dark:bg-zinc-900/20">
+          <DialogFooter className="p-6 pt-0 bg-white dark:bg-card border-none flex items-center justify-end gap-2.5">
             <Button
               type="button"
               variant="outline"
@@ -2327,12 +2355,12 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
                   setExtDriveModalOpen(false)
                   switchView("backup")
                 }}
-                className="flex h-10 items-center justify-center rounded-xl! btn-brand-red px-5 text-xs font-semibold text-white shadow-xs cursor-pointer active:scale-95 transition-all"
+                className="h-10 px-5 text-xs font-semibold rounded-xl btn-brand-red text-white shadow-xs cursor-pointer active:scale-95 transition-all"
               >
                 Open
               </Button>
             )}
-          </div>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

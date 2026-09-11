@@ -6,6 +6,7 @@ import {
 } from "@/lib/authHelpers";
 import { isSystemAdminRole } from "@/lib/roleUtils";
 import { dbAll } from "@/lib/sqlite";
+import { getRequestCharterStatus } from "@/lib/citizenCharter";
 
 export const runtime = "nodejs";
 
@@ -100,6 +101,16 @@ export async function GET(req) {
       console.error("Error populating trend intervals:", e);
     }
 
+    let compliantCompleted = 0;
+    let delayedCompleted = 0;
+    let activeOverdue = 0;
+    let activeDueSoon = 0;
+    const tierStats = {
+      Simple: { total: 0, compliant: 0 },
+      Complex: { total: 0, compliant: 0 },
+      HighlyTechnical: { total: 0, compliant: 0 },
+    };
+
     for (const r of (rows || [])) {
       // Lexicographical date filtering (User Recommendation)
       const createdDate = r.created_at ? String(r.created_at).substring(0, 10) : "";
@@ -114,6 +125,30 @@ export async function GET(req) {
 
       if (r.status === "Completed") {
           totalCompleted++;
+      }
+
+      // Citizen's Charter 3-7-20 Status Evaluation
+      const charter = getRequestCharterStatus(r);
+      const tierKey = charter.tier.key;
+      if (tierStats[tierKey]) {
+        tierStats[tierKey].total++;
+        if (charter.isCompliant) {
+          tierStats[tierKey].compliant++;
+        }
+      }
+
+      if (r.status === "Completed") {
+        if (charter.isCompliant) {
+          compliantCompleted++;
+        } else {
+          delayedCompleted++;
+        }
+      } else if (!["Cancelled", "Shredded"].includes(r.status)) {
+        if (charter.isOverdue) {
+          activeOverdue++;
+        } else if (charter.isDueSoon) {
+          activeDueSoon++;
+        }
       }
 
       // Chronological Trends
@@ -173,6 +208,10 @@ export async function GET(req) {
         return { name: `${monthNames[parseInt(m, 10) - 1] || m} ${parseInt(d, 10)}`, count };
       });
 
+    const overallComplianceRate = totalCompleted > 0
+      ? Math.round((compliantCompleted / totalCompleted) * 100)
+      : 100;
+
     return NextResponse.json({
         ok: true,
         data: {
@@ -185,7 +224,13 @@ export async function GET(req) {
                 daily: dailyTrend
             },
             sla: {
-                totalCompleted
+                totalCompleted,
+                compliantCompleted,
+                delayedCompleted,
+                activeOverdue,
+                activeDueSoon,
+                complianceRate: overallComplianceRate,
+                tierStats
             }
         }
     });

@@ -9,7 +9,7 @@ export const runtime = "nodejs";
 const statuses = new Set(["Pending", "InProgress", "Ready", "Completed", "Cancelled", "Shredded"]);
 
 export async function PATCH(req, ctx) {
-  const access = await requireOfficeModule("alumni_requests", { officeId: "registrar" }, req);
+  const access = await requireOfficeModule("document_requests", { officeId: "registrar" }, req);
   if (access === null) return NextResponse.json({ ok: false, error: "Authentication required" }, { status: 401 });
   if (!access) return NextResponse.json({ ok: false, error: "Forbidden" }, { status: 403 });
   const { id } = await ctx.params;

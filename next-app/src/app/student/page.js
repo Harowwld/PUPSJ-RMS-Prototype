@@ -333,13 +333,17 @@ export default function StudentDashboard() {
   }
 
   const StatusBadge = ({ status }) => {
-    const s = String(status || "").toLowerCase();
-    let badgeClass = "bg-amber-50 text-amber-800 border-amber-200/80 dark:bg-amber-950/30 dark:text-amber-300 dark:border-amber-800/40";
+    const s = String(status || "").toLowerCase().trim();
+    let badgeClass = "bg-zinc-100 text-zinc-700 border-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-700";
     if (s === "approved" || s === "completed" || s === "ready") {
       badgeClass = "bg-emerald-50 text-emerald-800 border-emerald-200/80 dark:bg-emerald-950/30 dark:text-emerald-300 dark:border-emerald-800/40";
-    } else if (s === "inprogress") {
+    } else if (s === "under review" || s === "inprogress" || s === "processing") {
       badgeClass = "bg-blue-50 text-blue-800 border-blue-200/80 dark:bg-blue-950/30 dark:text-blue-300 dark:border-blue-800/40";
-    } else if (s === "declined" || s === "cancelled") {
+    } else if (s === "needs revision" || s === "revision") {
+      badgeClass = "bg-amber-50 text-amber-800 border-amber-200/80 dark:bg-amber-950/30 dark:text-amber-300 dark:border-amber-800/40";
+    } else if (s === "submitted" || s === "pending") {
+      badgeClass = "bg-sky-50 text-sky-800 border-sky-200/80 dark:bg-sky-950/30 dark:text-sky-300 dark:border-sky-800/40";
+    } else if (s === "declined" || s === "cancelled" || s === "rejected") {
       badgeClass = "bg-rose-50 text-rose-800 border-rose-200/80 dark:bg-rose-950/30 dark:text-rose-300 dark:border-rose-800/40";
     }
     return <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${badgeClass}`}>{status}</span>;

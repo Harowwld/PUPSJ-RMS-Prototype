@@ -44,7 +44,11 @@ export function getBackupFilePath(filename, baseDir = getBackupsDir()) {
 
 export function getPrincipalOfficeId(user) {
   const officeId = user?.officeId ?? user?.office_id;
-  return officeId ? String(officeId).trim().toLowerCase() : null;
+  if (officeId) return String(officeId).trim().toLowerCase();
+  const sec = String(user?.section || "").trim().toLowerCase();
+  if (sec === "administrative" || sec === "records") return "registrar";
+  if (sec.includes("osas")) return "osas";
+  return null;
 }
 
 export function canAccessBackup(backup, user) {
@@ -622,6 +626,8 @@ export function restorePostgresSql(sqlContent) {
           "-i",
           "pupsj-rms-postgres",
           "psql",
+          "-v",
+          "ON_ERROR_STOP=1",
           "--username",
           "pupsj_rms",
           "--dbname",
@@ -687,9 +693,6 @@ export async function executeRestoreBackup(
 
   // 4. Role & Office Authorization Check
   const isSuper = isSystemAdminRole(userRole);
-  if (!isSuper) {
-    throw new Error("Only System Administrators can restore backup archives.");
-  }
   const isGovernanceBackup = targetTables.some((t) =>
     ["staff", "offices", "modules", "office_modules", "global_audit_logs"].includes(t)
   );
@@ -761,8 +764,10 @@ export async function executeRestoreBackup(
 
   const restoreTransactionSql = `
 BEGIN;
+SET session_replication_role = 'replica';
 ${deleteStatements}
 ${dataSql}
+SET session_replication_role = 'origin';
 COMMIT;
 `;
 

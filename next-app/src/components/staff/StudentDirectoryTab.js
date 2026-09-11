@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo, useCallback } from "react";
+import React, { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -25,7 +25,6 @@ import {
 } from "@/components/ui/empty";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import { getRoleBranding } from "@/lib/roleBranding";
 import RegisterStudentModal from "./RegisterStudentModal";
 import EditStudentModal from "./EditStudentModal";
 import StudentProfileSheet from "./StudentProfileSheet";
@@ -57,7 +56,6 @@ export default function StudentDirectoryTab({
   fetchData,
   showToast,
 }) {
-  const branding = useMemo(() => getRoleBranding(authUser), [authUser]);
   const [activeTab, setActiveTab] = useState("active"); // "active" | "archived" | "all"
   const [searchQuery, setSearchQuery] = useState("");
   const [courseFilter, setCourseFilter] = useState("all");
@@ -65,6 +63,24 @@ export default function StudentDirectoryTab({
   const [sectionFilter, setSectionFilter] = useState("all");
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [selectedKpi, setSelectedKpi] = useState(null);
+  const statCardsRef = useRef(null);
+
+  // Close expandable KPI card when clicking outside
+  useEffect(() => {
+    if (!selectedKpi) return;
+    const handleClickOutside = (e) => {
+      if (statCardsRef.current && !statCardsRef.current.contains(e.target)) {
+        setSelectedKpi(null);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("touchstart", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+    };
+  }, [selectedKpi]);
 
   // Sorting
   const [sortBy, setSortBy] = useState("name");
@@ -104,6 +120,33 @@ export default function StudentDirectoryTab({
     return combined;
   }, [activeTab, students, archivedStudents]);
 
+  // Reset selection when switching directory tabs (active / archived / all)
+  useEffect(() => {
+    setSelectedIds(new Set());
+    setPage(1);
+  }, [activeTab]);
+
+  // Prune any stale selected IDs when available students update
+  useEffect(() => {
+    setSelectedIds((prev) => {
+      if (prev.size === 0) return prev;
+      const validIds = new Set(allAvailableStudents.map((s) => s.studentNo));
+      let needsPruning = false;
+      for (const id of prev) {
+        if (!validIds.has(id)) {
+          needsPruning = true;
+          break;
+        }
+      }
+      if (!needsPruning) return prev;
+      const next = new Set();
+      for (const id of prev) {
+        if (validIds.has(id)) next.add(id);
+      }
+      return next;
+    });
+  }, [allAvailableStudents]);
+
   // Unique years for filter
   const availableYears = useMemo(() => {
     const years = new Set();
@@ -137,6 +180,60 @@ export default function StudentDirectoryTab({
     });
     return map;
   }, [allDocs]);
+
+  // KPI card calculations
+  const kpiStats = useMemo(() => {
+    const activeCount = students.length;
+    const assignedDrawersCount = students.filter(
+      (s) => s.room && s.cabinet && s.drawer
+    ).length;
+
+    // Top programs by enrollment
+    const courseCounts = {};
+    students.forEach((s) => {
+      const code = s.courseCode || s.course_code || "Unassigned";
+      courseCounts[code] = (courseCounts[code] || 0) + 1;
+    });
+    const topPrograms = Object.entries(courseCounts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5);
+
+    // Section breakdown by program
+    const programsList = courses.map((c) => {
+      const secCount = sections.filter(
+        (sec) =>
+          String(sec.course_code || sec.courseCode || "").toUpperCase() ===
+          String(c.code).toUpperCase()
+      ).length;
+      const stuCount = courseCounts[c.code] || 0;
+      return { code: c.code, name: c.name, secCount, stuCount };
+    });
+
+    // Document breakdown
+    const studentsWithFilesCount = new Set(
+      (allDocs || []).map((d) => d.student_no || d.studentNo).filter(Boolean)
+    ).size;
+    const docTypeCounts = {};
+    (allDocs || []).forEach((d) => {
+      const type = d.doc_type || d.docType || "General Document";
+      docTypeCounts[type] = (docTypeCounts[type] || 0) + 1;
+    });
+    const topDocTypes = Object.entries(docTypeCounts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5);
+
+    return {
+      activeCount,
+      assignedDrawersCount,
+      topPrograms,
+      programsList,
+      totalPrograms: courses.length,
+      totalSections: sections.length,
+      totalDocs: (allDocs || []).length,
+      studentsWithFilesCount,
+      topDocTypes,
+    };
+  }, [students, courses, sections, allDocs]);
 
   // Filtered and sorted students
   const filteredStudents = useMemo(() => {
@@ -327,6 +424,12 @@ export default function StudentDirectoryTab({
         title: "Student Archived",
         description: `Student ${archiveTarget.studentNo} moved to archive.`,
       });
+      setSelectedIds((prev) => {
+        if (!prev.has(archiveTarget.studentNo)) return prev;
+        const next = new Set(prev);
+        next.delete(archiveTarget.studentNo);
+        return next;
+      });
       setArchiveModalOpen(false);
       setArchiveTarget(null);
       fetchData?.();
@@ -350,6 +453,12 @@ export default function StudentDirectoryTab({
       showToast?.({
         title: "Student Restored",
         description: `Student ${restoreTarget.studentNo} is now active.`,
+      });
+      setSelectedIds((prev) => {
+        if (!prev.has(restoreTarget.studentNo)) return prev;
+        const next = new Set(prev);
+        next.delete(restoreTarget.studentNo);
+        return next;
       });
       setRestoreModalOpen(false);
       setRestoreTarget(null);
@@ -440,11 +549,7 @@ export default function StudentDirectoryTab({
                   <Button
                     type="button"
                     onClick={() => setRegisterOpen(true)}
-                    className="flex h-10 px-5 text-xs font-semibold rounded-xl! btn-brand-red active:scale-95 disabled:opacity-50 transition-all cursor-pointer shadow-xs"
-                    style={{
-                      backgroundColor: authUser?.accent_color || branding.color || "var(--brand-accent)",
-                      color: branding.foreground || "var(--brand-foreground, #ffffff)",
-                    }}
+                    className="flex h-10 px-5 text-xs font-semibold rounded-xl! btn-brand-red text-white! active:scale-95 disabled:opacity-50 transition-all cursor-pointer shadow-xs"
                   >
                     Register
                   </Button>
@@ -454,52 +559,317 @@ export default function StudentDirectoryTab({
           />
 
           {/* 2. Top Summary Metrics Banner */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 px-6 pb-6">
-            <div className="p-4 rounded-xl border border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-zinc-900/30">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500 block mb-1">
-                Active Students
-              </span>
-              <div className="flex items-baseline gap-2">
-                <span className="text-2xl font-black text-gray-900 dark:text-zinc-50 tracking-tight">
-                  {students.length}
-                </span>
-                <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">Enrolled</span>
+          <div ref={statCardsRef} className="grid grid-cols-1 md:grid-cols-3 gap-4 px-6 pb-6 items-start relative z-20">
+            {/* Stat Card 1: Active Students */}
+            <div
+              className={cn(
+                "relative group rounded-xl",
+                selectedKpi === "students" ? "z-30" : "z-10"
+              )}
+            >
+              <div
+                onClick={() => setSelectedKpi(selectedKpi === "students" ? null : "students")}
+                className={cn(
+                  "relative overflow-hidden rounded-xl border p-4 cursor-pointer select-none transition-all",
+                  "border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-zinc-900/30 hover:border-gray-200 dark:hover:border-white/10",
+                  selectedKpi === "students" && "border-emerald-500/40 dark:border-emerald-500/40 ring-1 ring-emerald-500/20"
+                )}
+              >
+                <div className="relative z-10 flex flex-col justify-between h-full">
+                  <div>
+                    <div className="mb-1 flex items-center justify-between">
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
+                        Active Students
+                      </span>
+                      <div className="flex items-center gap-1.5">
+                        <i
+                          className={cn(
+                            "ph-bold ph-caret-down text-xs text-gray-400 transition-transform duration-300",
+                            selectedKpi === "students" && "rotate-180"
+                          )}
+                        />
+                      </div>
+                    </div>
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-2xl font-black text-gray-900 dark:text-zinc-50 tracking-tight">
+                        {kpiStats.activeCount.toLocaleString()}
+                      </span>
+                      <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                        Enrolled
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Absolute details container */}
+              <div
+                className={cn(
+                  "absolute top-full left-0 right-0 z-[100] mt-2 rounded-xl border border-gray-200 bg-white p-4 shadow-xl dark:border-white/10 dark:bg-zinc-900 transition-all duration-300 ease-in-out origin-top",
+                  selectedKpi === "students"
+                    ? "scale-y-100 opacity-100 translate-y-0"
+                    : "scale-y-95 opacity-0 -translate-y-2 pointer-events-none"
+                )}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="space-y-3">
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-gray-100 dark:border-white/5">
+                      <span className="block text-[9px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">
+                        Active Students
+                      </span>
+                      <span className="text-lg font-black text-gray-900 dark:text-zinc-50">
+                        {kpiStats.activeCount}
+                      </span>
+                    </div>
+                    <div className="bg-emerald-50 dark:bg-emerald-950/30 p-2.5 rounded-lg border border-emerald-100 dark:border-emerald-900/30">
+                      <span className="block text-[9px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
+                        Physical Archive
+                      </span>
+                      <span className="text-lg font-black text-emerald-700 dark:text-emerald-400">
+                        {kpiStats.assignedDrawersCount}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h4 className="text-[10px] font-bold text-gray-400 dark:text-zinc-500 mb-1.5 uppercase tracking-wide">
+                      Top Programs by Enrollment
+                    </h4>
+                    <div className="max-h-36 overflow-y-auto space-y-1 pr-1">
+                      {kpiStats.topPrograms.length === 0 ? (
+                        <p className="text-[11px] text-gray-400 dark:text-zinc-500 text-center py-2">
+                          No active students enrolled
+                        </p>
+                      ) : (
+                        kpiStats.topPrograms.map(([code, count]) => (
+                          <div
+                            key={code}
+                            className="flex justify-between items-center text-[11px] py-1 border-b border-gray-100 dark:border-white/5 text-gray-700 dark:text-zinc-300"
+                          >
+                            <span className="truncate max-w-[170px] font-medium" title={code}>
+                              {code}
+                            </span>
+                            <span className="font-bold text-gray-900 dark:text-zinc-50">
+                              {count} {count === 1 ? "student" : "students"}
+                            </span>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 
-            <div className="p-4 rounded-xl border border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-zinc-900/30">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500 block mb-1">
-                Archived Records
-              </span>
-              <div className="flex items-baseline gap-2">
-                <span className="text-2xl font-black text-gray-900 dark:text-zinc-50 tracking-tight">
-                  {archivedStudents.length}
-                </span>
-                <span className="text-xs font-medium text-amber-600 dark:text-amber-400">Archived</span>
+            {/* Stat Card 2: Academic Programs */}
+            <div
+              className={cn(
+                "relative group rounded-xl",
+                selectedKpi === "programs" ? "z-30" : "z-10"
+              )}
+            >
+              <div
+                onClick={() => setSelectedKpi(selectedKpi === "programs" ? null : "programs")}
+                className={cn(
+                  "relative overflow-hidden rounded-xl border p-4 cursor-pointer select-none transition-all",
+                  "border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-zinc-900/30 hover:border-gray-200 dark:hover:border-white/10",
+                  selectedKpi === "programs" && "border-blue-500/40 dark:border-blue-500/40 ring-1 ring-blue-500/20"
+                )}
+              >
+                <div className="relative z-10 flex flex-col justify-between h-full">
+                  <div>
+                    <div className="mb-1 flex items-center justify-between">
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
+                        Academic Programs
+                      </span>
+                      <div className="flex items-center gap-1.5">
+                        <i
+                          className={cn(
+                            "ph-bold ph-caret-down text-xs text-gray-400 transition-transform duration-300",
+                            selectedKpi === "programs" && "rotate-180"
+                          )}
+                        />
+                      </div>
+                    </div>
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-2xl font-black text-gray-900 dark:text-zinc-50 tracking-tight">
+                        {kpiStats.totalPrograms}
+                      </span>
+                      <span className="text-xs font-medium text-blue-600 dark:text-blue-400">
+                        Degree Tracks
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Absolute details container */}
+              <div
+                className={cn(
+                  "absolute top-full left-0 right-0 z-[100] mt-2 rounded-xl border border-gray-200 bg-white p-4 shadow-xl dark:border-white/10 dark:bg-zinc-900 transition-all duration-300 ease-in-out origin-top",
+                  selectedKpi === "programs"
+                    ? "scale-y-100 opacity-100 translate-y-0"
+                    : "scale-y-95 opacity-0 -translate-y-2 pointer-events-none"
+                )}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="space-y-3">
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-gray-100 dark:border-white/5">
+                      <span className="block text-[9px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">
+                        Programs
+                      </span>
+                      <span className="text-lg font-black text-gray-900 dark:text-zinc-50">
+                        {kpiStats.totalPrograms}
+                      </span>
+                    </div>
+                    <div className="bg-blue-50 dark:bg-blue-950/30 p-2.5 rounded-lg border border-blue-100 dark:border-blue-900/30">
+                      <span className="block text-[9px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider">
+                        Class Sections
+                      </span>
+                      <span className="text-lg font-black text-blue-700 dark:text-blue-400">
+                        {kpiStats.totalSections}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h4 className="text-[10px] font-bold text-gray-400 dark:text-zinc-500 mb-1.5 uppercase tracking-wide">
+                      Program Directory
+                    </h4>
+                    <div className="max-h-36 overflow-y-auto space-y-1 pr-1">
+                      {kpiStats.programsList.length === 0 ? (
+                        <p className="text-[11px] text-gray-400 dark:text-zinc-500 text-center py-2">
+                          No programs available
+                        </p>
+                      ) : (
+                        kpiStats.programsList.map((p) => (
+                          <div
+                            key={p.code}
+                            className="flex justify-between items-center text-[11px] py-1 border-b border-gray-100 dark:border-white/5 text-gray-700 dark:text-zinc-300"
+                          >
+                            <div className="truncate max-w-[170px]" title={p.name || p.code}>
+                              <span className="font-bold text-gray-900 dark:text-zinc-50">
+                                {p.code}
+                              </span>
+                              {p.name && (
+                                <span className="text-gray-400 dark:text-zinc-500 text-[10px] ml-1.5">
+                                  ({p.secCount} {p.secCount === 1 ? "sec" : "secs"})
+                                </span>
+                              )}
+                            </div>
+                            <span className="font-semibold text-gray-900 dark:text-zinc-50">
+                              {p.stuCount} {p.stuCount === 1 ? "student" : "students"}
+                            </span>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 
-            <div className="p-4 rounded-xl border border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-zinc-900/30">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500 block mb-1">
-                Academic Programs
-              </span>
-              <div className="flex items-baseline gap-2">
-                <span className="text-2xl font-black text-gray-900 dark:text-zinc-50 tracking-tight">
-                  {courses.length}
-                </span>
-                <span className="text-xs font-medium text-gray-500">Degree Tracks</span>
+            {/* Stat Card 3: Digitized Files */}
+            <div
+              className={cn(
+                "relative group rounded-xl",
+                selectedKpi === "documents" ? "z-30" : "z-10"
+              )}
+            >
+              <div
+                onClick={() => setSelectedKpi(selectedKpi === "documents" ? null : "documents")}
+                className={cn(
+                  "relative overflow-hidden rounded-xl border p-4 cursor-pointer select-none transition-all",
+                  "border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-zinc-900/30 hover:border-gray-200 dark:hover:border-white/10",
+                  selectedKpi === "documents" && "border-red-500/40 dark:border-red-500/40 ring-1 ring-red-500/20"
+                )}
+              >
+                <div className="relative z-10 flex flex-col justify-between h-full">
+                  <div>
+                    <div className="mb-1 flex items-center justify-between">
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
+                        Digitized Files
+                      </span>
+                      <div className="flex items-center gap-1.5">
+                        <i
+                          className={cn(
+                            "ph-bold ph-caret-down text-xs text-gray-400 transition-transform duration-300",
+                            selectedKpi === "documents" && "rotate-180"
+                          )}
+                        />
+                      </div>
+                    </div>
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-2xl font-black text-gray-900 dark:text-zinc-50 tracking-tight">
+                        {kpiStats.totalDocs.toLocaleString()}
+                      </span>
+                      <span className="text-xs font-medium text-pup-maroon dark:text-red-400">
+                        Repository
+                      </span>
+                    </div>
+                  </div>
+                </div>
               </div>
-            </div>
 
-            <div className="p-4 rounded-xl border border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-zinc-900/30">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500 block mb-1">
-                Digitized Files
-              </span>
-              <div className="flex items-baseline gap-2">
-                <span className="text-2xl font-black text-gray-900 dark:text-zinc-50 tracking-tight">
-                  {allDocs.length}
-                </span>
-                <span className="text-xs font-medium text-pup-maroon dark:text-red-400">Repository</span>
+              {/* Absolute details container */}
+              <div
+                className={cn(
+                  "absolute top-full left-0 right-0 z-[100] mt-2 rounded-xl border border-gray-200 bg-white p-4 shadow-xl dark:border-white/10 dark:bg-zinc-900 transition-all duration-300 ease-in-out origin-top",
+                  selectedKpi === "documents"
+                    ? "scale-y-100 opacity-100 translate-y-0"
+                    : "scale-y-95 opacity-0 -translate-y-2 pointer-events-none"
+                )}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="space-y-3">
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-gray-100 dark:border-white/5">
+                      <span className="block text-[9px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">
+                        Total Files
+                      </span>
+                      <span className="text-lg font-black text-gray-900 dark:text-zinc-50">
+                        {kpiStats.totalDocs}
+                      </span>
+                    </div>
+                    <div className="bg-red-50 dark:bg-red-950/30 p-2.5 rounded-lg border border-red-100 dark:border-red-900/30">
+                      <span className="block text-[9px] font-bold text-pup-maroon dark:text-red-400 uppercase tracking-wider">
+                        With Records
+                      </span>
+                      <span className="text-lg font-black text-pup-maroon dark:text-red-400">
+                        {kpiStats.studentsWithFilesCount}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h4 className="text-[10px] font-bold text-gray-400 dark:text-zinc-500 mb-1.5 uppercase tracking-wide">
+                      Document Type Breakdown
+                    </h4>
+                    <div className="max-h-36 overflow-y-auto space-y-1 pr-1">
+                      {kpiStats.topDocTypes.length === 0 ? (
+                        <p className="text-[11px] text-gray-400 dark:text-zinc-500 text-center py-2">
+                          No documents uploaded yet
+                        </p>
+                      ) : (
+                        kpiStats.topDocTypes.map(([type, count]) => (
+                          <div
+                            key={type}
+                            className="flex justify-between items-center text-[11px] py-1 border-b border-gray-100 dark:border-white/5 text-gray-700 dark:text-zinc-300"
+                          >
+                            <span className="truncate max-w-[170px]" title={type}>
+                              {type}
+                            </span>
+                            <span className="font-bold text-gray-900 dark:text-zinc-50">
+                              {count}
+                            </span>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -651,15 +1021,15 @@ export default function StudentDirectoryTab({
           </div>
 
           {/* 4. Main Data Table */}
-          <div className="flex-1 bg-white dark:bg-card">
+          <div className={cn("flex-1 bg-white dark:bg-card overflow-hidden", filteredStudents.length === 0 && "rounded-b-2xl")}>
             {loading ? (
-              <div className="p-6 space-y-3">
+              <div className="p-6 space-y-3 rounded-b-2xl">
                 {[1, 2, 3, 4, 5].map((i) => (
                   <Skeleton key={i} className="h-12 w-full rounded-xl" />
                 ))}
               </div>
             ) : paginatedStudents.length === 0 ? (
-              <div className="py-16">
+              <div className="py-16 rounded-b-2xl">
                 <Empty className="flex h-full flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400">
                   <EmptyHeader className="flex flex-col items-center gap-0">
                     <div className="relative mb-6">
@@ -932,7 +1302,7 @@ export default function StudentDirectoryTab({
                                         setArchiveTarget(s);
                                         setArchiveModalOpen(true);
                                       }}
-                                      className="w-7 h-7 rounded-lg hover:bg-red-50 dark:hover:bg-red-500/10 text-gray-400 hover:text-red-600 dark:hover:text-red-400 flex items-center justify-center transition-colors"
+                                      className="w-7 h-7 rounded-lg hover:bg-amber-50 dark:hover:bg-amber-500/10 text-gray-400 hover:text-amber-600 dark:hover:text-amber-400 flex items-center justify-center transition-colors"
                                     >
                                       <i className="ph-bold ph-archive text-[14px]"></i>
                                     </button>
@@ -1011,45 +1381,43 @@ export default function StudentDirectoryTab({
         </Card>
 
         {/* Floating Bulk Action Bar */}
-        {selectedIds.size > 0 && (
-          <FloatingActionBar
-            selectedCount={selectedIds.size}
-            onClearSelection={() => setSelectedIds(new Set())}
-            actions={
-              <div className="flex items-center gap-2">
-                {activeTab !== "archived" && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => {
+        <FloatingActionBar
+          selectedCount={selectedIds.size}
+          onCancel={() => setSelectedIds(new Set())}
+          actions={
+            activeTab === "all"
+              ? [
+                  {
+                    label: "Archive",
+                    variant: "danger",
+                    onClick: () => {
                       setBulkActionType("archive");
                       setBulkActionOpen(true);
-                    }}
-                    className="h-8 px-3 text-xs font-semibold rounded-lg border border-red-200 bg-red-50 text-red-700 hover:bg-red-100 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-400 cursor-pointer active:scale-95 transition-all"
-                  >
-                    <i className="ph-bold ph-archive mr-1"></i>
-                    Archive ({selectedIds.size})
-                  </Button>
-                )}
-
-                {activeTab !== "active" && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => {
+                    },
+                  },
+                  {
+                    label: "Restore",
+                    variant: "success",
+                    onClick: () => {
                       setBulkActionType("restore");
                       setBulkActionOpen(true);
-                    }}
-                    className="h-8 px-3 text-xs font-semibold rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-400 cursor-pointer active:scale-95 transition-all"
-                  >
-                    <i className="ph-bold ph-archive-restore mr-1"></i>
-                    Restore ({selectedIds.size})
-                  </Button>
-                )}
-              </div>
+                    },
+                  },
+                ]
+              : undefined
+          }
+          actionLabel={activeTab === "active" ? "Archive" : activeTab === "archived" ? "Restore" : undefined}
+          actionVariant={activeTab === "active" ? "danger" : "success"}
+          onAction={() => {
+            if (activeTab === "active") {
+              setBulkActionType("archive");
+              setBulkActionOpen(true);
+            } else if (activeTab === "archived") {
+              setBulkActionType("restore");
+              setBulkActionOpen(true);
             }
-          />
-        )}
+          }}
+        />
 
         {/* Register Student Modal */}
         <RegisterStudentModal
@@ -1104,10 +1472,12 @@ export default function StudentDirectoryTab({
         <ConfirmModal
           open={archiveModalOpen}
           onOpenChange={setArchiveModalOpen}
+          onCancel={() => setArchiveModalOpen(false)}
           title="Archive Student Record"
           description={`Are you sure you want to archive student record ${archiveTarget?.studentNo} (${archiveTarget?.name})? The student will be moved to the archive view.`}
           confirmLabel="Archive"
-          confirmVariant="destructive"
+          variant="warning"
+          isArchiveModal={true}
           onConfirm={handleConfirmArchive}
         />
 
@@ -1115,10 +1485,12 @@ export default function StudentDirectoryTab({
         <ConfirmModal
           open={restoreModalOpen}
           onOpenChange={setRestoreModalOpen}
+          onCancel={() => setRestoreModalOpen(false)}
           title="Restore Student Record"
           description={`Are you sure you want to restore student record ${restoreTarget?.studentNo} (${restoreTarget?.name}) to Active status?`}
           confirmLabel="Restore"
-          confirmVariant="default"
+          variant="success"
+          isRestoreModal={true}
           onConfirm={handleConfirmRestore}
         />
 
@@ -1126,6 +1498,7 @@ export default function StudentDirectoryTab({
         <ConfirmModal
           open={bulkActionOpen}
           onOpenChange={setBulkActionOpen}
+          onCancel={() => setBulkActionOpen(false)}
           title={bulkActionType === "archive" ? "Bulk Archive Student Records" : "Bulk Restore Student Records"}
           description={
             bulkActionType === "archive"
@@ -1133,7 +1506,9 @@ export default function StudentDirectoryTab({
               : `Are you sure you want to restore ${selectedIds.size} student record(s) to Active status?`
           }
           confirmLabel={bulkActionType === "archive" ? "Archive" : "Restore"}
-          confirmVariant={bulkActionType === "archive" ? "destructive" : "default"}
+          variant={bulkActionType === "archive" ? "warning" : "success"}
+          isArchiveModal={bulkActionType === "archive"}
+          isRestoreModal={bulkActionType === "restore"}
           onConfirm={handleConfirmBulk}
           isLoading={isBulkProcessing}
         />

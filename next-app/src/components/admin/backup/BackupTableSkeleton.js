@@ -9,7 +9,7 @@ export default function BackupTableSkeleton({ rowCount = 8, embedded = false, cl
       className={cn(
         "flex-1 flex h-fit min-h-[600px] flex-col overflow-hidden isolate",
         embedded
-          ? ""
+          ? "rounded-b-2xl"
           : "rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card",
         className
       )}

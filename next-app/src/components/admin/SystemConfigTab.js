@@ -36,13 +36,11 @@ import DocTypesTab from "./system-config/DocTypesTab"
 import CoursesTab from "./system-config/CoursesTab"
 import SectionsTab from "./system-config/SectionsTab"
 import BulkImportTab from "./system-config/BulkImportTab"
-import SecurityQuestionsTab from "./system-config/SecurityQuestionsTab"
 import RecognitionTemplatesTab from "./system-config/RecognitionTemplatesTab"
 
 export default function SystemConfigTab({
   showToast,
   logAdminAction,
-  onVerifyTOTP,
   error: errorProp = null,
 }) {
   const [activeSubTab, setActiveSubTab] = useState("document-types")
@@ -123,10 +121,6 @@ export default function SystemConfigTab({
   const [error, setError] = useState(null)
   const [importing, setImporting] = useState(false)
 
-  // Security Questions State
-  const [securityQuestions, setSecurityQuestions] = useState(["", ""])
-  const [securitySaving, setSecuritySaving] = useState(false)
-
   // Confirmation Modal
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [confirmPayload, setConfirmPayload] = useState({
@@ -154,6 +148,9 @@ export default function SystemConfigTab({
     setSelectedDocTypes({})
     setSelectedCourses({})
     setSelectedSections({})
+    setPageDoc(1)
+    setPageCourse(1)
+    setPageSection(1)
 
     loadAll()
   }, [showArchived, activeSubTab])
@@ -248,6 +245,86 @@ export default function SystemConfigTab({
     pageSection,
     itemsPerPage
   )
+
+  // Ensure current page does not exceed available pages when data changes
+  useEffect(() => {
+    const totalPages = Math.ceil(filteredDocTypesFull.length / itemsPerPage) || 1
+    if (pageDoc > totalPages) setPageDoc(totalPages)
+  }, [filteredDocTypesFull.length, itemsPerPage, pageDoc])
+
+  useEffect(() => {
+    const totalPages = Math.ceil(filteredCoursesFull.length / itemsPerPage) || 1
+    if (pageCourse > totalPages) setPageCourse(totalPages)
+  }, [filteredCoursesFull.length, itemsPerPage, pageCourse])
+
+  useEffect(() => {
+    const totalPages = Math.ceil(filteredSectionsFull.length / itemsPerPage) || 1
+    if (pageSection > totalPages) setPageSection(totalPages)
+  }, [filteredSectionsFull.length, itemsPerPage, pageSection])
+
+  // Automatically prune stale selections when filtered datasets update
+  useEffect(() => {
+    setSelectedDocTypes((prev) => {
+      const selectedKeys = Object.keys(prev).filter((k) => prev[k])
+      if (selectedKeys.length === 0) return prev
+      const validIds = new Set(filteredDocTypesFull.map((d) => String(d.id)))
+      let needsPruning = false
+      for (const id of selectedKeys) {
+        if (!validIds.has(String(id))) {
+          needsPruning = true
+          break
+        }
+      }
+      if (!needsPruning) return prev
+      const next = {}
+      for (const [k, v] of Object.entries(prev)) {
+        if (v && validIds.has(String(k))) next[k] = true
+      }
+      return next
+    })
+  }, [filteredDocTypesFull])
+
+  useEffect(() => {
+    setSelectedCourses((prev) => {
+      const selectedKeys = Object.keys(prev).filter((k) => prev[k])
+      if (selectedKeys.length === 0) return prev
+      const validIds = new Set(filteredCoursesFull.map((c) => String(c.id)))
+      let needsPruning = false
+      for (const id of selectedKeys) {
+        if (!validIds.has(String(id))) {
+          needsPruning = true
+          break
+        }
+      }
+      if (!needsPruning) return prev
+      const next = {}
+      for (const [k, v] of Object.entries(prev)) {
+        if (v && validIds.has(String(k))) next[k] = true
+      }
+      return next
+    })
+  }, [filteredCoursesFull])
+
+  useEffect(() => {
+    setSelectedSections((prev) => {
+      const selectedKeys = Object.keys(prev).filter((k) => prev[k])
+      if (selectedKeys.length === 0) return prev
+      const validIds = new Set(filteredSectionsFull.map((s) => String(s.id)))
+      let needsPruning = false
+      for (const id of selectedKeys) {
+        if (!validIds.has(String(id))) {
+          needsPruning = true
+          break
+        }
+      }
+      if (!needsPruning) return prev
+      const next = {}
+      for (const [k, v] of Object.entries(prev)) {
+        if (v && validIds.has(String(k))) next[k] = true
+      }
+      return next
+    })
+  }, [filteredSectionsFull])
 
   const SortIndicator = ({ currentSort, columnKey }) => {
     if (currentSort.key !== columnKey)
@@ -442,34 +519,42 @@ export default function SystemConfigTab({
     setLoading(true)
     try {
       await Promise.all(
-        ids.map((id) => {
+        ids.map(async (id) => {
+          let res
           if (category === "DocumentType") {
             if (isRestore) {
-              return fetch(`/api/doc-types?id=${id}&silent=1`, {
+              res = await fetch(`/api/doc-types?id=${id}&silent=1`, {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ status: "Active" }),
               })
+            } else {
+              res = await fetch(`/api/doc-types?id=${id}&silent=1`, {
+                method: "DELETE",
+              })
             }
-            return fetch(`/api/doc-types?id=${id}&silent=1`, {
-              method: "DELETE",
-            })
           } else if (category === "Course") {
             if (isRestore) {
-              return fetch(`/api/courses?id=${id}&restore=true&silent=1`, {
+              res = await fetch(`/api/courses?id=${id}&restore=true&silent=1`, {
                 method: "DELETE",
               })
+            } else {
+              res = await fetch(`/api/courses?id=${id}&silent=1`, { method: "DELETE" })
             }
-            return fetch(`/api/courses?id=${id}&silent=1`, { method: "DELETE" })
           } else if (category === "Section") {
             if (isRestore) {
-              return fetch(`/api/sections?id=${id}&restore=true&silent=1`, {
+              res = await fetch(`/api/sections?id=${id}&restore=true&silent=1`, {
+                method: "DELETE",
+              })
+            } else {
+              res = await fetch(`/api/sections?id=${id}&silent=1`, {
                 method: "DELETE",
               })
             }
-            return fetch(`/api/sections?id=${id}&silent=1`, {
-              method: "DELETE",
-            })
+          }
+          if (res && !res.ok) {
+            const data = await res.json().catch(() => ({}))
+            throw new Error(data?.error || `Failed to ${action} item`)
           }
         })
       )
@@ -505,18 +590,16 @@ export default function SystemConfigTab({
     try {
       const q = "includeArchived=true"
 
-      const [rDoc, rCourse, rSec, rSecQ] = await Promise.all([
-        fetch(`/api/doc-types?admin=true${q ? "&" + q : ""}`),
-        fetch(`/api/courses${q ? "?" + q : ""}`),
-        fetch(`/api/sections${q ? "?" + q : ""}`),
-        fetch("/api/system/security-questions"),
+      const [rDoc, rCourse, rSec] = await Promise.all([
+        fetch(`/api/doc-types?admin=true${q ? "&" + q : ""}`, { cache: "no-store" }),
+        fetch(`/api/courses${q ? "?" + q : ""}`, { cache: "no-store" }),
+        fetch(`/api/sections${q ? "?" + q : ""}`, { cache: "no-store" }),
         isManual ? new Promise((resolve) => setTimeout(resolve, 600)) : Promise.resolve(),
       ])
 
       const jDoc = await rDoc.json()
       const jCourse = await rCourse.json()
       const jSec = await rSec.json()
-      const jSecQ = await rSecQ.json()
 
       if (!rDoc.ok || !jDoc.ok)
         throw new Error(jDoc.error || "Failed doc-types")
@@ -527,14 +610,6 @@ export default function SystemConfigTab({
       setDocTypes(jDoc.data)
       setCourses(jCourse.data)
       setSections(jSec.data)
-
-      if (jSecQ.ok && Array.isArray(jSecQ.data)) {
-        const qList = [...jSecQ.data]
-        while (qList.length < 2) {
-          qList.push("");
-        }
-        setSecurityQuestions(qList)
-      }
     } catch (err) {
       setError(err.message)
     } finally {
@@ -545,54 +620,7 @@ export default function SystemConfigTab({
 
 
 
-  const handleSaveSecurityQuestions = async (e, totpToken = null) => {
-    if (e) e.preventDefault()
-    setSecuritySaving(true)
-    const headers = { "Content-Type": "application/json" }
-    if (totpToken) {
-      headers["x-totp-token"] = totpToken
-    }
-    try {
-      const filtered = securityQuestions.filter((q) => q.trim() !== "")
-      if (filtered.length < 2) {
-        showToast({
-          title: "Validation Error",
-          description: "At least two security questions are required.",
-          variant: "destructive"
-        })
-        setSecuritySaving(false)
-        return
-      }
 
-      const res = await fetch("/api/system/security-questions", {
-        method: "PUT",
-        headers,
-        body: JSON.stringify({ questions: filtered }),
-      })
-      const json = await res.json()
-
-      if (res.status === 403 && json?.requiresTOTP && onVerifyTOTP) {
-        if (totpToken) {
-          throw new Error(json.error || "Invalid verification code")
-        }
-        await onVerifyTOTP((token) => handleSaveSecurityQuestions(null, token))
-        return
-      }
-
-      if (!res.ok || !json.ok)
-        throw new Error(json.error || "Failed to save questions")
-      showToast({
-        title: "Security Configuration Updated",
-        description: "The global security questions have been successfully saved to the system.",
-      })
-      loadAll()
-    } catch (err) {
-      if (totpToken) throw err
-      showToast({ title: "Configuration Update Failed", description: err.message }, true)
-    } finally {
-      setSecuritySaving(false)
-    }
-  }
 
   // --- ACTIONS: Export Taxonomy ---
   const downloadCsv = (entityLabel, content) => {
@@ -1017,19 +1045,7 @@ export default function SystemConfigTab({
               <span>Course Blocks</span>
             </button>
 
-            <button
-              type="button"
-              onClick={() => setActiveSubTab("security-questions")}
-              className={cn(
-                "flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer border-0",
-                activeSubTab === "security-questions"
-                  ? "bg-white dark:bg-zinc-800 text-pup-maroon dark:text-red-400 shadow-sm"
-                  : "text-gray-500 hover:text-gray-900 dark:hover:text-white bg-transparent"
-              )}
-            >
-              <i className="ph-bold ph-shield-check text-sm" />
-              <span>Security Questions</span>
-            </button>
+
 
             <button
               type="button"
@@ -1080,6 +1096,7 @@ export default function SystemConfigTab({
                 filteredDocTypes={filteredDocTypes}
                 filteredDocTypesFull={filteredDocTypesFull}
                 selectedDocTypes={selectedDocTypes}
+                setSelectedDocTypes={setSelectedDocTypes}
                 toggleDocTypeSelected={toggleDocTypeSelected}
                 toggleAllDocTypes={toggleAllDocTypes}
                 executeBulkTaxonomyAction={executeBulkTaxonomyAction}
@@ -1117,6 +1134,7 @@ export default function SystemConfigTab({
                 filteredCourses={filteredCourses}
                 filteredCoursesFull={filteredCoursesFull}
                 selectedCourses={selectedCourses}
+                setSelectedCourses={setSelectedCourses}
                 toggleCourseSelected={toggleCourseSelected}
                 toggleAllCourses={toggleAllCourses}
                 executeBulkTaxonomyAction={executeBulkTaxonomyAction}
@@ -1165,17 +1183,7 @@ export default function SystemConfigTab({
               />
             </TabsContent>
 
-            <TabsContent
-              value="security-questions"
-              className="m-0 flex flex-col border-0 focus-visible:ring-0"
-            >
-              <SecurityQuestionsTab
-                securityQuestions={securityQuestions}
-                setSecurityQuestions={setSecurityQuestions}
-                securitySaving={securitySaving}
-                handleSaveSecurityQuestions={handleSaveSecurityQuestions}
-              />
-            </TabsContent>
+
 
             <TabsContent
               value="bulk-import"

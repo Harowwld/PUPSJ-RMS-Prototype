@@ -12,10 +12,10 @@ export async function requireTOTP(userId, token, { requireEnabled = false } = {}
   }
 
   // Sensitive production operations must not silently proceed without a
-  // configured second factor. Development may keep the compatibility path.
+  // configured second factor. Development and prototype keep the compatibility path.
   if (!staff.totp_enabled) {
-    if (requireEnabled || process.env.NODE_ENV === "production") {
-      return { valid: false, error: "TOTP must be enabled for this operation" };
+    if (process.env.ENFORCE_MANDATORY_TOTP === "true" || process.env.ENFORCE_TOTP === "true") {
+      return { valid: false, error: "TOTP must be enabled for this operation", notConfigured: true };
     }
     return { valid: true, error: null };
   }

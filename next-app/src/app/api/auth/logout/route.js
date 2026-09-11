@@ -3,7 +3,6 @@ import { getSessionCookieName, verifySessionToken } from "../../../../lib/jwt";
 import { writeAuditLog } from "../../../../lib/auditLogRequest";
 import { authDebug } from "@/lib/authDebug";
 import { revokeSession } from "@/lib/authSessions";
-import { checkCSRFProtection } from "../../../../lib/csrfProtection";
 
 export const runtime = "nodejs";
 
@@ -16,6 +15,17 @@ function addSecurityHeaders(response) {
 }
 
 export async function POST(req) {
+  const origin = req?.headers?.get?.("origin");
+  if (origin) {
+    try {
+      if (new URL(origin).origin !== new URL(req.url).origin) {
+        return addSecurityHeaders(NextResponse.json({ ok: false, error: "Cross-origin request forbidden" }, { status: 403 }));
+      }
+    } catch {
+      return addSecurityHeaders(NextResponse.json({ ok: false, error: "Invalid origin" }, { status: 403 }));
+    }
+  }
+
   const sessionName = getSessionCookieName();
   const token = req.cookies.get(sessionName)?.value;
 
@@ -27,10 +37,6 @@ export async function POST(req) {
       const payload = await verifySessionToken(token);
       const userId = payload?.sub;
       const username = payload?.username;
-
-      if (!checkCSRFProtection(req, payload?.jti)) {
-        return addSecurityHeaders(NextResponse.json({ ok: false, error: "Invalid CSRF token" }, { status: 403 }));
-      }
 
       if (payload?.jti) {
         await revokeSession(payload.jti, { principalId: userId, reason: "logout" });

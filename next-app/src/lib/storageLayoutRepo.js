@@ -31,13 +31,16 @@ function normalizeRect(rect) {
   if (x === null || y === null || w === null || h === null) return null;
 
   // We allow small floating errors; the editor clamps values anyway.
-  const within = (v) => v >= -1e-9 && v <= 1 + 1e-9;
+  const within = (v) => v >= -1e-4 && v <= 1 + 1e-4;
   if (!within(x) || !within(y) || !within(w) || !within(h)) return null;
   if (w <= 0 || h <= 0) return null;
-  if (x + w > 1 + 1e-9) return null;
-  if (y + h > 1 + 1e-9) return null;
 
-  return { x, y, w, h };
+  const cx = Math.max(0, Math.min(1, x));
+  const cy = Math.max(0, Math.min(1, y));
+  const cw = Math.max(0.01, Math.min(Math.max(0.01, 1 - cx), w));
+  const ch = Math.max(0.01, Math.min(Math.max(0.01, 1 - cy), h));
+
+  return { x: cx, y: cy, w: cw, h: ch };
 }
 
 function normalizeDrawerIds(drawerIdsRaw) {
@@ -60,13 +63,13 @@ function normalizeRotation(rotationRaw) {
   if (rotationRaw === undefined || rotationRaw === null || rotationRaw === "") return 0;
   const n = typeof rotationRaw === "string" ? Number(rotationRaw) : rotationRaw;
   if (!Number.isFinite(n)) return 0;
-  return n === 90 ? 90 : 0;
+  return [0, 90, 180, 270].includes(n) ? n : 0;
 }
 
 function normalizeStorageLayout(layoutRaw) {
   if (!layoutRaw || typeof layoutRaw !== "object") return null;
-  const version = Number(layoutRaw.version);
-  if (!Number.isFinite(version) || (version !== 1 && version !== 2)) return null;
+  const versionRaw = layoutRaw.version !== undefined ? Number(layoutRaw.version) : 2;
+  const version = (versionRaw === 1 || versionRaw === 2) ? versionRaw : 2;
 
   if (!Array.isArray(layoutRaw.rooms)) return null;
 

@@ -16,7 +16,7 @@ function normalizeOfficeId(officeId) {
   return value || null;
 }
 
-function buildOfficeScope(officeId, tableAlias = "s") {
+function buildOfficeScope(officeId, tableAlias = "students") {
   const normalized = normalizeOfficeId(officeId);
   if (!normalized) return { sql: "", params: [] };
   return {
@@ -253,7 +253,7 @@ export async function listStudents({
   return await dbAll(
     `
       SELECT ${STUDENT_SELECT}
-      FROM students AS s
+      FROM students
       ${where}
       ORDER BY name ASC
       LIMIT ? OFFSET ?

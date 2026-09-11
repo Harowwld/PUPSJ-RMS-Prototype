@@ -119,7 +119,7 @@ export const MODULE_REGISTRY = [
 
   // Staff modules
   {
-    id: "alumni_requests",
+    id: "document_requests",
     name: "Document Requests",
     description: "Online and staff-mediated document request management (ODRS)",
     category: "staff",
@@ -227,7 +227,7 @@ export const DEFAULT_OFFICE_MODULES = {
     // All modules enabled for Registrar
     "records_review", "compliance_analytics", "request_analytics",
     "staff_directory", "storage_layout", "system_config", "backup", "audit_logs",
-    "alumni_requests", "scan_upload", "documents", "notifications",
+    "document_requests", "scan_upload", "documents", "notifications",
     "records_archive", "storage_explorer",
   ],
   osas: [

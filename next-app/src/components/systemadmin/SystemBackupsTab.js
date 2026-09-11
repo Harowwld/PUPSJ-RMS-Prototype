@@ -26,6 +26,7 @@ import BackupTableSkeleton from "@/components/admin/backup/BackupTableSkeleton"
 import PageHeader from "@/components/shared/PageHeader"
 import FloatingActionBar from "@/components/shared/FloatingActionBar"
 import ConfirmModal from "@/components/shared/ConfirmModal"
+import { TOTPChallengeModal } from "@/components/shared/TOTPChallengeModal"
 import { RefreshButton } from "@/components/shared/RefreshButton"
 import { cn } from "@/lib/utils"
 import { getCachedData, setCachedData, invalidateDataCache } from "@/lib/dataCache"
@@ -86,6 +87,42 @@ export default function SystemBackupsTab({ showToast }) {
   const [restoreFile, setRestoreFile] = useState(null)
   const [restoreConfirmOpen, setRestoreConfirmOpen] = useState(false)
   const [restoreLoading, setRestoreLoading] = useState(false)
+
+  // TOTP Challenge Modal state
+  const [totpModalOpen, setTotpModalOpen] = useState(false)
+  const [totpModalLoading, setTotpModalLoading] = useState(false)
+  const [totpActionLabel, setTotpActionLabel] = useState("Confirm")
+  const [totpModalDescription, setTotpModalDescription] = useState(
+    "Enter the 6-digit code from your authenticator app to confirm this action."
+  )
+  const totpPendingActionRef = useRef(null)
+
+  const executeWithTOTP = useCallback(
+    (action, actionLabel = "Confirm", description = "Enter the 6-digit code from your authenticator app to confirm this action.") => {
+      setTotpActionLabel(actionLabel)
+      setTotpModalDescription(description)
+      totpPendingActionRef.current = action
+      setTotpModalOpen(true)
+    },
+    []
+  )
+
+  const handleTOTPConfirm = useCallback(async (token) => {
+    if (!totpPendingActionRef.current) return
+    setTotpModalLoading(true)
+    try {
+      await totpPendingActionRef.current(token)
+      setTotpModalLoading(false)
+      setTotpModalOpen(false)
+    } catch (err) {
+      setTotpModalLoading(false)
+      const msg = err?.message || "Action failed"
+      const clean = msg.includes("TOTP verification required: ")
+        ? msg.replace("TOTP verification required: ", "")
+        : msg
+      throw new Error(clean)
+    }
+  }, [])
 
   // Sync jumpPage with page
   useEffect(() => {
@@ -166,6 +203,17 @@ export default function SystemBackupsTab({ showToast }) {
     fetchData()
   }, [fetchData])
 
+  // Prune stale selected backup IDs when backups update
+  useEffect(() => {
+    if (!backups) return
+    setSelectedBackupIds((prev) => {
+      if (prev.length === 0) return prev
+      const validIds = new Set(backups.map((b) => b?.id).filter(Boolean))
+      const pruned = prev.filter((id) => validIds.has(id))
+      return pruned.length !== prev.length ? pruned : prev
+    })
+  }, [backups])
+
   const handleSort = (column) => {
     if (sortBy === column) {
       if (sortOrder === "ASC") {
@@ -242,11 +290,27 @@ export default function SystemBackupsTab({ showToast }) {
       const json = await res.json().catch(() => null)
 
       if (res.status === 403 && json?.requiresTOTP) {
-        const token = window.prompt("Enter your 6-digit Authenticator TOTP Code:")
-        if (token) {
-          return handleGenerateBackup(token.trim())
+        clearTimeout(timer)
+        setLocalLoading((prev) => ({ ...prev, generating: false, generatingStatus: "" }))
+        if (totpToken) {
+          throw new Error(json.error || "Invalid verification code")
         }
-        throw new Error("TOTP verification is required to generate a governance backup.")
+        executeWithTOTP(
+          (token) => handleGenerateBackup(token),
+          "Create Backup",
+          "Enter your 6-digit Authenticator TOTP Code to generate a governance backup."
+        )
+        return
+      }
+
+      if (res.status === 403 && json?.totpNotConfigured) {
+        clearTimeout(timer)
+        setLocalLoading((prev) => ({ ...prev, generating: false, generatingStatus: "" }))
+        showToast?.({
+          title: "Two-Factor Auth Required",
+          description: "Two-Factor Authentication (TOTP) must be enabled on your account before generating governance backups. Please configure 2FA in your Account settings.",
+        }, "warning")
+        return
       }
 
       if (!res.ok || !json?.ok) {
@@ -260,6 +324,9 @@ export default function SystemBackupsTab({ showToast }) {
         description: `Platform archive '${json?.data?.filename || "package"}' has been secured.`,
       })
     } catch (err) {
+      if (totpModalOpen) {
+        throw err
+      }
       showToast?.({
         title: "Backup Failed",
         description: err.message,
@@ -275,7 +342,7 @@ export default function SystemBackupsTab({ showToast }) {
   }
 
   // External hardware sync
-  const handleSyncExternal = async (id) => {
+  const handleSyncExternal = async (id, totpToken = "") => {
     setLocalLoading((prev) => ({
       ...prev,
       syncingId: id,
@@ -283,13 +350,41 @@ export default function SystemBackupsTab({ showToast }) {
     }))
 
     try {
+      const headers = { "Content-Type": "application/json" }
+      if (totpToken) {
+        headers["X-TOTP-Token"] = totpToken
+      }
+
       const res = await fetch("/api/system/backup/sync-external", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({ id }),
       })
 
       const json = await res.json().catch(() => null)
+
+      if (res.status === 403 && json?.requiresTOTP) {
+        setLocalLoading((prev) => ({ ...prev, syncingId: null, syncStatus: "" }))
+        if (totpToken) {
+          throw new Error(json.error || "Invalid verification code")
+        }
+        executeWithTOTP(
+          (token) => handleSyncExternal(id, token),
+          "Sync Hardware",
+          "Enter your 6-digit Authenticator TOTP Code to mirror archive to secondary hardware."
+        )
+        return
+      }
+
+      if (res.status === 403 && json?.totpNotConfigured) {
+        setLocalLoading((prev) => ({ ...prev, syncingId: null, syncStatus: "" }))
+        showToast?.({
+          title: "Two-Factor Auth Required",
+          description: "Two-Factor Authentication (TOTP) must be enabled on your account before synchronizing to external storage.",
+        }, "warning")
+        return
+      }
+
       if (!res.ok || !json?.ok) {
         throw new Error(json?.error || "Failed to synchronize to external drive")
       }
@@ -301,6 +396,9 @@ export default function SystemBackupsTab({ showToast }) {
         description: "Governance archive mirrored to secondary hardware node.",
       })
     } catch (err) {
+      if (totpModalOpen) {
+        throw err
+      }
       showToast?.({
         title: "Sync Failed",
         description: err.message || "Unable to secure external copy.",
@@ -338,19 +436,24 @@ export default function SystemBackupsTab({ showToast }) {
   }
 
   // Confirm Delete
-  const confirmDeleteBackup = async () => {
+  const confirmDeleteBackup = async (totpToken = "") => {
     if (backupDeleteTargets.length === 0 || backupDeleteLoading) return
     setBackupDeleteLoading(true)
 
     try {
       const isBulk = backupDeleteTargets.length > 1
+      const headers = isBulk ? { "Content-Type": "application/json" } : {}
+      if (totpToken) {
+        headers["X-TOTP-Token"] = totpToken
+      }
+
       const res = await fetch(
         isBulk
           ? "/api/system/backup"
           : `/api/system/backup/${backupDeleteTargets[0].id}`,
         {
           method: "DELETE",
-          headers: isBulk ? { "Content-Type": "application/json" } : {},
+          headers,
           body: isBulk
             ? JSON.stringify({ ids: backupDeleteTargets.map((t) => t.id) })
             : undefined,
@@ -358,6 +461,29 @@ export default function SystemBackupsTab({ showToast }) {
       )
 
       const json = await res.json().catch(() => null)
+
+      if (res.status === 403 && json?.requiresTOTP) {
+        setBackupDeleteLoading(false)
+        if (totpToken) {
+          throw new Error(json.error || "Invalid verification code")
+        }
+        executeWithTOTP(
+          (token) => confirmDeleteBackup(token),
+          "Delete Archive",
+          "Enter your 6-digit Authenticator TOTP Code to permanently remove backup archive(s)."
+        )
+        return
+      }
+
+      if (res.status === 403 && json?.totpNotConfigured) {
+        setBackupDeleteLoading(false)
+        showToast?.({
+          title: "Two-Factor Auth Required",
+          description: "Two-Factor Authentication (TOTP) must be enabled on your account before deleting archives.",
+        }, "warning")
+        return
+      }
+
       if (!res.ok || !json?.ok) {
         throw new Error(json?.error || "Failed to delete backup archive(s)")
       }
@@ -374,6 +500,9 @@ export default function SystemBackupsTab({ showToast }) {
       invalidateDataCache("systemadmin_backups")
       await fetchData()
     } catch (err) {
+      if (totpModalOpen) {
+        throw err
+      }
       showToast?.({
         title: "Deletion Failed",
         description: err.message,
@@ -393,7 +522,7 @@ export default function SystemBackupsTab({ showToast }) {
   }
 
   // Confirm Restore
-  const confirmRestore = async () => {
+  const confirmRestore = async (totpToken = "") => {
     if (!restoreFile || restoreLoading) return
     setRestoreLoading(true)
 
@@ -401,12 +530,41 @@ export default function SystemBackupsTab({ showToast }) {
       const formData = new FormData()
       formData.append("file", restoreFile)
 
+      const headers = {}
+      if (totpToken) {
+        headers["X-TOTP-Token"] = totpToken
+      }
+
       const res = await fetch("/api/system/backup/restore", {
         method: "POST",
+        headers,
         body: formData,
       })
 
       const json = await res.json().catch(() => null)
+
+      if (res.status === 403 && json?.requiresTOTP) {
+        setRestoreLoading(false)
+        if (totpToken) {
+          throw new Error(json.error || "Invalid verification code")
+        }
+        executeWithTOTP(
+          (token) => confirmRestore(token),
+          "Restore System",
+          "Enter your 6-digit Authenticator TOTP Code to authorize system restoration."
+        )
+        return
+      }
+
+      if (res.status === 403 && json?.totpNotConfigured) {
+        setRestoreLoading(false)
+        showToast?.({
+          title: "Two-Factor Auth Required",
+          description: "Two-Factor Authentication (TOTP) must be enabled on your account before restoring system images.",
+        }, "warning")
+        return
+      }
+
       if (!res.ok || !json?.ok) {
         throw new Error(json?.error || "Failed to restore backup archive.")
       }
@@ -421,6 +579,9 @@ export default function SystemBackupsTab({ showToast }) {
       await fetchData()
       setTimeout(() => location.reload(), 2500)
     } catch (err) {
+      if (totpModalOpen) {
+        throw err
+      }
       showToast?.({
         title: "Restoration Failed",
         description: err.message,
@@ -476,8 +637,8 @@ export default function SystemBackupsTab({ showToast }) {
             <Card className="flex-1 flex flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none isolate">
               <PageHeader
                 icon="ph-hard-drives"
-                title="Backup & Maintenance"
-                description="Manage governance archives and secure copies."
+                title="Platform Governance Backups"
+                description="Create and restore full system governance backups, manage scheduled snapshots, and sync to external hardware."
                 showBorder={false}
                 titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
                 descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
@@ -505,7 +666,7 @@ export default function SystemBackupsTab({ showToast }) {
                         {localLoading.uploading ? (
                           <i className="ph-bold ph-spinner animate-spin text-[16px]"></i>
                         ) : (
-                          "Restore Backup"
+                          "Restore"
                         )}
                       </Button>
                       <Button
@@ -516,7 +677,7 @@ export default function SystemBackupsTab({ showToast }) {
                         {localLoading.generating ? (
                           <i className="ph-bold ph-spinner animate-spin text-[16px]"></i>
                         ) : (
-                          "Create Backup"
+                          "Create"
                         )}
                       </Button>
                       <input
@@ -607,8 +768,8 @@ export default function SystemBackupsTab({ showToast }) {
               {isLoading && !isManualLoading ? (
                 <BackupTableSkeleton embedded={true} />
               ) : error ? (
-                <div className="flex-1 flex min-h-[450px] flex-col border-t border-gray-100 dark:border-white/10">
-                  <CardContent className="flex flex-1 flex-col items-center justify-center p-6">
+                <div className="flex-1 flex min-h-[450px] flex-col border-t border-gray-100 dark:border-white/10 rounded-b-2xl overflow-hidden">
+                  <CardContent className="flex flex-1 flex-col items-center justify-center p-6 rounded-b-2xl">
                     <Empty className="flex h-[450px] flex-col items-center justify-center border-0 bg-transparent text-center">
                       <EmptyHeader className="flex flex-col items-center gap-0">
                         <div className="relative mb-6">
@@ -628,7 +789,6 @@ export default function SystemBackupsTab({ showToast }) {
                           onClick={() => fetchData(true)}
                           className="mt-6 flex h-10 items-center justify-center rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-5 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
                         >
-                          <i className="ph-bold ph-arrows-clockwise mr-2"></i>
                           Retry
                         </Button>
                       </EmptyHeader>
@@ -636,7 +796,7 @@ export default function SystemBackupsTab({ showToast }) {
                   </CardContent>
                 </div>
               ) : (
-                <div className="flex-1 flex flex-col min-h-0 border-t border-gray-100 dark:border-white/10">
+                <div className="flex-1 flex flex-col min-h-0 border-t border-gray-100 dark:border-white/10 rounded-b-2xl overflow-hidden">
                   <BackupTable
                     backups={backups}
                     sortedAndPaginatedBackups={sortedAndPaginatedBackups}
@@ -729,7 +889,8 @@ export default function SystemBackupsTab({ showToast }) {
         <ConfirmModal
           open={restoreConfirmOpen}
           title="Restore System Image"
-          variant="warning"
+          variant="success"
+          isRestoreModal={true}
           message="Overwrite all repository data with the following backup archive? This action is irreversible."
           selectedItems={[restoreFile?.name]}
           confirmLabel="Restore"
@@ -741,6 +902,16 @@ export default function SystemBackupsTab({ showToast }) {
             setRestoreFile(null)
           }}
           isLoading={restoreLoading}
+        />
+
+        {/* TOTP Challenge Modal */}
+        <TOTPChallengeModal
+          open={totpModalOpen}
+          onOpenChange={setTotpModalOpen}
+          onConfirm={handleTOTPConfirm}
+          actionLabel={totpActionLabel}
+          description={totpModalDescription}
+          isLoading={totpModalLoading}
         />
       </div>
     </TooltipProvider>

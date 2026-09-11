@@ -15,33 +15,48 @@ import { cn } from "@/lib/utils"
 
 function TabLoadingSkeleton() {
   return (
-    <div className="flex flex-col gap-6 w-full animate-fade-up font-inter">
-      <KpiStatCardsSkeleton count={3} />
-      <div className="rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card p-6 h-20 flex items-center justify-between">
-        <div className="space-y-1.5">
-          <Skeleton className="h-5 w-48 rounded dark:bg-muted" />
-          <Skeleton className="h-3.5 w-72 rounded dark:bg-muted" />
-        </div>
-        <div className="flex items-center gap-2">
-          <Skeleton className="h-9 w-24 rounded-xl dark:bg-muted" />
-          <Skeleton className="h-9 w-28 rounded-xl dark:bg-muted" />
-        </div>
-      </div>
-      <div className="rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card overflow-hidden p-6 space-y-4 min-h-[400px]">
-        <div className="h-10 border-b border-gray-100 dark:border-white/10 flex items-center justify-between pb-3">
-          <Skeleton className="h-4 w-32 rounded dark:bg-muted" />
-          <Skeleton className="h-4 w-24 rounded dark:bg-muted" />
-        </div>
-        {[1, 2, 3, 4, 5, 6].map((i) => (
-          <div key={i} className="h-12 border-b border-gray-100 dark:border-white/5 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Skeleton className="h-8 w-8 rounded-lg dark:bg-muted" />
-              <Skeleton className="h-4 w-40 rounded dark:bg-muted" />
-            </div>
-            <Skeleton className="h-4 w-24 rounded dark:bg-muted" />
-            <Skeleton className="h-6 w-20 rounded-full dark:bg-muted" />
+    <div className="flex flex-1 flex-col h-full min-h-0 w-full gap-6 animate-fade-up font-inter">
+      {/* ONE Single Container Card */}
+      <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card flex flex-col flex-1 min-h-[500px] mb-4 isolate">
+        {/* Header */}
+        <div className="p-6 flex items-center justify-between">
+          <div className="space-y-1.5">
+            <Skeleton className="h-5 w-48 rounded dark:bg-muted" />
+            <Skeleton className="h-3.5 w-72 rounded dark:bg-muted" />
           </div>
-        ))}
+          <div className="flex items-center gap-2">
+            <Skeleton className="h-9 w-24 rounded-xl dark:bg-muted" />
+            <Skeleton className="h-9 w-28 rounded-xl dark:bg-muted" />
+          </div>
+        </div>
+
+        {/* Top KPI Stat Cards */}
+        <div className="px-6 pb-6">
+          <KpiStatCardsSkeleton count={3} />
+        </div>
+
+        {/* Toolbar Row */}
+        <div className="h-14 border-t border-gray-100 dark:border-white/10 p-4 px-6 flex items-center justify-between bg-gray-50/40 dark:bg-zinc-900/30">
+          <div className="flex items-center gap-3">
+            <Skeleton className="h-9 w-64 rounded-xl dark:bg-muted" />
+            <Skeleton className="h-9 w-32 rounded-xl dark:bg-muted" />
+          </div>
+          <Skeleton className="h-9 w-20 rounded-xl dark:bg-muted" />
+        </div>
+
+        {/* Table Body Rows */}
+        <div className="p-6 space-y-4 flex-1 rounded-b-2xl">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div key={i} className="h-12 border-b border-gray-100 dark:border-white/5 flex items-center justify-between last:border-b-0">
+              <div className="flex items-center gap-3">
+                <Skeleton className="h-8 w-8 rounded-lg dark:bg-muted" />
+                <Skeleton className="h-4 w-40 rounded dark:bg-muted" />
+              </div>
+              <Skeleton className="h-4 w-24 rounded dark:bg-muted" />
+              <Skeleton className="h-6 w-20 rounded-full dark:bg-muted" />
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   )
@@ -68,8 +83,11 @@ const SystemBackupsTab = dynamic(() => import("@/components/systemadmin/SystemBa
 const LandingPageCmsTab = dynamic(() => import("@/components/systemadmin/LandingPageCmsTab"), {
   loading: () => <TabLoadingSkeleton />,
 })
+const SecurityQuestionsTab = dynamic(() => import("@/components/systemadmin/SecurityQuestionsTab"), {
+  loading: () => <TabLoadingSkeleton />,
+})
 
-const VALID_VIEWS = ["offices", "modules", "staff", "logs", "health", "backups", "landing"]
+const VALID_VIEWS = ["offices", "modules", "staff", "security", "logs", "health", "backups", "landing"]
 
 function SystemAdminPageContent({ authUser: propAuthUser }) {
   const contextUser = useAuthUser()
@@ -170,15 +188,13 @@ function SystemAdminPageContent({ authUser: propAuthUser }) {
 
   const handleLogout = useCallback(async () => {
     try {
-      const res = await fetch("/api/auth/logout", { method: "POST" })
-      if (res.ok) {
-        localStorage.setItem("pup-logout", Date.now().toString())
-        router.push("/")
-      }
-    } catch (err) {
-      showToast("Sign out failed", true)
+      await fetch("/api/auth/logout", { method: "POST" })
+    } catch {
+      /* ignore network errors */
     }
-  }, [router, showToast])
+    localStorage.setItem("pup-logout", Date.now().toString())
+    router.push("/")
+  }, [router])
 
   useEffect(() => {
     const tab = String(searchParams?.get("view") || "").trim()
@@ -229,6 +245,7 @@ function SystemAdminPageContent({ authUser: propAuthUser }) {
     
     { type: "header", label: "Access & Audit" },
     { key: "staff", label: "Global Directory", iconClass: "ph-bold ph-users" },
+    { key: "security", label: "Security Questions", iconClass: "ph-bold ph-shield-check" },
     { key: "logs", label: "Platform Audit Trail", iconClass: "ph-bold ph-history" },
     
     { type: "header", label: "Operations & Reliability" },
@@ -285,6 +302,7 @@ function SystemAdminPageContent({ authUser: propAuthUser }) {
             {view === "offices" && <OfficeManagementTab showToast={showToast} />}
             {view === "modules" && <ModuleConfigTab showToast={showToast} />}
             {view === "staff" && <GlobalStaffTab authUser={authUser} showToast={showToast} />}
+            {view === "security" && <SecurityQuestionsTab showToast={showToast} />}
             {view === "logs" && <GlobalAuditLogsTab showToast={showToast} />}
             {view === "health" && <CampusOperationsTab showToast={showToast} />}
             {view === "backups" && <SystemBackupsTab showToast={showToast} />}

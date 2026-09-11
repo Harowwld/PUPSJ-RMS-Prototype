@@ -4,20 +4,20 @@ import {
   setSimulationMode,
   isSimulationMode,
 } from "@/lib/externalDriveDetector";
-import { requireSystemAdmin, createAuthErrorResponse } from "../../../../lib/authHelpers";
+import { requireAdmin, createAuthErrorResponse } from "../../../../lib/authHelpers";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 function requireAccessError(access) {
   return createAuthErrorResponse(
-    access.error || "System administrator access required",
+    access.error || "Administrator access required",
     access.error?.startsWith("Access denied") ? 403 : 401,
   );
 }
 
 export async function GET(req) {
-  const access = await requireSystemAdmin(req);
+  const access = await requireAdmin(req);
   if (access.error || !access.user) return requireAccessError(access);
 
   try {
@@ -31,7 +31,7 @@ export async function GET(req) {
 }
 
 export async function POST(req) {
-  const access = await requireSystemAdmin(req);
+  const access = await requireAdmin(req);
   if (access.error || !access.user) return requireAccessError(access);
 
   try {

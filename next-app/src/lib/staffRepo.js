@@ -1,3 +1,4 @@
+import crypto from "node:crypto";
 import { query, queryOne } from "./postgres.js";
 import { dbAll, dbGet, dbRun } from "./postgresCompat.js";
 import { hashPassword, verifyPasswordHash as verifyPasswordHashValue } from "./passwordHash.js";

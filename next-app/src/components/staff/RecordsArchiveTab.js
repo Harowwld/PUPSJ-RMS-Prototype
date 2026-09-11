@@ -103,6 +103,11 @@ export default function RecordsArchiveTab({
     localStorage.setItem("pup-folder-colors", JSON.stringify(next))
   }
 
+  // Clear selection when toggling archived view
+  useEffect(() => {
+    onSelectionChange(new Set())
+  }, [showArchived, onSelectionChange])
+
   const [prevFilters, setPrevFilters] = useState({
     currentLevel,
     showArchived,
@@ -415,7 +420,7 @@ export default function RecordsArchiveTab({
                       variant="ghost"
                       size="sm"
                       onClick={() => toggleSelectAll(paginatedExplorerItems)}
-                      className="h-7 px-2.5 text-[12px] font-medium text-[#8E8E93] hover:text-[#0A84FF] hover:bg-[#F5F5F7] dark:text-zinc-400 dark:hover:text-red-400 dark:hover:bg-zinc-800 rounded-[6px] border border-[#E5E5EA] dark:border-white/10 cursor-pointer"
+                      className="h-7 px-2.5 text-[12px] font-medium text-[#8E8E93] hover:text-[#0A84FF] hover:bg-[#F5F5F7] dark:text-zinc-400 dark:hover:text-red-400 dark:hover:bg-zinc-800 rounded-lg border border-[#E5E5EA] dark:border-white/10 cursor-pointer"
                     >
                       {paginatedExplorerItems.every(it => selectedIds.has(it.student.studentNo)) ? "Deselect All" : "Select All"}
                     </Button>
@@ -889,60 +894,26 @@ export default function RecordsArchiveTab({
         isRestoreModal={true}
         onConfirm={async () => {
           if (restoreTarget) {
-            await onRestoreStudent(restoreTarget.studentNo)
+            const sn = restoreTarget.studentNo
+            if (selectedIds.has(sn)) {
+              const next = new Set(selectedIds)
+              next.delete(sn)
+              onSelectionChange(next)
+            }
+            await onRestoreStudent(sn)
           }
           setRestoreStudentOpen(false)
           setRestoreTarget(null)
         }}
       />
 
-      {selectedIds.size > 0 && (
-        <FloatingActionBar
-          selectedCount={selectedIds.size}
-          selectionStatus="Students Selected"
-          showOnSingle={true}
-          onCancel={() => onSelectionChange(new Set())}
-          customContent={
-            <div className="flex items-center gap-3">
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onSelectionChange(new Set())
-                }}
-                className="h-auto text-[13px] font-normal text-[#8E8E93] hover:text-[#111111] dark:hover:text-white bg-transparent hover:bg-transparent border-0 p-0 shadow-none cursor-pointer"
-              >
-                Deselect All
-              </button>
-              {showArchived ? (
-                <Button
-                  type="button"
-                  size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    onBulkRestore()
-                  }}
-                  className="flex h-[36px] px-5 items-center justify-center rounded-[8px] btn-brand-green text-[13px] font-medium text-white active:scale-95 transition-all dark:shadow-none cursor-pointer"
-                >
-                  Restore
-                </Button>
-              ) : (
-                <Button
-                  type="button"
-                  size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    onBulkArchive()
-                  }}
-                  className="flex h-[36px] px-5 items-center justify-center rounded-[8px] btn-brand-red text-[13px] font-medium text-white active:scale-95 transition-all dark:shadow-none cursor-pointer"
-                >
-                  Archive
-                </Button>
-              )}
-            </div>
-          }
-        />
-      )}
+      <FloatingActionBar
+        selectedCount={selectedIds.size}
+        onCancel={() => onSelectionChange(new Set())}
+        onAction={showArchived ? onBulkRestore : onBulkArchive}
+        actionLabel={showArchived ? "Restore" : "Archive"}
+        actionVariant={showArchived ? "success" : "danger"}
+      />
     </div>
   )
 }

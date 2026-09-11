@@ -7,7 +7,7 @@ export default function AuditLogsTableSkeleton({ rowCount = 8, embedded = false 
   return (
     <div
       className={cn(
-        "overflow-hidden isolate flex flex-col flex-1",
+        "overflow-hidden isolate flex flex-col flex-1 rounded-b-2xl",
         embedded
           ? "border-t border-gray-100 dark:border-white/10"
           : "rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-card shadow-sm"

@@ -227,7 +227,7 @@ export default function StorageExplorerTab({
             </div>
 
             {/* Level Inner Content */}
-            <div className="flex w-full flex-col min-h-0 flex-1 mx-auto pt-6 bg-white dark:bg-card">
+            <div className="flex w-full flex-col min-h-0 flex-1 mx-auto pt-6 bg-white dark:bg-card rounded-b-2xl">
               {loading ? (
               <StorageExplorerSkeleton />
             ) : locatorModel?.kind === "rooms" ? (

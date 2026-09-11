@@ -23,7 +23,16 @@ export async function DELETE(req, { params }) {
 
     const totpResult = await requireTOTP(user.id, extractTOTPToken(req.headers), { requireEnabled: true });
     if (!totpResult.valid) {
-      return NextResponse.json({ ok: false, error: "TOTP verification required", requiresTOTP: true, missingToken: !!totpResult.missing }, { status: 403 });
+      return NextResponse.json(
+        { 
+          ok: false, 
+          error: "TOTP verification required: " + totpResult.error, 
+          requiresTOTP: !totpResult.notConfigured, 
+          totpNotConfigured: !!totpResult.notConfigured,
+          missingToken: !!totpResult.missing 
+        }, 
+        { status: 403 }
+      );
     }
 
     const { id: idStr } = await params;

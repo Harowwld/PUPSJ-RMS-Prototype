@@ -19,13 +19,18 @@ export async function POST(req) {
       return createAuthErrorResponse(error || "Admin access required", 403);
     }
 
-    if (!isSystemAdminRole(user.role)) {
-      return createAuthErrorResponse("System Administrator authorization required", 403);
-    }
-
     const totpResult = await requireTOTP(user.id, extractTOTPToken(req.headers), { requireEnabled: true });
     if (!totpResult.valid) {
-      return NextResponse.json({ ok: false, error: "TOTP verification required", requiresTOTP: true, missingToken: !!totpResult.missing }, { status: 403 });
+      return NextResponse.json(
+        { 
+          ok: false, 
+          error: "TOTP verification required: " + totpResult.error, 
+          requiresTOTP: !totpResult.notConfigured, 
+          totpNotConfigured: !!totpResult.notConfigured,
+          missingToken: !!totpResult.missing 
+        }, 
+        { status: 403 }
+      );
     }
 
     const { id } = await req.json();

@@ -15,10 +15,6 @@ export async function POST(req) {
       return createAuthErrorResponse(error || "Admin access required", 403);
     }
 
-    if (!isSystemAdminRole(user.role)) {
-      return createAuthErrorResponse("System Administrator authorization required", 403);
-    }
-
     const totpToken = extractTOTPToken(req.headers);
     const totpResult = await requireTOTP(user.id, totpToken, { requireEnabled: true });
     if (!totpResult.valid) {
@@ -26,7 +22,8 @@ export async function POST(req) {
         {
           ok: false,
           error: "TOTP verification required: " + totpResult.error,
-          requiresTOTP: true,
+          requiresTOTP: !totpResult.notConfigured,
+          totpNotConfigured: !!totpResult.notConfigured,
           missingToken: !!totpResult.missing,
         },
         { status: 403 }
@@ -72,7 +69,7 @@ export async function POST(req) {
   } catch (err) {
     console.error("[RESTORE API] Restoration Error:", err);
     return NextResponse.json(
-      { ok: false, error: "Failed to restore backup archive." },
+      { ok: false, error: err.message || "Failed to restore backup archive." },
       { status: 500 }
     );
   }

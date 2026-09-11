@@ -20,18 +20,7 @@ const sysDbRun = dbRun;
  * @param {string} [data.ip] - IP address
  */
 export async function createAuditLog(data) {
-  const actor = data.actor;
-  const role = data.role;
-  const action = data.action;
-  const details = data.details || "";
-  const severity = data.severity || "INFO";
-  const user_agent = data.user_agent || "";
-  const entity_type = data.entity_type || "";
-  const entity_id = data.entity_id || "";
-  const ip = data.ip || "localhost";
-
-  const sql = "INSERT INTO global_audit_logs (actor, role, action, details, severity, user_agent, entity_type, entity_id, ip) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
-  await dbRun(sql, [actor, role, action, details, severity, user_agent, entity_type, entity_id, ip]);
+  return createGlobalAuditLog(data);
 }
 
 export async function countAuditLogs(options) {

@@ -125,6 +125,15 @@ export async function archiveRecognitionTemplate(id, actorId, officeId) {
   );
 }
 
+export async function restoreRecognitionTemplate(id, actorId, officeId) {
+  if (!officeId) throw new Error("Office scope is required");
+  return queryOne(
+    `UPDATE recognition_templates SET status = 'Active', updated_by = $2, updated_at = NOW()
+     WHERE id = $1 AND office_id = $3 RETURNING *`,
+    [id, actorId || null, String(officeId).trim().toLowerCase()]
+  );
+}
+
 export async function deleteRecognitionTemplate(id, officeId) {
   if (!officeId) throw new Error("Office scope is required");
   return queryOne(
@@ -134,3 +143,4 @@ export async function deleteRecognitionTemplate(id, officeId) {
     [id, String(officeId).trim().toLowerCase()]
   );
 }
+
