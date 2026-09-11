@@ -25,9 +25,13 @@ export async function GET(req) {
   }
 
   const requests = await query(
-    `SELECT dr.*, d.approval_status AS linked_document_status
+    `SELECT dr.*, d.approval_status AS linked_document_status,
+            COALESCE(dr.course_code, s.course_code) AS course_code,
+            c.name AS course_name
      FROM document_requests dr
      LEFT JOIN documents d ON d.id = dr.linked_document_id
+     LEFT JOIN students s ON s.student_no = dr.student_no
+     LEFT JOIN courses c ON c.code = COALESCE(dr.course_code, s.course_code)
      WHERE dr.office_id = 'registrar'
        AND (
          (dr.student_account_id IS NOT NULL AND dr.student_account_id = $1)
@@ -76,6 +80,7 @@ export async function POST(req) {
   const docType = String(body?.docType || "").trim();
   const notes = String(body?.notes || body?.description || "").trim();
   const requestedClientType = String(body?.clientType || "").trim();
+  const courseCode = String(body?.courseCode || "").trim().toUpperCase() || null;
 
   let accountId = session.accountId;
   let acc = null;
@@ -96,6 +101,13 @@ export async function POST(req) {
 
   if (!clientType) {
     return NextResponse.json({ ok: false, error: "Client type is required." }, { status: 400 });
+  }
+
+  if (clientType === "Alumni" && !studentNo && !courseCode) {
+    return NextResponse.json(
+      { ok: false, error: "Degree / academic program is required for alumni without a student number." },
+      { status: 400 }
+    );
   }
 
   if (!docType) {
@@ -119,22 +131,23 @@ export async function POST(req) {
 
   // If a student number is provided, ensure the student record exists in students table
   if (studentNo) {
-    const existingStudent = await queryOne("SELECT student_no FROM students WHERE upper(student_no) = upper($1)", [studentNo]);
+    const existingStudent = await queryOne("SELECT student_no, course_code FROM students WHERE upper(student_no) = upper($1)", [studentNo]);
     if (!existingStudent) {
       const studentName = [acc?.first_name, acc?.middle_name, acc?.last_name].filter(Boolean).join(" ") || acc?.email || studentNo;
       await query(
-        `INSERT INTO students (student_no, name, status)
-         VALUES ($1, $2, 'Active')
+        `INSERT INTO students (student_no, name, status, course_code)
+         VALUES ($1, $2, 'Active', $3)
          ON CONFLICT (student_no) DO NOTHING`,
-        [studentNo, studentName]
+        [studentNo, studentName, courseCode || null]
       );
     }
   }
 
+  const requesterName = [acc?.first_name, acc?.middle_name, acc?.last_name].filter(Boolean).join(" ") || acc?.email || null;
   const request = await queryOne(
-    `INSERT INTO document_requests (office_id, student_no, doc_type, status, notes, client_type, student_account_id)
-     VALUES ('registrar', $1, $2, 'Pending', $3, $4, $5) RETURNING *`,
-    [studentNo, docType, notes, clientType, accountId || null]
+    `INSERT INTO document_requests (office_id, student_no, doc_type, status, notes, client_type, student_account_id, course_code, requester_name)
+     VALUES ('registrar', $1, $2, 'Pending', $3, $4, $5, $6, $7) RETURNING *`,
+    [studentNo, docType, notes, clientType, accountId || null, courseCode, requesterName]
   );
 
   await query(
@@ -147,7 +160,7 @@ export async function POST(req) {
     actor: acc?.email || session.email || studentNo || "Student",
     role: "Student",
     officeId: "registrar",
-    details: `Requested ${docType} (${clientType})${studentNo ? ` for ${studentNo}` : ""}`,
+    details: `Requested ${docType} (${clientType})${studentNo ? ` for ${studentNo}` : ""}${courseCode ? ` - Program: ${courseCode}` : ""}`,
     entity_type: "document_request",
     entity_id: String(request.id),
   });

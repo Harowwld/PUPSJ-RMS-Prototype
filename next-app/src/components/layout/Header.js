@@ -233,13 +233,6 @@ export default function Header({ authUser, onLogout, children }) {
     return authUser?.accent_color || ROLE_BRANDING.orange.color;
   })();
 
-  const displayOfficeName = (() => {
-    if (isStudent) return "Student Portal";
-    if (isSuperAdmin || activeView === "systemadmin" || activeView === "superadmin") {
-      return "System";
-    }
-    return authUser?.office_name || (authUser?.office_id ? authUser.office_id.toUpperCase() : "Registrar");
-  })();
 
   // ---------------------------------------------------------------------------
   // STRICTLY SCOPED COMMAND PALETTE (CURRENT VIEW'S SIDEBAR + USER ACCOUNT)
@@ -254,12 +247,21 @@ export default function Header({ authUser, onLogout, children }) {
 
     if (activeView === "systemadmin") {
       currentViewSidebarItems = [
-        { label: "Departments & Stations", view: "offices", icon: "ph-bold ph-buildings", keywords: "offices departments stations campus registry admin governance" },
-        { label: "Department Features", view: "modules", icon: "ph-bold ph-squares-four", keywords: "features matrix permissions feature flags modules config" },
-        { label: "Global Directory", view: "staff", icon: "ph-bold ph-users", keywords: "directory personnel users accounts staff global" },
-        { label: "Platform Audit Trail", view: "logs", icon: "ph-bold ph-clock-counter-clockwise", keywords: "audit logs security platform activity history" },
-        { label: "System Health", view: "health", icon: "ph-bold ph-heartbeat", keywords: "status memory database health ping metrics activity" },
-        { label: "Platform Backups", view: "backups", icon: "ph-bold ph-cloud-arrow-up", keywords: "platform backups platforms backups database snapshots postgres dump restore export recovery archive maintenance cloud" },
+        { label: "Departments & Stations", view: "offices", icon: "ph-bold ph-buildings", badge: "View", keywords: "offices departments stations campus registry osas admissions library accounting admin governance units" },
+        { label: "Department Features", view: "modules", icon: "ph-bold ph-squares-four", badge: "View", keywords: "features matrix permissions feature flags modules config toggle access roles" },
+        { label: "Global Directory", view: "staff", icon: "ph-bold ph-users", badge: "View", keywords: "directory personnel users accounts staff global roles administrators employees" },
+        { label: "Platform Audit Trail", view: "logs", icon: "ph-bold ph-history", badge: "View", keywords: "audit logs security platform activity history transactions compliance events" },
+        { label: "Campus Operations", view: "health", icon: "ph-bold ph-activity", badge: "View", keywords: "campus operations system health telemetry status memory database ping metrics activity monitoring registrar odrs osas online services transactions" },
+        { label: "Platform Backups", view: "backups", icon: "ph-bold ph-cloud-arrow-up", badge: "View", keywords: "platform backups platforms backups database snapshots postgres dump restore export recovery archive maintenance automated schedule cloud" },
+        { label: "Landing Page CMS", view: "landing", icon: "ph-bold ph-layout", badge: "View", keywords: "landing page cms public portal content website builder customization homepage portal editor" },
+        
+        // Deep navigation sections for Landing Page CMS
+        { label: "Landing CMS: Hero Section", view: "landing", section: "hero", icon: "ph-bold ph-image", badge: "Section", keywords: "landing cms hero section banner headline slides background photos rotation" },
+        { label: "Landing CMS: Bento Grid", view: "landing", section: "bento", icon: "ph-bold ph-squares-four", badge: "Section", keywords: "landing cms bento grid features cards highlights showcase preview" },
+        { label: "Landing CMS: Workflow & Steps", view: "landing", section: "workflow", icon: "ph-bold ph-git-merge", badge: "Section", keywords: "landing cms workflow steps how it works pipeline guide process" },
+        { label: "Landing CMS: Academic Catalog", view: "landing", section: "catalog", icon: "ph-bold ph-books", badge: "Section", keywords: "landing cms academic catalog courses degrees document types requirements" },
+        { label: "Landing CMS: FAQ Section", view: "landing", section: "faq", icon: "ph-bold ph-question", badge: "Section", keywords: "landing cms faq accordion questions answers help support common inquiries" },
+        { label: "Landing CMS: Institutional Footer", view: "landing", section: "footer", icon: "ph-bold ph-panel-bottom", badge: "Section", keywords: "landing cms footer credentials address contact copyright socials links" },
       ];
     } else if (activeView === "admin") {
       const allAdminTabs = [
@@ -275,19 +277,30 @@ export default function Header({ authUser, onLogout, children }) {
       currentViewSidebarItems = allAdminTabs.filter(item => !hasModuleFilter || !item.module || enabledModules.has(item.module));
     } else if (activeView === "staff") {
       const allStaffTabs = [
-        { label: "Alumni Requests", view: "requests", icon: "ph-bold ph-tray-arrow-up", module: "alumni_requests", keywords: "alumni requests transcript diploma certification" },
-        { label: "OSAS Monitoring", view: "osas_monitoring", icon: "ph-bold ph-student", module: "osas_monitoring", keywords: "osas student affairs proposals events monitoring" },
-        { label: "Scan & Upload", view: "upload", icon: "ph-bold ph-scan", module: "scan_upload", keywords: "scan upload ocr document new ingest" },
-        { label: "Documents Matrix", view: "documents", icon: "ph-bold ph-file-text", module: "documents", keywords: "documents student records files matrix" },
-        { label: "Notifications", view: "notifications", icon: "ph-bold ph-bell", module: "notifications", keywords: "notifications alerts messages unread" },
-        { label: "Records Archive", view: "search", icon: "ph-bold ph-archive-box", module: "records_archive", keywords: "records archive search students" },
-        { label: "Storage Explorer", view: "storage", icon: "ph-bold ph-folder-open", module: "storage_explorer", keywords: "physical archive explorer room cabinet drawer storage" },
+        // Operations
+        { label: "Document Requests", view: "requests", icon: "ph-bold ph-tray-arrow-up", module: "alumni_requests", badge: "Operations", keywords: "document requests odrs alumni transcript diploma certification operations" },
+        { label: "OSAS Monitoring", view: "osas_monitoring", icon: "ph-bold ph-student", module: "osas_monitoring", badge: "Operations", keywords: "osas student affairs proposals events monitoring activities organizations" },
+        { label: "Scan & Upload", view: "upload", icon: "ph-bold ph-scan", module: "scan_upload", badge: "Operations", keywords: "scan upload ocr document new ingest single upload file" },
+        { label: "Batch Review", view: "batch_review", icon: "ph-bold ph-check-square", module: "scan_upload", badge: "Operations", keywords: "batch review scan queue bulk verification inspect documents" },
+        { label: "Documents", view: "documents", icon: "ph-bold ph-file-text", module: "documents", badge: "Operations", keywords: "documents student records files matrix status table" },
+        { label: "Notifications", view: "notifications", icon: "ph-bold ph-bell", module: "notifications", badge: "Operations", keywords: "notifications alerts messages unread updates" },
+
+        // Records Archive
+        { label: "Records & Archive", view: "search", icon: "ph-bold ph-archive-box", module: "records_archive", badge: "Records Archive", keywords: "records archive search students repository files folders year" },
+        { label: "Student Directory", view: "students", icon: "ph-bold ph-users", module: "student_directory", badge: "Records Archive", keywords: "student directory students profiles records directory list search archive" },
+        { label: "Storage Explorer", view: "storage", icon: "ph-bold ph-folder-open", module: "storage_explorer", badge: "Records Archive", keywords: "physical archive explorer room cabinet drawer storage 2d locator map" },
       ];
-      currentViewSidebarItems = allStaffTabs.filter(item => !hasModuleFilter || !item.module || enabledModules.has(item.module));
+      currentViewSidebarItems = allStaffTabs.filter(item => {
+        if (!hasModuleFilter || !item.module) return true;
+        if (item.view === "students") {
+          return enabledModules.has("student_directory") || enabledModules.has("records_archive");
+        }
+        return enabledModules.has(item.module);
+      });
     }
 
     const filteredSidebar = q
-      ? currentViewSidebarItems.filter(item => `${item.label} ${item.keywords || ""}`.toLowerCase().includes(q))
+      ? currentViewSidebarItems.filter(item => `${item.label} ${item.badge || ""} ${item.keywords || ""}`.toLowerCase().includes(q))
       : currentViewSidebarItems;
 
     // 2. Account & Profile items (Always available for active session)
@@ -335,13 +348,19 @@ export default function Header({ authUser, onLogout, children }) {
       const isSystemAdmin = activeView === "systemadmin";
       const onSystemAdminPage = pathname?.startsWith("/systemadmin") || pathname?.startsWith("/superadmin");
 
+      const params = new URLSearchParams({ view: item.view });
+      if (item.section) params.set("section", item.section);
+      if (item.officeId) params.set("office", item.officeId);
+
       if (isSystemAdmin && !onSystemAdminPage) {
-        router.push(`/systemadmin?view=${item.view}`);
+        router.push(`/systemadmin?${params.toString()}`);
       } else if (pathname === "/account" || pathname === "/account/activity") {
         const targetPath = isSystemAdmin ? "/systemadmin" : (activeView === "admin" ? "/admin" : "/staff");
-        router.push(`${targetPath}?view=${item.view}`);
+        router.push(`${targetPath}?${params.toString()}`);
       } else {
-        window.dispatchEvent(new CustomEvent("switch-view", { detail: { view: item.view } }));
+        window.dispatchEvent(new CustomEvent("switch-view", {
+          detail: { view: item.view, section: item.section, officeId: item.officeId }
+        }));
       }
     } else if (item.url) {
       router.push(item.url);
@@ -386,30 +405,10 @@ export default function Header({ authUser, onLogout, children }) {
               className={cn("h-7 w-7 object-contain transition-transform group-hover/logo:scale-105", isStudent && "brightness-0 saturate-100")}
               style={isStudent ? { filter: "brightness(0) saturate(100%) invert(13%) sepia(95%) saturate(3180%) hue-rotate(355deg) brightness(77%) contrast(118%)" } : undefined}
             />
-              <span className={cn("font-bold text-[19px] tracking-tight leading-none group-hover/logo:opacity-75 transition-opacity", isStudent ? "text-pup-maroon" : "text-gray-900 dark:text-zinc-50")}>
+            <span className={cn("font-bold text-[19px] tracking-tight leading-none group-hover/logo:opacity-75 transition-opacity", isStudent ? "text-pup-maroon" : "text-gray-900 dark:text-zinc-50")}>
               eManage
             </span>
           </div>
-
-          {authUser && (
-            <>
-              <div className="hidden sm:block h-4 w-px bg-gray-200 dark:bg-zinc-800" />
-              
-              {/* Dynamic Scope & Current View Role Badge */}
-              <div className={cn("hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium shadow-2xs transition-all", isStudent ? "bg-red-50 border border-red-200 text-red-800" : "bg-gray-100/90 dark:bg-zinc-900 border border-gray-200/70 dark:border-white/10 text-gray-700 dark:text-zinc-300")}>
-                <span className={cn("font-semibold", isStudent ? "text-pup-maroon" : "text-gray-900 dark:text-zinc-100")}>
-                  {displayOfficeName}
-                </span>
-                <span className={isStudent ? "text-red-300" : "text-gray-300 dark:text-zinc-600"}>·</span>
-                <span 
-                  className="font-medium transition-colors duration-200"
-                  style={{ color: currentViewColor }}
-                >
-                  {currentViewRole}
-                </span>
-              </div>
-            </>
-          )}
         </div>
 
         {/* CENTER: Command Palette Modal Trigger Button */}
@@ -495,7 +494,7 @@ export default function Header({ authUser, onLogout, children }) {
                <DropdownMenuGroup className="p-1.5 flex flex-col gap-[2px]">
                   {(isSettingsActive || isActivityActive) && (
                      <DropdownMenuItem
-                       className="cursor-pointer rounded-[8px] flex items-center gap-3 font-semibold text-[15px] py-2.5 px-3 text-pup-maroon hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/20 transition-colors outline-none"
+                       className="cursor-pointer rounded-[8px] flex items-center gap-3 font-normal text-[15px] py-2.5 px-3 text-pup-maroon hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/20 transition-colors outline-none"
                        onClick={handleMainDashboardClick}
                      >
                        <i className="ti ti-layout-dashboard text-[19px] shrink-0 flex items-center justify-center h-[19px] w-[19px] leading-none" style={{ color: branding.color }}></i>
@@ -507,7 +506,7 @@ export default function Header({ authUser, onLogout, children }) {
                     className={cn(
                       "cursor-pointer rounded-[8px] flex items-center gap-3 font-normal text-[15px] py-2.5 px-3 transition-colors outline-none",
                       isSettingsActive
-                        ? "text-pup-maroon bg-gray-50 dark:bg-white/5 font-semibold"
+                        ? "text-pup-maroon bg-gray-50 dark:bg-white/5 font-normal"
                         : "text-gray-900 hover:bg-gray-50 dark:text-zinc-100 dark:hover:bg-white/5"
                     )}
                     onClick={() => router.push("/account")}
@@ -520,7 +519,7 @@ export default function Header({ authUser, onLogout, children }) {
                     className={cn(
                       "cursor-pointer rounded-[8px] flex items-center gap-3 font-normal text-[15px] py-2.5 px-3 transition-colors outline-none",
                       isActivityActive
-                        ? "text-pup-maroon bg-gray-50 dark:bg-white/5 font-semibold"
+                        ? "text-pup-maroon bg-gray-50 dark:bg-white/5 font-normal"
                         : "text-gray-900 hover:bg-gray-50 dark:text-zinc-100 dark:hover:bg-white/5"
                     )}
                     onClick={() => router.push("/account/activity")}
@@ -551,7 +550,7 @@ export default function Header({ authUser, onLogout, children }) {
                <DropdownMenuGroup className="p-1.5">
                  <DropdownMenuItem
                    onClick={onLogout}
-                   className="cursor-pointer rounded-[8px] flex items-center gap-3 font-medium text-[15px] py-2.5 px-3 text-[#FF3B30] dark:text-[#FF453A] hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors outline-none"
+                   className="cursor-pointer rounded-[8px] flex items-center gap-3 font-normal text-[15px] py-2.5 px-3 text-[#FF3B30] dark:text-[#FF453A] hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors outline-none"
                  >
                    <i className="ti ti-circle-x text-[19px] text-[#FF3B30] dark:text-[#FF453A] shrink-0 flex items-center justify-center h-[19px] w-[19px] leading-none"></i>
                    <span>Sign Out</span>
@@ -616,9 +615,10 @@ export default function Header({ authUser, onLogout, children }) {
                 </div>
                 {sidebarMatches.map((item, idx) => {
                   const isFocused = focusedIndex === idx;
+                  const itemKey = item.section ? `${item.view}-${item.section}` : (item.view || item.label || idx);
                   return (
                     <button
-                      key={item.view}
+                      key={itemKey}
                       type="button"
                       onClick={() => handleSelectSuggestion(item)}
                       onMouseEnter={() => setFocusedIndex(idx)}
@@ -640,7 +640,7 @@ export default function Header({ authUser, onLogout, children }) {
                           </span>
                         )}
                         <span className="text-[10px] text-gray-400 dark:text-zinc-500 font-normal">
-                          View
+                          {item.badge || "View"}
                         </span>
                       </div>
                     </button>
@@ -742,7 +742,7 @@ export default function Header({ authUser, onLogout, children }) {
               onClick={handleSessionExpiredRedirect}
               className="w-full bg-pup-maroon hover:bg-pup-darkMaroon text-white font-bold text-xs h-10 shadow-sm cursor-pointer"
             >
-              Back to Login
+              Back
             </Button>
           </DialogFooter>
         </DialogContent>

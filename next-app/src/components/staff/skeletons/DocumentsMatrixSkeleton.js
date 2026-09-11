@@ -3,9 +3,14 @@
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
 
-export default function DocumentsMatrixSkeleton({ rowCount = 7 }) {
+export default function DocumentsMatrixSkeleton({ rowCount = 7, embedded = false }) {
   return (
-    <div className="overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card flex flex-col flex-1 isolate select-none font-inter">
+    <div
+      className={cn(
+        "flex flex-col flex-1 isolate select-none font-inter w-full",
+        !embedded && "overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card"
+      )}
+    >
       <div className="overflow-x-auto">
         <table className="min-w-full text-sm table-fixed">
           <thead className="sticky top-0 z-10 border-b border-gray-200 bg-white dark:bg-card dark:border-white/10">
@@ -41,7 +46,7 @@ export default function DocumentsMatrixSkeleton({ rowCount = 7 }) {
               >
                 {/* Student No */}
                 <td className="p-4 align-middle">
-                  <Skeleton className="h-3.5 w-28 font-mono dark:bg-muted" />
+                  <Skeleton className="h-3.5 w-28 rounded dark:bg-muted" />
                 </td>
 
                 {/* Name */}
@@ -59,7 +64,7 @@ export default function DocumentsMatrixSkeleton({ rowCount = 7 }) {
 
                 {/* Document Type */}
                 <td className="p-4 align-middle">
-                  <Skeleton className="h-6 w-32 rounded-lg dark:bg-muted" />
+                  <Skeleton className="h-6 w-32 rounded-full dark:bg-muted" />
                 </td>
 
                 {/* Status */}
@@ -83,8 +88,8 @@ export default function DocumentsMatrixSkeleton({ rowCount = 7 }) {
                 {/* Actions */}
                 <td className="p-4 align-middle text-right">
                   <div className="flex items-center justify-end gap-1.5">
-                    <Skeleton className="h-8 w-8 rounded-lg dark:bg-muted" />
-                    <Skeleton className="h-8 w-8 rounded-lg dark:bg-muted" />
+                    <Skeleton className="h-8 w-14 rounded-xl dark:bg-muted" />
+                    <Skeleton className="h-8 w-14 rounded-xl dark:bg-muted" />
                   </div>
                 </td>
               </tr>
@@ -97,9 +102,9 @@ export default function DocumentsMatrixSkeleton({ rowCount = 7 }) {
       <div className="flex items-center justify-between border-t border-gray-100 bg-white p-4 px-6 dark:border-white/10 dark:bg-card mt-auto">
         <Skeleton className="h-3.5 w-40 rounded dark:bg-muted" />
         <div className="flex items-center gap-2">
-          <Skeleton className="h-8 w-16 rounded-lg dark:bg-muted" />
-          <Skeleton className="h-8 w-8 rounded-lg dark:bg-muted" />
-          <Skeleton className="h-8 w-16 rounded-lg dark:bg-muted" />
+          <Skeleton className="h-8 w-16 rounded-xl dark:bg-muted" />
+          <Skeleton className="h-8 w-8 rounded-xl dark:bg-muted" />
+          <Skeleton className="h-8 w-16 rounded-xl dark:bg-muted" />
         </div>
       </div>
     </div>

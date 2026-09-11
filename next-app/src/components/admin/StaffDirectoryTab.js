@@ -250,6 +250,7 @@ function SortIndicator({ column, sortBy, sortOrder }) {
 
 export default function StaffDirectoryTab({
   staffData,
+  officeId = "registrar",
   isLoading = false,
   error = null,
   currentUserId,
@@ -276,6 +277,22 @@ export default function StaffDirectoryTab({
   const [lastSelectedId, setLastSelectedId] = useState(null)
 
   const hasActiveFilters = localSearch !== "" || roleFilter !== "All";
+
+  // Filter staff to the active office scope (excludes SuperAdmin/SystemAdmin and other offices like OSAS)
+  const officeStaff = useMemo(() => {
+    const targetOffice = (officeId || "registrar").toLowerCase()
+    return (staffData || []).filter((s) => {
+      if (!s) return false
+      // Exclude System Admin and Super Admin from office directory
+      if (s.role === "SystemAdmin" || s.role === "SuperAdmin") return false
+      // Exclude staff from other offices (e.g., OSAS accounts in Registrar)
+      const staffOffice = (s.office_id || "").toLowerCase()
+      if (staffOffice && staffOffice !== targetOffice) return false
+      // Strict safeguard: ensure no PUPOSAS accounts leak into Registrar
+      if (targetOffice === "registrar" && s.id?.toUpperCase().startsWith("PUPOSAS")) return false
+      return true
+    })
+  }, [staffData, officeId])
 
   // Sync local search with external search prop initially
   useEffect(() => {
@@ -304,10 +321,7 @@ export default function StaffDirectoryTab({
 
   const filteredStaff = useMemo(() => {
     const q = search.toLowerCase()
-    return staffData.filter((s) => {
-      // Exclude System Admin and Super Admin from admin-side staff directory
-      if (s.role === "SystemAdmin" || s.role === "SuperAdmin") return false
-
+    return officeStaff.filter((s) => {
       const matchesSearch =
           `${s.fname} ${s.lname}`.toLowerCase().includes(q) ||
           s.id.toLowerCase().includes(q) ||
@@ -321,7 +335,7 @@ export default function StaffDirectoryTab({
 
       return matchesSearch && matchesRole && matchesTab
     })
-  }, [search, roleFilter, staffData, activeTab])
+  }, [search, roleFilter, officeStaff, activeTab])
 
   const [sortBy, setSortBy] = useState("id")
   const [sortOrder, setSortOrder] = useState("ASC")
@@ -520,7 +534,7 @@ export default function StaffDirectoryTab({
                 disabled={activeTab === "archived" || isLoading}
                 className="flex h-10 items-center justify-center rounded-xl! btn-brand-red text-white font-semibold text-xs active:scale-95 disabled:opacity-50 transition-all cursor-pointer px-5 shadow-xs"
               >
-                Add Staff
+                Register
               </Button>
             </div>
           }
@@ -529,45 +543,50 @@ export default function StaffDirectoryTab({
         {/* Navigation Toolbar */}
         <div className="border-t border-gray-100 dark:border-white/10 p-5 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
           {/* Left: Active vs Archived Tabs */}
-          <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-gray-200/60 dark:border-white/5 shrink-0 overflow-x-auto">
+          <div className="flex items-center gap-6 shrink-0 select-none">
             <button
               type="button"
               onClick={() => setActiveTab("active")}
               className={cn(
-                "px-4 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer",
+                "relative h-9 flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent",
                 activeTab === "active"
-                  ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
-                  : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
+                  ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
+                  : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
               )}
             >
-              Active ({staffData.filter((s) => s.status !== "Archived" && s.role !== "SystemAdmin" && s.role !== "SuperAdmin").length})
+              Active ({officeStaff.filter((s) => s.status !== "Archived").length})
             </button>
             <button
               type="button"
               onClick={() => setActiveTab("archived")}
               className={cn(
-                "px-4 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer",
+                "relative h-9 flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent",
                 activeTab === "archived"
-                  ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
-                  : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
+                  ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
+                  : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
               )}
             >
-              Archived ({staffData.filter((s) => s.status === "Archived" && s.role !== "SystemAdmin" && s.role !== "SuperAdmin").length})
+              Archived ({officeStaff.filter((s) => s.status === "Archived").length})
             </button>
           </div>
 
           {/* Right: Search & Role Filter */}
           <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
-            <div className="relative flex-1 sm:w-64 min-w-[200px]">
-              <i className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-500 text-xs" />
+            <div className="relative flex-1 sm:w-64 min-w-[200px] group">
+              <i className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-xs pointer-events-none" />
               <Input
                 type="text"
                 placeholder="Search name, email or ID..."
-                className="h-10 pl-9 rounded-xl text-xs font-normal border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 placeholder:text-gray-400"
+                className="h-9 pl-8 pr-16 rounded-xl text-xs font-normal border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
                 value={localSearch}
                 onChange={(e) => setLocalSearch(e.target.value)}
                 disabled={isLoading}
               />
+              {localSearch && (
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] font-mono text-gray-400 dark:text-zinc-500 pointer-events-none">
+                  {filteredStaff.length} results
+                </span>
+              )}
             </div>
 
             <div className="w-40">
@@ -575,7 +594,7 @@ export default function StaffDirectoryTab({
                 value={roleFilter}
                 onChange={(e) => setRoleFilter(e.target.value)}
                 disabled={isLoading}
-                className="h-10 rounded-xl text-xs font-semibold border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200"
+                className="h-9 rounded-xl text-xs font-normal border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-[#111111] dark:text-zinc-200 cursor-pointer shadow-none"
               >
                 <option value="All">All Roles</option>
                 <option value="Admin">Administrators</option>
@@ -637,7 +656,7 @@ export default function StaffDirectoryTab({
 
         {/* Content Area: Loading / Error / Table */}
         {isLoading ? (
-          <div className="p-6 border-t border-gray-100 dark:border-white/10">
+          <div className="w-full border-t border-gray-100 dark:border-white/10">
             <DirectoryTableSkeleton rowCount={8} />
           </div>
         ) : error ? (
@@ -801,15 +820,15 @@ export default function StaffDirectoryTab({
                                 className="mt-6 flex h-10 items-center justify-center rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-6 text-xs font-semibold text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs active:scale-95 cursor-pointer"
                               >
                                 <i className="ph-bold ph-arrow-counter-clockwise mr-2"></i>
-                                Clear Search
+                                Clear
                               </Button>
                             ) : (
-                              activeTab === "active" && staffData.filter(s => s.status !== "Archived").length === 0 && (
+                              activeTab === "active" && officeStaff.filter(s => s.status !== "Archived").length === 0 && (
                                 <Button
                                   onClick={() => onSwitchView("create")}
                                   className="mt-6 flex h-10 items-center justify-center rounded-xl! btn-brand-red px-6 text-xs font-semibold text-white shadow-xs cursor-pointer active:scale-95 transition-all"
                                 >
-                                  Register New Staff
+                                  Register
                                 </Button>
                               )
                             )}
@@ -839,57 +858,58 @@ export default function StaffDirectoryTab({
             </div>
 
             {filteredStaff.length > 0 && (
-              <div className="flex items-center justify-between border-t border-gray-100 bg-white p-6 px-8 dark:border-white/10 dark:bg-card mt-auto">
-                <div className="flex items-center gap-8">
-                  <div className="flex items-center gap-6 text-[12px] font-normal text-gray-400 dark:text-zinc-500">
-                    <span>
-                      Showing {paginatedStaff.length} of {filteredStaff.length}
-                    </span>
-                    <div className="flex items-center gap-1.5 border-l border-gray-200 pl-6 dark:border-white/10">
-                      <span className="text-[12px] text-gray-400 dark:text-zinc-500">Rows:</span>
-                      <div className="flex items-center gap-1">
-                        {[10, 20, 50, 100].map((size) => (
-                          <button
-                            key={size}
-                            type="button"
-                            onClick={() => {
-                              setItemsPerPage(size)
-                              setCurrentPage(1)
-                            }}
-                            className={`px-2 py-0.5 rounded-[4px] text-[12px] font-normal cursor-pointer transition-colors border-0 ${
-                              itemsPerPage === size
-                                ? "bg-gray-100 text-[#111111] font-medium dark:bg-white/10 dark:text-zinc-50"
-                                : "bg-transparent text-gray-450 dark:text-zinc-550 hover:text-gray-700 dark:hover:text-zinc-300"
-                            }`}
-                          >
-                            {size}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
+              <div className="flex items-center justify-between border-t border-[#e5e5ea] dark:border-[#3a3a3c] bg-white dark:bg-[#1c1c1e] p-4 px-6 rounded-b-2xl mt-auto">
+                <div className="flex items-center gap-6 text-xs text-gray-500 dark:text-zinc-400 select-none">
+                  <span>
+                    Showing {paginatedStaff.length} of {filteredStaff.length.toLocaleString()}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <span>Rows:</span>
+                    {[10, 20, 50, 100].map((size) => (
+                      <button
+                        key={size}
+                        type="button"
+                        onClick={() => {
+                          setItemsPerPage(size)
+                          setCurrentPage(1)
+                        }}
+                        className={cn(
+                          "px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer",
+                          itemsPerPage === size
+                            ? "bg-gray-100 dark:bg-zinc-800 text-gray-900 dark:text-zinc-100"
+                            : "text-gray-400 hover:text-gray-600 dark:hover:text-zinc-200"
+                        )}
+                      >
+                        {size}
+                      </button>
+                    ))}
                   </div>
                 </div>
 
-                <div className="flex shrink-0 items-center gap-3">
-                  <button
+                <div className="flex items-center gap-2 select-none">
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     disabled={displayPage <= 1}
                     onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                    className="h-8 bg-transparent text-[12px] font-normal text-gray-400 hover:text-pup-maroon dark:text-zinc-500 dark:hover:text-zinc-200 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer border-0 p-0"
+                    className="text-xs text-gray-500 dark:text-zinc-400 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
                   >
                     Prev
-                  </button>
+                  </Button>
 
-                  <div className="flex h-8 min-w-[32px] items-center justify-center rounded-[6px] border border-gray-200/80 bg-white px-2.5 text-[12px] font-medium text-gray-900 dark:border-white/10 dark:bg-card dark:text-zinc-100">
+                  <div className="h-8 w-8 rounded-xl border border-[#e5e5ea] dark:border-zinc-800 flex items-center justify-center text-xs font-bold text-gray-800 dark:text-zinc-200 bg-white dark:bg-zinc-900">
                     {displayPage}
                   </div>
 
-                  <button
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     disabled={displayPage >= totalPages}
                     onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                    className="h-8 bg-transparent text-[12px] font-normal text-gray-400 hover:text-pup-maroon dark:text-zinc-500 dark:hover:text-zinc-200 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer border-0 p-0"
+                    className="text-xs text-gray-500 dark:text-zinc-400 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
                   >
                     Next
-                  </button>
+                  </Button>
                 </div>
               </div>
             )}

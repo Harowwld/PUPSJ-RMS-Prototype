@@ -530,7 +530,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
     <TooltipProvider delay={200}>
       <div className="animate-fade-up font-inter flex w-full flex-col gap-6">
         {/* Stat Cards */}
-        <StatCards isLoading={loading && !isManualLoading} logStats={logStats} />
+        <StatCards isLoading={loading} logStats={logStats} />
 
         {/* Main Table Card */}
         <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
@@ -578,7 +578,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
                     {isGeneratingPdf ? (
                       <i className="ph-bold ph-spinner animate-spin text-[16px] flex items-center justify-center"></i>
                     ) : (
-                      "Get Report"
+                      "Download"
                     )}
                   </Button>
                 </div>
@@ -588,8 +588,8 @@ export default function GlobalAuditLogsTab({ showToast }) {
 
           {/* Navigation Toolbar */}
           <div className="border-t border-gray-100 dark:border-white/10 p-5 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
-            {/* Severity Filter Pills */}
-            <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-gray-200/60 dark:border-white/5 shrink-0 overflow-x-auto">
+            {/* Severity Filter Line Tabs */}
+            <div className="flex items-center gap-6 shrink-0 select-none overflow-x-auto">
               <button
                 type="button"
                 onClick={() => {
@@ -597,10 +597,10 @@ export default function GlobalAuditLogsTab({ showToast }) {
                   setPage(1)
                 }}
                 className={cn(
-                  "px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap",
+                  "relative h-9 flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent whitespace-nowrap",
                   severityFilter === "All"
-                    ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
-                    : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
+                    ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
+                    : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
                 )}
               >
                 All Events ({total > 0 ? total.toLocaleString() : 0})
@@ -613,10 +613,10 @@ export default function GlobalAuditLogsTab({ showToast }) {
                   setPage(1)
                 }}
                 className={cn(
-                  "px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap",
+                  "relative h-9 flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent whitespace-nowrap",
                   severityFilter === "INFO"
-                    ? "bg-white dark:bg-zinc-700 text-emerald-700 dark:text-emerald-400 shadow-xs"
-                    : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
+                    ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
+                    : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
                 )}
               >
                 Information
@@ -629,10 +629,10 @@ export default function GlobalAuditLogsTab({ showToast }) {
                   setPage(1)
                 }}
                 className={cn(
-                  "px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap",
+                  "relative h-9 flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent whitespace-nowrap",
                   severityFilter === "WARNING"
-                    ? "bg-white dark:bg-zinc-700 text-amber-700 dark:text-amber-400 shadow-xs"
-                    : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
+                    ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
+                    : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
                 )}
               >
                 Warnings
@@ -645,10 +645,10 @@ export default function GlobalAuditLogsTab({ showToast }) {
                   setPage(1)
                 }}
                 className={cn(
-                  "px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap",
+                  "relative h-9 flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent whitespace-nowrap",
                   severityFilter === "CRITICAL"
-                    ? "bg-white dark:bg-zinc-700 text-red-700 dark:text-red-400 shadow-xs"
-                    : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
+                    ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
+                    : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
                 )}
               >
                 Critical
@@ -658,12 +658,12 @@ export default function GlobalAuditLogsTab({ showToast }) {
             {/* Search, Scope, Time, and Date Range Controls */}
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 flex-wrap">
               {/* Search */}
-              <div className="relative flex-1 sm:w-64 min-w-[200px]">
-                <i className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+              <div className="relative flex-1 sm:w-64 min-w-[200px] group">
+                <i className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-xs pointer-events-none"></i>
                 <Input
                   type="text"
                   placeholder="Search logs by actor, action..."
-                  className="pl-8 h-9 text-xs w-full bg-white dark:bg-zinc-800 border-gray-200 dark:border-white/10 rounded-xl"
+                  className="pl-8 h-9 text-xs w-full bg-white dark:bg-zinc-800 border-gray-200 dark:border-white/10 rounded-xl text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
                   value={localSearch}
                   onChange={(e) => setLocalSearch(e.target.value)}
                 />
@@ -898,7 +898,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
                       className="mt-6 flex h-10 items-center gap-2 rounded-xl border border-gray-300 bg-white px-5 text-xs font-semibold text-gray-700 shadow-xs transition-colors hover:bg-gray-50 dark:bg-zinc-900 dark:border-white/10 dark:text-zinc-300 cursor-pointer"
                     >
                       <i className="ph-bold ph-arrow-counter-clockwise"></i>
-                      Clear Search
+                      Clear
                     </Button>
                   )}
                 </EmptyHeader>

@@ -3,16 +3,22 @@
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
 
-export default function ComplianceTableSkeleton({ rowCount = 6 }) {
+export default function ComplianceTableSkeleton({ rowCount = 6, embedded = false }) {
   return (
-    <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card flex flex-col flex-1 isolate select-none">
+    <div
+      className={cn(
+        "overflow-hidden flex flex-col flex-1 isolate select-none",
+        embedded
+          ? "border-t border-gray-100 dark:border-white/10"
+          : "rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card"
+      )}
+    >
       {/* Table Toolbar Header */}
-      <div className="flex items-center justify-between p-4 px-6 border-b border-gray-100 dark:border-white/10 bg-white dark:bg-card">
-        <div className="flex items-center gap-3">
-          <Skeleton className="h-4 w-36 rounded dark:bg-muted" />
-          <Skeleton className="h-3 w-20 rounded dark:bg-muted" />
+      <div className="flex items-center justify-between px-6 py-3.5 border-b border-gray-100 dark:border-white/10 bg-gray-50/40 dark:bg-zinc-900/30">
+        <div className="flex items-center gap-2.5">
+          <Skeleton className="h-4 w-32 rounded dark:bg-muted" />
+          <Skeleton className="h-3 w-16 rounded dark:bg-muted" />
         </div>
-        <Skeleton className="h-9 w-56 rounded-lg dark:bg-muted" />
       </div>
 
       <div className="overflow-x-auto">

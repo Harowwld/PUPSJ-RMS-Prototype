@@ -40,6 +40,7 @@ export default function ConfirmModal({
   isPersonnelModal = false,
   isRegistrationModal = false,
   isUnsavedChangesModal = false,
+  isDeleteModal = false,
   isAppleStyled: isAppleStyledProp = false,
 }) {
   const inputRefs = [useRef(), useRef(), useRef(), useRef()];
@@ -159,7 +160,7 @@ export default function ConfirmModal({
     return () => window.removeEventListener("keydown", handleGlobalKey);
   }, [open, isLoading, disabled, isVerified, onConfirm]);
 
-  const isAppleStyled = isAppleStyledProp || isDeleteBackup || isArchiveModal || isRestoreModal || isPersonnelModal || isRegistrationModal || isUnsavedChangesModal;
+  const isAppleStyled = isAppleStyledProp || isDeleteBackup || isArchiveModal || isRestoreModal || isPersonnelModal || isRegistrationModal || isUnsavedChangesModal || isDeleteModal;
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -376,7 +377,7 @@ export default function ConfirmModal({
 
         <div className={cn(
           "p-4 border-t border-gray-100 dark:border-white/10 bg-white dark:bg-card flex flex-col-reverse sm:flex-row sm:justify-end gap-2.5",
-          isAppleStyled && "border-none pt-0 gap-2.5 justify-end flex-row items-center",
+          isAppleStyled && "border-none p-6 pt-0 gap-2.5 justify-end flex-row items-center",
           (!selectedItems.length && !isVerificationEnabled) && "pt-0 border-t-0"
         )}>
           <Button
@@ -395,18 +396,19 @@ export default function ConfirmModal({
             type="button"
             onClick={onConfirm}
             disabled={isLoading || disabled || !isVerified}
-            height={((isDeleteBackup || isArchiveModal || isPersonnelModal || isRegistrationModal) || isRestoreModal || isUnsavedChangesModal) ? 36 : 44}
-            radius={((isDeleteBackup || isArchiveModal || isPersonnelModal || isRegistrationModal) || isRestoreModal || isUnsavedChangesModal) ? 18 : 22}
+            height={isAppleStyled ? 36 : 44}
+            radius={isAppleStyled ? 18 : 22}
             glassColor="rgba(10, 132, 255, 0.15)"
             className={cn(
               "px-6 text-sm font-semibold gap-2 flex items-center transition-all active:scale-95 disabled:opacity-30 disabled:grayscale-[0.5] disabled:cursor-not-allowed",
               !isAppleStyled && "shadow-sm",
               (normalizedVariant === "success" && !isRestoreModal) && "btn-brand-green",
-              (normalizedVariant === "warning" && !isUnsavedChangesModal) && (v.confirmStyle || "bg-amber-600 hover:bg-amber-700 text-white"),
-              (normalizedVariant === "brand") && "btn-brand-red hover:from-red-700 hover:to-red-900",
-              (v.confirmVariant === "destructive") && "btn-brand-red",
-              (v.confirmVariant === "default" && !["success", "warning", "brand"].includes(normalizedVariant)) && "bg-gray-900 hover:bg-gray-800 text-white dark:bg-zinc-800 dark:hover:bg-zinc-700 dark:text-zinc-50 dark:border-white/10",
-              (isAppleStyled && !isRestoreModal && !isUnsavedChangesModal) && "btn-brand-red rounded-xl! h-10 px-5 text-xs font-semibold text-white shadow-none! border-none! cursor-pointer",
+              (!isAppleStyled && normalizedVariant === "warning" && !isUnsavedChangesModal) && (v.confirmStyle || "bg-amber-600 hover:bg-amber-700 text-white"),
+              (!isAppleStyled && normalizedVariant === "brand") && "btn-brand-red hover:from-red-700 hover:to-red-900",
+              (!isAppleStyled && v.confirmVariant === "destructive") && "btn-brand-red",
+              (!isAppleStyled && v.confirmVariant === "default" && !["success", "warning", "brand"].includes(normalizedVariant)) && "bg-gray-900 hover:bg-gray-800 text-white dark:bg-zinc-800 dark:hover:bg-zinc-700 dark:text-zinc-50 dark:border-white/10",
+              (isAppleStyled && !isRestoreModal && !isUnsavedChangesModal && normalizedVariant !== "warning") && "btn-brand-red rounded-xl! h-10 px-5 text-xs font-semibold text-white shadow-none! border-none! cursor-pointer",
+              (isAppleStyled && normalizedVariant === "warning" && !isUnsavedChangesModal) && "bg-amber-600 hover:bg-amber-700 text-white rounded-xl! h-10 px-5 text-xs font-semibold shadow-none! border-none! cursor-pointer",
               isRestoreModal && "bg-slate-900 hover:bg-slate-800 active:bg-black text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 rounded-xl! h-10 px-5 text-xs font-semibold shadow-none! border-none! cursor-pointer",
               isUnsavedChangesModal && "bg-[#FF6410] hover:bg-[#e55300] active:bg-[#cc4a00] text-white rounded-xl! h-10 px-5 text-xs font-semibold shadow-none! border-none! cursor-pointer",
               isRegistrationModal && "w-[120px]",

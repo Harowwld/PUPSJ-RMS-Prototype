@@ -16,7 +16,7 @@ export default function BackupPagination({
   const displayedCount = totalCount > 0 ? Math.max(0, endItem - startItem + 1) : 0
 
   return (
-    <div className="flex items-center justify-between border-t border-[#e5e5ea] dark:border-[#3a3a3c] bg-white dark:bg-[#1c1c1e] p-4 px-6 rounded-b-2xl">
+    <div className="mt-auto flex items-center justify-between border-t border-[#e5e5ea] dark:border-[#3a3a3c] bg-white dark:bg-[#1c1c1e] p-4 px-6 rounded-b-2xl">
       <div className="flex items-center gap-6 text-xs text-gray-500 dark:text-zinc-400 select-none">
         <span>
           Showing {displayedCount} of {totalCount.toLocaleString()}

@@ -8,8 +8,12 @@ import { RefreshButton } from "@/components/shared/RefreshButton";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Select } from "@/components/ui/select";
 import RegistrarODRSSkeleton from "@/components/staff/skeletons/RegistrarODRSSkeleton";
+import {
+  ALLOWED_STATUS_TRANSITIONS,
+  TERMINAL_REQUEST_STATUSES,
+} from "@/lib/constants";
 
-const statuses = ["Pending", "InProgress", "Ready", "Completed", "Cancelled"];
+const statuses = ["Pending", "InProgress", "Ready", "Completed", "Cancelled", "Shredded"];
 
 export default function RegistrarODRSTab({ showToast }) {
   const [rows, setRows] = useState([]);
@@ -134,7 +138,7 @@ export default function RegistrarODRSTab({ showToast }) {
                       <div className="mt-1 flex items-center gap-1.5 flex-wrap text-xs text-gray-500 dark:text-zinc-400">
                         <span>{item.student_name}</span>
                         <span>·</span>
-                        <span className="font-mono">{item.student_no || "No Student ID"}</span>
+                        <span>{item.student_no || "No Student ID"}</span>
                         {item.client_type && (
                           <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold border ${
                             item.client_type === "Alumni"
@@ -180,15 +184,29 @@ export default function RegistrarODRSTab({ showToast }) {
                 <div className="space-y-3 flex-1">
                   <div>
                     <label className="block text-xs font-bold uppercase tracking-wide text-gray-600 dark:text-zinc-400 mb-1">
-                      Update Status
+                      {Boolean(selected?.status && TERMINAL_REQUEST_STATUSES.includes(selected.status)) ? "Request Status" : "Update Status"}
                     </label>
-                    <Select
-                      className="h-10 text-sm font-normal text-gray-800 dark:text-zinc-100 border-gray-300 dark:border-zinc-700 dark:bg-zinc-800"
-                      value={status}
-                      onChange={(e) => setStatus(e.target.value)}
-                    >
-                      {statuses.map((item) => <option key={item} value={item}>{item}</option>)}
-                    </Select>
+                    {Boolean(selected?.status && TERMINAL_REQUEST_STATUSES.includes(selected.status)) ? (
+                      <div className="h-10 px-3 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-zinc-800/80 flex items-center justify-between text-sm font-semibold text-gray-800 dark:text-zinc-200">
+                        <span className="flex items-center gap-1.5 truncate">
+                          <i className="ph-bold ph-lock-simple text-gray-400 text-xs"></i>
+                          <span>{selected.status}</span>
+                        </span>
+                        <span className="text-[10px] font-medium text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
+                          Closed
+                        </span>
+                      </div>
+                    ) : (
+                      <Select
+                        className="h-10 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-sm font-normal text-gray-800 dark:text-zinc-100 shadow-none"
+                        value={status}
+                        onChange={(e) => setStatus(e.target.value)}
+                      >
+                        {((selected?.status && ALLOWED_STATUS_TRANSITIONS[selected.status]) || statuses).map((item) => (
+                          <option key={item} value={item}>{item}</option>
+                        ))}
+                      </Select>
+                    )}
                   </div>
 
                   <div>
@@ -204,7 +222,7 @@ export default function RegistrarODRSTab({ showToast }) {
                   </div>
 
                   <Button className="w-full bg-pup-maroon text-white hover:bg-red-900 font-semibold" onClick={save}>
-                    Publish Status Update
+                    Publish
                   </Button>
                 </div>
               </div>

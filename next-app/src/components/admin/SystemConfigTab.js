@@ -17,6 +17,7 @@ import { format } from "date-fns"
 import { generateExportFilename } from "@/lib/exportHelpers"
 import ConfirmModal from "@/components/shared/ConfirmModal"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
+import { cn } from "@/lib/utils"
 import {
   Empty,
   EmptyHeader,
@@ -965,84 +966,101 @@ export default function SystemConfigTab({
 
   return (
     <TooltipProvider delayDuration={200}>
-      <div className="animate-fade-up font-inter flex w-full flex-1 flex-col gap-6 min-h-0">
-        <Card className="p-0 gap-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none w-full flex flex-col min-h-0">
-          <Tabs
-            defaultValue="document-types"
-            value={activeSubTab}
-            onValueChange={setActiveSubTab}
-          >
-            <div className="w-full select-none px-[28px] pt-[20px]">
-              <div className="flex flex-wrap items-center gap-x-[24px] gap-y-0">
-                <button
-                  type="button"
-                  onClick={() => setActiveSubTab("document-types")}
-                  className={`flex items-center justify-center text-[15px] pt-[14px] pb-[10px] -mb-[0.5px] border-b-2 border-t-0 border-x-0 rounded-none cursor-pointer bg-transparent focus:outline-none transition-colors ${
-                    activeSubTab === "document-types"
-                      ? "border-black text-black dark:border-zinc-50 dark:text-zinc-50 font-semibold"
-                      : "border-transparent text-[#8E8E93] hover:text-[#111111] dark:hover:text-zinc-200 font-normal"
-                  }`}
-                >
-                  <span className="whitespace-nowrap tracking-wide">Document Types</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setActiveSubTab("degree-programs")}
-                  className={`flex items-center justify-center text-[15px] pt-[14px] pb-[10px] -mb-[0.5px] border-b-2 border-t-0 border-x-0 rounded-none cursor-pointer bg-transparent focus:outline-none transition-colors ${
-                    activeSubTab === "degree-programs"
-                      ? "border-black text-black dark:border-zinc-50 dark:text-zinc-50 font-semibold"
-                      : "border-transparent text-[#8E8E93] hover:text-[#111111] dark:hover:text-zinc-200 font-normal"
-                  }`}
-                >
-                  <span className="whitespace-nowrap tracking-wide">Degree Programs</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setActiveSubTab("course-blocks")}
-                  className={`flex items-center justify-center text-[15px] pt-[14px] pb-[10px] -mb-[0.5px] border-b-2 border-t-0 border-x-0 rounded-none cursor-pointer bg-transparent focus:outline-none transition-colors ${
-                    activeSubTab === "course-blocks"
-                      ? "border-black text-black dark:border-zinc-50 dark:text-zinc-50 font-semibold"
-                      : "border-transparent text-[#8E8E93] hover:text-[#111111] dark:hover:text-zinc-200 font-normal"
-                  }`}
-                >
-                  <span className="whitespace-nowrap tracking-wide">Course Blocks</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setActiveSubTab("security-questions")}
-                  className={`flex items-center justify-center text-[15px] pt-[14px] pb-[10px] -mb-[0.5px] border-b-2 border-t-0 border-x-0 rounded-none cursor-pointer bg-transparent focus:outline-none transition-colors ${
-                    activeSubTab === "security-questions"
-                      ? "border-black text-black dark:border-zinc-50 dark:text-zinc-50 font-semibold"
-                      : "border-transparent text-[#8E8E93] hover:text-[#111111] dark:hover:text-zinc-200 font-normal"
-                  }`}
-                >
-                  <span className="whitespace-nowrap tracking-wide">Security Questions</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setActiveSubTab("bulk-import")}
-                  className={`flex items-center justify-center text-[15px] pt-[14px] pb-[10px] -mb-[0.5px] border-b-2 border-t-0 border-x-0 rounded-none cursor-pointer bg-transparent focus:outline-none transition-colors ${
-                    activeSubTab === "bulk-import"
-                      ? "border-black text-black dark:border-zinc-50 dark:text-zinc-50 font-semibold"
-                      : "border-transparent text-[#8E8E93] hover:text-[#111111] dark:hover:text-zinc-200 font-normal"
-                  }`}
-                >
-                  <span className="whitespace-nowrap tracking-wide">Imports</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setActiveSubTab("recognition-templates")}
-                  className={`flex items-center justify-center text-[15px] pt-[14px] pb-[10px] -mb-[0.5px] border-b-2 border-t-0 border-x-0 rounded-none cursor-pointer bg-transparent focus:outline-none transition-colors ${
-                    activeSubTab === "recognition-templates"
-                      ? "border-black text-black dark:border-zinc-50 dark:text-zinc-50 font-semibold"
-                      : "border-transparent text-[#8E8E93] hover:text-[#111111] dark:hover:text-zinc-200 font-normal"
-                  }`}
-                >
-                  OCR Configuration
-                </button>
-              </div>
-            </div>
+      <div className="animate-fade-up font-inter flex w-full flex-1 flex-col gap-4 min-h-0">
+        <Tabs
+          defaultValue="document-types"
+          value={activeSubTab}
+          onValueChange={setActiveSubTab}
+          className="flex flex-col gap-4 w-full flex-1 min-h-0"
+        >
+          {/* Top Section Switcher Pill */}
+          <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-gray-100/90 dark:bg-zinc-900/80 border border-gray-200/80 dark:border-white/10 w-fit select-none overflow-x-auto max-w-full">
+            <button
+              type="button"
+              onClick={() => setActiveSubTab("document-types")}
+              className={cn(
+                "flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer border-0",
+                activeSubTab === "document-types"
+                  ? "bg-white dark:bg-zinc-800 text-pup-maroon dark:text-red-400 shadow-sm"
+                  : "text-gray-500 hover:text-gray-900 dark:hover:text-white bg-transparent"
+              )}
+            >
+              <i className="ph-bold ph-files text-sm" />
+              <span>Document Types</span>
+            </button>
 
+            <button
+              type="button"
+              onClick={() => setActiveSubTab("degree-programs")}
+              className={cn(
+                "flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer border-0",
+                activeSubTab === "degree-programs"
+                  ? "bg-white dark:bg-zinc-800 text-pup-maroon dark:text-red-400 shadow-sm"
+                  : "text-gray-500 hover:text-gray-900 dark:hover:text-white bg-transparent"
+              )}
+            >
+              <i className="ph-bold ph-graduation-cap text-sm" />
+              <span>Degree Programs</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveSubTab("course-blocks")}
+              className={cn(
+                "flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer border-0",
+                activeSubTab === "course-blocks"
+                  ? "bg-white dark:bg-zinc-800 text-pup-maroon dark:text-red-400 shadow-sm"
+                  : "text-gray-500 hover:text-gray-900 dark:hover:text-white bg-transparent"
+              )}
+            >
+              <i className="ph-bold ph-users-three text-sm" />
+              <span>Course Blocks</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveSubTab("security-questions")}
+              className={cn(
+                "flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer border-0",
+                activeSubTab === "security-questions"
+                  ? "bg-white dark:bg-zinc-800 text-pup-maroon dark:text-red-400 shadow-sm"
+                  : "text-gray-500 hover:text-gray-900 dark:hover:text-white bg-transparent"
+              )}
+            >
+              <i className="ph-bold ph-shield-check text-sm" />
+              <span>Security Questions</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveSubTab("bulk-import")}
+              className={cn(
+                "flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer border-0",
+                activeSubTab === "bulk-import"
+                  ? "bg-white dark:bg-zinc-800 text-pup-maroon dark:text-red-400 shadow-sm"
+                  : "text-gray-500 hover:text-gray-900 dark:hover:text-white bg-transparent"
+              )}
+            >
+              <i className="ph-bold ph-file-arrow-up text-sm" />
+              <span>Imports</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveSubTab("recognition-templates")}
+              className={cn(
+                "flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer border-0",
+                activeSubTab === "recognition-templates"
+                  ? "bg-white dark:bg-zinc-800 text-pup-maroon dark:text-red-400 shadow-sm"
+                  : "text-gray-500 hover:text-gray-900 dark:hover:text-white bg-transparent"
+              )}
+            >
+              <i className="ph-bold ph-scan text-sm" />
+              <span>OCR Configuration</span>
+            </button>
+          </div>
+
+          <Card className="p-0 gap-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none w-full flex flex-col min-h-0">
             <div className="relative flex flex-1 flex-col p-0 w-full min-h-0">
               <TabsContent
                 value="document-types"
@@ -1185,8 +1203,8 @@ export default function SystemConfigTab({
               />
             </TabsContent>
           </div>
-        </Tabs>
-      </Card>
+        </Card>
+      </Tabs>
 
       {/* MODALS */}
 
@@ -1201,6 +1219,7 @@ export default function SystemConfigTab({
           buttonIcon={confirmPayload.buttonIcon}
           selectedItems={confirmPayload.selectedItems}
           onConfirm={confirmPayload.onConfirm}
+          isAppleStyled={true}
           isArchiveModal={confirmPayload.title?.toLowerCase().includes("archive") && !confirmPayload.title?.toLowerCase().includes("delete")}
           isRestoreModal={confirmPayload.title?.toLowerCase().includes("restore") && !confirmPayload.title?.toLowerCase().includes("system")}
         />

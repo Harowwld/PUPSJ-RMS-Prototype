@@ -30,6 +30,17 @@ export async function POST(req) {
       }
     }
 
+    // Verify that an external drive is actually connected
+    const { detectExternalDrive } = await import("@/lib/externalDriveDetector");
+    const driveInfo = detectExternalDrive();
+    if (!driveInfo.connected || !driveInfo.path) {
+      return NextResponse.json({
+        ok: false,
+        error: "Cannot sync: No external hard drive detected. Please connect an external storage drive to sync.",
+        driveOffline: true,
+      }, { status: 400 });
+    }
+
     // Perform sync
     const result = await syncBackupExternally(id);
 

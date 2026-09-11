@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import PageHeader from "@/components/shared/PageHeader";
@@ -186,26 +187,28 @@ export default function OsasMonitoringTab({ showToast }) {
         </p>
 
         {/* Subtabs: Active / Archive */}
-        <div className="mb-4 flex gap-8 border-b border-gray-100 dark:border-white/5">
+        <div className="mb-4 flex items-center gap-6 shrink-0 h-10 border-b border-gray-100 dark:border-white/10 bg-transparent select-none">
           <button
             type="button"
             onClick={() => setSubtab("active")}
-            className={`relative pb-3 text-sm font-medium transition-colors ${
+            className={cn(
+              "relative h-full flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent",
               subtab === "active"
-                ? "text-pup-maroon font-semibold after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-full after:bg-pup-maroon dark:text-red-400 dark:after:bg-red-400"
-                : "text-gray-400 hover:text-gray-700 dark:text-zinc-500 dark:hover:text-zinc-300"
-            }`}
+                ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
+                : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
+            )}
           >
             Active ({counts.active})
           </button>
           <button
             type="button"
             onClick={() => setSubtab("archive")}
-            className={`relative pb-3 text-sm font-medium transition-colors ${
+            className={cn(
+              "relative h-full flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent",
               subtab === "archive"
-                ? "text-pup-maroon font-semibold after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-full after:bg-pup-maroon dark:text-red-400 dark:after:bg-red-400"
-                : "text-gray-400 hover:text-gray-700 dark:text-zinc-500 dark:hover:text-zinc-300"
-            }`}
+                ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
+                : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
+            )}
           >
             Archive ({counts.archive})
           </button>
@@ -296,7 +299,7 @@ export default function OsasMonitoringTab({ showToast }) {
                   className="w-full bg-pup-maroon text-white hover:bg-red-900 font-semibold"
                   onClick={save}
                 >
-                  Publish update
+                  Publish
                 </Button>
               </div>
             )}

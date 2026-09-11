@@ -15,22 +15,24 @@ export default function StorageLayoutSkeleton() {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Skeleton className="h-9 w-24 rounded-lg dark:bg-muted" />
-          <Skeleton className="h-9 w-28 rounded-lg dark:bg-muted" />
+          <Skeleton className="h-10 w-10 rounded-xl dark:bg-muted" />
         </div>
       </div>
 
-      {/* Editor Toolbar (h-[52px]) */}
-      <div className="flex h-[52px] items-center justify-between px-6 border-b border-black/[0.08] dark:border-white/[0.08] bg-gray-50/50 dark:bg-muted/10">
-        <div className="flex items-center gap-3">
-          <Skeleton className="h-7 w-16 rounded-md dark:bg-muted" />
-          <Skeleton className="h-7 w-16 rounded-md dark:bg-muted" />
-          <div className="h-4 w-[1px] bg-gray-200 dark:bg-white/10 mx-1" />
-          <Skeleton className="h-7 w-32 rounded-lg dark:bg-muted" />
+      {/* Editor Toolbar (h-[56px]) */}
+      <div className="flex h-[56px] items-center justify-between px-6 border-b border-gray-100 dark:border-white/10 bg-gray-50/50 dark:bg-muted/10">
+        <div className="flex items-center gap-2">
+          <Skeleton className="h-9 w-14 rounded-lg dark:bg-muted" />
+          <Skeleton className="h-9 w-14 rounded-lg dark:bg-muted" />
+          <div className="w-2" />
+          <Skeleton className="h-9 w-32 rounded-xl dark:bg-muted" />
+          <Skeleton className="h-7 w-7 rounded-lg dark:bg-muted" />
+          <Skeleton className="h-7 w-7 rounded-lg dark:bg-muted" />
         </div>
         <div className="flex items-center gap-2">
-          <Skeleton className="h-7 w-20 rounded-md dark:bg-muted" />
-          <Skeleton className="h-7 w-28 rounded-md dark:bg-muted" />
+          <Skeleton className="h-9 w-24 rounded-xl dark:bg-muted" />
+          <Skeleton className="h-9 w-32 rounded-xl dark:bg-muted" />
+          <Skeleton className="h-9 w-20 rounded-xl dark:bg-muted" />
         </div>
       </div>
 

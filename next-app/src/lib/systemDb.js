@@ -11,7 +11,6 @@
  * - Global audit logs
  * - Global settings
  * - Rate limits (global)
- * - Chat messages (global)
  */
 import crypto from "node:crypto";
 import { query, queryOne, withTransaction } from "./postgres.js";
@@ -121,8 +120,8 @@ export const MODULE_REGISTRY = [
   // Staff modules
   {
     id: "alumni_requests",
-    name: "Alumni Requests",
-    description: "Staff-mediated alumni document request management",
+    name: "Document Requests",
+    description: "Online and staff-mediated document request management (ODRS)",
     category: "staff",
     icon: "ph-bold ph-tray-arrow-up",
     sidebar_group: "Operations",
@@ -399,31 +398,6 @@ export async function getSystemDb() {
         updated_at TEXT NOT NULL DEFAULT (datetime('now'))
       );
 
-      CREATE TABLE IF NOT EXISTS chat_messages (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        sender_id TEXT NOT NULL,
-        recipient_id TEXT,
-        message TEXT NOT NULL,
-        created_at TEXT NOT NULL DEFAULT (datetime('now')),
-        is_read INTEGER DEFAULT 0,
-        is_deleted INTEGER DEFAULT 0,
-        is_edited INTEGER DEFAULT 0,
-        updated_at TEXT,
-        original_message TEXT,
-        image_filename TEXT,
-        mime_type TEXT,
-        FOREIGN KEY (sender_id) REFERENCES staff(id) ON UPDATE CASCADE ON DELETE CASCADE,
-        FOREIGN KEY (recipient_id) REFERENCES staff(id) ON UPDATE CASCADE ON DELETE CASCADE
-      );
-
-      CREATE TABLE IF NOT EXISTS chat_message_deletions (
-        message_id INTEGER NOT NULL,
-        user_id TEXT NOT NULL,
-        PRIMARY KEY (message_id, user_id),
-        FOREIGN KEY (message_id) REFERENCES chat_messages(id) ON UPDATE CASCADE ON DELETE CASCADE,
-        FOREIGN KEY (user_id) REFERENCES staff(id) ON UPDATE CASCADE ON DELETE CASCADE
-      );
-
       -- Indexes
       CREATE INDEX IF NOT EXISTS idx_staff_office_id ON staff(office_id);
       CREATE INDEX IF NOT EXISTS idx_staff_name ON staff(lname, fname);
@@ -437,8 +411,6 @@ export async function getSystemDb() {
       CREATE INDEX IF NOT EXISTS idx_rate_limit_hits_endpoint_identifier_created ON rate_limit_hits(endpoint_type, identifier, created_at);
       CREATE INDEX IF NOT EXISTS idx_rate_limit_hits_created_at ON rate_limit_hits(created_at);
       CREATE INDEX IF NOT EXISTS idx_rate_limit_violations_endpoint_identifier ON rate_limit_violations(endpoint_type, identifier);
-      CREATE INDEX IF NOT EXISTS idx_chat_messages_sender_recipient ON chat_messages(sender_id, recipient_id);
-      CREATE INDEX IF NOT EXISTS idx_chat_messages_created_at ON chat_messages(created_at);
     `);
 
     // ----- Seed defaults if first run -----

@@ -152,7 +152,7 @@ export default function PDFPreviewModal({ open, onClose, preview }) {
               rel="noreferrer"
               className="inline-flex items-center gap-1.5 h-10 px-4 text-xs font-semibold rounded-xl text-pup-maroon dark:text-red-400 hover:bg-red-50/60 dark:hover:bg-red-950/30 transition-colors"
             >
-              <span className="hover:underline">Open Full View</span>
+              <span className="hover:underline">Open</span>
               <i className="ph-bold ph-arrow-square-out text-sm"></i>
             </a>
           ) : null}

@@ -18,6 +18,7 @@ import {
 import { ROOM_TEMPLATES, getDefaultDoor } from "@/lib/storageLayoutDefaults"
 
 import PageHeader from "@/components/shared/PageHeader"
+import { RefreshButton } from "@/components/shared/RefreshButton"
 import FloatingActionBar from "@/components/shared/FloatingActionBar"
 import ConfirmModal from "@/components/shared/ConfirmModal"
 import PromptModal from "@/components/shared/PromptModal"
@@ -677,90 +678,109 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
     }
   }, [simulationMode, selectedCabinet, activeRoom])
 
-  useEffect(() => {
-    ;(async () => {
-      setLoading(true)
-      try {
-        const [layoutRes, templatesRes] = await Promise.all([
-          fetch("/api/storage-layout", { cache: "no-store" }),
-          fetch("/api/storage-layout/templates", { cache: "no-store" })
-        ])
-        
-        const json = await layoutRes.json()
-        const templatesJson = await templatesRes.json()
-
-        if (!layoutRes.ok || !json?.ok)
-          throw new Error(json?.error || "Failed to load layout")
-
-        setLayout(json.data)
-        setHistory([{
-          id: Math.random().toString(36).substring(7),
-          label: "Initial State",
-          layout: JSON.parse(JSON.stringify(json.data))
-        }])
-        setHistoryIndex(0)
-        const firstRoom = Array.isArray(json.data?.rooms)
-          ? json.data.rooms[0]?.id
-          : null
-        setActiveRoomId(firstRoom)
-
-        if (templatesRes.ok && templatesJson?.ok) {
-          setTemplates(templatesJson.data)
-          if (templatesJson.data.length > 0) {
-            setSelectedTemplateId(templatesJson.data[0].id)
+  const fetchStudentUsage = useCallback(async () => {
+    try {
+      const limit = 200
+      let offset = 0
+      const map = new Map()
+      const drawerMap = new Map()
+      while (true) {
+        const qs = new URLSearchParams()
+        qs.set("limit", String(limit))
+        qs.set("offset", String(offset))
+        const res = await fetch(`/api/students?${qs}`, { cache: "no-store" })
+        const json = await res.json().catch(() => null)
+        if (!res.ok || !json?.ok) break
+        const rows = Array.isArray(json.data) ? json.data : []
+        for (const s of rows) {
+          const roomId = Number(s?.room)
+          if (!Number.isFinite(roomId)) continue
+          map.set(roomId, (map.get(roomId) || 0) + 1)
+          const cabId = String(s?.cabinet || "").trim()
+          const drawerId = Number(s?.drawer)
+          if (cabId && Number.isFinite(drawerId)) {
+            const key = `${roomId}|${cabId}|${drawerId}`
+            drawerMap.set(key, (drawerMap.get(key) || 0) + 1)
           }
         }
-      } catch (err) {
-        showToast?.(
-          {
-            title: "Load Failed",
-            description: err?.message || "Unable to load storage layout.",
-          },
-          true
-        )
-      } finally {
-        setLoading(false)
+        if (rows.length < limit) break
+        offset += limit
+        if (offset > 20000) break
       }
-    })()
-  }, [showToast])
-
-  useEffect(() => {
-    ;(async () => {
-      try {
-        const limit = 200
-        let offset = 0
-        const map = new Map()
-        const drawerMap = new Map()
-        while (true) {
-          const qs = new URLSearchParams()
-          qs.set("limit", String(limit))
-          qs.set("offset", String(offset))
-          const res = await fetch(`/api/students?${qs}`, { cache: "no-store" })
-          const json = await res.json().catch(() => null)
-          if (!res.ok || !json?.ok) break
-          const rows = Array.isArray(json.data) ? json.data : []
-          for (const s of rows) {
-            const roomId = Number(s?.room)
-            if (!Number.isFinite(roomId)) continue
-            map.set(roomId, (map.get(roomId) || 0) + 1)
-            const cabId = String(s?.cabinet || "").trim()
-            const drawerId = Number(s?.drawer)
-            if (cabId && Number.isFinite(drawerId)) {
-              const key = `${roomId}|${cabId}|${drawerId}`
-              drawerMap.set(key, (drawerMap.get(key) || 0) + 1)
-            }
-          }
-          if (rows.length < limit) break
-          offset += limit
-          if (offset > 20000) break
-        }
-        setStudentRoomUsage(map)
-        setStudentDrawerUsage(drawerMap)
-      } catch {
-        // silent
-      }
-    })()
+      setStudentRoomUsage(map)
+      setStudentDrawerUsage(drawerMap)
+    } catch {
+      // silent
+    }
   }, [])
+
+  const handleRefresh = useCallback(async (isManual = true) => {
+    setLoading(true)
+    try {
+      const [layoutRes, templatesRes] = await Promise.all([
+        fetch("/api/storage-layout", { cache: "no-store" }),
+        fetch("/api/storage-layout/templates", { cache: "no-store" }),
+        fetchStudentUsage(),
+      ])
+      
+      const json = await layoutRes.json()
+      const templatesJson = await templatesRes.json()
+
+      if (!layoutRes.ok || !json?.ok)
+        throw new Error(json?.error || "Failed to load layout")
+
+      setLayout(json.data)
+      setHistory([{
+        id: Math.random().toString(36).substring(7),
+        label: "Initial State",
+        layout: JSON.parse(JSON.stringify(json.data))
+      }])
+      setHistoryIndex(0)
+      setSelectedCabinetIds(new Set())
+      setIsDirty?.(false)
+
+      const rooms = Array.isArray(json.data?.rooms) ? json.data.rooms : []
+      if (rooms.length > 0) {
+        setActiveRoomId(prev => {
+          if (prev && rooms.some(r => r.id === prev)) return prev
+          return rooms[0].id
+        })
+      } else {
+        setActiveRoomId(null)
+      }
+
+      if (templatesRes.ok && templatesJson?.ok) {
+        setTemplates(templatesJson.data)
+        if (templatesJson.data.length > 0) {
+          setSelectedTemplateId(prev => {
+            if (prev && templatesJson.data.some(t => t.id === prev)) return prev
+            return templatesJson.data[0].id
+          })
+        }
+      }
+
+      if (isManual) {
+        showToast?.({
+          title: "Storage Layout Refreshed",
+          description: "Archive rooms and templates reloaded."
+        })
+      }
+    } catch (err) {
+      showToast?.(
+        {
+          title: "Load Failed",
+          description: err?.message || "Unable to load storage layout.",
+        },
+        true
+      )
+    } finally {
+      setLoading(false)
+    }
+  }, [showToast, setIsDirty, fetchStudentUsage])
+
+  useEffect(() => {
+    handleRefresh(false)
+  }, [handleRefresh])
 
   const activeRoomStudentCount = useMemo(() => {
     if (!activeRoom) return 0
@@ -899,6 +919,29 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
     removeSelectedCabinet()
     setBulkConfirmOpen(false)
   }
+
+  const isSingleCabinet = selectedCabinetIds.size === 1
+  const deleteCabinetTitle = isSingleCabinet
+    ? (selectedCabinet?.isDoor ? "Delete Entrance Door" : `Delete Cabinet ${selectedCabinet?.id || ""}`)
+    : "Delete Selected Cabinets"
+
+  const deleteCabinetMessage = isSingleCabinet
+    ? (selectedCabinet?.isDoor
+        ? "Are you sure you want to remove this entrance door indicator? You can add it back anytime."
+        : `Are you sure you want to delete Cabinet ${selectedCabinet?.id || ""}? This will remove the cabinet and its drawer layout from this room.`)
+    : `Are you sure you want to delete the ${selectedCabinetIds.size} selected cabinets? This will permanently remove them and their drawer layouts from this room.`
+
+  const deleteCabinetConfirmLabel = "Delete"
+
+  const deleteCabinetItems = useMemo(() => {
+    if (selectedCabinetIds.size === 0) return []
+    return Array.from(selectedCabinetIds).map((id) => {
+      if (id === "DOOR") return "Entrance Door"
+      const cab = activeRoom?.cabinets?.find((c) => String(c.id) === String(id))
+      const count = (cab?.drawerIds || []).length
+      return `Cabinet ${id}${count > 0 ? ` (${count} ${count === 1 ? "drawer" : "drawers"})` : ""}`
+    })
+  }, [selectedCabinetIds, activeRoom])
 
   async function saveCurrentAsTemplate(name) {
     if (!activeRoom || !name) return
@@ -1163,7 +1206,7 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
       {/* Center-left group: Room dropdown + add icon + trash icon */}
       <div className="flex items-center gap-2 flex-none">
         <Select
-          className="h-10 min-w-[130px] w-fit cursor-pointer rounded-xl border border-gray-200 dark:border-white/10 bg-white px-3 text-xs font-semibold text-gray-700 dark:border-white/10 dark:bg-zinc-800 dark:text-zinc-200 shadow-xs"
+          className="h-9 min-w-[130px] w-fit cursor-pointer rounded-xl border border-gray-200 dark:border-white/10 bg-white px-3 text-xs font-normal text-gray-700 dark:bg-zinc-800 dark:text-zinc-200 shadow-none"
           value={String(activeRoomId ?? "")}
           disabled={!layout?.rooms?.length}
           onChange={(e) => setActiveRoomId(Number(e.target.value))}
@@ -1177,7 +1220,7 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
           type="button"
           onClick={addRoom}
           className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-emerald-600 dark:text-zinc-400 dark:hover:text-emerald-400 transition-colors cursor-pointer focus:outline-none flex items-center justify-center border-0 bg-transparent active:scale-95"
-          title="Add Room"
+          title="Add"
         >
           <i className="ph-bold ph-plus text-sm" />
         </button>
@@ -1187,7 +1230,7 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
           onClick={() => setDeleteRoomConfirmOpen(true)}
           disabled={!activeRoom || activeRoomStudentCount > 0}
           className="w-7 h-7 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/30 text-gray-500 hover:text-red-600 dark:text-zinc-400 dark:hover:text-red-400 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer focus:outline-none flex items-center justify-center border-0 bg-transparent active:scale-95"
-          title="Delete Room"
+          title="Delete"
         >
           <i className="ph-bold ph-trash text-sm" />
         </button>
@@ -1202,19 +1245,19 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
           type="button"
           variant="outline"
           onClick={addCabinet}
-          className="flex h-10 items-center justify-center rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
+          className="flex h-9 items-center justify-center rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
           disabled={!activeRoom}
         >
-          Add Cabinet
+          Add
         </Button>
 
         {/* Unified Right Group Container */}
-        <div className="relative flex items-center h-10 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 shadow-xs">
+        <div className="relative flex items-center h-9 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 shadow-xs">
           <Select
             usePortal={false}
-            className="h-full w-auto min-w-0 cursor-pointer rounded-none! rounded-l-xl! border-0 bg-transparent pl-3 pr-3 gap-1.5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-none hover:bg-black/[0.02]! focus:ring-0! focus:border-0! focus:outline-none! focus-visible:ring-0! focus-visible:border-0! focus:bg-transparent! active:bg-transparent! focus-visible:bg-transparent!"
+            className="h-full w-auto min-w-0 cursor-pointer rounded-none! rounded-l-xl! border-0 bg-transparent pl-3 pr-3 gap-1.5 text-xs font-normal text-gray-700 dark:text-zinc-200 shadow-none hover:bg-black/[0.02]! focus:ring-0! focus:border-0! focus:outline-none! focus-visible:ring-0! focus-visible:border-0! focus:bg-transparent! active:bg-transparent! focus-visible:bg-transparent!"
             menuClassName="bg-white! border border-gray-200! rounded-xl! shadow-md! dark:border-white/10 dark:bg-card"
-            optionClassName="text-xs! font-medium! text-gray-900! h-9! px-3! bg-transparent! hover:bg-gray-50! dark:text-zinc-200 dark:hover:bg-white/5 rounded-none!"
+            optionClassName="text-xs! font-normal! text-gray-900! h-9! px-3! bg-transparent! hover:bg-gray-50! dark:text-zinc-200 dark:hover:bg-white/5 rounded-none!"
             value={selectedTemplateId}
             onChange={(e) => setSelectedTemplateId(e.target.value)}
             disabled={!activeRoom || templates.length === 0}
@@ -1238,9 +1281,9 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
           <DropdownMenuTrigger asChild>
             <button
               type="button"
-              className="p-0 border-0 bg-transparent text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer focus:outline-none flex items-center justify-center w-7 h-10"
+              className="p-0 border-0 bg-transparent text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer focus:outline-none flex items-center justify-center w-7 h-9"
             >
-              <i className="ti ti-ellipsis-vertical text-base" />
+              <i className="ph-bold ph-dots-three-vertical text-[18px]" />
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48 rounded-xl border border-gray-200 bg-white shadow-md dark:bg-zinc-900 dark:border-white/10">
@@ -1260,7 +1303,7 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
         <Button
           onClick={saveLayout}
           disabled={saving || hasAnyCollisions}
-          className="flex h-10 w-[90px] items-center justify-center rounded-xl! btn-brand-red text-white font-semibold text-xs active:scale-95 disabled:opacity-30 disabled:grayscale transition-all dark:shadow-none cursor-pointer border-0 shadow-xs"
+          className="flex h-9 w-[84px] items-center justify-center rounded-xl! btn-brand-red text-white font-semibold text-xs active:scale-95 disabled:opacity-30 disabled:grayscale transition-all dark:shadow-none cursor-pointer border-0 shadow-xs"
         >
           {saving ? (
             <i className="ph-bold ph-spinner animate-spin text-sm"></i>
@@ -1279,10 +1322,17 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
         title="Storage Layout Editor"
         description="Organize how cabinets are placed and arranged in your storage rooms."
         showBorder={false}
-        titleClassName="text-[15px] font-semibold tracking-[-0.01em] text-[#111111] dark:text-zinc-50 mb-[4px]"
-        descriptionClassName="text-[13px] font-normal text-[#8E8E93] dark:text-zinc-400 m-0"
+        titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
+        descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
+        actions={
+          <RefreshButton
+            onRefresh={() => handleRefresh(true)}
+            isLoading={loading}
+            title="Refresh Storage Layout"
+          />
+        }
       />
-      <div className="border-b-[0.5px] border-black/[0.08] dark:border-white/[0.08] w-full" />
+      <div className="border-b border-gray-100 dark:border-white/10 w-full" />
 
       {renderToolbar()}
 
@@ -1334,12 +1384,61 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
         {renderEditorContent()}
       </Card>
 
-      <FloatingActionBar selectedCount={selectedCabinetIds.size} onCancel={() => setSelectedCabinetIds(new Set())} actionLabel="Delete selected" actionIcon="ph-trash" onAction={() => setBulkConfirmOpen(true)} selectionStatus="Selected Cabinets" />
+      <FloatingActionBar selectedCount={selectedCabinetIds.size} onCancel={() => setSelectedCabinetIds(new Set())} actionLabel="Delete" actionIcon="ph-trash" onAction={() => setBulkConfirmOpen(true)} selectionStatus="Selected Cabinets" />
 
-      <ConfirmModal open={bulkConfirmOpen} onCancel={() => setBulkConfirmOpen(false)} title="Delete" message="Delete selected cabinets?" confirmLabel="Delete" variant="danger" onConfirm={bulkDeleteCabinets} />
-      <ConfirmModal open={deleteRoomConfirmOpen} onCancel={() => setDeleteRoomConfirmOpen(false)} title="Delete room" message="Delete this room?" confirmLabel="Delete" variant="danger" onConfirm={() => { removeActiveRoom(); setDeleteRoomConfirmOpen(false); }} />
-      <ConfirmModal open={resetRoomConfirmOpen} onCancel={() => setResetRoomConfirmOpen(false)} title="Reset room" message="Clear layout?" confirmLabel="Reset" variant="warning" onConfirm={() => { resetActiveRoomCabinets(); setResetRoomConfirmOpen(false); }} />
-      <ConfirmModal open={templateApplyConfirmOpen} onCancel={() => setTemplateApplyConfirmOpen(false)} title="Use template" message="Apply template?" confirmLabel="Use" variant="warning" onConfirm={() => { applyTemplateToActiveRoom(); setTemplateApplyConfirmOpen(false); }} />
+      <ConfirmModal
+        open={bulkConfirmOpen}
+        onCancel={() => setBulkConfirmOpen(false)}
+        title={deleteCabinetTitle}
+        message={deleteCabinetMessage}
+        confirmLabel={deleteCabinetConfirmLabel}
+        selectedItems={deleteCabinetItems}
+        variant="danger"
+        onConfirm={bulkDeleteCabinets}
+        isDeleteModal={true}
+      />
+      <ConfirmModal
+        open={deleteRoomConfirmOpen}
+        onCancel={() => setDeleteRoomConfirmOpen(false)}
+        title="Delete Storage Room"
+        message={`Are you sure you want to delete ${activeRoom?.name || `Room ${activeRoom?.id}`}? This room and all cabinet configurations inside it will be permanently deleted.`}
+        confirmLabel="Delete"
+        selectedItems={activeRoom ? [`${activeRoom.name || `Room ${activeRoom.id}`} (${(activeRoom.cabinets || []).length} ${activeRoom.cabinets?.length === 1 ? "cabinet" : "cabinets"})`] : []}
+        variant="danger"
+        onConfirm={() => {
+          removeActiveRoom()
+          setDeleteRoomConfirmOpen(false)
+        }}
+        isDeleteModal={true}
+      />
+      <ConfirmModal
+        open={resetRoomConfirmOpen}
+        onCancel={() => setResetRoomConfirmOpen(false)}
+        title="Reset Room Layout"
+        message={`Are you sure you want to reset ${activeRoom?.name || `Room ${activeRoom?.id}`}? All placed cabinets will be cleared and the room layout will revert to an empty floorplan.`}
+        confirmLabel="Reset"
+        selectedItems={activeRoom ? [`${activeRoom.name || `Room ${activeRoom.id}`} (${(activeRoom.cabinets || []).length} ${activeRoom.cabinets?.length === 1 ? "cabinet" : "cabinets"})`] : []}
+        variant="warning"
+        onConfirm={() => {
+          resetActiveRoomCabinets()
+          setResetRoomConfirmOpen(false)
+        }}
+        isAppleStyled={true}
+      />
+      <ConfirmModal
+        open={templateApplyConfirmOpen}
+        onCancel={() => setTemplateApplyConfirmOpen(false)}
+        title="Apply Room Template"
+        message={`Are you sure you want to apply the "${templates.find(t => t.id === selectedTemplateId)?.name || 'selected'}" template? This will replace the current cabinet layout in ${activeRoom?.name || `Room ${activeRoom?.id}`}.`}
+        confirmLabel="Apply"
+        selectedItems={templates.find(t => t.id === selectedTemplateId) ? [templates.find(t => t.id === selectedTemplateId).name] : []}
+        variant="warning"
+        onConfirm={() => {
+          applyTemplateToActiveRoom()
+          setTemplateApplyConfirmOpen(false)
+        }}
+        isAppleStyled={true}
+      />
       
       <PromptModal
         open={saveTemplateOpen}
@@ -1349,7 +1448,7 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
         }}
         title="Save as Template"
         message="Enter a name for this new custom template."
-        confirmLabel="Save Template"
+        confirmLabel="Save"
         value={newTemplateName}
         onChange={setNewTemplateName}
         onConfirm={() => saveCurrentAsTemplate(newTemplateName)}
@@ -1360,22 +1459,25 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
       <ConfirmModal 
         open={deleteTemplateConfirmOpen} 
         onCancel={() => setDeleteTemplateConfirmOpen(false)} 
-        title="Delete Template" 
-        message={`Are you sure you want to delete the template "${templates.find(t => t.id === selectedTemplateId)?.name || 'selected'}"?`} 
-        confirmLabel="Delete Template" 
+        title="Delete Custom Template" 
+        message={`Are you sure you want to delete the "${templates.find(t => t.id === selectedTemplateId)?.name || 'selected'}" template? This custom layout template will be permanently removed.`} 
+        confirmLabel="Delete" 
+        selectedItems={templates.find(t => t.id === selectedTemplateId) ? [templates.find(t => t.id === selectedTemplateId).name] : []}
         variant="danger" 
         onConfirm={deleteSelectedTemplate} 
         isLoading={saving}
+        isDeleteModal={true}
       />
       <ConfirmModal 
         open={restoreTemplatesConfirmOpen} 
         onCancel={() => setRestoreTemplatesConfirmOpen(false)} 
         title="Restore Default Templates" 
-        message="This will delete all custom templates and restore the factory default room layouts. Are you sure you want to proceed?" 
-        confirmLabel="Restore Defaults" 
+        message="This will delete all custom layout templates and restore the factory default room layouts. Are you sure you want to proceed?" 
+        confirmLabel="Restore" 
         variant="warning" 
         onConfirm={restoreDefaultTemplates} 
         isLoading={saving}
+        isAppleStyled={true}
       />
     </div>
   )

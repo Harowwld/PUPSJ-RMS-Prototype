@@ -1368,7 +1368,7 @@ function AccountPageContent() {
                                  variant="outline"
                                  className="h-10 px-4 font-medium text-[13px] tracking-[-0.01em] border-gray-300 rounded-[8px]"
                                >
-                                 Disable App
+                                 Disable
                                </Button>
                              ) : (
                                <Button
@@ -1488,7 +1488,7 @@ function AccountPageContent() {
                                 variant="outline"
                                 className="h-10 px-4 font-medium text-[13px] tracking-[-0.01em] border-gray-300 rounded-[8px]"
                               >
-                                Disable Codes
+                                Disable
                               </Button>
                             )}
                             <Button
@@ -1561,7 +1561,7 @@ function AccountPageContent() {
                     variant="outline" 
                     className="flex-1 h-11 px-5 font-semibold text-[13px] text-[#1C1C1E] dark:text-zinc-200 border-[#E5E5EA] dark:border-zinc-800 bg-white dark:bg-zinc-900 rounded-[10px] hover:bg-[#F5F5F7] dark:hover:bg-zinc-800 hover:text-[#1C1C1E] transition-all shadow-none flex items-center justify-center gap-2"
                   >
-                    <i className="ph-bold ph-download-simple text-base"></i> Save File
+                    <i className="ph-bold ph-download-simple text-base"></i> Save
                   </Button>
                 </div>
                 <Button 

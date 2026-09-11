@@ -177,35 +177,34 @@ export default function RegisterAccountTab({
                 </div>
               </div>
 
-              {/* Part 2: Role Selection (right side of the card, no separator) */}
-              <div className="flex flex-row items-center justify-between pb-1">
+              {/* Part 2: Role Selection */}
+              <div className="flex flex-col gap-1.5 sm:flex-row sm:items-center sm:justify-between">
                 <label className="block text-[11px] font-medium uppercase tracking-wider text-gray-500 dark:text-zinc-400">
                   System Role <span className="text-[11px] font-normal text-gray-400 dark:text-zinc-500">*</span>
                 </label>
-                <div className="flex items-center gap-6">
+                <div className="inline-flex w-fit items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-gray-200/60 dark:border-white/5">
                   <button
                     type="button"
                     disabled={isLoading}
-                    onClick={() => setCreateForm(f => ({ ...f, role: "Staff" }))}
+                    onClick={() => setCreateForm((f) => ({ ...f, role: "Staff" }))}
                     className={cn(
-                      "text-[13px] pb-1 bg-transparent rounded-none h-auto px-0 w-auto hover:bg-transparent cursor-pointer focus:outline-none focus-visible:outline-none border-b-[1.5px] border-transparent transition-all font-medium",
+                      "px-4 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap",
                       createForm.role === "Staff"
-                        ? "text-[#edbb00] border-[#edbb00]"
-                        : "text-gray-500 dark:text-zinc-500"
+                        ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
+                        : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
                     )}
                   >
                     Registrar Staff
                   </button>
-
                   <button
                     type="button"
                     disabled={isLoading}
-                    onClick={() => setCreateForm(f => ({ ...f, role: "Admin" }))}
+                    onClick={() => setCreateForm((f) => ({ ...f, role: "Admin" }))}
                     className={cn(
-                      "text-[13px] pb-1 bg-transparent rounded-none h-auto px-0 w-auto hover:bg-transparent cursor-pointer focus:outline-none focus-visible:outline-none border-b-[1.5px] border-transparent transition-all font-medium",
+                      "px-4 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap",
                       createForm.role === "Admin"
-                        ? "text-[#e30000] border-[#e30000]"
-                        : "text-gray-500 dark:text-zinc-500"
+                        ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
+                        : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
                     )}
                   >
                     Administrator
@@ -270,12 +269,12 @@ export default function RegisterAccountTab({
             <div className="px-6 py-4 border-t border-gray-100 dark:border-white/10 flex items-center justify-between bg-gray-50/50 dark:bg-zinc-900/20">
               <Button
                 type="button"
-                variant="ghost"
+                variant="outline"
                 onClick={handleClearForm}
                 disabled={isLoading}
-                className="h-10 px-3 text-xs font-medium text-gray-500 hover:text-gray-700 dark:text-zinc-400 dark:hover:text-zinc-200 bg-transparent hover:bg-transparent border-none shadow-none cursor-pointer focus:outline-none"
+                className="h-10 px-4 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-600 dark:text-zinc-300 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
               >
-                Reset Form
+                Reset
               </Button>
               <div className="flex items-center gap-2">
                 <Button
@@ -290,9 +289,9 @@ export default function RegisterAccountTab({
                 <Button
                   type="submit"
                   disabled={isLoading}
-                  className="h-10 px-5 text-xs font-semibold rounded-xl btn-brand-red text-white shadow-xs cursor-pointer active:scale-95 disabled:opacity-50 transition-all border-0"
+                  className="h-10 px-5 text-xs font-semibold rounded-xl! btn-brand-red text-white shadow-xs cursor-pointer active:scale-95 disabled:opacity-50 transition-all border-0"
                 >
-                  {isLoading ? "Creating..." : "Create Account"}
+                  {isLoading ? "Registering..." : "Register"}
                 </Button>
               </div>
             </div>

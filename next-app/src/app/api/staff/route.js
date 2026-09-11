@@ -24,8 +24,9 @@ export async function GET(req) {
 
   // Resolve office filter context
   let officeId = user.office_id; // default to user's own office
+  const officeFilter = searchParams.get("officeId");
+
   if (user.role === "SuperAdmin") {
-    const officeFilter = searchParams.get("officeId");
     if (officeFilter === "global" || officeFilter === "null") {
       officeId = null;
     } else if (officeFilter && officeFilter !== "All") {
@@ -33,6 +34,9 @@ export async function GET(req) {
     } else {
       officeId = undefined; // SuperAdmin sees all by default
     }
+  } else {
+    // Non-SuperAdmin (e.g. Registrar Admin) is strictly scoped to their office
+    officeId = user.office_id || officeFilter || "registrar";
   }
 
   const rows = await listStaff({
@@ -92,9 +96,9 @@ export async function POST(req) {
   }
 
   // Resolve officeId for new staff
-  let officeId = user.office_id; // Default: user's own office
+  let officeId = user.office_id || body.officeId || body.office_id || "registrar";
   if (user.role === "SuperAdmin") {
-    officeId = body.officeId || body.office_id || null;
+    officeId = body.officeId || body.office_id || "registrar";
   }
 
   try {

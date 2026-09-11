@@ -143,7 +143,7 @@ export default function OCRPromptModal({
             disabled={!selected}
             className={`h-11 rounded-brand px-5 text-sm font-semibold shadow-sm transition-all ${ selected ? "btn-brand-red" : "cursor-not-allowed bg-gray-100 text-gray-400 dark:bg-muted dark:text-zinc-500" }`}
           >
-            Confirm selection
+            Confirm
           </button>
         </div>
       </DialogContent>

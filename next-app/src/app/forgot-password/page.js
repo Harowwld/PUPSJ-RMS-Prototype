@@ -283,7 +283,7 @@ export default function ForgotPasswordPage() {
                     onClick={handleClose}
                     className="text-[13px] text-[#E5484D] hover:underline focus:outline-none font-normal"
                   >
-                    Back to Login
+                    Back
                   </button>
                 </div>
               </form>
@@ -395,7 +395,7 @@ export default function ForgotPasswordPage() {
                     onClick={() => setForgotStep(1)}
                     className="text-[13px] text-[#E5484D] hover:underline focus:outline-none font-normal"
                   >
-                    Previous Step
+                    Back
                   </button>
                 </div>
               </form>

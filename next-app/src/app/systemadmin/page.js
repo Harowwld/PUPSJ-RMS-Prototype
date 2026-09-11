@@ -95,7 +95,7 @@ function SystemAdminPageContent({ authUser: propAuthUser }) {
 
   useEffect(() => {
     const handleSwitch = (e) => {
-      const { view: targetView, officeId } = e.detail || {}
+      const { view: targetView, officeId, section } = e.detail || {}
       if (targetView) {
         setView(targetView)
         const params = new URLSearchParams(window.location.search)
@@ -104,6 +104,11 @@ function SystemAdminPageContent({ authUser: propAuthUser }) {
           params.set("office", officeId)
         } else {
           params.delete("office")
+        }
+        if (section) {
+          params.set("section", section)
+        } else {
+          params.delete("section")
         }
         router.replace(`${window.location.pathname}?${params.toString()}`, { scroll: false })
       }
@@ -213,6 +218,7 @@ function SystemAdminPageContent({ authUser: propAuthUser }) {
     const params = new URLSearchParams(window.location.search)
     params.set("view", nextView)
     params.delete("office")
+    params.delete("section")
     router.replace(`${window.location.pathname}?${params.toString()}`, { scroll: false })
   }, [router])
 

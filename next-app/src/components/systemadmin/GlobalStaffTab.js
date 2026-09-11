@@ -748,7 +748,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                 onClick={handleOpenCreate}
                 className="flex h-10 items-center justify-center rounded-xl! btn-brand-red text-white font-semibold text-xs active:scale-95 transition-all cursor-pointer px-5 shadow-xs"
               >
-                Register Staff
+                Register
               </Button>
             </div>
           }
@@ -757,15 +757,15 @@ export default function GlobalStaffTab({ authUser, showToast }) {
         {/* Navigation Toolbar */}
         <div className="border-t border-gray-100 dark:border-white/10 p-5 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
           {/* Left: Active vs Archived Tabs */}
-          <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-gray-200/60 dark:border-white/5 shrink-0 overflow-x-auto">
+          <div className="flex items-center gap-6 shrink-0 select-none">
             <button
               type="button"
               onClick={() => setStatusFilter("Active")}
               className={cn(
-                "px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap",
+                "relative h-9 flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent",
                 statusFilter === "Active"
-                  ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
-                  : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
+                  ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
+                  : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
               )}
             >
               Active Personnel ({stats.active})
@@ -774,10 +774,10 @@ export default function GlobalStaffTab({ authUser, showToast }) {
               type="button"
               onClick={() => setStatusFilter("Inactive")}
               className={cn(
-                "px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap",
+                "relative h-9 flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent",
                 statusFilter === "Inactive"
-                  ? "bg-white dark:bg-zinc-700 text-pup-maroon dark:text-rose-400 shadow-xs"
-                  : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
+                  ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
+                  : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
               )}
             >
               Archived ({stats.inactive})
@@ -788,13 +788,13 @@ export default function GlobalStaffTab({ authUser, showToast }) {
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0">
             <div className="w-full sm:w-[260px] lg:w-[300px] relative group shrink-0">
               <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                <i className="ph-bold ph-magnifying-glass text-gray-400 transition-colors group-focus-within:text-pup-maroon dark:text-zinc-500 text-sm"></i>
+                <i className="ph-bold ph-magnifying-glass text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm"></i>
               </div>
               <Input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search by name, ID or email..."
-                className="h-9 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white pl-8 pr-16 text-xs font-normal placeholder:text-[#8E8E93] dark:bg-card focus-visible:ring-pup-maroon shadow-none"
+                className="h-9 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 pl-8 pr-16 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
               />
               <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] text-gray-400 dark:text-zinc-500 font-mono">
                 {filteredStaff.length}
@@ -808,7 +808,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                 onChange={(e) => setOfficeFilter(e.target.value)}
                 className="h-9 rounded-xl border border-gray-200 dark:border-white/10 text-xs font-normal text-[#111111] dark:text-zinc-200 cursor-pointer shadow-none"
                 menuClassName="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-900 shadow-2xl p-1.5"
-                optionClassName="rounded-lg text-xs font-medium py-1.5 px-2.5 hover:bg-gray-100 dark:hover:bg-zinc-800"
+                optionClassName="rounded-lg text-xs font-normal py-1.5 px-2.5 hover:bg-gray-100 dark:hover:bg-zinc-800"
               >
                 <option value="All">All Offices</option>
                 <option value="global">System Admin</option>
@@ -827,7 +827,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                 onChange={(e) => setRoleFilter(e.target.value)}
                 className="h-9 rounded-xl border border-gray-200 dark:border-white/10 text-xs font-normal text-[#111111] dark:text-zinc-200 cursor-pointer shadow-none"
                 menuClassName="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-900 shadow-2xl p-1.5"
-                optionClassName="rounded-lg text-xs font-medium py-1.5 px-2.5 hover:bg-gray-100 dark:hover:bg-zinc-800"
+                optionClassName="rounded-lg text-xs font-normal py-1.5 px-2.5 hover:bg-gray-100 dark:hover:bg-zinc-800"
               >
                 <option value="All">All Roles</option>
                 <option value="SystemAdmin">System Admin</option>
@@ -936,14 +936,14 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                   className="mt-6 flex h-10 items-center gap-2 rounded-xl border border-gray-300 bg-white px-5 text-xs font-semibold text-gray-700 shadow-xs transition-colors hover:bg-gray-50 dark:bg-zinc-900 dark:border-white/10 dark:text-zinc-300 cursor-pointer"
                 >
                   <i className="ph-bold ph-arrow-counter-clockwise"></i>
-                  Clear Filters
+                  Clear
                 </Button>
               ) : statusFilter === "Active" ? (
                 <Button
                   onClick={handleOpenCreate}
                   className="mt-6 flex h-10 items-center justify-center rounded-xl btn-brand-red text-white px-5 text-xs font-semibold shadow-xs cursor-pointer active:scale-95 transition-all"
                 >
-                  Register First Staff
+                  Register
                 </Button>
               ) : null}
             </EmptyHeader>
@@ -1144,7 +1144,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                                     <i className="ph-bold ph-archive-restore text-[16px]"></i>
                                   </button>
                                 </TooltipTrigger>
-                                <TooltipContent>Restore Staff</TooltipContent>
+                                <TooltipContent>Restore</TooltipContent>
                               </Tooltip>
                             ) : (
                               <Tooltip>
@@ -1157,7 +1157,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                                     <i className="ph-bold ph-archive text-[16px]"></i>
                                   </button>
                                 </TooltipTrigger>
-                                <TooltipContent>Archive Staff</TooltipContent>
+                                <TooltipContent>Archive</TooltipContent>
                               </Tooltip>
                             )}
                           </div>
@@ -1322,9 +1322,9 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                   <Select
                     value={form.office_id}
                     onChange={(e) => setForm(prev => ({ ...prev, office_id: e.target.value }))}
-                    className="h-10 rounded-xl bg-white border border-gray-200 text-xs font-normal focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10 dark:bg-zinc-950 dark:border-white/10 dark:text-white shadow-none cursor-pointer"
+                    className="h-10 rounded-xl bg-white border border-gray-200 text-xs font-normal focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 dark:bg-zinc-950 dark:border-white/10 dark:text-white shadow-none cursor-pointer"
                     menuClassName="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-900 shadow-2xl p-1.5"
-                    optionClassName="rounded-lg text-xs font-medium py-2.5 px-3 hover:bg-gray-100 dark:hover:bg-zinc-800"
+                    optionClassName="rounded-lg text-xs font-normal py-2.5 px-3 hover:bg-gray-100 dark:hover:bg-zinc-800"
                   >
                     <option value="">SystemAdmin / Global (No Office Scope)</option>
                     {(Array.isArray(offices) ? offices : []).map(o => (
@@ -1341,9 +1341,9 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                   <Select
                     value={form.role}
                     onChange={(e) => setForm(prev => ({ ...prev, role: e.target.value }))}
-                    className="h-10 rounded-xl bg-white border border-gray-200 text-xs font-normal focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10 dark:bg-zinc-950 dark:border-white/10 dark:text-white shadow-none cursor-pointer"
+                    className="h-10 rounded-xl bg-white border border-gray-200 text-xs font-normal focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 dark:bg-zinc-950 dark:border-white/10 dark:text-white shadow-none cursor-pointer"
                     menuClassName="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-900 shadow-2xl p-1.5"
-                    optionClassName="rounded-lg text-xs font-medium py-2.5 px-3 hover:bg-gray-100 dark:hover:bg-zinc-800"
+                    optionClassName="rounded-lg text-xs font-normal py-2.5 px-3 hover:bg-gray-100 dark:hover:bg-zinc-800"
                   >
                     <option value="SystemAdmin">System Admin</option>
                     <option value="Admin">Administrator</option>
@@ -1367,7 +1367,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                 disabled={submitLoading}
                 className="bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-xl h-10 px-5 cursor-pointer dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs"
               >
-                {submitLoading ? "Saving..." : isEditing ? "Save Changes" : "Register Personnel"}
+                {submitLoading ? "Saving..." : isEditing ? "Save" : "Register"}
               </Button>
             </DialogFooter>
           </form>
@@ -1402,7 +1402,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
               variant="outline"
               className="text-xs border-gray-200 dark:border-white/10 h-10 px-4 font-semibold rounded-xl cursor-pointer hover:bg-gray-50 dark:hover:bg-white/5"
             >
-              Copy Password
+              Copy
             </Button>
             <Button
               onClick={() => setPwDialogOpen(false)}
@@ -1422,7 +1422,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
         isLoading={isArchiving}
         title="Archive Personnel Account"
         message="This account will be restricted immediately but can be restored later."
-        confirmLabel="Archive Account"
+        confirmLabel="Archive"
         icon="ph-duotone ph-archive"
         buttonIcon="ph-bold ph-archive"
         selectedItems={[
@@ -1441,7 +1441,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
         isLoading={isRestoring}
         title="Restore Personnel Account"
         message="This account will be reactivated and the personnel will be able to log in again."
-        confirmLabel="Restore Account"
+        confirmLabel="Restore"
         icon="ph-duotone ph-archive-restore"
         buttonIcon="ph-bold ph-archive-restore"
         selectedItems={[
@@ -1460,7 +1460,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
         isLoading={bulkArchiveLoading}
         title="Batch Archive Personnel"
         message={`${selectedIds.size} personnel profiles will be archived and their system access revoked immediately.`}
-        confirmLabel="Archive Selected"
+        confirmLabel="Archive"
         icon="ph-duotone ph-archive"
         buttonIcon="ph-bold ph-archive"
         selectedItems={Array.from(selectedIds).map((id) => {
@@ -1480,7 +1480,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
         isLoading={bulkRestoreLoading}
         title="Batch Restore Personnel"
         message={`${selectedIds.size} personnel profiles will be reactivated and able to log in again.`}
-        confirmLabel="Restore Selected"
+        confirmLabel="Restore"
         icon="ph-duotone ph-archive-restore"
         buttonIcon="ph-bold ph-archive-restore"
         selectedItems={Array.from(selectedIds).map((id) => {

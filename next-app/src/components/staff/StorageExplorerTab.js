@@ -121,46 +121,41 @@ export default function StorageExplorerTab({
 
 
   const mapWrap = "w-full aspect-[16/10] max-h-[600px] mx-auto max-w-4xl overflow-hidden"
-  const rowClass = "flex flex-col w-full"
-  const leftClass = "bg-white dark:bg-zinc-950 pt-8 flex flex-col w-full rounded-2xl border border-gray-200 dark:border-white/10 shadow-sm"
-  const innerLeftClass = "flex w-full flex-col min-h-0 flex-1 mx-auto"
 
   return (
     <div
       id="view-storage"
       className="animate-fade-up font-inter flex h-auto w-full flex-col gap-6"
     >
-      <Card className="rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none overflow-visible flex flex-col">
+      {/* ONE Single Card Container encapsulating Header, Breadcrumbs & 2D Storage Explorer */}
+      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none isolate font-inter mb-4 min-h-0 flex-1">
         <PageHeader
           icon="ph-folder-open"
           title="Storage Explorer"
           description="Browse and explore physical storage rooms, cabinets, and drawers."
           showBorder={false}
-          titleClassName="text-[15px] font-bold text-gray-900 dark:text-zinc-50"
-          descriptionClassName="text-[14px] font-normal text-[#8E8E93] dark:text-zinc-400 mt-[2px]"
+          className="p-6"
+          titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
+          descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
           actions={
             <Button
-              variant="ghost"
+              variant="outline"
               onClick={() => onSwitchView("search")}
-              className="h-10 px-3 font-semibold text-sm text-gray-600 hover:text-gray-900 hover:bg-transparent dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-transparent transition-colors flex items-center gap-2 rounded-brand shadow-none! border-0!"
+              className="flex h-10 items-center gap-2 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
             >
-              <i className="ph-bold ph-arrow-left"></i>
+              <i className="ph-bold ph-arrow-left text-[14px]"></i>
               Records & Archive
             </Button>
           }
         />
-      </Card>
 
-      <div className={rowClass}>
-        <div className={leftClass}>
-          <div className={innerLeftClass}>
-            {/* Storage Explorer Unified Header with Browser-style Back & Forward Buttons */}
-            <div className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#E5E5EA] dark:border-white/10 pb-6 px-8">
-              <div className="flex flex-col gap-2 h-8 justify-center">
-                
-                <div className="flex items-center gap-1.5 sm:gap-2">
-                  {/* Location Path Text (Breadcrumbs) */}
-                  <Breadcrumb className="flex items-center select-none">
+        {/* Navigation Toolbar / Location Breadcrumbs */}
+        <div className="border-t border-gray-100 dark:border-white/10 p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
+          <div className="flex flex-col gap-2 h-8 justify-center">
+            
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              {/* Location Path Text (Breadcrumbs) */}
+              <Breadcrumb className="flex items-center select-none">
                     <BreadcrumbList className="flex items-center font-medium text-[14px] text-[#8E8E93] gap-0 dark:text-zinc-400">
                       {breadcrumbs.map((b, idx) => (
                         <div
@@ -232,7 +227,8 @@ export default function StorageExplorerTab({
             </div>
 
             {/* Level Inner Content */}
-            {loading ? (
+            <div className="flex w-full flex-col min-h-0 flex-1 mx-auto pt-6 bg-white dark:bg-card">
+              {loading ? (
               <StorageExplorerSkeleton />
             ) : locatorModel?.kind === "rooms" ? (
               <div className="flex flex-col w-full">
@@ -356,57 +352,60 @@ export default function StorageExplorerTab({
                 </div>
 
                 {(locatorModel?.rooms || []).length > 10 && (
-                  <div className="flex items-center justify-between border-t border-gray-100 bg-white p-6 px-8 dark:border-white/10 dark:bg-card mt-auto rounded-b-2xl">
-                    <div className="flex items-center gap-8">
-                      <div className="flex items-center gap-6 text-[12px] font-normal text-gray-400 dark:text-zinc-500">
-                        <span>
-                          Showing {paginatedRooms.length} of {(locatorModel.rooms || []).length} rooms
-                        </span>
-                        <div className="flex items-center gap-1.5 border-l border-gray-200 pl-6 dark:border-white/10">
-                          <span className="text-[12px] text-gray-400 dark:text-zinc-500">Rows:</span>
-                          <div className="flex items-center gap-1">
-                            {[10, 20, 30].map((size) => (
-                              <button
-                                key={size}
-                                type="button"
-                                onClick={() => {
-                                  setRoomsPerPage(size);
-                                  setRoomsPage(1);
-                                }}
-                                className={`px-2 py-0.5 rounded-[4px] text-[12px] font-normal cursor-pointer transition-colors border-0 ${
-                                  roomsPerPage === size
-                                    ? "bg-gray-100 text-[#111111] font-medium dark:bg-white/10 dark:text-zinc-50"
-                                    : "bg-transparent text-gray-455 dark:text-zinc-500 hover:text-gray-700 dark:hover:text-zinc-300"
-                                }`}
-                              >
-                                {size}
-                              </button>
-                            ))}
-                          </div>
+                  <div className="flex items-center justify-between border-t border-gray-100 bg-white p-4 px-6 dark:border-white/10 dark:bg-card mt-auto select-none">
+                    <div className="flex items-center gap-6 text-xs text-gray-500 dark:text-zinc-400">
+                      <span>
+                        Showing {paginatedRooms.length} of {(locatorModel?.rooms || []).length.toLocaleString()}
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <span>Rows:</span>
+                        <div className="flex items-center gap-1">
+                          {[6, 12, 18, 24].map((size) => (
+                            <button
+                              key={size}
+                              type="button"
+                              onClick={() => {
+                                setRoomsPerPage(size);
+                                setRoomsPage(1);
+                              }}
+                              className={cn(
+                                "px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer",
+                                roomsPerPage === size
+                                  ? "bg-gray-100 dark:bg-zinc-800 text-gray-900 dark:text-zinc-100"
+                                  : "text-gray-400 hover:text-gray-600 dark:hover:text-zinc-200"
+                              )}
+                            >
+                              {size}
+                            </button>
+                          ))}
                         </div>
                       </div>
                     </div>
 
-                    <div className="flex shrink-0 items-center gap-3">
-                      <button
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
                         disabled={roomsPage <= 1}
                         onClick={() => setRoomsPage((p) => Math.max(1, p - 1))}
-                        className="h-8 bg-transparent text-[12px] font-normal text-gray-400 hover:text-pup-maroon dark:text-zinc-500 dark:hover:text-zinc-200 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer border-0 p-0"
+                        className="text-xs text-gray-500 dark:text-zinc-400 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
                       >
                         Prev
-                      </button>
+                      </Button>
 
-                      <div className="flex h-8 min-w-[32px] items-center justify-center rounded-[6px] border border-gray-200/80 bg-white px-2.5 text-[12px] font-medium text-gray-900 dark:border-white/10 dark:bg-card dark:text-zinc-100">
+                      <div className="h-8 w-8 rounded-xl border border-[#e5e5ea] dark:border-zinc-800 flex items-center justify-center text-xs font-bold text-gray-800 dark:text-zinc-200 bg-white dark:bg-zinc-900">
                         {roomsPage}
                       </div>
 
-                      <button
+                      <Button
+                        variant="ghost"
+                        size="sm"
                         disabled={roomsPage >= totalRoomsPages}
                         onClick={() => setRoomsPage((p) => Math.min(totalRoomsPages, p + 1))}
-                        className="h-8 bg-transparent text-[12px] font-normal text-[#8E8E93] hover:text-pup-maroon dark:text-zinc-500 dark:hover:text-zinc-200 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer border-0 p-0"
+                        className="text-xs text-gray-500 dark:text-zinc-400 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
                       >
                         Next
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 )}
@@ -647,8 +646,7 @@ export default function StorageExplorerTab({
               </div>
             )}
           </div>
-        </div>
-      </div>
+        </Card>
     </div>
   )
 }

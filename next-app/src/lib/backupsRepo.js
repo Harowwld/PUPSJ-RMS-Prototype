@@ -6,6 +6,7 @@ import AdmZip from "adm-zip";
 import { execFileSync } from "node:child_process";
 import { isSystemAdminRole } from "./roleUtils.js";
 import { clearHealthCache } from "./healthCache.js";
+import { detectExternalDrive } from "./externalDriveDetector.js";
 
 const BACKUP_ENC_MAGIC = Buffer.from("PUPSBK1", "utf8");
 const BACKUP_ENC_ALGO = "aes-256-gcm";
@@ -27,27 +28,19 @@ export function getBackupsDir() {
 }
 
 export function getExternalBackupsDir() {
-  const explicit = process.env.EXTERNAL_BACKUP_PATH;
-  let dir = path.join(getLocalDir(), "external_media");
-
-  if (explicit) {
-    try {
-      // Check if the drive root exists (e.g. E:\)
-      const root = path.parse(explicit).root;
-      if (fs.existsSync(root)) {
-        dir = explicit;
-      } else {
-        console.warn(`[BACKUP] External path '${explicit}' is unreachable (drive not found). Falling back to local external_media.`);
-      }
-    } catch (e) {
-      console.warn(`[BACKUP] Error checking external path '${explicit}':`, e.message);
+  const driveInfo = detectExternalDrive();
+  if (driveInfo.connected && driveInfo.path) {
+    let targetDir = driveInfo.path;
+    if (!targetDir.includes("external_media") && !targetDir.includes("PUPSJ_BACKUPS")) {
+      targetDir = path.join(targetDir, "PUPSJ_BACKUPS");
     }
+    if (!fs.existsSync(targetDir)) {
+      fs.mkdirSync(targetDir, { recursive: true });
+    }
+    return targetDir;
   }
 
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
-  }
-  return dir;
+  throw new Error("Cannot sync: No external hard drive detected. Please connect an external storage drive to sync.");
 }
 
 export async function createBackupRecord({

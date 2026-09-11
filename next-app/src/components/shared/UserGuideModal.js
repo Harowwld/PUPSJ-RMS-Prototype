@@ -231,7 +231,7 @@ export default function UserGuideModal({ open, onClose }) {
                 onClick={onClose}
                 className="btn-brand-red px-6 text-white shadow-lg shadow-red-900/20 rounded-brand"
               >
-                Acknowledge <i className="ph-bold ph-check ml-2"></i>
+                Acknowledge
               </Button>
             </div>
           </div>

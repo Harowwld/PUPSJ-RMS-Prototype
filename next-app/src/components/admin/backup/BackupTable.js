@@ -56,6 +56,8 @@ export default function BackupTable({
   setJumpPage,
   handleJumpPage,
   handleItemsPerPageChange,
+  scope = "office",
+  externalDriveConnected = false,
 }) {
   return (
     <>
@@ -130,9 +132,25 @@ export default function BackupTable({
                   />
                 </button>
               </th>
-              <th className="p-4 w-36 text-center text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">
-                Status
-              </th>
+              {scope === "office" ? (
+                <th className="p-4 w-64 text-center text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">
+                  <div className="inline-flex items-center justify-center gap-1.5">
+                    <span>Backup Copies</span>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <i className="ph-bold ph-info text-[13px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 cursor-help" />
+                      </TooltipTrigger>
+                      <TooltipContent className="max-w-xs text-xs font-normal">
+                        Shows where this backup is safely stored: on Internal Storage and an External Drive.
+                      </TooltipContent>
+                    </Tooltip>
+                  </div>
+                </th>
+              ) : (
+                <th className="p-4 w-36 text-center text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">
+                  Status
+                </th>
+              )}
               <th className="p-4 pr-6 w-32 text-right text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">
                 Actions
               </th>
@@ -165,14 +183,14 @@ export default function BackupTable({
                           onClick={onClearFilters}
                           className="mt-6 h-10 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-6 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                         >
-                          Clear Search
+                          Clear
                         </Button>
                       ) : (
                         <Button
                           onClick={handleGenerateBackup}
                           className="mt-6 h-10 rounded-xl btn-brand-red px-6 text-xs font-semibold text-white shadow-xs active:scale-95 transition-all cursor-pointer border-0"
                         >
-                          Create Full Backup
+                          Create
                         </Button>
                       )}
                     </EmptyHeader>
@@ -226,11 +244,112 @@ export default function BackupTable({
                         </span>
                       </div>
                     </td>
-                    <td className="py-2 px-4 align-middle text-center">
-                      <div className="inline-flex w-fit items-center justify-center rounded-[4px] px-[8px] py-[3px] text-[11px] font-medium tracking-[0.04em] select-none bg-[#D1FAE5] text-[#065F46] dark:bg-emerald-950/40 dark:text-emerald-400">
-                        Ready
-                      </div>
-                    </td>
+                    {scope === "office" ? (
+                      <td className="py-2 px-4 align-middle text-center">
+                        <div className="flex mx-auto w-fit items-center justify-center gap-2">
+                          {/* Node 1: Internal Storage */}
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <div
+                                className={cn(
+                                  "inline-flex items-center gap-1 rounded-[4px] px-[8px] py-[3px] text-[11px] font-medium tracking-[0.04em] select-none",
+                                  b.status_local === "Success"
+                                    ? "bg-[#D1FAE5] text-[#065F46] dark:bg-emerald-950/40 dark:text-emerald-400"
+                                    : "bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-zinc-400"
+                                )}
+                              >
+                                <i className="ph-bold ph-hard-drive text-[11px]" />
+                                <span>Internal Storage</span>
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent className="text-xs">
+                              <p className="font-semibold">Internal Storage</p>
+                              <p className="text-[11px] opacity-80">
+                                {b.status_local === "Success"
+                                  ? "Backup safely saved on internal system storage"
+                                  : "Preparing backup"}
+                              </p>
+                            </TooltipContent>
+                          </Tooltip>
+
+                          {/* Node 2: External Hard Drive */}
+                          {b.status_external === "Success" ? (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div className="inline-flex items-center gap-1 rounded-[4px] px-[8px] py-[3px] text-[11px] font-medium tracking-[0.04em] select-none bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-200/50 dark:border-blue-900/40">
+                                  <i className="ph-bold ph-check-circle text-[11px]" />
+                                  <span>External Drive</span>
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent className="text-xs">
+                                <p className="font-semibold">External Hard Drive</p>
+                                <p className="text-[11px] opacity-80">
+                                  Backup copy verified on your connected external drive
+                                </p>
+                              </TooltipContent>
+                            </Tooltip>
+                          ) : !externalDriveConnected ? (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div className="inline-flex items-center gap-1 rounded-[4px] px-[8px] py-[3px] text-[11px] font-medium tracking-[0.04em] select-none bg-gray-100 text-gray-500 dark:bg-zinc-800 dark:text-zinc-500 border border-gray-200 dark:border-white/10 cursor-not-allowed">
+                                  <i className="ph-bold ph-plugs text-[11px]" />
+                                  <span>Drive Offline</span>
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent className="text-xs">
+                                <p className="font-semibold">External Drive Disconnected</p>
+                                <p className="text-[11px] opacity-80">
+                                  Connect an external USB drive and click &quot;Detect Drive&quot; to copy this backup.
+                                </p>
+                              </TooltipContent>
+                            </Tooltip>
+                          ) : (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    handleSyncExternal?.(b.id)
+                                  }}
+                                  disabled={localLoading?.syncingId === b.id}
+                                  className={cn(
+                                    "h-[22px] px-2 rounded-[4px] text-[11px] font-medium tracking-[0.04em] active:scale-95 transition-all cursor-pointer inline-flex items-center gap-1 border",
+                                    b.status_external === "Failed"
+                                      ? "border-amber-300 dark:border-amber-800/60 bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 hover:bg-amber-100"
+                                      : "border-blue-200 dark:border-blue-800/60 bg-white dark:bg-zinc-800 text-blue-700 dark:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-950/30"
+                                  )}
+                                >
+                                  {localLoading?.syncingId === b.id ? (
+                                    <>
+                                      <i className="ph-bold ph-arrows-clockwise animate-spin text-[11px]" />
+                                      <span>Copying...</span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <i className="ph-bold ph-hard-drives text-[11px]" />
+                                      <span>{b.status_external === "Failed" ? "Retry Copy" : "Copy to Drive"}</span>
+                                    </>
+                                  )}
+                                </button>
+                              </TooltipTrigger>
+                              <TooltipContent className="text-xs">
+                                <p className="font-semibold">Save to External Drive</p>
+                                <p className="text-[11px] opacity-80">
+                                  Copy this backup to your external hard drive for safekeeping
+                                </p>
+                              </TooltipContent>
+                            </Tooltip>
+                          )}
+                        </div>
+                      </td>
+                    ) : (
+                      <td className="py-2 px-4 align-middle text-center">
+                        <div className="inline-flex w-fit items-center justify-center rounded-[4px] px-[8px] py-[3px] text-[11px] font-medium tracking-[0.04em] select-none bg-[#D1FAE5] text-[#065F46] dark:bg-emerald-950/40 dark:text-emerald-400">
+                          Ready
+                        </div>
+                      </td>
+                    )}
                     <td className="py-0 px-4 pr-6 text-right align-middle">
                       <div className="inline-flex items-center justify-end gap-1.5" onClick={e => e.stopPropagation()}>
                         <Tooltip>

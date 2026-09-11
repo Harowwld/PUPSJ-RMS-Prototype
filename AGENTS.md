@@ -518,14 +518,15 @@ Buttons follow clean Apple Human Interface Guidelines (HIG) with standardized di
 - **`<Select>` Dropdown Component (`@/components/ui/select`)**:
   - Always use the project's `<Select>` component.
   - **CRITICAL AGENT RULE ON SCROLLBARS**: Never add `max-h-* overflow-y-auto` to `menuClassName`. The inner options container already manages scrolling (`max-h-60 overflow-y-auto`). Adding scroll classes to `menuClassName` creates nested double scrollbars!
+  - **UNIFIED BORDER & FOCUS RING STYLING**: All dropdown triggers are unified with search inputs: `rounded-xl border border-gray-200 dark:border-white/10 shadow-none` with focus ring `focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80`. Never add thick rings (`focus:ring-2`, `focus:ring-4`, `focus-visible:ring-2`) or outdated borders (`border-gray-300`).
   - Standard `<Select>` usage:
     ```jsx
     <Select
       value={value}
       onChange={(e) => setValue(e.target.value)}
-      className="h-9 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs"
+      className="h-9 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-xs font-normal text-gray-700 dark:text-zinc-200 shadow-none"
       menuClassName="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-900 shadow-2xl p-1.5"
-      optionClassName="rounded-lg text-xs font-semibold py-1.5 px-2.5 hover:bg-gray-100 dark:hover:bg-zinc-800"
+      optionClassName="rounded-lg text-xs font-normal py-1.5 px-2.5 hover:bg-gray-100 dark:hover:bg-zinc-800"
     >
       <option value="1">Option 1</option>
     </Select>

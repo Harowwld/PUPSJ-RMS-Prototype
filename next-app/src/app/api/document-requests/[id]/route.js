@@ -9,6 +9,7 @@ import {
   updateDocumentRequest,
   isValidRequestStatus,
 } from "../../../../lib/documentRequestsRepo";
+import { canTransitionRequestStatus } from "../../../../lib/constants";
 import { getDocumentById } from "../../../../lib/documentsRepo";
 
 export const runtime = "nodejs";
@@ -49,7 +50,7 @@ export async function GET(req, ctx) {
     return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
   }
 
-  await writeAuditLog(_req, "Viewed Document Request", {
+  await writeAuditLog(req, "Viewed Document Request", {
     details: `Viewed document request #${id}.`,
     entity_type: "document_request",
     entity_id: String(id),
@@ -93,11 +94,28 @@ export async function PATCH(req, ctx) {
         { status: 400 }
       );
     }
+    if (existing.status && existing.status !== s && !canTransitionRequestStatus(existing.status, s)) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: `Cannot change status from "${existing.status}" to "${s}". Completed and finalized requests cannot be reverted.`,
+        },
+        { status: 400 }
+      );
+    }
     patch.status = s;
   }
 
   if (body.notes !== undefined) {
     patch.notes = body.notes === null ? null : String(body.notes);
+  }
+
+  if (body.message !== undefined && String(body.message).trim()) {
+    patch.message = String(body.message).trim();
+  }
+
+  if (body.courseCode !== undefined) {
+    patch.courseCode = body.courseCode ? String(body.courseCode).trim().toUpperCase() : null;
   }
 
   if (body.linkedDocumentId !== undefined) {
@@ -119,7 +137,7 @@ export async function PATCH(req, ctx) {
           { status: 400 }
         );
       }
-      if (String(doc.student_no) !== String(existing.student_no)) {
+      if (existing.student_no && String(doc.student_no) !== String(existing.student_no)) {
         return NextResponse.json(
           { ok: false, error: "Document does not belong to this student" },
           { status: 400 }
@@ -132,7 +150,9 @@ export async function PATCH(req, ctx) {
   const hasFieldUpdates =
     patch.status !== undefined ||
     patch.notes !== undefined ||
-    patch.linkedDocumentId !== undefined;
+    patch.linkedDocumentId !== undefined ||
+    patch.message !== undefined ||
+    patch.courseCode !== undefined;
 
   if (!hasFieldUpdates) {
     return NextResponse.json({ ok: true, data: existing });
@@ -148,6 +168,7 @@ export async function PATCH(req, ctx) {
 
   const parts = [];
   if (patch.status !== undefined) parts.push(`status → ${patch.status}`);
+  if (patch.message !== undefined) parts.push(`update posted: "${patch.message}"`);
   if (patch.linkedDocumentId !== undefined)
     parts.push(`linked document ${patch.linkedDocumentId ?? "cleared"}`);
   await writeAuditLog(

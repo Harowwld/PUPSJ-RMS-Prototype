@@ -104,31 +104,28 @@ export function TOTPChallengeModal({
             </div>
           </div>
 
-          <div className="flex flex-col-reverse gap-2.5 border-t border-gray-100 bg-white p-4 sm:flex-row sm:justify-end dark:border-white/10 dark:bg-card">
+          <div className="flex flex-col-reverse gap-2 border-t border-gray-100 bg-gray-50/50 px-6 py-4 sm:flex-row sm:justify-end dark:border-white/10 dark:bg-zinc-900/20">
             <Button
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
               disabled={isLoading}
-              className="h-11 rounded-brand border-gray-300 px-6 text-sm font-semibold tracking-wider text-gray-700 hover:bg-gray-50 dark:border-white/10 dark:text-zinc-200 dark:hover:bg-white/10 dark:bg-card"
+              className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
             >
               Cancel
             </Button>
             <Button
               type="submit"
               disabled={isLoading || (token.trim().length !== 6 && token.trim().length !== 8)}
-              className="btn-brand-red px-8 shadow-lg shadow-red-900/20"
+              className="h-10 px-5 text-xs font-semibold rounded-xl! btn-brand-red text-white shadow-xs cursor-pointer active:scale-95 disabled:opacity-50 transition-all border-0"
             >
               {isLoading ? (
                 <>
-                  <i className="ph-bold ph-spinner animate-spin text-lg"></i>
+                  <i className="ph-bold ph-spinner animate-spin text-sm mr-1.5"></i>
                   Verifying...
                 </>
               ) : (
-                <>
-                  <i className="ph-bold ph-check text-lg"></i>
-                  {actionLabel}
-                </>
+                actionLabel
               )}
             </Button>
           </div>

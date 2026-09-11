@@ -418,7 +418,7 @@ export default function AccountSetupModal({ authUser }) {
                   disabled={secLoading || secSubmitting || questions.length === 0}
                   className="h-[36px] px-4 rounded-[8px] btn-brand-red text-[13px] font-medium text-white shadow-none cursor-pointer flex items-center justify-center border-none"
                 >
-                  {secSubmitting ? "Saving..." : "Complete Setup"}
+                  {secSubmitting ? "Saving..." : "Complete"}
                 </Button>
               </div>
             </form>

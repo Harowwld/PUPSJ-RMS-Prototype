@@ -39,6 +39,9 @@ export async function GET(req) {
   const sortBy = searchParams.get("sortBy") || "reviewed_at";
   const sortOrder = searchParams.get("sortOrder") || "DESC";
   const tab = searchParams.get("tab") || "inbox";
+  const search = searchParams.get("search") || searchParams.get("q") || "";
+  const decision = searchParams.get("decision") || "";
+  const readStatus = searchParams.get("readStatus") || "";
 
   const state = await getStaffReviewNotificationsState(staff.id);
   const res = await listDocumentReviewNotifications({
@@ -50,6 +53,9 @@ export async function GET(req) {
     sortBy,
     sortOrder,
     tab,
+    search,
+    decision,
+    readStatus,
   });
 
   return NextResponse.json({

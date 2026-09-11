@@ -72,34 +72,33 @@ export default function EditUserModal({
             </div>
 
             {/* Part 2: Role Selection */}
-            <div className="flex flex-col gap-1">
+            <div className="flex flex-col gap-1.5 sm:flex-row sm:items-center sm:justify-between">
               <label className="block text-[11px] font-medium uppercase tracking-wider text-gray-500 dark:text-zinc-400">
                 System Role <span className="text-[11px] font-normal text-gray-400 dark:text-zinc-500">*</span>
               </label>
-              <div className="flex items-center gap-6 border-b border-gray-100 dark:border-white/5 pb-0">
+              <div className="inline-flex w-fit items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-gray-200/60 dark:border-white/5">
                 <button
                   type="button"
                   disabled={isLoading}
-                  onClick={() => setEditForm(f => ({ ...f, role: "Staff" }))}
+                  onClick={() => setEditForm((f) => ({ ...f, role: "Staff" }))}
                   className={cn(
-                    "text-[13px] pb-1.5 bg-transparent rounded-none h-auto px-0 w-auto hover:bg-transparent cursor-pointer focus:outline-none focus-visible:outline-none border-b-[1.5px] border-transparent transition-all font-medium",
+                    "px-4 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap",
                     editForm.role === "Staff"
-                      ? "text-pup-maroon dark:text-red-400 border-pup-maroon dark:border-red-400"
-                      : "text-gray-500 dark:text-zinc-500"
+                      ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
+                      : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
                   )}
                 >
                   Registrar Staff
                 </button>
-
                 <button
                   type="button"
                   disabled={isLoading}
-                  onClick={() => setEditForm(f => ({ ...f, role: "Admin" }))}
+                  onClick={() => setEditForm((f) => ({ ...f, role: "Admin" }))}
                   className={cn(
-                    "text-[13px] pb-1.5 bg-transparent rounded-none h-auto px-0 w-auto hover:bg-transparent cursor-pointer focus:outline-none focus-visible:outline-none border-b-[1.5px] border-transparent transition-all font-medium",
+                    "px-4 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap",
                     editForm.role === "Admin"
-                      ? "text-pup-maroon dark:text-red-400 border-pup-maroon dark:border-red-400"
-                      : "text-gray-500 dark:text-zinc-500"
+                      ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
+                      : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
                   )}
                 >
                   Administrator
@@ -149,7 +148,7 @@ export default function EditUserModal({
             <Button
               type="submit"
               disabled={isLoading}
-              className="h-10 px-5 text-xs font-semibold rounded-xl btn-brand-red text-white shadow-xs cursor-pointer active:scale-95 disabled:opacity-50 transition-all border-0"
+              className="h-10 px-5 text-xs font-semibold rounded-xl! btn-brand-red text-white shadow-xs cursor-pointer active:scale-95 disabled:opacity-50 transition-all border-0"
             >
               {isLoading ? "Saving..." : "Save"}
             </Button>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,8 +11,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { Card, CardContent } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Card } from "@/components/ui/card";
 import DocumentsMatrixSkeleton from "@/components/staff/skeletons/DocumentsMatrixSkeleton";
 import { formatPHDateTime } from "@/lib/timeFormat";
 import {
@@ -25,8 +24,8 @@ import {
 import ConfirmModal from "@/components/shared/ConfirmModal";
 import PageHeader from "@/components/shared/PageHeader";
 import { RefreshButton } from "@/components/shared/RefreshButton";
-import { Select } from "@/components/ui/select"
-import { Badge } from "@/components/ui/badge"
+import { Select } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 import { canonicalizeCabinetId } from "@/lib/storageLayoutUtils";
 import {
   Tooltip,
@@ -37,18 +36,18 @@ import {
 
 function SortIndicator({ column, sortBy, sortOrder }) {
   if (sortBy !== column)
-    return <i className="ph-bold ph-caret-up-down ml-1 text-[11px] opacity-40 transition-opacity group-hover:opacity-70 dark:opacity-30 dark:group-hover:opacity-60"></i>
+    return <i className="ph-bold ph-caret-up-down ml-1 text-[11px] opacity-40 transition-opacity group-hover:opacity-70 dark:opacity-30 dark:group-hover:opacity-60"></i>;
   return sortOrder === "ASC" ? (
     <i className="ph-bold ph-caret-up ml-1 text-[11px] text-pup-maroon animate-in fade-in zoom-in duration-300 dark:text-primary"></i>
   ) : (
     <i className="ph-bold ph-caret-down ml-1 text-[11px] text-pup-maroon animate-in fade-in zoom-in duration-300 dark:text-primary"></i>
-  )
+  );
 }
 
 function DocumentsTable({
   docsRows,
   paginatedRows,
-  docsForm,
+  hasActiveFilters,
   sortBy,
   sortOrder,
   handleSort,
@@ -159,23 +158,19 @@ function DocumentsTable({
         </tr>
       </thead>
       <tbody className="divide-y divide-gray-100 dark:divide-white/10">
-        {!(
-          docsForm.studentNo.trim() ||
-          docsForm.studentName.trim() ||
-          docsForm.docType.trim()
-        ) && docsRows.length === 0 ? (
+        {!hasActiveFilters && docsRows.length === 0 ? (
           <tr className="border-0 hover:bg-transparent">
             <td colSpan={7} className="p-0 border-0">
-              <Empty className="flex h-[450px] flex-col items-center justify-center border-0 bg-transparent text-center">
+              <Empty className="flex h-[400px] flex-col items-center justify-center border-0 bg-transparent text-center">
                 <EmptyHeader className="flex flex-col items-center gap-0">
-                  <div className="relative mb-6">
+                  <div className="relative mb-4">
                     <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                    <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
-                      <i className="ph-duotone ph-magnifying-glass text-xl text-gray-300 dark:text-zinc-600"></i>
+                    <EmptyMedia className="relative z-10 flex h-20 w-20 items-center justify-center rounded-2xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
+                      <i className="ph-duotone ph-magnifying-glass text-3xl text-gray-400 dark:text-zinc-500"></i>
                     </EmptyMedia>
                   </div>
-                  <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">Search Documents</EmptyTitle>
-                  <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400">
+                  <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">Search Documents</EmptyTitle>
+                  <EmptyDescription className="max-w-xs text-xs font-normal text-gray-500 dark:text-zinc-400 mt-1">
                     Enter a student number, name, or select a document
                     type to find related records.
                   </EmptyDescription>
@@ -186,16 +181,16 @@ function DocumentsTable({
         ) : docsRows.length === 0 ? (
           <tr className="border-0 hover:bg-transparent">
             <td colSpan={7} className="p-0 border-0">
-              <Empty className="flex h-[450px] flex-col items-center justify-center border-0 bg-transparent text-center">
+              <Empty className="flex h-[400px] flex-col items-center justify-center border-0 bg-transparent text-center">
                 <EmptyHeader className="flex flex-col items-center gap-0">
-                  <div className="relative mb-6">
+                  <div className="relative mb-4">
                     <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                    <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
-                      <i className="ph-duotone ph-magnifying-glass text-xl text-gray-300 dark:text-zinc-600"></i>
+                    <EmptyMedia className="relative z-10 flex h-20 w-20 items-center justify-center rounded-2xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
+                      <i className="ph-duotone ph-magnifying-glass text-3xl text-gray-400 dark:text-zinc-500"></i>
                     </EmptyMedia>
                   </div>
-                  <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">No Results Found</EmptyTitle>
-                  <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400">
+                  <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">No Results Found</EmptyTitle>
+                  <EmptyDescription className="max-w-xs text-xs font-normal text-gray-500 dark:text-zinc-400 mt-1">
                     We couldn&apos;t find any documents matching your
                     search criteria.
                   </EmptyDescription>
@@ -285,7 +280,7 @@ function DocumentsTable({
                         variant="outline"
                         size="sm"
                         onClick={() => onViewDetails?.(r)}
-                        className="px-3 font-semibold text-xs border-gray-300 text-gray-700 hover:border-gray-300 transition-all dark:text-zinc-200 dark:hover:border-zinc-700 dark:border-white/10"
+                        className="h-8 px-3 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                       >
                         <i className="ph-bold ph-eye mr-1.5"></i>
                         View
@@ -303,7 +298,8 @@ function DocumentsTable({
                               r.doc.mime_type
                             )
                           }
-                          className="btn-brand-red active:scale-95 transition-all dark:shadow-none"
+                          className="h-8 px-3 text-xs font-semibold rounded-xl! btn-brand-red text-white! active:scale-95 disabled:opacity-50 transition-all cursor-pointer shadow-xs"
+                          style={{ color: "#ffffff" }}
                         >
                           <i className="ph-bold ph-arrow-counter-clockwise mr-1.5"></i>
                           Update
@@ -312,14 +308,15 @@ function DocumentsTable({
                     </>
                   ) : (
                     <Button
+                      variant="outline"
                       size="sm"
                       onClick={() =>
                         onRescan?.(r.student_no, r.doc_type)
                       }
-                      className="bg-white border border-gray-300 text-gray-700 hover:text-pup-maroon dark:hover:text-red-500 hover:border-gray-300 font-semibold text-xs px-3 h-8 shadow-sm dark:bg-card dark:text-zinc-200 dark:hover:border-zinc-700 dark:shadow-none dark:border-white/10"
+                      className="h-8 px-3 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                     >
                       <i className="ph-bold ph-scan mr-1.5"></i>
-                      Scan & Upload
+                      Scan
                     </Button>
                   )}
                 </div>
@@ -348,14 +345,37 @@ export default function DocumentsTab({
   archivedStudents = [],
   currentStudent,
 }) {
-  const [isDragActive, setIsDragActive] = useState(false);
   const [isManualRefreshing, setIsManualRefreshing] = useState(false);
-  const fileRef = useRef(null);
-
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [selectedDoc, setSelectedDoc] = useState(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [subtab, setSubtab] = useState("active");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [archiveSearch, setArchiveSearch] = useState("");
+
+  const searchQuery = docsForm.studentName || docsForm.studentNo || "";
+
+  const handleSearchChange = (val) => {
+    const trimmed = val.trim();
+    const isStudentNo = /^\d{4}/.test(trimmed);
+    const next = {
+      ...docsForm,
+      studentNo: isStudentNo ? trimmed : "",
+      studentName: isStudentNo ? "" : val,
+    };
+    setDocsForm(next);
+    refreshDocuments(next);
+  };
+
+  const handleClearAllFilters = () => {
+    const cleared = { studentNo: "", studentName: "", docType: "" };
+    setDocsForm(cleared);
+    setStatusFilter("");
+    refreshDocuments(cleared);
+    setPage(1);
+  };
+
+  const hasActiveFilters = Boolean(searchQuery || statusFilter || docsForm.docType);
 
   useEffect(() => {
     if (!detailModalOpen) {
@@ -375,11 +395,22 @@ export default function DocumentsTab({
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [jumpPage, setJumpPage] = useState("1");
 
-  // Reset page when search parameters/docsRows change
+  const filteredRows = useMemo(() => {
+    if (!statusFilter) return docsRows;
+    return docsRows.filter((r) => {
+      if (statusFilter === "Uploaded") return r.status === "uploaded";
+      if (statusFilter === "Verified") return r.status === "uploaded" && r.verificationStatus === "verified";
+      if (statusFilter === "Unverified") return r.status === "uploaded" && r.verificationStatus === "unverified";
+      if (statusFilter === "Missing") return r.status === "missing";
+      return true;
+    });
+  }, [docsRows, statusFilter]);
+
+  // Reset page when search parameters/filteredRows change
   useEffect(() => {
     setPage(1);
     setJumpPage("1");
-  }, [docsRows.length]);
+  }, [filteredRows.length]);
 
   const handleSort = (column) => {
     if (sortBy === column) {
@@ -393,7 +424,7 @@ export default function DocumentsTab({
   };
 
   const sortedRows = useMemo(() => {
-    const rows = [...docsRows];
+    const rows = [...filteredRows];
     return rows.sort((a, b) => {
       let valA = "";
       let valB = "";
@@ -424,14 +455,14 @@ export default function DocumentsTab({
       if (valA > valB) return sortOrder === "ASC" ? 1 : -1;
       return 0;
     });
-  }, [docsRows, sortBy, sortOrder]);
+  }, [filteredRows, sortBy, sortOrder]);
 
   const paginatedRows = useMemo(() => {
     const start = (page - 1) * itemsPerPage;
     return sortedRows.slice(start, start + itemsPerPage);
   }, [sortedRows, page, itemsPerPage]);
 
-  const totalPages = Math.max(1, Math.ceil(docsRows.length / itemsPerPage));
+  const totalPages = Math.max(1, Math.ceil(filteredRows.length / itemsPerPage));
 
   // Student Edit State
   const [editStudentOpen, setEditStudentOpen] = useState(false);
@@ -482,8 +513,7 @@ export default function DocumentsTab({
     return ids;
   };
 
-
-  const uniqueStudents = Array.from(new Set(docsRows.map(r => r.student_no)));
+  const uniqueStudents = Array.from(new Set(docsRows.map((r) => r.student_no)));
   const isSingleStudentView = uniqueStudents.length === 1 && !docsForm.docType.trim() && docsRows.length > 0;
 
   let compPercent = 0;
@@ -491,7 +521,7 @@ export default function DocumentsTab({
   let compTotal = 0;
   if (isSingleStudentView) {
     compTotal = docsRows.length;
-    compUploaded = docsRows.filter(r => r.status === "uploaded").length;
+    compUploaded = docsRows.filter((r) => r.status === "uploaded").length;
     compPercent = compTotal > 0 ? Math.round((compUploaded / compTotal) * 100) : 0;
   }
 
@@ -509,25 +539,38 @@ export default function DocumentsTab({
     setEditStudentOpen(true);
   };
 
+  const filteredArchivedStudents = useMemo(() => {
+    if (!archiveSearch.trim()) return archivedStudents;
+    const q = archiveSearch.trim().toLowerCase();
+    return archivedStudents.filter((s) => {
+      const no = String(s.studentNo || s.student_no || "").toLowerCase();
+      const name = String(s.name || "").toLowerCase();
+      const course = String(s.courseCode || s.course_code || "").toLowerCase();
+      return no.includes(q) || name.includes(q) || course.includes(q);
+    });
+  }, [archivedStudents, archiveSearch]);
+
   return (
     <TooltipProvider delayDuration={200}>
       <div
         id="view-documents"
-        className="flex flex-col w-full h-auto gap-6 animate-fade-up font-inter focus:outline-none"
+        className="flex flex-col w-full h-auto min-h-0 flex-1 focus:outline-none animate-fade-up font-inter"
         tabIndex={0}
       >
-        {/* Card 1: Header & Filters */}
-        <Card className="rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none overflow-hidden">
+        {/* ONE Single Card Container encapsulating Header, Toolbar, Filters, Table & Pagination */}
+        <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none isolate mb-4 min-h-0 flex-1">
+          {/* 1. Page Header */}
           <PageHeader
             icon="ph-files"
             title="Documents"
             description="Search and view digitized student records."
             showBorder={false}
+            className="p-6"
             titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
             descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
             actions={
               <div className="flex items-center gap-6">
-                <RefreshButton 
+                <RefreshButton
                   onRefresh={async () => {
                     setIsManualRefreshing(true);
                     const startTime = Date.now();
@@ -540,120 +583,152 @@ export default function DocumentsTab({
                     } finally {
                       setIsManualRefreshing(false);
                     }
-                  }} 
-                  isLoading={docsLoading || isManualRefreshing} 
+                  }}
+                  isLoading={docsLoading || isManualRefreshing}
                   title="Refresh Documents"
                 />
               </div>
             }
           />
 
-          <div className="flex gap-8 border-t border-gray-100 px-4 pt-3 dark:border-white/10">
-            <button type="button" onClick={() => setSubtab("active")} className={`relative pb-3 text-sm font-medium ${subtab === "active" ? "text-black after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-full after:bg-black" : "text-gray-400"}`}>Active Documents ({docsRows.length})</button>
-            <button type="button" onClick={() => setSubtab("archive")} className={`relative pb-3 text-sm font-medium ${subtab === "archive" ? "text-black after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-full after:bg-black" : "text-gray-400"}`}>Archive ({archivedStudents.length})</button>
-          </div>
-
-          <div className={cn("bg-white border-t border-gray-100 p-4 backdrop-blur-md dark:bg-card/50 dark:border-white/10", subtab === "archive" && "hidden")}>
-            <div className="flex w-full flex-wrap items-center gap-5">
-              {/* Student Number */}
-              <div className="flex-1 min-w-[200px] group relative">
-                <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                  <i className="ph-bold ph-magnifying-glass text-gray-400 transition-colors group-focus-within:text-pup-maroon dark:text-zinc-500 text-sm"></i>
-                </div>
-                <Input
-                  className="h-[36px] w-full rounded-[8px] border-[0.5px] border-gray-200 bg-white pl-9 pr-4 text-[13px] font-normal transition-all focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 placeholder:text-gray-400 dark:border-white/10 dark:bg-card dark:text-zinc-300 dark:focus:border-primary"
-                  value={docsForm.studentNo}
-                  onChange={(e) => {
-                    const v = e.target.value;
-                    setDocsForm((p) => {
-                      const next = { ...p, studentNo: v };
-                      refreshDocuments(next);
-                      return next;
-                    });
-                  }}
-                  placeholder="Student number"
-                />
-              </div>
-
-              {/* Student Name */}
-              <div className="flex-1 min-w-[200px] group relative">
-                <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                  <i className="ph-bold ph-user text-gray-400 transition-colors group-focus-within:text-pup-maroon dark:text-zinc-500 text-sm"></i>
-                </div>
-                <Input
-                  className="h-[36px] w-full rounded-[8px] border-[0.5px] border-gray-200 bg-white pl-9 pr-4 text-[13px] font-normal transition-all focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 placeholder:text-gray-400 dark:border-white/10 dark:bg-card dark:text-zinc-300 dark:focus:border-primary"
-                  value={docsForm.studentName}
-                  onChange={(e) => {
-                    const v = e.target.value;
-                    setDocsForm((p) => {
-                      const next = { ...p, studentName: v };
-                      refreshDocuments(next);
-                      return next;
-                    });
-                  }}
-                  placeholder="Student name"
-                />
-              </div>
-
-              {/* Document Type */}
-              <div className="min-w-[180px] flex-1">
-                <Select
-                  value={docsForm.docType}
-                  onChange={(e) => {
-                    const v = e.target.value;
-                    setDocsForm((p) => {
-                      const next = { ...p, docType: v };
-                      refreshDocuments(next);
-                      return next;
-                    });
-                  }}
-                  className="h-[36px] w-full rounded-[8px] border-[0.5px] border-gray-200 bg-white text-[13px] font-medium transition-all focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 dark:border-white/10 dark:bg-card dark:text-zinc-300 dark:focus:border-primary"
-                >
-                  <option value="">All Document Types</option>
-                  {docTypes.map((t) => (
-                    <option key={t} value={t}>
-                      {t}
-                    </option>
-                  ))}
-                </Select>
-              </div>
+          {/* 2. Navigation Toolbar */}
+          <div className="border-t border-gray-100 dark:border-white/10 p-5 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
+            {/* Left: Line Tabs */}
+            <div className="flex items-center gap-6 shrink-0 select-none overflow-x-auto">
+              <button
+                type="button"
+                onClick={() => setSubtab("active")}
+                className={cn(
+                  "relative h-9 flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent whitespace-nowrap",
+                  subtab === "active"
+                    ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
+                    : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
+                )}
+              >
+                Active Documents ({docsRows.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setSubtab("archive")}
+                className={cn(
+                  "relative h-9 flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent whitespace-nowrap",
+                  subtab === "archive"
+                    ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
+                    : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
+                )}
+              >
+                Archive ({archivedStudents.length})
+              </button>
             </div>
 
-            {docsError ? (
-              <div className="mt-4 p-3 rounded-brand bg-red-50 border border-red-200 text-sm text-red-800 font-medium dark:bg-red-950/30">
-                {docsError}
+            {/* Right: Search & Filters */}
+            {subtab === "active" ? (
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0">
+                {/* Search Input */}
+                <div className="w-full sm:w-[260px] lg:w-[300px] relative group shrink-0">
+                  <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                    <i className="ph-bold ph-magnifying-glass text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm"></i>
+                  </div>
+                  <Input
+                    value={searchQuery}
+                    onChange={(e) => handleSearchChange(e.target.value)}
+                    placeholder="Search student number or name..."
+                    className="h-9 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 pl-8 pr-16 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
+                  />
+                  <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] text-gray-400 dark:text-zinc-500">
+                    {filteredRows.length > 0 ? filteredRows.length.toLocaleString() : "0"}
+                  </div>
+                </div>
+
+                {/* Status Filter */}
+                <div className="w-full sm:w-[155px] shrink-0">
+                  <Select
+                    value={statusFilter}
+                    onChange={(e) => {
+                      setStatusFilter(e.target.value);
+                      setPage(1);
+                    }}
+                    className="h-9 rounded-xl border border-gray-200 dark:border-white/10 text-xs font-normal text-[#111111] dark:text-zinc-200 cursor-pointer shadow-none"
+                    menuClassName="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-900 shadow-2xl p-1.5"
+                    optionClassName="rounded-lg text-xs font-normal py-1.5 px-2.5 hover:bg-gray-100 dark:hover:bg-zinc-800"
+                  >
+                    <option value="">All Statuses</option>
+                    <option value="Uploaded">Uploaded</option>
+                    <option value="Verified">Verified</option>
+                    <option value="Unverified">Unverified</option>
+                    <option value="Missing">Missing</option>
+                  </Select>
+                </div>
+
+                {/* Document Type Filter */}
+                <div className="w-full sm:w-[185px] shrink-0">
+                  <Select
+                    value={docsForm.docType}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      const next = { ...docsForm, docType: v };
+                      setDocsForm(next);
+                      refreshDocuments(next);
+                      setPage(1);
+                    }}
+                    className="h-9 rounded-xl border border-gray-200 dark:border-white/10 text-xs font-normal text-[#111111] dark:text-zinc-200 cursor-pointer shadow-none"
+                    menuClassName="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-900 shadow-2xl p-1.5"
+                    optionClassName="rounded-lg text-xs font-normal py-1.5 px-2.5 hover:bg-gray-100 dark:hover:bg-zinc-800"
+                  >
+                    <option value="">All Document Types</option>
+                    {docTypes.map((t) => (
+                      <option key={t} value={t}>
+                        {t}
+                      </option>
+                    ))}
+                  </Select>
+                </div>
               </div>
-            ) : null}
+            ) : (
+              <div className="flex items-center gap-3 shrink-0">
+                <div className="w-full sm:w-[260px] lg:w-[300px] relative group shrink-0">
+                  <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                    <i className="ph-bold ph-magnifying-glass text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm"></i>
+                  </div>
+                  <Input
+                    value={archiveSearch}
+                    onChange={(e) => setArchiveSearch(e.target.value)}
+                    placeholder="Search archived students..."
+                    className="h-9 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 pl-8 pr-16 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
+                  />
+                  <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] text-gray-400 dark:text-zinc-500">
+                    {filteredArchivedStudents.length}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* Active filter Chips Row */}
-          {(docsForm.studentNo !== "" || docsForm.studentName !== "" || docsForm.docType !== "") && (
-            <div className="flex-none border-b border-gray-100 bg-white px-6 py-3 animate-in fade-in slide-in-from-top-1 duration-300 dark:border-white/10 dark:bg-card">
+          {/* 3. Active Filters Chips Row */}
+          {subtab === "active" && hasActiveFilters && (
+            <div className="flex-none border-t border-gray-100 dark:border-white/10 bg-white dark:bg-card px-6 py-2.5 animate-in fade-in slide-in-from-top-1 duration-normal">
               <div className="flex flex-wrap items-center gap-2">
-                <span className="mr-1 text-[11px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500">Active filters:</span>
-                {docsForm.studentNo && (
-                  <div className="flex items-center gap-[6px] rounded-[6px] bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
-                    ID: {docsForm.studentNo}
+                <span className="mr-1 text-[11px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500">
+                  Active filters:
+                </span>
+                {searchQuery && (
+                  <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
+                    Search: {searchQuery}
                     <button
-                      onClick={() => {
-                        const next = { ...docsForm, studentNo: "" };
-                        setDocsForm(next);
-                        refreshDocuments(next);
-                      }}
+                      onClick={() => handleSearchChange("")}
                       className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
                     >
                       ×
                     </button>
                   </div>
                 )}
-                {docsForm.studentName && (
-                  <div className="flex items-center gap-[6px] rounded-[6px] bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
-                    Name: {docsForm.studentName}
+                {statusFilter && (
+                  <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
+                    Status: {statusFilter}
                     <button
                       onClick={() => {
-                        const next = { ...docsForm, studentName: "" };
-                        setDocsForm(next);
-                        refreshDocuments(next);
+                        setStatusFilter("");
+                        setPage(1);
                       }}
                       className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
                     >
@@ -662,13 +737,14 @@ export default function DocumentsTab({
                   </div>
                 )}
                 {docsForm.docType && (
-                  <div className="flex items-center gap-[6px] rounded-[6px] bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
+                  <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
                     Type: {docsForm.docType}
                     <button
                       onClick={() => {
                         const next = { ...docsForm, docType: "" };
                         setDocsForm(next);
                         refreshDocuments(next);
+                        setPage(1);
                       }}
                       className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
                     >
@@ -679,11 +755,7 @@ export default function DocumentsTab({
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => {
-                    const cleared = { studentNo: "", studentName: "", docType: "" };
-                    setDocsForm(cleared);
-                    refreshDocuments(cleared);
-                  }}
+                  onClick={handleClearAllFilters}
                   className="h-auto text-[12px] font-medium text-gray-400 dark:text-zinc-500 border-0 bg-transparent hover:bg-transparent shadow-none p-0 hover:text-red-600 dark:hover:text-red-500 transition-colors cursor-pointer"
                 >
                   Clear
@@ -691,176 +763,194 @@ export default function DocumentsTab({
               </div>
             </div>
           )}
-        </Card>
 
-        {subtab === "archive" && (
-          <Card className="rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
-            <PageHeader
-              icon="ph-archive-box"
-              title="Archived Documents"
-              description="Archived student records and their documents."
-              showBorder={false}
-            />
-            <div className="p-4">
-              {archivedStudents.length > 0 ? (
-                <div className="space-y-2">
-                  {archivedStudents.map((student) => (
-                    <div key={student.studentNo || student.student_no} className="flex items-center justify-between rounded border border-gray-200 p-3 dark:border-white/10">
-                      <div>
-                        <p className="text-sm font-semibold text-gray-900 dark:text-zinc-50">{student.name || "Unnamed student"}</p>
-                        <p className="text-xs text-gray-500 dark:text-zinc-400">{student.studentNo || student.student_no}</p>
-                      </div>
-                      <span className="rounded-full bg-gray-100 px-2.5 py-1 text-[10px] font-semibold text-gray-600 dark:bg-white/10 dark:text-zinc-300">Archived</span>
-                    </div>
-                  ))}
+          {/* 4. Active Subtab Content */}
+          {subtab === "active" ? (
+            <div className="flex flex-col flex-1 w-full min-h-0">
+              {docsLoading ? (
+                <DocumentsMatrixSkeleton rowCount={7} embedded={true} />
+              ) : docsError ? (
+                <div className="p-8">
+                  <Empty className="h-[320px] flex flex-col items-center justify-center text-center text-gray-500 border-0 dark:text-zinc-400">
+                    <EmptyHeader className="flex flex-col items-center gap-0">
+                      <EmptyMedia className="w-16 h-16 rounded-2xl bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm dark:bg-card dark:border-white/10 dark:shadow-none">
+                        <i className="ph-duotone ph-warning-circle text-2xl text-pup-maroon dark:text-primary" />
+                      </EmptyMedia>
+                      <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">Could Not Load Report</EmptyTitle>
+                      <EmptyDescription className="text-xs font-normal text-gray-500 mt-1 max-w-md dark:text-zinc-400">
+                        {docsError}
+                      </EmptyDescription>
+                    </EmptyHeader>
+                  </Empty>
                 </div>
               ) : (
-                <p className="py-10 text-center text-sm text-gray-500 dark:text-zinc-400">No archived documents.</p>
-              )}
-            </div>
-          </Card>
-        )}
+                <div className="flex flex-col flex-1 w-full min-h-0 border-t border-gray-100 dark:border-white/10">
+                  {isSingleStudentView && (
+                    <div className="p-4 border-b border-gray-100 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/20">
+                      <div className="bg-white border border-gray-200 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xs dark:bg-card dark:border-white/10">
+                        <div>
+                          <h3 className="text-sm font-semibold text-gray-900 tracking-wide dark:text-zinc-50">
+                            Upload Progress • {docsRows[0]?.student_name || docsRows[0]?.student_no}
+                          </h3>
+                          <p className="text-xs font-normal text-gray-500 mt-1 dark:text-zinc-400">
+                            {compUploaded} out of {compTotal} documents uploaded.
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-6 w-full sm:w-auto justify-between sm:justify-end">
+                          <div className="flex items-center gap-3">
+                            <span className={`text-base font-semibold ${compPercent >= 100 ? "text-emerald-600" : compPercent >= 50 ? "text-amber-600" : "text-red-600"} dark:text-emerald-400`}>
+                              {compPercent}%
+                            </span>
+                            <div className="w-28 sm:w-40 h-2 bg-gray-200 rounded-full overflow-hidden dark:bg-zinc-700">
+                              <div
+                                className={`h-full transition-all duration-500 ${compPercent >= 100 ? "bg-emerald-500" : compPercent >= 50 ? "bg-amber-500" : "bg-red-500"}`}
+                                style={{ width: `${compPercent}%` }}
+                              />
+                            </div>
+                          </div>
+                          <Button
+                            variant="outline"
+                            onClick={openEditStudent}
+                            className="h-9 px-4 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                          >
+                            <i className="ph-bold ph-user-circle-gear mr-1.5 text-sm"></i>
+                            Edit Profile
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
-        {/* Main Table Grid & Pagination */}
-        <div className="flex flex-col flex-1 h-auto">
-          {docsLoading ? (
-            <div className="mb-4">
-              <DocumentsMatrixSkeleton rowCount={7} />
-            </div>
-          ) : docsError ? (
-            <div className="overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card p-6 mb-4">
-              <Empty className="h-[320px] flex flex-col items-center justify-center text-center text-gray-500 border-0 dark:text-zinc-400">
-                <EmptyHeader className="flex flex-col items-center gap-0">
-                  <EmptyMedia className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm dark:bg-card dark:border-white/10 dark:shadow-none">
-                    <i className="ph-duotone ph-warning-circle text-xl text-pup-maroon dark:text-primary" />
-                  </EmptyMedia>
-                  <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">Could Not Load Report</EmptyTitle>
-                  <EmptyDescription className="text-sm font-medium text-gray-600 mt-1 max-w-md dark:text-zinc-300">
-                    {docsError}
-                  </EmptyDescription>
-                </EmptyHeader>
-              </Empty>
+                  <div className="flex-1 w-full overflow-x-auto min-h-0">
+                    <DocumentsTable
+                      docsRows={filteredRows}
+                      paginatedRows={paginatedRows}
+                      hasActiveFilters={hasActiveFilters}
+                      sortBy={sortBy}
+                      sortOrder={sortOrder}
+                      handleSort={handleSort}
+                      onViewDetails={handleViewDetails}
+                      onRescan={onRescan}
+                    />
+                  </div>
+
+                  {filteredRows.length > 0 && (
+                    <div className="flex items-center justify-between border-t border-gray-100 bg-white p-4 px-6 dark:border-white/10 dark:bg-card mt-auto select-none">
+                      <div className="flex items-center gap-6 text-xs text-gray-500 dark:text-zinc-400">
+                        <span>
+                          Showing {paginatedRows.length} of {filteredRows.length.toLocaleString()}
+                        </span>
+                        <div className="flex items-center gap-2">
+                          <span>Rows:</span>
+                          <div className="flex items-center gap-1">
+                            {[10, 20, 50, 100].map((size) => (
+                              <button
+                                key={size}
+                                type="button"
+                                onClick={() => {
+                                  setItemsPerPage(size);
+                                  setPage(1);
+                                  setJumpPage("1");
+                                }}
+                                className={cn(
+                                  "px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer",
+                                  itemsPerPage === size
+                                    ? "bg-gray-100 dark:bg-zinc-800 text-gray-900 dark:text-zinc-100"
+                                    : "text-gray-400 hover:text-gray-600 dark:hover:text-zinc-200"
+                                )}
+                              >
+                                {size}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          disabled={page <= 1}
+                          onClick={() => {
+                            setPage((p) => Math.max(1, p - 1));
+                            setJumpPage(String(Math.max(1, page - 1)));
+                          }}
+                          className="text-xs text-gray-500 dark:text-zinc-400 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
+                        >
+                          Prev
+                        </Button>
+
+                        <div className="h-8 w-8 rounded-xl border border-[#e5e5ea] dark:border-zinc-800 flex items-center justify-center text-xs font-bold text-gray-800 dark:text-zinc-200 bg-white dark:bg-zinc-900">
+                          {page}
+                        </div>
+
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          disabled={page >= totalPages}
+                          onClick={() => {
+                            setPage((p) => Math.min(totalPages, p + 1));
+                            setJumpPage(String(Math.min(totalPages, page + 1)));
+                          }}
+                          className="text-xs text-gray-500 dark:text-zinc-400 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
+                        >
+                          Next
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           ) : (
-            <div className="overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card flex flex-col h-auto mb-4">
-              {isSingleStudentView && (
-                <div className="p-4 border-b border-gray-100 dark:border-white/10">
-                  <div className="bg-gray-50 border border-gray-200 rounded-brand p-5 flex items-center justify-between shadow-xs dark:bg-muted/30 dark:border-white/10">
-                    <div>
-                      <h3 className="text-sm font-semibold text-gray-900 tracking-wide dark:text-zinc-50">Upload Progress • {docsRows[0].student_name || docsRows[0].student_no}</h3>
-                      <p className="text-xs font-medium text-gray-500 mt-1 dark:text-zinc-400">
-                        {compUploaded} out of {compTotal} documents uploaded.
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-6">
-                      <div className="flex items-center gap-4">
-                        <span className={`text-xl font-semibold ${compPercent >= 100 ? "text-emerald-600" : compPercent >= 50 ? "text-amber-600" : "text-red-600"} dark:text-emerald-400`}>
-                          {compPercent}%
-                        </span>
-                        <div className="w-32 sm:w-48 h-2.5 bg-gray-200 rounded-full overflow-hidden dark:bg-zinc-700">
-                          <div
-                            className={`h-full transition-all duration-500 ${compPercent >= 100 ? "bg-emerald-500" : compPercent >= 50 ? "bg-amber-500" : "bg-red-500"}`}
-                            style={{ width: `${compPercent}%` }}
-                          />
-                        </div>
-                      </div>
-                      <Button
-                        onClick={openEditStudent}
-                        className="bg-white border border-gray-300 text-gray-700 hover:text-pup-maroon dark:hover:text-red-500 hover:border-gray-300 font-semibold text-xs px-4 h-9 shadow-sm dark:bg-card dark:text-zinc-200 dark:hover:border-zinc-700 dark:shadow-none dark:border-white/10"
+            /* Archive Subtab View */
+            <div className="flex flex-col flex-1 w-full min-h-0 border-t border-gray-100 dark:border-white/10">
+              <div className="p-6">
+                {filteredArchivedStudents.length > 0 ? (
+                  <div className="space-y-3">
+                    {filteredArchivedStudents.map((student) => (
+                      <div
+                        key={student.studentNo || student.student_no}
+                        className="flex items-center justify-between rounded-xl border border-gray-200 bg-white p-4 dark:border-white/10 dark:bg-card"
                       >
-                        <i className="ph-bold ph-user-circle-gear mr-2 text-sm"></i>
-                        Edit Student
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              )}
-              
-              <div
-                key={`${docsForm.studentNo}-${docsForm.docType}`}
-                className="flex-1 w-full overflow-visible animate-fade-up"
-              >
-                <DocumentsTable
-                  docsRows={docsRows}
-                  paginatedRows={paginatedRows}
-                  docsForm={docsForm}
-                  sortBy={sortBy}
-                  sortOrder={sortOrder}
-                  handleSort={handleSort}
-                  onViewDetails={handleViewDetails}
-                  onRescan={onRescan}
-                />
-              </div>
-
-              {docsRows.length > 0 && (
-                <div className="flex items-center justify-between border-t border-gray-100 bg-white p-6 px-8 dark:border-white/10 dark:bg-card mt-auto">
-                  <div className="flex items-center gap-8">
-                    <div className="flex items-center gap-6 text-[12px] font-normal text-gray-400 dark:text-zinc-500">
-                      <span>
-                        Showing {paginatedRows.length} of {docsRows.length}
-                      </span>
-                      <div className="flex items-center gap-1.5 border-l border-gray-200 pl-6 dark:border-white/10">
-                        <span className="text-[12px] text-gray-400 dark:text-zinc-500">Rows:</span>
-                        <div className="flex items-center gap-1">
-                          {[10, 20, 50, 100].map((size) => (
-                            <button
-                              key={size}
-                              type="button"
-                              onClick={() => {
-                                setItemsPerPage(size);
-                                setPage(1);
-                                setJumpPage("1");
-                              }}
-                              className={`px-2 py-0.5 rounded-[4px] text-[12px] font-normal cursor-pointer transition-colors border-0 ${
-                                itemsPerPage === size
-                                  ? "bg-gray-100 text-[#111111] font-medium dark:bg-white/10 dark:text-zinc-50"
-                                  : "bg-transparent text-gray-450 dark:text-zinc-550 hover:text-gray-700 dark:hover:text-zinc-300"
-                              }`}
-                            >
-                              {size}
-                            </button>
-                          ))}
+                        <div>
+                          <p className="text-sm font-semibold text-gray-900 dark:text-zinc-50">
+                            {student.name || "Unnamed student"}
+                          </p>
+                          <p className="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">
+                            {student.studentNo || student.student_no} • {student.courseCode || student.course_code || "No Program"}
+                          </p>
                         </div>
+                        <span className="rounded-full bg-gray-100 px-3 py-1 text-[10px] font-semibold text-gray-600 dark:bg-white/10 dark:text-zinc-300">
+                          Archived
+                        </span>
                       </div>
-                    </div>
+                    ))}
                   </div>
-
-                  <div className="flex shrink-0 items-center gap-3">
-                    <button
-                      disabled={page <= 1}
-                      onClick={() => {
-                        setPage((p) => Math.max(1, p - 1));
-                        setJumpPage(String(Math.max(1, page - 1)));
-                      }}
-                      className="h-8 bg-transparent text-[12px] font-normal text-gray-400 hover:text-pup-maroon dark:text-zinc-500 dark:hover:text-zinc-200 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer border-0 p-0"
-                    >
-                      Prev
-                    </button>
-
-                    <div className="flex h-8 min-w-[32px] items-center justify-center rounded-[6px] border border-gray-200/80 bg-white px-2.5 text-[12px] font-medium text-gray-900 dark:border-white/10 dark:bg-card dark:text-zinc-100">
-                      {page}
-                    </div>
-
-                    <button
-                      disabled={page >= totalPages}
-                      onClick={() => {
-                        setPage((p) => Math.min(totalPages, p + 1));
-                        setJumpPage(String(Math.min(totalPages, page + 1)));
-                      }}
-                      className="h-8 bg-transparent text-[12px] font-normal text-gray-400 hover:text-pup-maroon dark:text-zinc-500 dark:hover:text-zinc-200 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer border-0 p-0"
-                    >
-                      Next
-                    </button>
-                  </div>
-                </div>
-              )}
+                ) : (
+                  <Empty className="h-[320px] flex flex-col items-center justify-center text-center text-gray-500 border-0 dark:text-zinc-400">
+                    <EmptyHeader className="flex flex-col items-center gap-0">
+                      <div className="relative mb-4">
+                        <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
+                        <EmptyMedia className="relative z-10 flex h-20 w-20 items-center justify-center rounded-2xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
+                          <i className="ph-duotone ph-archive-box text-3xl text-gray-400 dark:text-zinc-500"></i>
+                        </EmptyMedia>
+                      </div>
+                      <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">No Archived Records</EmptyTitle>
+                      <EmptyDescription className="max-w-xs text-xs font-normal text-gray-500 dark:text-zinc-400 mt-1">
+                        There are currently no student records in the archive.
+                      </EmptyDescription>
+                    </EmptyHeader>
+                  </Empty>
+                )}
+              </div>
             </div>
           )}
-        </div>
+        </Card>
 
         {/* STUDENT PROFILE EDIT MODAL */}
         <Dialog open={editStudentOpen} onOpenChange={setEditStudentOpen}>
-          <DialogContent className="sm:max-w-2xl p-0 overflow-hidden bg-white border border-gray-200 shadow-2xl rounded-brand dark:bg-card dark:border-white/10">
+          <DialogContent className="sm:max-w-2xl p-0 overflow-hidden bg-white border border-gray-200 shadow-2xl rounded-2xl dark:bg-card dark:border-white/10">
             <DialogHeader className="p-6 border-b border-gray-100 bg-gray-50 dark:border-white/10 dark:bg-white/5">
               <div className="flex items-start gap-4">
                 <div className="w-12 h-12 rounded-xl border border-red-100 bg-red-50 text-pup-maroon dark:text-primary shadow-sm flex items-center justify-center shrink-0 dark:bg-red-950/30 dark:text-primary dark:shadow-none">
@@ -882,45 +972,45 @@ export default function DocumentsTab({
                 <h4 className="text-[11px] font-semibold text-gray-500 tracking-widest border-b border-gray-100 pb-1 dark:text-zinc-400 dark:border-white/10">Identification</h4>
                 <div>
                   <label className="block text-xs font-semibold text-gray-700 mb-1.5 tracking-wide dark:text-zinc-200">Student Number</label>
-                  <Input disabled value={currentStudent?.studentNo} className="bg-gray-100 text-gray-500 border-gray-200 cursor-not-allowed dark:text-zinc-400 dark:border-white/10 dark:bg-muted" />
+                  <Input disabled value={currentStudent?.studentNo} className="bg-gray-100 text-gray-500 border-gray-200 cursor-not-allowed dark:text-zinc-400 dark:border-white/10 dark:bg-muted rounded-xl" />
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-gray-700 mb-1.5 tracking-wide dark:text-zinc-200">Full Name <span className="text-pup-maroon dark:text-primary">*</span></label>
                   <Input
                     value={editStudentForm.name}
-                    onChange={e => setEditStudentForm(p => ({ ...p, name: e.target.value.toUpperCase() }))}
+                    onChange={(e) => setEditStudentForm((p) => ({ ...p, name: e.target.value.toUpperCase() }))}
                     placeholder="LAST NAME, FIRST NAME"
-                    className="h-11 bg-white border border-gray-300 rounded-brand text-sm focus-visible:ring-pup-maroon focus-visible:border-gray-300 dark:bg-card dark:border-white/10"
+                    className="h-10 bg-white border border-gray-200 dark:border-white/10 rounded-xl text-xs shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 dark:bg-card"
                     required
                   />
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-gray-700 mb-1.5 tracking-wide dark:text-zinc-200">Degree Program <span className="text-pup-maroon dark:text-primary">*</span></label>
                   <Select
-                    className="h-12 w-full rounded-brand border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-900 shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-gray-300 dark:bg-card dark:text-zinc-50 dark:shadow-none dark:focus:border-zinc-700 dark:border-white/10"
+                    className="h-10 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white px-3 text-xs font-normal text-gray-900 shadow-none transition-colors focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 dark:bg-card dark:text-zinc-50"
                     value={editStudentForm.courseCode}
-                    onChange={e => setEditStudentForm(p => ({ ...p, courseCode: e.target.value }))}
+                    onChange={(e) => setEditStudentForm((p) => ({ ...p, courseCode: e.target.value }))}
                     required
                   >
                     <option value="" disabled>Select Program...</option>
-                    {courses.map(c => <option key={c.code} value={c.code}>{c.code} - {c.name}</option>)}
+                    {courses.map((c) => <option key={c.code} value={c.code}>{c.code} - {c.name}</option>)}
                   </Select>
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-gray-700 mb-1.5 tracking-wide dark:text-zinc-200">Section <span className="text-pup-maroon dark:text-primary">*</span></label>
                   <Input
                     value={editStudentForm.section}
-                    onChange={e => setEditStudentForm(p => ({ ...p, section: e.target.value }))}
-                    className="h-11 bg-white border border-gray-300 rounded-brand text-sm focus-visible:ring-pup-maroon focus-visible:border-gray-300 dark:bg-card dark:border-white/10"
+                    onChange={(e) => setEditStudentForm((p) => ({ ...p, section: e.target.value }))}
+                    className="h-10 bg-white border border-gray-200 dark:border-white/10 rounded-xl text-xs shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 dark:bg-card"
                     required
                   />
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-gray-700 mb-1.5 tracking-wide dark:text-zinc-200">Account Status <span className="text-pup-maroon dark:text-primary">*</span></label>
                   <Select
-                    className="h-12 w-full rounded-brand border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-900 shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-gray-300 dark:bg-card dark:text-zinc-50 dark:shadow-none dark:focus:border-zinc-700 dark:border-white/10"
+                    className="h-10 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white px-3 text-xs font-normal text-gray-900 shadow-none transition-colors focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 dark:bg-card dark:text-zinc-50"
                     value={editStudentForm.status}
-                    onChange={e => setEditStudentForm(p => ({ ...p, status: e.target.value }))}
+                    onChange={(e) => setEditStudentForm((p) => ({ ...p, status: e.target.value }))}
                     required
                   >
                     <option value="Active">Active</option>
@@ -937,7 +1027,7 @@ export default function DocumentsTab({
                 <div>
                   <label className="block text-xs font-semibold text-gray-700 mb-1.5 tracking-wide dark:text-zinc-200">Room Number <span className="text-pup-maroon dark:text-primary">*</span></label>
                   <Select
-                    className="h-12 w-full rounded-brand border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-900 shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-gray-300 dark:bg-card dark:text-zinc-50 dark:shadow-none dark:focus:border-zinc-700 dark:border-white/10"
+                    className="h-10 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white px-3 text-xs font-normal text-gray-900 shadow-none transition-colors focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 dark:bg-card dark:text-zinc-50"
                     value={String(editStudentForm.room || "")}
                     onChange={(e) => {
                       const nextRoom = e.target.value ? parseInt(e.target.value, 10) : "";
@@ -954,7 +1044,7 @@ export default function DocumentsTab({
                 <div>
                   <label className="block text-xs font-semibold text-gray-700 mb-1.5 tracking-wide dark:text-zinc-200">Cabinet ID <span className="text-pup-maroon dark:text-primary">*</span></label>
                   <Select
-                    className="h-12 w-full rounded-brand border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-900 shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-gray-300 dark:bg-card dark:text-zinc-50 dark:shadow-none dark:focus:border-zinc-700 dark:border-white/10"
+                    className="h-10 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white px-3 text-xs font-normal text-gray-900 shadow-none transition-colors focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 dark:bg-card dark:text-zinc-50"
                     value={editStudentForm.cabinet}
                     onChange={(e) => setEditStudentForm((p) => ({ ...p, cabinet: e.target.value, drawer: "" }))}
                     disabled={!editStudentForm.room}
@@ -969,7 +1059,7 @@ export default function DocumentsTab({
                 <div>
                   <label className="block text-xs font-semibold text-gray-700 mb-1.5 tracking-wide dark:text-zinc-200">Drawer Number <span className="text-pup-maroon dark:text-primary">*</span></label>
                   <Select
-                    className="h-12 w-full rounded-brand border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-900 shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-gray-300 dark:bg-card dark:text-zinc-50 dark:shadow-none dark:focus:border-zinc-700 dark:border-white/10"
+                    className="h-10 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white px-3 text-xs font-normal text-gray-900 shadow-none transition-colors focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 dark:bg-card dark:text-zinc-50"
                     value={String(editStudentForm.drawer || "")}
                     onChange={(e) => setEditStudentForm((p) => ({ ...p, drawer: e.target.value }))}
                     disabled={!editStudentForm.cabinet}
@@ -995,10 +1085,10 @@ export default function DocumentsTab({
                           type="button"
                           variant="outline"
                           onClick={() => setConfirmArchiveOpen(true)}
-                          className="mt-3 w-full bg-white border border-red-200 text-red-600 hover:bg-red-50 text-[10px] font-semibold h-9 shadow-xs rounded-brand dark:bg-card"
+                          className="mt-3 w-full bg-white border border-red-200 text-red-600 hover:bg-red-50 text-xs font-semibold h-9 shadow-xs rounded-xl dark:bg-card"
                         >
                           <i className="ph-bold ph-archive mr-2"></i>
-                          Archive Student Record
+                          Archive
                         </Button>
                       </div>
                     </div>
@@ -1012,7 +1102,7 @@ export default function DocumentsTab({
                 type="button"
                 variant="outline"
                 onClick={() => setEditStudentOpen(false)}
-                className="h-11 px-6 text-sm font-semibold border-gray-300 text-gray-700 hover:bg-gray-50 rounded-brand dark:text-zinc-200 dark:hover:bg-white/10 dark:bg-card dark:border-white/10"
+                className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
               >
                 Cancel
               </Button>
@@ -1028,10 +1118,17 @@ export default function DocumentsTab({
                   }
                 }}
                 disabled={editStudentSaving}
-                className="h-11 px-6 btn-brand-red active:scale-95 transition-all dark:shadow-none"
+                className="h-10 px-5 text-xs font-semibold rounded-xl! btn-brand-red text-white! active:scale-95 disabled:opacity-50 transition-all cursor-pointer shadow-xs"
+                style={{ color: "#ffffff" }}
               >
-                <i className="ph-bold ph-check text-lg"></i>
-                {editStudentSaving ? "Saving..." : "Save Profile"}
+                {editStudentSaving ? (
+                  <>
+                    <i className="ph-bold ph-spinner animate-spin mr-2"></i>
+                    Saving...
+                  </>
+                ) : (
+                  "Save"
+                )}
               </Button>
             </div>
           </DialogContent>
@@ -1055,14 +1152,14 @@ export default function DocumentsTab({
         <Dialog
           open={detailModalOpen}
           onOpenChange={(isOpen) => {
-            setDetailModalOpen(isOpen)
+            setDetailModalOpen(isOpen);
             if (!isOpen) {
-              setIsFullscreen(false)
-              setTimeout(() => setSelectedDoc(null), 300)
+              setIsFullscreen(false);
+              setTimeout(() => setSelectedDoc(null), 300);
             }
           }}
         >
-          <DialogContent className="flex h-[90vh] w-[96vw] max-w-[96vw] flex-col overflow-hidden border border-gray-200 bg-gray-100 p-0 shadow-2xl transition-all duration-300 xl:max-w-[1400px] rounded-brand dark:border-white/10 dark:bg-muted">
+          <DialogContent className="flex h-[90vh] w-[96vw] max-w-[96vw] flex-col overflow-hidden border border-gray-200 bg-gray-100 p-0 shadow-2xl transition-all duration-300 xl:max-w-[1400px] rounded-2xl dark:border-white/10 dark:bg-muted">
             <DialogHeader className="shrink-0 border-b border-gray-100 bg-gray-50 p-6 dark:border-white/10 dark:bg-white/5">
               <div className="flex items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
@@ -1165,14 +1262,14 @@ export default function DocumentsTab({
                             </div>
                           )
                         ) : (
-                            <div className="flex w-fit items-center gap-1.5 rounded-full border px-3 py-1.5 text-[10px] font-semibold tracking-wider shadow-xs bg-red-50 text-red-700 border-red-200 dark:bg-red-950/20 dark:text-red-500/90 dark:border-red-900/50">
-                              <i className="ph-fill ph-x-circle text-[11px]"></i>
-                              Missing
-                            </div>
+                          <div className="flex w-fit items-center gap-1.5 rounded-full border px-3 py-1.5 text-[10px] font-semibold tracking-wider shadow-xs bg-red-50 text-red-700 border-red-200 dark:bg-red-950/20 dark:text-red-500/90 dark:border-red-900/50">
+                            <i className="ph-fill ph-x-circle text-[11px]"></i>
+                            Missing
+                          </div>
                         )}
                       </div>
                     </div>
-                    
+
                     {selectedDoc?.doc && (
                       <>
                         <div className="grid grid-cols-2 gap-4">
@@ -1212,7 +1309,7 @@ export default function DocumentsTab({
                       onClick={() => setIsFullscreen(!isFullscreen)}
                       disabled={!selectedDoc?.doc?.file_url && !selectedDoc?.doc?.id}
                       className={cn(
-                        "h-11 w-11 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-card transition-all hover:bg-gray-50 dark:hover:bg-white/10 shadow-sm dark:shadow-none",
+                        "h-10 w-10 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-card transition-all hover:bg-gray-50 dark:hover:bg-white/10 shadow-sm dark:shadow-none",
                         isFullscreen && "bg-pup-maroon dark:bg-red-600 text-white hover:bg-pup-darkMaroon border-pup-darkMaroon"
                       )}
                     >
@@ -1230,10 +1327,10 @@ export default function DocumentsTab({
                     href={selectedDoc.doc.file_url || `/api/documents/${selectedDoc.doc.id}`}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex h-11 items-center rounded-brand border border-gray-300 px-6 text-sm font-semibold tracking-wide text-gray-600 hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 shadow-sm transition-colors dark:text-zinc-300 dark:border-white/10"
+                    className="inline-flex h-10 items-center rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 px-4 text-xs font-semibold shadow-xs cursor-pointer active:scale-95 transition-all"
                   >
-                    <i className="ph-bold ph-arrow-square-out mr-2 text-lg"></i>
-                    Open Full View
+                    <i className="ph-bold ph-arrow-square-out mr-2 text-base"></i>
+                    Open
                   </a>
                 )}
               </div>
@@ -1242,9 +1339,9 @@ export default function DocumentsTab({
                 <Button
                   variant="outline"
                   onClick={() => setDetailModalOpen(false)}
-                  className="h-11 rounded-brand border-gray-300 px-6 text-sm font-semibold tracking-wide text-gray-600 hover:border-gray-300 hover:bg-gray-50 dark:hover:bg-white/10 shadow-sm transition-colors dark:text-zinc-300 dark:border-white/10"
+                  className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                 >
-                  Close Details
+                  Close
                 </Button>
 
                 <Button
@@ -1261,10 +1358,10 @@ export default function DocumentsTab({
                     }
                   }}
                   disabled={!selectedDoc?.doc?.id || !!selectedDoc?.doc?.source_type}
-                  className="h-11 rounded-brand btn-brand-red px-8 text-sm font-semibold tracking-wide shadow-md transition-all active:scale-95 dark:shadow-none"
+                  className="h-10 px-5 text-xs font-semibold rounded-xl! btn-brand-red text-white! active:scale-95 disabled:opacity-50 transition-all cursor-pointer shadow-xs"
+                  style={{ color: "#ffffff" }}
                 >
-                  <i className="ph-bold ph-arrow-counter-clockwise mr-2"></i>
-                  Update Document File
+                  Update
                 </Button>
               </div>
             </div>

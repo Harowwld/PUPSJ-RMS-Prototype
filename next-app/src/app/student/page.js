@@ -58,9 +58,10 @@ export default function StudentDashboard() {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState({ requests: [], documents: [], proposals: [], activity: [] });
   const [docTypes, setDocTypes] = useState([]);
+  const [courses, setCourses] = useState([]);
   const [authMode, setAuthMode] = useState("login");
   const [auth, setAuth] = useState({ studentNo: "", name: "", password: "" });
-  const [requestForm, setRequestForm] = useState({ studentNo: "", docType: "", notes: "", clientType: "Student" });
+  const [requestForm, setRequestForm] = useState({ studentNo: "", docType: "", notes: "", clientType: "Student", courseCode: "" });
   const [proposalForm, setProposalForm] = useState({ title: "", organizationName: "", eventDate: "", file: null });
   const [message, setMessage] = useState("");
   const [view, setView] = useState("odrs");
@@ -192,17 +193,19 @@ export default function StudentDashboard() {
         clientType: meJson.data.client_type || prev.clientType || "Student",
         studentNo: prev.studentNo || meJson.data.student_no || "",
       }));
-      const [requestRes, proposalRes, typesRes, activityRes] = await Promise.all([
+      const [requestRes, proposalRes, typesRes, activityRes, coursesRes] = await Promise.all([
         fetch("/api/student/document-requests", { cache: "no-store" }),
         fetch("/api/student/event-proposals", { cache: "no-store" }),
         fetch("/api/doc-types", { cache: "no-store" }),
         fetch("/api/student/activity", { cache: "no-store" }),
+        fetch("/api/courses", { cache: "no-store" }),
       ]);
-      const [requestJson, proposalJson, typesJson, activityJson] = await Promise.all([requestRes.json(), proposalRes.json(), typesRes.json(), activityRes.json()]);
+      const [requestJson, proposalJson, typesJson, activityJson, coursesJson] = await Promise.all([requestRes.json(), proposalRes.json(), typesRes.json(), activityRes.json(), coursesRes.json()]);
       if (!requestRes.ok || !requestJson?.ok || !proposalRes.ok || !proposalJson?.ok) {
         throw new Error(requestJson?.error || proposalJson?.error || "Unable to load student records.");
       }
       setDocTypes(Array.isArray(typesJson?.data) ? typesJson.data : []);
+      setCourses(Array.isArray(coursesJson?.data) ? coursesJson.data : []);
       setData({ requests: requestJson?.data?.requests || [], documents: requestJson?.data?.documents || [], proposals: proposalJson?.data || [], activity: activityJson?.data || [] });
     } finally {
       setLoading(false);
@@ -241,10 +244,16 @@ export default function StudentDashboard() {
       const docType = String(requestForm.docType || "").trim();
       const notes = String(requestForm.notes || "").trim();
       const clientType = String(requestForm.clientType || me?.client_type || "Student").trim();
+      const courseCode = String(requestForm.courseCode || "").trim().toUpperCase() || null;
 
       if (!clientType) {
         setMessage("Client type is required.");
         showToast("Client type required", "Please select whether you are a Student or Alumni.", true);
+        return;
+      }
+      if (clientType === "Alumni" && !studentNo && !courseCode) {
+        setMessage("Academic program is required for alumni without a student number.");
+        showToast("Program required", "Please select your degree program / course.", true);
         return;
       }
       if (!docType) {
@@ -266,6 +275,7 @@ export default function StudentDashboard() {
           docType,
           notes,
           clientType,
+          courseCode,
         }),
       });
       const json = await res.json();
@@ -279,6 +289,7 @@ export default function StudentDashboard() {
         ...prev,
         docType: "",
         notes: "",
+        courseCode: "",
         studentNo: me?.student_no || "",
       }));
       showToast("Request submitted", "The Registrar can now review your document request.");
@@ -368,7 +379,7 @@ export default function StudentDashboard() {
                   actions={
                     <div className="flex items-center gap-3">
                       {me?.student_no && (
-                        <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-medium bg-red-50 text-pup-maroon border border-red-100 dark:bg-red-950/30 dark:border-red-900/30">
+                        <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-red-50 text-pup-maroon border border-red-100 dark:bg-red-950/30 dark:border-red-900/30">
                           <i className="ph-fill ph-student text-[13px]"></i>
                           {me.student_no}
                         </span>
@@ -443,7 +454,7 @@ export default function StudentDashboard() {
 
                     <form onSubmit={createRequest} className="flex flex-col gap-4">
                       <div className="flex flex-col md:flex-row gap-4">
-                        <div className="flex-1 min-w-[200px]">
+                        <div className="flex-1 min-w-[180px]">
                           <label htmlFor="student-client-type" className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-gray-600 dark:text-zinc-400">
                             Client Type <span className="text-red-500">*</span>
                           </label>
@@ -451,31 +462,55 @@ export default function StudentDashboard() {
                             id="student-client-type"
                             value={requestForm.clientType}
                             onChange={(e) => setRequestForm({ ...requestForm, clientType: e.target.value })}
-                            className="h-10 text-sm font-normal text-gray-800 dark:text-zinc-100 border-gray-300 dark:border-zinc-700 dark:bg-zinc-800"
+                            className="h-10 rounded-xl text-sm font-normal text-gray-800 dark:text-zinc-100 border border-gray-200 dark:border-white/10 dark:bg-zinc-800 shadow-none"
                           >
                             <option value="Student">Student (Currently Enrolled)</option>
                             <option value="Alumni">Alumni (Graduate / Former)</option>
                           </Select>
                         </div>
 
-                        <div className="flex-1 min-w-[200px]">
+                        <div className="flex-1 min-w-[180px]">
                           <label htmlFor="student-id-input" className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-gray-600 dark:text-zinc-400">
-                            Student Number <span className="font-normal normal-case text-gray-400 dark:text-zinc-500">(Optional)</span>
+                            Student Number <span className="font-normal normal-case text-gray-400 dark:text-zinc-500">{requestForm.clientType === "Alumni" ? "(Optional)" : "*"}</span>
                           </label>
                           <Input
                             id="student-id-input"
                             type="text"
-                            placeholder="e.g. 2020-00123-TG-0 (optional)"
+                            placeholder={requestForm.clientType === "Alumni" ? "Optional if forgotten" : "YYYY-XXXXX-SJ-0"}
                             value={requestForm.studentNo || ""}
                             onChange={(e) => setRequestForm({ ...requestForm, studentNo: e.target.value })}
-                            className="h-10 w-full rounded-brand border border-gray-300 bg-white px-3 text-sm font-mono text-gray-900 placeholder:text-gray-400 outline-none focus-visible:ring-pup-maroon dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+                            className="h-10 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white px-3 text-sm text-gray-900 placeholder:text-gray-400 shadow-none outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 dark:bg-zinc-800 dark:text-zinc-100"
                           />
                           <p className="mt-1 text-[11px] text-gray-500 dark:text-zinc-400">
-                            Optional for alumni who do not recall their student number.
+                            {requestForm.clientType === "Alumni" ? "Optional for alumni who do not recall their student number." : "Official PUP student registration number."}
                           </p>
                         </div>
 
-                        <div className="flex-1 min-w-[240px]">
+                        {requestForm.clientType === "Alumni" && (
+                          <div className="flex-1 min-w-[200px]">
+                            <label htmlFor="student-course-select" className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-gray-600 dark:text-zinc-400">
+                              Academic Program {!requestForm.studentNo && <span className="text-red-500">*</span>}
+                            </label>
+                            <Select
+                              id="student-course-select"
+                              value={requestForm.courseCode || ""}
+                              onChange={(e) => setRequestForm({ ...requestForm, courseCode: e.target.value })}
+                              className="h-10 rounded-xl text-sm font-normal border border-gray-200 dark:border-white/10 dark:bg-zinc-800 shadow-none text-gray-800 dark:text-zinc-100"
+                            >
+                              <option value="">Select degree program...</option>
+                              {courses.map((c) => (
+                                <option key={c.code} value={c.code}>
+                                  {c.code} - {c.name}
+                                </option>
+                              ))}
+                            </Select>
+                            <p className="mt-1 text-[11px] text-gray-500 dark:text-zinc-400">
+                              Program/course graduated or attended.
+                            </p>
+                          </div>
+                        )}
+
+                        <div className="flex-1 min-w-[220px]">
                           <label htmlFor="student-document-type" className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-gray-600 dark:text-zinc-400">
                             Document Type <span className="text-red-500">*</span>
                           </label>
@@ -484,7 +519,7 @@ export default function StudentDashboard() {
                             value={requestForm.docType}
                             placeholder="Select a document type"
                             onChange={(e) => setRequestForm({ ...requestForm, docType: e.target.value })}
-                            className={`h-10 text-sm font-normal border-gray-300 dark:border-zinc-700 dark:bg-zinc-800 ${
+                            className={`h-10 rounded-xl text-sm font-normal border border-gray-200 dark:border-white/10 dark:bg-zinc-800 shadow-none ${
                               !requestForm.docType ? "text-gray-400 dark:text-zinc-500" : "text-gray-800 dark:text-zinc-100"
                             }`}
                           >
@@ -529,10 +564,7 @@ export default function StudentDashboard() {
                               Submitting...
                             </>
                           ) : (
-                            <>
-                              <i className="ph-bold ph-paper-plane-tilt text-sm" />
-                              Submit Request
-                            </>
+                            "Submit"
                           )}
                         </Button>
                       </div>
@@ -561,12 +593,12 @@ export default function StudentDashboard() {
                       <div className="mt-4 flex flex-row items-center gap-[12px] w-full select-none">
                         <div className="flex-1 min-w-0 relative group">
                           <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                            <i className="ph-bold ph-magnifying-glass text-gray-400 transition-colors group-focus-within:text-pup-maroon dark:text-zinc-500 text-sm"></i>
+                            <i className="ph-bold ph-magnifying-glass text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm"></i>
                           </div>
                           <Input
                             type="text"
                             placeholder="Search by ticket ID, document type, notes..."
-                            className="h-[36px] w-full rounded-[8px] border-[0.5px] border-black/15 bg-white pl-9 pr-20 text-[13px] font-normal placeholder:text-[#8E8E93] dark:border-white/15 dark:bg-card"
+                            className="h-9 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 pl-9 pr-20 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
                             value={requestSearch}
                             onChange={(e) => {
                               setRequestSearch(e.target.value);
@@ -589,7 +621,7 @@ export default function StudentDashboard() {
                               setStatusFilter(e.target.value);
                               setCurrentPage(1);
                             }}
-                            className="h-[36px] rounded-[8px] border-[0.5px] border-black/15 text-[13px] font-normal text-[#111111] dark:border-white/15 dark:bg-card"
+                            className="h-9 rounded-xl text-xs font-normal border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-200 cursor-pointer shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
                           >
                             <option value="All">All Statuses</option>
                             {requestStatuses.map((st) => (
@@ -751,7 +783,7 @@ export default function StudentDashboard() {
                                         className="mt-5 flex h-9 items-center gap-2 rounded-brand border border-gray-300 bg-white px-4 text-xs font-semibold text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:bg-card dark:text-zinc-300"
                                       >
                                         <i className="ph-bold ph-arrow-counter-clockwise"></i>
-                                        Clear Filters
+                                        Clear
                                       </Button>
                                     )}
                                   </EmptyHeader>
@@ -765,7 +797,7 @@ export default function StudentDashboard() {
                                 onClick={() => setSelectedRequestForDetail(item)}
                                 className="group h-[52px] border-b-[0.5px] border-gray-100 dark:border-white/10 last:border-b-0 transition-all duration-fast hover:bg-gray-50/50 dark:bg-card dark:hover:bg-white/2 select-none cursor-pointer"
                               >
-                                <td className="py-0 px-4 pl-6 align-middle font-mono text-[13px] font-medium text-gray-700 dark:text-zinc-300">
+                                <td className="py-0 px-4 pl-6 align-middle text-[13px] font-medium text-gray-700 dark:text-zinc-300">
                                   #{item.id}
                                 </td>
                                 <td className="py-0 px-4 align-middle">
@@ -774,16 +806,23 @@ export default function StudentDashboard() {
                                   </span>
                                 </td>
                                 <td className="py-0 px-4 align-middle">
-                                  <span
-                                    className={cn(
-                                      "inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold border",
-                                      item.client_type === "Alumni"
-                                        ? "bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/30 dark:text-purple-300 dark:border-purple-800/40"
-                                        : "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/30 dark:text-blue-300 dark:border-blue-800/40"
+                                  <div className="flex items-center gap-1.5 flex-wrap">
+                                    <span
+                                      className={cn(
+                                        "inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold border",
+                                        item.client_type === "Alumni"
+                                          ? "bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/30 dark:text-purple-300 dark:border-purple-800/40"
+                                          : "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/30 dark:text-blue-300 dark:border-blue-800/40"
+                                      )}
+                                    >
+                                      {item.client_type || "Student"}
+                                    </span>
+                                    {item.course_code && (
+                                      <span className="inline-flex items-center rounded-md bg-gray-100 dark:bg-zinc-800 px-1.5 py-0.5 text-[10px] font-medium text-gray-700 dark:text-zinc-300" title={item.course_name || item.course_code}>
+                                        {item.course_code}
+                                      </span>
                                     )}
-                                  >
-                                    {item.client_type || "Student"}
-                                  </span>
+                                  </div>
                                 </td>
                                 <td className="py-0 px-4 align-middle max-w-[280px]">
                                   <div className="truncate text-[13px] font-normal text-[#8E8E93] dark:text-zinc-400" title={item.notes}>
@@ -896,7 +935,7 @@ export default function StudentDashboard() {
                     </div>
                     <div className="md:col-span-2">
                       <Button type="submit" disabled={proposalSubmitting} className="bg-pup-maroon text-white hover:bg-red-900 font-semibold rounded-brand">
-                        {proposalSubmitting ? "Submitting..." : "Submit proposal"}
+                        {proposalSubmitting ? "Submitting..." : "Submit"}
                       </Button>
                     </div>
                   </form>
@@ -960,7 +999,7 @@ export default function StudentDashboard() {
         <DialogContent className="max-w-lg rounded-2xl p-6 font-inter">
           <DialogHeader>
             <div className="flex items-center justify-between">
-              <span className="font-mono text-xs font-semibold text-pup-maroon bg-red-50 dark:bg-red-950/40 px-2.5 py-1 rounded-md border border-red-100 dark:border-red-900/30">
+              <span className="text-xs font-semibold text-pup-maroon bg-red-50 dark:bg-red-950/40 px-2.5 py-1 rounded-md border border-red-100 dark:border-red-900/30">
                 Request #{selectedRequestForDetail?.id}
               </span>
               <StatusBadge status={selectedRequestForDetail?.status} />
@@ -971,6 +1010,7 @@ export default function StudentDashboard() {
             <DialogDescription className="text-xs text-gray-500 dark:text-zinc-400">
               Submitted on {selectedRequestForDetail?.created_at ? formatPHDateTime(selectedRequestForDetail.created_at) : "—"} · {selectedRequestForDetail?.client_type || "Student"}
               {selectedRequestForDetail?.student_no ? ` (${selectedRequestForDetail.student_no})` : ""}
+              {selectedRequestForDetail?.course_code ? ` · ${selectedRequestForDetail.course_code}` : ""}
             </DialogDescription>
           </DialogHeader>
 
@@ -1002,7 +1042,7 @@ export default function StudentDashboard() {
                           {upd.status}
                         </span>
                         {upd.created_at && (
-                          <span className="text-[11px] font-mono text-gray-400 dark:text-zinc-500">
+                          <span className="text-[11px] text-gray-400 dark:text-zinc-500">
                             {formatPHDateTime(upd.created_at)}
                           </span>
                         )}

@@ -4,7 +4,21 @@ import * as React from "react"
 import { createPortal } from "react-dom"
 import { cn } from "@/lib/utils"
 
-const Select = React.forwardRef(({ className, containerClassName, children, value, onChange, placeholder, menuClassName, optionClassName, usePortal = true, ...props }, ref) => {
+const Select = React.forwardRef(({
+  className,
+  buttonClassName,
+  containerClassName,
+  children,
+  options: optionsProp,
+  value,
+  onChange,
+  onValueChange,
+  placeholder,
+  menuClassName,
+  optionClassName,
+  usePortal = true,
+  ...props
+}, ref) => {
   const [isOpen, setIsOpen] = React.useState(false)
   const [mounted, setMounted] = React.useState(false)
   const [coords, setCoords] = React.useState({ top: 0, left: 0, width: 0 })
@@ -56,22 +70,35 @@ const Select = React.forwardRef(({ className, containerClassName, children, valu
     return () => document.removeEventListener("mousedown", handleClickOutside)
   }, [isOpen])
 
-  // Extract options from children
-  const options = React.Children.map(children, (child) => {
-    if (!child) return null
-    if (child.type === "option") {
-      return {
-        value: child.props.value,
-        label: child.props.children,
-        disabled: child.props.disabled,
+  // Extract options from options prop or children
+  let options = []
+  if (Array.isArray(optionsProp)) {
+    options = optionsProp.map((opt) =>
+      typeof opt === "object" && opt !== null
+        ? opt
+        : { value: opt, label: String(opt) }
+    )
+  } else if (children) {
+    const mapped = React.Children.map(children, (child) => {
+      if (!child) return null
+      if (child.type === "option") {
+        return {
+          value: child.props.value,
+          label: child.props.children,
+          disabled: child.props.disabled,
+        }
       }
-    }
-    return null
-  }).filter(Boolean)
+      return null
+    })
+    options = (mapped || []).filter(Boolean)
+  }
 
   const selectedOption = options.find((o) => String(o.value) === String(value))
 
   const handleSelect = (val) => {
+    if (onValueChange) {
+      onValueChange(val)
+    }
     if (onChange) {
       onChange({ target: { value: val } })
     }
@@ -89,7 +116,7 @@ const Select = React.forwardRef(({ className, containerClassName, children, valu
         zIndex: 9999,
       } : undefined}
       className={cn(
-        "transition-[opacity,transform] animate-in fade-in slide-in-from-top-2 duration-200 overflow-hidden rounded-brand border border-gray-200 bg-white p-1 shadow-2xl dark:border-white/10 dark:bg-card",
+        "transition-[opacity,transform] animate-in fade-in slide-in-from-top-2 duration-200 overflow-hidden rounded-xl border border-gray-200 bg-white p-1 shadow-2xl dark:border-white/10 dark:bg-card",
         usePortal ? "" : "absolute z-50 top-[calc(100%+4px)] left-0 min-w-[120px] w-full",
         menuClassName
       )}
@@ -102,7 +129,7 @@ const Select = React.forwardRef(({ className, containerClassName, children, valu
             disabled={option.disabled}
             onClick={() => handleSelect(option.value)}
             className={cn(
-              "flex w-full items-center rounded-lg px-3 py-2 text-left text-xs font-semibold transition-colors min-w-0",
+              "flex w-full items-center rounded-lg px-3 py-2 text-left text-xs font-normal transition-colors min-w-0",
               String(value) === String(option.value)
                 ? "bg-pup-maroon/10 text-pup-maroon dark:bg-red-500/20 dark:text-red-400"
                 : "text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-white/5",
@@ -131,14 +158,16 @@ const Select = React.forwardRef(({ className, containerClassName, children, valu
         }}
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
-          "flex h-11 w-full items-center justify-between overflow-hidden rounded-brand border border-gray-300 bg-white px-3 text-xs font-semibold text-gray-700 shadow-xs outline-none transition-all hover:bg-gray-50 focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 dark:border-white/10 dark:bg-card dark:text-zinc-200 dark:hover:bg-zinc-800 min-w-0",
+          "flex h-11 w-full items-center justify-between overflow-hidden rounded-xl border border-gray-200 bg-white px-3 text-xs font-normal text-gray-700 shadow-none outline-none transition-all hover:bg-gray-50 focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 dark:border-white/10 dark:bg-card dark:text-zinc-200 dark:hover:bg-zinc-800 min-w-0",
+          isOpen && "border-pup-maroon ring-1 ring-pup-maroon dark:border-red-500/80 dark:ring-red-500/80",
+          buttonClassName,
           className
         )}
         {...props}
       >
         <span 
           className="flex-1 text-left truncate min-w-0"
-          title={selectedOption ? selectedOption.label : ""}
+          title={selectedOption ? String(selectedOption.label ?? "") : ""}
         >
           {selectedOption ? selectedOption.label : (placeholder !== undefined ? placeholder : (options[0]?.label || "Select..."))}
         </span>

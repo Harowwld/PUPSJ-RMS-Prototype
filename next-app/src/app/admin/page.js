@@ -17,7 +17,6 @@ import Header from "@/components/layout/Header"
 import Footer from "@/components/layout/Footer"
 import Sidebar from "@/components/shared/Sidebar"
 import ConfirmModal from "@/components/shared/ConfirmModal"
-import FloatingChatWidget from "@/components/shared/FloatingChatWidget"
 import PromptModal from "@/components/shared/PromptModal"
 import PDFPreviewModal from "@/components/shared/PDFPreviewModal"
 import { TOTPChallengeModal } from "@/components/shared/TOTPChallengeModal"
@@ -188,6 +187,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
   const [backupSearch, setBackupSearch] = useState("")
   const [backupStartDate, setBackupStartDate] = useState("")
   const [backupEndDate, setBackupEndDate] = useState("")
+  const [externalDrive, setExternalDrive] = useState(null)
   const [reviewRecords, setReviewRecords] = useState(null)
   const [reviewStatusFilter, setReviewStatusFilter] = useState("All")
   const [pendingReviewCount, setPendingReviewCount] = useState(0)
@@ -442,8 +442,9 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
   const refreshStaff = useCallback(async (isManual = false) => {
     if (isManual) setViewLoading((prev) => ({ ...prev, directory: true }))
     try {
+      const office = authUser?.office_id || "registrar"
       const [res] = await Promise.all([
-        fetch("/api/staff?limit=500"),
+        fetch(`/api/staff?limit=500&officeId=${encodeURIComponent(office)}`),
         isManual ? new Promise((resolve) => setTimeout(resolve, 600)) : Promise.resolve(),
       ])
       const json = await res.json()
@@ -456,7 +457,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
     } finally {
       setViewLoading((prev) => ({ ...prev, directory: false }))
     }
-  }, [showToast])
+  }, [authUser?.office_id, showToast])
 
   const refreshAuditLogs = useCallback(async (isManual = false) => {
     if (isManual) setViewLoading((prev) => ({ ...prev, logs: true }))
@@ -567,10 +568,11 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
         ? `&endDate=${encodeURIComponent(backupEndDate)}`
         : ""
 
-      const [res] = await Promise.all([
-        fetch(`/api/system/backup?t=${Date.now()}${searchQuery}${startQuery}${endQuery}`, {
+      const [res, driveRes] = await Promise.all([
+        fetch(`/api/system/backup?scope=office&officeId=registrar&t=${Date.now()}${searchQuery}${startQuery}${endQuery}`, {
           cache: "no-store",
         }),
+        fetch("/api/system/external-drive", { cache: "no-store" }).catch(() => null),
         isManual ? new Promise((resolve) => setTimeout(resolve, 600)) : Promise.resolve(),
       ])
       const json = await res.json()
@@ -579,12 +581,50 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
         loadedViewsRef.current.system = true
         loadedViewsRef.current.backup = true
       }
+      if (driveRes && driveRes.ok) {
+        const driveJson = await driveRes.json().catch(() => null)
+        if (driveJson?.ok && driveJson.data) {
+          setExternalDrive(driveJson.data)
+        }
+      }
     } catch (err) {
       console.error("Failed to refresh backups:", err)
     } finally {
       if (isManual) setViewLoading((prev) => ({ ...prev, system: false, backup: false }))
     }
   }, [backupSearch, backupStartDate, backupEndDate])
+
+  const rescanExternalDrive = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/system/external-drive?t=${Date.now()}`, { cache: "no-store" })
+      const json = await res.json()
+      if (res.ok && json?.ok && json.data) {
+        setExternalDrive(json.data)
+        return json.data
+      }
+    } catch (err) {
+      console.error("Failed to rescan external drive:", err)
+    }
+    return null
+  }, [])
+
+  const toggleExternalDriveSimulation = useCallback(async (simulate) => {
+    try {
+      const res = await fetch("/api/system/external-drive", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ simulate }),
+      })
+      const json = await res.json()
+      if (res.ok && json?.ok && json.data) {
+        setExternalDrive(json.data)
+        return json.data
+      }
+    } catch (err) {
+      console.error("Failed to toggle external drive simulation:", err)
+    }
+    return null
+  }, [])
 
   const fetchPendingReviewCount = useCallback(async () => {
     try {
@@ -1064,7 +1104,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
       const res = await fetch("/api/staff", {
         method: "POST",
         headers,
-        body: JSON.stringify({ ...createForm, section }),
+        body: JSON.stringify({ ...createForm, section, officeId: authUser?.office_id || "registrar" }),
       })
       const json = await res.json()
 
@@ -1378,6 +1418,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
     }
 
     const headers = new Headers()
+    headers.set("Content-Type", "application/json")
     if (totpToken) {
       headers.set("x-totp-token", totpToken)
     }
@@ -1386,6 +1427,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
       const res = await fetch("/api/system/backup", {
         method: "POST",
         headers,
+        body: JSON.stringify({ scope: "office", officeId: "registrar" }),
       })
       const json = await res.json()
 
@@ -1457,20 +1499,20 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
     })()
 
     toast.promise(promise, {
-      loading: "Transferring encrypted backup to external volume...",
+      loading: "Copying backup to external drive...",
       success: (
         <div className="flex flex-col gap-1">
-          <p className="text-sm font-semibold">External Sync Complete</p>
+          <p className="text-sm font-semibold">Backup Saved to External Drive</p>
           <p className="text-xs font-medium opacity-80">
-            A redundant copy has been secured on the external drive.
+            A copy of this backup has been saved on your external drive.
           </p>
         </div>
       ),
       error: (err) => (
         <div className="flex flex-col gap-1">
-          <p className="text-sm font-semibold text-red-600">Sync Failed</p>
+          <p className="text-sm font-semibold text-red-600">Copy Failed</p>
           <p className="text-xs font-medium opacity-80">
-            {err.message || "Unable to secure external copy."}
+            {err.message || "Could not copy to external drive."}
           </p>
         </div>
       ),
@@ -1705,6 +1747,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
           >          {view === "directory" && (
             <StaffDirectoryTab
               staffData={staffData}
+              officeId={authUser?.office_id || "registrar"}
               isLoading={viewLoading.directory}
               currentUserId={authUser?.id}
               search={search}
@@ -1845,6 +1888,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
             <BackupTab
               systemHealth={systemHealth}
               backups={backups}
+              externalDrive={externalDrive}
               isLoading={viewLoading.system || viewLoading.backup}
               isManualLoading={viewLoading.system || viewLoading.backup}
               backupSearch={backupSearch}
@@ -1855,6 +1899,8 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
               setBackupEndDate={setBackupEndDate}
               onSimulateBackup={() => simulateBackup()}
               onSyncExternal={syncExternal}
+              onRescanDrive={rescanExternalDrive}
+              onToggleSimulation={toggleExternalDriveSimulation}
               onDownloadBackup={(b) => {
                 const id = b && typeof b === "object" ? b.id : b
                 const filename =
@@ -1897,7 +1943,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
         open={discardConfirmOpen}
         title="Unsaved Changes"
         message="You have unsaved layout modifications. Navigating away will discard them."
-        confirmLabel="Discard Changes"
+        confirmLabel="Discard"
         variant="warning"
         onConfirm={confirmDiscardChanges}
         onCancel={() => {
@@ -1940,7 +1986,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
         open={deleteOpen}
         title="Archive Personnel Account"
         message="This account will be restricted immediately but can be restored later."
-        confirmLabel="Archive Account"
+        confirmLabel="Archive"
         icon="ph-duotone ph-archive"
         buttonIcon="ph-bold ph-archive"
         selectedItems={[
@@ -1956,7 +2002,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
         open={restoreOpen}
         title="Restore Personnel Account"
         message="This account will be reactivated and the personnel will be able to log in again."
-        confirmLabel="Restore Account"
+        confirmLabel="Restore"
         variant="success"
         selectedItems={[
           restoreTarget ? `${restoreTarget.fname} ${restoreTarget.lname}` : "",
@@ -1981,7 +2027,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
         selectedItems={backupDeleteTargets.map((t) => t?.filename || "Unknown")}
         onConfirm={confirmDeleteBackup}
         onCancel={() => setBackupDeleteOpen(false)}
-        confirmLabel={backupDeleteTargets.length > 1 ? "Bulk Delete" : "Delete Permanently"}
+        confirmLabel="Delete"
         isLoading={backupDeleteLoading}
         variant="danger"
         verificationTarget={backupDeleteVerificationTarget}
@@ -1996,7 +2042,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
         variant="warning"
         message={`Overwrite all repository data with the following backup archive? This action is irreversible.`}
         selectedItems={[restoreFile?.name]}
-        confirmLabel="Begin Restoration"
+        confirmLabel="Restore"
         icon="ph-duotone ph-arrow-counter-clockwise"
         buttonIcon="ph-bold ph-arrow-counter-clockwise"
         onConfirm={() => confirmRestore()}
@@ -2017,7 +2063,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
           setDeclineReason("")
         }}
         variant="danger"
-        confirmLabel="Confirm Decline"
+        confirmLabel="Decline"
         buttonIcon="ph-bold ph-x"
         inputLabel="Reason"
         placeholder="e.g., Image is too blurry, incorrect document type..."
@@ -2041,7 +2087,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
         inputLabel="Common Rejection Reason"
         placeholder="Reason for bulk rejection (applied to all selected)..."
         onConfirm={submitBulkDecline}
-        confirmLabel="Decline All Records"
+        confirmLabel="Decline"
         multiline
       />
 
@@ -2049,7 +2095,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
         open={bulkArchiveOpen}
         title="Batch Archive Personnel"
         message={`${selectedStaffIds.size} personnel profiles will be archived and their system access revoked immediately.`}
-        confirmLabel="Archive Selected"
+        confirmLabel="Archive"
         icon="ph-duotone ph-archive"
         buttonIcon="ph-bold ph-archive"
         selectedItems={Array.from(selectedStaffIds).map((id) => {
@@ -2078,7 +2124,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
         open={bulkRestoreOpen}
         title="Batch Restore Personnel"
         message={`${selectedStaffIds.size} personnel profiles will be reactivated and able to log in again.`}
-        confirmLabel="Restore Selected"
+        confirmLabel="Restore"
         variant="success"
         selectedItems={Array.from(selectedStaffIds).map((id) => {
           const s = staffData.find((x) => x.id === id)
@@ -2283,13 +2329,12 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
                 }}
                 className="flex h-10 items-center justify-center rounded-xl! btn-brand-red px-5 text-xs font-semibold text-white shadow-xs cursor-pointer active:scale-95 transition-all"
               >
-                Go to Backup & Maintenance
+                Open
               </Button>
             )}
           </div>
         </DialogContent>
       </Dialog>
-      <FloatingChatWidget />
     </div>
   )
 }

@@ -106,8 +106,7 @@ export default function DefaultPasswordModal({
             onClick={onClose}
             className="btn-brand-red h-10 px-5 text-xs font-semibold text-white rounded-xl shadow-none cursor-pointer flex items-center gap-1.5"
           >
-            <i className="ph-bold ph-check text-base"></i>
-            I&apos;ve Recorded This
+            Acknowledge
           </Button>
         </div>
       </DialogContent>

@@ -5,7 +5,6 @@ import {
   Card,
   CardContent,
 } from "@/components/ui/card"
-import { LiquidGlassButton } from "@/components/ui/liquid-glass-button";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton"
 import {
@@ -19,10 +18,19 @@ import {
   TooltipProvider,
 } from "@/components/ui/tooltip"
 import { formatPHDateTime } from "@/lib/timeFormat"
+import { format } from "date-fns"
+
+function parseDateLocal(str) {
+  if (!str) return undefined
+  const [y, m, d] = str.split("-").map(Number)
+  if (isNaN(y) || isNaN(m) || isNaN(d)) return undefined
+  return new Date(y, m - 1, d)
+}
 
 import HealthSidebar from "./backup/HealthSidebar"
 import BackupTable from "./backup/BackupTable"
 import AutoBackupSchedule from "./backup/AutoBackupSchedule"
+import BackupFilters from "./backup/BackupFilters"
 import BackupTableSkeleton from "./backup/BackupTableSkeleton"
 import PageHeader from "@/components/shared/PageHeader"
 import FloatingActionBar from "@/components/shared/FloatingActionBar"
@@ -32,6 +40,7 @@ import { cn } from "@/lib/utils"
 export default function BackupTab({
   systemHealth,
   backups,
+  externalDrive = null,
   isLoading = false,
   isManualLoading = false,
   error = null,
@@ -44,6 +53,8 @@ export default function BackupTab({
   onSimulateBackup,
   onRestoreFileChange,
   onSyncExternal,
+  onRescanDrive,
+  onToggleSimulation,
   onDownloadBackup,
   onDeleteBackup,
   onRefresh,
@@ -58,6 +69,59 @@ export default function BackupTab({
     syncStatus: "",
     uploading: false,
   })
+
+  const [isRescanning, setIsRescanning] = useState(false)
+
+  const handleRescanDrive = async () => {
+    setIsRescanning(true)
+    try {
+      const data = await onRescanDrive?.()
+      if (data?.connected) {
+        showToast?.({
+          title: "External Storage Connected",
+          description: `Detected volume "${data.label || "External Storage"}" (${data.freeFormatted ? `${data.freeFormatted} free` : "Ready"}).`,
+        })
+      } else {
+        showToast?.({
+          title: "No External Storage Detected",
+          description: "No physical USB storage drive was found. Connect a drive or activate demo simulation.",
+          variant: "warning",
+        })
+      }
+    } catch {
+      showToast?.({
+        title: "Scan Failed",
+        description: "Unable to complete storage device scan.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsRescanning(false)
+    }
+  }
+
+  const handleToggleSimulationLocal = async () => {
+    try {
+      const nextSimulate = !externalDrive?.connected
+      const data = await onToggleSimulation?.(nextSimulate)
+      if (nextSimulate && data?.connected) {
+        showToast?.({
+          title: "Demo Mode Enabled",
+          description: "Simulated offline external storage volume is now active for demonstration.",
+        })
+      } else {
+        showToast?.({
+          title: "Demo Mode Disabled",
+          description: "Switched back to real physical hardware detection.",
+        })
+      }
+    } catch {
+      showToast?.({
+        title: "Toggle Failed",
+        description: "Could not update demo simulation state.",
+        variant: "destructive",
+      })
+    }
+  }
 
   const [selectedBackupIds, setSelectedBackupIds] = useState([])
   const [sortBy, setSortBy] = useState("created_at")
@@ -212,6 +276,14 @@ export default function BackupTab({
 
   const isFilterActive = !!(backupSearch || backupStartDate || backupEndDate)
 
+  const handleClearFilters = () => {
+    setLocalSearch("")
+    setBackupSearch("")
+    setBackupStartDate("")
+    setBackupEndDate("")
+    setPage(1)
+  }
+
   return (
     <TooltipProvider delayDuration={200}>
       <div className="animate-fade-up font-inter flex w-full flex-col gap-6">
@@ -221,8 +293,8 @@ export default function BackupTab({
             <Card className="flex-1 flex flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none isolate">
               <PageHeader
                 icon="ph-hard-drives"
-                title="Backup & Maintenance"
-                description="Manage system archives and secure copies."
+                title="Records Archive & Backup"
+                description="Create and restore system backups, and save offline copies to an external drive for safekeeping."
                 showBorder={false}
                 titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
                 descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
@@ -245,28 +317,25 @@ export default function BackupTab({
                           restoreFileRef.current.click()
                         }
                         disabled={localLoading.uploading}
-                        className="flex h-10 items-center justify-center rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
+                        className="flex h-10 items-center justify-center rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-5 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
                       >
                         {localLoading.uploading ? (
                           <i className="ph-bold ph-spinner animate-spin text-[16px]"></i>
                         ) : (
-                          "Restore Backup"
+                          "Restore"
                         )}
                       </Button>
-                      <LiquidGlassButton
+                      <Button
                         onClick={handleGenerateBackup}
                         disabled={localLoading.generating}
-                        height={40}
-                        radius={12}
-                        glassColor="rgba(10, 132, 255, 0.15)"
-                        className="flex h-10 items-center justify-center rounded-xl! px-5 active:scale-95 transition-all dark:shadow-none text-xs font-semibold text-white cursor-pointer"
+                        className="flex h-10 items-center justify-center rounded-xl! btn-brand-red px-5 active:scale-95 transition-all text-xs font-semibold text-white shadow-xs cursor-pointer border-0"
                       >
                         {localLoading.generating ? (
                           <i className="ph-bold ph-spinner animate-spin text-[16px]"></i>
                         ) : (
-                          "Create Backup"
+                          "Create"
                         )}
-                      </LiquidGlassButton>
+                      </Button>
                       <input
                         ref={restoreFileRef}
                         type="file"
@@ -279,12 +348,102 @@ export default function BackupTab({
                 }
               />
 
+              {/* External Storage Status Banner */}
+              <div className="border-t border-gray-100 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/30 p-4 px-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className={cn(
+                    "w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border",
+                    externalDrive?.connected
+                      ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border-emerald-200/60 dark:border-emerald-900/40"
+                      : "bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border-amber-200/60 dark:border-amber-900/40"
+                  )}>
+                    <i className="ph-bold ph-hard-drives text-[18px]" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
+                        {externalDrive?.connected ? "External Hard Drive Connected" : "External Storage Disconnected"}
+                      </span>
+                      <span className={cn(
+                        "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold",
+                        externalDrive?.connected
+                          ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300"
+                          : "bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300"
+                      )}>
+                        <span className={cn("w-1.5 h-1.5 rounded-full", externalDrive?.connected ? "bg-emerald-500" : "bg-amber-500 animate-pulse")} />
+                        {externalDrive?.connected ? "Ready to Copy" : "Waiting for Drive"}
+                      </span>
+                      {externalDrive?.isEmulated && (
+                        <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300">
+                          Demo Mode
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-[11px] text-gray-500 dark:text-zinc-400 mt-0.5">
+                      {externalDrive?.connected
+                        ? `Volume: ${externalDrive.label || "External Storage"}${externalDrive.freeFormatted ? ` · ${externalDrive.freeFormatted} free` : ""} · Path: ${externalDrive.path || "Mounted"}`
+                        : "Connect an external USB drive to copy backups for safekeeping."}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={isRescanning}
+                    onClick={handleRescanDrive}
+                    className="h-8 px-3 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all inline-flex items-center gap-1.5"
+                    title="Rescan USB ports and mount points for connected storage"
+                  >
+                    <i className={cn("ph-bold ph-arrows-clockwise text-xs", isRescanning && "animate-spin")} />
+                    <span>{isRescanning ? "Scanning..." : "Detect Drive"}</span>
+                  </Button>
+
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleToggleSimulationLocal}
+                    className={cn(
+                      "h-8 px-3 text-xs font-semibold rounded-xl border shadow-xs cursor-pointer active:scale-95 transition-all inline-flex items-center gap-1.5",
+                      externalDrive?.isEmulated
+                        ? "border-blue-300 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 hover:bg-blue-100"
+                        : "border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700"
+                    )}
+                    title={externalDrive?.isEmulated ? "Disable simulated demo drive" : "Simulate an external storage drive for demonstration"}
+                  >
+                    <i className="ph-bold ph-flask text-xs" />
+                    <span>{externalDrive?.isEmulated ? "Exit Demo" : "Simulate Drive"}</span>
+                  </Button>
+                </div>
+              </div>
+
               {/* Automatic Backup Configuration Section */}
               <AutoBackupSchedule showToast={showToast} scope="office" embedded={true} />
 
+              {/* Standard Filter Toolbar */}
+              <BackupFilters
+                localSearch={localSearch}
+                handleSearchChange={(e) => {
+                  setLocalSearch(e.target.value)
+                  setPage(1)
+                }}
+                backupStartDate={backupStartDate}
+                setBackupStartDate={setBackupStartDate}
+                backupEndDate={backupEndDate}
+                setBackupEndDate={setBackupEndDate}
+                setPage={setPage}
+                setLocalSearch={setLocalSearch}
+                setBackupSearch={setBackupSearch}
+                backupTotal={(backups || []).length}
+                isLoading={isLoading}
+              />
+
               {isLoading && !isManualLoading ? (
-                <div className="p-6">
-                  <BackupTableSkeleton />
+                <div className="flex-1 flex flex-col min-h-0 border-t border-gray-100 dark:border-white/10">
+                  <BackupTableSkeleton embedded={true} />
                 </div>
               ) : error ? (
                 <div className="flex-1 flex min-h-[400px] flex-col items-center justify-center p-6">
@@ -307,8 +466,7 @@ export default function BackupTab({
                         onClick={onRefresh}
                         className="mt-6 flex h-10 items-center justify-center rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-5 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
                       >
-                        <i className="ph-bold ph-arrows-clockwise mr-2"></i>
-                        Retry Loading
+                        Retry
                       </Button>
                     </EmptyHeader>
                   </Empty>
@@ -341,8 +499,8 @@ export default function BackupTab({
                         )}
                         {(backupStartDate || backupEndDate) && (
                           <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
-                            Range: {backupStartDate || "..."} to{" "}
-                            {backupEndDate || "..."}
+                            Range: {backupStartDate ? format(parseDateLocal(backupStartDate), "MMM d, yyyy") : "..."} to{" "}
+                            {backupEndDate ? format(parseDateLocal(backupEndDate), "MMM d, yyyy") : "..."}
                             <button
                               onClick={() => {
                                 setBackupStartDate("")
@@ -358,13 +516,7 @@ export default function BackupTab({
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => {
-                            setLocalSearch("")
-                            setBackupSearch("")
-                            setBackupStartDate("")
-                            setBackupEndDate("")
-                            setPage(1)
-                          }}
+                          onClick={handleClearFilters}
                           className="h-auto text-[12px] font-medium text-gray-400 dark:text-zinc-500 border-0 bg-transparent hover:bg-transparent shadow-none p-0 hover:text-red-600 dark:hover:text-red-500 transition-colors cursor-pointer"
                         >
                           Clear
@@ -389,13 +541,7 @@ export default function BackupTab({
                       onDeleteBackup={onDeleteBackup}
                       handleGenerateBackup={handleGenerateBackup}
                       isFilterActive={isFilterActive}
-                      onClearFilters={() => {
-                        setLocalSearch("")
-                        setBackupSearch("")
-                        setBackupStartDate("")
-                        setBackupEndDate("")
-                        setPage(1)
-                      }}
+                      onClearFilters={handleClearFilters}
                       page={page}
                       setPage={setPage}
                       totalPages={totalPages}
@@ -407,6 +553,8 @@ export default function BackupTab({
                       setJumpPage={setJumpPage}
                       handleJumpPage={handleJumpPage}
                       handleItemsPerPageChange={handleItemsPerPageChange}
+                      scope="office"
+                      externalDriveConnected={Boolean(externalDrive?.connected)}
                     />
                   </div>
                 </>
@@ -419,13 +567,14 @@ export default function BackupTab({
             lastBackupTime={lastBackupTime}
             isLoading={isLoading}
             isManualLoading={isManualLoading}
+            externalDrive={externalDrive}
             scopeInfo={{
-              title: "Local Partition Archive",
+              title: "Backup Coverage",
               items: [
-                "Office Student Records",
-                "Documents Matrix",
-                "Local Uploads",
-                "Hardware Vault",
+                "Student Records & Data",
+                "Documents Vault",
+                "Physical Archive Layout",
+                "External Drive Copy",
               ],
             }}
           />
@@ -436,7 +585,7 @@ export default function BackupTab({
           selectionStatus="Selected Backups"
           onCancel={() => setSelectedBackupIds([])}
           onAction={() => onDeleteBackup(selectedBackupIds)}
-          actionLabel="Delete Permanently"
+          actionLabel="Delete"
           actionIcon="ph-trash"
         />
       </div>

@@ -419,7 +419,7 @@ const CabinetElement = memo(({
         return (
           <div className={cn(placementClasses[placement], "pointer-events-none select-none")}>
             <div className={cn(
-              "inline-flex w-fit items-center justify-center rounded-[4px] px-[8px] py-[2.5px] text-[11px] font-medium tracking-[0.04em] whitespace-nowrap shadow-xs border font-sans",
+              "inline-flex w-fit items-center justify-center rounded-md px-2 py-0.5 text-[11px] font-semibold tracking-[0.02em] whitespace-nowrap shadow-xs border font-sans",
               isSelected
                 ? "bg-[#ECFEFF] text-[#0891B2] border-[#CFFAFE] dark:bg-cyan-950/40 dark:text-cyan-400 dark:border-cyan-900/30"
                 : isConflict
@@ -447,7 +447,7 @@ const CabinetElement = memo(({
                   type="button"
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8 rounded-full text-gray-700 hover:bg-gray-100 hover:text-pup-maroon dark:hover:text-red-500 dark:text-zinc-200 dark:bg-muted dark:hover:bg-white/10"
+                  className="h-8 w-8 rounded-full text-gray-700 hover:bg-gray-100 hover:text-pup-maroon dark:hover:text-red-500 dark:text-zinc-200 dark:bg-muted dark:hover:bg-white/10 cursor-pointer"
                   onClick={duplicateSelectedCabinet}
                 >
                   <i className="ph-bold ph-copy text-sm" />
@@ -466,7 +466,7 @@ const CabinetElement = memo(({
                   type="button"
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8 rounded-full text-gray-700 hover:bg-gray-100 hover:text-red-600 dark:text-zinc-200 dark:bg-muted dark:hover:bg-white/10"
+                  className="h-8 w-8 rounded-full text-gray-700 hover:bg-gray-100 hover:text-red-600 dark:text-zinc-200 dark:bg-muted dark:hover:bg-white/10 cursor-pointer"
                   onClick={() => setBulkConfirmOpen(true)}
                 >
                   <i className="ph-bold ph-trash text-sm" />

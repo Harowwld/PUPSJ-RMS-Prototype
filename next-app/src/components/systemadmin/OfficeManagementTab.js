@@ -685,7 +685,7 @@ export default function OfficeManagementTab({ showToast }) {
                 onClick={handleOpenCreate}
                 className="flex h-10 items-center justify-center rounded-xl! btn-brand-red text-white font-semibold text-xs active:scale-95 transition-all cursor-pointer px-5 shadow-xs"
               >
-                Add Department
+                Add
               </Button>
             </div>
           }
@@ -694,15 +694,15 @@ export default function OfficeManagementTab({ showToast }) {
         {/* Navigation Toolbar */}
         <div className="border-t border-gray-100 dark:border-white/10 p-5 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
           {/* Left: Active vs Archived Tabs */}
-          <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-gray-200/60 dark:border-white/5 shrink-0 overflow-x-auto">
+          <div className="flex items-center gap-6 shrink-0 select-none">
             <button
               type="button"
               onClick={() => setStatusFilter("Active")}
               className={cn(
-                "px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap",
+                "relative h-9 flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent",
                 statusFilter === "Active"
-                  ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
-                  : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
+                  ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
+                  : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
               )}
             >
               Active Departments ({stats.active})
@@ -711,10 +711,10 @@ export default function OfficeManagementTab({ showToast }) {
               type="button"
               onClick={() => setStatusFilter("Inactive")}
               className={cn(
-                "px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap",
+                "relative h-9 flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent",
                 statusFilter === "Inactive"
-                  ? "bg-white dark:bg-zinc-700 text-pup-maroon dark:text-rose-400 shadow-xs"
-                  : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
+                  ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
+                  : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
               )}
             >
               Archived ({stats.inactive})
@@ -725,13 +725,13 @@ export default function OfficeManagementTab({ showToast }) {
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0">
             <div className="w-full sm:w-[320px] lg:w-[380px] relative group shrink-0">
               <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                <i className="ph-bold ph-magnifying-glass text-gray-400 transition-colors group-focus-within:text-pup-maroon dark:text-zinc-500 text-sm"></i>
+                <i className="ph-bold ph-magnifying-glass text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm"></i>
               </div>
               <Input
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search offices by name, acronym, ID..."
-                className="h-9 w-full rounded-xl border border-gray-200 bg-white pl-8 pr-20 text-xs font-normal placeholder:text-gray-400 dark:border-white/10 dark:bg-card focus-visible:ring-pup-maroon shadow-none"
+                className="h-9 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 pl-8 pr-20 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
               />
               <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] text-gray-400 dark:text-zinc-500 font-mono">
                 {filteredOffices.length > 0 ? `${filteredOffices.length} results` : "0 results"}
@@ -838,14 +838,14 @@ export default function OfficeManagementTab({ showToast }) {
                   onClick={() => setSearchQuery("")}
                   className="mt-6 flex h-10 items-center justify-center rounded-xl border border-gray-300 bg-white px-5 text-xs font-semibold text-gray-700 shadow-xs transition-all active:scale-95 hover:bg-gray-50 dark:bg-zinc-900 dark:border-white/10 dark:text-zinc-300 cursor-pointer"
                 >
-                  Clear Search
+                  Clear
                 </Button>
               ) : statusFilter === "Active" ? (
                 <Button
                   onClick={handleOpenCreate}
                   className="mt-6 flex h-10 items-center justify-center rounded-xl bg-slate-900 hover:bg-slate-800 text-white px-5 text-xs font-semibold shadow-xs dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200 cursor-pointer active:scale-95 transition-all"
                 >
-                  Create First Office
+                  Create
                 </Button>
               ) : null}
             </EmptyHeader>
@@ -1043,7 +1043,7 @@ export default function OfficeManagementTab({ showToast }) {
                         onClick={() => setRestoreOfficeTarget(office)}
                         className="w-full bg-[#34c759]/10 hover:bg-[#34c759]/20 text-[#28a745] dark:bg-[#30d158]/15 dark:hover:bg-[#30d158]/25 dark:text-[#30d158] font-semibold text-xs h-8 cursor-pointer rounded-xl border-0 shadow-none transition-all active:scale-95 flex items-center justify-center"
                       >
-                        Restore Department
+                        Restore
                       </Button>
                     )}
                   </div>
@@ -1533,7 +1533,7 @@ export default function OfficeManagementTab({ showToast }) {
                       }}
                       className="text-[10px] font-bold text-pup-maroon hover:underline dark:text-red-400 cursor-pointer"
                     >
-                      Generate New Key
+                      Generate
                     </button>
                   </div>
                   <div className="relative">
@@ -1843,7 +1843,7 @@ export default function OfficeManagementTab({ showToast }) {
                 disabled={submitLoading}
                 className="bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-xl h-10 px-5 cursor-pointer dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs"
               >
-                {submitLoading ? "Saving..." : isEditing ? "Save Changes" : "Create Office"}
+                {submitLoading ? "Saving..." : isEditing ? "Save" : "Create"}
               </Button>
             </DialogFooter>
           </form>
@@ -1858,7 +1858,7 @@ export default function OfficeManagementTab({ showToast }) {
         isLoading={isArchiving}
         title="Archive Department"
         message={`Are you sure you want to archive ${archiveOfficeTarget?.name || "this department"}? Staff members assigned to this department will not have access until it is restored.`}
-        confirmLabel="Archive Department"
+        confirmLabel="Archive"
         variant="danger"
         isAppleStyled={true}
         isPersonnelModal={true}
@@ -1873,7 +1873,7 @@ export default function OfficeManagementTab({ showToast }) {
         isLoading={isRestoring}
         title="Restore Department"
         message={`Are you sure you want to restore ${restoreOfficeTarget?.name || "this department"}? Assigned staff members will regain access to their department workspace.`}
-        confirmLabel="Restore Department"
+        confirmLabel="Restore"
         variant="primary"
         isAppleStyled={true}
         isPersonnelModal={true}

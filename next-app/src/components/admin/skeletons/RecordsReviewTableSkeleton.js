@@ -3,9 +3,16 @@
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
 
-export default function RecordsReviewTableSkeleton({ rowCount = 8 }) {
+export default function RecordsReviewTableSkeleton({ rowCount = 8, embedded = false }) {
   return (
-    <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card flex flex-col flex-1 isolate select-none">
+    <div
+      className={cn(
+        "overflow-hidden flex flex-col flex-1 isolate select-none",
+        embedded
+          ? "border-t border-gray-100 dark:border-white/10"
+          : "rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card"
+      )}
+    >
       <div className="overflow-x-auto">
         <table className="min-w-full text-sm">
           <thead className="sticky top-0 z-10 border-b border-gray-200 bg-white dark:bg-card dark:border-white/10">
@@ -101,7 +108,12 @@ export default function RecordsReviewTableSkeleton({ rowCount = 8 }) {
       </div>
 
       {/* Pagination Footer */}
-      <div className="flex items-center justify-between border-t border-[#e5e5ea] dark:border-[#3a3a3c] bg-white dark:bg-card p-4 px-6 rounded-b-2xl mt-auto">
+      <div
+        className={cn(
+          "flex items-center justify-between border-t border-[#e5e5ea] dark:border-[#3a3a3c] bg-white dark:bg-card p-4 px-6 mt-auto",
+          !embedded && "rounded-b-2xl"
+        )}
+      >
         <Skeleton className="h-3.5 w-40 rounded dark:bg-muted" />
         <div className="flex items-center gap-2">
           <Skeleton className="h-8 w-16 rounded-xl dark:bg-muted" />

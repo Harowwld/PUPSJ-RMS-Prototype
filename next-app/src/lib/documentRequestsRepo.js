@@ -1,4 +1,5 @@
 import { dbAll, dbGet, dbRun } from "./postgresCompat.js";
+import { canTransitionRequestStatus } from "./constants.js";
 
 const VALID_STATUSES = new Set([
   "Pending",
@@ -17,6 +18,9 @@ export async function listDocumentRequests({
   q = "",
   status = "",
   studentNo = "",
+  clientType = "",
+  docType = "",
+  officeId = "registrar",
   limit = 50,
   offset = 0,
   sortBy = "created_at",
@@ -25,6 +29,10 @@ export async function listDocumentRequests({
   const filters = [];
   const params = [];
 
+  if (officeId) {
+    filters.push("dr.office_id = ?");
+    params.push(officeId);
+  }
   if (status) {
     filters.push("dr.status = ?");
     params.push(status);
@@ -33,12 +41,20 @@ export async function listDocumentRequests({
     filters.push("dr.student_no = ?");
     params.push(studentNo);
   }
+  if (clientType) {
+    filters.push("dr.client_type = ?");
+    params.push(clientType);
+  }
+  if (docType) {
+    filters.push("dr.doc_type = ?");
+    params.push(docType);
+  }
   if (q) {
     filters.push(
-      "(dr.student_no LIKE ? OR s.name LIKE ? OR dr.doc_type LIKE ? OR IFNULL(dr.notes,'') LIKE ?)"
+      "(dr.student_no LIKE ? OR dr.requester_name LIKE ? OR s.name LIKE ? OR dr.doc_type LIKE ? OR IFNULL(dr.notes,'') LIKE ? OR IFNULL(dr.course_code,'') LIKE ? OR IFNULL(c.name,'') LIKE ? OR IFNULL(sa.email,'') LIKE ? OR IFNULL(sa.first_name,'') LIKE ? OR IFNULL(sa.last_name,'') LIKE ?)"
     );
     const like = `%${q}%`;
-    params.push(like, like, like, like);
+    params.push(like, like, like, like, like, like, like, like, like, like);
   }
 
   const where = filters.length ? `WHERE ${filters.join(" AND ")}` : "";
@@ -47,7 +63,7 @@ export async function listDocumentRequests({
 
   const validSortCols = {
     id: "dr.id",
-    student: "s.name",
+    student: "COALESCE(dr.requester_name, s.name, sa.last_name, sa.first_name, sa.email)",
     doc_type: "dr.doc_type",
     status: "dr.status",
     created_at: "dr.created_at",
@@ -59,10 +75,17 @@ export async function listDocumentRequests({
     `
     SELECT
       dr.*,
-      COALESCE(s.name, NULLIF(TRIM(CONCAT_WS(' ', sa.first_name, sa.last_name)), ''), sa.email, 'Alumni Requester') AS student_name
+      COALESCE(dr.requester_name, s.name, NULLIF(TRIM(CONCAT_WS(' ', sa.first_name, sa.last_name)), ''), sa.email, 'Alumni Requester') AS student_name,
+      COALESCE(dr.course_code, s.course_code) AS course_code,
+      c.name AS course_name,
+      sa.email AS requester_email,
+      s.storage_room AS room,
+      s.storage_cabinet AS cabinet,
+      s.storage_drawer AS drawer
     FROM document_requests dr
     LEFT JOIN students s ON s.student_no = dr.student_no
     LEFT JOIN student_accounts sa ON sa.id = dr.student_account_id
+    LEFT JOIN courses c ON c.code = COALESCE(dr.course_code, s.course_code)
     ${where}
     ORDER BY ${sortCol} ${order}, dr.id DESC
     LIMIT ? OFFSET ?
@@ -75,10 +98,17 @@ export async function countDocumentRequests({
   q = "",
   status = "",
   studentNo = "",
+  clientType = "",
+  docType = "",
+  officeId = "registrar",
 } = {}) {
   const filters = [];
   const params = [];
 
+  if (officeId) {
+    filters.push("dr.office_id = ?");
+    params.push(officeId);
+  }
   if (status) {
     filters.push("dr.status = ?");
     params.push(status);
@@ -87,12 +117,20 @@ export async function countDocumentRequests({
     filters.push("dr.student_no = ?");
     params.push(studentNo);
   }
+  if (clientType) {
+    filters.push("dr.client_type = ?");
+    params.push(clientType);
+  }
+  if (docType) {
+    filters.push("dr.doc_type = ?");
+    params.push(docType);
+  }
   if (q) {
     filters.push(
-      "(dr.student_no LIKE ? OR s.name LIKE ? OR dr.doc_type LIKE ? OR IFNULL(dr.notes,'') LIKE ?)"
+      "(dr.student_no LIKE ? OR dr.requester_name LIKE ? OR s.name LIKE ? OR dr.doc_type LIKE ? OR IFNULL(dr.notes,'') LIKE ? OR IFNULL(dr.course_code,'') LIKE ? OR IFNULL(c.name,'') LIKE ? OR IFNULL(sa.email,'') LIKE ? OR IFNULL(sa.first_name,'') LIKE ? OR IFNULL(sa.last_name,'') LIKE ?)"
     );
     const like = `%${q}%`;
-    params.push(like, like, like, like);
+    params.push(like, like, like, like, like, like, like, like, like, like);
   }
 
   const where = filters.length ? `WHERE ${filters.join(" AND ")}` : "";
@@ -102,6 +140,7 @@ export async function countDocumentRequests({
     FROM document_requests dr
     LEFT JOIN students s ON s.student_no = dr.student_no
     LEFT JOIN student_accounts sa ON sa.id = dr.student_account_id
+    LEFT JOIN courses c ON c.code = COALESCE(dr.course_code, s.course_code)
     ${where}
     `,
     params
@@ -114,27 +153,51 @@ export async function getDocumentRequestById(id) {
     `
     SELECT
       dr.*,
-      COALESCE(s.name, NULLIF(TRIM(CONCAT_WS(' ', sa.first_name, sa.last_name)), ''), sa.email, 'Alumni Requester') AS student_name
+      COALESCE(dr.requester_name, s.name, NULLIF(TRIM(CONCAT_WS(' ', sa.first_name, sa.last_name)), ''), sa.email, 'Alumni Requester') AS student_name,
+      COALESCE(dr.course_code, s.course_code) AS course_code,
+      c.name AS course_name,
+      sa.email AS requester_email,
+      s.storage_room AS room,
+      s.storage_cabinet AS cabinet,
+      s.storage_drawer AS drawer
     FROM document_requests dr
     LEFT JOIN students s ON s.student_no = dr.student_no
     LEFT JOIN student_accounts sa ON sa.id = dr.student_account_id
+    LEFT JOIN courses c ON c.code = COALESCE(dr.course_code, s.course_code)
     WHERE dr.id = ?
     `,
     [id]
   );
-  return row || null;
+  if (!row) return null;
+
+  const updates = await dbAll(
+    "SELECT * FROM transaction_updates WHERE document_request_id = ? ORDER BY created_at ASC",
+    [id]
+  );
+  row.updates = updates || [];
+
+  return row;
 }
 
 export async function createDocumentRequest({
-  studentNo,
+  studentNo = null,
   docType,
-  notes,
-  createdBy,
+  notes = null,
+  createdBy = null,
   linkedDocumentId = null,
+  clientType = "Student",
+  courseCode = null,
+  requesterName = null,
+  officeId = "registrar",
+  studentAccountId = null,
 }) {
-  const sn = String(studentNo || "").trim();
+  const sn = String(studentNo || "").trim().toUpperCase() || null;
   const dt = String(docType || "").trim();
-  if (!sn || !dt) return null;
+  const ct = String(clientType || "Student").trim();
+  const cc = String(courseCode || "").trim().toUpperCase() || null;
+  const rn = String(requesterName || "").trim() || null;
+  if (!dt) return null;
+  if (ct === "Student" && !sn) return null;
 
   const lid =
     linkedDocumentId != null && Number.isFinite(Number(linkedDocumentId))
@@ -144,18 +207,27 @@ export async function createDocumentRequest({
   const res = await dbRun(
     `
     INSERT INTO document_requests (
-      student_no, doc_type, status, notes, linked_document_id, created_by, updated_by
-    ) VALUES (?, ?, 'Pending', ?, ?, ?, ?)
+      office_id, student_no, doc_type, status, notes, linked_document_id, client_type, course_code, requester_name, student_account_id, created_by, updated_by
+    ) VALUES (?, ?, ?, 'Pending', ?, ?, ?, ?, ?, ?, ?, ?)
     `,
-    [sn, dt, notes ?? null, lid, createdBy ?? null, createdBy ?? null]
+    [officeId, sn, dt, notes ?? null, lid, ct, cc, rn, studentAccountId || null, createdBy ?? null, createdBy ?? null]
   );
   const id = res.lastInsertRowid;
   if (!id) return null;
+
+  await dbRun(
+    `
+    INSERT INTO transaction_updates (document_request_id, status, message, created_by)
+    VALUES (?, 'Pending', 'Request initiated by Registrar Staff.', ?)
+    `,
+    [id, createdBy ?? null]
+  );
+
   return await getDocumentRequestById(id);
 }
 
 export async function updateDocumentRequest(id, fields) {
-  const existing = await dbGet("SELECT id FROM document_requests WHERE id = ?", [
+  const existing = await dbGet("SELECT id, status, notes FROM document_requests WHERE id = ?", [
     id,
   ]);
   if (!existing) return null;
@@ -166,12 +238,19 @@ export async function updateDocumentRequest(id, fields) {
   if (fields.status !== undefined) {
     const s = String(fields.status || "");
     if (!isValidRequestStatus(s)) return null;
+    if (existing.status && existing.status !== s && !canTransitionRequestStatus(existing.status, s)) {
+      throw new Error(`Cannot transition document request from status "${existing.status}" to "${s}". Terminal and progressed requests cannot be reverted.`);
+    }
     cols.push("status = ?");
     vals.push(s);
   }
   if (fields.notes !== undefined) {
     cols.push("notes = ?");
     vals.push(fields.notes);
+  }
+  if (fields.courseCode !== undefined) {
+    cols.push("course_code = ?");
+    vals.push(fields.courseCode ? String(fields.courseCode).trim().toUpperCase() : null);
   }
   if (fields.linkedDocumentId !== undefined) {
     cols.push("linked_document_id = ?");
@@ -187,12 +266,22 @@ export async function updateDocumentRequest(id, fields) {
     vals.push(fields.updatedBy);
   }
 
-  if (cols.length === 0) return await getDocumentRequestById(id);
+  if (cols.length > 0) {
+    vals.push(id);
+    await dbRun(
+      `UPDATE document_requests SET ${cols.join(", ")}, updated_at = datetime('now') WHERE id = ?`,
+      vals
+    );
+  }
 
-  vals.push(id);
-  await dbRun(
-    `UPDATE document_requests SET ${cols.join(", ")}, updated_at = datetime('now') WHERE id = ?`,
-    vals
-  );
+  if (fields.message && String(fields.message).trim()) {
+    const currentStatus = fields.status || existing.status || "Pending";
+    await dbRun(
+      `INSERT INTO transaction_updates (document_request_id, status, message, created_by)
+       VALUES (?, ?, ?, ?)`,
+      [id, currentStatus, String(fields.message).trim(), fields.updatedBy ?? null]
+    );
+  }
+
   return await getDocumentRequestById(id);
 }

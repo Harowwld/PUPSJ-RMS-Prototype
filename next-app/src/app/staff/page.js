@@ -12,7 +12,6 @@ import { StaffGuard, useAuthUser } from "@/components/shared/AuthGuard";
 import PDFPreviewModal from "@/components/shared/PDFPreviewModal";
 import OCRPromptModal from "@/components/staff/OCRPromptModal";
 import ConfirmModal from "@/components/shared/ConfirmModal";
-import FloatingChatWidget from "@/components/shared/FloatingChatWidget";
 import {
   Tabs,
   TabsList,
@@ -35,6 +34,7 @@ const NotificationsTab = dynamic(() => import("@/components/staff/NotificationsT
 const DocumentRequestsTab = dynamic(() => import("@/components/staff/DocumentRequestsTab"), { loading: StaffTabLoading });
 const RegistrarODRSTab = dynamic(() => import("@/components/staff/RegistrarODRSTab"), { loading: StaffTabLoading });
 const OsasMonitoringTab = dynamic(() => import("@/components/staff/OsasMonitoringTab"), { loading: StaffTabLoading });
+const StudentDirectoryTab = dynamic(() => import("@/components/staff/StudentDirectoryTab"), { loading: StaffTabLoading });
 
 function normalizeStudentRow(row) {
   if (!row || typeof row !== "object") return row;
@@ -77,7 +77,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
   const locateTimeoutRef = useRef(null);
   const processedLocateRef = useRef(null);
 
-  const validViews = ["requests", "osas_monitoring", "upload", "batch_review", "documents", "notifications", "search", "storage"];
+  const validViews = ["requests", "osas_monitoring", "students", "upload", "batch_review", "documents", "notifications", "search", "storage"];
   const initialView = validViews.includes(searchParams?.get("view"))
     ? searchParams.get("view")
     : "requests";
@@ -95,7 +95,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
 
   useEffect(() => {
     const tab = String(searchParams?.get("view") || searchParams?.get("tab") || "").trim()
-    const allowedTabs = new Set(["requests", "osas_monitoring", "upload", "batch_review", "documents", "notifications", "search", "storage"])
+    const allowedTabs = new Set(["requests", "osas_monitoring", "students", "upload", "batch_review", "documents", "notifications", "search", "storage"])
     if (allowedTabs.has(tab)) {
       setView(tab)
     }
@@ -152,6 +152,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
     const MODULE_KEY_MAP = {
       requests: "alumni_requests",
       osas_monitoring: "osas_monitoring",
+      students: "student_directory",
       upload: "scan_upload",
       batch_review: "scan_upload",
       documents: "documents",
@@ -165,7 +166,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
         type: "group",
         label: "Operations",
         children: [
-          { key: "requests", label: "Alumni Requests", iconClass: "ph-bold ph-tray-arrow-up" },
+          { key: "requests", label: "Document Requests", iconClass: "ph-bold ph-tray-arrow-up" },
           { key: "osas_monitoring", label: "OSAS Monitoring", iconClass: "ph-bold ph-student" },
           { key: "upload", label: "Scan & Upload", iconClass: "ph-bold ph-scan" },
           { key: "batch_review", label: "Batch Review", iconClass: "ph-bold ph-check-square" },
@@ -178,6 +179,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
         label: "Records Archive",
         children: [
           { key: "search", label: "Records & Archive", iconClass: "ph-bold ph-archive-box" },
+          { key: "students", label: "Student Directory", iconClass: "ph-bold ph-users" },
           { key: "storage", label: "Storage Explorer", iconClass: "ph-bold ph-folder-open" },
         ]
       }
@@ -187,7 +189,11 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
     for (const group of groups) {
       const activeChildren = group.children.filter(child => {
         const requiredModule = MODULE_KEY_MAP[child.key]
-        return !requiredModule || enabled.has(requiredModule)
+        if (!requiredModule) return true
+        if (child.key === "students") {
+          return enabled.has("student_directory") || enabled.has("records_archive")
+        }
+        return enabled.has(requiredModule)
       })
       if (activeChildren.length > 0) {
         result.push({ type: "header", label: group.label })
@@ -1063,14 +1069,20 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
     const MODULE_KEY_MAP = {
       requests: "alumni_requests",
       osas_monitoring: "osas_monitoring",
+      students: "student_directory",
       upload: "scan_upload",
+      batch_review: "scan_upload",
       documents: "documents",
       notifications: "notifications",
       search: "records_archive",
       storage: "storage_explorer",
     }
     const requiredModule = MODULE_KEY_MAP[view]
-    if (requiredModule && !enabled.has(requiredModule)) {
+    const isAllowed =
+      !requiredModule ||
+      enabled.has(requiredModule) ||
+      (view === "students" && enabled.has("records_archive"))
+    if (!isAllowed) {
       const firstEnabled = sidebarItems.find(item => item.key)
       if (firstEnabled) {
         switchView(firstEnabled.key)
@@ -1505,7 +1517,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
   }
 
   return (
-    <div className="h-screen overflow-hidden flex flex-col bg-slate-50/30 dark:bg-zinc-950/30 font-inter relative transition-colors duration-300" style={{ "--brand-accent": authUser?.accent_color || "#EDBB00", "--brand-foreground": "#1C1C1E" }}>
+    <div className="h-screen overflow-hidden flex flex-col bg-slate-50/30 dark:bg-zinc-950/30 font-inter relative transition-colors duration-300" style={{ "--brand-accent": authUser?.accent_color || "#EDBB00", "--brand-foreground": "#FFFFFF" }}>
       {/* Dynamic Liquid Glass Background Blobs */}
       <div className="liquid-container">
         <div className="liquid-blob liquid-blob-1"></div>
@@ -1573,7 +1585,33 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
           <div 
             className="flex-1 p-4 flex flex-col min-h-0 w-full"
             style={{ zoom: [0.75, 0.83, 0.92, 1.0, 1.08, 1.17, 1.25][zoomNode] }}
-          >          <TabsContent value="search" className="h-full m-0 border-0 focus-visible:ring-0">
+          >
+            <TabsContent value="students" className="h-full m-0 border-0 focus-visible:ring-0">
+            <StudentDirectoryTab
+              loading={!storageLayout || loading}
+              students={students}
+              archivedStudents={archivedStudents}
+              courses={courses}
+              sections={sections}
+              storageLayout={storageLayout}
+              allDocs={allDocs}
+              onLocateStudent={locateStudent}
+              onPreviewDocument={(docType, name, no, id) => {
+                setPreview({
+                  docType,
+                  studentName: name,
+                  studentNo: no,
+                  docId: id,
+                  refId: `DOC-${Date.now()}`,
+                });
+                setPreviewOpen(true);
+              }}
+              fetchData={fetchData}
+              showToast={showToast}
+            />
+          </TabsContent>
+
+          <TabsContent value="search" className="h-full m-0 border-0 focus-visible:ring-0">
             <RecordsArchiveTab
               loading={!storageLayout}
               quickQuery={quickQuery}
@@ -1925,17 +1963,14 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
           </TabsContent>
 
           <TabsContent value="requests" className="h-full m-0 border-0 focus-visible:ring-0">
-            {authUser?.office_id === "registrar" ? (
-              <RegistrarODRSTab showToast={showToast} />
-            ) : (
-              <DocumentRequestsTab
-                students={students}
-                docTypes={docTypes}
-                staffDocs={staffDocs}
-                onLocateOnMap={goToStorageMapFromRequest}
-                showToast={showToast}
-              />
-            )}
+            <DocumentRequestsTab
+              students={students}
+              courses={courses}
+              docTypes={docTypes}
+              staffDocs={staffDocs}
+              onLocateOnMap={goToStorageMapFromRequest}
+              showToast={showToast}
+            />
           </TabsContent>
 
           <TabsContent value="osas_monitoring" className="h-full m-0 border-0 focus-visible:ring-0">
@@ -2048,7 +2083,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
         title="Duplicate Document Warning"
         message={`A document of type "${newRec.docType}" already exists for student ${newRec.studentNo}.`}
         confirmLabel="Acknowledge"
-        cancelLabel="Clear form"
+        cancelLabel="Clear"
         onConfirm={() => {
           setDuplicateConfirmOpen(false);
         }}
@@ -2079,7 +2114,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
         open={bulkArchiveOpen}
         title="Confirm Bulk Archival"
         message={`You are about to move ${selectedStudentIds.size} student record(s) to the system archive. This will disable associated processing for these records.`}
-        confirmLabel="Archive Selected"
+        confirmLabel="Archive"
         selectedItems={Array.from(selectedStudentIds)}
         onConfirm={confirmBulkArchive}
         onCancel={() => setBulkArchiveOpen(false)}
@@ -2091,7 +2126,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
         open={bulkRestoreOpen}
         title="Confirm Bulk Restoration"
         message={`You are about to restore ${selectedStudentIds.size} student record(s) to active status.`}
-        confirmLabel="Restore Selected"
+        confirmLabel="Restore"
         selectedItems={Array.from(selectedStudentIds)}
         onConfirm={confirmBulkRestore}
         onCancel={() => setBulkRestoreOpen(false)}
@@ -2099,7 +2134,6 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
         variant="success"
         isRestoreModal={true}
       />
-      <FloatingChatWidget />
     </div>
   );
 }

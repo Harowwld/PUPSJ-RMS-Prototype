@@ -74,20 +74,70 @@ export async function listDocumentReviewNotifications({
   sortBy = "reviewed_at",
   sortOrder = "DESC",
   tab = "inbox",
+  search = "",
+  decision = "",
+  readStatus = "",
 } = {}) {
   const lim = Math.min(Math.max(parseInt(limit) || 20, 1), 100);
   const off = Math.max(parseInt(offset) || 0, 0);
 
-  const filters = ["d.reviewed_at IS NOT NULL", "d.approval_status IN ('Approved', 'Declined')"];
-  const params = [];
+  const baseFilters = ["d.reviewed_at IS NOT NULL", "d.approval_status IN ('Approved', 'Declined')"];
+  const baseParams = [];
 
   if (officeId) {
-    filters.push("d.office_id = ?");
-    params.push(officeId);
+    baseFilters.push("d.office_id = ?");
+    baseParams.push(officeId);
+  }
+
+  const archiveCondition = tab === "archive" ? "COALESCE(ns.is_archived, FALSE) = TRUE" : "COALESCE(ns.is_archived, FALSE) = FALSE";
+  const baseWhereClause = baseFilters.join(" AND ");
+
+  // Inbox & Archive counts for tab headers remain unaffected by active filters
+  const inboxCountRow = await dbGet(
+    `
+      SELECT COUNT(1) AS total
+      FROM documents d
+      LEFT JOIN staff_notification_item_states ns ON d.id = ns.notification_id AND ns.staff_id = ?
+      WHERE ${baseWhereClause} AND COALESCE(ns.is_archived, FALSE) = FALSE
+    `,
+    [staffId, ...baseParams]
+  );
+  const inboxCount = Number(inboxCountRow?.total || 0);
+
+  const archiveCountRow = await dbGet(
+    `
+      SELECT COUNT(1) AS total
+      FROM documents d
+      LEFT JOIN staff_notification_item_states ns ON d.id = ns.notification_id AND ns.staff_id = ?
+      WHERE ${baseWhereClause} AND COALESCE(ns.is_archived, FALSE) = TRUE
+    `,
+    [staffId, ...baseParams]
+  );
+  const archiveCount = Number(archiveCountRow?.total || 0);
+
+  // Active view filters
+  const filters = [...baseFilters];
+  const params = [...baseParams];
+
+  const trimmedSearch = String(search || "").trim();
+  if (trimmedSearch) {
+    const s = `%${trimmedSearch}%`;
+    filters.push("(d.student_no LIKE ? OR d.student_name LIKE ? OR d.original_filename LIKE ? OR d.doc_type LIKE ? OR d.review_note LIKE ? OR d.reviewed_by LIKE ?)");
+    params.push(s, s, s, s, s, s);
+  }
+
+  if (decision && ["Approved", "Declined"].includes(decision)) {
+    filters.push("d.approval_status = ?");
+    params.push(decision);
+  }
+
+  if (readStatus === "unread") {
+    filters.push("COALESCE(ns.is_read, FALSE) = FALSE");
+  } else if (readStatus === "read") {
+    filters.push("COALESCE(ns.is_read, FALSE) = TRUE");
   }
 
   const whereClause = filters.join(" AND ");
-  const archiveCondition = tab === "archive" ? "COALESCE(ns.is_archived, FALSE) = TRUE" : "COALESCE(ns.is_archived, FALSE) = FALSE";
 
   const totalRow = await dbGet(
     `
@@ -110,28 +160,6 @@ export async function listDocumentReviewNotifications({
     [staffId, ...params]
   );
   const unreadCount = Number(unreadRow?.unread || 0);
-
-  const inboxCountRow = await dbGet(
-    `
-      SELECT COUNT(1) AS total
-      FROM documents d
-      LEFT JOIN staff_notification_item_states ns ON d.id = ns.notification_id AND ns.staff_id = ?
-      WHERE ${whereClause} AND COALESCE(ns.is_archived, FALSE) = FALSE
-    `,
-    [staffId, ...params]
-  );
-  const inboxCount = Number(inboxCountRow?.total || 0);
-
-  const archiveCountRow = await dbGet(
-    `
-      SELECT COUNT(1) AS total
-      FROM documents d
-      LEFT JOIN staff_notification_item_states ns ON d.id = ns.notification_id AND ns.staff_id = ?
-      WHERE ${whereClause} AND COALESCE(ns.is_archived, FALSE) = TRUE
-    `,
-    [staffId, ...params]
-  );
-  const archiveCount = Number(archiveCountRow?.total || 0);
 
   const allowedSortCols = {
     decision: "d.approval_status",

@@ -329,7 +329,7 @@ export default function ModuleConfigTab({ showToast }) {
         message: isAll
           ? `Are you sure you want to turn off all optional features for ${targetOffice?.short_name || "this department"}? Department staff will no longer be able to use tools like document scanning, file uploads, and student records review. Required core features will remain available.`
           : `Are you sure you want to turn off all optional ${category === "admin" ? "supervisor and department head" : "staff"} features for ${targetOffice?.short_name || "this department"}?`,
-        confirmLabel: isAll ? "Keep Essentials Only" : "Turn Off Features",
+        confirmLabel: isAll ? "Keep" : "Disable",
         variant: "danger",
         icon: "ph-duotone ph-toggle-left",
         buttonIcon: "ph-bold ph-prohibit",
@@ -474,7 +474,7 @@ export default function ModuleConfigTab({ showToast }) {
                 onClick={() => window.dispatchEvent(new CustomEvent("switch-view", { detail: { view: "offices" } }))}
                 className="mt-6 flex h-10 items-center justify-center rounded-xl bg-slate-900 hover:bg-slate-800 text-white px-5 text-xs font-semibold shadow-xs dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200 cursor-pointer"
               >
-                Go to Departments & Stations
+                Navigate
               </Button>
             </EmptyHeader>
           </Empty>
@@ -549,15 +549,15 @@ export default function ModuleConfigTab({ showToast }) {
         {/* Navigation Toolbar */}
         <div className="border-t border-gray-100 dark:border-white/10 p-5 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
           {/* Left: Active vs Archived Tabs */}
-          <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-gray-200/60 dark:border-white/5 shrink-0 overflow-x-auto">
+          <div className="flex items-center gap-6 shrink-0 select-none">
             <button
               type="button"
               onClick={() => setOfficeFilter("Active")}
               className={cn(
-                "px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap",
+                "relative h-9 flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent",
                 officeFilter === "Active"
-                  ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
-                  : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
+                  ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
+                  : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
               )}
             >
               Active Departments ({officeFilterCounts.active})
@@ -566,10 +566,10 @@ export default function ModuleConfigTab({ showToast }) {
               type="button"
               onClick={() => setOfficeFilter("Archived")}
               className={cn(
-                "px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap",
+                "relative h-9 flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent",
                 officeFilter === "Archived"
-                  ? "bg-white dark:bg-zinc-700 text-pup-maroon dark:text-rose-400 shadow-xs"
-                  : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
+                  ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
+                  : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
               )}
             >
               Archived ({officeFilterCounts.archived})
@@ -580,13 +580,13 @@ export default function ModuleConfigTab({ showToast }) {
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0">
             <div className="w-full sm:w-[280px] lg:w-[340px] relative group shrink-0">
               <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                <i className="ph-bold ph-magnifying-glass text-gray-400 transition-colors group-focus-within:text-pup-maroon dark:text-zinc-500 text-sm"></i>
+                <i className="ph-bold ph-magnifying-glass text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm"></i>
               </div>
               <Input
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search features by name, description..."
-                className="h-9 w-full rounded-xl border border-gray-200 bg-white pl-8 pr-20 text-xs font-normal placeholder:text-gray-400 dark:border-white/10 dark:bg-card focus-visible:ring-pup-maroon shadow-none"
+                className="h-9 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 pl-8 pr-20 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
               />
               <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] text-gray-400 dark:text-zinc-500 font-mono">
                 {filteredModules.length} features
@@ -600,7 +600,7 @@ export default function ModuleConfigTab({ showToast }) {
                 onChange={(e) => setCategoryFilter(e.target.value)}
                 className="h-9 rounded-xl border border-gray-200 dark:border-white/10 text-xs font-normal text-[#111111] dark:text-zinc-200 cursor-pointer shadow-none"
                 menuClassName="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-900 shadow-2xl p-1.5"
-                optionClassName="rounded-lg text-xs font-medium py-1.5 px-2.5 hover:bg-gray-100 dark:hover:bg-zinc-800"
+                optionClassName="rounded-lg text-xs font-normal py-1.5 px-2.5 hover:bg-gray-100 dark:hover:bg-zinc-800"
               >
                 <option value="All">All Roles ({modules.length})</option>
                 <option value="admin">Supervisors ({modules.filter((m) => m.category === "admin").length})</option>
@@ -615,7 +615,7 @@ export default function ModuleConfigTab({ showToast }) {
                 onChange={(e) => setModuleStatusFilter(e.target.value)}
                 className="h-9 rounded-xl border border-gray-200 dark:border-white/10 text-xs font-normal text-[#111111] dark:text-zinc-200 cursor-pointer shadow-none"
                 menuClassName="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-900 shadow-2xl p-1.5"
-                optionClassName="rounded-lg text-xs font-medium py-1.5 px-2.5 hover:bg-gray-100 dark:hover:bg-zinc-800"
+                optionClassName="rounded-lg text-xs font-normal py-1.5 px-2.5 hover:bg-gray-100 dark:hover:bg-zinc-800"
               >
                 <option value="All">All Status</option>
                 <option value="enabled">Enabled Only</option>
@@ -711,7 +711,7 @@ export default function ModuleConfigTab({ showToast }) {
                       className="mt-6 flex h-10 items-center gap-2 rounded-xl border border-gray-300 bg-white px-5 text-xs font-semibold text-gray-700 shadow-xs transition-colors hover:bg-gray-50 dark:bg-zinc-900 dark:border-white/10 dark:text-zinc-300 cursor-pointer"
                     >
                       <i className="ph-bold ph-arrow-counter-clockwise"></i>
-                      View Active Departments
+                      View
                     </Button>
                   )}
                 </EmptyHeader>
@@ -847,7 +847,7 @@ export default function ModuleConfigTab({ showToast }) {
                     className="h-8 text-xs font-semibold rounded-xl border-gray-200 dark:border-white/10 cursor-pointer flex items-center gap-1.5 px-3 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     <i className="ph-bold ph-checks text-sm text-emerald-600 dark:text-emerald-400"></i>
-                    <span>Turn On All</span>
+                    <span>Enable</span>
                   </Button>
                   <Button
                     variant="outline"
@@ -909,7 +909,7 @@ export default function ModuleConfigTab({ showToast }) {
                           className="mt-6 flex h-10 items-center gap-2 rounded-xl border border-gray-300 bg-white px-5 text-xs font-semibold text-gray-700 shadow-xs transition-colors hover:bg-gray-50 dark:bg-zinc-900 dark:border-white/10 dark:text-zinc-300 cursor-pointer"
                         >
                           <i className="ph-bold ph-arrow-counter-clockwise"></i>
-                          Clear Search & Filters
+                          Clear
                         </Button>
                       </EmptyHeader>
                     </Empty>
@@ -956,7 +956,7 @@ export default function ModuleConfigTab({ showToast }) {
                               )}
                             >
                               <i className="ph-bold ph-check text-[10px]"></i>
-                              Turn On All
+                              Enable
                             </button>
                             <span className="text-gray-300 dark:text-zinc-700">·</span>
                             <button
@@ -970,7 +970,7 @@ export default function ModuleConfigTab({ showToast }) {
                               )}
                             >
                               <i className="ph-bold ph-x text-[10px]"></i>
-                              Turn Off Optional
+                              Disable
                             </button>
                           </div>
                         </div>
@@ -1037,7 +1037,7 @@ export default function ModuleConfigTab({ showToast }) {
                               )}
                             >
                               <i className="ph-bold ph-check text-[10px]"></i>
-                              Turn On All
+                              Enable
                             </button>
                             <span className="text-gray-300 dark:text-zinc-700">·</span>
                             <button
@@ -1051,7 +1051,7 @@ export default function ModuleConfigTab({ showToast }) {
                               )}
                             >
                               <i className="ph-bold ph-x text-[10px]"></i>
-                              Turn Off Optional
+                              Disable
                             </button>
                           </div>
                         </div>
@@ -1119,7 +1119,7 @@ export default function ModuleConfigTab({ showToast }) {
                       className="mt-6 flex h-10 items-center gap-2 rounded-xl border border-gray-300 bg-white px-5 text-xs font-semibold text-gray-700 shadow-xs transition-colors hover:bg-gray-50 dark:bg-zinc-900 dark:border-white/10 dark:text-zinc-300 cursor-pointer"
                     >
                       <i className="ph-bold ph-arrow-counter-clockwise"></i>
-                      View Active Departments
+                      View
                     </Button>
                   )}
                 </EmptyHeader>
@@ -1148,7 +1148,7 @@ export default function ModuleConfigTab({ showToast }) {
                     className="mt-6 flex h-10 items-center gap-2 rounded-xl border border-gray-300 bg-white px-5 text-xs font-semibold text-gray-700 shadow-xs transition-colors hover:bg-gray-50 dark:bg-zinc-900 dark:border-white/10 dark:text-zinc-300 cursor-pointer"
                   >
                     <i className="ph-bold ph-arrow-counter-clockwise"></i>
-                    Clear Search & Filters
+                    Clear
                   </Button>
                 </EmptyHeader>
               </Empty>

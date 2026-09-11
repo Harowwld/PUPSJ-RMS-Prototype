@@ -364,12 +364,12 @@ function LogFilters({
         {/* Search */}
         <div className="flex-[2] min-w-[280px] group relative">
           <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-            <i className="ph-bold ph-magnifying-glass text-gray-400 transition-colors group-focus-within:text-pup-maroon dark:text-zinc-500 text-sm"></i>
+            <i className="ph-bold ph-magnifying-glass text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm"></i>
           </div>
           <Input
             type="text"
             placeholder="Search by action, details, or IP..."
-            className="h-[36px] w-full rounded-[8px] border-[0.5px] border-gray-200 bg-white pl-9 pr-20 text-[13px] font-normal transition-all focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 placeholder:text-gray-400 dark:border-white/10 dark:bg-card dark:text-zinc-300 dark:focus:border-primary"
+            className="h-9 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 pl-9 pr-20 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
             value={localSearch}
             onChange={handleSearchChange}
           />
@@ -383,7 +383,7 @@ function LogFilters({
           <Select
             value={logSeverityFilter}
             onChange={handleSeverityChange}
-            className="h-[36px] rounded-[8px] border-[0.5px] border-gray-200 text-[13px] font-normal"
+            className="h-9 rounded-xl text-xs font-normal border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-200 cursor-pointer shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
           >
             <option value="All">Severity</option>
             <option value="INFO">Information</option>
@@ -810,7 +810,7 @@ function LogTable({
             className="mt-6 rounded-full border-gray-200 font-semibold hover:bg-gray-50 dark:border-white/10 dark:hover:bg-white/10 dark:bg-card"
           >
             <i className="ph-bold ph-arrows-clockwise mr-2 animate-spin"></i>
-            Retry Loading
+            Retry
           </Button>
         </EmptyHeader>
       </Empty>
@@ -913,7 +913,7 @@ function LogTable({
                             className="mt-6 flex h-10 items-center gap-3 rounded-brand border border-gray-300 bg-white px-6 text-xs font-semibold text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 tracking-wide dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10 cursor-pointer"
                           >
                             <i className="ph-bold ph-arrow-counter-clockwise"></i>
-                            Clear Search
+                            Clear
                           </Button>
                         )}
                       </EmptyHeader>

@@ -20,6 +20,33 @@ export const TARGET_SLA_HOURS = 72;
 export const STANDARD_PROCESSING_DAYS_MIN = 3;
 export const STANDARD_PROCESSING_DAYS_MAX = 5;
 
+export const REQUEST_STATUSES = [
+  "Pending",
+  "InProgress",
+  "Ready",
+  "Completed",
+  "Cancelled",
+  "Shredded",
+];
+
+export const TERMINAL_REQUEST_STATUSES = ["Completed", "Cancelled", "Shredded"];
+
+export const ALLOWED_STATUS_TRANSITIONS = {
+  Pending: ["Pending", "InProgress", "Ready", "Cancelled"],
+  InProgress: ["InProgress", "Ready", "Cancelled"],
+  Ready: ["Ready", "Completed", "Cancelled", "Shredded"],
+  Completed: ["Completed"],
+  Cancelled: ["Cancelled"],
+  Shredded: ["Shredded"],
+};
+
+export function canTransitionRequestStatus(currentStatus, newStatus) {
+  if (!currentStatus || !newStatus) return false;
+  if (currentStatus === newStatus) return true;
+  const allowed = ALLOWED_STATUS_TRANSITIONS[currentStatus];
+  return Array.isArray(allowed) && allowed.includes(newStatus);
+}
+
 export const FOLDER_COLORS = {
   yellow: {
     name: "Yellow",

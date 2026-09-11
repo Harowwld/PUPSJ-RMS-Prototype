@@ -64,7 +64,7 @@ export default function CampusOperationsTab({ showToast }) {
   const [health, setHealth] = useState(null)
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
-  const [activeTab, setActiveTab] = useState("all") // "all" | "registrar" | "osas" | "status"
+  const [activeTab, setActiveTab] = useState("all") // "all" | "registrar" | "osas"
   const [autoRefreshSecs] = useState(15)
 
   // Filters & Sorting
@@ -229,7 +229,7 @@ export default function CampusOperationsTab({ showToast }) {
     setPage(1)
   }, [search, statusFilter, activeTab, pageSize])
 
-  // Non-tech friendly Top 3 Stat Cards (Focused on University Operations)
+  // Non-tech friendly Top 2 Stat Cards (Focused on University Operations)
   const statCardsData = useMemo(() => [
     {
       key: "odrs",
@@ -253,30 +253,17 @@ export default function CampusOperationsTab({ showToast }) {
       bg: "from-[#34d399] via-[#059669] to-[#047857] dark:from-[#059669] dark:to-[#024e37]",
       glass: "glass-stat-card-green",
     },
-    {
-      key: "status",
-      label: "Campus Online Services",
-      value: health?.onlineServices?.allActive
-        ? "All Active"
-        : `${health?.onlineServices?.activeCount ?? 0} of ${health?.onlineServices?.totalCount ?? 4} Active`,
-      sublabel: `${health?.onlineServices?.archive?.totalDocuments ?? health?.storage?.totalFiles ?? 0} documents archived · ${health?.onlineServices?.studentPortal?.activeAccounts ?? 0} active student accounts`,
-      color: "amber",
-      shape1: "from-[#b45309]/40 to-[#d97706]/0",
-      shape2: "from-[#fbbf24]/30 to-[#d97706]/0",
-      bg: "from-[#fbbf24] via-[#d97706] to-[#b45309] dark:from-[#d97706] dark:to-[#78350f]",
-      glass: "glass-stat-card-orange",
-    },
   ], [health])
 
   return (
     <div className="flex flex-col gap-6 w-full animate-fade-up font-inter">
-      {/* Signature 3 Stat Cards with expandable details */}
+      {/* Signature 2 Stat Cards with expandable details */}
       {loading && !health ? (
-        <KpiStatCardsSkeleton count={3} />
+        <KpiStatCardsSkeleton count={2} />
       ) : (
         <div
           ref={statCardsRef}
-          className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 items-start relative z-20 transition-all duration-500"
+          className="grid grid-cols-1 gap-6 md:grid-cols-2 items-start relative z-20 transition-all duration-500"
         >
           {statCardsData.map((stat) => (
             <div
@@ -382,43 +369,6 @@ export default function CampusOperationsTab({ showToast }) {
                     </div>
                   </div>
                 )}
-
-                {stat.key === "status" && (
-                  <div className="space-y-3 text-white">
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg">
-                        <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Student Portal</span>
-                        <span className="text-base font-black flex items-center gap-1.5">
-                          <span className={cn("w-2 h-2 rounded-full", health?.onlineServices?.studentPortal?.status === "Operational" ? "bg-emerald-400 animate-pulse" : "bg-amber-400")}></span>
-                          {health?.onlineServices?.studentPortal?.status || "Operational"}
-                        </span>
-                      </div>
-                      <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg">
-                        <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Registrar ODRS</span>
-                        <span className="text-base font-black flex items-center gap-1.5">
-                          <span className={cn("w-2 h-2 rounded-full", health?.onlineServices?.odrs?.status === "Operational" ? "bg-emerald-400 animate-pulse" : "bg-amber-400")}></span>
-                          {health?.onlineServices?.odrs?.status || "Operational"}
-                        </span>
-                      </div>
-                      <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg">
-                        <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">OSAS Proposals</span>
-                        <span className="text-base font-black flex items-center gap-1.5">
-                          <span className={cn("w-2 h-2 rounded-full", health?.onlineServices?.osas?.status === "Operational" ? "bg-emerald-400 animate-pulse" : "bg-amber-400")}></span>
-                          {health?.onlineServices?.osas?.status || "Operational"}
-                        </span>
-                      </div>
-                      <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg">
-                        <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Digital Archives</span>
-                        <span className="text-base font-black">{health?.onlineServices?.archive?.totalDocuments ?? health?.storage?.totalFiles ?? 0} files</span>
-                      </div>
-                    </div>
-                    <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg text-xs text-white/90 leading-relaxed">
-                      {health?.onlineServices?.allActive
-                        ? "All campus-facing online portals and departmental services are functioning normally."
-                        : `${health?.onlineServices?.activeCount ?? 0} of ${health?.onlineServices?.totalCount ?? 4} institutional services currently operational.`}
-                    </div>
-                  </div>
-                )}
               </div>
             </div>
           ))}
@@ -431,46 +381,32 @@ export default function CampusOperationsTab({ showToast }) {
         <PageHeader
           icon="ph-bold ph-activity"
           title="Campus Services & Operations Monitor"
-          description="Live tracking of university online services, student document requests, and student organization proposals across departments."
+          description="Live tracking of student document requests and student organization proposals across campus departments."
           showBorder={false}
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
           descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
           actions={
             <div className="flex items-center gap-2">
-              {/* Online Status Pill */}
-              {health?.onlineServices?.allActive ? (
-                <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/60 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/40">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                  All Services Online
-                </span>
-              ) : (
-                <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200/60 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800/40">
-                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
-                  {health?.onlineServices?.activeCount ?? 0} of {health?.onlineServices?.totalCount ?? 4} Services Online
-                </span>
-              )}
-
               <RefreshButton
                 onRefresh={() => fetchHealth(true)}
                 isLoading={refreshing}
                 title="Refresh Operations Health"
               />
-
             </div>
           }
         />
 
         {/* Navigation Toolbar */}
         <div className="border-t border-gray-100 dark:border-white/10 p-5 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
-          {/* View Filter Pills */}
-          <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-gray-200/60 dark:border-white/5 shrink-0 overflow-x-auto">
+          {/* View Filter Line Tabs */}
+          <div className="flex items-center gap-6 shrink-0 select-none overflow-x-auto">
             <button
               onClick={() => setActiveTab("all")}
               className={cn(
-                "px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap",
+                "relative h-9 flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent whitespace-nowrap",
                 activeTab === "all"
-                  ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
-                  : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
+                  ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
+                  : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
               )}
             >
               All Campus Activity ({health?.transactions?.length || 0})
@@ -479,10 +415,10 @@ export default function CampusOperationsTab({ showToast }) {
             <button
               onClick={() => setActiveTab("registrar")}
               className={cn(
-                "px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap",
+                "relative h-9 flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent whitespace-nowrap",
                 activeTab === "registrar"
-                  ? "bg-white dark:bg-zinc-700 text-pup-maroon dark:text-rose-400 shadow-xs"
-                  : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
+                  ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
+                  : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
               )}
             >
               Registrar Requests ({health?.odrs?.total || 0})
@@ -491,67 +427,51 @@ export default function CampusOperationsTab({ showToast }) {
             <button
               onClick={() => setActiveTab("osas")}
               className={cn(
-                "px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap",
+                "relative h-9 flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent whitespace-nowrap",
                 activeTab === "osas"
-                  ? "bg-white dark:bg-zinc-700 text-blue-600 dark:text-blue-400 shadow-xs"
-                  : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
+                  ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
+                  : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
               )}
             >
               OSAS Proposals ({health?.osas?.total || 0})
             </button>
-
-            <button
-              onClick={() => setActiveTab("status")}
-              className={cn(
-                "px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5",
-                activeTab === "status"
-                  ? "bg-white dark:bg-zinc-700 text-emerald-700 dark:text-emerald-300 shadow-xs"
-                  : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
-              )}
-            >
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-              Online Services Status
-            </button>
           </div>
 
-          {/* Search & Status Filter (shown when on activity tabs) */}
-          {activeTab !== "status" && (
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0">
-              <div className="w-full sm:w-[280px] relative group shrink-0">
-                <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                  <i className="ph-bold ph-magnifying-glass text-gray-400 transition-colors group-focus-within:text-pup-maroon text-sm"></i>
-                </div>
-                <Input
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search student, document, or org..."
-                  className="h-9 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white pl-8 pr-16 text-xs font-normal placeholder:text-[#8E8E93] dark:bg-card focus-visible:ring-pup-maroon shadow-none"
-                />
-                <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] text-gray-400 dark:text-zinc-500 font-mono">
-                  {sortedTransactions.length} results
-                </div>
+          {/* Search & Status Filter */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0">
+            <div className="w-full sm:w-[280px] relative group shrink-0">
+              <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                <i className="ph-bold ph-magnifying-glass text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm"></i>
               </div>
-
-              <div className="w-full sm:w-[160px] shrink-0">
-                <Select
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                  className="h-9 rounded-xl border border-gray-200 dark:border-white/10 text-xs font-normal text-[#111111] dark:text-zinc-200 cursor-pointer shadow-none"
-                  menuClassName="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-900 shadow-2xl p-1.5"
-                  optionClassName="rounded-lg text-xs font-medium py-1.5 px-2.5 hover:bg-gray-100 dark:hover:bg-zinc-800"
-                >
-                  <option value="All">All Stages</option>
-                  <option value="ActionRequired">Action Needed</option>
-                  <option value="Completed">Completed / Approved</option>
-                </Select>
+              <Input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search student, document, or org..."
+                className="h-9 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 pl-8 pr-16 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
+              />
+              <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] text-gray-400 dark:text-zinc-500 font-mono">
+                {sortedTransactions.length} results
               </div>
             </div>
-          )}
+
+            <div className="w-full sm:w-[160px] shrink-0">
+              <Select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="h-9 rounded-xl border border-gray-200 dark:border-white/10 text-xs font-normal text-[#111111] dark:text-zinc-200 cursor-pointer shadow-none"
+                menuClassName="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-900 shadow-2xl p-1.5"
+                optionClassName="rounded-lg text-xs font-normal py-1.5 px-2.5 hover:bg-gray-100 dark:hover:bg-zinc-800"
+              >
+                <option value="All">All Stages</option>
+                <option value="ActionRequired">Action Needed</option>
+                <option value="Completed">Completed / Approved</option>
+              </Select>
+            </div>
+          </div>
         </div>
 
-        {/* Content View 1: Cross-Department Activity Stream Table */}
-        {activeTab !== "status" && (
-          <div className="overflow-hidden border-t border-gray-200 dark:border-white/10 bg-white dark:bg-card flex flex-col flex-1">
+        {/* Cross-Department Activity Stream Table */}
+        <div className="overflow-hidden border-t border-gray-200 dark:border-white/10 bg-white dark:bg-card flex flex-col flex-1">
             {loading ? (
               <TransactionsTableSkeleton rowCount={8} />
             ) : paginatedTransactions.length === 0 ? (
@@ -583,7 +503,7 @@ export default function CampusOperationsTab({ showToast }) {
                         className="mt-4 flex h-9 items-center gap-2 rounded-xl border border-gray-300 bg-white px-4 text-xs font-semibold text-gray-700 shadow-xs hover:bg-gray-50 dark:bg-zinc-900 dark:border-white/10 dark:text-zinc-300 cursor-pointer"
                       >
                         <i className="ph-bold ph-arrow-counter-clockwise"></i>
-                        Clear Filters
+                        Clear
                       </Button>
                     )}
                   </EmptyHeader>
@@ -826,269 +746,7 @@ export default function CampusOperationsTab({ showToast }) {
               </div>
             )}
           </div>
-        )}
-
-        {/* Content View 2: Simplified, Human-Friendly Online Services Status */}
-        {activeTab === "status" && (
-          <div className="border-t border-gray-100 dark:border-white/10 p-6 flex flex-col gap-6 bg-white dark:bg-card">
-            {/* Overall Status Banner */}
-            {health?.onlineServices?.allActive ? (
-              <div className="p-6 rounded-2xl bg-emerald-50/70 dark:bg-emerald-950/20 border border-emerald-200/80 dark:border-emerald-900/40 flex items-start gap-4">
-                <div className="w-12 h-12 rounded-2xl bg-emerald-600 text-white flex items-center justify-center text-2xl shrink-0 shadow-sm">
-                  <i className="ph-bold ph-check"></i>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="text-base font-bold text-emerald-950 dark:text-emerald-300">
-                    All Campus Online Portals Are Running Normally
-                  </h3>
-                  <p className="text-xs text-emerald-800/90 dark:text-emerald-400 mt-1 leading-relaxed">
-                    Students, faculty, and administrative staff can submit credential requests, evaluate proposals, and access archives without interruption.
-                  </p>
-                  <div className="mt-3 flex flex-wrap items-center gap-3 text-xs font-medium text-emerald-900 dark:text-emerald-300">
-                    <span className="flex items-center gap-1.5">
-                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                      {health?.onlineServices?.activeCount ?? 4} of {health?.onlineServices?.totalCount ?? 4} Campus Services Active
-                    </span>
-                    <span>•</span>
-                    <span>Verified {health?.onlineServices?.lastVerifiedAt ? formatRelativeTime(health.onlineServices.lastVerifiedAt).relative : "Just now"}</span>
-                    <span>•</span>
-                    <span className="text-emerald-700/80 dark:text-emerald-400/80">Direct Database Telemetry</span>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="p-6 rounded-2xl bg-amber-50/70 dark:bg-amber-950/20 border border-amber-200/80 dark:border-amber-900/40 flex items-start gap-4">
-                <div className="w-12 h-12 rounded-2xl bg-amber-600 text-white flex items-center justify-center text-2xl shrink-0 shadow-sm">
-                  <i className="ph-bold ph-warning"></i>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="text-base font-bold text-amber-950 dark:text-amber-300">
-                    {health?.onlineServices?.activeCount ?? 0} of {health?.onlineServices?.totalCount ?? 4} Campus Services Active
-                  </h3>
-                  <p className="text-xs text-amber-800/90 dark:text-amber-400 mt-1 leading-relaxed">
-                    One or more campus online portals or departmental modules are currently disabled or undergoing maintenance.
-                  </p>
-                  <div className="mt-3 flex flex-wrap items-center gap-3 text-xs font-medium text-amber-900 dark:text-amber-300">
-                    <span className="flex items-center gap-1.5">
-                      <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
-                      Attention Required
-                    </span>
-                    <span>•</span>
-                    <span>Verified {health?.onlineServices?.lastVerifiedAt ? formatRelativeTime(health.onlineServices.lastVerifiedAt).relative : "Just now"}</span>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Portal Cards Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-              {/* Card 1: Student Self-Service Portal */}
-              <div className="p-5 rounded-2xl border border-gray-200/80 dark:border-white/10 bg-white dark:bg-zinc-900/30 flex flex-col justify-between shadow-2xs">
-                <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-700 dark:bg-purple-950/50 dark:text-purple-300 flex items-center justify-center text-xl">
-                      <i className="ph-bold ph-user-check"></i>
-                    </div>
-                    {health?.onlineServices?.studentPortal?.status === "Operational" ? (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                        Operational
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-zinc-300">
-                        <span className="w-1.5 h-1.5 rounded-full bg-gray-400"></span>
-                        {health?.onlineServices?.studentPortal?.status || "Idle"}
-                      </span>
-                    )}
-                  </div>
-                  <h4 className="font-semibold text-sm text-gray-900 dark:text-zinc-100">
-                    Student Online Portal
-                  </h4>
-                  <p className="text-xs text-gray-500 dark:text-zinc-400 mt-1 leading-relaxed">
-                    Student portal where students apply for credentials, submit activity permits, and track applications.
-                  </p>
-
-                  {/* Database Metrics */}
-                  <div className="mt-4 pt-3 border-t border-gray-100 dark:border-white/5 space-y-2 text-xs">
-                    <div className="flex items-center justify-between text-gray-600 dark:text-zinc-300">
-                      <span>Registered Students:</span>
-                      <strong className="text-gray-900 dark:text-zinc-100 font-semibold">
-                        {health?.onlineServices?.studentPortal?.totalAccounts ?? 0} accounts
-                      </strong>
-                    </div>
-                    <div className="flex items-center justify-between text-gray-600 dark:text-zinc-300">
-                      <span>Active Accounts:</span>
-                      <strong className="text-emerald-600 dark:text-emerald-400 font-semibold">
-                        {health?.onlineServices?.studentPortal?.activeAccounts ?? 0} active
-                      </strong>
-                    </div>
-                    <div className="flex items-center justify-between text-gray-600 dark:text-zinc-300">
-                      <span>Latest Registration:</span>
-                      <strong className="text-gray-700 dark:text-zinc-300 font-medium">
-                        {health?.onlineServices?.studentPortal?.latestRegisteredAt
-                          ? formatRelativeTime(health.onlineServices.studentPortal.latestRegisteredAt).relative
-                          : "None recorded"}
-                      </strong>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-4 pt-3 border-t border-gray-100 dark:border-white/5 text-xs text-gray-600 dark:text-zinc-300 flex items-center justify-between">
-                  <span>Student Access:</span>
-                  <strong className="text-emerald-600 dark:text-emerald-400 font-semibold">Available 24/7</strong>
-                </div>
-              </div>
-
-              {/* Card 2: Registrar ODRS */}
-              <div className="p-5 rounded-2xl border border-gray-200/80 dark:border-white/10 bg-white dark:bg-zinc-900/30 flex flex-col justify-between shadow-2xs">
-                <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="w-10 h-10 rounded-xl bg-red-50 text-pup-maroon dark:bg-red-950/50 dark:text-rose-300 flex items-center justify-center text-xl">
-                      <i className="ph-bold ph-certificate"></i>
-                    </div>
-                    {health?.onlineServices?.odrs?.status === "Operational" ? (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                        Operational
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-300">
-                        <span className="w-1.5 h-1.5 rounded-full bg-red-500"></span>
-                        {health?.onlineServices?.odrs?.status || "Disabled"}
-                      </span>
-                    )}
-                  </div>
-                  <h4 className="font-semibold text-sm text-gray-900 dark:text-zinc-100">
-                    Registrar Request Pipeline (ODRS)
-                  </h4>
-                  <p className="text-xs text-gray-500 dark:text-zinc-400 mt-1 leading-relaxed">
-                    Document processing pipeline handling student transcripts, certifications, and graduation records.
-                  </p>
-
-                  {/* Database Metrics */}
-                  <div className="mt-4 pt-3 border-t border-gray-100 dark:border-white/5 space-y-2 text-xs">
-                    <div className="flex items-center justify-between text-gray-600 dark:text-zinc-300">
-                      <span>Active Backlog:</span>
-                      <strong className="text-gray-900 dark:text-zinc-100 font-semibold">
-                        {health?.onlineServices?.odrs?.activeBacklog ?? 0} in progress ({health?.onlineServices?.odrs?.pending ?? 0} pending)
-                      </strong>
-                    </div>
-                    <div className="flex items-center justify-between text-gray-600 dark:text-zinc-300">
-                      <span>Received Today:</span>
-                      <strong className="text-pup-maroon dark:text-rose-400 font-semibold">
-                        {health?.onlineServices?.odrs?.today ?? 0} requests
-                      </strong>
-                    </div>
-                    <div className="flex items-center justify-between text-gray-600 dark:text-zinc-300">
-                      <span>Serving Station:</span>
-                      <strong className="text-gray-700 dark:text-zinc-300 font-mono text-[11px]">
-                        {health?.onlineServices?.odrs?.stationName || "Main Terminal"}
-                      </strong>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-4 pt-3 border-t border-gray-100 dark:border-white/5 text-xs text-gray-600 dark:text-zinc-300 flex items-center justify-between">
-                  <span>Latest Request:</span>
-                  <strong className="text-gray-900 dark:text-zinc-100 font-medium">
-                    {health?.onlineServices?.odrs?.latestRequestAt
-                      ? formatRelativeTime(health.onlineServices.odrs.latestRequestAt).relative
-                      : "None"}
-                  </strong>
-                </div>
-              </div>
-
-              {/* Card 3: OSAS Proposals */}
-              <div className="p-5 rounded-2xl border border-gray-200/80 dark:border-white/10 bg-white dark:bg-zinc-900/30 flex flex-col justify-between shadow-2xs">
-                <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300 flex items-center justify-center text-xl">
-                      <i className="ph-bold ph-student"></i>
-                    </div>
-                    {health?.onlineServices?.osas?.status === "Operational" ? (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                        Operational
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-300">
-                        <span className="w-1.5 h-1.5 rounded-full bg-red-500"></span>
-                        {health?.onlineServices?.osas?.status || "Disabled"}
-                      </span>
-                    )}
-                  </div>
-                  <h4 className="font-semibold text-sm text-gray-900 dark:text-zinc-100">
-                    OSAS Student Organization Gateway
-                  </h4>
-                  <p className="text-xs text-gray-500 dark:text-zinc-400 mt-1 leading-relaxed">
-                    Activity permits and proposals intake gateway for recognized campus student organizations.
-                  </p>
-
-                  {/* Database Metrics */}
-                  <div className="mt-4 pt-3 border-t border-gray-100 dark:border-white/5 space-y-2 text-xs">
-                    <div className="flex items-center justify-between text-gray-600 dark:text-zinc-300">
-                      <span>Awaiting Review:</span>
-                      <strong className="text-gray-900 dark:text-zinc-100 font-semibold">
-                        {health?.onlineServices?.osas?.activePending ?? 0} proposals ({health?.onlineServices?.osas?.submitted ?? 0} new)
-                      </strong>
-                    </div>
-                    <div className="flex items-center justify-between text-gray-600 dark:text-zinc-300">
-                      <span>Recognized Orgs:</span>
-                      <strong className="text-blue-600 dark:text-blue-400 font-semibold">
-                        {health?.onlineServices?.osas?.totalOrgs ?? 0} student orgs
-                      </strong>
-                    </div>
-                    <div className="flex items-center justify-between text-gray-600 dark:text-zinc-300">
-                      <span>Serving Station:</span>
-                      <strong className="text-gray-700 dark:text-zinc-300 font-mono text-[11px]">
-                        {health?.onlineServices?.osas?.stationName || "OSAS Terminal"}
-                      </strong>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-4 pt-3 border-t border-gray-100 dark:border-white/5 text-xs text-gray-600 dark:text-zinc-300 flex items-center justify-between">
-                  <span>Latest Submission:</span>
-                  <strong className="text-gray-900 dark:text-zinc-100 font-medium">
-                    {health?.onlineServices?.osas?.latestProposalAt
-                      ? formatRelativeTime(health.onlineServices.osas.latestProposalAt).relative
-                      : "None"}
-                  </strong>
-                </div>
-              </div>
-            </div>
-
-            {/* Campus Data Safety & Archive Subsystem Summary */}
-            <div className="p-5 rounded-2xl border border-gray-200/80 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/30 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
-              <div className="flex items-start sm:items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 flex items-center justify-center text-xl shrink-0 mt-0.5 sm:mt-0">
-                  <i className="ph-bold ph-shield-check"></i>
-                </div>
-                <div>
-                  <h4 className="font-semibold text-xs text-gray-900 dark:text-zinc-100 uppercase tracking-wider">
-                    Institutional Record Safety & Protection Subsystem
-                  </h4>
-                  <p className="text-xs text-gray-600 dark:text-zinc-300 mt-0.5">
-                    {health?.onlineServices?.archive?.totalDocuments ?? health?.storage?.totalFiles ?? 0} documents across {health?.onlineServices?.archive?.totalStudents ?? 0} student archive records securely preserved.
-                  </p>
-                  <div className="flex flex-wrap items-center gap-3 text-[11px] text-gray-500 dark:text-zinc-400 mt-1.5 font-mono">
-                    <span>Backup: {health?.onlineServices?.archive?.latestBackupFilename || "Automated Snapshot"}</span>
-                    <span>•</span>
-                    <span>Verified: {health?.onlineServices?.archive?.lastBackupAt ? formatPHDateTime(health.onlineServices.archive.lastBackupAt) : "Automated"}</span>
-                    <span>•</span>
-                    <span>{health?.onlineServices?.archive?.totalBackups ?? 0} backups logged</span>
-                  </div>
-                </div>
-              </div>
-
-              <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-3 py-1.5 rounded-xl border border-emerald-200/60 dark:border-emerald-800/40 shrink-0 flex items-center gap-1.5">
-                <i className="ph-bold ph-check-circle text-emerald-600 dark:text-emerald-400"></i>
-                {health?.onlineServices?.archive?.latestBackupStatus || "Safe & Synchronized"}
-              </span>
-            </div>
-          </div>
-        )}
-      </Card>
+        </Card>
 
       {/* Human-Friendly Details Modal */}
       {selectedItem && (
@@ -1206,7 +864,7 @@ export default function CampusOperationsTab({ showToast }) {
                     onClick={() => handleOpenPdfPreview(selectedItem)}
                     className="text-xs font-semibold text-blue-600 dark:text-blue-400 bg-white dark:bg-zinc-800 border border-blue-200 dark:border-blue-900/40 hover:bg-blue-50 dark:hover:bg-blue-950/40 shrink-0 h-8 px-2.5 rounded-lg cursor-pointer shadow-xs active:scale-95 transition-all"
                   >
-                    <i className="ph-bold ph-eye text-sm mr-1"></i> Preview PDF
+                    <i className="ph-bold ph-eye text-sm mr-1"></i> Preview
                   </Button>
                 </div>
               )}

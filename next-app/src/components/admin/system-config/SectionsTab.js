@@ -254,7 +254,7 @@ export default function SectionsTab({
       message: showArchived 
         ? "These course blocks will be visible for new records again."
         : "These course blocks will be hidden from new registrations but their history will be preserved.",
-      confirmLabel: showArchived ? "Restore Selected" : "Archive Selected",
+      confirmLabel: showArchived ? "Restore" : "Archive",
       variant: showArchived ? "success" : "danger",
       buttonIcon: showArchived ? "ph-bold ph-archive-restore" : "ph-bold ph-archive",
       icon: showArchived ? "ph-duotone ph-archive-restore" : "ph-duotone ph-archive",
@@ -280,7 +280,8 @@ export default function SectionsTab({
         <PageHeader
           icon="ph-list-numbers"
           showBorder={false}
-          titleClassName="text-[15px]"
+          titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
+          descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
           title={
             <div className="flex items-center gap-[6px]">
               Course Blocks
@@ -297,34 +298,32 @@ export default function SectionsTab({
       </div>
 
       <div className="font-inter">
-        <div className="flex select-none items-center justify-between gap-3 border-b-[0.5px] border-black/10 dark:border-white/10 pb-4">
+        <div className="flex select-none items-center justify-between gap-3 border-b border-gray-100 dark:border-white/10 pb-4">
           {/* Active / Archived Tabs */}
-          <div className="flex items-center gap-[24px]">
+          <div className="flex items-center gap-6 select-none">
             <button
               type="button"
               onClick={() => setShowArchived(false)}
-              className={`flex items-center justify-center text-[13px] pb-[10px] -mb-[17px] border-b-2 border-t-0 border-x-0 rounded-none cursor-pointer bg-transparent focus:outline-none transition-colors ${
+              className={cn(
+                "relative pb-4 -mb-[17px] text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent",
                 !showArchived
-                  ? "border-black text-black dark:border-zinc-50 dark:text-zinc-50 font-semibold"
-                  : "border-transparent text-[#8E8E93] hover:text-[#111111] dark:hover:text-zinc-200 font-normal"
-              }`}
+                  ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
+                  : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
+              )}
             >
-              <span className="whitespace-nowrap tracking-wide">
-                Active ({sections.filter((s) => s.status !== "Archived").length})
-              </span>
+              Active ({sections.filter((s) => s.status !== "Archived").length})
             </button>
             <button
               type="button"
               onClick={() => setShowArchived(true)}
-              className={`flex items-center justify-center text-[13px] pb-[10px] -mb-[17px] border-b-2 border-t-0 border-x-0 rounded-none cursor-pointer bg-transparent focus:outline-none transition-colors ${
+              className={cn(
+                "relative pb-4 -mb-[17px] text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent",
                 showArchived
-                  ? "border-black text-black dark:border-zinc-50 dark:text-zinc-50 font-semibold"
-                  : "border-transparent text-[#8E8E93] hover:text-[#111111] dark:hover:text-zinc-200 font-normal"
-              }`}
+                  ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
+                  : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
+              )}
             >
-              <span className="whitespace-nowrap tracking-wide">
-                Archived ({sections.filter((s) => s.status === "Archived").length})
-              </span>
+              Archived ({sections.filter((s) => s.status === "Archived").length})
             </button>
           </div>
 
@@ -333,7 +332,7 @@ export default function SectionsTab({
             {/* Program Filter Select dropdown */}
             <div className="w-[180px]">
               <Select
-                className="h-10 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs px-3 focus-visible:ring-1 focus-visible:ring-pup-maroon"
+                className="h-10 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-xs font-normal text-gray-700 dark:text-zinc-200 shadow-none px-3 focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 cursor-pointer"
                 value={selectedCourseFilter}
                 onChange={(e) => {
                   setSelectedCourseFilter(e.target.value)
@@ -351,17 +350,33 @@ export default function SectionsTab({
 
             <div className="flex-1 max-w-md relative group">
               <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                <i className="ph-bold ph-magnifying-glass text-gray-400 transition-colors group-focus-within:text-pup-maroon dark:text-zinc-500 text-sm"></i>
+                <i className="ph-bold ph-magnifying-glass text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm"></i>
               </div>
               <Input
                 type="text"
                 placeholder="Filter block name..."
-                className="h-10 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-850 pl-9 pr-20 text-xs font-normal placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-xs focus-visible:ring-1 focus-visible:ring-pup-maroon text-gray-900 dark:text-zinc-100"
+                className="h-10 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 pl-9 pr-24 text-xs font-normal placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 text-gray-900 dark:text-zinc-100"
                 value={localSearch}
                 onChange={(e) => setLocalSearch(e.target.value)}
               />
-              <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[12px] font-normal text-gray-400 dark:text-zinc-500">
-                {filteredSectionsFull.length > 0 ? `${filteredSectionsFull.length} results` : "0 results"}
+              <div className="absolute inset-y-0 right-3 flex items-center gap-2">
+                {localSearch && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setLocalSearch("")
+                      setSectionSearch("")
+                      setPageSection(1)
+                    }}
+                    className="text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none text-xs"
+                    title="Clear search"
+                  >
+                    <i className="ph-bold ph-x" />
+                  </button>
+                )}
+                <span className="text-[12px] font-normal text-gray-400 dark:text-zinc-500 pointer-events-none">
+                  {filteredSectionsFull.length > 0 ? `${filteredSectionsFull.length} results` : "0 results"}
+                </span>
               </div>
             </div>
 
@@ -503,7 +518,7 @@ export default function SectionsTab({
                         <td className="py-0 px-6 align-middle">
                           <Select
                             className={cn(
-                              "h-9 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-3 text-xs font-semibold text-gray-700 dark:text-zinc-200 transition-all focus:border-gray-300 focus:ring-pup-maroon",
+                              "h-9 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-3 text-xs font-normal text-gray-700 dark:text-zinc-200 transition-all shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80",
                               secCourseCode ? "ring-1 ring-amber-100" : ""
                             )}
                             value={secCourseCode}
@@ -678,7 +693,7 @@ export default function SectionsTab({
                                     <i className="ph-bold ph-archive-restore text-sm"></i>
                                   </button>
                                 </TooltipTrigger>
-                                <TooltipContent side="top">Restore Course Block</TooltipContent>
+                                <TooltipContent side="top">Restore</TooltipContent>
                               </Tooltip>
                             ) : (
                               <Tooltip>
@@ -738,20 +753,20 @@ export default function SectionsTab({
                                 </EmptyDescription>
                                 {totalInView > 0 ? (
                                   <Button
-                                    variant="ghost"
+                                    variant="outline"
                                     onClick={() => {
                                       setSectionSearch("")
                                       setLocalSearch("")
                                       setSelectedCourseFilter("")
                                     }}
-                                    className="mt-4 h-9 px-6 text-xs font-semibold text-pup-maroon hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/30 transition-all rounded-xl"
+                                    className="mt-4 h-10 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                                   >
-                                    Clear Search
+                                    Clear
                                   </Button>
                                 ) : !showArchived && (
                                   <Button
                                     onClick={() => setIsAddSectionOpen(true)}
-                                    className="mt-4 flex h-10 items-center justify-center rounded-xl! btn-brand-red text-white font-semibold text-xs px-6 active:scale-95 transition-all cursor-pointer shadow-xs border-0"
+                                    className="mt-4 h-10 rounded-xl btn-brand-red px-5 text-xs font-semibold text-white shadow-xs active:scale-95 transition-all cursor-pointer border-0"
                                   >
                                     Add
                                   </Button>
@@ -767,54 +782,55 @@ export default function SectionsTab({
             </div>
 
         {filteredSectionsFull.length > 0 && (
-          <div className="flex items-center justify-between border-t border-gray-100 bg-white p-6 px-8 dark:border-white/10 dark:bg-card">
-            <div className="flex items-center gap-8">
-              <div className="flex items-center gap-6 text-[12px] font-normal text-gray-400 dark:text-zinc-500">
-                <span>
-                  Showing {filteredSections.length} of {filteredSectionsFull.length}
-                </span>
-                <div className="flex items-center gap-1.5 border-l border-gray-200 pl-6 dark:border-white/10">
-                  <span className="text-[12px] text-gray-400 dark:text-zinc-500">Rows:</span>
-                  <div className="flex items-center gap-1">
-                    {[10, 20, 50, 100].map((size) => (
-                      <button
-                        key={size}
-                        type="button"
-                        onClick={() => handleItemsPerPageChange({ target: { value: size } })}
-                        className={`px-2 py-0.5 rounded-[4px] text-[12px] font-normal cursor-pointer transition-colors border-0 ${
-                          itemsPerPage === size
-                            ? "bg-gray-100 text-[#111111] font-medium dark:bg-white/10 dark:text-zinc-50"
-                            : "bg-transparent text-gray-450 dark:text-zinc-550 hover:text-gray-700 dark:hover:text-zinc-300"
-                        }`}
-                      >
-                        {size}
-                      </button>
-                    ))}
-                  </div>
-                </div>
+          <div className="flex items-center justify-between border-t border-[#e5e5ea] dark:border-[#3a3a3c] bg-white dark:bg-[#1c1c1e] p-4 px-6 rounded-b-2xl mt-auto">
+            <div className="flex items-center gap-6 text-xs text-gray-500 dark:text-zinc-400 select-none">
+              <span>
+                Showing {filteredSections.length} of {filteredSectionsFull.length.toLocaleString()}
+              </span>
+              <div className="flex items-center gap-2">
+                <span>Rows:</span>
+                {[10, 20, 50, 100].map((size) => (
+                  <button
+                    key={size}
+                    type="button"
+                    onClick={() => handleItemsPerPageChange({ target: { value: size } })}
+                    className={cn(
+                      "px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer",
+                      itemsPerPage === size
+                        ? "bg-gray-100 dark:bg-zinc-800 text-gray-900 dark:text-zinc-100"
+                        : "text-gray-400 hover:text-gray-600 dark:hover:text-zinc-200"
+                    )}
+                  >
+                    {size}
+                  </button>
+                ))}
               </div>
             </div>
 
-            <div className="flex shrink-0 items-center gap-3">
-              <button
+            <div className="flex items-center gap-2 select-none">
+              <Button
+                variant="ghost"
+                size="sm"
                 disabled={pageSection <= 1}
                 onClick={() => setPageSection((p) => Math.max(1, p - 1))}
-                className="h-8 bg-transparent text-[12px] font-normal text-gray-400 hover:text-pup-maroon dark:text-zinc-500 dark:hover:text-zinc-200 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer border-0 p-0"
+                className="text-xs text-gray-500 dark:text-zinc-400 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
               >
                 Prev
-              </button>
+              </Button>
 
-              <div className="flex h-8 min-w-[32px] items-center justify-center rounded-[6px] border border-gray-200/80 bg-white px-2.5 text-[12px] font-medium text-gray-900 dark:border-white/10 dark:bg-card dark:text-zinc-100">
+              <div className="h-8 w-8 rounded-xl border border-[#e5e5ea] dark:border-zinc-800 flex items-center justify-center text-xs font-bold text-gray-800 dark:text-zinc-200 bg-white dark:bg-zinc-900">
                 {pageSection}
               </div>
 
-              <button
+              <Button
+                variant="ghost"
+                size="sm"
                 disabled={pageSection >= Math.ceil(filteredSectionsFull.length / itemsPerPage)}
                 onClick={() => setPageSection((p) => p + 1)}
-                className="h-8 bg-transparent text-[12px] font-normal text-gray-400 hover:text-pup-maroon dark:text-zinc-500 dark:hover:text-zinc-200 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer border-0 p-0"
+                className="text-xs text-gray-500 dark:text-zinc-400 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
               >
                 Next
-              </button>
+              </Button>
             </div>
           </div>
         )}
@@ -860,7 +876,7 @@ export default function SectionsTab({
                   Degree Program <span className="text-[11px] font-normal text-gray-400 dark:text-zinc-500">*</span>
                 </label>
                 <Select
-                  className="h-10 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-3 text-xs font-normal text-gray-900 dark:text-zinc-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon shadow-xs min-w-0"
+                  className="h-10 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-3 text-xs font-normal text-gray-900 dark:text-zinc-100 focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 shadow-none min-w-0"
                   value={secCourseCode}
                   onChange={(e) => setSecCourseCode(e.target.value)}
                   required
@@ -904,7 +920,7 @@ export default function SectionsTab({
                 type="submit"
                 className="h-10 px-5 text-xs font-semibold rounded-xl btn-brand-red text-white shadow-xs cursor-pointer active:scale-95 transition-all border-0"
               >
-                Create Block
+                Create
               </Button>
             </div>
           </form>
@@ -938,7 +954,7 @@ export default function SectionsTab({
                   Degree Program <span className="text-[11px] font-normal text-gray-400 dark:text-zinc-500">*</span>
                 </label>
                 <Select
-                  className="h-10 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-3 text-xs font-normal text-gray-900 dark:text-zinc-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon shadow-xs min-w-0"
+                  className="h-10 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-3 text-xs font-normal text-gray-900 dark:text-zinc-100 focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 shadow-none min-w-0"
                   value={editSection.courseCode}
                   onChange={(e) =>
                     setEditSection((prev) => ({

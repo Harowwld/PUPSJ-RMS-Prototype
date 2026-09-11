@@ -149,59 +149,42 @@ const SlaCharts = React.memo(function SlaCharts({ data, pieData, onSwitchView })
   return (
     <div className="grid grid-cols-1 gap-[20px] lg:grid-cols-3">
       {/* Card 1: Request Trends Chart */}
-      <div className="rounded-[12px] border-[0.5px] border-black/10 bg-white p-[28px] shadow-[0_1px_3px_rgba(0,0,0,0.06)] dark:border-white/10 dark:bg-card flex flex-col">
+      <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none flex flex-col">
         <div className="flex items-start justify-between mb-4 flex-wrap gap-3">
           <div className="flex flex-col">
-            <h3 className="text-[18px] font-semibold tracking-[-0.01em] text-[#111111] dark:text-zinc-50 m-0">
+            <h3 className="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50 m-0">
               Request Trends
             </h3>
             {displayPoint && (
               <div className="mt-1.5 flex items-baseline gap-1 animate-fade-in">
-                <span className="text-[28px] font-extrabold text-[#111111] dark:text-zinc-50 leading-none">
+                <span className="text-[28px] font-extrabold text-gray-900 dark:text-zinc-50 leading-none">
                   {displayPoint.count}
                 </span>
-                <span className="text-[12px] font-semibold text-[#8E8E93] dark:text-zinc-550 lowercase">
+                <span className="text-[12px] font-semibold text-gray-400 dark:text-zinc-500 lowercase">
                   requests ({displayPoint.name})
                 </span>
               </div>
             )}
           </div>
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => setDropdownOpen(!dropdownOpen)}
-              className="flex items-center justify-between h-8 min-w-[100px] gap-2 rounded-lg border border-[#e5e5ea] dark:border-[#3a3a3c] bg-white dark:bg-[#2c2c2e] px-2.5 text-[12px] font-semibold text-gray-800 dark:text-[#f2f2f7] hover:bg-gray-50 dark:hover:bg-[#3a3a3c] transition-all cursor-pointer shadow-[0_1px_2px_0_rgba(0,0,0,0.05)] select-none"
-            >
-              <span>{timeGrain === "monthly" ? "Monthly" : timeGrain === "weekly" ? "Weekly" : "Daily"}</span>
-              <i className="ph-bold ph-caret-down text-[10px] text-gray-400"></i>
-            </button>
-            {dropdownOpen && (
-              <>
-                <div className="fixed inset-0 z-40" onClick={() => setDropdownOpen(false)} />
-                <div className="absolute right-0 mt-1.5 w-32 rounded-xl border border-[#e5e5ea] dark:border-[#3a3a3c] bg-white dark:bg-[#2c2c2e] p-1 shadow-lg z-50 animate-fade-in font-sans">
-                  {["monthly", "weekly", "daily"].map((opt) => (
-                    <button
-                      key={opt}
-                      type="button"
-                      onClick={() => {
-                        setTimeGrain(opt)
-                        setHoveredTrendPoint(null)
-                        setDropdownOpen(false)
-                      }}
-                      className={cn(
-                        "w-full text-left px-3 py-1.5 text-[12px] font-medium rounded-lg transition-colors cursor-pointer flex items-center justify-between",
-                        timeGrain === opt 
-                          ? "bg-pup-maroon/10 text-pup-maroon font-semibold" 
-                          : "text-gray-700 dark:text-zinc-300 hover:bg-gray-50 dark:hover:bg-zinc-800"
-                      )}
-                    >
-                      {opt === "monthly" ? "Monthly" : opt === "weekly" ? "Weekly" : "Daily"}
-                      {timeGrain === opt && <i className="ph-bold ph-check text-[10px] text-pup-maroon" />}
-                    </button>
-                  ))}
-                </div>
-              </>
-            )}
+          <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-gray-200/60 dark:border-white/5">
+            {["monthly", "weekly", "daily"].map((opt) => (
+              <button
+                key={opt}
+                type="button"
+                onClick={() => {
+                  setTimeGrain(opt)
+                  setHoveredTrendPoint(null)
+                }}
+                className={cn(
+                  "px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all cursor-pointer whitespace-nowrap capitalize",
+                  timeGrain === opt
+                    ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
+                    : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
+                )}
+              >
+                {opt}
+              </button>
+            ))}
           </div>
         </div>
         <div className="flex-1 min-h-[288px] w-full flex flex-col justify-center">
@@ -279,8 +262,8 @@ const SlaCharts = React.memo(function SlaCharts({ data, pieData, onSwitchView })
       </div>
 
       {/* Card 2: Document Demand Chart */}
-      <div className="rounded-[12px] border-[0.5px] border-black/10 bg-white p-[28px] shadow-[0_1px_3px_rgba(0,0,0,0.06)] dark:border-white/10 dark:bg-card flex flex-col">
-        <h3 className="mb-4 text-[18px] font-semibold tracking-[-0.01em] text-[#111111] dark:text-zinc-50 m-0">
+      <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none flex flex-col">
+        <h3 className="mb-4 text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50 m-0">
           Document Demand
         </h3>
         <div className="flex-1 min-h-[288px] w-full flex flex-col justify-center">
@@ -365,10 +348,10 @@ const SlaCharts = React.memo(function SlaCharts({ data, pieData, onSwitchView })
       </div>
 
       {/* Card 3: Right side panels container */}
-      <div className="flex flex-col gap-[24px] rounded-[12px] border-[0.5px] border-black/10 bg-white p-[28px] shadow-[0_1px_3px_rgba(0,0,0,0.06)] dark:border-white/10 dark:bg-card">
+      <div className="flex flex-col gap-6 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
         {/* Status Distribution */}
         <div className="flex flex-col">
-          <h3 className="mb-4 text-[18px] font-semibold tracking-[-0.01em] text-[#111111] dark:text-zinc-50 m-0">
+          <h3 className="mb-4 text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50 m-0">
             Status Distribution
           </h3>
           <div className="h-44 w-full relative flex items-center justify-center">
@@ -436,7 +419,7 @@ const SlaCharts = React.memo(function SlaCharts({ data, pieData, onSwitchView })
             )}
           </div>
           
-          <div className="mt-4 flex flex-col pt-4 border-t border-[#F2F2F7] dark:border-white/5">
+          <div className="mt-4 flex flex-col pt-4 border-t border-gray-100 dark:border-white/5">
             {pieData.map((d, index) => {
               const percent = totalSlaRequests > 0 ? ((d.value / totalSlaRequests) * 100).toFixed(0) : 0
               const displayName = d.name === "InProgress" ? "In Progress" : d.name
@@ -448,7 +431,7 @@ const SlaCharts = React.memo(function SlaCharts({ data, pieData, onSwitchView })
                   onMouseEnter={() => setActivePieIndex(index)}
                   onMouseLeave={() => setActivePieIndex(null)}
                   className={cn(
-                    "flex items-center justify-between h-[36px] border-b-[0.5px] border-[#F2F2F7] dark:border-white/5 px-2 rounded-md transition-colors cursor-pointer",
+                    "flex items-center justify-between h-[36px] border-b-[0.5px] border-gray-100 dark:border-white/5 px-2 rounded-md transition-colors cursor-pointer",
                     isHovered && "bg-gray-50 dark:bg-zinc-800/40",
                     index === pieData.length - 1 && "border-b-0"
                   )}
@@ -458,12 +441,12 @@ const SlaCharts = React.memo(function SlaCharts({ data, pieData, onSwitchView })
                       className="h-2 w-2 rounded-full shrink-0"
                       style={{ backgroundColor: color }}
                     />
-                    <span className="text-[13px] font-normal text-[#111111] dark:text-zinc-300">
+                    <span className="text-[13px] font-normal text-gray-800 dark:text-zinc-300">
                       {displayName}
                     </span>
                   </div>
                   <div className="flex items-center gap-[8px]">
-                    <span className="text-[13px] font-normal text-[#111111] dark:text-zinc-50">
+                    <span className="text-[13px] font-normal text-gray-900 dark:text-zinc-50">
                       {d.value}
                     </span>
                     <span 
@@ -479,11 +462,11 @@ const SlaCharts = React.memo(function SlaCharts({ data, pieData, onSwitchView })
           </div>
         </div>
 
-        <div className="h-px bg-[#F2F2F7] dark:bg-white/5" />
+        <div className="h-px bg-gray-100 dark:bg-white/5" />
 
         {/* Top Requested Documents */}
         <div className="flex flex-col">
-          <h3 className="mb-4 text-[18px] font-semibold tracking-[-0.01em] text-[#111111] dark:text-zinc-50 m-0">
+          <h3 className="mb-4 text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50 m-0">
             Top Requested Documents
           </h3>
           <div className="flex flex-col">
@@ -494,7 +477,7 @@ const SlaCharts = React.memo(function SlaCharts({ data, pieData, onSwitchView })
                   onMouseEnter={() => setActiveBarName(dt.name)}
                   onMouseLeave={() => setActiveBarName(null)}
                   className={cn(
-                    "flex items-center justify-between h-[44px] border-b-[0.5px] border-[#F2F2F7] dark:border-white/5 px-2 rounded-lg transition-all cursor-pointer",
+                    "flex items-center justify-between h-[44px] border-b-[0.5px] border-gray-100 dark:border-white/5 px-2 rounded-lg transition-all cursor-pointer",
                     activeBarName === dt.name 
                       ? "bg-orange-50/50 dark:bg-orange-950/20 font-bold" 
                       : "hover:bg-gray-50/50 dark:hover:bg-zinc-800/20",
@@ -502,14 +485,14 @@ const SlaCharts = React.memo(function SlaCharts({ data, pieData, onSwitchView })
                   )}
                 >
                   <div className="flex items-center gap-3 overflow-hidden">
-                    <span className="text-[11px] font-normal text-[#8E8E93] dark:text-zinc-500 w-4 shrink-0">
+                    <span className="text-[11px] font-normal text-gray-400 dark:text-zinc-500 w-4 shrink-0">
                       {i + 1}
                     </span>
-                    <span className="truncate text-[14px] font-medium text-[#111111] dark:text-zinc-50">
+                    <span className="truncate text-[14px] font-medium text-gray-900 dark:text-zinc-50">
                       {dt.name}
                     </span>
                   </div>
-                  <span className="text-[12px] font-normal text-[#8E8E93] dark:text-zinc-400">
+                  <span className="text-[12px] font-normal text-gray-400 dark:text-zinc-400">
                     {dt.count} {dt.count === 1 ? "request" : "requests"}
                   </span>
                 </div>

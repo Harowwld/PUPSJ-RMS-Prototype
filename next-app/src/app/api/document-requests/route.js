@@ -44,6 +44,8 @@ export async function GET(req) {
   const q = searchParams.get("q") || "";
   const status = searchParams.get("status") || "";
   const studentNo = searchParams.get("studentNo") || "";
+  const clientType = searchParams.get("clientType") || "";
+  const docType = searchParams.get("docType") || "";
   const limit = searchParams.get("limit") || "50";
   const offset = searchParams.get("offset") || "0";
   const sortBy = searchParams.get("sortBy") || "created_at";
@@ -54,6 +56,9 @@ export async function GET(req) {
       q: q || undefined,
       status: status || undefined,
       studentNo: studentNo || undefined,
+      clientType: clientType || undefined,
+      docType: docType || undefined,
+      officeId: "registrar",
       limit,
       offset,
       sortBy,
@@ -63,6 +68,9 @@ export async function GET(req) {
       q: q || undefined,
       status: status || undefined,
       studentNo: studentNo || undefined,
+      clientType: clientType || undefined,
+      docType: docType || undefined,
+      officeId: "registrar",
     }),
   ]);
 
@@ -83,24 +91,37 @@ export async function POST(req) {
     );
   }
 
-  const studentNo = String(body.studentNo || "").trim().toUpperCase();
+  const clientType = String(body.clientType || "Student").trim();
+  const studentNo = String(body.studentNo || "").trim().toUpperCase() || null;
   const docType = String(body.docType || "").trim();
+  const courseCode = String(body.courseCode || "").trim().toUpperCase() || null;
+  const requesterName = String(body.requesterName || "").trim();
   const notes =
     body.notes != null ? String(body.notes).trim() || null : null;
 
-  if (!studentNo || !docType) {
+  if (!docType) {
     return NextResponse.json(
-      { ok: false, error: "studentNo and docType are required" },
+      { ok: false, error: "Document type is required" },
       { status: 400 }
     );
   }
 
-  const student = await getStudentByStudentNo(studentNo);
-  if (!student) {
+  if (clientType === "Student" && !studentNo) {
     return NextResponse.json(
-      { ok: false, error: "Student not found" },
+      { ok: false, error: "Student number is required for enrolled student requests" },
       { status: 400 }
     );
+  }
+
+  let student = null;
+  if (studentNo) {
+    student = await getStudentByStudentNo(studentNo);
+    if (!student && clientType === "Student") {
+      return NextResponse.json(
+        { ok: false, error: "Student record not found" },
+        { status: 400 }
+      );
+    }
   }
 
   const typeRow = await dbGet(
@@ -114,17 +135,20 @@ export async function POST(req) {
     );
   }
 
-  const existingDocs = await listDocuments({
-    studentNo,
-    docType,
-    excludeDeclined: true,
-    limit: 1,
-    offset: 0,
-  });
-  const autoLinkedId =
-    Array.isArray(existingDocs) && existingDocs[0]?.id != null
-      ? Number(existingDocs[0].id)
-      : null;
+  let autoLinkedId = null;
+  if (studentNo) {
+    const existingDocs = await listDocuments({
+      studentNo,
+      docType,
+      excludeDeclined: true,
+      limit: 1,
+      offset: 0,
+    });
+    autoLinkedId =
+      Array.isArray(existingDocs) && existingDocs[0]?.id != null
+        ? Number(existingDocs[0].id)
+        : null;
+  }
 
   const row = await createDocumentRequest({
     studentNo,
@@ -132,6 +156,10 @@ export async function POST(req) {
     notes,
     createdBy: staff.id,
     linkedDocumentId: Number.isFinite(autoLinkedId) ? autoLinkedId : null,
+    clientType,
+    courseCode: courseCode || student?.course_code || null,
+    requesterName: requesterName || student?.name || null,
+    officeId: "registrar",
   });
 
   if (!row) {
@@ -141,8 +169,9 @@ export async function POST(req) {
     );
   }
 
+  const displayName = requesterName || student?.name || studentNo || "Alumni Requester";
   await writeAuditLog(req, `Create Document Request`, { 
-    details: `initiated formal document request for student '${student.name}' (ID: ${studentNo}) - Category: ${docType}`,
+    details: `initiated document request for '${displayName}' (${clientType})${studentNo ? ` (ID: ${studentNo})` : ""}${courseCode ? ` - Program: ${courseCode}` : ""} - Category: ${docType}`,
     entity_type: "DocumentRequest",
     entity_id: row.id
   });

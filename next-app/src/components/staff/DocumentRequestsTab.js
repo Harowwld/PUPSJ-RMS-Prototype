@@ -1,13 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { LiquidGlassButton } from "@/components/ui/liquid-glass-button";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import DocumentRequestsTableSkeleton from "@/components/staff/skeletons/DocumentRequestsTableSkeleton";
 import { cn } from "@/lib/utils";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -15,6 +14,13 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+} from "@/components/ui/sheet";
 import { getDocAvailabilityForType } from "@/lib/docAvailability";
 import { formatPHDateTime } from "@/lib/timeFormat";
 import {
@@ -25,15 +31,15 @@ import {
   EmptyMedia,
 } from "@/components/ui/empty";
 import {
-  Tooltip,
-  TooltipContent,
   TooltipProvider,
-  TooltipTrigger,
 } from "@/components/ui/tooltip";
 import PageHeader from "@/components/shared/PageHeader";
 import { RefreshButton } from "@/components/shared/RefreshButton";
-import { Select } from "@/components/ui/select"
-import { Badge } from "@/components/ui/badge"
+import { Select } from "@/components/ui/select";
+import {
+  ALLOWED_STATUS_TRANSITIONS,
+  TERMINAL_REQUEST_STATUSES,
+} from "@/lib/constants";
 
 const STATUS_OPTIONS = [
   "Pending",
@@ -45,13 +51,14 @@ const STATUS_OPTIONS = [
 ];
 
 function SortIndicator({ column, sortBy, sortOrder }) {
-  if (sortBy !== column)
-    return <i className="ph-bold ph-caret-up-down ml-1 text-[11px] opacity-40 transition-opacity group-hover:opacity-70 dark:opacity-30 dark:group-hover:opacity-60"></i>
+  if (sortBy !== column) {
+    return <i className="ph-bold ph-caret-up-down ml-1 text-[11px] opacity-40 transition-opacity group-hover:opacity-70 dark:opacity-30 dark:group-hover:opacity-60"></i>;
+  }
   return sortOrder === "ASC" ? (
     <i className="ph-bold ph-caret-up ml-1 text-[11px] text-pup-maroon animate-in fade-in zoom-in duration-normal dark:text-primary"></i>
   ) : (
     <i className="ph-bold ph-caret-down ml-1 text-[11px] text-pup-maroon animate-in fade-in zoom-in duration-normal dark:text-primary"></i>
-  )
+  );
 }
 
 function statusBadgeClass(status) {
@@ -62,10 +69,7 @@ function statusBadgeClass(status) {
   if (s === "PROCESSING" || s === "INPROGRESS") {
     return "bg-[#DBEAFE] text-[#1E40AF] dark:bg-blue-950/40 dark:text-blue-400";
   }
-  if (s === "READY") {
-    return "bg-[#D1FAE5] text-[#065F46] dark:bg-emerald-950/40 dark:text-emerald-400";
-  }
-  if (s === "DONE" || s === "COMPLETED") {
+  if (s === "READY" || s === "DONE" || s === "COMPLETED") {
     return "bg-[#D1FAE5] text-[#065F46] dark:bg-emerald-950/40 dark:text-emerald-400";
   }
   if (s === "CANCELLED") {
@@ -78,9 +82,10 @@ function statusBadgeClass(status) {
 }
 
 export default function DocumentRequestsTab({
-  students,
-  docTypes,
-  staffDocs,
+  students = [],
+  courses = [],
+  docTypes = [],
+  staffDocs = [],
   onLocateOnMap,
   showToast,
   error = null,
@@ -92,14 +97,18 @@ export default function DocumentRequestsTab({
   const [q, setQ] = useState("");
   const [debouncedQ, setDebouncedQ] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [clientTypeFilter, setClientTypeFilter] = useState("");
+  const [docTypeFilter, setDocTypeFilter] = useState("");
   const [page, setPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(20);
-  const [jumpPage, setJumpPage] = useState("1");
+  const [itemsPerPage, setItemsPerPage] = useState(10);
   const [sortBy, setSortBy] = useState("created_at");
   const [sortOrder, setSortOrder] = useState("DESC");
 
   const [createOpen, setCreateOpen] = useState(false);
+  const [createClientType, setCreateClientType] = useState("Student");
   const [createStudentNo, setCreateStudentNo] = useState("");
+  const [createCourseCode, setCreateCourseCode] = useState("");
+  const [createRequesterName, setCreateRequesterName] = useState("");
   const [createDocType, setCreateDocType] = useState("");
   const [createNotes, setCreateNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -113,11 +122,10 @@ export default function DocumentRequestsTab({
   const [saving, setSaving] = useState(false);
   const [fileWarningOpen, setFileWarningOpen] = useState(false);
 
-  // local edit state for the detail side-panel
+  // Local edit state for the detail Sheet
   const [editStatus, setEditStatus] = useState("");
   const [editNotes, setEditNotes] = useState("");
-  const [statusFocused, setStatusFocused] = useState(false);
-  const [notesFocused, setNotesFocused] = useState(false);
+  const [editUpdateMessage, setEditUpdateMessage] = useState("");
 
   const debouncedPageResetSkip = useRef(true);
   const autoLinkAttempted = useRef(new Set());
@@ -125,7 +133,10 @@ export default function DocumentRequestsTab({
   // Reset creation state on modal open/close
   useEffect(() => {
     if (!createOpen) {
+      setCreateClientType("Student");
       setCreateStudentNo("");
+      setCreateCourseCode("");
+      setCreateRequesterName("");
       setCreateDocType("");
       setCreateNotes("");
       setStudentSearch("");
@@ -134,15 +145,15 @@ export default function DocumentRequestsTab({
   }, [createOpen]);
 
   const studentMap = useMemo(() => {
-    const map = new Map()
+    const map = new Map();
     if (Array.isArray(students)) {
       students.forEach((s) => {
-        const key = String(s.studentNo || s.student_no || "").toUpperCase()
-        if (key) map.set(key, s)
-      })
+        const key = String(s.studentNo || s.student_no || "").toUpperCase();
+        if (key) map.set(key, s);
+      });
     }
-    return map
-  }, [students])
+    return map;
+  }, [students]);
 
   const studentSuggestions = useMemo(() => {
     const val = studentSearch.trim().toLowerCase();
@@ -186,6 +197,8 @@ export default function DocumentRequestsTab({
         qs.set("offset", String(offset));
         if (debouncedQ) qs.set("q", debouncedQ);
         if (statusFilter) qs.set("status", statusFilter);
+        if (clientTypeFilter) qs.set("clientType", clientTypeFilter);
+        if (docTypeFilter) qs.set("docType", docTypeFilter);
         qs.set("sortBy", sortBy);
         qs.set("sortOrder", sortOrder);
         const res = await fetch(`/api/document-requests?${qs}`, {
@@ -193,19 +206,19 @@ export default function DocumentRequestsTab({
         });
         const json = await res.json().catch(() => null);
         if (!res.ok || !json?.ok) throw new Error(json?.error || "Failed to load");
-        
+
         if (isManual) {
           const elapsed = Date.now() - startTime;
           if (elapsed < 600) {
             await new Promise((resolve) => setTimeout(resolve, 600 - elapsed));
           }
         }
-        
+
         setRows(Array.isArray(json.data) ? json.data : []);
         setTotal(Number(json.total) || 0);
       } catch (e) {
         if (showLoading || isManual) {
-          showToast({ title: "Load Failed", description: e?.message || "Unable to load requests." }, true);
+          showToast?.({ title: "Load Failed", description: e?.message || "Unable to load requests." }, true);
           setRows([]);
           setTotal(0);
         }
@@ -214,7 +227,7 @@ export default function DocumentRequestsTab({
         setIsManualLoading(false);
       }
     },
-    [page, itemsPerPage, debouncedQ, statusFilter, sortBy, sortOrder, showToast]
+    [page, itemsPerPage, debouncedQ, statusFilter, clientTypeFilter, docTypeFilter, sortBy, sortOrder, showToast]
   );
 
   const handleSort = (column) => {
@@ -256,11 +269,6 @@ export default function DocumentRequestsTab({
   }, [loadList]);
 
   const openDetail = async (id) => {
-    if (selectedId === id) {
-      setSelectedId(null);
-      setDetail(null);
-      return;
-    }
     setSelectedId(id);
     setDetailLoading(true);
     setDetail(null);
@@ -271,8 +279,9 @@ export default function DocumentRequestsTab({
       setDetail(json.data);
       setEditStatus(json.data.status || "Pending");
       setEditNotes(json.data.notes || "");
+      setEditUpdateMessage("");
     } catch (e) {
-      showToast({ title: "Load Failed", description: e?.message || "Unable to load details." }, true);
+      showToast?.({ title: "Load Failed", description: e?.message || "Unable to load details." }, true);
       setSelectedId(null);
     } finally {
       setDetailLoading(false);
@@ -333,36 +342,54 @@ export default function DocumentRequestsTab({
       setDetail(json.data);
       setEditStatus(json.data.status || "Pending");
       setEditNotes(json.data.notes || "");
+      setEditUpdateMessage("");
       if (!silent) {
-        showToast({ title: "Request Updated", description: "Status and notes have been saved." });
+        showToast?.({ title: "Request Updated", description: "Status and updates have been saved." });
       }
       loadList({ showLoading: false });
     } catch (e) {
       if (body.linkedDocumentId != null) {
         autoLinkAttempted.current.delete(reqId);
       }
-      showToast({ title: "Update Failed", description: e?.message || "Unable to save changes." }, true);
+      showToast?.({ title: "Update Failed", description: e?.message || "Unable to save changes." }, true);
     } finally {
       setSaving(false);
     }
   };
 
+  const isTerminalStatus = Boolean(
+    detail?.status && TERMINAL_REQUEST_STATUSES.includes(detail.status)
+  );
+
+  const availableStatuses = useMemo(() => {
+    if (!detail?.status) return STATUS_OPTIONS;
+    return ALLOWED_STATUS_TRANSITIONS[detail.status] || [detail.status];
+  }, [detail?.status]);
+
   const handleManualSave = () => {
-    patchDetail({ status: editStatus, notes: editNotes || null });
+    patchDetail({
+      status: isTerminalStatus ? undefined : editStatus,
+      notes: editNotes || null,
+      message: editUpdateMessage.trim() || undefined,
+    });
   };
 
   const handleResetEdits = () => {
     if (!detail) return;
     setEditStatus(detail.status || "Pending");
     setEditNotes(detail.notes || "");
+    setEditUpdateMessage("");
   };
 
   const hasEdits = useMemo(() => {
     if (!detail) return false;
-    // Normalized comparison
     const norm = (s) => (s || "").trim();
-    return norm(editStatus) !== norm(detail.status) || norm(editNotes) !== norm(detail.notes);
-  }, [detail, editStatus, editNotes]);
+    return (
+      (!isTerminalStatus && norm(editStatus) !== norm(detail.status)) ||
+      norm(editNotes) !== norm(detail.notes) ||
+      Boolean(editUpdateMessage.trim())
+    );
+  }, [detail, editStatus, editNotes, editUpdateMessage, isTerminalStatus]);
 
   useEffect(() => {
     if (!detail?.id || detail.linked_document_id) return;
@@ -371,34 +398,52 @@ export default function DocumentRequestsTab({
     if (autoLinkAttempted.current.has(detail.id)) return;
     autoLinkAttempted.current.add(detail.id);
     patchDetail({ linkedDocumentId: docId }, { silent: true });
-    // patchDetail intentionally omitted from deps to avoid re-running on each render
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [detail?.id, detail?.linked_document_id, availability?.doc?.id]);
 
   const handleCreate = async (e) => {
     e.preventDefault();
+    if (createClientType === "Student" && !createStudentNo.trim()) {
+      showToast?.({ title: "Validation Error", description: "Please select or enter a student number." }, true);
+      return;
+    }
+    if (createClientType === "Alumni") {
+      if (!createRequesterName.trim()) {
+        showToast?.({ title: "Validation Error", description: "Please provide the alumni requester name." }, true);
+        return;
+      }
+      if (!createCourseCode) {
+        showToast?.({ title: "Validation Error", description: "Please select the academic program attended." }, true);
+        return;
+      }
+    }
+    if (!createDocType) {
+      showToast?.({ title: "Validation Error", description: "Please select a document type." }, true);
+      return;
+    }
+
     setSubmitting(true);
     try {
       const res = await fetch("/api/document-requests", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          studentNo: createStudentNo.trim(),
+          clientType: createClientType,
+          studentNo: createStudentNo.trim() || null,
+          requesterName: createRequesterName.trim() || null,
+          courseCode: createCourseCode || null,
           docType: createDocType,
           notes: createNotes.trim() || null,
         }),
       });
       const json = await res.json().catch(() => null);
       if (!res.ok || !json?.ok) throw new Error(json?.error || "Failed to create");
-      showToast({ title: "Request Created", description: "Request added." });
+      showToast?.({ title: "Request Created", description: "Request added successfully." });
       setCreateOpen(false);
-      setCreateStudentNo("");
-      setCreateDocType("");
-      setCreateNotes("");
       setPage(1);
       loadList({ showLoading: true });
     } catch (err) {
-      showToast({ title: "Creation Failed", description: err?.message || "Unable to create the request." }, true);
+      showToast?.({ title: "Creation Failed", description: err?.message || "Unable to create the request." }, true);
     } finally {
       setSubmitting(false);
     }
@@ -406,164 +451,244 @@ export default function DocumentRequestsTab({
 
   const totalPages = Math.max(1, Math.ceil(total / itemsPerPage));
 
-  useEffect(() => {
-    setJumpPage(String(page));
-  }, [page]);
-
-  const handleJumpPage = (e) => {
-    if (e.key === "Enter" || e.type === "blur") {
-      const val = parseInt(jumpPage);
-      if (!isNaN(val) && val >= 1 && val <= totalPages) {
-        setPage(val);
-      } else {
-        setJumpPage(String(page));
-      }
-    }
+  const handleClearFilters = () => {
+    setQ("");
+    setStatusFilter("");
+    setClientTypeFilter("");
+    setDocTypeFilter("");
+    setPage(1);
   };
 
+  const hasActiveFilters = Boolean(
+    q || statusFilter || clientTypeFilter || docTypeFilter
+  );
 
   return (
     <TooltipProvider delayDuration={200}>
-      <div className="flex flex-col h-auto gap-6 animate-fade-up font-inter">
-      {/* 1. Alumni Request Card (Header & Filters) */}
-      <Card className="rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none overflow-hidden">
-        <PageHeader
-          icon="ph-tray"
-          title="Alumni Requests"
-          description="Manage and track alumni requests."
-          showBorder={false}
-          titleClassName="text-[15px] font-bold text-gray-900 dark:text-zinc-50"
-          descriptionClassName="text-[14px] font-normal text-[#8E8E93] dark:text-zinc-400 mt-[2px]"
-          actions={
-            <div className="flex items-center gap-6">
-              <RefreshButton 
-                onRefresh={() => loadList({ showLoading: false, manual: true })} 
-                isLoading={isManualLoading} 
-                title="Refresh Requests"
-              />
-
-              <div className="h-6 w-px bg-gray-200 dark:bg-zinc-800" />
-
-              <div className="flex items-center gap-2">
-                {!loading && !error && (
-                  <Button
-                    type="button"
-                    onClick={() => setCreateOpen(true)}
-                    className="flex h-[36px] items-center justify-center rounded-[8px] btn-brand-red text-[13px] font-medium text-white active:scale-95 disabled:opacity-50 transition-all dark:shadow-none px-4 cursor-pointer"
-                  >
-                    New Request
-                  </Button>
-                )}
-              </div>
-            </div>
-          }
-        />
-        
-        {!error && (
-          <div className="bg-white border-t border-gray-100 p-4 backdrop-blur-md dark:bg-card/50 dark:border-white/10">
-            <div className="flex w-full flex-wrap items-center gap-5">
-              {/* Search */}
-              <div className="flex-[2] min-w-[280px] group relative">
-                <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                  <i className="ph-bold ph-magnifying-glass text-gray-400 transition-colors group-focus-within:text-pup-maroon dark:text-zinc-500 text-sm"></i>
-                </div>
-                <Input
-                  type="text"
-                  placeholder="Student no., name, document type…"
-                  className="h-[36px] w-full rounded-[8px] border-[0.5px] border-gray-200 bg-white pl-9 pr-20 text-[13px] font-normal transition-all focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 placeholder:text-gray-400 dark:border-white/10 dark:bg-card dark:text-zinc-300 dark:focus:border-primary"
-                  value={q}
-                  onChange={(e) => {
-                    setQ(e.target.value);
-                    setPage(1);
-                  }}
+      <div className="font-inter w-full flex flex-1 flex-col h-auto min-h-0 gap-6 focus:outline-none animate-fade-up">
+        {/* ONE Single Card Container encapsulating Header, Toolbar, Active Filters, Table & Pagination */}
+        <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none isolate font-inter mb-4 min-h-0 flex-1">
+          {/* 1. Page Header */}
+          <PageHeader
+            icon="ph-tray"
+            title="Document Requests"
+            description="Manage and track student and alumni document requests (ODRS)."
+            showBorder={false}
+            className="p-6"
+            titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
+            descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
+            actions={
+              <div className="flex items-center gap-6">
+                <RefreshButton
+                  onRefresh={() => loadList({ showLoading: false, manual: true })}
+                  isLoading={isManualLoading}
+                  title="Refresh Requests"
                 />
-                <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[12px] font-normal text-gray-400 dark:text-zinc-500">
-                  {total > 0 ? `${total.toLocaleString()} results` : "0 results"}
+
+                <div className="h-6 w-px bg-gray-200 dark:bg-zinc-800" />
+
+                <div className="flex items-center gap-2">
+                  {!loading && !error && (
+                    <Button
+                      type="button"
+                      onClick={() => setCreateOpen(true)}
+                      className="flex h-10 px-5 text-xs font-semibold rounded-xl! btn-brand-red text-white! active:scale-95 disabled:opacity-50 transition-all cursor-pointer shadow-xs"
+                      style={{ color: "#ffffff" }}
+                    >
+                      Create Request
+                    </Button>
+                  )}
                 </div>
               </div>
+            }
+          />
 
-              {/* Status Filter */}
-              <div className="min-w-[120px] flex-1">
-                <Select
-                  value={statusFilter}
-                  onChange={(e) => {
-                    setStatusFilter(e.target.value);
-                    setPage(1);
-                  }}
-                  className="h-[36px] w-full rounded-[8px] border-[0.5px] border-gray-200 bg-white text-[13px] font-medium transition-all focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 dark:border-white/10 dark:bg-card dark:text-zinc-300 dark:focus:border-primary"
+          {/* 2. Navigation Toolbar */}
+          {!error && (
+            <div className="border-t border-gray-100 dark:border-white/10 p-5 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
+              {/* Left: Client Type Line Tabs */}
+              <div className="flex items-center gap-6 shrink-0 select-none overflow-x-auto">
+                {[
+                  { label: "All Requests", value: "" },
+                  { label: "Students", value: "Student" },
+                  { label: "Alumni", value: "Alumni" },
+                ].map((item) => {
+                  const isActive = clientTypeFilter === item.value;
+                  return (
+                    <button
+                      key={item.value}
+                      type="button"
+                      onClick={() => {
+                        setClientTypeFilter(item.value);
+                        setPage(1);
+                      }}
+                      className={cn(
+                        "relative h-9 flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent whitespace-nowrap",
+                        isActive
+                          ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
+                          : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
+                      )}
+                    >
+                      {item.label}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Right: Search Input & Dropdown Popovers Group */}
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0">
+                {/* Search Input */}
+                <div className="w-full sm:w-[260px] lg:w-[300px] relative group shrink-0">
+                  <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                    <i className="ph-bold ph-magnifying-glass text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm"></i>
+                  </div>
+                  <Input
+                    value={q}
+                    onChange={(e) => {
+                      setQ(e.target.value);
+                      setPage(1);
+                    }}
+                    placeholder="Search student, name, program..."
+                    className="h-9 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 pl-8 pr-16 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
+                  />
+                  <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] text-gray-400 dark:text-zinc-500">
+                    {total > 0 ? `${total.toLocaleString()}` : "0"}
+                  </div>
+                </div>
+
+                {/* Status Select Popover */}
+                <div className="w-full sm:w-[155px] shrink-0">
+                  <Select
+                    value={statusFilter}
+                    onChange={(e) => {
+                      setStatusFilter(e.target.value);
+                      setPage(1);
+                    }}
+                    className="h-9 rounded-xl border border-gray-200 dark:border-white/10 text-xs font-normal text-[#111111] dark:text-zinc-200 cursor-pointer shadow-none"
+                    menuClassName="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-900 shadow-2xl p-1.5"
+                    optionClassName="rounded-lg text-xs font-normal py-1.5 px-2.5 hover:bg-gray-100 dark:hover:bg-zinc-800"
+                  >
+                    <option value="">All Statuses</option>
+                    <option value="Pending">Pending</option>
+                    <option value="InProgress">In Progress</option>
+                    <option value="Ready">Ready</option>
+                    <option value="Completed">Completed</option>
+                    <option value="Cancelled">Cancelled</option>
+                    <option value="Shredded">Shredded</option>
+                  </Select>
+                </div>
+
+                {/* Document Type Select Popover */}
+                <div className="w-full sm:w-[175px] shrink-0">
+                  <Select
+                    value={docTypeFilter}
+                    onChange={(e) => {
+                      setDocTypeFilter(e.target.value);
+                      setPage(1);
+                    }}
+                    className="h-9 rounded-xl border border-gray-200 dark:border-white/10 text-xs font-normal text-[#111111] dark:text-zinc-200 cursor-pointer shadow-none"
+                    menuClassName="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-900 shadow-2xl p-1.5"
+                    optionClassName="rounded-lg text-xs font-normal py-1.5 px-2.5 hover:bg-gray-100 dark:hover:bg-zinc-800"
+                  >
+                    <option value="">All Documents</option>
+                    {docTypes.map((dt) => (
+                      <option key={dt} value={dt}>
+                        {dt}
+                      </option>
+                    ))}
+                  </Select>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* 3. Active Filter Chips Row */}
+          {!loading && !error && hasActiveFilters && (
+            <div className="flex-none border-t border-gray-100 dark:border-white/10 bg-white dark:bg-card px-6 py-2.5 animate-in fade-in slide-in-from-top-1 duration-normal">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="mr-1 text-[11px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500">
+                  Active filters:
+                </span>
+                {q && (
+                  <div className="flex items-center gap-[6px] rounded-[6px] bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
+                    Search: {q}
+                    <button
+                      onClick={() => {
+                        setQ("");
+                        setPage(1);
+                      }}
+                      className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
+                    >
+                      ×
+                    </button>
+                  </div>
+                )}
+                {clientTypeFilter && (
+                  <div className="flex items-center gap-[6px] rounded-[6px] bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
+                    Client: {clientTypeFilter === "Student" ? "Students" : "Alumni"}
+                    <button
+                      onClick={() => {
+                        setClientTypeFilter("");
+                        setPage(1);
+                      }}
+                      className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
+                    >
+                      ×
+                    </button>
+                  </div>
+                )}
+                {statusFilter && (
+                  <div className="flex items-center gap-[6px] rounded-[6px] bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
+                    Status: {statusFilter === "InProgress" ? "In Progress" : statusFilter}
+                    <button
+                      onClick={() => {
+                        setStatusFilter("");
+                        setPage(1);
+                      }}
+                      className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
+                    >
+                      ×
+                    </button>
+                  </div>
+                )}
+                {docTypeFilter && (
+                  <div className="flex items-center gap-[6px] rounded-[6px] bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
+                    Document: {docTypeFilter}
+                    <button
+                      onClick={() => {
+                        setDocTypeFilter("");
+                        setPage(1);
+                      }}
+                      className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
+                    >
+                      ×
+                    </button>
+                  </div>
+                )}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleClearFilters}
+                  className="h-auto text-[12px] font-medium text-gray-400 dark:text-zinc-500 border-0 bg-transparent hover:bg-transparent shadow-none p-0 hover:text-red-600 dark:hover:text-red-500 transition-colors cursor-pointer"
                 >
-                  <option value="">All Status</option>
-                  {STATUS_OPTIONS.map((s) => (
-                    <option key={s} value={s}>
-                      {s === "InProgress" ? "In Progress" : s}
-                    </option>
-                  ))}
-                </Select>
+                  Clear
+                </Button>
               </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Active filter Chips Row */}
-        {!loading && !error && (q !== "" || statusFilter !== "") && (
-          <div className="flex-none border-b border-gray-100 bg-white px-6 py-3 animate-in fade-in slide-in-from-top-1 duration-normal dark:border-white/10 dark:bg-card">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="mr-1 text-[11px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500">Active filters:</span>
-              {q && (
-                <div className="flex items-center gap-[6px] rounded-[6px] bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
-                  Search: {q}
-                  <button
-                    onClick={() => { setQ(""); setPage(1); }}
-                    className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
-                  >
-                    ×
-                  </button>
-                </div>
-              )}
-              {statusFilter && (
-                <div className="flex items-center gap-[6px] rounded-[6px] bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
-                  Status: {statusFilter === "InProgress" ? "In Progress" : statusFilter}
-                  <button
-                    onClick={() => { setStatusFilter(""); setPage(1); }}
-                    className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
-                  >
-                    ×
-                  </button>
-                </div>
-              )}
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  setQ("");
-                  setStatusFilter("");
-                  setPage(1);
-                }}
-                className="h-auto text-[12px] font-medium text-gray-400 dark:text-zinc-500 border-0 bg-transparent hover:bg-transparent shadow-none p-0 hover:text-red-600 dark:hover:text-red-500 transition-colors cursor-pointer"
-              >
-                Clear
-              </Button>
-            </div>
-          </div>
-        )}
-      </Card>
-
-      {/* 2. Columns layout for Request Table and Request details */}
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-6 items-start">
-        
-        {/* Table Card (Left Column) */}
-        <Card className="rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none overflow-hidden flex flex-col w-full p-0 mb-4">
-          <CardContent className="p-0 h-auto flex flex-col">
+          {/* 4. Full-Width Table Body */}
+          <div className="w-full flex flex-col flex-1 min-h-0 border-t border-gray-100 dark:border-white/10">
             {(loading && !isManualLoading) ? (
-              <DocumentRequestsTableSkeleton rowCount={7} />
+              <DocumentRequestsTableSkeleton rowCount={itemsPerPage} embedded={true} />
             ) : error ? (
-              <div className="p-6">
+              <div className="p-12">
                 <Empty className="h-[320px] flex flex-col items-center justify-center text-center text-gray-500 border-0 dark:text-zinc-400">
                   <EmptyHeader className="flex flex-col items-center gap-0">
                     <EmptyMedia className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm dark:bg-card dark:border-white/10 dark:shadow-none">
                       <i className="ph-duotone ph-warning-circle text-xl text-pup-maroon dark:text-primary" />
                     </EmptyMedia>
-                    <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">Could Not Load Report</EmptyTitle>
+                    <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">Could Not Load Requests</EmptyTitle>
                     <EmptyDescription className="text-sm font-medium text-gray-600 mt-1 max-w-md dark:text-zinc-300">
                       {error}
                     </EmptyDescription>
@@ -571,129 +696,115 @@ export default function DocumentRequestsTab({
                 </Empty>
               </div>
             ) : (
-              <div 
-                key={`${page}-${statusFilter}-${debouncedQ}-${sortBy}-${sortOrder}`}
-                className="flex-1 w-full overflow-visible animate-fade-up"
-              >
-                <div className="overflow-x-auto flex-1">
-                  <table className={cn("min-w-full text-sm table-fixed", rows.length === 0 && "h-full")}>
-                    <thead className="sticky top-0 z-10 border-b-[0.5px] border-black/10 dark:border-white/10 bg-white dark:bg-card">
-                      <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">
-                        <th className="p-4 w-20">
-                          <button
-                            type="button"
-                            onClick={() => handleSort("id")}
-                            className={cn(
-                              "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
-                              sortBy === "id" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
-                            )}
-                          >
-                            ID
-                            <SortIndicator
-                              column="id"
-                              sortBy={sortBy}
-                              sortOrder={sortOrder}
-                            />
-                          </button>
-                        </th>
-                        <th className="p-4">
-                          <button
-                            type="button"
-                            onClick={() => handleSort("student")}
-                            className={cn(
-                              "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
-                              sortBy === "student" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
-                            )}
-                          >
-                            Student
-                            <SortIndicator
-                              column="student"
-                              sortBy={sortBy}
-                              sortOrder={sortOrder}
-                            />
-                          </button>
-                        </th>
-                        <th className="p-4">
-                          <button
-                            type="button"
-                            onClick={() => handleSort("doc_type")}
-                            className={cn(
-                              "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
-                              sortBy === "doc_type" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
-                            )}
-                          >
-                            Document Type
-                            <SortIndicator
-                              column="doc_type"
-                              sortBy={sortBy}
-                              sortOrder={sortOrder}
-                            />
-                          </button>
-                        </th>
-                        <th className="p-4">
-                          <button
-                            type="button"
-                            onClick={() => handleSort("status")}
-                            className={cn(
-                              "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
-                              sortBy === "status" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
-                            )}
-                          >
-                            Status
-                            <SortIndicator
-                              column="status"
-                              sortBy={sortBy}
-                              sortOrder={sortOrder}
-                            />
-                          </button>
-                        </th>
-                        <th className="p-4 text-right">
-                          <div className="flex justify-end">
-                            <button
-                              type="button"
-                              onClick={() => handleSort("created_at")}
-                              className={cn(
-                                "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
-                                sortBy === "created_at" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
-                              )}
-                            >
-                              Created
-                              <SortIndicator
-                                column="created_at"
-                                sortBy={sortBy}
-                                sortOrder={sortOrder}
-                              />
-                            </button>
-                          </div>
-                        </th>
+              <div className="overflow-x-auto flex-1">
+                <table className={cn("min-w-full text-sm table-fixed", rows.length === 0 && "h-full")}>
+                  <thead className="sticky top-0 z-10 border-b border-gray-100 dark:border-white/10 bg-white dark:bg-card">
+                    <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">
+                      <th className="p-4 w-20">
+                        <button
+                          type="button"
+                          onClick={() => handleSort("id")}
+                          className={cn(
+                            "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
+                            sortBy === "id" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
+                          )}
+                        >
+                          ID
+                          <SortIndicator column="id" sortBy={sortBy} sortOrder={sortOrder} />
+                        </button>
+                      </th>
+                      <th className="p-4 min-w-[240px]">
+                        <button
+                          type="button"
+                          onClick={() => handleSort("student")}
+                          className={cn(
+                            "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
+                            sortBy === "student" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
+                          )}
+                        >
+                          Requester
+                          <SortIndicator column="student" sortBy={sortBy} sortOrder={sortOrder} />
+                        </button>
+                      </th>
+                      <th className="p-4 min-w-[180px]">
+                        <button
+                          type="button"
+                          onClick={() => handleSort("doc_type")}
+                          className={cn(
+                            "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
+                            sortBy === "doc_type" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
+                          )}
+                        >
+                          Document Type
+                          <SortIndicator column="doc_type" sortBy={sortBy} sortOrder={sortOrder} />
+                        </button>
+                      </th>
+                      <th className="p-4 min-w-[140px]">
+                        <button
+                          type="button"
+                          onClick={() => handleSort("status")}
+                          className={cn(
+                            "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
+                            sortBy === "status" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
+                          )}
+                        >
+                          Status
+                          <SortIndicator column="status" sortBy={sortBy} sortOrder={sortOrder} />
+                        </button>
+                      </th>
+                      <th className="p-4 min-w-[170px]">
+                        <button
+                          type="button"
+                          onClick={() => handleSort("created_at")}
+                          className={cn(
+                            "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
+                            sortBy === "created_at" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
+                          )}
+                        >
+                          Created At
+                          <SortIndicator column="created_at" sortBy={sortBy} sortOrder={sortOrder} />
+                        </button>
+                      </th>
+                      <th className="p-4 text-right min-w-[100px] text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">
+                        Action
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className={cn("divide-y divide-gray-100 dark:divide-white/10", rows.length === 0 && "h-full")}>
+                    {rows.length === 0 ? (
+                      <tr className="border-0 hover:bg-transparent h-full">
+                        <td colSpan={6} className="p-0 border-0 h-full">
+                          <Empty className="flex h-[360px] flex-col items-center justify-center border-0 bg-transparent text-center">
+                            <EmptyHeader className="flex flex-col items-center gap-0">
+                              <div className="relative mb-6">
+                                <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
+                                <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
+                                  <i className="ph-duotone ph-magnifying-glass text-xl text-gray-300 dark:text-zinc-600"></i>
+                                </EmptyMedia>
+                              </div>
+                              <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">No Document Requests Found</EmptyTitle>
+                              <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400">
+                                {clientTypeFilter === "Alumni"
+                                  ? "No alumni requests found matching your filters."
+                                  : clientTypeFilter === "Student"
+                                  ? "No student requests found matching your filters."
+                                  : "No document requests match your active filters."}
+                              </EmptyDescription>
+                            </EmptyHeader>
+                          </Empty>
+                        </td>
                       </tr>
-                    </thead>
-                    <tbody className={cn("divide-y divide-gray-100 dark:divide-white/10", rows.length === 0 && "h-full")}>
-                      {rows.length === 0 ? (
-                        <tr className="border-0 hover:bg-transparent h-full">
-                          <td colSpan={5} className="p-0 border-0 h-full">
-                            <Empty className="flex h-full flex-col items-center justify-center border-0 bg-transparent text-center">
-                              <EmptyHeader className="flex flex-col items-center gap-0">
-                                <div className="relative mb-6">
-                                  <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                                  <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
-                                    <i className="ph-duotone ph-magnifying-glass text-xl text-gray-300 dark:text-zinc-600"></i>
-                                  </EmptyMedia>
-                                </div>
-                                <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">No Alumni Requests Yet</EmptyTitle>
-                                <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400">
-                                  Create a request for alumni. Track status and find the physical file using the map.
-                                </EmptyDescription>
-                              </EmptyHeader>
-                            </Empty>
-                          </td>
-                        </tr>
-                      ) : (
-                        rows.map((r) => (
+                    ) : (
+                      rows.map((r) => {
+                        const student = studentMap.get(String(r.student_no || "").toUpperCase());
+                        const loc = student || (r.room ? { room: r.room, cabinet: r.cabinet, drawer: r.drawer, studentNo: r.student_no, name: r.student_name } : null);
+                        const isAlumni = r.client_type === "Alumni";
+
+                        return (
                           <tr
                             key={r.id}
                             className={cn(
-                              "group h-[52px] border-b-[0.5px] border-gray-100 dark:border-white/10 last:border-b-0 transition-all duration-fast hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none cursor-pointer",
+                              "group h-[56px] border-b-[0.5px] border-gray-100 dark:border-white/10 last:border-b-0 transition-all duration-fast hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none cursor-pointer",
                               selectedId === r.id && "bg-blue-50/60 dark:bg-blue-950/20"
                             )}
                             onClick={() => openDetail(r.id)}
@@ -701,533 +812,834 @@ export default function DocumentRequestsTab({
                             <td className="py-0 px-4 align-middle text-[13px] font-normal text-[#111111] dark:text-zinc-300">
                               #{r.id}
                             </td>
-                            <td className="py-0 px-4 align-middle">
-                              <div className="text-[14px] font-medium text-[#111111] dark:text-zinc-50 truncate">
-                                {r.student_name || "—"}
+                            <td className="py-2.5 px-4 align-middle">
+                              <div className="flex items-center gap-2">
+                                <span className="text-[14px] font-medium text-[#111111] dark:text-zinc-50 truncate">
+                                  {r.student_name || r.requester_name || "—"}
+                                </span>
+                                <span
+                                  className={cn(
+                                    "inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium",
+                                    isAlumni
+                                      ? "bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-300 border border-purple-200/50 dark:border-purple-800/30"
+                                      : "bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-200/50 dark:border-blue-800/30"
+                                  )}
+                                >
+                                  {isAlumni ? "Alumni" : "Student"}
+                                </span>
                               </div>
                               <div className="flex flex-wrap items-center gap-2 mt-[2px] truncate text-[12px] font-normal text-[#8E8E93] dark:text-zinc-500">
-                                <span>{r.student_no}</span>
-                                {(() => {
-                                  const student = studentMap.get(String(r.student_no).toUpperCase());
-                                  if (!student) return null;
-                                  return (
-                                    <button
-                                      type="button"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        onLocateOnMap(student);
-                                      }}
-                                      title="Locate on storage map"
-                                      className="inline-flex items-center gap-1 rounded-[4px] bg-red-50 hover:bg-red-100 px-[8px] py-[3px] text-[11px] font-medium tracking-[0.04em] text-pup-maroon dark:bg-red-950/40 dark:text-primary dark:hover:bg-red-950/60 border border-red-100/30 dark:border-white/5 cursor-pointer transition-colors whitespace-nowrap"
-                                    >
-                                      <i className="ph-bold ph-map-pin text-[10px]"></i>
-                                      RM{student.room} · CAB-{student.cabinet} · DRW-{student.drawer}
-                                    </button>
-                                  );
-                                })()}
+                                {r.student_no ? (
+                                  <span>{r.student_no}</span>
+                                ) : (
+                                  <span className="italic text-amber-600 dark:text-amber-400">No Student ID</span>
+                                )}
+                                {r.course_code && (
+                                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-gray-100 dark:bg-zinc-800 text-gray-700 dark:text-zinc-300">
+                                    {r.course_code}
+                                  </span>
+                                )}
+                                {loc && (
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      onLocateOnMap(loc);
+                                    }}
+                                    title="Locate on storage map"
+                                    className="inline-flex items-center gap-1 rounded-lg bg-red-50 hover:bg-red-100 px-2 py-0.5 text-[11px] font-medium tracking-[0.04em] text-pup-maroon dark:bg-red-950/40 dark:text-primary dark:hover:bg-red-950/60 border border-red-100/30 dark:border-white/5 cursor-pointer transition-colors whitespace-nowrap"
+                                  >
+                                    <i className="ph-bold ph-map-pin text-[10px]"></i>
+                                    RM{loc.room} · CAB-{loc.cabinet} · DRW-{loc.drawer}
+                                  </button>
+                                )}
                               </div>
                             </td>
                             <td className="py-0 px-4 align-middle">
-                               <div
-                                 className="inline-flex w-fit items-center justify-center rounded-[4px] bg-gray-100 px-[8px] py-[3px] text-[11px] font-medium text-gray-900 dark:bg-zinc-800 dark:text-zinc-100 whitespace-nowrap"
-                               >
-                                 {r.doc_type}
-                               </div>
-                             </td>
-                             <td className="py-0 px-4 align-middle">
-                               <div
-                                 className={cn("inline-flex w-fit items-center justify-center rounded-[4px] px-[8px] py-[3px] text-[11px] font-medium tracking-[0.04em] whitespace-nowrap", statusBadgeClass(r.status))}
-                               >
-                                 {r.status === "InProgress" ? "In Progress" : r.status}
-                               </div>
-                             </td>
-                            <td className="py-0 px-4 align-middle text-right text-[13px] font-normal text-[#8E8E93] dark:text-zinc-500 whitespace-nowrap">
+                              <div className="inline-flex w-fit items-center justify-center rounded-lg bg-gray-100 px-2.5 py-1 text-[11px] font-medium text-gray-900 dark:bg-zinc-800 dark:text-zinc-100 whitespace-nowrap">
+                                {r.doc_type}
+                              </div>
+                            </td>
+                            <td className="py-0 px-4 align-middle">
+                              <div className={cn("inline-flex w-fit items-center justify-center rounded-lg px-2.5 py-1 text-[11px] font-medium tracking-[0.04em] whitespace-nowrap", statusBadgeClass(r.status))}>
+                                {r.status === "InProgress" ? "In Progress" : r.status}
+                              </div>
+                            </td>
+                            <td className="py-0 px-4 align-middle text-[13px] font-normal text-[#8E8E93] dark:text-zinc-500 whitespace-nowrap">
                               {formatPHDateTime(r.created_at)}
                             </td>
-                          </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-                {total > 0 && (
-                  <div className="flex items-center justify-between border-t border-gray-100 bg-white p-6 px-8 dark:border-white/10 dark:bg-card mt-auto">
-                    <div className="flex items-center gap-8">
-                      <div className="flex items-center gap-6 text-[12px] font-normal text-gray-400 dark:text-zinc-500">
-                        <span>
-                          Showing {rows.length} of {total}
-                        </span>
-                        <div className="flex items-center gap-1.5 border-l border-gray-200 pl-6 dark:border-white/10">
-                          <span className="text-[12px] text-gray-400 dark:text-zinc-500">Rows:</span>
-                          <div className="flex items-center gap-1">
-                            {[10, 20, 50, 100].map((size) => (
-                              <button
-                                key={size}
-                                type="button"
-                                onClick={() => {
-                                  setItemsPerPage(size);
-                                  setPage(1);
+                            <td className="py-0 px-4 align-middle text-right">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  openDetail(r.id);
                                 }}
-                                className={`px-2 py-0.5 rounded-[4px] text-[12px] font-normal cursor-pointer transition-colors border-0 ${
-                                  itemsPerPage === size
-                                    ? "bg-gray-100 text-[#111111] font-medium dark:bg-white/10 dark:text-zinc-50"
-                                    : "bg-transparent text-gray-450 dark:text-zinc-550 hover:text-gray-700 dark:hover:text-zinc-300"
-                                }`}
+                                className="h-8 px-3 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                               >
-                                {size}
-                              </button>
+                                Inspect
+                              </Button>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+
+          {/* 5. Apple HIG Pagination Footer */}
+          {total > 0 && (
+            <div className="flex items-center justify-between border-t border-[#e5e5ea] dark:border-[#3a3a3c] bg-white dark:bg-[#1c1c1e] p-4 px-6 rounded-b-2xl mt-auto">
+              <div className="flex items-center gap-6 text-xs text-gray-500 dark:text-zinc-400 select-none">
+                <span>
+                  Showing {rows.length} of {total.toLocaleString()}
+                </span>
+                <div className="flex items-center gap-2">
+                  <span>Rows:</span>
+                  {[10, 20, 50, 100].map((size) => (
+                    <button
+                      key={size}
+                      type="button"
+                      onClick={() => {
+                        setItemsPerPage(size);
+                        setPage(1);
+                      }}
+                      className={cn(
+                        "px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer border-0",
+                        itemsPerPage === size
+                          ? "bg-gray-100 dark:bg-zinc-800 text-gray-900 dark:text-zinc-100"
+                          : "bg-transparent text-gray-400 hover:text-gray-600 dark:hover:text-zinc-200"
+                      )}
+                    >
+                      {size}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 select-none">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  disabled={page <= 1}
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  className="text-xs text-gray-500 dark:text-zinc-400 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
+                >
+                  Prev
+                </Button>
+
+                <div className="h-8 w-8 rounded-xl border border-[#e5e5ea] dark:border-zinc-800 flex items-center justify-center text-xs font-bold text-gray-800 dark:text-zinc-200 bg-white dark:bg-zinc-900">
+                  {page}
+                </div>
+
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  disabled={page >= totalPages}
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  className="text-xs text-gray-500 dark:text-zinc-400 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
+          )}
+        </Card>
+
+        {/* 6. Request Detail Sheet Slide-Over Drawer */}
+        <Sheet
+          open={Boolean(selectedId)}
+          onOpenChange={(open) => {
+            if (!open) {
+              setSelectedId(null);
+              setDetail(null);
+              setEditUpdateMessage("");
+            }
+          }}
+        >
+          <SheetContent
+            className="font-inter flex flex-col border-l bg-white p-0 shadow-2xl data-[side=right]:w-full data-[side=right]:sm:max-w-[620px] data-[side=right]:md:max-w-[700px] sm:max-w-[620px]! md:max-w-[700px]! w-full dark:border-white/10 dark:bg-[#121214]"
+            style={{ borderLeft: "0.5px solid rgba(0,0,0,0.08)" }}
+          >
+            {/* Sheet Header */}
+            <SheetHeader className="p-6 pb-4 border-b border-gray-100 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/40 text-left">
+              <div className="flex items-start justify-between">
+                <div>
+                  <SheetTitle className="text-left text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
+                    Request Details
+                  </SheetTitle>
+                  <SheetDescription className="mt-1 text-left text-xs font-normal text-gray-500 dark:text-zinc-400 flex items-center gap-2">
+                    <span>Request #{selectedId}</span>
+                    {detail && (
+                      <span className={cn("inline-flex px-2 py-0.5 rounded text-[10px] font-medium", statusBadgeClass(detail.status))}>
+                        {detail.status === "InProgress" ? "In Progress" : detail.status}
+                      </span>
+                    )}
+                  </SheetDescription>
+                </div>
+              </div>
+            </SheetHeader>
+
+            {/* Sheet Scrollable Body */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-5">
+              {detailLoading ? (
+                <div className="space-y-4">
+                  <Skeleton className="h-28 w-full rounded-xl dark:bg-muted" />
+                  <Skeleton className="h-20 w-full rounded-xl dark:bg-muted" />
+                  <Skeleton className="h-24 w-full rounded-xl dark:bg-muted" />
+                  <Skeleton className="h-28 w-full rounded-xl dark:bg-muted" />
+                </div>
+              ) : detail ? (
+                <>
+                  {/* Top 2-Column Grid: Requester Profile & Storage Location */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {/* Requester Profile Card */}
+                    <div className="flex flex-col">
+                      <span className="text-[11px] font-semibold uppercase tracking-wider text-[#8E8E93] dark:text-zinc-400 mb-1.5">
+                        Requester Profile
+                      </span>
+                      <div className="w-full h-full bg-[#F5F5F7] dark:bg-zinc-800/40 border border-[#E5E5EA] dark:border-white/10 rounded-xl p-4 flex flex-col justify-between space-y-2">
+                        <div className="space-y-1.5">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="font-semibold text-sm text-gray-900 dark:text-zinc-50 truncate">
+                              {detail.student_name || detail.requester_name || "—"}
+                            </span>
+                            <span
+                              className={cn(
+                                "inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium shrink-0",
+                                detail.client_type === "Alumni"
+                                  ? "bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-300 border border-purple-200/50 dark:border-purple-800/30"
+                                  : "bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-200/50 dark:border-blue-800/30"
+                              )}
+                            >
+                              {detail.client_type === "Alumni" ? "Alumni" : "Student"}
+                            </span>
+                          </div>
+                          <div className="text-xs text-[#8E8E93] dark:text-zinc-400 font-normal">
+                            {detail.student_no ? detail.student_no : <span className="italic text-amber-600 dark:text-amber-400">No Student ID</span>}
+                          </div>
+                          {(detail.course_code || studentForRequest?.courseCode) && (
+                            <div className="text-xs text-gray-600 dark:text-zinc-300 font-normal">
+                              Program: <span className="font-semibold text-gray-900 dark:text-zinc-100">{detail.course_code || studentForRequest?.courseCode}</span>
+                              {detail.course_name ? ` — ${detail.course_name}` : ""}
+                            </div>
+                          )}
+                        </div>
+                        {(detail.requester_email || detail.email) && (
+                          <div className="text-xs text-gray-500 dark:text-zinc-400 font-normal pt-1.5 border-t border-gray-200/60 dark:border-white/5 truncate flex items-center gap-1.5">
+                            <i className="ph-bold ph-envelope text-gray-400 text-xs"></i>
+                            <span className="truncate">{detail.requester_email || detail.email}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Physical Storage Location Card */}
+                    <div className="flex flex-col">
+                      <span className="text-[11px] font-semibold uppercase tracking-wider text-[#8E8E93] dark:text-zinc-400 mb-1.5">
+                        Physical Storage Location
+                      </span>
+                      <div className="w-full h-full rounded-xl border border-gray-200 p-4 dark:border-white/10 bg-[#F5F5F7] dark:bg-zinc-800/40 flex flex-col justify-between space-y-2">
+                        <div className="space-y-1.5">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[11px] font-medium text-gray-500 dark:text-zinc-400">
+                              Physical Archive
+                            </span>
+                            {studentForRequest || detail.room ? (
+                              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200/50 dark:border-emerald-800/30">
+                                Mapped
+                              </span>
+                            ) : null}
+                          </div>
+
+                          {studentForRequest || detail.room ? (
+                            <div className="text-xs font-semibold text-gray-900 dark:text-zinc-100 flex items-center gap-1.5">
+                              <i className="ph-bold ph-archive text-pup-maroon dark:text-red-400 text-sm"></i>
+                              <span>Room {detail.room || studentForRequest?.room} · Cabinet {detail.cabinet || studentForRequest?.cabinet} · Drawer {detail.drawer || studentForRequest?.drawer}</span>
+                            </div>
+                          ) : (
+                            <div className="text-xs text-amber-700 dark:text-amber-400 font-normal">
+                              {detail.student_no
+                                ? "Student record not loaded — check student number."
+                                : "No physical storage mapped for this alumni record."}
+                            </div>
+                          )}
+                        </div>
+
+                        <Button
+                          type="button"
+                          className="mt-2 w-full btn-brand-red text-white! font-semibold text-xs h-9 rounded-xl transition-all border-0 flex items-center justify-center gap-2 shadow-xs cursor-pointer active:scale-95"
+                          style={{ color: "#ffffff" }}
+                          disabled={!studentForRequest && !detail.room}
+                          onClick={() => {
+                            const target = studentForRequest || (detail.room ? {
+                              room: detail.room,
+                              cabinet: detail.cabinet,
+                              drawer: detail.drawer,
+                              studentNo: detail.student_no,
+                              name: detail.student_name || detail.requester_name,
+                            } : null);
+                            if (!target) return;
+                            if (requestNeedsPhysicalVerification) {
+                              setFileWarningOpen(true);
+                              return;
+                            }
+                            onLocateOnMap(target);
+                          }}
+                        >
+                          <i className="ph-bold ph-map-pin text-sm"></i>
+                          Locate on Storage Map
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Document Requested & Purpose (Grid on sm+ screens) */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    {/* Document Requested Card */}
+                    <div className="flex flex-col sm:col-span-1">
+                      <span className="text-[11px] font-semibold uppercase tracking-wider text-[#8E8E93] dark:text-zinc-400 mb-1.5">
+                        Document Requested
+                      </span>
+                      <div className="w-full h-full bg-[#F5F5F7] dark:bg-zinc-800/40 border border-[#E5E5EA] dark:border-white/10 rounded-xl p-4 flex flex-col justify-between space-y-2">
+                        <span className="inline-flex w-fit items-center rounded-lg bg-white dark:bg-zinc-800 border border-[#E5E5EA] dark:border-white/10 px-2.5 py-1 text-xs font-semibold text-gray-900 dark:text-zinc-100">
+                          {detail.doc_type}
+                        </span>
+                        <span className="text-[11px] text-gray-500 dark:text-zinc-400 flex items-center gap-1.5">
+                          <i className="ph-bold ph-calendar text-gray-400 text-xs"></i>
+                          {formatPHDateTime(detail.created_at)}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Stated Purpose */}
+                    <div className="flex flex-col sm:col-span-2">
+                      <span className="text-[11px] font-semibold uppercase tracking-wider text-[#8E8E93] dark:text-zinc-400 mb-1.5">
+                        Requester Stated Purpose
+                      </span>
+                      <div className="w-full h-full min-h-[64px] p-4 text-xs font-normal text-gray-700 dark:text-zinc-300 bg-[#F5F5F7] dark:bg-zinc-800/40 border border-[#E5E5EA] dark:border-white/10 rounded-xl whitespace-pre-wrap leading-relaxed">
+                        {detail.notes || <span className="text-gray-400 italic">No purpose entered by requester.</span>}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Update Status & Timeline Message Card */}
+                  <div className="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-900/40 p-4 space-y-3.5">
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+                      <div className="flex flex-col">
+                        <span className="text-[11px] font-semibold uppercase tracking-wider text-[#8E8E93] dark:text-zinc-400">
+                          {isTerminalStatus ? "Request Lifecycle State" : "Update Status"}
+                        </span>
+                        <span className="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">
+                          {detail.status === "Completed"
+                            ? "This document has been issued/released to the requester. This transaction is fulfilled and closed."
+                            : detail.status === "Shredded"
+                            ? "This unclaimed document was shredded after exceeding the 90-day retention schedule. This record is closed."
+                            : detail.status === "Cancelled"
+                            ? "This request was cancelled and is permanently closed."
+                            : "Select the next progressive stage of this request"}
+                        </span>
+                      </div>
+                      <div className="w-full sm:w-52 shrink-0">
+                        {isTerminalStatus ? (
+                          <div className="h-9 px-3 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-zinc-800/80 flex items-center justify-between text-xs font-semibold text-gray-800 dark:text-zinc-200">
+                            <span className="flex items-center gap-1.5 truncate">
+                              <i className="ph-bold ph-lock-simple text-gray-400 text-xs"></i>
+                              <span>{detail.status === "InProgress" ? "In Progress" : detail.status}</span>
+                            </span>
+                            <span className="text-[10px] font-medium text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
+                              Closed
+                            </span>
+                          </div>
+                        ) : (
+                          <Select
+                            className="w-full h-9 py-1 px-3 text-xs font-medium text-gray-900 dark:text-zinc-100 bg-white dark:bg-zinc-800 border border-gray-200 dark:border-white/10 rounded-xl shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 cursor-pointer"
+                            menuClassName="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-900 shadow-2xl p-1.5"
+                            optionClassName="rounded-lg text-xs font-normal py-1.5 px-2.5 hover:bg-gray-100 dark:hover:bg-zinc-800"
+                            value={editStatus}
+                            disabled={saving}
+                            onChange={(e) => setEditStatus(e.target.value)}
+                          >
+                            {availableStatuses.map((s) => (
+                              <option key={s} value={s}>
+                                {s === "InProgress" ? "In Progress" : s}
+                              </option>
                             ))}
+                          </Select>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Add Timeline Update */}
+                    <div className="flex flex-col pt-3 border-t border-gray-100 dark:border-white/10">
+                      <div className="flex items-center justify-between mb-1.5">
+                        <span className="text-[11px] font-semibold uppercase tracking-wider text-[#8E8E93] dark:text-zinc-400">
+                          {isTerminalStatus ? "Add Archival Note / Log" : "Add Timeline Update"}
+                        </span>
+                        <span className="text-[10px] text-gray-400 dark:text-zinc-500">
+                          {isTerminalStatus ? "Audit record note" : "Visible to requester"}
+                        </span>
+                      </div>
+                      <textarea
+                        className="w-full min-h-[72px] p-3 text-xs font-normal text-gray-900 dark:text-zinc-100 bg-[#F5F5F7] dark:bg-zinc-800/50 border border-gray-200 dark:border-white/10 rounded-xl focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus:outline-none transition-all resize-none placeholder:text-gray-400 dark:placeholder:text-zinc-500"
+                        value={editUpdateMessage}
+                        onChange={(e) => setEditUpdateMessage(e.target.value)}
+                        placeholder={
+                          isTerminalStatus
+                            ? "Add an archival note or release verification detail..."
+                            : "e.g. Document printed, awaiting dry seal..."
+                        }
+                      />
+                    </div>
+                  </div>
+
+                  {/* Timeline History */}
+                  {Array.isArray(detail.updates) && detail.updates.length > 0 && (
+                    <div className="flex flex-col">
+                      <span className="text-[11px] font-semibold uppercase tracking-wider text-[#8E8E93] dark:text-zinc-400 mb-1.5">
+                        Activity History ({detail.updates.length})
+                      </span>
+                      <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                        {detail.updates.map((u, idx) => (
+                          <div
+                            key={u.id || idx}
+                            className="p-3 rounded-xl bg-[#F5F5F7] dark:bg-zinc-800/40 border border-gray-200/70 dark:border-white/5 text-xs space-y-1"
+                          >
+                            <div className="flex items-center justify-between text-[11px]">
+                              <span className="font-semibold text-gray-800 dark:text-zinc-200">
+                                {u.status}
+                              </span>
+                              <span className="text-gray-400 dark:text-zinc-500 text-[10px]">
+                                {formatPHDateTime(u.created_at)}
+                              </span>
+                            </div>
+                            {u.message && (
+                              <div className="text-gray-600 dark:text-zinc-300 text-xs leading-relaxed">
+                                {u.message}
+                              </div>
+                            )}
+                            <div className="text-[10px] text-gray-400 dark:text-zinc-500">
+                              By {u.actor_name || "Staff"}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 90-Day Retention Policy Notice */}
+                  {detail.status === "Ready" && retentionExpiryDate && (
+                    <div className="rounded-xl border border-amber-200 bg-amber-50/50 p-3.5 dark:border-amber-950/40 dark:bg-amber-950/10 animate-in fade-in duration-fast">
+                      <div className="flex gap-3">
+                        <i className="ph-bold ph-calendar-blank text-amber-700 dark:text-amber-500 text-lg shrink-0 mt-0.5"></i>
+                        <div className="text-xs">
+                          <span className="font-semibold text-amber-950 dark:text-amber-300 block tracking-wider text-[10px] uppercase">
+                            PUP ODRS Retention Policy
+                          </span>
+                          <span className="text-gray-600 dark:text-zinc-400 block mt-0.5 leading-normal">
+                            Unclaimed documents are shredded after 90 days according to ODRS policy.
+                          </span>
+                          <span className="text-amber-800 dark:text-amber-400 font-semibold block mt-1.5 flex items-center gap-1.5">
+                            <i className="ph-bold ph-warning"></i>
+                            Shred Schedule: {retentionExpiryDate.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                            {daysRemaining !== null && (
+                              <span className="text-gray-500 dark:text-zinc-500 font-normal">({daysRemaining > 0 ? `${daysRemaining}d left` : "Expired"})</span>
+                            )}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </>
+              ) : null}
+            </div>
+
+            {/* Sheet Sticky Footer */}
+            <div className="p-4 px-6 border-t border-gray-100 dark:border-white/10 bg-white dark:bg-[#18181b] flex items-center justify-between">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-9 px-4 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 shadow-xs cursor-pointer hover:bg-gray-50 dark:hover:bg-zinc-700"
+                onClick={() => {
+                  setSelectedId(null);
+                  setDetail(null);
+                  setEditUpdateMessage("");
+                }}
+              >
+                Close
+              </Button>
+
+              {hasEdits && (
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-9 px-4 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 shadow-xs cursor-pointer hover:bg-gray-50 dark:hover:bg-zinc-700"
+                    onClick={handleResetEdits}
+                    disabled={saving}
+                  >
+                    Reset
+                  </Button>
+                  <Button
+                    size="sm"
+                    className="h-9 px-4 text-xs font-semibold rounded-xl! btn-brand-red text-white! shadow-xs cursor-pointer active:scale-95 transition-all"
+                    style={{ color: "#ffffff" }}
+                    onClick={handleManualSave}
+                    disabled={saving}
+                  >
+                    {saving ? "Saving..." : "Save Changes"}
+                  </Button>
+                </div>
+              )}
+            </div>
+          </SheetContent>
+        </Sheet>
+
+        {/* 7. Dialog: Create Request */}
+        <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+          <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-white border border-gray-200 shadow-2xl rounded-2xl dark:bg-card dark:border-white/10">
+            <DialogHeader className="p-6 border-b border-gray-100 bg-gray-50 dark:border-white/10 dark:bg-white/5">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-xl border border-red-100 dark:border-zinc-800 bg-red-50 text-pup-maroon dark:text-primary shadow-sm flex items-center justify-center shrink-0 dark:bg-red-950/30 dark:text-primary dark:shadow-none">
+                  <i className="ph-duotone ph-pencil-line text-xl"></i>
+                </div>
+                <div className="min-w-0">
+                  <DialogTitle className="text-lg font-semibold tracking-tight text-gray-900 dark:text-zinc-50">New Document Request</DialogTitle>
+                  <DialogDescription className="text-sm font-medium text-gray-600 mt-1 dark:text-zinc-300">
+                    Create a document request for a student or alumni.
+                  </DialogDescription>
+                </div>
+              </div>
+            </DialogHeader>
+            <form onSubmit={handleCreate}>
+              <div className="p-6 space-y-4">
+                {/* Client Type Selector */}
+                <div>
+                  <label className="text-xs font-semibold text-gray-700 dark:text-zinc-200 block mb-1.5">
+                    Client Type
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCreateClientType("Student");
+                        setSelectedStudent(null);
+                        setCreateStudentNo("");
+                      }}
+                      className={cn(
+                        "flex-1 h-10 px-3 text-xs font-semibold rounded-xl border transition-all cursor-pointer text-center",
+                        createClientType === "Student"
+                          ? "bg-slate-900 text-white border-slate-900 dark:bg-zinc-100 dark:text-zinc-900 dark:border-zinc-100 shadow-xs"
+                          : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50 dark:bg-zinc-800 dark:text-zinc-300 dark:border-white/10"
+                      )}
+                    >
+                      Current Student
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCreateClientType("Alumni");
+                        setSelectedStudent(null);
+                        setCreateStudentNo("");
+                      }}
+                      className={cn(
+                        "flex-1 h-10 px-3 text-xs font-semibold rounded-xl border transition-all cursor-pointer text-center",
+                        createClientType === "Alumni"
+                          ? "bg-slate-900 text-white border-slate-900 dark:bg-zinc-100 dark:text-zinc-900 dark:border-zinc-100 shadow-xs"
+                          : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50 dark:bg-zinc-800 dark:text-zinc-300 dark:border-white/10"
+                      )}
+                    >
+                      Alumni / Former Student
+                    </button>
+                  </div>
+                </div>
+
+                {/* Form fields for Student vs Alumni */}
+                {createClientType === "Student" ? (
+                  selectedStudent ? (
+                    <div className="rounded-xl border border-red-100 bg-red-50/50 p-4 relative animate-in fade-in zoom-in-95 duration-fast dark:border-white/10 dark:bg-red-950/20">
+                      <button
+                        type="button"
+                        className="absolute top-2.5 right-2.5 text-gray-400 hover:text-gray-600 transition-colors bg-white hover:bg-gray-100 border border-gray-200 rounded-full w-5 h-5 flex items-center justify-center shadow-xs dark:bg-zinc-800 dark:border-white/10 dark:text-zinc-300"
+                        onClick={() => {
+                          setSelectedStudent(null);
+                          setCreateStudentNo("");
+                        }}
+                      >
+                        <i className="ph-bold ph-x text-[10px]"></i>
+                      </button>
+                      <div className="flex items-start gap-3">
+                        <div className="w-10 h-10 rounded-full bg-pup-maroon/10 text-pup-maroon flex items-center justify-center shrink-0 dark:bg-pup-maroon/20">
+                          <i className="ph-bold ph-user-focus text-lg"></i>
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="font-semibold text-gray-900 text-sm truncate dark:text-zinc-50">{selectedStudent.name}</div>
+                          <div className="text-xs text-gray-500 mt-0.5 dark:text-zinc-400">{selectedStudent.studentNo || selectedStudent.student_no}</div>
+                          <div className="text-[11px] text-gray-600 mt-1 flex flex-wrap gap-x-2 gap-y-0.5 dark:text-zinc-300">
+                            <span>Course: <strong className="text-gray-800 dark:text-zinc-100">{selectedStudent.courseCode || selectedStudent.course_code || "—"}</strong></span>
+                            <span>Section: <strong className="text-gray-800 dark:text-zinc-100">{selectedStudent.section || "—"}</strong></span>
+                            <span>Year: <strong className="text-gray-800 dark:text-zinc-100">{selectedStudent.yearLevel || selectedStudent.year_level || "—"}</strong></span>
+                          </div>
+                          <div className="text-[11px] text-pup-maroon dark:text-red-500 font-semibold mt-2 flex items-center gap-1">
+                            <i className="ph-bold ph-archive-tray text-xs"></i>
+                            <span>Storage: Room {selectedStudent.room} · Cabinet {selectedStudent.cabinet} · Drawer {selectedStudent.drawer}</span>
                           </div>
                         </div>
                       </div>
                     </div>
-
-                    <div className="flex shrink-0 items-center gap-3">
-                      <button
-                        disabled={page <= 1}
-                        onClick={() => setPage((p) => Math.max(1, p - 1))}
-                        className="h-8 bg-transparent text-[12px] font-normal text-gray-400 hover:text-pup-maroon dark:text-zinc-500 dark:hover:text-zinc-200 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer border-0 p-0"
-                      >
-                        Prev
-                      </button>
-
-                      <div className="flex h-8 min-w-[32px] items-center justify-center rounded-[6px] border border-gray-200/80 bg-white px-2.5 text-[12px] font-medium text-gray-900 dark:border-white/10 dark:bg-card dark:text-zinc-100">
-                        {page}
+                  ) : (
+                    <div className="space-y-4">
+                      <div className="relative">
+                        <label className="text-xs font-semibold text-gray-700 dark:text-zinc-200">
+                          Search Student (Name or Number)
+                        </label>
+                        <div className="relative mt-1.5 group">
+                          <i className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 pointer-events-none"></i>
+                          <Input
+                            className="pl-9 h-10 bg-white dark:bg-zinc-800 border border-gray-200 dark:border-white/10 rounded-xl text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
+                            value={studentSearch}
+                            onChange={(e) => setStudentSearch(e.target.value)}
+                            placeholder="Type to search by student name or number..."
+                          />
+                        </div>
+                        {studentSuggestions.length > 0 && (
+                          <div className="absolute z-50 left-0 right-0 mt-1 rounded-xl border border-gray-200 bg-white overflow-hidden shadow-lg animate-in fade-in slide-in-from-top-1 duration-fast dark:bg-zinc-900 dark:border-zinc-800">
+                            {studentSuggestions.map((s) => {
+                              const sn = String(s?.studentNo || s?.student_no || "");
+                              return (
+                                <button
+                                  key={sn}
+                                  type="button"
+                                  className="w-full text-left px-3 py-2 border-b last:border-b-0 border-gray-100 hover:bg-red-50/50 transition-colors group flex flex-col gap-0.5 dark:border-zinc-800 dark:hover:bg-zinc-800/50"
+                                  onClick={() => {
+                                    setSelectedStudent(s);
+                                    setCreateStudentNo(sn);
+                                    setStudentSearch("");
+                                  }}
+                                >
+                                  <div className="text-sm font-semibold text-gray-900 dark:text-zinc-100 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors">
+                                    {s?.name}
+                                  </div>
+                                  <div className="text-[10px] text-gray-500 dark:text-zinc-400 flex items-center gap-1.5">
+                                    <span>{sn}</span>
+                                    <span className="text-gray-300 dark:text-zinc-700">•</span>
+                                    <span>{s?.courseCode || s?.course_code || "—"} - {s?.section || "—"}</span>
+                                  </div>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        )}
                       </div>
 
-                      <button
-                        disabled={page >= totalPages}
-                        onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                        className="h-8 bg-transparent text-[12px] font-normal text-gray-400 hover:text-pup-maroon dark:text-zinc-500 dark:hover:text-zinc-200 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer border-0 p-0"
+                      <div>
+                        <div className="flex items-center justify-between">
+                          <label className="text-xs font-semibold text-gray-700 dark:text-zinc-200">
+                            Or Enter Student Number
+                          </label>
+                          <span className="text-[10px] text-gray-400 font-medium">If record is not in database</span>
+                        </div>
+                        <Input
+                          className="mt-1.5 h-10 bg-white dark:bg-zinc-800 border border-gray-200 dark:border-white/10 rounded-xl text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
+                          value={createStudentNo}
+                          onChange={(e) => setCreateStudentNo(e.target.value)}
+                          placeholder="202X-XXXXX-MN-0"
+                        />
+                      </div>
+                    </div>
+                  )
+                ) : (
+                  /* Alumni Fields */
+                  <div className="space-y-4 animate-fade-up">
+                    <div>
+                      <label className="text-xs font-semibold text-gray-700 dark:text-zinc-200">
+                        Alumni Full Name <span className="text-red-500">*</span>
+                      </label>
+                      <Input
+                        className="mt-1.5 h-10 bg-white dark:bg-zinc-800 border border-gray-200 dark:border-white/10 rounded-xl text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
+                        value={createRequesterName}
+                        onChange={(e) => setCreateRequesterName(e.target.value)}
+                        placeholder="e.g. Maria Santos"
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-xs font-semibold text-gray-700 dark:text-zinc-200">
+                        Academic Program / Degree <span className="text-red-500">*</span>
+                      </label>
+                      <Select
+                        className="mt-1.5 h-10 w-full rounded-xl border border-gray-200 bg-white px-3 text-xs font-normal shadow-none focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 dark:bg-zinc-800 dark:border-white/10"
+                        value={createCourseCode}
+                        onChange={(e) => setCreateCourseCode(e.target.value)}
+                        required
                       >
-                        Next
-                      </button>
+                        <option value="">Select Degree Program…</option>
+                        {courses.map((c) => (
+                          <option key={c.code || c.id} value={c.code}>
+                            {c.code} {c.name ? `— ${c.name}` : ""}
+                          </option>
+                        ))}
+                      </Select>
+                      <span className="text-[11px] text-gray-500 dark:text-zinc-400 mt-1 block">
+                        Required for locating physical records when student number is not present.
+                      </span>
+                    </div>
+
+                    <div>
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-semibold text-gray-700 dark:text-zinc-200">
+                          Student Number (Optional)
+                        </label>
+                        <span className="text-[10px] text-gray-400 font-medium">If remembered</span>
+                      </div>
+                      <Input
+                        className="mt-1.5 h-10 bg-white dark:bg-zinc-800 border border-gray-200 dark:border-white/10 rounded-xl text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
+                        value={createStudentNo}
+                        onChange={(e) => setCreateStudentNo(e.target.value)}
+                        placeholder="e.g. 2018-01234-SJ-0"
+                      />
                     </div>
                   </div>
                 )}
-              </div>
-            )}
-          </CardContent>
-        </Card>
 
-        {/* 3. Request details Card (Right Column) */}
-        <Card className="rounded-[14px] border border-[#E5E5EA] bg-white shadow-sm overflow-hidden flex flex-col min-h-[560px] dark:bg-card dark:border-white/10 dark:shadow-none p-0 mb-4" style={{ fontFamily: 'Geist, "Geist Fallback", Inter, Helvetica, sans-serif' }}>
-          <div className="p-[16px_20px] border-b border-[#E5E5EA] bg-white flex items-center justify-between dark:border-white/10 dark:bg-card">
-            <div className="text-[14px] font-semibold text-[#8E8E93] dark:text-zinc-400 tracking-wider">
-              Request Details
-            </div>
-            {hasEdits && (
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 px-2 text-[10px] font-semibold text-gray-500 hover:text-gray-700 dark:text-zinc-400 dark:hover:text-zinc-200"
-                  onClick={handleResetEdits}
-                  disabled={saving}
-                >
-                  Reset
-                </Button>
-                <Button
-                  variant="default"
-                  size="sm"
-                  className="h-7 px-3 text-[10px] font-semibold btn-brand-red text-white shadow-sm dark:shadow-none"
-                  onClick={handleManualSave}
-                  disabled={saving}
-                >
-                  {saving ? "Saving..." : "Save Changes"}
-                </Button>
-              </div>
-            )}
-          </div>
-          <CardContent className="p-[20px] flex-grow flex flex-col">
-            {loading ? (
-              <div className="space-y-6">
-                <div className="space-y-2">
-                  <Skeleton className="h-3 w-16 dark:bg-muted" />
-                  <Skeleton className="h-5 w-3/4 dark:bg-muted" />
-                  <Skeleton className="h-3 w-1/2 dark:bg-muted" />
-                </div>
-                <div className="space-y-2">
-                  <Skeleton className="h-3 w-24 dark:bg-muted" />
-                  <Skeleton className="h-5 w-1/2 dark:bg-muted" />
-                </div>
-                <Skeleton className="h-32 w-full rounded-brand dark:bg-muted" />
-                <div className="space-y-2">
-                  <Skeleton className="h-3 w-16 dark:bg-muted" />
-                  <Skeleton className="h-10 w-full rounded-brand dark:bg-muted" />
-                </div>
-                <div className="space-y-2">
-                  <Skeleton className="h-3 w-16 dark:bg-muted" />
-                  <Skeleton className="h-20 w-full rounded-brand dark:bg-muted" />
-                </div>
-              </div>
-            ) : error ? (
-              <div className="py-8 text-center text-red-500 font-medium">
-                {error}
-              </div>
-            ) : !selectedId ? (
-              <Empty className="flex-1 flex flex-col items-center justify-center border-0 bg-transparent text-center">
-                <EmptyHeader className="flex flex-col items-center gap-0">
-                  <div className="relative mb-6">
-                    <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                    <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
-                      <i className="ph-duotone ph-file-text text-xl text-gray-300 dark:text-zinc-600"></i>
-                    </EmptyMedia>
-                  </div>
-                  <EmptyTitle className="text-[16px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">Select a Request</EmptyTitle>
-                  <EmptyDescription className="max-w-xs text-[13px] font-normal text-[#8E8E93] dark:text-zinc-400 mt-1">
-                    Select a request to see details and location.
-                  </EmptyDescription>
-                </EmptyHeader>
-              </Empty>
-            ) : detailLoading ? (
-              <div className="space-y-3">
-                <Skeleton className="h-6 w-3/4 dark:bg-muted" />
-                <Skeleton className="h-4 w-full dark:bg-muted" />
-                <Skeleton className="h-4 w-full dark:bg-muted" />
-              </div>
-            ) : (
-              <div className="flex flex-col gap-[18px] animate-fade-up">
-                {/* Student Detail Group */}
-                <div className="flex flex-col">
-                  <span className="text-[11px] font-semibold tracking-wider text-[#8E8E93] dark:text-zinc-400 mb-1.5">
-                    Student
-                  </span>
-                  <div className="w-full bg-[#F5F5F7] dark:bg-zinc-800/40 border border-[#E5E5EA] dark:border-white/10 rounded-[10px] p-[12px] text-[13px] font-medium text-[#111111] dark:text-zinc-50">
-                    <div>{detail.student_name}</div>
-                    <div className="text-[11px] text-[#8E8E93] dark:text-zinc-500 font-normal mt-0.5">{detail.student_no}</div>
-                  </div>
-                </div>
-
-                {/* Document Type Group */}
-                <div className="flex flex-col">
-                  <span className="text-[11px] font-semibold tracking-wider text-[#8E8E93] dark:text-zinc-400 mb-1.5">
-                    Document Type
-                  </span>
-                  <div className="w-full bg-[#F5F5F7] dark:bg-zinc-800/40 border border-[#E5E5EA] dark:border-white/10 rounded-[10px] p-[12px] flex items-center">
-                    <span className="inline-flex w-fit items-center justify-center rounded-[6px] bg-white dark:bg-zinc-800 border border-[#E5E5EA] dark:border-white/10 px-[8px] py-[3px] text-[11px] font-medium text-gray-900 dark:text-zinc-100 whitespace-nowrap">
-                      {detail.doc_type}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Status Dropdown Group */}
-                <div className="flex flex-col">
-                  <span className="text-[11px] font-semibold tracking-wider text-[#8E8E93] dark:text-zinc-400 mb-1.5">
-                    Status
-                  </span>
+                <div>
+                  <label className="text-xs font-semibold text-gray-700 dark:text-zinc-200">
+                    Document Type <span className="text-red-500">*</span>
+                  </label>
                   <Select
-                    className="w-full h-auto py-[10px] px-[12px] text-[13px] font-normal text-[#111111] dark:text-zinc-300 bg-[#F5F5F7] dark:bg-zinc-800/40 border border-[#E5E5EA] dark:border-white/10 rounded-[10px] hover:bg-[#EAEAEA] dark:hover:bg-zinc-700/60 focus:bg-white focus:border-[#0A84FF] focus:ring-2 focus:ring-[#0A84FF]/20 focus:outline-none transition-all cursor-pointer shadow-none!"
-                    value={editStatus}
-                    disabled={saving}
-                    onChange={(e) => setEditStatus(e.target.value)}
+                    className="mt-1.5 h-10 w-full rounded-xl border border-gray-200 bg-white px-3 text-xs font-normal shadow-none focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 dark:bg-zinc-800 dark:border-white/10"
+                    value={createDocType}
+                    onChange={(e) => setCreateDocType(e.target.value)}
+                    required
                   >
-                    {STATUS_OPTIONS.map((s) => (
-                      <option key={s} value={s}>
-                        {s === "InProgress" ? "In Progress" : s}
+                    <option value="">Select document type…</option>
+                    {docTypes.map((dt) => (
+                      <option key={dt} value={dt}>
+                        {dt}
                       </option>
                     ))}
                   </Select>
                 </div>
 
-                {/* Notes Textarea Group */}
-                <div className="flex flex-col">
-                  <span className="text-[11px] font-semibold tracking-wider text-[#8E8E93] dark:text-zinc-400 mb-1.5">
-                    Notes
-                  </span>
+                <div>
+                  <label className="text-xs font-semibold text-gray-700 dark:text-zinc-200">
+                    Notes (Optional)
+                  </label>
                   <textarea
-                    className="w-full min-h-[90px] p-[12px] text-[13px] font-normal text-[#111111] dark:text-zinc-300 bg-[#F5F5F7] dark:bg-zinc-800/40 border border-[#E5E5EA] dark:border-white/10 rounded-[10px] focus:bg-white focus:border-[#0A84FF] focus:ring-2 focus:ring-[#0A84FF]/20 focus:outline-none transition-all resize-none shadow-[inset_0_1px_2px_rgba(0,0,0,0.05)] placeholder:text-gray-400"
-                    value={editNotes}
-                    onChange={(e) => setEditNotes(e.target.value)}
-                    placeholder="Add notes..."
+                    className="mt-1.5 w-full min-h-[72px] rounded-xl border border-gray-200 p-3 text-xs font-normal focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus:outline-none dark:bg-zinc-800 dark:border-white/10 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 transition-all resize-none"
+                    value={createNotes}
+                    onChange={(e) => setCreateNotes(e.target.value)}
+                    placeholder="Requester purpose or special remarks…"
                   />
                 </div>
+              </div>
 
-                {/* Storage physical location wrapper */}
-                <div className="rounded-[14px] border border-[#E5E5EA] p-[16px_20px] dark:border-white/10 bg-[#F5F5F7] dark:bg-white/3">
-                  <div className="text-[11px] font-semibold tracking-wider text-[#8E8E93] dark:text-zinc-400 mb-1.5">
-                    Physical Location
-                  </div>
-
-                  {studentForRequest ? (
-                    <div className="text-[13px] font-normal text-[#111111] dark:text-zinc-155">
-                      RM {studentForRequest.room} · CAB {studentForRequest.cabinet} · DRW {studentForRequest.drawer}
-                    </div>
+              {/* Dialog Actions */}
+              <div className="p-4 px-6 border-t border-gray-100 bg-white flex flex-col-reverse sm:flex-row sm:justify-end gap-2 dark:border-white/10 dark:bg-card">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                  onClick={() => setCreateOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  className="px-5 h-10 btn-brand-red text-white! font-semibold text-xs shadow-xs rounded-xl! gap-2 flex items-center dark:shadow-none active:scale-95 cursor-pointer"
+                  style={{ color: "#ffffff" }}
+                  disabled={submitting}
+                >
+                  {submitting ? (
+                    <>
+                      <i className="ph-bold ph-spinner animate-spin text-sm text-white!"></i>
+                      Saving...
+                    </>
                   ) : (
-                    <div className="text-[13px] text-amber-850 dark:text-amber-400 font-normal">
-                      Student record not loaded — check student number.
-                    </div>
+                    "Create"
                   )}
-                  <Button
-                    type="button"
-                    className="mt-3 w-full btn-brand-red text-white font-medium text-[13px] h-10 rounded-[10px] transition-all border-0 flex items-center justify-center gap-2 shadow-none!"
-                    disabled={!studentForRequest}
-                    onClick={() => {
-                      if (!studentForRequest) return;
-                      if (requestNeedsPhysicalVerification) {
-                        setFileWarningOpen(true);
-                        return;
-                      }
-                      onLocateOnMap(studentForRequest);
-                    }}
-                  >
-                    Locate
-                  </Button>
-                </div>
-
-                {detail.status === "Ready" && retentionExpiryDate && (
-                  <div className="rounded-brand border border-amber-250 bg-amber-50/40 p-3.5 dark:border-amber-950/40 dark:bg-amber-950/10 animate-in fade-in duration-fast">
-                    <div className="flex gap-3">
-                      <i className="ph-bold ph-calendar-blank text-amber-700 dark:text-amber-500 text-lg shrink-0 mt-0.5"></i>
-                      <div className="text-[12px]">
-                        <span className="font-semibold text-amber-950 dark:text-amber-300 block tracking-wider text-[10px]">
-                          PUP ODRS Retention Policy
-                        </span>
-                        <span className="text-gray-600 dark:text-zinc-400 block mt-0.5 leading-normal">
-                          Unclaimed documents are shredded after 90 days according to ODRS policy.
-                        </span>
-                        <span className="text-amber-850 dark:text-amber-400 font-semibold block mt-1.5 flex items-center gap-1.5">
-                          <i className="ph-bold ph-warning"></i>
-                          Shred Schedule: {retentionExpiryDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                          {daysRemaining !== null && (
-                            <span className="text-gray-500 dark:text-zinc-500 font-normal">({daysRemaining > 0 ? `${daysRemaining}d left` : "Expired"})</span>
-                          )}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                )}
+                </Button>
               </div>
-                  )}
-          </CardContent>
-        </Card>
-      </div>
+            </form>
+          </DialogContent>
+        </Dialog>
 
-      <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-        <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-white border border-gray-200 shadow-2xl rounded-brand dark:bg-card dark:border-white/10">
-          <DialogHeader className="p-6 border-b border-gray-100 bg-gray-50 dark:border-white/10 dark:bg-white/5">
-            <div className="flex items-start gap-4">
-              <div className="w-12 h-12 rounded-xl border border-red-100 dark:border-zinc-800 bg-red-50 text-pup-maroon dark:text-primary shadow-sm flex items-center justify-center shrink-0 dark:bg-red-950/30 dark:text-primary dark:shadow-none">
-                <i className="ph-duotone ph-pencil-line text-xl"></i>
-              </div>
+        {/* 8. Dialog: No Digital Copy Warning */}
+        <Dialog open={fileWarningOpen} onOpenChange={setFileWarningOpen}>
+          <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-white border border-gray-200 shadow-2xl rounded-2xl dark:bg-card dark:border-white/10">
+            <DialogHeader className="p-6 bg-white dark:bg-card border-none pb-0">
               <div className="min-w-0">
-                <DialogTitle className="text-lg font-semibold tracking-tight text-gray-900 dark:text-zinc-50">New Alumni Request</DialogTitle>
-                <DialogDescription className="text-sm font-medium text-gray-600 mt-1 dark:text-zinc-300">
-                  Enter the student number and document type.
+                <DialogTitle className="text-[16px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
+                  No Digital Copy
+                </DialogTitle>
+                <DialogDescription className="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-1">
+                  Document not yet scanned. Check physical storage.
                 </DialogDescription>
               </div>
-            </div>
-          </DialogHeader>
-          <form onSubmit={handleCreate}>
-            <div className="p-6 space-y-4">
-              {selectedStudent ? (
-                <div className="rounded-brand border border-red-100 bg-red-50/50 p-4 relative animate-in fade-in zoom-in-95 duration-fast dark:border-white/10 dark:bg-red-950/20">
-                  <button
-                    type="button"
-                    className="absolute top-2.5 right-2.5 text-gray-400 hover:text-gray-600 transition-colors bg-white hover:bg-gray-100 border border-gray-200 rounded-full w-5 h-5 flex items-center justify-center shadow-xs dark:bg-zinc-800 dark:border-white/10 dark:text-zinc-300"
-                    onClick={() => {
-                      setSelectedStudent(null);
-                      setCreateStudentNo("");
-                    }}
-                  >
-                    <i className="ph-bold ph-x text-[10px]"></i>
-                  </button>
-                  <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 rounded-full bg-pup-maroon/10 text-pup-maroon flex items-center justify-center shrink-0 dark:bg-pup-maroon/20">
-                      <i className="ph-bold ph-user-focus text-lg"></i>
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="font-semibold text-gray-900 text-sm truncate dark:text-zinc-50">{selectedStudent.name}</div>
-                      <div className="text-xs text-gray-500 mt-0.5 dark:text-zinc-400">{selectedStudent.studentNo || selectedStudent.student_no}</div>
-                      <div className="text-[11px] text-gray-600 mt-1 flex flex-wrap gap-x-2 gap-y-0.5 dark:text-zinc-300">
-                        <span>Course: <strong className="text-gray-800 dark:text-zinc-100">{selectedStudent.courseCode || selectedStudent.course_code || "—"}</strong></span>
-                        <span>Section: <strong className="text-gray-800 dark:text-zinc-100">{selectedStudent.section || "—"}</strong></span>
-                        <span>Year: <strong className="text-gray-800 dark:text-zinc-100">{selectedStudent.yearLevel || selectedStudent.year_level || "—"}</strong></span>
-                      </div>
-                      <div className="text-[11px] text-pup-maroon dark:text-red-500 font-semibold mt-2 flex items-center gap-1">
-                        <i className="ph-bold ph-archive-tray text-xs"></i>
-                        <span>Storage: Room {selectedStudent.room} · Cabinet {selectedStudent.cabinet} · Drawer {selectedStudent.drawer}</span>
-                      </div>
-                    </div>
-                  </div>
+            </DialogHeader>
+            <div className="p-6 pt-4 space-y-4">
+              <div className="space-y-3 text-sm">
+                <div className="rounded-xl border border-amber-200 bg-amber-50/50 p-3.5 text-xs text-amber-800 dark:border-amber-950/40 dark:bg-amber-950/10">
+                  Check physical file in archives before releasing.
                 </div>
-              ) : (
-                <div className="space-y-4">
-                  <div className="relative">
-                    <label className="text-xs font-semibold text-gray-700 dark:text-zinc-200">
-                      Search Student (Name or Number)
-                    </label>
-                    <div className="relative mt-1.5">
-                      <i className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
-                      <Input
-                        className="pl-9 bg-white border-gray-300 rounded-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-gray-300 dark:bg-zinc-900 dark:border-zinc-800 dark:focus-visible:border-zinc-700"
-                        value={studentSearch}
-                        onChange={(e) => setStudentSearch(e.target.value)}
-                        placeholder="Type to search by student name or number..."
-                      />
-                    </div>
-                    {studentSuggestions.length > 0 && (
-                      <div className="absolute z-50 left-0 right-0 mt-1 rounded-brand border border-gray-200 bg-white overflow-hidden shadow-lg animate-in fade-in slide-in-from-top-1 duration-fast dark:bg-zinc-900 dark:border-zinc-800">
-                        {studentSuggestions.map((s) => {
-                          const sn = String(s?.studentNo || s?.student_no || "");
-                          return (
-                            <button
-                              key={sn}
-                              type="button"
-                              className="w-full text-left px-3 py-2 border-b last:border-b-0 border-gray-100 hover:bg-red-50/50 transition-colors group flex flex-col gap-0.5 dark:border-zinc-800 dark:hover:bg-zinc-800/50"
-                              onClick={() => {
-                                setSelectedStudent(s);
-                                setCreateStudentNo(sn);
-                                setStudentSearch("");
-                              }}
-                            >
-                              <div className="text-sm font-semibold text-gray-900 dark:text-zinc-100 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors">
-                                {s?.name}
-                              </div>
-                              <div className="text-[10px] text-gray-500 dark:text-zinc-400 flex items-center gap-1.5">
-                                <span>{sn}</span>
-                                <span className="text-gray-300 dark:text-zinc-700">•</span>
-                                <span>{s?.courseCode || s?.course_code || "—"} - {s?.section || "—"}</span>
-                              </div>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    )}
+                {studentForRequest || detail?.room ? (
+                  <div className="rounded-xl p-3 bg-white dark:bg-zinc-800/60 border border-gray-200 dark:border-white/10 text-xs font-semibold text-pup-maroon dark:text-red-400">
+                    Room {detail?.room || studentForRequest?.room} · Cabinet {detail?.cabinet || studentForRequest?.cabinet} · Drawer {detail?.drawer || studentForRequest?.drawer}
                   </div>
-
-                  <div>
-                    <div className="flex items-center justify-between">
-                      <label className="text-xs font-semibold text-gray-700 dark:text-zinc-200">
-                        Or Enter Custom Student Number
-                      </label>
-                      <span className="text-[10px] text-gray-400 font-semibold">If student record is missing</span>
-                    </div>
-                    <Input
-                      className="mt-1.5 bg-white border-gray-300 rounded-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-gray-300 dark:bg-zinc-900 dark:border-zinc-800 dark:focus-visible:border-zinc-700"
-                      value={createStudentNo}
-                      onChange={(e) => setCreateStudentNo(e.target.value)}
-                      placeholder="202X-XXXXX-MN-0"
-                    />
-                  </div>
-                </div>
-              )}
-              <div>
-                <label className="text-xs font-semibold text-gray-700 dark:text-zinc-200">
-                  Document Type
-                </label>
-                <Select
-                  className="mt-1.5 h-10 w-full rounded-brand border border-gray-300 bg-white px-3 text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-gray-300 dark:bg-card dark:border-white/10"
-                  value={createDocType}
-                  onChange={(e) => setCreateDocType(e.target.value)}
-                  required
-                >
-                  <option value="">Select type…</option>
-                  {docTypes.map((dt) => (
-                    <option key={dt} value={dt}>
-                      {dt}
-                    </option>
-                  ))}
-                </Select>
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-gray-700 dark:text-zinc-200">
-                  Notes (Optional)
-                </label>
-                <textarea
-                  className="mt-1.5 w-full min-h-[72px] rounded-brand border border-gray-300 p-2.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-gray-300 dark:bg-zinc-900 dark:border-zinc-800 dark:focus-visible:border-zinc-700"
-                  value={createNotes}
-                  onChange={(e) => setCreateNotes(e.target.value)}
-                  placeholder="Requester name, contact, purpose…"
-                />
+                ) : (
+                  <Empty className="py-6 border-red-200 bg-red-50 text-red-800 dark:bg-red-950/30">
+                    <EmptyHeader>
+                      <EmptyMedia>
+                        <i className="ph-bold ph-warning-circle text-xl text-red-600"></i>
+                      </EmptyMedia>
+                      <EmptyTitle className="text-sm">No Mapped Storage Location</EmptyTitle>
+                      <EmptyDescription className="text-red-700/70 text-xs">
+                        This requester has no physical drawer assignment.
+                      </EmptyDescription>
+                    </EmptyHeader>
+                  </Empty>
+                )}
               </div>
             </div>
-            <div className="p-4 border-t border-gray-100 bg-white flex flex-col-reverse sm:flex-row sm:justify-end gap-2 dark:border-white/10 dark:bg-card">
+            <div className="p-6 pt-0 border-none bg-white dark:bg-card flex justify-end items-center gap-3">
               <Button
                 type="button"
                 variant="outline"
-                className="px-5 text-sm font-semibold border-gray-300 text-gray-700 hover:bg-gray-50 rounded-brand dark:text-zinc-200 dark:hover:bg-white/10 dark:bg-card dark:border-white/10"
-                onClick={() => setCreateOpen(false)}
+                className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                onClick={() => setFileWarningOpen(false)}
               >
-                Cancel
+                Close
               </Button>
-              <Button
-                type="submit"
-                className="px-5 btn-brand-red font-semibold shadow-sm rounded-brand gap-2 flex items-center dark:shadow-none"
-                disabled={submitting}
-              >
-                <i className="ph-bold ph-plus-circle text-lg"></i>
-                {submitting ? "Saving..." : "Create Request"}
-              </Button>
-            </div>
-          </form>
-        </DialogContent>
-      </Dialog>
-      <Dialog open={fileWarningOpen} onOpenChange={setFileWarningOpen}>
-        <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-white border border-gray-200 shadow-2xl rounded-brand dark:bg-card dark:border-white/10">
-          <DialogHeader className="p-6 bg-white dark:bg-card border-none pb-0">
-            <div className="min-w-0">
-              <DialogTitle className="text-[16px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
-                No Digital Copy
-              </DialogTitle>
-              <DialogDescription className="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-1">
-                Document not yet scanned. Check physical storage.
-              </DialogDescription>
-            </div>
-          </DialogHeader>
-          <div className="p-6 pt-4 space-y-4">
-            <div className="space-y-3 text-sm">
-              <div className="rounded-brand border border-amber-250 bg-amber-50/40 p-3.5 text-[12px] text-amber-850 dark:border-amber-950/40 dark:bg-amber-950/10">
-                Check physical file before releasing.
-              </div>
-              {studentForRequest ? (
-                <div 
-                  className="rounded-[8px] p-[10px_14px] bg-white dark:bg-card text-[13px] font-normal text-pup-maroon dark:text-red-400"
-                  style={{ borderWidth: '0.5px', borderStyle: 'solid', borderColor: 'rgba(0,0,0,0.1)' }}
-                >
-                  RM {studentForRequest.room} · CAB {studentForRequest.cabinet} · DRW {studentForRequest.drawer}
-                </div>
-              ) : (
-                <Empty className="py-6 border-red-200 bg-red-50 text-red-800 dark:bg-red-950/30">
-                  <EmptyHeader>
-                    <EmptyMedia>
-                      <i className="ph-bold ph-warning-circle text-xl text-red-600"></i>
-                    </EmptyMedia>
-                    <EmptyTitle className="text-sm">No Mapped Storage Location</EmptyTitle>
-                    <EmptyDescription className="text-red-700/70 text-xs">
-                      This student record has no physical drawer assignment.
-                    </EmptyDescription>
-                  </EmptyHeader>
-                </Empty>
-              )}
-            </div>
-          </div>
-          <div className="p-6 pt-0 border-none bg-white dark:bg-card flex justify-end items-center gap-4">
-            <Button
-              type="button"
-              variant="ghost"
-              className="text-[13px] font-medium text-gray-500 dark:text-zinc-400 bg-transparent hover:bg-transparent border-none shadow-none p-0 h-auto cursor-pointer"
-              onClick={() => setFileWarningOpen(false)}
-            >
-              Close
-            </Button>
 
-            {studentForRequest ? (
-              <Button
-                type="button"
-                className="flex h-[36px] items-center justify-center rounded-[8px] btn-brand-red text-[13px] font-medium text-white shadow-none! border-none! py-0 px-4 cursor-pointer"
-                onClick={() => {
-                  setFileWarningOpen(false);
-                  onLocateOnMap(studentForRequest);
-                }}
-              >
-                Check Anyway
-              </Button>
-            ) : null}
-          </div>
-        </DialogContent>
-      </Dialog>
-    </div>
+              {studentForRequest || detail?.room ? (
+                <Button
+                  type="button"
+                  className="flex h-10 items-center justify-center rounded-xl! btn-brand-red text-xs font-semibold text-white! shadow-xs border-none py-0 px-5 cursor-pointer active:scale-95"
+                  style={{ color: "#ffffff" }}
+                  onClick={() => {
+                    setFileWarningOpen(false);
+                    const target = studentForRequest || (detail?.room ? {
+                      room: detail.room,
+                      cabinet: detail.cabinet,
+                      drawer: detail.drawer,
+                      studentNo: detail.student_no,
+                      name: detail.student_name || detail.requester_name,
+                    } : null);
+                    if (target) onLocateOnMap(target);
+                  }}
+                >
+                  Locate
+                </Button>
+              ) : null}
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
     </TooltipProvider>
   );
 }

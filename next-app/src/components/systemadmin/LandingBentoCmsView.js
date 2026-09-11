@@ -258,7 +258,7 @@ export default function LandingBentoCmsView({ showToast }) {
                 onClick={() => window.open("/", "_blank")}
                 className="flex h-10 items-center justify-center rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
               >
-                View Portal
+                Preview
               </Button>
 
               <Button
@@ -267,7 +267,7 @@ export default function LandingBentoCmsView({ showToast }) {
                 onClick={() => setResetModalOpen(true)}
                 className="flex h-10 items-center justify-center rounded-xl! border border-rose-200 dark:border-rose-900/40 bg-white dark:bg-zinc-900 text-rose-600 dark:text-rose-400 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-rose-50 dark:hover:bg-rose-950/20"
               >
-                Reset Defaults
+                Reset
               </Button>
 
               <Button
@@ -282,7 +282,7 @@ export default function LandingBentoCmsView({ showToast }) {
                     Saving...
                   </>
                 ) : (
-                  "Save Changes"
+                  "Save"
                 )}
               </Button>
             </div>
@@ -1288,7 +1288,7 @@ export default function LandingBentoCmsView({ showToast }) {
         isLoading={saving}
         title="Reset Bento Grid to Defaults"
         message="Are you sure you want to reset all landing page bento grid features, SLA chips, checklist stubs, and legal commitments to default institutional branding?"
-        confirmLabel="Reset to Defaults"
+        confirmLabel="Reset"
         icon="ph-duotone ph-arrow-counter-clockwise"
         buttonIcon="ph-bold ph-arrow-counter-clockwise"
         selectedItems={[

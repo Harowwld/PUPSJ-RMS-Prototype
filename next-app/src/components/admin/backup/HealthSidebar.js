@@ -56,6 +56,7 @@ export default function HealthSidebar({
   isLoading = false,
   isManualLoading = false,
   scopeInfo = null,
+  externalDrive = null,
 }) {
   if (isLoading && !isManualLoading) {
     return (
@@ -99,7 +100,7 @@ export default function HealthSidebar({
           <div className="flex flex-col gap-3">
             <div className="flex items-center gap-3">
               {/* Total capacity badge */}
-              <div className="bg-[#1D1D1F] dark:bg-zinc-800 px-3 py-1.5 rounded-[8px] text-[14px] font-bold text-white shrink-0">
+              <div className="bg-[#1D1D1F] dark:bg-zinc-800 px-3 py-1.5 rounded-xl text-[14px] font-bold text-white shrink-0">
                 {diskTotal} GB
               </div>
               <div className="text-[13px] font-normal text-[#8E8E93] leading-none">
@@ -109,7 +110,7 @@ export default function HealthSidebar({
             </div>
 
             {/* Horizontal progress bar */}
-            <div className="w-full h-3 rounded-[6px] bg-[#F2F2F7] dark:bg-zinc-800 overflow-hidden flex">
+            <div className="w-full h-3 rounded-full bg-[#F2F2F7] dark:bg-zinc-800 overflow-hidden flex">
               <div 
                 className="bg-[#5856D6] h-full"
                 style={{ width: `${(diskUsed / diskTotal) * 100}%` }}
@@ -122,8 +123,8 @@ export default function HealthSidebar({
             {/* RAM Row */}
             <div className="flex items-center justify-between h-[44px] border-b border-black/5 dark:border-white/5">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-[8px] flex items-center justify-center bg-[#E0F2FE] text-[#0369A1] shrink-0">
-                  <i className="ti ti-cpu text-[16px]"></i>
+                <div className="w-8 h-8 rounded-xl flex items-center justify-center bg-[#E0F2FE] text-[#0369A1] shrink-0">
+                  <i className="ph-bold ph-cpu text-[16px]"></i>
                 </div>
                 <span className="text-[13px] font-medium text-[#111111] dark:text-zinc-50">RAM</span>
                 <span className="text-[13px] font-normal text-[#8E8E93]">{ramPercent}% usage</span>
@@ -140,8 +141,8 @@ export default function HealthSidebar({
             {/* CPU Row */}
             <div className="flex items-center justify-between h-[44px] border-b border-black/5 dark:border-white/5">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-[8px] flex items-center justify-center bg-[#DCFCE7] text-[#166534] shrink-0">
-                  <i className="ti ti-activity text-[16px]"></i>
+                <div className="w-8 h-8 rounded-xl flex items-center justify-center bg-[#DCFCE7] text-[#166534] shrink-0">
+                  <i className="ph-bold ph-activity text-[16px]"></i>
                 </div>
                 <span className="text-[13px] font-medium text-[#111111] dark:text-zinc-50">CPU</span>
                 <span className="text-[13px] font-normal text-[#8E8E93]">{cpuPercent}% usage</span>
@@ -158,8 +159,8 @@ export default function HealthSidebar({
             {/* Data Protection Row */}
             <div className="flex items-center justify-between h-[44px] border-b border-black/5 dark:border-white/5">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-[8px] flex items-center justify-center bg-[#CCFBF1] text-[#0F766E] shrink-0">
-                  <i className="ti ti-shield-check text-[16px]"></i>
+                <div className="w-8 h-8 rounded-xl flex items-center justify-center bg-[#CCFBF1] text-[#0F766E] shrink-0">
+                  <i className="ph-bold ph-shield-check text-[16px]"></i>
                 </div>
                 <span className="text-[13px] font-medium text-[#111111] dark:text-zinc-50">Data Protection</span>
                 <span className="text-[13px] font-normal text-[#8E8E93]">Protected</span>
@@ -169,6 +170,34 @@ export default function HealthSidebar({
                 <span className="w-[6px] h-[6px] rounded-full ml-1.5 bg-[#30D158]" />
               </div>
             </div>
+
+            {/* External Volume Row */}
+            {externalDrive && (
+              <div className="flex items-center justify-between h-[44px] border-b border-black/5 dark:border-white/5">
+                <div className="flex items-center gap-3">
+                  <div className={cn(
+                    "w-8 h-8 rounded-xl flex items-center justify-center shrink-0",
+                    externalDrive.connected ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400" : "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400"
+                  )}>
+                    <i className="ph-bold ph-hard-drives text-[16px]"></i>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-[13px] font-medium text-[#111111] dark:text-zinc-50">External Drive</span>
+                    <span className="text-[11px] font-normal text-[#8E8E93] truncate max-w-[130px]" title={externalDrive.label || "External Storage"}>
+                      {externalDrive.label || "Not Connected"}
+                    </span>
+                  </div>
+                </div>
+                <div className="flex items-center">
+                  <span className="text-[12px] font-medium text-[#111111] dark:text-zinc-50">
+                    {externalDrive.connected ? "Connected" : "Disconnected"}
+                  </span>
+                  <span 
+                    className={cn("w-[6px] h-[6px] rounded-full ml-1.5", externalDrive.connected ? "bg-[#30D158]" : "bg-[#FF9F0A]")}
+                  />
+                </div>
+              </div>
+            )}
 
             {/* Last Synced Row */}
             <div className="flex items-center justify-between h-[44px] border-b border-black/5 dark:border-white/5">
@@ -201,7 +230,7 @@ export default function HealthSidebar({
                 {scopeInfo.items.map((item, idx) => (
                   <span
                     key={idx}
-                    className="inline-flex items-center rounded-[6px] bg-indigo-50/80 px-2 py-1 text-[11px] font-medium text-indigo-700 border border-indigo-200/50 dark:bg-indigo-950/40 dark:text-indigo-300 dark:border-indigo-900/40"
+                    className="inline-flex items-center rounded-lg bg-indigo-50/80 px-2 py-1 text-[11px] font-medium text-indigo-700 border border-indigo-200/50 dark:bg-indigo-950/40 dark:text-indigo-300 dark:border-indigo-900/40"
                   >
                     {item}
                   </span>

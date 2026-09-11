@@ -594,272 +594,309 @@ export default function DigitizationComplianceTab({
         </div>
       ) : null}
 
-      {/* 2. Header and Filters Card & Table Wrapper */}
-      <div className="flex flex-col flex-1 min-h-0 gap-6 w-full">
-        <Card className="p-0 gap-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none w-full">
-          <PageHeader
-            icon="ph-chart-pie"
-            title="Compliance Analysis"
-            description="Monitor digitization completeness."
-            showBorder={false}
-            titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
-            descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
-            actions={
-              <div className="flex items-center gap-6">
-                <RefreshButton 
-                  onRefresh={() => load(true)} 
-                  isLoading={manualLoading} 
-                  title="Refresh Compliance Data"
-                />
+      {/* 2. Unified Single Card Container: Header, Filters, Target Metrics & Program Breakdown Table */}
+      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none isolate">
+        <PageHeader
+          icon="ph-chart-pie"
+          title="Compliance Analysis"
+          description="Monitor digitization completeness."
+          showBorder={false}
+          titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
+          descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
+          actions={
+            <div className="flex items-center gap-6">
+              <RefreshButton 
+                onRefresh={() => load(true)} 
+                isLoading={manualLoading} 
+                title="Refresh Compliance Data"
+              />
 
-                <div className="h-6 w-px bg-gray-200 dark:bg-zinc-800" />
+              <div className="h-6 w-px bg-gray-200 dark:bg-zinc-800" />
 
-                <div className="flex items-center gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={downloadCsv}
-                    disabled={loading || !data || isExportingCsv}
-                    className="flex h-10 items-center justify-center rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
-                  >
-                    {isExportingCsv ? (
-                      <i className="ph-bold ph-spinner animate-spin text-[16px]"></i>
-                    ) : (
-                      "Export"
-                    )}
-                  </Button>
-
-                  <Button
-                    type="button"
-                    onClick={handlePreview}
-                    disabled={loading || !data || isGeneratingPdf}
-                    className="flex h-10 items-center justify-center rounded-xl! btn-brand-red text-white font-semibold text-xs active:scale-95 disabled:opacity-50 transition-all cursor-pointer px-5 shadow-xs"
-                  >
-                    {isGeneratingPdf ? (
-                      <i className="ph-bold ph-spinner animate-spin text-[16px] flex items-center justify-center"></i>
-                    ) : (
-                      "Get Report"
-                    )}
-                  </Button>
-                </div>
-              </div>
-            }
-          />
-
-          {/* Active Filter Chips Row */}
-          {hasActiveFilters && (() => {
-            const formatChipDate = (dateStr) => {
-              if (!dateStr) return "..."
-              try {
-                return format(new Date(dateStr), "MMM d, yyyy")
-              } catch (e) {
-                return dateStr
-              }
-            }
-            return (
-              <div className="flex-none border-b border-gray-100 bg-white px-6 py-3 animate-in fade-in slide-in-from-top-1 duration-normal dark:border-white/10 dark:bg-card">
-                <div className="flex flex-wrap items-center gap-2">
-                    <span className="mr-1 text-[11px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500">
-                    Active filters:
-                    </span>
-                    {statusFilter !== "Active" && (
-                        <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
-                        Status: {statusFilter}
-                        <button
-                            onClick={() => setStatusFilter("Active")}
-                            className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
-                        >
-                            ×
-                        </button>
-                        </div>
-                    )}
-                    {courseFilter !== "" && (
-                        <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
-                        Program: {courseFilter}
-                        <button
-                            onClick={() => setCourseFilter("")}
-                            className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
-                        >
-                            ×
-                        </button>
-                        </div>
-                    )}
-                    {requireApproved && (
-                        <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
-                        Requirement: Approved Only
-                        <button
-                            onClick={() => setRequireApproved(false)}
-                            className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
-                        >
-                            ×
-                        </button>
-                        </div>
-                    )}
-                    {tableSearch && (
-                        <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
-                        Search: {tableSearch}
-                        <button
-                            onClick={() => setTableSearch("")}
-                            className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
-                        >
-                            ×
-                        </button>
-                        </div>
-                    )}
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={handleClearAll}
-                        className="h-auto text-[12px] font-medium text-gray-400 dark:text-zinc-500 border-0 bg-transparent hover:bg-transparent shadow-none p-0 hover:text-red-600 dark:hover:text-red-500 transition-colors cursor-pointer"
-                    >
-                        Clear
-                    </Button>
-                </div>
-              </div>
-            )
-          })()}
-
-          <div className="bg-white border-t border-gray-100 p-4 backdrop-blur-md dark:bg-card/50 dark:border-white/10">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-5 w-full">
-              <div className="flex flex-col gap-[4px] w-full">
-                <label className="block text-[11px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">
-                  Student Status
-                </label>
-                <Select
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                  className="h-10 rounded-xl border-[0.5px] border-gray-200 text-[13px] font-normal"
+              <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={downloadCsv}
+                  disabled={loading || !data || isExportingCsv}
+                  className="flex h-10 items-center justify-center rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
                 >
-                  <option value="Active">Active</option>
-                  <option value="All">All</option>
-                  <option value="Archived">Archived</option>
-                </Select>
-              </div>
-
-              <div className="flex flex-col gap-[4px] w-full">
-                <label className="block text-[11px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">
-                  Validation Requirement
-                </label>
-                <Select
-                  value={requireApproved ? "1" : "0"}
-                  onChange={(e) => setRequireApproved(e.target.value === "1")}
-                  className="h-10 rounded-xl border-[0.5px] border-gray-200 text-[13px] font-normal"
-                >
-                  <option value="0">All Uploads</option>
-                  <option value="1">Approved Only</option>
-                </Select>
-              </div>
-
-              <div className="flex flex-col gap-[4px] w-full">
-                <label className="block text-[11px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">
-                  Academic Program
-                </label>
-                <div className="relative w-full">
-                  <Select
-                    value={courseFilter}
-                    onChange={(e) => setCourseFilter(e.target.value)}
-                    disabled={coursesLoading}
-                    placeholder={coursesLoading ? "Loading..." : "All Programs"}
-                    className="h-10 rounded-xl border-[0.5px] border-gray-200 text-[13px] font-normal"
-                  >
-                    <option value="">All Programs</option>
-                    {courses.map((c) => (
-                      <option key={c.code || c.id} value={String(c.code || "")}>
-                        {c.code}{c.name ? ` — ${c.name}` : ""}
-                      </option>
-                    ))}
-                  </Select>
-                  {coursesLoading && (
-                    <div className="absolute right-10 top-1/2 -translate-y-1/2 pointer-events-none">
-                      <i className="ph-bold ph-spinner animate-spin text-gray-400 dark:text-zinc-500 text-xs" />
-                    </div>
+                  {isExportingCsv ? (
+                    <i className="ph-bold ph-spinner animate-spin text-[16px]"></i>
+                  ) : (
+                    "Export"
                   )}
-                </div>
+                </Button>
+
+                <Button
+                  type="button"
+                  onClick={handlePreview}
+                  disabled={loading || !data || isGeneratingPdf}
+                  className="flex h-10 items-center justify-center rounded-xl! btn-brand-red text-white font-semibold text-xs active:scale-95 disabled:opacity-50 transition-all cursor-pointer px-5 shadow-xs"
+                >
+                  {isGeneratingPdf ? (
+                    <i className="ph-bold ph-spinner animate-spin text-[16px] flex items-center justify-center"></i>
+                  ) : (
+                    "Download"
+                  )}
+                </Button>
               </div>
             </div>
+          }
+        />
+
+        {/* Navigation Toolbar */}
+        <div className="border-t border-gray-100 dark:border-white/10 p-5 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
+          {/* Student Status Filter Line Tabs */}
+          <div className="flex items-center gap-6 shrink-0 select-none overflow-x-auto">
+            <button
+              type="button"
+              onClick={() => setStatusFilter("Active")}
+              className={cn(
+                "relative h-9 flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent whitespace-nowrap",
+                statusFilter === "Active"
+                  ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
+                  : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
+              )}
+            >
+              Active
+            </button>
+            <button
+              type="button"
+              onClick={() => setStatusFilter("All")}
+              className={cn(
+                "relative h-9 flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent whitespace-nowrap",
+                statusFilter === "All"
+                  ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
+                  : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
+              )}
+            >
+              All Students
+            </button>
+            <button
+              type="button"
+              onClick={() => setStatusFilter("Archived")}
+              className={cn(
+                "relative h-9 flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent whitespace-nowrap",
+                statusFilter === "Archived"
+                  ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
+                  : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
+              )}
+            >
+              Archived
+            </button>
           </div>
 
-          {/* Calculation block skeletons or data */}
-          <div className="p-6 border-t border-gray-100 dark:border-white/10">
-            {loading && !data ? (
-              <ComplianceCalcSkeleton />
-            ) : !error && data ? (() => {
-              const percent = summary?.totalExpectedDocsCount > 0 
-                ? Math.min(100, Math.round((summary?.totalDigitizedDocsCount / summary?.totalExpectedDocsCount) * 100)) 
-                : 0;
-              return (
-                <div className={cn(
-                  "transition-all duration-slow", 
-                  (loading && !manualLoading) ? "opacity-40 blur-[1px] grayscale-[0.1]" : "opacity-100"
-                )}>
-                  <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8 py-4 w-full bg-transparent border-0">
-                    
-                    {/* Context & Formula */}
-                    <div className="flex-1">
-                      <div className="flex items-start gap-3">
-                        <i className="ph-bold ph-target text-[16px] text-gray-400 dark:text-zinc-500 shrink-0 mt-1" />
-                        <div>
-                          <h3 className="text-[14px] font-semibold text-gray-900 tracking-[-0.01em] dark:text-zinc-50 m-0">
-                            Digitization Target
-                          </h3>
-                          <div className="text-[10px] font-medium text-gray-400 dark:text-zinc-500 tracking-[0.05em] uppercase mt-[2px]">
-                            Requirement Basis
-                          </div>
-                          <p className="text-[12px] font-normal text-gray-500 dark:text-zinc-400 max-w-xl mt-[6px] mb-0">
-                            {meta?.definitions?.expectedCountFormula || "All required documents based on program configuration."}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
+          {/* Search, Academic Program, and Validation Controls */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 flex-wrap">
+            {/* Search */}
+            <div className="relative flex-1 sm:w-64 min-w-[200px] group">
+              <i className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-xs pointer-events-none"></i>
+              <Input
+                type="text"
+                placeholder="Search Program"
+                className="pl-8 pr-16 h-9 text-xs w-full bg-white dark:bg-zinc-800 border border-gray-200 dark:border-white/10 rounded-xl text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
+                value={tableSearch}
+                onChange={(e) => setTableSearch(e.target.value)}
+              />
+              <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] font-mono text-gray-400 dark:text-zinc-500">
+                {sortedByCourse.length > 0 ? `${sortedByCourse.length} results` : "0 results"}
+              </div>
+            </div>
 
-                    {/* Progress Metrics Box */}
-                    <div className="w-full lg:w-[400px] shrink-0">
-                      <div className="flex items-end justify-between mb-2">
-                        <div className="flex flex-col">
-                          <span className="text-[10px] font-medium text-gray-400 dark:text-zinc-500 tracking-[0.05em] mb-1">
-                            Documents Digitized
-                          </span>
-                          <div className="flex items-baseline gap-1">
-                            <span className="text-[28px] font-semibold text-gray-900 tracking-[-0.01em] dark:text-zinc-50">
-                              {summary?.totalDigitizedDocsCount?.toLocaleString() || 0}
-                            </span>
-                            <span className="text-[28px] font-semibold text-gray-400 dark:text-zinc-500 tracking-[-0.01em]">
-                              / {summary?.totalExpectedDocsCount?.toLocaleString() || 0}
-                            </span>
-                          </div>
+            {/* Academic Program Select */}
+            <div className="w-[180px]">
+              <Select
+                value={courseFilter}
+                onChange={(e) => setCourseFilter(e.target.value)}
+                disabled={coursesLoading}
+                className="h-9 rounded-xl border border-gray-200 text-xs font-normal bg-white dark:bg-zinc-800 dark:border-white/10"
+              >
+                <option value="">All Programs</option>
+                {courses.map((c) => (
+                  <option key={c.code || c.id} value={String(c.code || "")}>
+                    {c.code}{c.name ? ` — ${c.name}` : ""}
+                  </option>
+                ))}
+              </Select>
+            </div>
+
+            {/* Validation Requirement Segmented Control */}
+            <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-gray-200/60 dark:border-white/5">
+              <button
+                type="button"
+                onClick={() => setRequireApproved(false)}
+                className={cn(
+                  "px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all cursor-pointer whitespace-nowrap",
+                  !requireApproved
+                    ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
+                    : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
+                )}
+              >
+                All Uploads
+              </button>
+              <button
+                type="button"
+                onClick={() => setRequireApproved(true)}
+                className={cn(
+                  "px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all cursor-pointer whitespace-nowrap",
+                  requireApproved
+                    ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
+                    : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
+                )}
+              >
+                Approved Only
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Active Filter Chips Row */}
+        {hasActiveFilters && (
+          <div className="flex-none border-t border-gray-100 dark:border-white/10 bg-white dark:bg-card px-6 py-3 animate-in fade-in slide-in-from-top-1 duration-normal">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="mr-1 text-[11px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500">
+                Active filters:
+              </span>
+              {statusFilter !== "Active" && (
+                <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
+                  Status: {statusFilter}
+                  <button
+                    onClick={() => setStatusFilter("Active")}
+                    className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
+                  >
+                    ×
+                  </button>
+                </div>
+              )}
+              {courseFilter !== "" && (
+                <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
+                  Program: {courseFilter}
+                  <button
+                    onClick={() => setCourseFilter("")}
+                    className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
+                  >
+                    ×
+                  </button>
+                </div>
+              )}
+              {requireApproved && (
+                <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
+                  Requirement: Approved Only
+                  <button
+                    onClick={() => setRequireApproved(false)}
+                    className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
+                  >
+                    ×
+                  </button>
+                </div>
+              )}
+              {tableSearch && (
+                <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
+                  Search: {tableSearch}
+                  <button
+                    onClick={() => setTableSearch("")}
+                    className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
+                  >
+                    ×
+                  </button>
+                </div>
+              )}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleClearAll}
+                className="h-auto text-[12px] font-medium text-gray-400 dark:text-zinc-500 border-0 bg-transparent hover:bg-transparent shadow-none p-0 hover:text-red-600 dark:hover:text-red-500 transition-colors cursor-pointer"
+              >
+                Clear
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Calculation block skeletons or data */}
+        <div className="p-6 border-t border-gray-100 dark:border-white/10">
+          {loading && !data ? (
+            <ComplianceCalcSkeleton />
+          ) : !error && data ? (() => {
+            const percent = summary?.totalExpectedDocsCount > 0 
+              ? Math.min(100, Math.round((summary?.totalDigitizedDocsCount / summary?.totalExpectedDocsCount) * 100)) 
+              : 0;
+            return (
+              <div className={cn(
+                "transition-all duration-slow", 
+                (loading && !manualLoading) ? "opacity-40 blur-[1px] grayscale-[0.1]" : "opacity-100"
+              )}>
+                <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8 py-4 w-full bg-transparent border-0">
+                  
+                  {/* Context & Formula */}
+                  <div className="flex-1">
+                    <div className="flex items-start gap-3">
+                      <i className="ph-bold ph-target text-[16px] text-gray-400 dark:text-zinc-500 shrink-0 mt-1" />
+                      <div>
+                        <h3 className="text-[14px] font-semibold text-gray-900 tracking-[-0.01em] dark:text-zinc-50 m-0">
+                          Digitization Target
+                        </h3>
+                        <div className="text-[10px] font-medium text-gray-400 dark:text-zinc-500 tracking-[0.05em] uppercase mt-[2px]">
+                          Requirement Basis
                         </div>
-                        <div className="flex flex-col items-end pb-1">
-                          <div className="text-[11px] font-medium text-emerald-600 dark:text-emerald-500 text-right">
-                            {percent}% Complete
-                          </div>
-                        </div>
-                      </div>
-                      
-                      {/* Substantial Progress Bar */}
-                      <div className="relative h-[8px] w-full overflow-hidden rounded-[4px] bg-gray-100 dark:bg-zinc-800">
-                        <div 
-                          className="absolute top-0 left-0 h-full rounded-[4px] bg-emerald-600 dark:bg-emerald-500 transition-all duration-slow ease-standard"
-                          style={{ width: `${percent}%` }}
-                        />
+                        <p className="text-[12px] font-normal text-gray-500 dark:text-zinc-400 max-w-xl mt-[6px] mb-0">
+                          {meta?.definitions?.expectedCountFormula || "All required documents based on program configuration."}
+                        </p>
                       </div>
                     </div>
                   </div>
-                </div>
-              );
-            })() : null}
-          </div>
-        </Card>
 
-        {/* 3. Table / Empty / Error Area below in separated container */}
+                  {/* Progress Metrics Box */}
+                  <div className="w-full lg:w-[400px] shrink-0">
+                    <div className="flex items-end justify-between mb-2">
+                      <div className="flex flex-col">
+                        <span className="text-[10px] font-medium text-gray-400 dark:text-zinc-500 tracking-[0.05em] mb-1">
+                          Documents Digitized
+                        </span>
+                        <div className="flex items-baseline gap-1">
+                          <span className="text-[28px] font-semibold text-gray-900 tracking-[-0.01em] dark:text-zinc-50">
+                            {summary?.totalDigitizedDocsCount?.toLocaleString() || 0}
+                          </span>
+                          <span className="text-[28px] font-semibold text-gray-400 dark:text-zinc-500 tracking-[-0.01em]">
+                            / {summary?.totalExpectedDocsCount?.toLocaleString() || 0}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex flex-col items-end pb-1">
+                        <div className="text-[11px] font-medium text-emerald-600 dark:text-emerald-500 text-right">
+                          {percent}% Complete
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Substantial Progress Bar */}
+                    <div className="relative h-[8px] w-full overflow-hidden rounded-[4px] bg-gray-100 dark:bg-zinc-800">
+                      <div 
+                        className="absolute top-0 left-0 h-full rounded-[4px] bg-emerald-600 dark:bg-emerald-500 transition-all duration-slow ease-standard"
+                        style={{ width: `${percent}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })() : null}
+        </div>
+
+        {/* Table / Empty / Error Area embedded in single card */}
         {loading && !data ? (
-          <ComplianceTableSkeleton rowCount={6} />
+          <ComplianceTableSkeleton rowCount={6} embedded={true} />
         ) : error ? (
-          <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card p-6">
-            <Empty className="flex h-[400px] flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400">
+          <div className="flex min-h-[380px] flex-col items-center justify-center border-t border-gray-100 dark:border-white/10 bg-transparent text-center p-6">
+            <Empty className="flex flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400">
               <EmptyHeader className="flex flex-col items-center gap-0">
-                <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
-                  <i className="ph-duotone ph-warning-circle text-xl text-pup-maroon dark:text-primary" />
-                </EmptyMedia>
+                <div className="relative mb-6">
+                  <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
+                  <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
+                    <i className="ph-duotone ph-warning-circle text-3xl text-pup-maroon dark:text-primary" />
+                  </EmptyMedia>
+                </div>
                 <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">Data Unavailable</EmptyTitle>
                 <EmptyDescription className="mt-1 max-w-md text-sm font-medium text-gray-600 dark:text-zinc-300">
                   {error}
@@ -868,151 +905,139 @@ export default function DigitizationComplianceTab({
                   variant="outline" 
                   size="sm" 
                   onClick={() => load(true)}
-                  className="mt-6 flex h-10 items-center gap-2 rounded-xl border border-gray-300 bg-white px-6 text-xs font-semibold text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 tracking-wide dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10" 
+                  className="mt-6 flex h-10 items-center justify-center rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-6 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-colors hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer" 
                 >
-                  <i className={cn("ph-bold ph-arrows-clockwise", manualLoading && "animate-spin")}></i>
-                  Retry Connection
+                  Retry
                 </Button>
               </EmptyHeader>
             </Empty>
           </div>
         ) : data ? (
           <div className={cn(
-            "flex flex-1 flex-col min-h-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card", 
+            "flex flex-1 flex-col min-h-0 overflow-hidden border-t border-gray-100 dark:border-white/10", 
             (loading && !manualLoading) ? "opacity-40 blur-[1px] grayscale-[0.1]" : "opacity-100"
           )}>
-            <div className="flex items-center justify-between gap-6 p-4 bg-white border-b border-gray-200 dark:bg-card/50 dark:border-white/10">
-              <div className="flex flex-col gap-[2px]">
-                <h4 className="text-[13px] font-semibold text-gray-900 dark:text-zinc-50 tracking-[-0.01em] m-0">
+            <div className="flex items-center justify-between gap-6 px-6 py-3.5 bg-gray-50/40 dark:bg-zinc-900/30 border-b border-gray-100 dark:border-white/10">
+              <div className="flex items-center gap-2.5">
+                <h4 className="text-xs font-semibold text-gray-900 dark:text-zinc-100 tracking-[-0.01em] m-0">
                   Program Breakdown
                 </h4>
-                <span className="text-[11px] font-normal text-gray-400 dark:text-zinc-500">
-                  {sortedByCourse.length} {sortedByCourse.length === 1 ? "program" : "programs"}
+                <span className="text-[11px] font-mono text-gray-400 dark:text-zinc-500">
+                  ({sortedByCourse.length} {sortedByCourse.length === 1 ? "program" : "programs"})
                 </span>
-              </div>
-              
-              <div className="relative group w-[220px] ml-auto">
-                <i className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 transition-colors group-focus-within:text-pup-maroon dark:text-zinc-500 text-sm"></i>
-                <Input
-                  type="text"
-                  placeholder="Search course code..."
-                  className="h-10 w-full rounded-xl border-[0.5px] border-gray-200 bg-white pl-9 pr-4 text-[13px] font-normal transition-all focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 placeholder:text-gray-400 dark:border-white/10 dark:bg-card dark:text-zinc-300 dark:focus:border-primary"
-                  value={tableSearch}
-                  onChange={(e) => setTableSearch(e.target.value)}
-                />
               </div>
             </div>
 
-            <div className="flex-1 overflow-visible rounded-[inherit]">
-                {sortedByCourse.length > 0 ? (
-                  <table className="min-w-full text-sm">
-                    <thead className="sticky top-0 z-10 bg-white backdrop-blur-sm dark:bg-card">
-                      <tr className="hover:bg-transparent text-left border-b border-gray-100 dark:border-white/5">
-                        <th className="p-4 px-6">
-                          <button
-                            onClick={() => handleSort("courseCode")}
-                            className="group flex items-center text-[12px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500 transition-colors focus:outline-none"
-                          >
-                            Program <SortIndicator column="courseCode" />
-                          </button>
-                        </th>
-                        <th className="p-4 px-6 text-center">
-                          <button
-                            onClick={() => handleSort("total")}
-                            className="group mx-auto flex items-center text-[12px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500 transition-colors focus:outline-none"
-                          >
-                            Total Students <SortIndicator column="total" />
-                          </button>
-                        </th>
-                        <th className="p-4 px-6 text-center">
-                          <button
-                            onClick={() => handleSort("digitized")}
-                            className="group mx-auto flex items-center text-[12px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500 transition-colors focus:outline-none"
-                          >
-                            Fully Digitized <SortIndicator column="digitized" />
-                          </button>
-                        </th>
-                        <th className="p-4 px-6 text-right">
-                          <button
-                            onClick={() => handleSort("percent")}
-                            className="group ml-auto flex items-center text-[12px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500 transition-colors focus:outline-none"
-                          >
-                            Completeness <SortIndicator column="percent" />
-                          </button>
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-transparent">
-                      {sortedByCourse.map((row) => (
-                        <tr key={row.courseCode} className="h-[48px] border-b-[0.5px] border-gray-100 last:border-b-0 group transition-all duration-fast hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/[0.02]">
-                          <td className="p-4 px-6 text-[13px] font-medium text-gray-900 dark:text-zinc-50 tracking-[-0.01em]">
-                            {row.courseCode || "—"}
-                          </td>
-                          <td className="p-4 px-6 text-[13px] font-normal text-gray-900 dark:text-zinc-50 text-center">
-                            {row.total?.toLocaleString?.() ?? row.total}
-                          </td>
-                          <td className="p-4 px-6 text-center text-[13px] font-normal">
-                            <span className={cn(
-                              row.digitized === 0 
-                                ? "text-gray-400 dark:text-zinc-500" 
-                                : "text-gray-900 dark:text-zinc-50"
-                            )}>
-                              {row.digitized?.toLocaleString?.() ?? row.digitized}
+            <div className="flex-1 overflow-visible rounded-b-2xl">
+              {sortedByCourse.length > 0 ? (
+                <table className="min-w-full text-sm">
+                  <thead className="sticky top-0 z-10 bg-white backdrop-blur-sm dark:bg-card">
+                    <tr className="hover:bg-transparent text-left border-b border-gray-100 dark:border-white/5">
+                      <th className="p-4 px-6">
+                        <button
+                          onClick={() => handleSort("courseCode")}
+                          className="group flex items-center text-[12px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500 transition-colors focus:outline-none cursor-pointer"
+                        >
+                          Program <SortIndicator column="courseCode" />
+                        </button>
+                      </th>
+                      <th className="p-4 px-6 text-center">
+                        <button
+                          onClick={() => handleSort("total")}
+                          className="group mx-auto flex items-center text-[12px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500 transition-colors focus:outline-none cursor-pointer"
+                        >
+                          Total Students <SortIndicator column="total" />
+                        </button>
+                      </th>
+                      <th className="p-4 px-6 text-center">
+                        <button
+                          onClick={() => handleSort("digitized")}
+                          className="group mx-auto flex items-center text-[12px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500 transition-colors focus:outline-none cursor-pointer"
+                        >
+                          Fully Digitized <SortIndicator column="digitized" />
+                        </button>
+                      </th>
+                      <th className="p-4 px-6 text-right">
+                        <button
+                          onClick={() => handleSort("percent")}
+                          className="group ml-auto flex items-center text-[12px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500 transition-colors focus:outline-none cursor-pointer"
+                        >
+                          Completeness <SortIndicator column="percent" />
+                        </button>
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-transparent">
+                    {sortedByCourse.map((row) => (
+                      <tr key={row.courseCode} className="h-[48px] border-b-[0.5px] border-gray-100 dark:border-white/10 last:border-b-0 group transition-all duration-fast hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/[0.02]">
+                        <td className="p-4 px-6 text-[13px] font-medium text-gray-900 dark:text-zinc-50 tracking-[-0.01em]">
+                          {row.courseCode || "—"}
+                        </td>
+                        <td className="p-4 px-6 text-[13px] font-normal text-gray-900 dark:text-zinc-50 text-center">
+                          {row.total?.toLocaleString?.() ?? row.total}
+                        </td>
+                        <td className="p-4 px-6 text-center text-[13px] font-normal">
+                          <span className={cn(
+                            row.digitized === 0 
+                              ? "text-gray-400 dark:text-zinc-500" 
+                              : "text-gray-900 dark:text-zinc-50"
+                          )}>
+                            {row.digitized?.toLocaleString?.() ?? row.digitized}
+                          </span>
+                          <span className="text-[10px] text-gray-400 font-semibold ml-1.5 opacity-0 group-hover:opacity-100 dark:text-zinc-500">
+                            ({row.fullyDigitizedRate}%)
+                          </span>
+                        </td>
+                        <td className="p-4 px-6 text-right">
+                          <div className="flex items-center justify-end gap-[8px]">
+                            <span className="text-[13px] font-medium text-gray-900 dark:text-zinc-50">
+                              {row.percent != null ? `${row.percent}%` : "0%"}
                             </span>
-                            <span className="text-[10px] text-gray-400 font-semibold ml-1.5 opacity-0 group-hover:opacity-100 dark:text-zinc-505">
-                              ({row.fullyDigitizedRate}%)
-                            </span>
-                          </td>
-                          <td className="p-4 px-6 text-right">
-                            <div className="flex items-center justify-end gap-[8px]">
-                              <span className="text-[13px] font-medium text-gray-900 dark:text-zinc-50">
-                                {row.percent != null ? `${row.percent}%` : "0%"}
-                              </span>
-                              <div className="w-[80px] h-[4px] rounded-[2px] bg-gray-100 overflow-hidden hidden sm:block dark:bg-zinc-800">
-                                <div
-                                  className="h-full bg-emerald-600 dark:bg-emerald-500"
-                                  style={{ width: `${Math.min(100, row.percent || 0)}%` }}
-                                />
-                              </div>
+                            <div className="w-[80px] h-[4px] rounded-[2px] bg-gray-100 overflow-hidden hidden sm:block dark:bg-zinc-800">
+                              <div
+                                className="h-full bg-emerald-600 dark:bg-emerald-500"
+                                style={{ width: `${Math.min(100, row.percent || 0)}%` }}
+                              />
                             </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                ) : (
-                  <Empty className="flex h-[320px] flex-col items-center justify-center border-0 bg-transparent text-center">
-                    <EmptyHeader className="flex flex-col items-center gap-0">
-                      <div className="relative mb-6">
-                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-36 h-36 rounded-full bg-gray-100/50 dark:bg-zinc-800/30"></div>
-                        <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
-                          <i className="ph-duotone ph-magnifying-glass text-xl text-gray-300 dark:text-zinc-600"></i>
-                        </EmptyMedia>
-                      </div>
-                      <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">No data found</EmptyTitle>
-                      <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400">
-                        {tableSearch 
-                          ? `No results found for "${tableSearch}".` 
-                          : "No student records available to analyze."}
-                      </EmptyDescription>
-                      {hasActiveFilters && (
-                          <Button 
-                              variant="outline" 
-                              size="sm" 
-                              onClick={handleClearAll}
-                              className="mt-6 flex h-10 items-center gap-3 rounded-xl border border-gray-300 bg-white px-6 text-xs font-semibold text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 tracking-wide dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
-                          >
-                              <i className="ph-bold ph-arrow-counter-clockwise"></i>
-                              CLEAR ALL FILTERS
-                          </Button>
-                      )}
-                    </EmptyHeader>
-                  </Empty>
-                )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              ) : (
+                <Empty className="flex h-[320px] flex-col items-center justify-center border-0 bg-transparent text-center">
+                  <EmptyHeader className="flex flex-col items-center gap-0">
+                    <div className="relative mb-6">
+                      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-36 h-36 rounded-full bg-gray-100/50 dark:bg-zinc-800/30"></div>
+                      <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
+                        <i className="ph-duotone ph-magnifying-glass text-xl text-gray-300 dark:text-zinc-600"></i>
+                      </EmptyMedia>
+                    </div>
+                    <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">No data found</EmptyTitle>
+                    <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400">
+                      {tableSearch 
+                        ? `No results found for "${tableSearch}".` 
+                        : "No student records available to analyze."}
+                    </EmptyDescription>
+                    {hasActiveFilters && (
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={handleClearAll}
+                        className="mt-6 flex h-10 items-center gap-3 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-6 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-colors hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 tracking-wide cursor-pointer"
+                      >
+                        <i className="ph-bold ph-arrow-counter-clockwise"></i>
+                        Clear
+                      </Button>
+                    )}
+                  </EmptyHeader>
+                </Empty>
+              )}
             </div>
           </div>
         ) : null}
-      </div>
+      </Card>
 
       {/* Report Preview Modal */}
       <Dialog
@@ -1136,7 +1161,7 @@ export default function DigitizationComplianceTab({
                 disabled={!pdfBlobUrl}
                 className="h-10 px-5 rounded-xl! text-xs font-semibold text-white btn-brand-red active:scale-95 disabled:opacity-50 transition-all cursor-pointer shadow-xs"
               >
-                Save to Device
+                Download
               </Button>
             </div>
           </div>

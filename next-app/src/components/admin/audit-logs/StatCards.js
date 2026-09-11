@@ -81,19 +81,14 @@ export default function StatCards({ isLoading, logStats }) {
     }
   };
 
-  if (isLoading && !logStats) {
+  if (isLoading || !logStats) {
     return <KpiStatCardsSkeleton count={3} />;
   }
-
-  if (!logStats) return null;
 
   return (
     <div
       ref={containerRef}
-      className={cn(
-        "grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 items-start relative z-20 transition-all duration-500",
-        isLoading ? "opacity-40 blur-[1px] grayscale-[0.1]" : "opacity-100"
-      )}
+      className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 items-start relative z-20"
     >
       {stats.map((stat, i) => {
         const classes = getColorClasses(stat.color);

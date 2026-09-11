@@ -242,8 +242,8 @@ export default function RecognitionTemplatesTab({ showToast }) {
   return (
     <div className="space-y-5 p-7">
       <div>
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-zinc-50">OCR Configuration</h2>
-        <p className="mt-1 text-sm text-gray-500 dark:text-zinc-400">Select a document type, choose a name field, load a PSA file, and drag over that field. Repeat for each field, then save the template.</p>
+        <h2 className="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">OCR Configuration</h2>
+        <p className="mt-[4px] text-[13px] font-normal text-gray-500 dark:text-zinc-400">Select a document type, choose a name field, load a PSA file, and drag over that field. Repeat for each field, then save the template.</p>
       </div>
       <div className="grid gap-5 xl:grid-cols-[280px_minmax(0,1fr)_280px]">
         <div className="space-y-4 rounded-2xl border border-gray-200 bg-gray-50 p-4 dark:border-white/10 dark:bg-white/5">
@@ -255,7 +255,7 @@ export default function RecognitionTemplatesTab({ showToast }) {
           <label className="block text-xs font-semibold uppercase text-gray-500">Document</label>
           <input ref={sampleInputRef} type="file" accept="application/pdf,image/*" onChange={(event) => handleSample(event.target.files?.[0])} className="sr-only" />
           <Button type="button" variant="outline" className="w-full h-10 rounded-xl justify-center border-pup-maroon text-pup-maroon text-xs font-semibold active:scale-95 transition-all shadow-xs" onClick={chooseSampleFile}>
-            {sampleFile ? "Replace Document" : "Upload Document"}
+            {sampleFile ? "Replace" : "Upload"}
           </Button>
           {sampleFile ? <p className="truncate text-xs text-gray-500">Uploaded: {sampleFile.name}</p> : <p className="text-xs text-gray-500">Upload a representative document before highlighting fields.</p>}
           <div>
@@ -278,7 +278,7 @@ export default function RecognitionTemplatesTab({ showToast }) {
             <span className="font-semibold text-gray-900 dark:text-zinc-50">Selected field:</span> {[WHOLE_FIELD, ...FIELDS].find(([key]) => key === activeField)?.[1] || "Choose a recognition method"}
           </div>
           <div className="border-t border-gray-200 pt-4 dark:border-white/10">
-            <Button className="w-full h-10 rounded-xl btn-brand-red text-white text-xs font-semibold shadow-xs cursor-pointer active:scale-95 transition-all border-0" onClick={saveTemplate} disabled={saving || loading}>{saving ? "Saving..." : "Save Template"}</Button>
+            <Button className="w-full h-10 rounded-xl btn-brand-red text-white text-xs font-semibold shadow-xs cursor-pointer active:scale-95 transition-all border-0" onClick={saveTemplate} disabled={saving || loading}>{saving ? "Saving..." : "Save"}</Button>
           </div>
           <label className="block text-xs font-semibold uppercase text-gray-500">Template name</label>
           <input className="h-10 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-3 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon" value={templateName} onChange={(event) => setTemplateName(event.target.value)} />
@@ -299,7 +299,7 @@ export default function RecognitionTemplatesTab({ showToast }) {
             <i className="ph-duotone ph-file-arrow-up text-4xl text-pup-maroon" />
             <p>Load a representative PSA PDF or image to begin plotting.</p>
             <Button type="button" className="h-10 px-5 text-xs font-semibold rounded-xl btn-brand-red text-white shadow-xs active:scale-95 transition-all border-0 cursor-pointer" onClick={chooseSampleFile}>
-              Load PSA File
+              Upload
             </Button>
             {!documentTypeId && <p className="text-xs text-gray-400">You can load the file now; select the document type before saving.</p>}
           </div>}
@@ -324,7 +324,7 @@ export default function RecognitionTemplatesTab({ showToast }) {
         open={Boolean(deleteTemplateId)}
         title="Delete OCR configuration"
         message="This permanently deletes the saved OCR configuration. This action cannot be undone."
-        confirmLabel="Delete permanently"
+        confirmLabel="Delete"
         onCancel={() => setDeleteTemplateId(null)}
         onConfirm={deleteTemplate}
       />

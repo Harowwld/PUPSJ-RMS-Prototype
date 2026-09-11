@@ -345,9 +345,9 @@ export default function AutoBackupSchedule({ showToast, scope = "system", embedd
                   value={schedule.dayOfWeek}
                   onChange={handleDayChange}
                   disabled={isSaving}
-                  className="h-9 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-xs font-semibold text-gray-700 dark:text-zinc-200 cursor-pointer shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
+                  className="h-9 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-xs font-normal text-gray-700 dark:text-zinc-200 cursor-pointer shadow-none hover:bg-gray-50 dark:hover:bg-zinc-700"
                   menuClassName="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-900 shadow-2xl p-1.5"
-                  optionClassName="rounded-lg text-xs font-semibold py-1.5 px-2.5 hover:bg-gray-100 dark:hover:bg-zinc-800"
+                  optionClassName="rounded-lg text-xs font-normal py-1.5 px-2.5 hover:bg-gray-100 dark:hover:bg-zinc-800"
                 >
                   {DAY_LABELS.map((day, idx) => (
                     <option key={idx} value={idx}>
@@ -376,9 +376,9 @@ export default function AutoBackupSchedule({ showToast, scope = "system", embedd
                 value={schedule.time}
                 onChange={handleTimeChange}
                 disabled={isSaving}
-                className="h-9 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-xs font-semibold text-gray-700 dark:text-zinc-200 cursor-pointer shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
+                className="h-9 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-xs font-normal text-gray-700 dark:text-zinc-200 cursor-pointer shadow-none hover:bg-gray-50 dark:hover:bg-zinc-700"
                 menuClassName="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-900 shadow-2xl p-1.5"
-                optionClassName="rounded-lg text-xs font-semibold py-1.5 px-2.5 hover:bg-gray-100 dark:hover:bg-zinc-800"
+                optionClassName="rounded-lg text-xs font-normal py-1.5 px-2.5 hover:bg-gray-100 dark:hover:bg-zinc-800"
               >
                 {HOUR_OPTIONS.map((opt) => (
                   <option key={opt.value} value={opt.value}>

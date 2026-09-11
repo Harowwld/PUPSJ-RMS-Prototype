@@ -282,7 +282,7 @@ export default function CoursesTab({
       message: showArchived 
         ? "These degree programs will be visible for new records again."
         : "These degree programs will be hidden from new registrations but their history will be preserved.",
-      confirmLabel: showArchived ? "Restore Selected" : "Archive Selected",
+      confirmLabel: showArchived ? "Restore" : "Archive",
       variant: showArchived ? "success" : "danger",
       buttonIcon: showArchived ? "ph-bold ph-archive-restore" : "ph-bold ph-archive",
       icon: showArchived ? "ph-duotone ph-archive-restore" : "ph-duotone ph-archive",
@@ -306,7 +306,8 @@ export default function CoursesTab({
         <PageHeader
           icon="ph-books"
           showBorder={false}
-          titleClassName="text-[15px]"
+          titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
+          descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
           title={
             <div className="flex items-center gap-[6px]">
               Degree Programs
@@ -323,34 +324,32 @@ export default function CoursesTab({
       </div>
 
       <div className="font-inter">
-        <div className="flex select-none items-center justify-between gap-3 border-b-[0.5px] border-black/10 dark:border-white/10 pb-4">
+        <div className="flex select-none items-center justify-between gap-3 border-b border-gray-100 dark:border-white/10 pb-4">
           {/* Active / Archived Tabs */}
-          <div className="flex items-center gap-[24px]">
+          <div className="flex items-center gap-6 select-none">
             <button
               type="button"
               onClick={() => setShowArchived(false)}
-              className={`flex items-center justify-center text-[13px] pb-[10px] -mb-[17px] border-b-2 border-t-0 border-x-0 rounded-none cursor-pointer bg-transparent focus:outline-none transition-colors ${
+              className={cn(
+                "relative pb-4 -mb-[17px] text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent",
                 !showArchived
-                  ? "border-black text-black dark:border-zinc-50 dark:text-zinc-50 font-semibold"
-                  : "border-transparent text-[#8E8E93] hover:text-[#111111] dark:hover:text-zinc-200 font-normal"
-              }`}
+                  ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
+                  : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
+              )}
             >
-              <span className="whitespace-nowrap tracking-wide">
-                Active ({courses.filter((c) => c.status !== "Archived").length})
-              </span>
+              Active ({courses.filter((c) => c.status !== "Archived").length})
             </button>
             <button
               type="button"
               onClick={() => setShowArchived(true)}
-              className={`flex items-center justify-center text-[13px] pb-[10px] -mb-[17px] border-b-2 border-t-0 border-x-0 rounded-none cursor-pointer bg-transparent focus:outline-none transition-colors ${
+              className={cn(
+                "relative pb-4 -mb-[17px] text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent",
                 showArchived
-                  ? "border-black text-black dark:border-zinc-50 dark:text-zinc-50 font-semibold"
-                  : "border-transparent text-[#8E8E93] hover:text-[#111111] dark:hover:text-zinc-200 font-normal"
-              }`}
+                  ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
+                  : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
+              )}
             >
-              <span className="whitespace-nowrap tracking-wide">
-                Archived ({courses.filter((c) => c.status === "Archived").length})
-              </span>
+              Archived ({courses.filter((c) => c.status === "Archived").length})
             </button>
           </div>
 
@@ -358,17 +357,33 @@ export default function CoursesTab({
           <div className="flex flex-1 items-center justify-end gap-3 min-w-[300px] select-none">
             <div className="flex-1 max-w-md relative group">
               <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                <i className="ph-bold ph-magnifying-glass text-gray-400 transition-colors group-focus-within:text-pup-maroon dark:text-zinc-500 text-sm"></i>
+                <i className="ph-bold ph-magnifying-glass text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm"></i>
               </div>
               <Input
                 type="text"
                 placeholder="Search code or program name..."
-                className="h-10 w-full rounded-xl border-[0.5px] border-black/15 bg-white pl-9 pr-20 text-[13px] font-normal placeholder:text-[#8E8E93] dark:border-white/15 dark:bg-card focus-visible:ring-0 focus-visible:border-black/30"
+                className="h-10 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 pl-9 pr-24 text-xs font-normal placeholder:text-gray-400 dark:placeholder:text-zinc-500 text-gray-900 dark:text-zinc-100 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
                 value={localSearch}
                 onChange={(e) => setLocalSearch(e.target.value)}
               />
-              <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[12px] font-normal text-gray-400 dark:text-zinc-500">
-                {filteredCoursesFull.length > 0 ? `${filteredCoursesFull.length} results` : "0 results"}
+              <div className="absolute inset-y-0 right-3 flex items-center gap-2">
+                {localSearch && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setLocalSearch("")
+                      setCourseSearch("")
+                      setPageCourse(1)
+                    }}
+                    className="text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none text-xs"
+                    title="Clear search"
+                  >
+                    <i className="ph-bold ph-x" />
+                  </button>
+                )}
+                <span className="text-[12px] font-normal text-gray-400 dark:text-zinc-500 pointer-events-none">
+                  {filteredCoursesFull.length > 0 ? `${filteredCoursesFull.length} results` : "0 results"}
+                </span>
               </div>
             </div>
 
@@ -753,16 +768,15 @@ export default function CoursesTab({
                                     setCourseSearch("")
                                     setLocalSearch("")
                                   }}
-                                  className="mt-4 flex h-9 items-center gap-2 rounded-xl border border-gray-300 bg-white px-4 text-xs font-semibold text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
+                                  className="mt-4 h-10 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                                 >
-                                  <i className="ph-bold ph-archive-restore"></i>
-                                  CLEAR SEARCH
+                                  Clear
                                 </Button>
                               ) : (
                                 !showArchived && (
                                   <Button
                                     onClick={() => setIsAddCourseOpen(true)}
-                                    className="mt-4 flex h-10 items-center justify-center rounded-xl! btn-brand-red px-8 font-semibold text-xs text-white shadow-sm active:scale-95 transition-all cursor-pointer"
+                                    className="mt-4 h-10 rounded-xl btn-brand-red px-5 text-xs font-semibold text-white shadow-xs active:scale-95 transition-all cursor-pointer border-0"
                                   >
                                     Add
                                   </Button>
@@ -779,54 +793,55 @@ export default function CoursesTab({
             </div>
 
         {filteredCoursesFull.length > 0 && (
-          <div className="flex items-center justify-between border-t border-gray-100 bg-white p-6 px-8 dark:border-white/10 dark:bg-card">
-            <div className="flex items-center gap-8">
-              <div className="flex items-center gap-6 text-[12px] font-normal text-gray-400 dark:text-zinc-500">
-                <span>
-                  Showing {filteredCourses.length} of {filteredCoursesFull.length}
-                </span>
-                <div className="flex items-center gap-1.5 border-l border-gray-200 pl-6 dark:border-white/10">
-                  <span className="text-[12px] text-gray-400 dark:text-zinc-500">Rows:</span>
-                  <div className="flex items-center gap-1">
-                    {[10, 20, 50, 100].map((size) => (
-                      <button
-                        key={size}
-                        type="button"
-                        onClick={() => handleItemsPerPageChange({ target: { value: size } })}
-                        className={`px-2 py-0.5 rounded-[4px] text-[12px] font-normal cursor-pointer transition-colors border-0 ${
-                          itemsPerPage === size
-                            ? "bg-gray-100 text-[#111111] font-medium dark:bg-white/10 dark:text-zinc-50"
-                            : "bg-transparent text-gray-450 dark:text-zinc-550 hover:text-gray-700 dark:hover:text-zinc-300"
-                        }`}
-                      >
-                        {size}
-                      </button>
-                    ))}
-                  </div>
-                </div>
+          <div className="flex items-center justify-between border-t border-[#e5e5ea] dark:border-[#3a3a3c] bg-white dark:bg-[#1c1c1e] p-4 px-6 rounded-b-2xl mt-auto">
+            <div className="flex items-center gap-6 text-xs text-gray-500 dark:text-zinc-400 select-none">
+              <span>
+                Showing {filteredCourses.length} of {filteredCoursesFull.length.toLocaleString()}
+              </span>
+              <div className="flex items-center gap-2">
+                <span>Rows:</span>
+                {[10, 20, 50, 100].map((size) => (
+                  <button
+                    key={size}
+                    type="button"
+                    onClick={() => handleItemsPerPageChange({ target: { value: size } })}
+                    className={cn(
+                      "px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer",
+                      itemsPerPage === size
+                        ? "bg-gray-100 dark:bg-zinc-800 text-gray-900 dark:text-zinc-100"
+                        : "text-gray-400 hover:text-gray-600 dark:hover:text-zinc-200"
+                    )}
+                  >
+                    {size}
+                  </button>
+                ))}
               </div>
             </div>
 
-            <div className="flex shrink-0 items-center gap-3">
-              <button
+            <div className="flex items-center gap-2 select-none">
+              <Button
+                variant="ghost"
+                size="sm"
                 disabled={pageCourse <= 1}
                 onClick={() => setPageCourse((p) => Math.max(1, p - 1))}
-                className="h-8 bg-transparent text-[12px] font-normal text-gray-400 hover:text-pup-maroon dark:text-zinc-500 dark:hover:text-zinc-200 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer border-0 p-0"
+                className="text-xs text-gray-500 dark:text-zinc-400 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
               >
                 Prev
-              </button>
+              </Button>
 
-              <div className="flex h-8 min-w-[32px] items-center justify-center rounded-[6px] border border-gray-200/80 bg-white px-2.5 text-[12px] font-medium text-gray-900 dark:border-white/10 dark:bg-card dark:text-zinc-100">
+              <div className="h-8 w-8 rounded-xl border border-[#e5e5ea] dark:border-zinc-800 flex items-center justify-center text-xs font-bold text-gray-800 dark:text-zinc-200 bg-white dark:bg-zinc-900">
                 {pageCourse}
               </div>
 
-              <button
+              <Button
+                variant="ghost"
+                size="sm"
                 disabled={pageCourse >= Math.ceil(filteredCoursesFull.length / itemsPerPage)}
                 onClick={() => setPageCourse((p) => p + 1)}
-                className="h-8 bg-transparent text-[12px] font-normal text-gray-400 hover:text-pup-maroon dark:text-zinc-500 dark:hover:text-zinc-200 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer border-0 p-0"
+                className="text-xs text-gray-500 dark:text-zinc-400 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
               >
                 Next
-              </button>
+              </Button>
             </div>
           </div>
         )}
@@ -965,7 +980,7 @@ export default function CoursesTab({
                 type="submit"
                 className="h-10 px-5 text-xs font-semibold rounded-xl btn-brand-red text-white shadow-xs cursor-pointer active:scale-95 transition-all border-0"
               >
-                Create Program
+                Create
               </Button>
             </div>
           </form>

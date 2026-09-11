@@ -90,7 +90,7 @@ export async function listStaff({
     if (officeId === null) {
       filters.push("office_id IS NULL");
     } else {
-      filters.push("office_id = ?");
+      filters.push("LOWER(office_id) = LOWER(?)");
       params.push(officeId);
     }
   }

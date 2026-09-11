@@ -336,7 +336,7 @@ export default function LandingWorkflowCmsView({ showToast }) {
                 onClick={() => window.open("/#workflow", "_blank")}
                 className="flex h-10 items-center justify-center rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
               >
-                View Portal
+                Preview
               </Button>
 
               <Button
@@ -345,7 +345,7 @@ export default function LandingWorkflowCmsView({ showToast }) {
                 onClick={() => setResetModalOpen(true)}
                 className="flex h-10 items-center justify-center rounded-xl! border border-rose-200 dark:border-rose-900/40 bg-white dark:bg-zinc-900 text-rose-600 dark:text-rose-400 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-rose-50 dark:hover:bg-rose-950/20"
               >
-                Reset Defaults
+                Reset
               </Button>
 
               <Button
@@ -360,7 +360,7 @@ export default function LandingWorkflowCmsView({ showToast }) {
                     Saving...
                   </>
                 ) : (
-                  "Save Changes"
+                  "Save"
                 )}
               </Button>
             </div>
@@ -442,9 +442,9 @@ export default function LandingWorkflowCmsView({ showToast }) {
                             curveStyle: e.target.value,
                           }))
                         }
-                        className="h-9 rounded-xl border border-gray-200 dark:border-white/10 text-xs font-semibold text-gray-700 dark:text-zinc-200 bg-white dark:bg-zinc-900 cursor-pointer shadow-none px-3"
+                        className="h-9 rounded-xl border border-gray-200 dark:border-white/10 text-xs font-normal text-gray-700 dark:text-zinc-200 bg-white dark:bg-zinc-900 cursor-pointer shadow-none px-3"
                         menuClassName="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-900 shadow-2xl p-1.5"
-                        optionClassName="rounded-lg text-xs font-medium py-2 px-3 hover:bg-gray-100 dark:hover:bg-zinc-800"
+                        optionClassName="rounded-lg text-xs font-normal py-2 px-3 hover:bg-gray-100 dark:hover:bg-zinc-800"
                       >
                         <option value="gentle">Gentle Arc (Default)</option>
                         <option value="pronounced">Pronounced Arc</option>
@@ -461,7 +461,7 @@ export default function LandingWorkflowCmsView({ showToast }) {
                     className="flex h-9 items-center justify-center rounded-xl! btn-brand-red text-white font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs disabled:opacity-40"
                     title={currentSteps.length >= MAX_STEPS ? `Maximum of ${MAX_STEPS} steps reached` : "Add blank step"}
                   >
-                    Add Step
+                    Add
                   </Button>
                 </div>
               </div>
@@ -935,7 +935,7 @@ export default function LandingWorkflowCmsView({ showToast }) {
         isLoading={saving}
         title="Reset Workflow to Institutional Defaults"
         message="Are you sure you want to revert all workflow headlines, application steps, and requirement tags back to the official PUP San Juan institutional template?"
-        confirmLabel="Reset to Defaults"
+        confirmLabel="Reset"
         icon="ph-duotone ph-arrow-counter-clockwise"
         buttonIcon="ph-bold ph-arrow-counter-clockwise"
         selectedItems={[
@@ -963,7 +963,7 @@ export default function LandingWorkflowCmsView({ showToast }) {
             : "Delete Application Step"
         }
         message="Are you sure you want to permanently remove this application step from the student portal workflow?"
-        confirmLabel="Delete Step"
+        confirmLabel="Delete"
         icon="ph-duotone ph-trash"
         buttonIcon="ph-bold ph-trash"
         selectedItems={

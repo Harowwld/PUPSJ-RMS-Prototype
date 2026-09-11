@@ -3,9 +3,12 @@
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
 
-export default function DocumentRequestsTableSkeleton({ rowCount = 7 }) {
+export default function DocumentRequestsTableSkeleton({ rowCount = 7, embedded = false }) {
   return (
-    <div className="overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card flex flex-col flex-1 isolate select-none font-inter">
+    <div className={cn(
+      "flex flex-col flex-1 w-full isolate select-none font-inter",
+      !embedded && "overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card"
+    )}>
       <div className="overflow-x-auto">
         <table className="min-w-full text-sm table-fixed">
           <thead className="sticky top-0 z-10 border-b border-gray-200 bg-white dark:bg-card dark:border-white/10">
@@ -38,7 +41,7 @@ export default function DocumentRequestsTableSkeleton({ rowCount = 7 }) {
               >
                 {/* ID */}
                 <td className="p-4 align-middle">
-                  <Skeleton className="h-3.5 w-10 font-mono dark:bg-muted" />
+                  <Skeleton className="h-3.5 w-10 dark:bg-muted" />
                 </td>
 
                 {/* Student */}
@@ -52,7 +55,7 @@ export default function DocumentRequestsTableSkeleton({ rowCount = 7 }) {
                           i % 3 === 0 ? "w-32" : i % 2 === 0 ? "w-40" : "w-28"
                         )}
                       />
-                      <Skeleton className="h-2.5 w-24 rounded font-mono dark:bg-muted" />
+                      <Skeleton className="h-2.5 w-24 rounded dark:bg-muted" />
                     </div>
                   </div>
                 </td>

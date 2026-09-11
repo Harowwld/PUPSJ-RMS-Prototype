@@ -39,7 +39,8 @@ export default function PageHeader({
 }) {
   return (
     <div className={cn(
-      "bg-transparent p-6 rounded-t-brand select-none transition-colors duration-normal dark:bg-transparent",
+      "bg-transparent rounded-t-brand select-none transition-colors duration-normal dark:bg-transparent",
+      !className?.includes("p-") && !className?.includes("py-") && "p-6",
       showBorder && "border-b border-gray-100 dark:border-white/5",
       className
     )}>
@@ -94,11 +95,11 @@ export default function PageHeader({
                     </span>
                   )}
                 </div>
-                <div className="relative transition-colors">
-                  <i className="ph-bold ph-magnifying-glass absolute top-1/2 left-3 -translate-y-1/2 text-gray-400 dark:text-zinc-500"></i>
+                <div className="relative transition-colors group">
+                  <i className="ph-bold ph-magnifying-glass absolute top-1/2 left-3 -translate-y-1/2 text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 pointer-events-none"></i>
                   <Input
                     placeholder={searchPlaceholder || "Search..."}
-                    className="h-10 rounded-brand border border-gray-300 bg-white pl-9 text-sm focus-visible:border-gray-300 focus-visible:ring-pup-maroon transition-all dark:border-white/10 dark:bg-white/5 dark:focus-visible:border-white/20 dark:focus-visible:ring-primary/20 dark:text-zinc-100"
+                    className="h-10 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 pl-9 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
                     value={searchValue || ""}
                     onChange={(e) => onSearchChange && onSearchChange(e.target.value)}
                   />

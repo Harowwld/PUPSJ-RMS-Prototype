@@ -157,7 +157,7 @@ const ConflictResolutionModals = memo(({
                       : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
                   )}
                 >
-                  Auto Map
+                  Map
                 </button>
               </div>
             </div>
@@ -263,7 +263,7 @@ const ConflictResolutionModals = memo(({
               onClick={openApplyPreview}
               className="h-10 px-5 text-xs font-semibold rounded-xl btn-brand-red text-white shadow-xs active:scale-95 transition-all cursor-pointer border-0"
             >
-              Continue Reassignment
+              Continue
             </Button>
           </div>
         </DialogContent>
@@ -329,7 +329,7 @@ const ConflictResolutionModals = memo(({
               onClick={applyTemplateWithMappings}
               className="h-10 px-5 text-xs font-semibold rounded-xl btn-brand-red text-white shadow-xs active:scale-95 transition-all cursor-pointer border-0"
             >
-              Apply Template + Reassign
+              Apply
             </Button>
           </div>
         </DialogContent>

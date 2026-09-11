@@ -20,6 +20,7 @@ import { formatPHDateTimeParts } from "@/lib/timeFormat"
 import { cn } from "@/lib/utils"
 
 import LogExpandedRow from "./LogExpandedRow"
+import LogPagination from "./LogPagination"
 import AuditLogsTableSkeleton from "@/components/systemadmin/skeletons/AuditLogsTableSkeleton"
 
 function SortIndicator({ column, logSortBy, logSortOrder }) {
@@ -114,7 +115,7 @@ const LogRow = React.memo(function LogRow({
             className="mx-auto flex h-7 w-7 items-center justify-center bg-transparent border-none text-[#8E8E93] hover:text-[#111111] dark:hover:text-zinc-200 cursor-pointer transition-transform duration-200"
             style={{ transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}
           >
-            <i className="ti ti-chevron-down text-[14px]" style={{ fontSize: '14px' }}></i>
+            <i className="ph-bold ph-caret-down text-[14px]"></i>
           </button>
         </td>
         <td className="py-0 px-4 align-middle text-[13px] font-normal text-[#111111] dark:text-zinc-50">
@@ -216,6 +217,7 @@ export default function LogTable({
   setLogStartDate,
   setLogEndDate,
   handleCopy,
+  embedded = false,
   cn,
 }) {
   const [expandedRows, setExpandedRows] = useState({})
@@ -228,13 +230,18 @@ export default function LogTable({
   }, [])
 
   if (isLoading && (!displayLogs || displayLogs.length === 0)) {
-    return <AuditLogsTableSkeleton rowCount={8} />
+    return <AuditLogsTableSkeleton rowCount={8} embedded={embedded} />
   }
 
   if (error) {
     return (
-      <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card p-6">
-        <Empty className="flex h-[320px] flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400">
+      <div className={cn(
+        "flex flex-1 min-h-[320px] flex-col items-center justify-center p-6 text-center text-gray-500 dark:text-zinc-400",
+        embedded
+          ? "border-t border-gray-100 dark:border-white/10"
+          : "overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card"
+      )}>
+        <Empty className="flex flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400">
           <EmptyHeader className="flex flex-col items-center gap-0">
             <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
               <i className="ph-duotone ph-warning-circle text-xl text-pup-maroon dark:text-primary" />
@@ -255,9 +262,14 @@ export default function LogTable({
   const displayPage = Math.min(logPage, totalPages)
 
   return (
-    <div className="flex flex-1 flex-col min-h-0 gap-6">
-      <div className="flex-1 min-h-0 flex flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card isolate">
-        <div className="flex-1 overflow-hidden rounded-[inherit] isolate">
+    <div className={cn("flex flex-1 flex-col min-h-0", !embedded && "gap-6")}>
+      <div className={cn(
+        "flex-1 min-h-0 flex flex-col overflow-hidden isolate",
+        embedded
+          ? "border-t border-gray-100 dark:border-white/10"
+          : "rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card"
+      )}>
+        <div className="flex-1 overflow-hidden overflow-x-auto select-none">
           <table className={cn("min-w-full text-sm", displayLogs.length === 0 && "h-full")}>
             <thead className="sticky top-0 z-10 border-b border-gray-200 bg-white dark:bg-card dark:border-white/10">
               <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">
@@ -265,7 +277,12 @@ export default function LogTable({
                 <th className="p-4">
                   <button
                     onClick={() => handleSort("created_at")}
-                    className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none text-[12px] font-medium tracking-[0.04em]"
+                    className={cn(
+                      "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
+                      logSortBy === "created_at"
+                        ? "text-[#111111] dark:text-white font-semibold"
+                        : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
+                    )}
                   >
                     Timestamp{" "}
                     <SortIndicator
@@ -278,7 +295,12 @@ export default function LogTable({
                 <th className="p-4">
                   <button
                     onClick={() => handleSort("severity")}
-                    className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none text-[12px] font-medium tracking-[0.04em]"
+                    className={cn(
+                      "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
+                      logSortBy === "severity"
+                        ? "text-[#111111] dark:text-white font-semibold"
+                        : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
+                    )}
                   >
                     Level{" "}
                     <SortIndicator
@@ -291,7 +313,12 @@ export default function LogTable({
                 <th className="p-4">
                   <button
                     onClick={() => handleSort("actor")}
-                    className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none text-[12px] font-medium tracking-[0.04em]"
+                    className={cn(
+                      "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
+                      logSortBy === "actor"
+                        ? "text-[#111111] dark:text-white font-semibold"
+                        : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
+                    )}
                   >
                     Actor{" "}
                     <SortIndicator
@@ -304,7 +331,12 @@ export default function LogTable({
                 <th className="p-4">
                   <button
                     onClick={() => handleSort("action")}
-                    className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none text-[12px] font-medium tracking-[0.04em]"
+                    className={cn(
+                      "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
+                      logSortBy === "action"
+                        ? "text-[#111111] dark:text-white font-semibold"
+                        : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
+                    )}
                   >
                     Action{" "}
                     <SortIndicator
@@ -355,7 +387,7 @@ export default function LogTable({
                             }}
                             className="mt-6 h-10 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-6 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                           >
-                            Clear Search
+                            Clear
                           </Button>
                         )}
                       </EmptyHeader>
@@ -381,60 +413,19 @@ export default function LogTable({
         </div>
 
         {logTotal > 0 && (
-          <div className="flex items-center justify-between border-t border-gray-100 bg-white p-6 px-8 dark:border-white/10 dark:bg-card">
-            <div className="flex items-center gap-8">
-              <div className="flex items-center gap-6 text-[12px] font-normal text-gray-400 dark:text-zinc-500">
-                <span>
-                  Showing {displayLogs.length} of {logTotal}
-                </span>
-                <div className="flex items-center gap-1.5 border-l border-gray-200 pl-6 dark:border-white/10">
-                  <span className="text-[12px] text-gray-400 dark:text-zinc-500">Rows:</span>
-                  <div className="flex items-center gap-1">
-                    {[10, 20, 50, 100].map((size) => (
-                      <button
-                        key={size}
-                        type="button"
-                        onClick={() => {
-                          setItemsPerPage(size)
-                          setLogsPerPage(size)
-                          setLogPage(1)
-                        }}
-                        className={`px-2 py-0.5 rounded-[4px] text-[12px] font-normal cursor-pointer transition-colors border-0 ${
-                          itemsPerPage === size
-                            ? "bg-gray-100 text-[#111111] font-medium dark:bg-white/10 dark:text-zinc-50"
-                            : "bg-transparent text-gray-450 dark:text-zinc-550 hover:text-gray-700 dark:hover:text-zinc-300"
-                        }`}
-                      >
-                        {size}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex shrink-0 items-center gap-3">
-              <button
-                disabled={displayPage <= 1}
-                onClick={() => setLogPage((p) => Math.max(1, p - 1))}
-                className="h-8 bg-transparent text-[12px] font-normal text-gray-400 hover:text-pup-maroon dark:text-zinc-500 dark:hover:text-zinc-200 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer border-0 p-0"
-              >
-                Prev
-              </button>
-
-              <div className="flex h-8 min-w-[32px] items-center justify-center rounded-[6px] border border-gray-200/80 bg-white px-2.5 text-[12px] font-medium text-gray-900 dark:border-white/10 dark:bg-card dark:text-zinc-100">
-                {displayPage}
-              </div>
-
-              <button
-                disabled={displayPage >= totalPages}
-                onClick={() => setLogPage((p) => Math.min(totalPages, p + 1))}
-                className="h-8 bg-transparent text-[12px] font-normal text-gray-400 hover:text-pup-maroon dark:text-zinc-500 dark:hover:text-zinc-200 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer border-0 p-0"
-              >
-                Next
-              </button>
-            </div>
-          </div>
+          <LogPagination
+            logTotal={logTotal}
+            logPage={logPage}
+            setLogPage={setLogPage}
+            itemsPerPage={itemsPerPage}
+            logsPerPage={logsPerPage}
+            displayCount={displayLogs.length}
+            handleItemsPerPageChange={(size) => {
+              setItemsPerPage(size)
+              setLogsPerPage?.(size)
+              setLogPage(1)
+            }}
+          />
         )}
       </div>
     </div>

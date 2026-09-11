@@ -11,10 +11,13 @@ export async function GET(req) {
     SELECT
       dr.*,
       COALESCE(s.name, NULLIF(TRIM(CONCAT_WS(' ', sa.first_name, sa.last_name)), ''), sa.email, 'Alumni Requester') AS student_name,
+      COALESCE(dr.course_code, s.course_code) AS course_code,
+      c.name AS course_name,
       sa.email AS requester_email
     FROM document_requests dr
     LEFT JOIN students s ON s.student_no = dr.student_no
     LEFT JOIN student_accounts sa ON sa.id = dr.student_account_id
+    LEFT JOIN courses c ON c.code = COALESCE(dr.course_code, s.course_code)
     WHERE dr.office_id = 'registrar'
     ORDER BY dr.created_at DESC
   `);

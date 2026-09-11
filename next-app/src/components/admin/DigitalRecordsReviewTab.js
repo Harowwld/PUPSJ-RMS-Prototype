@@ -303,6 +303,7 @@ export default function DigitalRecordsReviewTab({
 
   const sortedRecords = useMemo(() => {
     const baseFiltered = (records || []).filter((r) => {
+      if (statusFilter !== "All" && r.approval_status !== statusFilter) return false
       if (docTypeFilter !== "All" && r.doc_type !== docTypeFilter) return false
       if (dateFrom || dateTo) {
         let createdDate = ""
@@ -349,7 +350,7 @@ export default function DigitalRecordsReviewTab({
       if (valA > valB) return sortOrder === "ASC" ? 1 : -1
       return 0
     })
-  }, [records, docTypeFilter, dateFrom, dateTo, searchQuery, sortBy, sortOrder])
+  }, [records, statusFilter, docTypeFilter, dateFrom, dateTo, searchQuery, sortBy, sortOrder])
 
   const totalPages = Math.ceil(sortedRecords.length / itemsPerPage) || 1
   const displayPage = Math.min(currentPage, totalPages)
@@ -634,6 +635,26 @@ export default function DigitalRecordsReviewTab({
     }
     setDateFrom(format(start, "yyyy-MM-dd"))
     setDateTo(format(end, "yyyy-MM-dd"))
+    setCurrentPage(1)
+  }
+
+  const formatChipDate = (dateStr) => {
+    if (!dateStr) return "..."
+    try {
+      const d = new Date(dateStr.includes("T") ? dateStr : dateStr + "T00:00:00")
+      return isNaN(d.getTime()) ? dateStr : format(d, "MMM d, yyyy")
+    } catch (e) {
+      return dateStr
+    }
+  }
+
+  const handleClearFilters = () => {
+    setLocalSearch("")
+    setSearchQuery("")
+    setStatusFilter("All")
+    setDocTypeFilter("All")
+    setDateFrom("")
+    setDateTo("")
     setCurrentPage(1)
   }
 
@@ -927,180 +948,152 @@ export default function DigitalRecordsReviewTab({
           }
         />
 
-        {/* Active Filter Chips Row */}
-        {(localSearch !== "" || statusFilter !== "All" || docTypeFilter !== "All" || dateFrom || dateTo) && (() => {
-          const formatChipDate = (dateStr) => {
-            if (!dateStr) return "..."
-            try {
-              return format(new Date(dateStr), "MMM d, yyyy")
-            } catch (e) {
-              return dateStr
-            }
-          }
-          return (
-            <div className="flex-none border-b border-gray-100 bg-white px-6 py-3 animate-in fade-in slide-in-from-top-1 duration-normal dark:border-white/10 dark:bg-card">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="mr-1 text-[11px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500">Active filters:</span>
-                {localSearch && (
-                  <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
-                    Search: {localSearch}
-                    <button
-                      onClick={() => { setSearchQuery(""); setLocalSearch(""); setCurrentPage(1); }}
-                      className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
-                    >
-                      ×
-                    </button>
-                  </div>
-                )}
-                {statusFilter !== "All" && (
-                  <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
-                    Status: {statusFilter}
-                    <button
-                      onClick={() => { setStatusFilter("All"); setCurrentPage(1); }}
-                      className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
-                    >
-                      ×
-                    </button>
-                  </div>
-                )}
-                {docTypeFilter !== "All" && (
-                  <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
-                    Type: {docTypeFilter}
-                    <button
-                      onClick={() => { setDocTypeFilter("All"); setCurrentPage(1); }}
-                      className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
-                    >
-                      ×
-                    </button>
-                  </div>
-                )}
-                {(dateFrom || dateTo) && (
-                  <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
-                    {formatChipDate(dateFrom)} – {formatChipDate(dateTo)}
-                    <button
-                      onClick={() => { setDateFrom(""); setDateTo(""); setCurrentPage(1); }}
-                      className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
-                    >
-                      ×
-                    </button>
-                  </div>
-                )}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    setSearchQuery("")
-                    setLocalSearch("")
-                    setStatusFilter("All")
-                    setDocTypeFilter("All")
-                    setDateFrom("")
-                    setDateTo("")
-                    setCurrentPage(1)
-                  }}
-                  className="h-auto text-[12px] font-medium text-gray-400 dark:text-zinc-500 border-0 bg-transparent hover:bg-transparent shadow-none p-0 hover:text-red-600 dark:hover:text-red-500 transition-colors cursor-pointer"
-                >
-                  Clear
-                </Button>
-              </div>
-            </div>
-          )
-        })()}
+        {/* Navigation Toolbar */}
+        <div className="border-t border-gray-100 dark:border-white/10 p-5 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
+          {/* Status Filter Line Tabs */}
+          <div className="flex items-center gap-6 shrink-0 select-none overflow-x-auto">
+            <button
+              type="button"
+              onClick={() => {
+                setStatusFilter("All")
+                setCurrentPage(1)
+              }}
+              className={cn(
+                "relative h-9 flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent whitespace-nowrap",
+                statusFilter === "All"
+                  ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
+                  : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
+              )}
+            >
+              All Records
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setStatusFilter("Pending")
+                setCurrentPage(1)
+              }}
+              className={cn(
+                "relative h-9 flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent whitespace-nowrap",
+                statusFilter === "Pending"
+                  ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
+                  : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
+              )}
+            >
+              Pending
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setStatusFilter("Approved")
+                setCurrentPage(1)
+              }}
+              className={cn(
+                "relative h-9 flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent whitespace-nowrap",
+                statusFilter === "Approved"
+                  ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
+                  : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
+              )}
+            >
+              Approved
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setStatusFilter("Declined")
+                setCurrentPage(1)
+              }}
+              className={cn(
+                "relative h-9 flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent whitespace-nowrap",
+                statusFilter === "Declined"
+                  ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
+                  : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
+              )}
+            >
+              Declined
+            </button>
+          </div>
 
-        {/* Filter Bar */}
-        <div className="bg-white border-t border-gray-100 p-4 backdrop-blur-md dark:bg-card/50 dark:border-white/10">
-          <div className="flex w-full flex-wrap items-center gap-5">
+          {/* Search, Doc Type, Time, and Date Range Controls */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 flex-wrap">
             {/* Search */}
-            <div className="flex-[2] min-w-[280px] group relative">
-              <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                <i className="ph-bold ph-magnifying-glass text-gray-400 transition-colors group-focus-within:text-pup-maroon dark:text-zinc-500 text-sm"></i>
-              </div>
+            <div className="relative flex-1 sm:w-64 min-w-[200px] group">
+              <i className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-xs pointer-events-none"></i>
               <Input
                 type="text"
                 placeholder="Search Student"
-                className="h-10 w-full rounded-xl border-[0.5px] border-gray-200 bg-white pl-9 pr-20 text-[13px] font-normal transition-all focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 placeholder:text-gray-400 dark:border-white/10 dark:bg-card dark:text-zinc-300 dark:focus:border-primary"
+                className="pl-8 pr-16 h-9 text-xs w-full bg-white dark:bg-zinc-800 border border-gray-200 dark:border-white/10 rounded-xl text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
                 value={localSearch}
                 onChange={(e) => setLocalSearch(e.target.value)}
               />
-              <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[12px] font-normal text-gray-400 dark:text-zinc-500">
+              <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] font-mono text-gray-400 dark:text-zinc-500">
                 {sortedRecords.length > 0 ? `${sortedRecords.length} results` : "0 results"}
               </div>
             </div>
 
-            {/* Status Select */}
-            <div className="min-w-[120px] flex-1">
-              <Select
-                value={statusFilter}
-                onChange={(e) => { 
-                  setStatusFilter(e.target.value); 
-                  setCurrentPage(1);
-                }}
-                className="h-10 rounded-xl border-[0.5px] border-gray-200 text-[13px] font-normal"
-              >
-                <option value="All">Status</option>
-                <option value="Pending">Pending</option>
-                <option value="Approved">Approved</option>
-                <option value="Declined">Declined</option>
-              </Select>
-            </div>
-
             {/* Doc Type Select */}
-            <div className="min-w-[150px] flex-1">
+            <div className="w-[150px]">
               <Select
                 value={docTypeFilter}
                 onChange={(e) => { 
                   setDocTypeFilter(e.target.value); 
                   setCurrentPage(1);
                 }}
-                className="h-10 rounded-xl border-[0.5px] border-gray-200 text-[13px] font-normal"
+                className="h-9 rounded-xl border border-gray-200 text-xs font-normal bg-white dark:bg-zinc-800 dark:border-white/10"
               >
-                <option value="All">Document type</option>
+                <option value="All">All Doc Types</option>
                 {activeDocTypes.map((docTypeName) => (
                   <option key={docTypeName} value={docTypeName}>{docTypeName}</option>
                 ))}
               </Select>
             </div>
 
-            {/* Time Period shortcuts */}
-            <div className="flex items-center gap-[12px] h-[36px] flex-none">
-              {["Today", "Yesterday", "7 days", "30 days"].map((range) => {
-                const isActive = activeShortcut === range
+            {/* Time Shortcuts */}
+            <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-gray-200/60 dark:border-white/5">
+              {[
+                { key: "Today", label: "Today" },
+                { key: "Yesterday", label: "Yest." },
+                { key: "7 days", label: "7d" },
+                { key: "30 days", label: "30d" },
+              ].map((range) => {
+                const isActive = activeShortcut === range.key
                 return (
                   <button
-                    key={range}
+                    key={range.key}
                     type="button"
-                    onClick={() => handleShortcutClick(range)}
+                    onClick={() => handleShortcutClick(range.key)}
                     className={cn(
-                      "text-[12px] font-normal transition-all bg-transparent border-0 cursor-pointer shadow-none focus:outline-none focus:ring-0 pb-1",
-                      isActive 
-                        ? "text-[#03a10e] dark:text-[#03a10e] border-b-[2px] border-[#03a10e] dark:border-[#03a10e] font-medium" 
-                        : "text-gray-400 dark:text-zinc-500 hover:text-gray-600 dark:hover:text-zinc-300"
+                      "px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all cursor-pointer whitespace-nowrap",
+                      isActive
+                        ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
+                        : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
                     )}
                   >
-                    {range}
+                    {range.label}
                   </button>
                 )
               })}
             </div>
 
             {/* Date range picker */}
-            <div className="flex items-center gap-2 flex-none">
-              <div className="w-[120px]">
+            <div className="flex items-center gap-1.5">
+              <div className="w-[105px]">
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
                       variant="outline"
                       className={cn(
-                        "h-[36px] w-full justify-start rounded-[8px] border-[0.5px] border-gray-200 dark:border-white/10 bg-white dark:bg-card text-left text-[13px] font-normal shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-white/10",
+                        "h-9 w-full justify-start rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-left text-xs font-normal shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-white/10 px-2.5",
                         !dateFrom ? "text-gray-400 dark:text-zinc-500" : "text-gray-700 dark:text-zinc-200"
                       )}
                     >
-                      {dateFrom ? format(new Date(dateFrom), "MMM d, yyyy") : "Start Date"}
+                      {dateFrom ? format(new Date(dateFrom.includes("T") ? dateFrom : dateFrom + "T00:00:00"), "MMM d") : "Start"}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto rounded-2xl border border-gray-200 bg-white p-0 shadow-2xl dark:border-white/10 dark:bg-card" align="start">
                     <Calendar
                       mode="single"
-                      selected={dateFrom ? new Date(dateFrom) : undefined}
+                      selected={dateFrom ? new Date(dateFrom.includes("T") ? dateFrom : dateFrom + "T00:00:00") : undefined}
                       onSelect={(date) => {
                         setDateFrom(date ? format(date, "yyyy-MM-dd") : "")
                         setCurrentPage(1)
@@ -1110,26 +1103,24 @@ export default function DigitalRecordsReviewTab({
                   </PopoverContent>
                 </Popover>
               </div>
-              <div className="text-[12px] text-gray-400 dark:text-zinc-500 shrink-0">
-                →
-              </div>
-              <div className="w-[120px]">
+              <span className="text-[11px] text-gray-400 dark:text-zinc-500">→</span>
+              <div className="w-[105px]">
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
                       variant="outline"
                       className={cn(
-                        "h-[36px] w-full justify-start rounded-[8px] border-[0.5px] border-gray-200 dark:border-white/10 bg-white dark:bg-card text-left text-[13px] font-normal shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-white/10",
+                        "h-9 w-full justify-start rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-left text-xs font-normal shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-white/10 px-2.5",
                         !dateTo ? "text-gray-400 dark:text-zinc-500" : "text-gray-700 dark:text-zinc-200"
                       )}
                     >
-                      {dateTo ? format(new Date(dateTo), "MMM d, yyyy") : "End Date"}
+                      {dateTo ? format(new Date(dateTo.includes("T") ? dateTo : dateTo + "T00:00:00"), "MMM d") : "End"}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto rounded-2xl border border-gray-200 bg-white p-0 shadow-2xl dark:border-white/10 dark:bg-card" align="start">
                     <Calendar
                       mode="single"
-                      selected={dateTo ? new Date(dateTo) : undefined}
+                      selected={dateTo ? new Date(dateTo.includes("T") ? dateTo : dateTo + "T00:00:00") : undefined}
                       onSelect={(date) => {
                         setDateTo(date ? format(date, "yyyy-MM-dd") : "")
                         setCurrentPage(1)
@@ -1142,29 +1133,109 @@ export default function DigitalRecordsReviewTab({
             </div>
           </div>
         </div>
-      </Card>
-       {(isLoading && !isManualLoading) && (!records || records.length === 0) ? (
-        <RecordsReviewTableSkeleton rowCount={8} />
-       ) : error ? (
-        <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card p-6">
-          <Empty className="flex h-[320px] flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400">
-            <EmptyHeader className="flex flex-col items-center gap-0">
-              <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
-                <i className="ph-duotone ph-warning-circle text-xl text-pup-maroon dark:text-primary" />
-              </EmptyMedia>
-              <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">
-                Load failed
-              </EmptyTitle>
-              <EmptyDescription className="mt-1 max-w-md text-sm font-medium text-gray-600 dark:text-zinc-300">
-                {error}
-              </EmptyDescription>
-            </EmptyHeader>
-          </Empty>
-        </div>
-      ) : records ? (
-        <div className="flex flex-1 flex-col min-h-0 gap-6">
-          <div className="flex-1 min-h-0 flex flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card">
-            <div className="flex-1 overflow-visible rounded-[inherit]">
+
+        {/* Active Filter Chips Row */}
+        {hasActiveFilters && (
+          <div className="flex-none border-t border-gray-100 dark:border-white/10 bg-white dark:bg-card px-6 py-3 animate-in fade-in slide-in-from-top-1 duration-normal">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="mr-1 text-[11px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500">
+                Active filters:
+              </span>
+              {localSearch && (
+                <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
+                  Search: {localSearch}
+                  <button
+                    onClick={() => {
+                      setLocalSearch("")
+                      setSearchQuery("")
+                      setCurrentPage(1)
+                    }}
+                    className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
+                  >
+                    ×
+                  </button>
+                </div>
+              )}
+              {statusFilter !== "All" && (
+                <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
+                  Status: {statusFilter}
+                  <button
+                    onClick={() => {
+                      setStatusFilter("All")
+                      setCurrentPage(1)
+                    }}
+                    className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
+                  >
+                    ×
+                  </button>
+                </div>
+              )}
+              {docTypeFilter !== "All" && (
+                <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
+                  Type: {docTypeFilter}
+                  <button
+                    onClick={() => {
+                      setDocTypeFilter("All")
+                      setCurrentPage(1)
+                    }}
+                    className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
+                  >
+                    ×
+                  </button>
+                </div>
+              )}
+              {(dateFrom || dateTo) && (
+                <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
+                  {formatChipDate(dateFrom)} – {formatChipDate(dateTo)}
+                  <button
+                    onClick={() => {
+                      setDateFrom("")
+                      setDateTo("")
+                      setCurrentPage(1)
+                    }}
+                    className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
+                  >
+                    ×
+                  </button>
+                </div>
+              )}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleClearFilters}
+                className="h-auto text-[12px] font-medium text-gray-400 dark:text-zinc-500 border-0 bg-transparent hover:bg-transparent shadow-none p-0 hover:text-red-600 dark:hover:text-red-500 transition-colors cursor-pointer"
+              >
+                Clear
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Content Area */}
+        {(isLoading && !isManualLoading) && (!records || records.length === 0) ? (
+          <RecordsReviewTableSkeleton rowCount={8} embedded={true} />
+        ) : error ? (
+          <div className="flex min-h-[420px] flex-col items-center justify-center border-t border-gray-100 dark:border-white/10 bg-transparent text-center p-6">
+            <Empty className="flex flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400">
+              <EmptyHeader className="flex flex-col items-center gap-0">
+                <div className="relative mb-6">
+                  <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
+                  <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
+                    <i className="ph-duotone ph-warning-circle text-3xl text-red-500 dark:text-red-400" />
+                  </EmptyMedia>
+                </div>
+                <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
+                  Load failed
+                </EmptyTitle>
+                <EmptyDescription className="mt-1 max-w-md text-sm font-medium text-gray-600 dark:text-zinc-300">
+                  {error}
+                </EmptyDescription>
+              </EmptyHeader>
+            </Empty>
+          </div>
+        ) : (
+          <div className="overflow-hidden border-t border-gray-200 dark:border-white/10 bg-white dark:bg-card flex flex-col flex-1">
+            <div className="overflow-x-auto">
               <table className="min-w-full text-sm">
                 <thead className="sticky top-0 z-10 border-b border-gray-200 bg-white dark:bg-card dark:border-white/10">
                   <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">
@@ -1277,7 +1348,7 @@ export default function DigitalRecordsReviewTab({
                                 }}
                                 className="mt-6 h-10 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-6 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                               >
-                                Clear Search
+                                Clear
                               </Button>
                             )}
                           </EmptyHeader>
@@ -1431,64 +1502,66 @@ export default function DigitalRecordsReviewTab({
               </table>
             </div>
 
+            {/* Pagination Toolbar */}
             {sortedRecords.length > 0 && (
-              <div className="flex items-center justify-between border-t border-gray-100 bg-white p-6 px-8 dark:border-white/10 dark:bg-card">
-                <div className="flex items-center gap-8">
-                  <div className="flex items-center gap-6 text-[12px] font-normal text-gray-400 dark:text-zinc-500">
-                    <span>
-                      Showing {paginatedRecords.length} of {sortedRecords.length}
-                    </span>
-                    <div className="flex items-center gap-1.5 border-l border-gray-200 pl-6 dark:border-white/10">
-                      <span className="text-[12px] text-gray-400 dark:text-zinc-500">Rows:</span>
-                      <div className="flex items-center gap-1">
-                        {[10, 20, 50, 100].map((size) => (
-                          <button
-                            key={size}
-                            type="button"
-                            onClick={() => {
-                              setItemsPerPage(size)
-                              setCurrentPage(1)
-                            }}
-                            className={`px-2 py-0.5 rounded-[4px] text-[12px] font-normal cursor-pointer transition-colors border-0 ${
-                              itemsPerPage === size
-                                ? "bg-gray-100 text-[#111111] font-medium dark:bg-white/10 dark:text-zinc-50"
-                                : "bg-transparent text-gray-450 dark:text-zinc-550 hover:text-gray-700 dark:hover:text-zinc-300"
-                            }`}
-                          >
-                            {size}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
+              <div className="flex items-center justify-between border-t border-[#e5e5ea] dark:border-[#3a3a3c] bg-white dark:bg-[#1c1c1e] p-4 px-6 rounded-b-2xl">
+                <div className="flex items-center gap-6 text-xs text-gray-500 dark:text-zinc-400 select-none">
+                  <span>
+                    Showing {paginatedRecords.length} of {sortedRecords.length.toLocaleString()}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <span>Rows:</span>
+                    {[10, 20, 50, 100].map((size) => (
+                      <button
+                        key={size}
+                        type="button"
+                        onClick={() => {
+                          setItemsPerPage(size)
+                          setCurrentPage(1)
+                        }}
+                        className={cn(
+                          "px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer",
+                          itemsPerPage === size
+                            ? "bg-gray-100 dark:bg-zinc-800 text-gray-900 dark:text-zinc-100"
+                            : "text-gray-400 hover:text-gray-600 dark:hover:text-zinc-200"
+                        )}
+                      >
+                        {size}
+                      </button>
+                    ))}
                   </div>
                 </div>
 
-                <div className="flex shrink-0 items-center gap-3">
-                  <button
+                <div className="flex items-center gap-2 select-none">
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     disabled={displayPage <= 1}
                     onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                    className="h-8 bg-transparent text-[12px] font-normal text-gray-400 hover:text-pup-maroon dark:text-zinc-500 dark:hover:text-zinc-200 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer border-0 p-0"
+                    className="text-xs text-gray-500 dark:text-zinc-400 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
                   >
                     Prev
-                  </button>
+                  </Button>
 
-                  <div className="flex h-8 min-w-[32px] items-center justify-center rounded-[6px] border border-gray-200/80 bg-white px-2.5 text-[12px] font-medium text-gray-900 dark:border-white/10 dark:bg-card dark:text-zinc-100">
+                  <div className="h-8 w-8 rounded-xl border border-[#e5e5ea] dark:border-zinc-800 flex items-center justify-center text-xs font-bold text-gray-800 dark:text-zinc-200 bg-white dark:bg-zinc-900">
                     {displayPage}
                   </div>
 
-                  <button
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     disabled={displayPage >= totalPages}
                     onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                    className="h-8 bg-transparent text-[12px] font-normal text-gray-400 hover:text-pup-maroon dark:text-zinc-500 dark:hover:text-zinc-200 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer border-0 p-0"
+                    className="text-xs text-gray-500 dark:text-zinc-400 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
                   >
                     Next
-                  </button>
+                  </Button>
                 </div>
               </div>
             )}
           </div>
-        </div>
-      ) : null}
+        )}
+      </Card>
 
       {/* Floating Bulk Action Bar */}
       {selectedIds.size > 1 && (

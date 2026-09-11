@@ -72,7 +72,7 @@ export default function PdfPreviewDialog({
                 cursor: 'pointer'
               }}
             >
-              <i className="ti ti-x" style={{ fontSize: '16px' }}></i>
+              <i className="ph-bold ph-x text-[16px]"></i>
             </button>
           </DialogClose>
         </DialogHeader>
@@ -132,7 +132,7 @@ export default function PdfPreviewDialog({
             onClick={() => setIsFullscreenPreview(!isFullscreenPreview)}
             className="text-[#8E8E93] hover:text-[#111] dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/10 transition-colors rounded-xl shadow-none border-0 p-0 h-10 w-10 cursor-pointer"
           >
-            <i className="ti ti-arrows-vertical text-[16px]"></i>
+            <i className="ph-bold ph-arrows-out text-[16px]"></i>
           </Button>
 
           <div className="flex items-center gap-2.5 ml-auto">
@@ -148,7 +148,7 @@ export default function PdfPreviewDialog({
               disabled={!pdfBlobUrl}
               className="text-white btn-brand-red active:scale-95 disabled:opacity-50 transition-all dark:shadow-none h-10 px-5 rounded-xl! text-xs font-semibold shadow-xs cursor-pointer"
             >
-              Save to Device
+              Download
             </Button>
           </div>
         </div>

@@ -5,7 +5,6 @@ import {
   Card,
   CardContent,
 } from "@/components/ui/card"
-import { LiquidGlassButton } from "@/components/ui/liquid-glass-button"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
@@ -17,10 +16,12 @@ import {
 } from "@/components/ui/empty"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { formatPHDateTime } from "@/lib/timeFormat"
+import { format } from "date-fns"
 
 import HealthSidebar from "@/components/admin/backup/HealthSidebar"
 import BackupTable from "@/components/admin/backup/BackupTable"
 import AutoBackupSchedule from "@/components/admin/backup/AutoBackupSchedule"
+import BackupFilters from "@/components/admin/backup/BackupFilters"
 import BackupTableSkeleton from "@/components/admin/backup/BackupTableSkeleton"
 import PageHeader from "@/components/shared/PageHeader"
 import FloatingActionBar from "@/components/shared/FloatingActionBar"
@@ -28,6 +29,13 @@ import ConfirmModal from "@/components/shared/ConfirmModal"
 import { RefreshButton } from "@/components/shared/RefreshButton"
 import { cn } from "@/lib/utils"
 import { getCachedData, setCachedData, invalidateDataCache } from "@/lib/dataCache"
+
+function parseDateLocal(str) {
+  if (!str) return undefined
+  const [y, m, d] = str.split("-").map(Number)
+  if (isNaN(y) || isNaN(m) || isNaN(d)) return undefined
+  return new Date(y, m - 1, d)
+}
 
 export default function SystemBackupsTab({ showToast }) {
   const restoreFileRef = useRef(null)
@@ -450,6 +458,14 @@ export default function SystemBackupsTab({ showToast }) {
   const endItem = Math.min(page * itemsPerPage, (backups || []).length)
   const isFilterActive = !!(backupSearch || backupStartDate || backupEndDate)
 
+  const handleClearFilters = () => {
+    setLocalSearch("")
+    setBackupSearch("")
+    setBackupStartDate("")
+    setBackupEndDate("")
+    setPage(1)
+  }
+
   return (
     <TooltipProvider delayDuration={200}>
       <div className="animate-fade-up font-inter flex w-full flex-col gap-6" style={{ "--brand-accent": "#000000", "--brand-foreground": "#FFFFFF" }}>
@@ -484,7 +500,7 @@ export default function SystemBackupsTab({ showToast }) {
                           restoreFileRef.current.click()
                         }
                         disabled={localLoading.uploading}
-                        className="flex h-10 items-center justify-center rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
+                        className="flex h-10 items-center justify-center rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-5 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
                       >
                         {localLoading.uploading ? (
                           <i className="ph-bold ph-spinner animate-spin text-[16px]"></i>
@@ -492,20 +508,17 @@ export default function SystemBackupsTab({ showToast }) {
                           "Restore Backup"
                         )}
                       </Button>
-                      <LiquidGlassButton
+                      <Button
                         onClick={() => handleGenerateBackup()}
                         disabled={localLoading.generating}
-                        height={40}
-                        radius={12}
-                        glassColor="rgba(10, 132, 255, 0.15)"
-                        className="flex h-10 items-center justify-center rounded-xl! px-5 active:scale-95 transition-all dark:shadow-none text-xs font-semibold text-white cursor-pointer"
+                        className="flex h-10 items-center justify-center rounded-xl! btn-brand-red px-5 active:scale-95 transition-all text-xs font-semibold text-white shadow-xs cursor-pointer border-0"
                       >
                         {localLoading.generating ? (
                           <i className="ph-bold ph-spinner animate-spin text-[16px]"></i>
                         ) : (
                           "Create Backup"
                         )}
-                      </LiquidGlassButton>
+                      </Button>
                       <input
                         ref={restoreFileRef}
                         type="file"
@@ -520,6 +533,24 @@ export default function SystemBackupsTab({ showToast }) {
 
               {/* Automatic Backup Configuration Section */}
               <AutoBackupSchedule showToast={showToast} scope="system" embedded={true} />
+
+              {/* Standard Filter Toolbar */}
+              <BackupFilters
+                localSearch={localSearch}
+                handleSearchChange={(e) => {
+                  setLocalSearch(e.target.value)
+                  setPage(1)
+                }}
+                backupStartDate={backupStartDate}
+                setBackupStartDate={setBackupStartDate}
+                backupEndDate={backupEndDate}
+                setBackupEndDate={setBackupEndDate}
+                setPage={setPage}
+                setLocalSearch={setLocalSearch}
+                setBackupSearch={setBackupSearch}
+                backupTotal={(backups || []).length}
+                isLoading={isLoading}
+              />
 
               {/* Active Filter Chips Row */}
               {(localSearch !== "" ||
@@ -547,8 +578,8 @@ export default function SystemBackupsTab({ showToast }) {
                     )}
                     {(backupStartDate || backupEndDate) && (
                       <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
-                        Range: {backupStartDate || "..."} to{" "}
-                        {backupEndDate || "..."}
+                        Range: {backupStartDate ? format(parseDateLocal(backupStartDate), "MMM d, yyyy") : "..."} to{" "}
+                        {backupEndDate ? format(parseDateLocal(backupEndDate), "MMM d, yyyy") : "..."}
                         <button
                           onClick={() => {
                             setBackupStartDate("")
@@ -564,13 +595,7 @@ export default function SystemBackupsTab({ showToast }) {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => {
-                        setLocalSearch("")
-                        setBackupSearch("")
-                        setBackupStartDate("")
-                        setBackupEndDate("")
-                        setPage(1)
-                      }}
+                      onClick={handleClearFilters}
                       className="h-auto text-[12px] font-medium text-gray-400 dark:text-zinc-500 border-0 bg-transparent hover:bg-transparent shadow-none p-0 hover:text-red-600 dark:hover:text-red-500 transition-colors cursor-pointer"
                     >
                       Clear
@@ -601,10 +626,10 @@ export default function SystemBackupsTab({ showToast }) {
                         <Button 
                           variant="outline" 
                           onClick={() => fetchData(true)}
-                          className="mt-6 rounded-full border-gray-200 font-semibold hover:bg-gray-50 dark:border-white/10 dark:hover:bg-white/10 dark:bg-card"
+                          className="mt-6 flex h-10 items-center justify-center rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-5 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
                         >
                           <i className="ph-bold ph-arrows-clockwise mr-2"></i>
-                          Retry Loading
+                          Retry
                         </Button>
                       </EmptyHeader>
                     </Empty>
@@ -627,13 +652,7 @@ export default function SystemBackupsTab({ showToast }) {
                     onDeleteBackup={handleDeletePrompt}
                     handleGenerateBackup={handleGenerateBackup}
                     isFilterActive={isFilterActive}
-                    onClearFilters={() => {
-                      setLocalSearch("")
-                      setBackupSearch("")
-                      setBackupStartDate("")
-                      setBackupEndDate("")
-                      setPage(1)
-                    }}
+                    onClearFilters={handleClearFilters}
                     page={page}
                     setPage={setPage}
                     totalPages={totalPages}
@@ -645,6 +664,7 @@ export default function SystemBackupsTab({ showToast }) {
                     setJumpPage={setJumpPage}
                     handleJumpPage={handleJumpPage}
                     handleItemsPerPageChange={handleItemsPerPageChange}
+                    scope="system"
                   />
                 </div>
               )}
@@ -676,7 +696,7 @@ export default function SystemBackupsTab({ showToast }) {
           selectionStatus="Selected Backups"
           onCancel={() => setSelectedBackupIds([])}
           onAction={() => handleDeletePrompt(selectedBackupIds)}
-          actionLabel="Delete Permanently"
+          actionLabel="Delete"
           actionIcon="ph-trash"
         />
 
@@ -696,7 +716,7 @@ export default function SystemBackupsTab({ showToast }) {
           selectedItems={backupDeleteTargets.map((t) => t?.filename || "Unknown")}
           onConfirm={confirmDeleteBackup}
           onCancel={() => setBackupDeleteOpen(false)}
-          confirmLabel={backupDeleteTargets.length > 1 ? "Bulk Delete" : "Delete Permanently"}
+          confirmLabel="Delete"
           isLoading={backupDeleteLoading}
           variant="danger"
           verificationTarget={backupDeleteVerificationTarget}
@@ -712,7 +732,7 @@ export default function SystemBackupsTab({ showToast }) {
           variant="warning"
           message="Overwrite all repository data with the following backup archive? This action is irreversible."
           selectedItems={[restoreFile?.name]}
-          confirmLabel="Begin Restoration"
+          confirmLabel="Restore"
           icon="ph-duotone ph-arrow-counter-clockwise"
           buttonIcon="ph-bold ph-arrow-counter-clockwise"
           onConfirm={confirmRestore}

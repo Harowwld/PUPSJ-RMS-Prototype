@@ -20,6 +20,30 @@ import { cn } from "@/lib/utils"
 export default function LandingPageCmsTab({ showToast }) {
   const [currentSection, setCurrentSection] = useState("hero") // 'hero' | 'bento' | 'workflow' | 'catalog' | 'faq' | 'footer'
   const [loading, setLoading] = useState(true)
+
+  // Synchronize section from URL or switch-view events (Command Palette & deep linking)
+  useEffect(() => {
+    const urlSection = new URLSearchParams(window.location.search).get("section")
+    if (urlSection && ["hero", "bento", "workflow", "catalog", "faq", "footer"].includes(urlSection)) {
+      setCurrentSection(urlSection)
+    }
+
+    const handleSwitch = (e) => {
+      const targetSec = e.detail?.section
+      if (targetSec && ["hero", "bento", "workflow", "catalog", "faq", "footer"].includes(targetSec)) {
+        setCurrentSection(targetSec)
+      }
+    }
+    window.addEventListener("switch-view", handleSwitch)
+    return () => window.removeEventListener("switch-view", handleSwitch)
+  }, [])
+
+  const handleSelectSection = (sec) => {
+    setCurrentSection(sec)
+    const params = new URLSearchParams(window.location.search)
+    params.set("section", sec)
+    window.history.replaceState(null, "", `${window.location.pathname}?${params.toString()}`)
+  }
   const [saving, setSaving] = useState(false)
   const [uploadingIndex, setUploadingIndex] = useState(null)
   const [isAddingPhoto, setIsAddingPhoto] = useState(false)
@@ -296,7 +320,7 @@ export default function LandingPageCmsTab({ showToast }) {
       <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-gray-100/90 dark:bg-zinc-900/80 border border-gray-200/80 dark:border-white/10 w-fit select-none">
         <button
           type="button"
-          onClick={() => setCurrentSection("hero")}
+          onClick={() => handleSelectSection("hero")}
           className={cn(
             "flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer border-0",
             currentSection === "hero"
@@ -310,7 +334,7 @@ export default function LandingPageCmsTab({ showToast }) {
 
         <button
           type="button"
-          onClick={() => setCurrentSection("bento")}
+          onClick={() => handleSelectSection("bento")}
           className={cn(
             "flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer border-0",
             currentSection === "bento"
@@ -324,7 +348,7 @@ export default function LandingPageCmsTab({ showToast }) {
 
         <button
           type="button"
-          onClick={() => setCurrentSection("workflow")}
+          onClick={() => handleSelectSection("workflow")}
           className={cn(
             "flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer border-0",
             currentSection === "workflow"
@@ -338,7 +362,7 @@ export default function LandingPageCmsTab({ showToast }) {
 
         <button
           type="button"
-          onClick={() => setCurrentSection("catalog")}
+          onClick={() => handleSelectSection("catalog")}
           className={cn(
             "flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer border-0",
             currentSection === "catalog"
@@ -352,7 +376,7 @@ export default function LandingPageCmsTab({ showToast }) {
 
         <button
           type="button"
-          onClick={() => setCurrentSection("faq")}
+          onClick={() => handleSelectSection("faq")}
           className={cn(
             "flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer border-0",
             currentSection === "faq"
@@ -366,7 +390,7 @@ export default function LandingPageCmsTab({ showToast }) {
 
         <button
           type="button"
-          onClick={() => setCurrentSection("footer")}
+          onClick={() => handleSelectSection("footer")}
           className={cn(
             "flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer border-0",
             currentSection === "footer"
@@ -410,7 +434,7 @@ export default function LandingPageCmsTab({ showToast }) {
                 onClick={() => window.open("/", "_blank")}
                 className="flex h-10 items-center justify-center rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
               >
-                View Portal
+                Preview
               </Button>
 
               <Button
@@ -419,7 +443,7 @@ export default function LandingPageCmsTab({ showToast }) {
                 onClick={() => setResetModalOpen(true)}
                 className="flex h-10 items-center justify-center rounded-xl! border border-rose-200 dark:border-rose-900/40 bg-white dark:bg-zinc-900 text-rose-600 dark:text-rose-400 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-rose-50 dark:hover:bg-rose-950/20"
               >
-                Reset Defaults
+                Reset
               </Button>
 
               <Button
@@ -434,7 +458,7 @@ export default function LandingPageCmsTab({ showToast }) {
                     Saving...
                   </>
                 ) : (
-                  "Save Changes"
+                  "Save"
                 )}
               </Button>
             </div>
@@ -513,9 +537,9 @@ export default function LandingPageCmsTab({ showToast }) {
                             autoRotateInterval: Number(e.target.value),
                           }))
                         }
-                        className="h-9 rounded-xl border border-gray-200 dark:border-white/10 text-xs font-semibold text-gray-700 dark:text-zinc-200 bg-white dark:bg-zinc-900 cursor-pointer shadow-none px-3"
+                        className="h-9 rounded-xl border border-gray-200 dark:border-white/10 text-xs font-normal text-gray-700 dark:text-zinc-200 bg-white dark:bg-zinc-900 cursor-pointer shadow-none px-3"
                         menuClassName="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-900 shadow-2xl p-1.5"
-                        optionClassName="rounded-lg text-xs font-medium py-2 px-3 hover:bg-gray-100 dark:hover:bg-zinc-800"
+                        optionClassName="rounded-lg text-xs font-normal py-2 px-3 hover:bg-gray-100 dark:hover:bg-zinc-800"
                       >
                         <option value={3500}>Fast (3.5s)</option>
                         <option value={5500}>Balanced (5.5s)</option>
@@ -551,7 +575,7 @@ export default function LandingPageCmsTab({ showToast }) {
                         Uploading...
                       </>
                     ) : (
-                      "Upload Photo"
+                      "Upload"
                     )}
                   </Button>
                 </div>
@@ -949,7 +973,7 @@ export default function LandingPageCmsTab({ showToast }) {
         isLoading={saving}
         title="Reset Hero Section to Defaults"
         message="Are you sure you want to reset all landing page hero content and slides to default PUP institutional branding? Custom text and custom slide sequences will be reverted."
-        confirmLabel="Reset to Defaults"
+        confirmLabel="Reset"
         icon="ph-duotone ph-arrow-counter-clockwise"
         buttonIcon="ph-bold ph-arrow-counter-clockwise"
         selectedItems={[
@@ -973,7 +997,7 @@ export default function LandingPageCmsTab({ showToast }) {
         }}
         title="Remove Background Photo"
         message="Are you sure you want to remove this background photo from the hero carousel?"
-        confirmLabel="Remove Photo"
+        confirmLabel="Remove"
         icon="ph-duotone ph-trash"
         buttonIcon="ph-bold ph-trash"
         selectedItems={
@@ -1246,7 +1270,7 @@ function SlideCard({
           onMouseDown={(e) => e.stopPropagation()}
           className="w-full flex items-center justify-center h-9 rounded-xl! border-gray-200 dark:border-white/10 text-gray-700 dark:text-zinc-300 font-semibold text-xs hover:bg-gray-50 dark:hover:bg-zinc-800 cursor-pointer shadow-2xs"
         >
-          Change Photo
+          Change
         </Button>
       </div>
     </div>

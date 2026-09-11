@@ -230,7 +230,7 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
                   {isGeneratingPdf ? (
                     <i className="ph-bold ph-spinner animate-spin text-[16px] flex items-center justify-center"></i>
                   ) : (
-                    "Get Report"
+                    "Download"
                   )}
                 </Button>
               </div>
@@ -238,32 +238,35 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
           }
         />
 
+        {/* Navigation Toolbar */}
+        <SlaFilters 
+          startDate={startDate}
+          setStartDate={setStartDate}
+          endDate={endDate}
+          setEndDate={setEndDate}
+          isLoading={loading}
+          onRefresh={handleRefresh}
+        />
+
         {/* Active Filter Chips Row */}
         {hasActiveFilters && (() => {
           const formatChipDate = (dateStr) => {
             if (!dateStr) return "..."
             try {
-              return format(new Date(dateStr), "MMM d, yyyy")
+              const [y, m, d] = dateStr.split("-").map(Number)
+              if (isNaN(y) || isNaN(m) || isNaN(d)) return dateStr
+              return new Date(y, m - 1, d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
             } catch (e) {
               return dateStr
             }
           }
-          const format = (d, fmt) => {
-            try {
-              const dateObj = new Date(d);
-              if (isNaN(dateObj.getTime())) return d;
-              return dateObj.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-            } catch (e) {
-              return d;
-            }
-          }
           return (
-            <div className="flex-none border-b border-gray-100 bg-white px-6 py-3 animate-in fade-in slide-in-from-top-1 duration-normal dark:border-white/10 dark:bg-card">
+            <div className="flex-none border-t border-gray-100 dark:border-white/10 bg-white dark:bg-card px-6 py-3 animate-in fade-in slide-in-from-top-1 duration-normal">
               <div className="flex flex-wrap items-center gap-2">
                 <span className="mr-1 text-[11px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500">Active filters:</span>
                 {(startDate || endDate) && (
                   <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
-                    {formatChipDate(startDate)} – {formatChipDate(endDate)}
+                    Date Range: {startDate ? formatChipDate(startDate) : "Earliest"} – {endDate ? formatChipDate(endDate) : "Latest"}
                     <button
                       onClick={() => { setStartDate(""); setEndDate(""); }}
                       className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
@@ -288,16 +291,7 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
           )
         })()}
 
-        <SlaFilters 
-            startDate={startDate}
-            setStartDate={setStartDate}
-            endDate={endDate}
-            setEndDate={setEndDate}
-            isLoading={loading}
-            onRefresh={handleRefresh}
-        />
-
-        <CardContent className="bg-white p-6 dark:bg-card">
+        <CardContent className="bg-white p-6 dark:bg-card border-t border-gray-100 dark:border-white/10">
           {loading && !data ? (
             <SlaChartsSkeleton />
           ) : error ? (
@@ -442,7 +436,7 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
                 disabled={!pdfBlobUrl}
                 className="h-10 px-5 rounded-xl! text-xs font-semibold text-white btn-brand-red active:scale-95 disabled:opacity-50 transition-all cursor-pointer shadow-xs"
               >
-                Save to Device
+                Download
               </Button>
             </div>
           </div>

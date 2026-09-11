@@ -18,6 +18,13 @@ import PdfPreviewDialog from "./audit-logs/PdfPreviewDialog"
 import PageHeader from "@/components/shared/PageHeader"
 import { RefreshButton } from "@/components/shared/RefreshButton"
 
+function parseDateLocal(str) {
+  if (!str) return undefined
+  const [y, m, d] = str.split("-").map(Number)
+  if (isNaN(y) || isNaN(m) || isNaN(d)) return undefined
+  return new Date(y, m - 1, d)
+}
+
 export default function AuditLogsTab({
   displayLogs,
   logStats,
@@ -231,10 +238,10 @@ export default function AuditLogsTab({
     <TooltipProvider delay={200}>
       <div className="animate-fade-up font-inter flex w-full flex-col gap-6">
         {/* Stat Cards */}
-        <StatCards isLoading={isLoading && !isManualLoading} logStats={logStats} />
+        <StatCards isLoading={isLoading} logStats={logStats} />
 
         {/* Main Table Card */}
-        <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
+        <Card className="flex-1 flex flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none isolate">
           <PageHeader
             icon="ph-shield-check"
             title="Audit Logs"
@@ -257,7 +264,7 @@ export default function AuditLogsTab({
                     variant="outline"
                     onClick={handleDownloadCSV}
                     disabled={logTotal === 0 || isExporting || isGeneratingPdf}
-                    className="flex h-10 items-center justify-center rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
+                    className="flex h-10 items-center justify-center rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-5 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
                   >
                     {isExporting ? (
                       <i className="ph-bold ph-spinner animate-spin text-[16px]"></i>
@@ -274,7 +281,7 @@ export default function AuditLogsTab({
                     {isGeneratingPdf ? (
                       <i className="ph-bold ph-spinner animate-spin text-[16px] flex items-center justify-center"></i>
                     ) : (
-                      "Get Report"
+                      "Download"
                     )}
                   </Button>
                 </div>
@@ -282,18 +289,39 @@ export default function AuditLogsTab({
             }
           />
 
+          <LogFilters
+            localSearch={localSearch}
+            handleSearchChange={handleSearchChange}
+            logRoleFilter={logRoleFilter}
+            handleRoleChange={handleRoleChange}
+            logSeverityFilter={logSeverityFilter}
+            handleSeverityChange={handleSeverityChange}
+            logStartDate={logStartDate}
+            setLogStartDate={setLogStartDate}
+            logEndDate={logEndDate}
+            setLogEndDate={setLogEndDate}
+            setLogPage={setLogPage}
+            setLocalSearch={setLocalSearch}
+            setLogSearch={setLogSearch}
+            setLogRoleFilter={setLogRoleFilter}
+            setLogSeverityFilter={setLogSeverityFilter}
+            logTotal={logTotal}
+            isLoading={isLoading && !isManualLoading}
+          />
+
           {/* Active Filter Chips Row */}
           {hasActiveFilters && (() => {
             const formatChipDate = (dateStr) => {
               if (!dateStr) return "..."
               try {
-                return format(new Date(dateStr), "MMM d, yyyy")
+                const parsed = parseDateLocal(dateStr)
+                return parsed ? format(parsed, "MMM d, yyyy") : dateStr
               } catch (e) {
                 return dateStr
               }
             }
             return (
-              <div className="flex-none border-b border-gray-100 bg-white px-6 py-3 animate-in fade-in slide-in-from-top-1 duration-normal dark:border-white/10 dark:bg-card">
+              <div className="flex-none border-t border-gray-100 bg-white px-6 py-3 animate-in fade-in slide-in-from-top-1 duration-normal dark:border-white/10 dark:bg-card">
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="mr-1 text-[11px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500">Active filters:</span>
                   {localSearch && (
@@ -361,59 +389,40 @@ export default function AuditLogsTab({
             )
           })()}
 
-          <LogFilters
-            localSearch={localSearch}
-            handleSearchChange={handleSearchChange}
-            logRoleFilter={logRoleFilter}
-            handleRoleChange={handleRoleChange}
-            logSeverityFilter={logSeverityFilter}
-            handleSeverityChange={handleSeverityChange}
-            logStartDate={logStartDate}
-            setLogStartDate={setLogStartDate}
-            logEndDate={logEndDate}
-            setLogEndDate={setLogEndDate}
+          <LogTable
+            isLoading={isLoading && !isManualLoading}
+            error={error}
+            displayLogs={logs}
+            selectedLog={selectedLog}
+            setSelectedLog={setSelectedLog}
+            logTotal={logTotal}
+            logPage={logPage}
             setLogPage={setLogPage}
+            itemsPerPage={itemsPerPage}
+            logsPerPage={logsPerPage}
+            setItemsPerPage={setItemsPerPage}
+            setLogsPerPage={setLogsPerPage}
+            jumpPage={jumpPage}
+            setJumpPage={setJumpPage}
+            handleSort={handleSort}
+            logSortBy={logSortBy}
+            logSortOrder={logSortOrder}
+            localSearch={localSearch}
+            logRoleFilter={logRoleFilter}
+            logSeverityFilter={logSeverityFilter}
+            logStartDate={logStartDate}
+            logEndDate={logEndDate}
             setLocalSearch={setLocalSearch}
             setLogSearch={setLogSearch}
             setLogRoleFilter={setLogRoleFilter}
             setLogSeverityFilter={setLogSeverityFilter}
-            logTotal={logTotal}
-            isLoading={isLoading && !isManualLoading}
+            setLogStartDate={setLogStartDate}
+            setLogEndDate={setLogEndDate}
+            handleCopy={handleCopy}
+            embedded={true}
+            cn={cn}
           />
         </Card>
-
-        <LogTable
-          isLoading={isLoading && !isManualLoading}
-          error={error}
-          displayLogs={logs}
-          selectedLog={selectedLog}
-          setSelectedLog={setSelectedLog}
-          logTotal={logTotal}
-          logPage={logPage}
-          setLogPage={setLogPage}
-          itemsPerPage={itemsPerPage}
-          logsPerPage={logsPerPage}
-          setItemsPerPage={setItemsPerPage}
-          setLogsPerPage={setLogsPerPage}
-          jumpPage={jumpPage}
-          setJumpPage={setJumpPage}
-          handleSort={handleSort}
-          logSortBy={logSortBy}
-          logSortOrder={logSortOrder}
-          localSearch={localSearch}
-          logRoleFilter={logRoleFilter}
-          logSeverityFilter={logSeverityFilter}
-          logStartDate={logStartDate}
-          logEndDate={logEndDate}
-          setLocalSearch={setLocalSearch}
-          setLogSearch={setLogSearch}
-          setLogRoleFilter={setLogRoleFilter}
-          setLogSeverityFilter={setLogSeverityFilter}
-          setLogStartDate={setLogStartDate}
-          setLogEndDate={setLogEndDate}
-          handleCopy={handleCopy}
-          cn={cn}
-        />
 
         {/* Log Detail Side Sheet */}
         <LogDetailSheet

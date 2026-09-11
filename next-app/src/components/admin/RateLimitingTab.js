@@ -256,7 +256,7 @@ export default function RateLimitingTab() {
                               <PhUnlock className="h-4 w-4" />
                             </button>
                           </TooltipTrigger>
-                          <TooltipContent>Clear violation</TooltipContent>
+                          <TooltipContent>Clear</TooltipContent>
                         </Tooltip>
                       </div>
                     </td>
@@ -313,7 +313,7 @@ export default function RateLimitingTab() {
                           <i className="ph-bold ph-pencil-simple text-sm" />
                         </button>
                       </TooltipTrigger>
-                      <TooltipContent>Edit configuration</TooltipContent>
+                      <TooltipContent>Edit</TooltipContent>
                     </Tooltip>
                   </div>
                 </td>

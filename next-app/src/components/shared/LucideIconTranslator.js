@@ -58,6 +58,8 @@ export default function LucideIconTranslator() {
       "check-square": "check-square",
       "square": "square",
       "bell": "bell",
+      "bell-slash": "bell-off",
+      "bell-simple-slash": "bell-off",
       "archive": "archive",
       "archive-restore": "archive-restore",
       "scan": "scan",

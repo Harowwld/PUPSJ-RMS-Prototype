@@ -53,7 +53,8 @@ export default function SecurityQuestionsTab({
             <PageHeader
               icon="ph-lock-key"
               showBorder={false}
-              titleClassName="text-[15px]"
+              titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
+              descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
               title="Security Questions"
               description="Define verification challenges for personnel account recovery and setup."
               actions={
@@ -63,7 +64,7 @@ export default function SecurityQuestionsTab({
                   className="flex h-10 items-center justify-center rounded-xl! btn-brand-red text-white font-semibold text-xs px-5 active:scale-95 disabled:opacity-50 transition-all cursor-pointer shadow-xs border-0"
                 >
                   {securitySaving && <i className="ph-bold ph-spinner animate-spin mr-1.5 text-xs"></i>}
-                  {securitySaving ? "Saving..." : "Save Questions"}
+                  {securitySaving ? "Saving..." : "Save"}
                 </Button>
               }
               className="p-0"
@@ -142,7 +143,7 @@ export default function SecurityQuestionsTab({
                 onClick={handleAddQuestion}
                 className="mt-2 flex h-10 w-fit items-center justify-center rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-4 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700 cursor-pointer active:scale-95 transition-all"
               >
-                Add another question
+                Add
               </Button>
             </div>
           </div>
