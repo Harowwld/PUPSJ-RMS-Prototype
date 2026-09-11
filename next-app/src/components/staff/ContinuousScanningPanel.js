@@ -56,16 +56,14 @@ export default function ContinuousScanningPanel({ onOpenReview, showToast = () =
       });
     }
     setCurrentFile(rows.find((row) => row.review_status === "Processing")?.original_filename || "");
-    if (data.total > 0) {
-      setStats({
-        total: rows.length,
-        remaining: processingRows.length,
-        succeeded: successfulRows.length,
-        confirmed: confirmedRows.length,
-        review: reviewRows.length,
-        failed: failedRows.length,
-      });
-    }
+    setStats(data.total > 0 ? {
+      total: rows.length,
+      remaining: processingRows.length,
+      succeeded: successfulRows.length,
+      confirmed: confirmedRows.length,
+      review: reviewRows.length,
+      failed: failedRows.length,
+    } : EMPTY_STATS);
     return data;
   }, []);
 
@@ -210,7 +208,7 @@ export default function ContinuousScanningPanel({ onOpenReview, showToast = () =
         </div>
       </div>
       <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/80 dark:bg-zinc-800">
-        <div className="rms-style-width h-full rounded-full bg-blue-600 transition-all duration-300" data-width={`${percent}%`} />
+        <div className="h-full rounded-full bg-blue-600 transition-all duration-300" style={{ width: `${percent}%` }} />
       </div>
       <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[11px] font-medium text-gray-600 dark:text-zinc-400">
         <span>{batch?.total > 0 ? `${stats.total} total in batch` : `${stats.total} waiting in inbound queue`}</span><span>{batch?.total > 0 ? `${stats.remaining} OCR remaining` : `${stats.remaining} waiting to be claimed`}</span><span className="text-emerald-700 dark:text-emerald-400">{stats.succeeded} OCR complete</span><span>{stats.confirmed} confirmed</span><span>{stats.review} review</span><span>{stats.failed} failed</span>
