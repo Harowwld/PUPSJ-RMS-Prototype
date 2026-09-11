@@ -818,7 +818,7 @@ export default function StudentDashboard() {
                                       {item.client_type || "Student"}
                                     </span>
                                     {item.course_code && (
-                                      <span className="inline-flex items-center rounded-md bg-gray-100 dark:bg-zinc-800 px-1.5 py-0.5 text-[10px] font-medium text-gray-700 dark:text-zinc-300" title={item.course_name || item.course_code}>
+                                      <span className="inline-flex items-center rounded-full bg-gray-100 dark:bg-zinc-800 px-2 py-0.5 text-[10px] font-medium text-gray-700 dark:text-zinc-300" title={item.course_name || item.course_code}>
                                         {item.course_code}
                                       </span>
                                     )}
@@ -999,7 +999,7 @@ export default function StudentDashboard() {
         <DialogContent className="max-w-lg rounded-2xl p-6 font-inter">
           <DialogHeader>
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-pup-maroon bg-red-50 dark:bg-red-950/40 px-2.5 py-1 rounded-md border border-red-100 dark:border-red-900/30">
+              <span className="text-xs font-semibold text-pup-maroon bg-red-50 dark:bg-red-950/40 px-3 py-1 rounded-full border border-red-100 dark:border-red-900/30">
                 Request #{selectedRequestForDetail?.id}
               </span>
               <StatusBadge status={selectedRequestForDetail?.status} />

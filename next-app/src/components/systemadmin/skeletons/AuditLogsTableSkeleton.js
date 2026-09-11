@@ -65,7 +65,7 @@ export default function AuditLogsTableSkeleton({ rowCount = 8, embedded = false 
                   <Skeleton className="h-3.5 w-24 rounded dark:bg-muted" />
                 </td>
                 <td className="py-0 px-4 align-middle">
-                  <Skeleton className="h-5 w-20 rounded-md dark:bg-muted" />
+                  <Skeleton className="h-5 w-20 rounded-full dark:bg-muted" />
                 </td>
                 <td className="py-0 px-4 align-middle">
                   <Skeleton className="h-3.5 w-32 rounded dark:bg-muted" />

@@ -82,7 +82,7 @@ export default function LogExpandedRow({ log, handleCopy }) {
           >
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-semibold uppercase tracking-[0.04em] text-[#8E8E93]">Target</span>
-              <span className="rounded-md bg-[#E0F2FE] px-[8px] py-[3px] text-[11px] font-medium text-[#0369A1] dark:bg-blue-950/40 dark:text-blue-400">
+              <span className="rounded-full bg-[#E0F2FE] px-[10px] py-[2.5px] text-[11px] font-medium text-[#0369A1] dark:bg-blue-950/40 dark:text-blue-400">
                 {log.entityType || "N/A"}
               </span>
             </div>

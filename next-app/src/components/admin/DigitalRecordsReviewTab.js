@@ -689,7 +689,7 @@ export default function DigitalRecordsReviewTab({
                           <div className="flex items-center gap-1.5">
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                <Badge className="bg-[#FEE2E2] text-[#991B1B] hover:bg-[#FEE2E2] dark:bg-red-950/40 dark:text-red-400 dark:hover:bg-red-950/40 border border-red-200/50 dark:border-red-500/20 text-[10px] font-bold px-2 py-0.5 tracking-wide cursor-help rounded-[4px]">
+                                <Badge className="bg-[#FEE2E2] text-[#991B1B] hover:bg-[#FEE2E2] dark:bg-red-950/40 dark:text-red-400 dark:hover:bg-red-950/40 border border-red-200/50 dark:border-red-500/20 text-[10px] font-bold px-2.5 py-0.5 tracking-wide cursor-help rounded-full">
                                   SLA Warning
                                 </Badge>
                               </TooltipTrigger>
@@ -1395,7 +1395,7 @@ export default function DigitalRecordsReviewTab({
                             </div>
                           </td>
                           <td className="py-0 px-4 align-middle">
-                            <span className="inline-flex w-fit items-center justify-center rounded-[4px] bg-gray-100 px-[8px] py-[3px] text-[11px] font-medium text-gray-900 dark:bg-zinc-800 dark:text-zinc-100">
+                            <span className="inline-flex w-fit items-center justify-center rounded-full bg-gray-100 px-[10px] py-[2.5px] text-[11px] font-medium text-gray-900 dark:bg-zinc-800 dark:text-zinc-100">
                               {r.doc_type}
                             </span>
                           </td>
@@ -1411,7 +1411,7 @@ export default function DigitalRecordsReviewTab({
                             <div className="flex items-center gap-3">
                               <span
                                 className={cn(
-                                  "inline-flex w-fit items-center justify-center rounded-[4px] px-[8px] py-[3px] text-[11px] font-medium uppercase tracking-[0.04em] shadow-none transition-all",
+                                  "inline-flex w-fit items-center justify-center rounded-full px-[10px] py-[2.5px] text-[11px] font-medium uppercase tracking-[0.04em] shadow-none transition-all",
                                   getStatusBadge(r.approval_status)
                                 )}
                               >

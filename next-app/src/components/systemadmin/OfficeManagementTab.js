@@ -780,7 +780,7 @@ export default function OfficeManagementTab({ showToast }) {
                 Active filters:
               </span>
               {searchQuery && (
-                <div className="flex items-center gap-[6px] rounded-[6px] bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
+                <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
                   Search: {searchQuery}
                   <button
                     onClick={() => setSearchQuery("")}
@@ -903,7 +903,7 @@ export default function OfficeManagementTab({ showToast }) {
 
                       <div
                         className={cn(
-                          "inline-flex w-fit items-center justify-center rounded-[4px] px-[8px] py-[3px] text-[11px] font-medium tracking-[0.04em] select-none",
+                          "inline-flex w-fit items-center justify-center rounded-full px-[10px] py-[2.5px] text-[11px] font-medium tracking-[0.04em] select-none",
                           isActive
                             ? "bg-[#D1FAE5] text-[#065F46] dark:bg-emerald-950/40 dark:text-emerald-400"
                             : "bg-gray-100 text-[#8E8E93] dark:bg-zinc-800 dark:text-zinc-400"
@@ -1221,7 +1221,7 @@ export default function OfficeManagementTab({ showToast }) {
                       <td className="px-5 py-3.5 whitespace-nowrap">
                         <div
                           className={cn(
-                            "inline-flex w-fit items-center justify-center rounded-[4px] px-[8px] py-[3px] text-[11px] font-medium tracking-[0.04em] select-none",
+                            "inline-flex w-fit items-center justify-center rounded-full px-[10px] py-[2.5px] text-[11px] font-medium tracking-[0.04em] select-none",
                             isActive
                               ? "bg-[#D1FAE5] text-[#065F46] dark:bg-emerald-950/40 dark:text-emerald-400"
                               : "bg-gray-100 text-[#8E8E93] dark:bg-zinc-800 dark:text-zinc-400"

@@ -418,7 +418,7 @@ th {
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
   border: none !important;
-  color: #ffffff !important;
+  color: var(--brand-foreground, #ffffff) !important;
   border-radius: 12px !important;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
   font-weight: 600 !important;

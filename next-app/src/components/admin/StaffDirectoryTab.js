@@ -123,7 +123,7 @@ const StaffTableRow = React.memo(({
       </td>
       <td className="py-0 px-4 align-middle">
         <div className={cn(
-          "inline-flex w-fit items-center justify-center rounded-[4px] px-[8px] py-[3px] text-[11px] font-medium tracking-[0.04em]",
+          "inline-flex w-fit items-center justify-center rounded-full px-[10px] py-[3px] text-[11px] font-medium tracking-[0.04em]",
           s.role === "SystemAdmin" || s.role === "SuperAdmin"
             ? "bg-gray-900 text-white dark:bg-zinc-100 dark:text-zinc-950"
             : s.role === "Admin"

@@ -21,6 +21,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { canonicalizeCabinetId } from "@/lib/storageLayoutUtils";
 import { cn } from "@/lib/utils";
+import { getRoleBranding } from "@/lib/roleBranding";
 import { PageTransition } from "@/components/ui/motion";
 import StaffTabSkeleton from "@/components/staff/skeletons/StaffTabSkeleton";
 
@@ -1516,8 +1517,12 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
     );
   }
 
+  const roleBranding = getRoleBranding(authUser);
+  const brandAccent = authUser?.accent_color || roleBranding.color || "#EDBB00";
+  const brandForeground = roleBranding.foreground || "#FFFFFF";
+
   return (
-    <div className="h-screen overflow-hidden flex flex-col bg-slate-50/30 dark:bg-zinc-950/30 font-inter relative transition-colors duration-300" style={{ "--brand-accent": authUser?.accent_color || "#EDBB00", "--brand-foreground": "#FFFFFF" }}>
+    <div className="h-screen overflow-hidden flex flex-col bg-slate-50/30 dark:bg-zinc-950/30 font-inter relative transition-colors duration-300" style={{ "--brand-accent": brandAccent, "--brand-foreground": brandForeground }}>
       {/* Dynamic Liquid Glass Background Blobs */}
       <div className="liquid-container">
         <div className="liquid-blob liquid-blob-1"></div>
@@ -1588,6 +1593,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
           >
             <TabsContent value="students" className="h-full m-0 border-0 focus-visible:ring-0">
             <StudentDirectoryTab
+              authUser={authUser}
               loading={!storageLayout || loading}
               students={students}
               archivedStudents={archivedStudents}

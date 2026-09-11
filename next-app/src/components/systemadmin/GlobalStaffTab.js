@@ -846,7 +846,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                 Active filters:
               </span>
               {search && (
-                <div className="flex items-center gap-[6px] rounded-[6px] bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
+                <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
                   Search: {search}
                   <button
                     onClick={() => {
@@ -860,7 +860,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                 </div>
               )}
               {officeFilter !== "All" && (
-                <div className="flex items-center gap-[6px] rounded-[6px] bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
+                <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
                   Office: {officeFilter === "global" ? "System Administration" : (Array.isArray(offices) ? offices : []).find((o) => o.id === officeFilter)?.short_name || officeFilter}
                   <button
                     onClick={() => {
@@ -874,7 +874,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                 </div>
               )}
               {roleFilter !== "All" && (
-                <div className="flex items-center gap-[6px] rounded-[6px] bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
+                <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
                   Role: {roleFilter === "SystemAdmin" ? "System Admin" : roleFilter}
                   <button
                     onClick={() => {
@@ -1070,7 +1070,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                     <td className="py-2 px-4 align-middle">
                       {office ? (
                         <div 
-                          className="inline-flex w-fit items-center justify-center rounded-[4px] px-[8px] py-[3px] text-[11px] font-semibold tracking-[0.04em] border-0 select-none"
+                          className="inline-flex w-fit items-center justify-center rounded-full px-[10px] py-[2.5px] text-[11px] font-semibold tracking-[0.04em] border-0 select-none"
                           style={{
                             backgroundColor: `${office.accent_color || "#800000"}15`,
                             color: office.accent_color || "#800000"
@@ -1079,7 +1079,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                           {office.short_name}
                         </div>
                       ) : (
-                        <span className="inline-flex w-fit items-center justify-center rounded-[4px] px-[8px] py-[3px] text-[11px] font-semibold tracking-[0.04em] bg-gray-900 text-white dark:bg-zinc-100 dark:text-zinc-950 select-none">
+                        <span className="inline-flex w-fit items-center justify-center rounded-full px-[10px] py-[2.5px] text-[11px] font-semibold tracking-[0.04em] bg-gray-900 text-white dark:bg-zinc-100 dark:text-zinc-950 select-none">
                           Platform Level
                         </span>
                       )}
@@ -1087,7 +1087,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                     <td className="py-2 px-4 align-middle">
                       <div 
                         className={cn(
-                          "inline-flex w-fit items-center justify-center rounded-[4px] px-[8px] py-[3px] text-[11px] font-medium tracking-[0.04em]",
+                          "inline-flex w-fit items-center justify-center rounded-full px-[10px] py-[2.5px] text-[11px] font-medium tracking-[0.04em]",
                           member.role === "SystemAdmin" || member.role === "SuperAdmin"
                             ? "bg-gray-900 text-white dark:bg-zinc-100 dark:text-zinc-950"
                             : member.role === "Admin"

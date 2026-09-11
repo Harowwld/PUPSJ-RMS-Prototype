@@ -610,7 +610,7 @@ export default function DocumentRequestsTab({
                   Active filters:
                 </span>
                 {q && (
-                  <div className="flex items-center gap-[6px] rounded-[6px] bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
+                  <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
                     Search: {q}
                     <button
                       onClick={() => {
@@ -624,7 +624,7 @@ export default function DocumentRequestsTab({
                   </div>
                 )}
                 {clientTypeFilter && (
-                  <div className="flex items-center gap-[6px] rounded-[6px] bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
+                  <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
                     Client: {clientTypeFilter === "Student" ? "Students" : "Alumni"}
                     <button
                       onClick={() => {
@@ -638,7 +638,7 @@ export default function DocumentRequestsTab({
                   </div>
                 )}
                 {statusFilter && (
-                  <div className="flex items-center gap-[6px] rounded-[6px] bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
+                  <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
                     Status: {statusFilter === "InProgress" ? "In Progress" : statusFilter}
                     <button
                       onClick={() => {
@@ -652,7 +652,7 @@ export default function DocumentRequestsTab({
                   </div>
                 )}
                 {docTypeFilter && (
-                  <div className="flex items-center gap-[6px] rounded-[6px] bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
+                  <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
                     Document: {docTypeFilter}
                     <button
                       onClick={() => {
@@ -819,7 +819,7 @@ export default function DocumentRequestsTab({
                                 </span>
                                 <span
                                   className={cn(
-                                    "inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium",
+                                    "inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium",
                                     isAlumni
                                       ? "bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-300 border border-purple-200/50 dark:border-purple-800/30"
                                       : "bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-200/50 dark:border-blue-800/30"
@@ -835,7 +835,7 @@ export default function DocumentRequestsTab({
                                   <span className="italic text-amber-600 dark:text-amber-400">No Student ID</span>
                                 )}
                                 {r.course_code && (
-                                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-gray-100 dark:bg-zinc-800 text-gray-700 dark:text-zinc-300">
+                                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-gray-100 dark:bg-zinc-800 text-gray-700 dark:text-zinc-300">
                                     {r.course_code}
                                   </span>
                                 )}
@@ -844,10 +844,16 @@ export default function DocumentRequestsTab({
                                     type="button"
                                     onClick={(e) => {
                                       e.stopPropagation();
-                                      onLocateOnMap(loc);
+                                      onLocateOnMap({
+                                        room: loc.room,
+                                        cabinet: loc.cabinet,
+                                        drawer: loc.drawer,
+                                        studentNo: r.student_no,
+                                        name: r.student_name || r.requester_name,
+                                      });
                                     }}
-                                    title="Locate on storage map"
-                                    className="inline-flex items-center gap-1 rounded-lg bg-red-50 hover:bg-red-100 px-2 py-0.5 text-[11px] font-medium tracking-[0.04em] text-pup-maroon dark:bg-red-950/40 dark:text-primary dark:hover:bg-red-950/60 border border-red-100/30 dark:border-white/5 cursor-pointer transition-colors whitespace-nowrap"
+                                    title="View student location on storage map"
+                                    className="inline-flex items-center gap-1 rounded-full bg-red-50 hover:bg-red-100 px-2.5 py-0.5 text-[11px] font-medium tracking-[0.04em] text-pup-maroon dark:bg-red-950/40 dark:text-primary dark:hover:bg-red-950/60 border border-red-100/30 dark:border-white/5 cursor-pointer transition-colors whitespace-nowrap"
                                   >
                                     <i className="ph-bold ph-map-pin text-[10px]"></i>
                                     RM{loc.room} · CAB-{loc.cabinet} · DRW-{loc.drawer}
@@ -856,12 +862,12 @@ export default function DocumentRequestsTab({
                               </div>
                             </td>
                             <td className="py-0 px-4 align-middle">
-                              <div className="inline-flex w-fit items-center justify-center rounded-lg bg-gray-100 px-2.5 py-1 text-[11px] font-medium text-gray-900 dark:bg-zinc-800 dark:text-zinc-100 whitespace-nowrap">
+                              <div className="inline-flex w-fit items-center justify-center rounded-full bg-gray-100 px-[10px] py-[2.5px] text-[11px] font-medium text-gray-900 dark:bg-zinc-800 dark:text-zinc-100 whitespace-nowrap">
                                 {r.doc_type}
                               </div>
                             </td>
                             <td className="py-0 px-4 align-middle">
-                              <div className={cn("inline-flex w-fit items-center justify-center rounded-lg px-2.5 py-1 text-[11px] font-medium tracking-[0.04em] whitespace-nowrap", statusBadgeClass(r.status))}>
+                              <div className={cn("inline-flex w-fit items-center justify-center rounded-full px-[10px] py-[2.5px] text-[11px] font-medium tracking-[0.04em] whitespace-nowrap", statusBadgeClass(r.status))}>
                                 {r.status === "InProgress" ? "In Progress" : r.status}
                               </div>
                             </td>
@@ -975,7 +981,7 @@ export default function DocumentRequestsTab({
                   <SheetDescription className="mt-1 text-left text-xs font-normal text-gray-500 dark:text-zinc-400 flex items-center gap-2">
                     <span>Request #{selectedId}</span>
                     {detail && (
-                      <span className={cn("inline-flex px-2 py-0.5 rounded text-[10px] font-medium", statusBadgeClass(detail.status))}>
+                      <span className={cn("inline-flex px-2.5 py-0.5 rounded-full text-[10px] font-medium", statusBadgeClass(detail.status))}>
                         {detail.status === "InProgress" ? "In Progress" : detail.status}
                       </span>
                     )}
@@ -1010,7 +1016,7 @@ export default function DocumentRequestsTab({
                             </span>
                             <span
                               className={cn(
-                                "inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium shrink-0",
+                                "inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium shrink-0",
                                 detail.client_type === "Alumni"
                                   ? "bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-300 border border-purple-200/50 dark:border-purple-800/30"
                                   : "bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-200/50 dark:border-blue-800/30"
@@ -1050,7 +1056,7 @@ export default function DocumentRequestsTab({
                               Physical Archive
                             </span>
                             {studentForRequest || detail.room ? (
-                              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200/50 dark:border-emerald-800/30">
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200/50 dark:border-emerald-800/30">
                                 Mapped
                               </span>
                             ) : null}
@@ -1106,7 +1112,7 @@ export default function DocumentRequestsTab({
                         Document Requested
                       </span>
                       <div className="w-full h-full bg-[#F5F5F7] dark:bg-zinc-800/40 border border-[#E5E5EA] dark:border-white/10 rounded-xl p-4 flex flex-col justify-between space-y-2">
-                        <span className="inline-flex w-fit items-center rounded-lg bg-white dark:bg-zinc-800 border border-[#E5E5EA] dark:border-white/10 px-2.5 py-1 text-xs font-semibold text-gray-900 dark:text-zinc-100">
+                        <span className="inline-flex w-fit items-center rounded-full bg-white dark:bg-zinc-800 border border-[#E5E5EA] dark:border-white/10 px-3 py-1 text-xs font-semibold text-gray-900 dark:text-zinc-100">
                           {detail.doc_type}
                         </span>
                         <span className="text-[11px] text-gray-500 dark:text-zinc-400 flex items-center gap-1.5">

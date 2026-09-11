@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   Dialog,
   DialogContent,
@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
 import { canonicalizeCabinetId } from "@/lib/storageLayoutUtils";
 import { cn } from "@/lib/utils";
+import { getRoleBranding } from "@/lib/roleBranding";
 
 export default function RegisterStudentModal({
   open,
@@ -23,7 +24,9 @@ export default function RegisterStudentModal({
   storageLayout = null,
   onSuccess,
   showToast,
+  authUser = null,
 }) {
+  const branding = useMemo(() => getRoleBranding(authUser), [authUser]);
   const currentYear = new Date().getFullYear();
 
   const [studentNo, setStudentNo] = useState("");
@@ -181,7 +184,7 @@ export default function RegisterStudentModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-full max-w-2xl overflow-hidden rounded-2xl border border-gray-200 bg-white p-0 shadow-2xl dark:border-white/10 dark:bg-card">
+      <DialogContent className="w-full max-w-4xl sm:max-w-4xl overflow-hidden rounded-2xl border border-gray-200 bg-white p-0 shadow-2xl dark:border-white/10 dark:bg-card">
         <DialogHeader className="bg-white p-6 pb-2 dark:bg-card border-none">
           <DialogTitle className="text-[17px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
             Register Student Record
@@ -240,8 +243,8 @@ export default function RegisterStudentModal({
             <h4 className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
               Academic Program & Section
             </h4>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+              <div className="md:col-span-6">
                 <label className="mb-1.5 block text-xs font-medium text-gray-700 dark:text-zinc-300">
                   Degree Program <span className="text-red-500">*</span>
                 </label>
@@ -260,7 +263,7 @@ export default function RegisterStudentModal({
                 />
               </div>
 
-              <div>
+              <div className="md:col-span-3">
                 <label className="mb-1.5 block text-xs font-medium text-gray-700 dark:text-zinc-300">
                   Entry Year <span className="text-red-500">*</span>
                 </label>
@@ -276,7 +279,7 @@ export default function RegisterStudentModal({
                 />
               </div>
 
-              <div>
+              <div className="md:col-span-3">
                 <label className="mb-1.5 block text-xs font-medium text-gray-700 dark:text-zinc-300">
                   Section <span className="text-red-500">*</span>
                 </label>
@@ -374,7 +377,11 @@ export default function RegisterStudentModal({
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all"
+              className="flex h-10 px-5 text-xs font-semibold rounded-xl! btn-brand-red active:scale-95 disabled:opacity-50 transition-all cursor-pointer shadow-xs"
+              style={{
+                backgroundColor: authUser?.accent_color || branding.color || "var(--brand-accent)",
+                color: branding.foreground || "var(--brand-foreground, #ffffff)",
+              }}
             >
               {isSubmitting ? (
                 <span className="flex items-center gap-2">
@@ -382,7 +389,7 @@ export default function RegisterStudentModal({
                   Registering...
                 </span>
               ) : (
-                "Enroll Student"
+                "Register"
               )}
             </Button>
           </DialogFooter>

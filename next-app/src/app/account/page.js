@@ -787,7 +787,7 @@ function AccountPageContent() {
                       {fname} {lname}
                     </h3>
                     {authUser?.role && (
-                      <span className="text-[11px] font-medium px-2.5 py-1 rounded-[4px] bg-red-50 text-pup-maroon dark:bg-red-500/20 dark:text-red-400 tracking-[0.04em]">
+                      <span className="text-[11px] font-medium px-3 py-1 rounded-full bg-red-50 text-pup-maroon dark:bg-red-500/20 dark:text-red-400 tracking-[0.04em]">
                         {authUser.role === "Student" ? (clientType || "Student") : getRoleLabel(authUser.role)}
                       </span>
                     )}

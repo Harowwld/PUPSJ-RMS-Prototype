@@ -25,9 +25,10 @@ import {
 } from "@/components/ui/empty";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
+import { getRoleBranding } from "@/lib/roleBranding";
 import RegisterStudentModal from "./RegisterStudentModal";
 import EditStudentModal from "./EditStudentModal";
-import StudentProfileModal from "./StudentProfileModal";
+import StudentProfileSheet from "./StudentProfileSheet";
 
 function SortIndicator({ column, sortBy, sortOrder }) {
   if (sortBy !== column) {
@@ -43,6 +44,7 @@ function SortIndicator({ column, sortBy, sortOrder }) {
 }
 
 export default function StudentDirectoryTab({
+  authUser = null,
   loading = false,
   students = [],
   archivedStudents = [],
@@ -55,6 +57,7 @@ export default function StudentDirectoryTab({
   fetchData,
   showToast,
 }) {
+  const branding = useMemo(() => getRoleBranding(authUser), [authUser]);
   const [activeTab, setActiveTab] = useState("active"); // "active" | "archived" | "all"
   const [searchQuery, setSearchQuery] = useState("");
   const [courseFilter, setCourseFilter] = useState("all");
@@ -414,31 +417,38 @@ export default function StudentDirectoryTab({
             titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
             descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
             actions={
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-4">
                 <RefreshButton
                   onRefresh={handleRefresh}
                   isLoading={loading || isRefreshing}
                   title="Refresh Student Directory"
                 />
 
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleExportCSV}
-                  disabled={filteredStudents.length === 0}
-                  className="h-10 px-4 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
-                >
-                  <i className="ph-bold ph-export mr-1.5 text-sm"></i>
-                  Export CSV
-                </Button>
+                <div className="h-6 w-px bg-gray-200 dark:bg-zinc-800" />
 
-                <Button
-                  type="button"
-                  onClick={() => setRegisterOpen(true)}
-                  className="h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all"
-                >
-                  Register Student
-                </Button>
+                <div className="flex items-center gap-3">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleExportCSV}
+                    disabled={filteredStudents.length === 0}
+                    className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                  >
+                    Export
+                  </Button>
+
+                  <Button
+                    type="button"
+                    onClick={() => setRegisterOpen(true)}
+                    className="flex h-10 px-5 text-xs font-semibold rounded-xl! btn-brand-red active:scale-95 disabled:opacity-50 transition-all cursor-pointer shadow-xs"
+                    style={{
+                      backgroundColor: authUser?.accent_color || branding.color || "var(--brand-accent)",
+                      color: branding.foreground || "var(--brand-foreground, #ffffff)",
+                    }}
+                  >
+                    Register
+                  </Button>
+                </div>
               </div>
             }
           />
@@ -780,7 +790,7 @@ export default function StudentDirectoryTab({
                           </td>
 
                           <td className="p-4">
-                            <span className="font-mono text-xs font-semibold px-2 py-1 rounded-md bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200">
+                            <span className="font-mono text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200">
                               {s.studentNo}
                             </span>
                           </td>
@@ -795,7 +805,7 @@ export default function StudentDirectoryTab({
                             <div className="flex items-center gap-1.5">
                               <Badge
                                 variant="outline"
-                                className="text-[11px] font-semibold uppercase px-2 py-0.5 rounded-md border-gray-200 dark:border-white/10"
+                                className="text-[11px] font-semibold uppercase px-2.5 py-0.5 rounded-full border-gray-200 dark:border-white/10"
                               >
                                 {s.courseCode || "N/A"}
                               </Badge>
@@ -1015,10 +1025,10 @@ export default function StudentDirectoryTab({
                       setBulkActionType("archive");
                       setBulkActionOpen(true);
                     }}
-                    className="h-8 px-3 text-xs font-semibold rounded-lg border border-red-200 bg-red-50 text-red-700 hover:bg-red-100 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-400"
+                    className="h-8 px-3 text-xs font-semibold rounded-lg border border-red-200 bg-red-50 text-red-700 hover:bg-red-100 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-400 cursor-pointer active:scale-95 transition-all"
                   >
                     <i className="ph-bold ph-archive mr-1"></i>
-                    Archive Selected ({selectedIds.size})
+                    Archive ({selectedIds.size})
                   </Button>
                 )}
 
@@ -1030,10 +1040,10 @@ export default function StudentDirectoryTab({
                       setBulkActionType("restore");
                       setBulkActionOpen(true);
                     }}
-                    className="h-8 px-3 text-xs font-semibold rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-400"
+                    className="h-8 px-3 text-xs font-semibold rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-400 cursor-pointer active:scale-95 transition-all"
                   >
                     <i className="ph-bold ph-archive-restore mr-1"></i>
-                    Restore Selected ({selectedIds.size})
+                    Restore ({selectedIds.size})
                   </Button>
                 )}
               </div>
@@ -1050,6 +1060,7 @@ export default function StudentDirectoryTab({
           storageLayout={storageLayout}
           onSuccess={fetchData}
           showToast={showToast}
+          authUser={authUser}
         />
 
         {/* Edit Student Modal */}
@@ -1062,13 +1073,15 @@ export default function StudentDirectoryTab({
           storageLayout={storageLayout}
           onSuccess={fetchData}
           showToast={showToast}
+          authUser={authUser}
         />
 
-        {/* Student Profile / Dossier Modal */}
-        <StudentProfileModal
+        {/* Student Profile / Dossier Sheet */}
+        <StudentProfileSheet
           open={profileOpen}
           onOpenChange={setProfileOpen}
           student={activeStudent}
+          courses={courses}
           allDocs={allDocs}
           onLocateStudent={onLocateStudent}
           onPreviewDocument={onPreviewDocument}
@@ -1084,6 +1097,7 @@ export default function StudentDirectoryTab({
             setRestoreTarget(activeStudent);
             setRestoreModalOpen(true);
           }}
+          authUser={authUser}
         />
 
         {/* Single Archive Confirm Modal */}
@@ -1092,7 +1106,7 @@ export default function StudentDirectoryTab({
           onOpenChange={setArchiveModalOpen}
           title="Archive Student Record"
           description={`Are you sure you want to archive student record ${archiveTarget?.studentNo} (${archiveTarget?.name})? The student will be moved to the archive view.`}
-          confirmLabel="Archive Student"
+          confirmLabel="Archive"
           confirmVariant="destructive"
           onConfirm={handleConfirmArchive}
         />
@@ -1103,7 +1117,7 @@ export default function StudentDirectoryTab({
           onOpenChange={setRestoreModalOpen}
           title="Restore Student Record"
           description={`Are you sure you want to restore student record ${restoreTarget?.studentNo} (${restoreTarget?.name}) to Active status?`}
-          confirmLabel="Restore Record"
+          confirmLabel="Restore"
           confirmVariant="default"
           onConfirm={handleConfirmRestore}
         />
@@ -1118,7 +1132,7 @@ export default function StudentDirectoryTab({
               ? `Are you sure you want to archive ${selectedIds.size} student record(s)?`
               : `Are you sure you want to restore ${selectedIds.size} student record(s) to Active status?`
           }
-          confirmLabel={bulkActionType === "archive" ? "Archive Records" : "Restore Records"}
+          confirmLabel={bulkActionType === "archive" ? "Archive" : "Restore"}
           confirmVariant={bulkActionType === "archive" ? "destructive" : "default"}
           onConfirm={handleConfirmBulk}
           isLoading={isBulkProcessing}

@@ -69,7 +69,7 @@ export default function RecordsReviewTableSkeleton({ rowCount = 8, embedded = fa
 
                 {/* Document Type */}
                 <td className="py-0 px-6 align-middle">
-                  <Skeleton className="h-6 w-32 rounded-lg dark:bg-muted" />
+                  <Skeleton className="h-6 w-32 rounded-full dark:bg-muted" />
                 </td>
 
                 {/* File Details */}

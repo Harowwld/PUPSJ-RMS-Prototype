@@ -400,7 +400,7 @@ export default function RecordsArchiveTab({
                 {showArchived && (
                   <>
                     <div className="h-4 w-[1px] bg-[#E5E5EA] dark:bg-zinc-800 mx-3.5" />
-                    <div className="py-[5px] px-[10px] bg-pup-maroon/10 dark:bg-red-400/10 text-pup-maroon dark:text-red-400 rounded-[6px] text-[12.5px] font-medium select-none">
+                    <div className="py-[4px] px-[10px] bg-pup-maroon/10 dark:bg-red-400/10 text-pup-maroon dark:text-red-400 rounded-full text-[12px] font-medium select-none">
                       Archive View
                     </div>
                   </>
@@ -683,7 +683,7 @@ export default function RecordsArchiveTab({
                               </h4>
                             </div>
                             <div className="mt-2 flex items-center gap-2">
-                              <div className="rounded-[6px] border border-white/20 bg-white/10 px-2 py-0.5 font-sans text-[12px] font-medium text-white/90">
+                              <div className="rounded-full border border-white/20 bg-white/10 px-2.5 py-0.5 font-sans text-[12px] font-medium text-white/90">
                                 {row.student.studentNo}
                               </div>
                               {showArchived && (
@@ -784,7 +784,7 @@ export default function RecordsArchiveTab({
                               </div>
                             </td>
                             <td className="py-0 px-6 align-middle">
-                               <div className="inline-flex w-fit items-center justify-center rounded-[6px] bg-[#E5E5EA]/60 dark:bg-zinc-800 px-2.5 py-1 text-[11px] font-medium tracking-[0.02em] text-gray-800 dark:text-zinc-300 whitespace-nowrap">
+                               <div className="inline-flex w-fit items-center justify-center rounded-full bg-[#E5E5EA]/60 dark:bg-zinc-800 px-2.5 py-0.5 text-[11px] font-medium tracking-[0.02em] text-gray-800 dark:text-zinc-300 whitespace-nowrap">
                                  Room {row.student.room} • Cabinet {row.student.cabinet} • Drawer {row.student.drawer}
                                </div>
                             </td>

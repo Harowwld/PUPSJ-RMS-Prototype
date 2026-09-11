@@ -62,7 +62,7 @@ export default function DocumentRequestsTableSkeleton({ rowCount = 7, embedded =
 
                 {/* Document Type */}
                 <td className="p-4 align-middle">
-                  <Skeleton className="h-6 w-32 rounded-lg dark:bg-muted" />
+                  <Skeleton className="h-6 w-32 rounded-full dark:bg-muted" />
                 </td>
 
                 {/* Status */}

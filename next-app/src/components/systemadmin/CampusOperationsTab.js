@@ -600,12 +600,12 @@ export default function CampusOperationsTab({ showToast }) {
                           {/* Department Badge */}
                           <td className="p-4 align-middle">
                             {isRegistrar ? (
-                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[6px] text-[11px] font-semibold bg-[#800000]/10 text-pup-maroon dark:bg-pup-maroon/20 dark:text-rose-300">
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-[#800000]/10 text-pup-maroon dark:bg-pup-maroon/20 dark:text-rose-300">
                                 <i className="ph-bold ph-certificate text-xs"></i>
                                 Registrar
                               </span>
                             ) : (
-                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[6px] text-[11px] font-semibold bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300">
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300">
                                 <i className="ph-bold ph-student text-xs"></i>
                                 OSAS
                               </span>
@@ -651,7 +651,7 @@ export default function CampusOperationsTab({ showToast }) {
                           {/* Stage Status Badge */}
                           <td className="p-4 align-middle">
                             <span className={cn(
-                              "inline-flex items-center justify-center rounded-[6px] px-[8px] py-[3px] text-[11px] font-medium whitespace-nowrap",
+                              "inline-flex items-center justify-center rounded-full px-[10px] py-[2.5px] text-[11px] font-medium whitespace-nowrap",
                               statusBadgeClass(tx.status)
                             )}>
                               {tx.status === "InProgress" ? "In Progress" : tx.status}
@@ -757,12 +757,12 @@ export default function CampusOperationsTab({ showToast }) {
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 mb-1.5 flex-wrap">
                     {selectedItem?.officeId === "registrar" ? (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[6px] text-[11px] font-semibold bg-[#800000]/10 text-pup-maroon dark:bg-pup-maroon/20 dark:text-rose-300">
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-[#800000]/10 text-pup-maroon dark:bg-pup-maroon/20 dark:text-rose-300">
                         <i className="ph-bold ph-certificate text-xs"></i>
                         Registrar Document Request
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[6px] text-[11px] font-semibold bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300">
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300">
                         <i className="ph-bold ph-student text-xs"></i>
                         OSAS Event Proposal
                       </span>
@@ -799,7 +799,7 @@ export default function CampusOperationsTab({ showToast }) {
                   </span>
                   <div className="flex items-center justify-between mt-1">
                     <span className={cn(
-                      "inline-flex items-center gap-1 rounded-[5px] px-2 py-0.5 text-[11px] font-semibold",
+                      "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold",
                       statusBadgeClass(selectedItem?.status)
                     )}>
                       {selectedItem?.status === "InProgress" ? "In Progress" : selectedItem?.status}

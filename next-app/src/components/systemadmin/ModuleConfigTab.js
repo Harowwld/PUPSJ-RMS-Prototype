@@ -74,7 +74,7 @@ function StatusChip({ status }) {
   return (
     <span
       className={cn(
-        "rounded-[4px] px-[8px] py-[3px] text-[11px] font-medium tracking-[0.04em] select-none inline-flex items-center",
+        "rounded-full px-[10px] py-[2.5px] text-[11px] font-medium tracking-[0.04em] select-none inline-flex items-center",
         isInactive
           ? "bg-gray-100 text-[#8E8E93] dark:bg-zinc-800 dark:text-zinc-400"
           : "bg-[#D1FAE5] text-[#065F46] dark:bg-emerald-950/40 dark:text-emerald-400"
@@ -633,7 +633,7 @@ export default function ModuleConfigTab({ showToast }) {
                 Active filters:
               </span>
               {searchQuery && (
-                <div className="flex items-center gap-[6px] rounded-[6px] bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
+                <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
                   Search: {searchQuery}
                   <button
                     onClick={() => setSearchQuery("")}
@@ -644,7 +644,7 @@ export default function ModuleConfigTab({ showToast }) {
                 </div>
               )}
               {categoryFilter !== "All" && (
-                <div className="flex items-center gap-[6px] rounded-[6px] bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
+                <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
                   Role: {categoryFilter === "admin" ? "Supervisors & Heads" : "Staff Tools"}
                   <button
                     onClick={() => setCategoryFilter("All")}
@@ -655,7 +655,7 @@ export default function ModuleConfigTab({ showToast }) {
                 </div>
               )}
               {moduleStatusFilter !== "All" && (
-                <div className="flex items-center gap-[6px] rounded-[6px] bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
+                <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
                   Feature: {moduleStatusFilter === "enabled" ? "Enabled Only" : "Disabled Only"}
                   <button
                     onClick={() => setModuleStatusFilter("All")}
@@ -773,7 +773,7 @@ export default function ModuleConfigTab({ showToast }) {
 
                           <div className="flex items-center gap-1.5 shrink-0">
                             {isOfficeArchived ? (
-                              <span className="rounded-[4px] px-[6px] py-[2px] text-[10px] font-medium tracking-[0.04em] bg-gray-100 text-[#8E8E93] dark:bg-zinc-800 dark:text-zinc-400">
+                              <span className="rounded-full px-2 py-0.5 text-[10px] font-medium tracking-[0.04em] bg-gray-100 text-[#8E8E93] dark:bg-zinc-800 dark:text-zinc-400">
                                 Archived
                               </span>
                             ) : (
@@ -1188,7 +1188,7 @@ export default function ModuleConfigTab({ showToast }) {
                               {o.short_name}
                             </span>
                             {isArchived ? (
-                              <span className="rounded-[4px] px-[6px] py-[1.5px] text-[9.5px] font-medium tracking-[0.04em] bg-gray-100 text-[#8E8E93] dark:bg-zinc-800 dark:text-zinc-400 normal-case">
+                              <span className="rounded-full px-2 py-0.5 text-[9.5px] font-medium tracking-[0.04em] bg-gray-100 text-[#8E8E93] dark:bg-zinc-800 dark:text-zinc-400 normal-case">
                                 Archived
                               </span>
                             ) : (

@@ -1035,7 +1035,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
                           <td className="py-0 px-4 align-middle">
                             <span
                               className={cn(
-                                "inline-flex w-fit items-center justify-center rounded-[4px] px-[8px] py-[3px] text-[11px] font-medium tracking-[0.04em] shadow-none transition-all",
+                                "inline-flex w-fit items-center justify-center rounded-full px-[10px] py-[2.5px] text-[11px] font-medium tracking-[0.04em] shadow-none transition-all",
                                 severityInfo.classes
                               )}
                             >
