@@ -1,97 +1,89 @@
+import crypto from "node:crypto";
 import { NextResponse } from "next/server";
-import { sysDbGet, sysDbAll } from "@/lib/sqlite";
+import { query, queryOne } from "@/lib/postgres";
 import { ForgotPasswordIdentifySchema } from "@/lib/authSchemas";
 import { checkAuthForgotPasswordRateLimit } from "@/lib/rateLimiter";
+import { writeGlobalAuditLog } from "@/lib/auditLogRequest";
 
 export const runtime = "nodejs";
 
 function addSecurityHeaders(response) {
-  response.headers.set('X-Content-Type-Options', 'nosniff');
-  response.headers.set('X-Frame-Options', 'DENY');
-  response.headers.set('X-XSS-Protection', '1; mode=block');
-  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+  response.headers.set("X-Content-Type-Options", "nosniff");
+  response.headers.set("X-Frame-Options", "DENY");
+  response.headers.set("X-XSS-Protection", "1; mode=block");
+  response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
   return response;
 }
 
+function genericResponse() {
+  return addSecurityHeaders(NextResponse.json({
+    ok: true,
+    data: {
+      message: "If an active account matches, a password-reset link will be sent to its registered recovery channel.",
+    },
+  }));
+}
+
+function getIpAddress(req) {
+  return req.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
+    || req.headers.get("x-real-ip")?.trim()
+    || req.ip
+    || "unknown";
+}
+
 export async function POST(req) {
-  try {
-    // 1. Check Rate Limit
-    const forwardedFor = req.headers.get('x-forwarded-for');
-    const realIP = req.headers.get('x-real-ip');
-    const ipAddress = forwardedFor ? forwardedFor.split(',')[0].trim() : 
-                      realIP ? realIP.trim() : 
-                      req.ip || 'unknown';
-
-    const rateLimitResult = await checkAuthForgotPasswordRateLimit(ipAddress);
-    if (!rateLimitResult.allowed) {
-      return addSecurityHeaders(NextResponse.json(
-        { 
-          ok: false, 
-          error: rateLimitResult.reason === 'locked_out' 
-            ? `Too many password reset attempts. Account temporarily locked. Please try again later.`
-            : 'Too many password reset attempts. Please try again later.',
-          retryAfter: rateLimitResult.resetTime ? Math.ceil((rateLimitResult.resetTime - Date.now()) / 1000) : undefined
-        },
-        { 
-          status: 429,
-          headers: rateLimitResult.resetTime ? {
-            'Retry-After': Math.ceil((rateLimitResult.resetTime - Date.now()) / 1000),
-            'X-RateLimit-Limit': rateLimitResult.limit,
-            'X-RateLimit-Remaining': Math.max(0, rateLimitResult.remaining || 0),
-            'X-RateLimit-Reset': new Date(rateLimitResult.resetTime).toISOString()
-          } : {}
-        }
-      ));
-    }
-
-    // 2. Validate Input
-    const body = await req.json().catch(() => null);
-    const validation = ForgotPasswordIdentifySchema.safeParse(body);
-    
-    if (!validation.success) {
-      const errorMsg = validation.error.errors[0]?.message || "Invalid input";
-      return addSecurityHeaders(NextResponse.json(
-        { ok: false, error: errorMsg },
-        { status: 400 }
-      ));
-    }
-
-    const { identifier } = validation.data;
-
-    // 2. Identify Staff
-    const staff = await sysDbGet(
-      "SELECT id, fname, lname, email FROM staff WHERE id = ? OR email = ?",
-      [identifier, identifier]
-    );
-
-    if (!staff) {
-      // Don't leak whether the account exists
-      // Add a small random delay to prevent timing attacks
-      await new Promise(resolve => setTimeout(resolve, 500 + Math.random() * 500));
-      return addSecurityHeaders(NextResponse.json({ ok: false, error: "If an account exists, a security question would be displayed." }, { status: 404 }));
-    }
-
-    const res = await sysDbAll(`
-      SELECT q.id, q.question 
-      FROM staff_security_answers ssa
-      JOIN security_questions q ON ssa.question_id = q.id
-      WHERE ssa.staff_id = ?
-    `, [staff.id]);
-
-    if (!res || res.length === 0) {
-      return addSecurityHeaders(NextResponse.json({ ok: false, error: "This account has not set up any security questions." }, { status: 400 }));
-    }
-
-    return addSecurityHeaders(NextResponse.json({ 
-      ok: true, 
-      data: {
-        id: staff.id,
-        name: `${staff.fname} ${staff.lname}`,
-        questions: res
-      } 
-    }));
-  } catch (error) {
-    console.error("[Forgot-Password Identify Error]:", error);
-    return addSecurityHeaders(NextResponse.json({ ok: false, error: "Internal server error" }, { status: 500 }));
+  const ipAddress = getIpAddress(req);
+  const ipLimit = await checkAuthForgotPasswordRateLimit(ipAddress);
+  if (!ipLimit.allowed) {
+    return addSecurityHeaders(NextResponse.json(
+      { ok: false, error: "Too many password reset attempts. Please try again later." },
+      { status: 429 },
+    ));
   }
+
+  const body = await req.json().catch(() => null);
+  const validation = ForgotPasswordIdentifySchema.safeParse(body);
+  if (!validation.success) {
+    return addSecurityHeaders(NextResponse.json(
+      { ok: false, error: "Invalid account identifier." },
+      { status: 400 },
+    ));
+  }
+
+  const identifier = validation.data.identifier.toLowerCase();
+  const accountLimit = await checkAuthForgotPasswordRateLimit(ipAddress, identifier);
+  if (!accountLimit.allowed) {
+    return addSecurityHeaders(NextResponse.json(
+      { ok: false, error: "Too many password reset attempts. Please try again later." },
+      { status: 429 },
+    ));
+  }
+
+  const staff = await queryOne(
+    `SELECT id, email FROM staff
+      WHERE (lower(email) = $1 OR lower(id) = $1) AND status = 'Active'`,
+    [identifier],
+  );
+
+  if (staff) {
+    const resetToken = crypto.randomBytes(32).toString("base64url");
+    const tokenHash = crypto.createHash("sha256").update(resetToken).digest("hex");
+    await query("UPDATE password_reset_tokens SET used_at = NOW() WHERE staff_id = $1 AND used_at IS NULL", [staff.id]);
+    await query(
+      `INSERT INTO password_reset_tokens (staff_id, token_hash, expires_at, requested_ip)
+       VALUES ($1, $2, NOW() + INTERVAL '15 minutes', $3)`,
+      [staff.id, tokenHash, ipAddress],
+    );
+    // Delivery is intentionally out-of-band. Never put resetToken in the response or logs.
+    await writeGlobalAuditLog(req, "Password reset requested", {
+      actor: "System",
+      role: "System",
+      details: "A password reset transaction was created for an active staff account.",
+      entity_type: "password_reset",
+    });
+  }
+
+  // Keep account-present and account-absent responses indistinguishable to callers.
+  await new Promise((resolve) => setTimeout(resolve, 250));
+  return genericResponse();
 }

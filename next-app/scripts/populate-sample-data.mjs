@@ -5,11 +5,11 @@
  *   pnpm populate-sample-data
  *   pnpm populate-sample-data --force   # also replaces storage_layout
  */
-import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import dotenv from "dotenv";
+import { hashPassword } from "../src/lib/passwordHash.js";
 
 dotenv.config({ path: ".env.local" });
 dotenv.config();
@@ -21,12 +21,8 @@ if (!process.env.DATABASE_URL) {
   throw new Error("DATABASE_URL is required. Start PostgreSQL and check next-app/.env.local.");
 }
 
-const passwordHash = crypto
-  .createHash("sha256")
-  .update(process.env.DEFAULT_STAFF_PASSWORD || "pupstaff")
-  .digest("hex");
-const studentSalt = "local-test-student-salt";
-const studentPasswordHash = `${studentSalt}:${crypto.scryptSync("student123", studentSalt, 64).toString("hex")}`;
+const passwordHash = hashPassword(process.env.DEFAULT_STAFF_PASSWORD || "pupstaff");
+const studentPasswordHash = hashPassword("student123");
 
 const students = [
   ["2023-00001-IT-1", "TEST STUDENT", "BSIT", 4, "BSIT-4A", 1, "2027", 1],
@@ -188,7 +184,7 @@ export async function seed({ force: forceOverride } = {}) {
     ];
     for (const [staffId] of officialStaff) {
       for (const [qid, ans] of defaultAnswers) {
-        const aHash = crypto.createHash("sha256").update(ans.toLowerCase()).digest("hex");
+        const aHash = hashPassword(ans.toLowerCase());
         await run(
           `INSERT INTO staff_security_answers (staff_id, question_id, answer_hash, updated_at)
            VALUES ($1, $2, $3, NOW())

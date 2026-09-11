@@ -118,6 +118,10 @@ async function importStudents() {
         status=EXCLUDED.status,storage_room=COALESCE(EXCLUDED.storage_room,students.storage_room),
         storage_cabinet=COALESCE(EXCLUDED.storage_cabinet,students.storage_cabinet),storage_drawer=COALESCE(EXCLUDED.storage_drawer,students.storage_drawer),updated_at=NOW()`,
         [row.student_no, row.name, row.course_code || null, row.year_level ?? null, row.section || null, row.status || "Active", row.room ?? null, row.cabinet ?? null, row.drawer ?? null, row.created_at || null]);
+      await sql(`INSERT INTO student_office_memberships (student_no, office_id, status)
+        VALUES ($1, $2, 'Active')
+        ON CONFLICT (student_no, office_id) DO UPDATE SET status = 'Active', updated_at = NOW()`,
+        [row.student_no, officeId]);
       count(`students:${officeId}`);
     }
   }

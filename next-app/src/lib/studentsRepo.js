@@ -11,6 +11,38 @@ const STUDENT_SELECT = `
   created_at, updated_at
 `;
 
+function normalizeOfficeId(officeId) {
+  const value = String(officeId || "").trim().toLowerCase();
+  return value || null;
+}
+
+function buildOfficeScope(officeId, tableAlias = "s") {
+  const normalized = normalizeOfficeId(officeId);
+  if (!normalized) return { sql: "", params: [] };
+  return {
+    sql: `EXISTS (
+      SELECT 1
+      FROM student_office_memberships som
+      WHERE som.student_no = ${tableAlias}.student_no
+        AND som.office_id = ?
+        AND som.status = 'Active'
+    )`,
+    params: [normalized],
+  };
+}
+
+async function ensureStudentOfficeMembership(studentNo, officeId) {
+  const normalized = normalizeOfficeId(officeId);
+  if (!normalized) throw new Error("Office scope is required");
+  await dbRun(
+    `INSERT INTO student_office_memberships (student_no, office_id, status)
+     VALUES (?, ?, 'Active')
+     ON CONFLICT (student_no, office_id)
+     DO UPDATE SET status = 'Active', updated_at = CURRENT_TIMESTAMP`,
+    [studentNo, normalized],
+  );
+}
+
 function normalizeStudentName(name) {
   return String(name || "")
     .trim()
@@ -18,11 +50,14 @@ function normalizeStudentName(name) {
     .toUpperCase();
 }
 
-async function ensureCourseSectionMapping(courseCodeRaw, sectionRaw) {
+async function ensureCourseSectionMapping(courseCodeRaw, sectionRaw, officeId) {
   const courseCode = String(courseCodeRaw || "").trim().toUpperCase();
   const section = String(sectionRaw || "").trim();
+  const scopedOfficeId = String(officeId || "").trim().toLowerCase();
+  if (!scopedOfficeId) throw new Error("Office scope is required");
 
-  const course = await dbGet("SELECT code FROM courses WHERE upper(code) = upper(?)", [
+  const course = await dbGet("SELECT code FROM courses WHERE office_id = ? AND upper(code) = upper(?)", [
+    scopedOfficeId,
     courseCode,
   ]);
   if (!course) {
@@ -31,8 +66,8 @@ async function ensureCourseSectionMapping(courseCodeRaw, sectionRaw) {
 
   // Look up section by BOTH name AND course_code to avoid cross-course confusion
   const sectionRow = await dbGet(
-    "SELECT id, course_code FROM sections WHERE name = ? AND COALESCE(course_code, '') = ?",
-    [section, courseCode]
+    "SELECT id, course_code FROM sections WHERE office_id = ? AND name = ? AND COALESCE(course_code, '') = ?",
+    [scopedOfficeId, section, courseCode]
   );
   if (!sectionRow) {
     throw new Error(`Section ${section} is not defined for course ${courseCode}`);
@@ -47,8 +82,9 @@ async function ensureCourseSectionMapping(courseCodeRaw, sectionRaw) {
 
   // Auto-link legacy section records that don't yet have a course assigned.
   if (!linkedCourse) {
-    await dbRun("UPDATE sections SET course_code = ? WHERE id = ?", [
+    await dbRun("UPDATE sections SET course_code = ? WHERE office_id = ? AND id = ?", [
       courseCode,
+      scopedOfficeId,
       sectionRow.id,
     ]);
   }
@@ -64,11 +100,14 @@ export async function createStudent({
   cabinet,
   drawer,
   status,
+  officeId,
 }) {
+  const normalizedOfficeId = normalizeOfficeId(officeId);
+  if (!normalizedOfficeId) throw new Error("Office scope is required");
   const normalizedCourseCode = String(courseCode || "").trim().toUpperCase();
   const normalizedName = normalizeStudentName(name);
   const normalizedSection = String(section || "").trim();
-  await ensureCourseSectionMapping(normalizedCourseCode, normalizedSection);
+  await ensureCourseSectionMapping(normalizedCourseCode, normalizedSection, normalizedOfficeId);
 
   const academicYear = parseInt(yearLevel);
 
@@ -124,7 +163,9 @@ export async function createStudent({
     );
   }
 
-  return await getStudentByStudentNo(studentNo);
+  await ensureStudentOfficeMembership(studentNo, normalizedOfficeId);
+
+  return await getStudentByStudentNo(studentNo, { officeId: normalizedOfficeId });
 }
 
 export async function upsertStudent({
@@ -137,9 +178,13 @@ export async function upsertStudent({
   cabinet,
   drawer,
   status,
+  officeId,
 }) {
   const existing = await getStudentByStudentNo(studentNo);
-  if (existing) return existing;
+  if (existing) {
+    await ensureStudentOfficeMembership(studentNo, officeId);
+    return existing;
+  }
 
   return await createStudent({
     studentNo,
@@ -151,10 +196,12 @@ export async function upsertStudent({
     cabinet,
     drawer,
     status,
+    officeId,
   });
 }
 
 export async function listStudents({
+  officeId,
   q,
   courseCode,
   yearLevel,
@@ -166,6 +213,12 @@ export async function listStudents({
 } = {}) {
   const filters = [];
   const params = [];
+
+  const officeScope = buildOfficeScope(officeId);
+  if (officeScope.sql) {
+    filters.push(officeScope.sql);
+    params.push(...officeScope.params);
+  }
 
   if (courseCode) {
     filters.push("course_code = ?");
@@ -200,7 +253,7 @@ export async function listStudents({
   return await dbAll(
     `
       SELECT ${STUDENT_SELECT}
-      FROM students
+      FROM students AS s
       ${where}
       ORDER BY name ASC
       LIMIT ? OFFSET ?
@@ -209,13 +262,22 @@ export async function listStudents({
   );
 }
 
-export async function getStudentByStudentNo(studentNo) {
-  const row = await dbGet(`SELECT ${STUDENT_SELECT} FROM students WHERE student_no = ?`, [studentNo]);
+export async function getStudentByStudentNo(studentNo, { officeId } = {}) {
+  const officeScope = buildOfficeScope(officeId);
+  const filters = ["student_no = ?"];
+  const params = [studentNo];
+  if (officeScope.sql) {
+    filters.push(officeScope.sql);
+    params.push(...officeScope.params);
+  }
+  const row = await dbGet(`SELECT ${STUDENT_SELECT} FROM students WHERE ${filters.join(" AND ")}`, params);
   return row || null;
 }
 
 export async function updateStudent(studentNo, patch) {
-  const existing = await getStudentByStudentNo(studentNo);
+  const officeId = normalizeOfficeId(patch?.officeId);
+  if (!officeId) throw new Error("Office scope is required");
+  const existing = await getStudentByStudentNo(studentNo, { officeId });
   if (!existing) return null;
 
   const next = {
@@ -230,7 +292,7 @@ export async function updateStudent(studentNo, patch) {
     status: patch.status ?? existing.status,
   };
 
-  await ensureCourseSectionMapping(next.course_code, next.section);
+  await ensureCourseSectionMapping(next.course_code, next.section, officeId);
 
   const hasStorage = await hasPhysicalStorage();
   if (hasStorage) {
@@ -243,6 +305,7 @@ export async function updateStudent(studentNo, patch) {
       UPDATE students
       SET name = ?, course_code = ?, year_level = ?, section = ?, storage_room = ?, storage_cabinet = ?, storage_drawer = ?, status = ?
       WHERE student_no = ?
+        AND EXISTS (SELECT 1 FROM student_office_memberships som WHERE som.student_no = students.student_no AND som.office_id = ? AND som.status = 'Active')
     `,
       [
         next.name,
@@ -254,6 +317,7 @@ export async function updateStudent(studentNo, patch) {
         drawer,
         next.status,
         studentNo,
+        officeId,
       ]
     );
   } else {
@@ -262,6 +326,7 @@ export async function updateStudent(studentNo, patch) {
       UPDATE students
       SET name = ?, course_code = ?, year_level = ?, section = ?, status = ?
       WHERE student_no = ?
+        AND EXISTS (SELECT 1 FROM student_office_memberships som WHERE som.student_no = students.student_no AND som.office_id = ? AND som.status = 'Active')
     `,
       [
         next.name,
@@ -270,51 +335,56 @@ export async function updateStudent(studentNo, patch) {
         next.section,
         next.status,
         studentNo,
+        officeId,
       ]
     );
   }
 
-  return await getStudentByStudentNo(studentNo);
+  return await getStudentByStudentNo(studentNo, { officeId });
 }
 
-export async function archiveStudent(studentNo) {
-  const existing = await getStudentByStudentNo(studentNo);
+export async function archiveStudent(studentNo, { officeId } = {}) {
+  const existing = await getStudentByStudentNo(studentNo, { officeId });
   if (!existing) return null;
-  await dbRun("UPDATE students SET status = 'Archived' WHERE student_no = ?", [studentNo]);
+  const scope = buildOfficeScope(officeId);
+  await dbRun(`UPDATE students SET status = 'Archived' WHERE student_no = ?${scope.sql ? ` AND ${scope.sql}` : ""}`, [studentNo, ...scope.params]);
   return { ...existing, status: "Archived" };
 }
 
-export async function restoreStudent(studentNo) {
-  const existing = await getStudentByStudentNo(studentNo);
+export async function restoreStudent(studentNo, { officeId } = {}) {
+  const existing = await getStudentByStudentNo(studentNo, { officeId });
   if (!existing) return null;
-  await dbRun("UPDATE students SET status = 'Active' WHERE student_no = ?", [studentNo]);
+  const scope = buildOfficeScope(officeId);
+  await dbRun(`UPDATE students SET status = 'Active' WHERE student_no = ?${scope.sql ? ` AND ${scope.sql}` : ""}`, [studentNo, ...scope.params]);
   return { ...existing, status: "Active" };
 }
 
-export async function deleteStudent(studentNo) {
-  const existing = await getStudentByStudentNo(studentNo);
+export async function deleteStudent(studentNo, { officeId } = {}) {
+  const existing = await getStudentByStudentNo(studentNo, { officeId });
   if (!existing) return null;
-  await dbRun("DELETE FROM students WHERE student_no = ?", [studentNo]);
+  const scope = buildOfficeScope(officeId);
+  await dbRun(`DELETE FROM students WHERE student_no = ?${scope.sql ? ` AND ${scope.sql}` : ""}`, [studentNo, ...scope.params]);
   return existing;
 }
 
-export async function listStudentLocationUsage() {
+export async function listStudentLocationUsage({ officeId } = {}) {
   const hasStorage = await hasPhysicalStorage();
   if (!hasStorage) return [];
 
+  const scope = buildOfficeScope(officeId);
   return await dbAll(
     `
       SELECT storage_room AS room, storage_cabinet AS cabinet, storage_drawer AS drawer, COUNT(*) as count
       FROM students
-      WHERE status = 'Active'
+      WHERE status = 'Active'${scope.sql ? ` AND ${scope.sql}` : ""}
       GROUP BY storage_room, storage_cabinet, storage_drawer
       ORDER BY storage_room ASC, storage_cabinet ASC, storage_drawer ASC
     `,
-    []
+    scope.params,
   );
 }
 
-export async function reassignStudentsByLocationMappings(mappings = []) {
+export async function reassignStudentsByLocationMappings(mappings = [], { officeId } = {}) {
   if (!Array.isArray(mappings) || mappings.length === 0) {
     return { moved: 0, breakdown: [] };
   }
@@ -325,6 +395,7 @@ export async function reassignStudentsByLocationMappings(mappings = []) {
 
   let moved = 0;
   const breakdown = [];
+  const scope = buildOfficeScope(officeId);
   for (const m of mappings) {
     const fromRoom = Number(m?.from?.room);
     const fromCabinet = canonicalizeCabinetId(m?.from?.cabinet);
@@ -346,9 +417,9 @@ export async function reassignStudentsByLocationMappings(mappings = []) {
       `
         UPDATE students
         SET storage_room = ?, storage_cabinet = ?, storage_drawer = ?
-        WHERE storage_room = ? AND storage_cabinet = ? AND storage_drawer = ?
+        WHERE storage_room = ? AND storage_cabinet = ? AND storage_drawer = ?${scope.sql ? ` AND ${scope.sql}` : ""}
       `,
-      [toRoom, toCabinet, toDrawer, fromRoom, fromCabinet, fromDrawer],
+      [toRoom, toCabinet, toDrawer, fromRoom, fromCabinet, fromDrawer, ...scope.params],
     );
     const changed = Number(res?.changes || 0);
     moved += changed;

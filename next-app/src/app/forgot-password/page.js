@@ -5,7 +5,6 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Select } from "@/components/ui/select";
 
 export default function ForgotPasswordPage() {
   const router = useRouter();
@@ -13,16 +12,13 @@ export default function ForgotPasswordPage() {
   // Forgot Password State
   const [forgotStep, setForgotStep] = useState(1);
   const [forgotIdentifier, setForgotIdentifier] = useState("");
-  const [forgotUserId, setForgotUserId] = useState(null);
-  const [forgotQuestionId, setForgotQuestionId] = useState(null);
-  const [forgotQuestions, setForgotQuestions] = useState([]);
-  const [forgotAnswer, setForgotAnswer] = useState("");
+  const [forgotResetToken, setForgotResetToken] = useState("");
   const [forgotNewPassword, setForgotNewPassword] = useState("");
   const [forgotConfirmPassword, setForgotConfirmPassword] = useState("");
   const [forgotLoading, setForgotLoading] = useState(false);
   const [forgotError, setForgotError] = useState("");
   const [forgotIdentifierFocused, setForgotIdentifierFocused] = useState(false);
-  const [answerFocused, setAnswerFocused] = useState(false);
+  const [resetTokenFocused, setResetTokenFocused] = useState(false);
   const [newPassFocused, setNewPassFocused] = useState(false);
   const [confirmPassFocused, setConfirmPassFocused] = useState(false);
 
@@ -38,16 +34,13 @@ export default function ForgotPasswordPage() {
   const resetForgotState = () => {
     setForgotStep(1);
     setForgotIdentifier("");
-    setForgotUserId(null);
-    setForgotQuestionId(null);
-    setForgotQuestions([]);
-    setForgotAnswer("");
+    setForgotResetToken("");
     setForgotNewPassword("");
     setForgotConfirmPassword("");
     setForgotError("");
     setForgotLoading(false);
     setForgotIdentifierFocused(false);
-    setAnswerFocused(false);
+    setResetTokenFocused(false);
     setNewPassFocused(false);
     setConfirmPassFocused(false);
   };
@@ -70,9 +63,6 @@ export default function ForgotPasswordPage() {
       if (!res.ok || !json.ok) {
         throw new Error(json.error || "Failed to identify account.");
       }
-      setForgotUserId(json.data.id);
-      setForgotQuestions(json.data.questions);
-      setForgotQuestionId(json.data.questions[0]?.id || null);
       setForgotStep(2);
     } catch (err) {
       setForgotError(err.message);
@@ -83,7 +73,7 @@ export default function ForgotPasswordPage() {
 
   const handleForgotReset = async (e) => {
     e.preventDefault();
-    if (!forgotAnswer.trim() || !forgotNewPassword || !forgotConfirmPassword) {
+    if (!forgotResetToken.trim() || !forgotNewPassword || !forgotConfirmPassword) {
       setForgotError("Please fill all fields.");
       return;
     }
@@ -91,8 +81,8 @@ export default function ForgotPasswordPage() {
       setForgotError("Passwords do not match.");
       return;
     }
-    if (forgotNewPassword.length < 6) {
-      setForgotError("New password must be at least 6 characters.");
+    if (forgotNewPassword.length < 8) {
+      setForgotError("New password must be at least 8 characters.");
       return;
     }
     setForgotError("");
@@ -102,9 +92,7 @@ export default function ForgotPasswordPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          id: forgotUserId,
-          questionId: forgotQuestionId,
-          answer: forgotAnswer.trim(),
+          resetToken: forgotResetToken.trim(),
           newPassword: forgotNewPassword
         })
       });
@@ -147,11 +135,10 @@ export default function ForgotPasswordPage() {
 
       <div className="w-full max-w-[550px] p-4 z-10">
         <div
-          className="bg-white rounded-[20px] shadow-[0_4px_40px_rgba(0,0,0,0.12)] dark:bg-zinc-900 flex flex-col items-center w-full relative"
-          style={{ padding: "56px 52px", height: "630px" }}
+          className="bg-white rounded-[20px] shadow-[0_4px_40px_rgba(0,0,0,0.12)] dark:bg-zinc-900 flex flex-col items-center w-full relative rms-forgot-card"
         >
           {/* APP ICON WITH CONCENTRIC CIRCLES */}
-          <div className="relative w-[160px] h-[160px] flex items-center justify-center mb-3 select-none shrink-0" style={{ width: '160px', height: '160px', flexShrink: 0 }}>
+          <div className="relative w-[160px] h-[160px] flex items-center justify-center mb-3 select-none shrink-0">
             <svg className="absolute w-full h-full inset-0 pointer-events-none" viewBox="0 0 160 160">
               {[
                 { r: 72, count: 24, size: 4.2, reverse: false },
@@ -195,13 +182,9 @@ export default function ForgotPasswordPage() {
                 }
                 const duration = rIdx === 0 ? '45s' : rIdx === 1 ? '35s' : rIdx === 2 ? '50s' : '40s';
                 return (
-                  <g 
-                    key={rIdx} 
-                    className={`origin-center ${ring.reverse ? "animate-spin-reverse" : "animate-spin-slow"}`}
-                    style={{ 
-                      transformOrigin: '80px 80px',
-                      animationDuration: duration 
-                    }}
+                  <g
+                    key={rIdx}
+                    className={`rms-ring-origin rms-ring-${duration.replace("s", "")} ${ring.reverse ? "animate-spin-reverse" : "animate-spin-slow"}`}
                   >
                     {dots}
                   </g>
@@ -294,37 +277,26 @@ export default function ForgotPasswordPage() {
                   <div className={`merged-container bg-white dark:bg-zinc-800 ${
                     forgotError ? "has-error" : ""
                   }`}>
-                    {/* Challenge Question select wrapper */}
-                    <div className="field-wrapper border-b border-gray-100 dark:border-zinc-700/50 select-wrapper active">
-                      <label className="text-gray-400 dark:text-zinc-500">Challenge Question</label>
-                      <Select
-                        className="border-none shadow-none bg-transparent hover:bg-transparent focus:ring-0 dark:border-none dark:bg-transparent dark:hover:bg-transparent h-[52px] pt-[16px] px-[14px] text-[15px] font-normal"
-                        value={forgotQuestionId || ""}
-                        onChange={(e) => setForgotQuestionId(Number(e.target.value))}
-                      >
-                        {forgotQuestions.map(q => (
-                          <option key={q.id} value={q.id}>{q.question}</option>
-                        ))}
-                      </Select>
-                    </div>
-
-                    {/* Security Answer input */}
-                    <div className={`field-wrapper border-b border-gray-100 dark:border-zinc-700/50 ${answerFocused || forgotAnswer.length > 0 ? "active" : ""}`}>
-                      <label>Security Answer</label>
+                    <div className={`field-wrapper border-b border-gray-100 dark:border-zinc-700/50 ${resetTokenFocused || forgotResetToken.length > 0 ? "active" : ""}`}>
+                      <label>Reset Token</label>
                       <Input
-                        type="password"
+                        type="text"
                         placeholder=" "
                         className="pr-11 focus-visible:ring-0 focus-visible:ring-offset-0"
-                        value={forgotAnswer}
-                        onFocus={() => setAnswerFocused(true)}
-                        onBlur={() => setAnswerFocused(false)}
+                        value={forgotResetToken}
+                        onFocus={() => setResetTokenFocused(true)}
+                        onBlur={() => setResetTokenFocused(false)}
                         onChange={(e) => {
-                          setForgotAnswer(e.target.value);
+                          setForgotResetToken(e.target.value);
                           if (forgotError) setForgotError("");
                         }}
                         required
                       />
                     </div>
+
+                    <p className="px-[14px] py-3 text-[12px] text-gray-500 dark:text-zinc-400">
+                      Paste the one-time token from your registered recovery email. It expires after 15 minutes.
+                    </p>
 
                     {/* New Password input */}
                     <div className={`field-wrapper border-b border-gray-100 dark:border-zinc-700/50 ${newPassFocused || forgotNewPassword.length > 0 ? "active" : ""}`}>
@@ -377,7 +349,7 @@ export default function ForgotPasswordPage() {
                 <div className="absolute bottom-[64px] left-[52px] right-[52px]">
                   <Button
                     type="submit"
-                    disabled={forgotLoading || !forgotAnswer.trim() || !forgotNewPassword || !forgotConfirmPassword}
+                    disabled={forgotLoading || !forgotResetToken.trim() || !forgotNewPassword || !forgotConfirmPassword}
                     className="w-full h-11 rounded-[8px] btn-brand-red text-[13px] font-medium text-white active:scale-95 disabled:opacity-50 transition-all flex items-center justify-center"
                   >
                     {forgotLoading ? (

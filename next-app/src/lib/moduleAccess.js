@@ -1,17 +1,20 @@
-import { queryOne } from "./postgres";
-import { getSessionCookieName, verifySessionToken } from "./jwt";
+import { queryOne } from "./postgres.js";
+import { getAuthenticatedPrincipal } from "./authHelpers.js";
+import { isSystemAdminRole, normalizeRole } from "./roleUtils.js";
 
 async function getVerifiedStaffSession(req) {
   try {
-    const token = req?.cookies?.get?.(getSessionCookieName())?.value;
-    if (!token) return null;
-    const payload = await verifySessionToken(token);
-    const staff = await queryOne(
-      "SELECT id, role, office_id, status FROM staff WHERE id = $1",
-      [payload?.sub]
-    );
-    if (!staff || staff.status !== "Active" || staff.role !== payload?.role) return null;
-    return { role: staff.role, officeId: staff.office_id || null, userId: staff.id };
+    const principal = await getAuthenticatedPrincipal(req);
+    if (!principal) return null;
+    if (principal.principalType !== "staff") return false;
+    return {
+      id: principal.id,
+      userId: principal.id,
+      role: principal.role,
+      officeId: principal.officeId || null,
+      status: principal.status,
+      principalType: principal.principalType,
+    };
   } catch {
     return null;
   }
@@ -19,17 +22,20 @@ async function getVerifiedStaffSession(req) {
 
 export async function requireSuperAdminSession(req) {
   const session = await getVerifiedStaffSession(req);
-  return session?.role === "SuperAdmin" ? session : null;
+  if (session === null) return null;
+  return isSystemAdminRole(session.role) ? session : false;
 }
 
 export async function requireOfficeModule(moduleId, { officeId, roles = ["Admin", "Staff"] } = {}, req) {
   const session = await getVerifiedStaffSession(req);
-  if (!session) return null;
-  if (session.role === "SuperAdmin") return { ...session, officeId: officeId || session.officeId };
-  if (!roles.includes(session.role) || !session.officeId || (officeId && officeId !== session.officeId)) return null;
+  if (session === null) return null;
+  if (!session) return false;
+  if (isSystemAdminRole(session.role)) return { ...session, officeId: officeId || session.officeId };
+  const normalizedRoles = roles.map(normalizeRole).filter(Boolean);
+  if (!normalizedRoles.includes(normalizeRole(session.role)) || !session.officeId || (officeId && String(officeId).toLowerCase() !== String(session.officeId).toLowerCase())) return false;
   const assignment = await queryOne(
     "SELECT enabled FROM office_modules WHERE office_id = $1 AND module_id = $2",
     [session.officeId, moduleId]
   );
-  return assignment?.enabled ? session : null;
+  return assignment?.enabled ? session : false;
 }

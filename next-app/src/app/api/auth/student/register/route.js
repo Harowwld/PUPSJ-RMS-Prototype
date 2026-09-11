@@ -12,6 +12,6 @@ export async function POST(req) {
     const token = await createStudentSession(student);
     return setStudentSessionCookie(NextResponse.json({ ok: true, data: { student_no: student.student_no, name: student.name } }, { status: 201 }), token);
   } catch (error) {
-    return NextResponse.json({ ok: false, error: error.message || "Registration failed" }, { status: 400 });
+    return NextResponse.json({ ok: false, error: "Registration failed" }, { status: 400 });
   }
 }

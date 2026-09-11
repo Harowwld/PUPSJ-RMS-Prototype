@@ -6,14 +6,13 @@ export const runtime = "nodejs";
 
 export async function GET(req) {
   try {
-    if (!await requireSuperAdminSession(req)) {
+    const session = await requireSuperAdminSession(req);
+    if (session === null) {
+      return NextResponse.json({ ok: false, error: "Authentication required" }, { status: 401 });
+    }
+    if (!session) {
       return NextResponse.json({ ok: false, error: "Forbidden" }, { status: 403 });
     }
-    // Heal any missing default icons in the database if necessary
-    await query("UPDATE modules SET icon = 'ph-bold ph-student' WHERE id = 'osas_monitoring' AND (icon IS NULL OR icon = '')").catch(() => {});
-    await query("UPDATE offices SET icon = 'ph-bold ph-certificate' WHERE id = 'registrar' AND (icon IS NULL OR icon = '')").catch(() => {});
-    await query("UPDATE offices SET icon = 'ph-bold ph-student' WHERE id = 'osas' AND (icon IS NULL OR icon = '')").catch(() => {});
-
     const [offices, modules, rows] = await Promise.all([
       query("SELECT id, name, short_name, description, icon, accent_color, status FROM offices ORDER BY created_at"),
       query("SELECT * FROM modules ORDER BY category, sort_order"),
@@ -60,6 +59,6 @@ export async function GET(req) {
     rows.forEach((row) => { assignments[row.office_id] ||= {}; assignments[row.office_id][row.module_id] = row; });
     return NextResponse.json({ ok: true, data: { offices: sanitizedOffices, modules: sanitizedModules, assignments } });
   } catch (err) {
-    return NextResponse.json({ ok: false, error: err.message }, { status: 500 });
+    return NextResponse.json({ ok: false, error: "Internal server error" }, { status: 500 });
   }
 }

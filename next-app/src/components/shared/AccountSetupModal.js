@@ -294,7 +294,6 @@ export default function AccountSetupModal({ authUser }) {
                       <Input
                         type={showPw.next ? "text" : "password"}
                         className="h-10 rounded-[8px] border-[0.5px] border-gray-300 bg-white pr-10 text-[13px] font-normal text-gray-900 focus-visible:border-gray-500 focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none focus:ring-0 focus:border-gray-500 dark:border-zinc-800 dark:bg-card dark:text-zinc-50 dark:focus:border-zinc-650"
-                        style={{ borderWidth: '0.5px', borderStyle: 'solid' }}
                         value={pwNext}
                         onChange={(e) => setPwNext(e.target.value)}
                         placeholder="••••••••"
@@ -318,7 +317,6 @@ export default function AccountSetupModal({ authUser }) {
                       <Input
                         type={showPw.confirm ? "text" : "password"}
                         className="h-10 rounded-[8px] border-[0.5px] border-gray-300 bg-white pr-10 text-[13px] font-normal text-gray-900 focus-visible:border-gray-500 focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none focus:ring-0 focus:border-gray-500 dark:border-zinc-800 dark:bg-card dark:text-zinc-50 dark:focus:border-zinc-650"
-                        style={{ borderWidth: '0.5px', borderStyle: 'solid' }}
                         value={pwConfirm}
                         onChange={(e) => setPwConfirm(e.target.value)}
                         placeholder="••••••••"
@@ -399,7 +397,6 @@ export default function AccountSetupModal({ authUser }) {
                           type="text"
                           placeholder={q.hasAnswer ? "•••••••• (Already Answered)" : "Enter your answer"}
                           className="h-10 w-full rounded-[8px] border-[0.5px] border-gray-300 bg-white text-[13px] font-normal text-gray-900 focus-visible:border-gray-500 focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none focus:ring-0 focus:border-gray-500 dark:border-zinc-800 dark:bg-card dark:text-zinc-50 dark:focus:border-zinc-650"
-                          style={{ borderWidth: '0.5px', borderStyle: 'solid' }}
                           value={answers[q.id] || ""}
                           onChange={(e) =>
                             setAnswers({ ...answers, [q.id]: e.target.value })

@@ -1,28 +1,27 @@
 import { NextResponse } from "next/server";
 import { getGlobalAuditLogStats } from "@/lib/auditLogsRepo";
-import { verifySessionToken, getSessionCookieName } from "@/lib/jwt";
+import {
+  getPrincipalOfficeId,
+  requireAdmin,
+  createAuthErrorResponse,
+} from "@/lib/authHelpers";
+import { isSystemAdminRole } from "@/lib/roleUtils";
 
 export const runtime = "nodejs";
 
-async function isSuperAdmin(req) {
-  try {
-    const token = req.cookies.get(getSessionCookieName())?.value;
-    if (!token) return false;
-    const payload = await verifySessionToken(token);
-    return payload.role === "SuperAdmin";
-  } catch {
-    return false;
-  }
-}
-
 export async function GET(req) {
-  if (!await isSuperAdmin(req)) {
-    return NextResponse.json({ ok: false, error: "Forbidden" }, { status: 403 });
-  }
+  const access = await requireAdmin(req);
+  if (access.error || !access.user) return createAuthErrorResponse(access.error || "Admin access required", access.error?.startsWith("Access denied") ? 403 : 401);
 
   try {
     const { searchParams } = new URL(req.url);
-    const officeId = searchParams.get("officeId") || "";
+    const requestedOfficeId = searchParams.get("officeId") || "";
+    const officeId = isSystemAdminRole(access.user.role)
+      ? requestedOfficeId
+      : getPrincipalOfficeId(access.user);
+    if (!isSystemAdminRole(access.user.role) && !officeId) {
+      return createAuthErrorResponse("Office scope is required", 403);
+    }
     const severity = searchParams.get("severity") || "";
     const role = searchParams.get("role") || "";
     const startDate = searchParams.get("startDate") || "";
@@ -39,6 +38,6 @@ export async function GET(req) {
     });
     return NextResponse.json({ ok: true, data: stats });
   } catch (err) {
-    return NextResponse.json({ ok: false, error: err.message }, { status: 500 });
+    return NextResponse.json({ ok: false, error: "Internal server error" }, { status: 500 });
   }
 }

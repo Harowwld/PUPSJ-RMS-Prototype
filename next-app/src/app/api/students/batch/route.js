@@ -5,12 +5,27 @@ import { writeAuditLog } from "../../../../lib/auditLogRequest";
 import { getStorageLayout } from "../../../../lib/storageLayoutRepo";
 import { canonicalizeCabinetId } from "../../../../lib/storageLayoutUtils";
 import { isUniqueViolation } from "../../../../lib/dbErrors";
+import { requireAdmin, requireStaff, createAuthErrorResponse } from "../../../../lib/authHelpers";
+import { isSystemAdminRole } from "../../../../lib/roleUtils";
+import { canAccessResource } from "@/lib/resourceAuthorization";
 
 export const runtime = "nodejs";
 
-export async function GET() {
+function resolveOfficeId(user, req, requestedOfficeId) {
+  const requested = String(requestedOfficeId || new URL(req.url).searchParams.get("officeId") || "").trim().toLowerCase();
+  if (isSystemAdminRole(user.role)) return requested || "registrar";
+  const ownOffice = String(user.officeId || user.office_id || "").trim().toLowerCase();
+  if (requested && requested !== ownOffice) return null;
+  return ownOffice || null;
+}
+
+export async function GET(req) {
+  const access = await requireStaff(req);
+  if (access.error || !access.user) return createAuthErrorResponse(access.error || "Staff authentication required", access.error?.startsWith("Access denied") ? 403 : 401);
+  const officeId = resolveOfficeId(access.user, req);
+  if (!officeId) return createAuthErrorResponse("Office scope is required", 403);
   try {
-    const courses = await listCourses();
+    const courses = await listCourses({ officeId });
     return NextResponse.json({ ok: true, data: courses.map(c => c.code) });
   } catch (e) {
     return NextResponse.json(
@@ -89,6 +104,8 @@ function validateStudentPayload(body, layout) {
 }
 
 export async function POST(req) {
+  const access = await requireAdmin(req);
+  if (access.error || !access.user) return createAuthErrorResponse(access.error || "Admin access required", access.error?.startsWith("Access denied") ? 403 : 401);
   const body = await req.json().catch(() => null);
   if (!body || typeof body !== "object") {
     return NextResponse.json(
@@ -105,7 +122,10 @@ export async function POST(req) {
     );
   }
 
-  const layout = await getStorageLayout().catch(() => null);
+  const officeId = resolveOfficeId(access.user, req, body.officeId || body.office_id);
+  if (!officeId) return createAuthErrorResponse("You cannot access that office", 403);
+
+  const layout = await getStorageLayout({ officeId }).catch(() => null);
 
   const results = [];
   for (let i = 0; i < rows.length; i++) {
@@ -117,8 +137,12 @@ export async function POST(req) {
     }
 
     try {
-      const created = await createStudent(validated.value);
-      results.push({ index: i, ok: true, data: created });
+      const created = await createStudent({ ...validated.value, officeId });
+      if (!created || !canAccessResource(access.user, "student", { ...created, office_id: officeId })) {
+        results.push({ index: i, ok: false, error: "Student could not be created" });
+      } else {
+        results.push({ index: i, ok: true, data: created });
+      }
     } catch (e) {
       const msg = String(e?.message || "");
       if (isUniqueViolation(e)) {
@@ -128,7 +152,7 @@ export async function POST(req) {
         msg.includes("Invalid section") ||
         msg.includes("is linked to")
       ) {
-        results.push({ index: i, ok: false, error: msg });
+        results.push({ index: i, ok: false, error: "Invalid course or section relationship" });
       } else {
         results.push({ index: i, ok: false, error: "Failed to create student" });
       }

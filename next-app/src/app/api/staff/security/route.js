@@ -1,22 +1,18 @@
 import { NextResponse } from "next/server";
 import { dbGet as sysDbGet, dbRun as sysDbRun, dbAll as sysDbAll } from "@/lib/postgresCompat";
 import { writeAuditLog } from "@/lib/auditLogRequest";
-import { verifySessionToken } from "@/lib/jwt";
 import { hasAllSecurityAnswers } from "@/lib/staffRepo";
-import crypto from "node:crypto";
+import { hashPassword } from "@/lib/passwordHash";
+import { requireStaff, createAuthErrorResponse } from "@/lib/authHelpers";
+import { requireTOTP, extractTOTPToken } from "@/lib/totpMiddleware";
 
 export const runtime = "nodejs";
 
 export async function GET(req) {
   try {
-    const token = req.cookies.get("pup_session")?.value;
-    if (!token) {
-      return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
-    }
-    const user = await verifySessionToken(token);
-    if (!user) {
-      return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
-    }
+    const access = await requireStaff(req);
+    if (access.error || !access.user) return createAuthErrorResponse(access.error || "Staff authentication required", access.error?.startsWith("Access denied") ? 403 : 401);
+    const user = access.user;
 
     const questions = await sysDbAll("SELECT id, question, is_required FROM security_questions ORDER BY id ASC");
     
@@ -43,19 +39,22 @@ export async function GET(req) {
     });
   } catch (error) {
     console.error("[GET /api/staff/security Error]:", error);
-    return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ ok: false, error: "Internal server error" }, { status: 500 });
   }
 }
 
 export async function PUT(req) {
   try {
-    const token = req.cookies.get("pup_session")?.value;
-    if (!token) {
-      return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
-    }
-    const user = await verifySessionToken(token);
-    if (!user) {
-      return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
+    const access = await requireStaff(req);
+    if (access.error || !access.user) return createAuthErrorResponse(access.error || "Staff authentication required", access.error?.startsWith("Access denied") ? 403 : 401);
+    const user = access.user;
+
+    const totpResult = await requireTOTP(user.id, extractTOTPToken(req.headers), { requireEnabled: true });
+    if (!totpResult.valid) {
+      return NextResponse.json(
+        { ok: false, error: "TOTP verification required: " + totpResult.error, requiresTOTP: true },
+        { status: 403 }
+      );
     }
 
     const { answers } = await req.json();
@@ -84,7 +83,7 @@ export async function PUT(req) {
       }
 
       const answerNormalized = answerRaw.toLowerCase();
-      const answerHash = crypto.createHash("sha256").update(answerNormalized).digest("hex");
+      const answerHash = hashPassword(answerNormalized);
 
       // PostgreSQL upsert for the composite staff/question key.
       await sysDbRun(`
@@ -103,6 +102,6 @@ export async function PUT(req) {
     return NextResponse.json({ ok: true, data: { success: true } });
   } catch (error) {
     console.error("[PUT /api/staff/security Error]:", error);
-    return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ ok: false, error: "Internal server error" }, { status: 500 });
   }
 }

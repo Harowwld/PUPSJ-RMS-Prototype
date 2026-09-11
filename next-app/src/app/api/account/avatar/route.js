@@ -2,10 +2,11 @@ import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
 import { NextResponse } from "next/server";
-import { getStaffById, updateStaff } from "@/lib/staffRepo";
-import { getSessionCookieName, verifySessionToken } from "@/lib/jwt";
+import { requireAuth, createAuthErrorResponse } from "@/lib/authHelpers";
+import { updateStaff } from "@/lib/staffRepo";
 import { writeAuditLog } from "@/lib/auditLogRequest";
-import { query, queryOne } from "@/lib/postgres";
+import { query } from "@/lib/postgres";
+import { canAccessResource } from "@/lib/resourceAuthorization";
 
 export const runtime = "nodejs";
 
@@ -21,90 +22,40 @@ function getAvatarsDir() {
   return dir;
 }
 
-async function getSessionUser(req) {
-  const token = req.cookies.get(getSessionCookieName())?.value || "";
-  if (!token) return null;
-  try {
-    const payload = await verifySessionToken(token);
-    if (!payload) return null;
-
-    if (payload.role === "Student") {
-      const accountId = payload.account_id || (Number.isFinite(Number(payload.sub)) ? Number(payload.sub) : null);
-      const student = await queryOne(
-        `SELECT sa.*, s.name 
-         FROM student_accounts sa 
-         LEFT JOIN students s ON s.student_no = sa.student_no 
-         WHERE (sa.id = $1 AND $1 IS NOT NULL)
-            OR (sa.student_no IS NOT NULL AND upper(sa.student_no) = upper($2) AND $2 IS NOT NULL)
-            OR (lower(sa.email) = lower($3) AND $3 IS NOT NULL)
-         LIMIT 1`,
-        [accountId, payload.student_no || null, payload.email || payload.username || null]
-      );
-      if (!student) return null;
-      return {
-        type: "student",
-        id: student.student_no || String(student.id),
-        account_id: student.id,
-        avatar_filename: student.avatar_filename || null,
-        user: student,
-      };
-    }
-
-    const userId = String(payload?.sub || "").trim();
-    if (!userId) return null;
-    const staff = await getStaffById(userId);
-    if (!staff) return null;
-    return {
-      type: "staff",
-      id: staff.id,
-      account_id: staff.id,
-      avatar_filename: staff.avatar_filename || null,
-      user: staff,
-    };
-  } catch {
-    return null;
-  }
+function getSessionUser(principal) {
+  if (!principal) return null;
+  const isStudent = principal.principalType === "student";
+  return {
+    type: isStudent ? "student" : "staff",
+    id: isStudent ? principal.studentNo || String(principal.accountId) : principal.id,
+    account_id: isStudent ? principal.accountId : principal.id,
+    avatar_filename: principal.avatar_filename || null,
+    user: principal,
+  };
 }
 
 // GET serves the avatar image
 export async function GET(req) {
+  const auth = await requireAuth(req);
+  if (auth.error || !auth.user) {
+    return createAuthErrorResponse(auth.error || "Authentication required", auth.error?.startsWith("Access denied") ? 403 : 401);
+  }
   try {
-    const sessionUser = await getSessionUser(req);
+    const sessionUser = getSessionUser(auth.user);
     if (!sessionUser) {
       return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
+    }
+    if (!canAccessResource(auth.user, "avatar", { ownerType: sessionUser.type, ownerId: sessionUser.account_id })) {
+      return NextResponse.json({ ok: false, error: "Avatar not found" }, { status: 404 });
     }
 
     const { searchParams } = new URL(req.url);
     const targetId = searchParams.get("id") || sessionUser.id;
-
-    let avatarFilename = null;
-    // Check if targetId matches current session
-    if (sessionUser.id === targetId || String(sessionUser.account_id) === targetId) {
-      avatarFilename = sessionUser.avatar_filename;
+    if (targetId !== sessionUser.id && String(targetId) !== String(sessionUser.account_id)) {
+      return NextResponse.json({ ok: false, error: "Avatar not found" }, { status: 404 });
     }
 
-    // Try finding staff
-    if (!avatarFilename) {
-      const targetStaff = await getStaffById(targetId);
-      if (targetStaff?.avatar_filename) {
-        avatarFilename = targetStaff.avatar_filename;
-      }
-    }
-
-    // Try finding student
-    if (!avatarFilename && process.env.DATABASE_URL) {
-      const targetStudent = await queryOne(
-        `SELECT avatar_filename FROM student_accounts 
-         WHERE id::text = $1 
-            OR (student_no IS NOT NULL AND upper(student_no) = upper($1))
-            OR lower(email) = lower($1)
-         LIMIT 1`,
-        [targetId]
-      );
-      if (targetStudent?.avatar_filename) {
-        avatarFilename = targetStudent.avatar_filename;
-      }
-    }
+    const avatarFilename = sessionUser.avatar_filename;
 
     if (!avatarFilename) {
       return NextResponse.json({ ok: false, error: "No avatar uploaded" }, { status: 404 });
@@ -131,16 +82,23 @@ export async function GET(req) {
       },
     });
   } catch (err) {
-    return NextResponse.json({ ok: false, error: err.message }, { status: 500 });
+    return NextResponse.json({ ok: false, error: "Internal server error" }, { status: 500 });
   }
 }
 
 // POST uploads a new avatar image
 export async function POST(req) {
+  const auth = await requireAuth(req);
+  if (auth.error || !auth.user) {
+    return createAuthErrorResponse(auth.error || "Authentication required", auth.error?.startsWith("Access denied") ? 403 : 401);
+  }
   try {
-    const sessionUser = await getSessionUser(req);
+    const sessionUser = getSessionUser(auth.user);
     if (!sessionUser) {
       return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
+    }
+    if (!canAccessResource(auth.user, "avatar", { ownerType: sessionUser.type, ownerId: sessionUser.account_id })) {
+      return NextResponse.json({ ok: false, error: "Avatar not found" }, { status: 404 });
     }
 
     const form = await req.formData().catch(() => null);
@@ -211,16 +169,23 @@ export async function POST(req) {
 
     return NextResponse.json({ ok: true, avatar_filename: filename });
   } catch (err) {
-    return NextResponse.json({ ok: false, error: err.message }, { status: 500 });
+    return NextResponse.json({ ok: false, error: "Internal server error" }, { status: 500 });
   }
 }
 
 // DELETE removes current custom avatar
 export async function DELETE(req) {
+  const auth = await requireAuth(req);
+  if (auth.error || !auth.user) {
+    return createAuthErrorResponse(auth.error || "Authentication required", auth.error?.startsWith("Access denied") ? 403 : 401);
+  }
   try {
-    const sessionUser = await getSessionUser(req);
+    const sessionUser = getSessionUser(auth.user);
     if (!sessionUser) {
       return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
+    }
+    if (!canAccessResource(auth.user, "avatar", { ownerType: sessionUser.type, ownerId: sessionUser.account_id })) {
+      return NextResponse.json({ ok: false, error: "Avatar not found" }, { status: 404 });
     }
 
     if (sessionUser.avatar_filename) {
@@ -252,6 +217,6 @@ export async function DELETE(req) {
 
     return NextResponse.json({ ok: true });
   } catch (err) {
-    return NextResponse.json({ ok: false, error: err.message }, { status: 500 });
+    return NextResponse.json({ ok: false, error: "Internal server error" }, { status: 500 });
   }
 }

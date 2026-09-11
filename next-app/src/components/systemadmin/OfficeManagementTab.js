@@ -543,12 +543,10 @@ export default function OfficeManagementTab({ showToast }) {
               >
                 <div className="absolute inset-0 overflow-hidden rounded-2xl pointer-events-none z-0">
                   <div
-                    className={cn("absolute bottom-0 left-0 w-[70%] h-[80%] bg-gradient-to-tr pointer-events-none", stat.shape1)}
-                    style={{ clipPath: "polygon(0% 100%, 100% 100%, 0% 0%)" }}
+                    className={cn("rms-style-clip-one absolute bottom-0 left-0 w-[70%] h-[80%] bg-gradient-to-tr pointer-events-none", stat.shape1)}
                   />
                   <div
-                    className={cn("absolute bottom-0 left-0 w-[50%] h-[60%] bg-gradient-to-tr pointer-events-none", stat.shape2)}
-                    style={{ clipPath: "polygon(0% 100%, 100% 100%, 0% 25%)" }}
+                    className={cn("rms-style-clip-two absolute bottom-0 left-0 w-[50%] h-[60%] bg-gradient-to-tr pointer-events-none", stat.shape2)}
                   />
                 </div>
 
@@ -882,12 +880,13 @@ export default function OfficeManagementTab({ showToast }) {
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex items-center gap-3">
                         <div
-                          className="h-10 w-10 rounded-xl flex items-center justify-center border text-lg shadow-sm"
-                          style={
+                          className={cn(
+                            "h-10 w-10 rounded-xl flex items-center justify-center border text-lg shadow-sm",
                             isActive
-                              ? { borderColor: `${accent}20`, backgroundColor: `${accent}08`, color: accent }
-                              : { borderColor: "rgba(142, 142, 147, 0.2)", backgroundColor: "rgba(142, 142, 147, 0.08)", color: "#8e8e93" }
-                          }
+                              ? "rms-office-accent"
+                              : "border-black/10 bg-gray-100/80 text-[#8e8e93]"
+                          )}
+                          {...(isActive ? { "data-color": accent } : {})}
                         >
                           <i className={office.icon || "ti ti-building"}></i>
                         </div>
@@ -1151,12 +1150,13 @@ export default function OfficeManagementTab({ showToast }) {
                       <td className="px-5 py-3.5 whitespace-nowrap">
                         <div className="flex items-center gap-3">
                           <div
-                            className="h-8 w-8 rounded-lg flex items-center justify-center border text-sm shadow-2xs shrink-0"
-                            style={
+                            className={cn(
+                              "h-8 w-8 rounded-lg flex items-center justify-center border text-sm shadow-2xs shrink-0",
                               isActive
-                                ? { borderColor: `${accent}20`, backgroundColor: `${accent}08`, color: accent }
-                                : { borderColor: "rgba(142, 142, 147, 0.2)", backgroundColor: "rgba(142, 142, 147, 0.08)", color: "#8e8e93" }
-                            }
+                                ? "rms-office-accent"
+                                : "border-black/10 bg-gray-100/80 text-[#8e8e93]"
+                            )}
+                            {...(isActive ? { "data-color": accent } : {})}
                           >
                             <i className={office.icon || "ti ti-building"}></i>
                           </div>
@@ -1774,13 +1774,15 @@ export default function OfficeManagementTab({ showToast }) {
                           type="button"
                           title={`${c.name} (${c.hex})`}
                           onClick={() => setForm(prev => ({ ...prev, accent_color: c.hex }))}
+                          data-color={c.hex}
+                          data-background-color={c.hex}
                           className={cn(
+                            "rms-style-background-color",
                             "h-8 rounded-xl border transition-all cursor-pointer flex items-center justify-center shadow-2xs",
                             isSelected
                               ? "ring-2 ring-slate-900 ring-offset-2 dark:ring-white dark:ring-offset-zinc-950 scale-105"
                               : "border-black/10 hover:scale-105"
                           )}
-                          style={{ backgroundColor: c.hex }}
                         >
                           {isSelected && (
                             <i className="ti ti-check text-white text-xs drop-shadow-sm font-bold"></i>
@@ -1813,12 +1815,8 @@ export default function OfficeManagementTab({ showToast }) {
                         Live Preview:
                       </span>
                       <div
-                        className="flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-semibold shadow-2xs"
-                        style={{
-                          borderColor: `${form.accent_color}30`,
-                          backgroundColor: `${form.accent_color}10`,
-                          color: form.accent_color
-                        }}
+                        className="rms-office-accent flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-semibold shadow-2xs"
+                        data-color={form.accent_color}
                       >
                         <i className={cn(form.icon || "ti ti-building", "text-sm")}></i>
                         <span>{form.short_name || "Office"}</span>

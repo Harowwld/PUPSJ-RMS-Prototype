@@ -3,7 +3,7 @@ import {
   getStaffById, 
   verifyRecoveryCode, 
   getStaffDisplayName, 
-  hashPasswordForStorage,
+  verifyPasswordHash,
   verifySerialKey,
   hasAllSecurityAnswers,
 } from "@/lib/staffRepo";
@@ -11,7 +11,9 @@ import { getSessionCookieName, verifySessionToken, signSessionToken } from "@/li
 import { verifyTOTP, decryptSecret } from "@/lib/totp";
 import { createSession } from "@/lib/sessionStore";
 import { writeAuditLog } from "@/lib/auditLogRequest";
-import { checkAuthLoginRateLimit, resetAuthLoginRateLimit } from "@/lib/rateLimiter";
+import { checkAuth2FARateLimit, resetAuth2FARateLimit } from "@/lib/rateLimiter";
+import { setCSRFTokenCookie } from "../../../../../lib/csrfProtection";
+import { getSessionVersion, isSessionActive, revokeSession } from "@/lib/authSessions";
 
 export const runtime = "nodejs";
 
@@ -31,7 +33,7 @@ export async function POST(req) {
                     realIP ? realIP.trim() : 
                     req.ip || 'unknown';
 
-  const rateLimitResult = await checkAuthLoginRateLimit(ipAddress);
+  const rateLimitResult = await checkAuth2FARateLimit(ipAddress);
   if (!rateLimitResult.allowed) {
     return addSecurityHeaders(NextResponse.json(
       { 
@@ -67,14 +69,17 @@ export async function POST(req) {
     if (payload.purpose !== "2fa") {
       throw new Error("Invalid token purpose");
     }
+    if (!(await isSessionActive(payload))) {
+      throw new Error("Challenge already used or revoked");
+    }
   } catch (err) {
     return addSecurityHeaders(NextResponse.json({ ok: false, error: "Invalid or expired session" }, { status: 401 }));
   }
 
   const userId = payload.sub;
   const staff = await getStaffById(userId);
-  if (!staff) {
-    return addSecurityHeaders(NextResponse.json({ ok: false, error: "User not found" }, { status: 404 }));
+  if (!staff || staff.status !== "Active" || !staff.totp_enabled) {
+    return addSecurityHeaders(NextResponse.json({ ok: false, error: "Invalid or inactive 2FA session" }, { status: 401 }));
   }
 
   let isValid = false;
@@ -114,10 +119,10 @@ export async function POST(req) {
   }
 
   // 4. Verification Successful -> Create Full Session
+  await revokeSession(payload.jti, { principalId: staff.id, reason: "2fa-challenge-used" });
   const defaultPassword = process.env.DEFAULT_STAFF_PASSWORD || "pupstaff";
-  const defaultHash = hashPasswordForStorage(defaultPassword);
   const hasSecurity = await hasAllSecurityAnswers(staff.id);
-  const mustChangePassword = (staff.password_hash === defaultHash) && !hasSecurity;
+  const mustChangePassword = verifyPasswordHash(defaultPassword, staff.password_hash).valid && !hasSecurity;
 
   const sessionPayload = {
     sub: staff.id,
@@ -126,12 +131,13 @@ export async function POST(req) {
     username: staff.email,
     last_active: staff.last_active,
     mustChangePassword,
+    session_version: await getSessionVersion(staff.id),
   };
   const token = await signSessionToken(sessionPayload);
-  createSession(token, staff.id, staff.role || "Staff", staff.email);
+  await createSession(token, staff.id, staff.role || "Staff", staff.email, { authLevel: "2fa" });
   
   // Reset login rate limit on successful 2FA
-  await resetAuthLoginRateLimit(ipAddress);
+  await resetAuth2FARateLimit(ipAddress, staff.id);
 
   await writeAuditLog(req, `User Login (2FA)`, { 
     details: `personnel '${getStaffDisplayName(staff)}' successfully verified via ${methodUsed} and authenticated`, 
@@ -162,5 +168,5 @@ export async function POST(req) {
     path: "/",
   });
 
-  return addSecurityHeaders(res);
+  return addSecurityHeaders(setCSRFTokenCookie(res, token));
 }

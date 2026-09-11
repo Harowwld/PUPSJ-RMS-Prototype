@@ -4,15 +4,22 @@ import { NextResponse } from "next/server";
 import { query, queryOne } from "@/lib/postgres";
 import { requireOfficeModule } from "@/lib/moduleAccess";
 import { writeGlobalAuditLog } from "@/lib/auditLogRequest";
+import { canAccessResource } from "@/lib/resourceAuthorization";
 
 export const runtime = "nodejs";
 const validStatuses = new Set(["Submitted", "Under Review", "Needs Revision", "Approved", "Declined"]);
 
+async function getAuthorizedProposal(id, access) {
+  const proposal = await queryOne("SELECT * FROM event_proposals WHERE id = $1 AND office_id = 'osas'", [id]);
+  return proposal && canAccessResource(access, "proposal", proposal) ? proposal : null;
+}
+
 export async function GET(req, ctx) {
   const access = await requireOfficeModule("osas_monitoring", { officeId: "osas" }, req);
+  if (access === null) return NextResponse.json({ ok: false, error: "Authentication required" }, { status: 401 });
   if (!access) return NextResponse.json({ ok: false, error: "Forbidden" }, { status: 403 });
   const { id } = await ctx.params;
-  const proposal = await queryOne("SELECT * FROM event_proposals WHERE id = $1 AND office_id = 'osas'", [id]);
+  const proposal = await getAuthorizedProposal(id, access);
   if (!proposal) return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
   if (new URL(req.url).searchParams.get("file") === "1") {
     const localDir = process.env.LOCAL_DATA_DIR || path.join(process.cwd(), ".local");
@@ -35,8 +42,11 @@ export async function GET(req, ctx) {
 
 export async function PATCH(req, ctx) {
   const access = await requireOfficeModule("osas_monitoring", { officeId: "osas" }, req);
+  if (access === null) return NextResponse.json({ ok: false, error: "Authentication required" }, { status: 401 });
   if (!access) return NextResponse.json({ ok: false, error: "Forbidden" }, { status: 403 });
   const { id } = await ctx.params;
+  const existingProposal = await getAuthorizedProposal(id, access);
+  if (!existingProposal) return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
   const body = await req.json().catch(() => null);
   if (body?.archive === true) {
     const archived = await queryOne("UPDATE event_proposals SET status = 'Archived', archived_at = NOW(), updated_at = NOW() WHERE id = $1 AND office_id = 'osas' AND archived_at IS NULL RETURNING *", [id]);

@@ -1,31 +1,39 @@
 import { NextResponse } from "next/server";
-import { 
-  detectExternalDrive, 
-  setSimulationMode, 
-  isSimulationMode 
+import {
+  detectExternalDrive,
+  setSimulationMode,
+  isSimulationMode,
 } from "@/lib/externalDriveDetector";
+import { requireSystemAdmin, createAuthErrorResponse } from "../../../../lib/authHelpers";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+function requireAccessError(access) {
+  return createAuthErrorResponse(
+    access.error || "System administrator access required",
+    access.error?.startsWith("Access denied") ? 403 : 401,
+  );
+}
+
 export async function GET(req) {
+  const access = await requireSystemAdmin(req);
+  if (access.error || !access.user) return requireAccessError(access);
+
   try {
     const { searchParams } = new URL(req.url);
     const simulateParam = searchParams.get("simulate");
-    
-    if (simulateParam !== null) {
-      setSimulationMode(simulateParam === "true");
-    }
-
-    const info = detectExternalDrive();
-    return NextResponse.json({ ok: true, data: info });
-  } catch (err) {
-    console.error("[EXTERNAL DRIVE API] Detection Error:", err);
-    return NextResponse.json({ ok: false, error: err.message }, { status: 500 });
+    if (simulateParam !== null) setSimulationMode(simulateParam === "true");
+    return NextResponse.json({ ok: true, data: detectExternalDrive() });
+  } catch {
+    return NextResponse.json({ ok: false, error: "Internal server error" }, { status: 500 });
   }
 }
 
 export async function POST(req) {
+  const access = await requireSystemAdmin(req);
+  if (access.error || !access.user) return requireAccessError(access);
+
   try {
     const body = await req.json().catch(() => ({}));
     if (body.simulate !== undefined) {
@@ -33,15 +41,13 @@ export async function POST(req) {
     } else {
       setSimulationMode(!isSimulationMode());
     }
-
     const info = detectExternalDrive();
-    return NextResponse.json({ 
-      ok: true, 
-      message: info.isEmulated ? "Simulation mode enabled" : "Hardware detection mode active", 
-      data: info 
+    return NextResponse.json({
+      ok: true,
+      message: info.isEmulated ? "Simulation mode enabled" : "Hardware detection mode active",
+      data: info,
     });
-  } catch (err) {
-    console.error("[EXTERNAL DRIVE API] Toggle Error:", err);
-    return NextResponse.json({ ok: false, error: err.message }, { status: 500 });
+  } catch {
+    return NextResponse.json({ ok: false, error: "Internal server error" }, { status: 500 });
   }
 }

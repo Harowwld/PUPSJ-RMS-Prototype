@@ -5,7 +5,9 @@ import {
 } from "../../../../../lib/backupsRepo";
 import { writeAuditLog } from "../../../../../lib/auditLogRequest";
 import { requireAdmin, createAuthErrorResponse } from "../../../../../lib/authHelpers";
+import { requireTOTP, extractTOTPToken } from "../../../../../lib/totpMiddleware";
 import { isSystemAdminRole } from "../../../../../lib/roleUtils";
+import { canAccessResource } from "../../../../../lib/resourceAuthorization";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -17,18 +19,20 @@ export async function POST(req) {
       return createAuthErrorResponse(error || "Admin access required", 403);
     }
 
+    if (!isSystemAdminRole(user.role)) {
+      return createAuthErrorResponse("System Administrator authorization required", 403);
+    }
+
+    const totpResult = await requireTOTP(user.id, extractTOTPToken(req.headers), { requireEnabled: true });
+    if (!totpResult.valid) {
+      return NextResponse.json({ ok: false, error: "TOTP verification required", requiresTOTP: true, missingToken: !!totpResult.missing }, { status: 403 });
+    }
+
     const { id } = await req.json();
     if (!id) return NextResponse.json({ ok: false, error: "Missing ID" }, { status: 400 });
 
     const backup = await getBackupById(id);
-    if (!backup) return NextResponse.json({ ok: false, error: "Backup not found" }, { status: 404 });
-
-    if (!isSystemAdminRole(user.role)) {
-      const userOffice = String(user.office_id || user.section || "registrar").toLowerCase().trim();
-      if (backup.scope === "system" || (backup.office_id && backup.office_id.toLowerCase() !== userOffice)) {
-        return NextResponse.json({ ok: false, error: "Forbidden: You do not have permission to sync this backup" }, { status: 403 });
-      }
-    }
+    if (!backup || !canAccessResource(user, "backup", backup)) return NextResponse.json({ ok: false, error: "Backup not found" }, { status: 404 });
 
     // Verify that an external drive is actually connected
     const { detectExternalDrive } = await import("@/lib/externalDriveDetector");
@@ -42,7 +46,7 @@ export async function POST(req) {
     }
 
     // Perform sync
-    const result = await syncBackupExternally(id);
+    await syncBackupExternally(id);
 
     await writeAuditLog(req, `Sync Backup External`, { 
       details: `synchronized encrypted backup '${backup.filename}' (ID: ${id}) to external hardware storage node`,
@@ -53,10 +57,9 @@ export async function POST(req) {
     return NextResponse.json({
       ok: true,
       message: "Synced to external hardware successfully",
-      path: result.path
     });
   } catch (error) {
     console.error("[SYNC EXTERNAL] Error:", error);
-    return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ ok: false, error: "Internal server error" }, { status: 500 });
   }
 }

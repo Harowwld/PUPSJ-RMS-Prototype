@@ -27,6 +27,36 @@ export function getBackupsDir() {
   return dir;
 }
 
+export function getBackupFilePath(filename, baseDir = getBackupsDir()) {
+  const safeFilename = String(filename || "").trim();
+  if (!safeFilename || path.basename(safeFilename) !== safeFilename) {
+    throw new Error("Invalid backup filename.");
+  }
+
+  const root = path.resolve(baseDir);
+  const candidate = path.resolve(root, safeFilename);
+  const relative = path.relative(root, candidate);
+  if (!relative || relative.startsWith("..") || path.isAbsolute(relative)) {
+    throw new Error("Invalid backup path.");
+  }
+  return candidate;
+}
+
+export function getPrincipalOfficeId(user) {
+  const officeId = user?.officeId ?? user?.office_id;
+  return officeId ? String(officeId).trim().toLowerCase() : null;
+}
+
+export function canAccessBackup(backup, user) {
+  if (!backup || isSystemAdminRole(user?.role)) return Boolean(backup);
+  const principalOffice = getPrincipalOfficeId(user);
+  return Boolean(
+    principalOffice &&
+      String(backup.scope || "office").toLowerCase() === "office" &&
+      String(backup.office_id || "").trim().toLowerCase() === principalOffice
+  );
+}
+
 export function getExternalBackupsDir() {
   const driveInfo = detectExternalDrive();
   if (driveInfo.connected && driveInfo.path) {
@@ -38,6 +68,19 @@ export function getExternalBackupsDir() {
       fs.mkdirSync(targetDir, { recursive: true });
     }
     return targetDir;
+  }
+
+  const explicit = process.env.EXTERNAL_BACKUP_PATH;
+  if (explicit) {
+    try {
+      const root = path.parse(explicit).root;
+      if (fs.existsSync(root)) {
+        if (!fs.existsSync(explicit)) fs.mkdirSync(explicit, { recursive: true });
+        return explicit;
+      }
+    } catch {
+      // Fall through to the same explicit no-drive error below.
+    }
   }
 
   throw new Error("Cannot sync: No external hard drive detected. Please connect an external storage drive to sync.");
@@ -165,40 +208,31 @@ export async function syncBackupExternally(id) {
     }
 
     const backupsDir = getBackupsDir();
-    const sourcePath = path.join(backupsDir, backup.filename);
-    console.log(`[SYNC DEBUG] Source path: ${sourcePath}`);
+    const sourcePath = getBackupFilePath(backup.filename, backupsDir);
 
     if (!fs.existsSync(sourcePath)) {
-      console.error(`[SYNC DEBUG] CRITICAL: Source file missing on disk: ${sourcePath}`);
-      throw new Error(`Source file not found at: ${sourcePath}`);
+      throw new Error("Source backup file is unavailable.");
     }
 
     // Ensure PUPSJRMS Backups folder exists on the external drive
     const externalDir = getExternalBackupsDir();
-    console.log(`[SYNC DEBUG] External base dir: ${externalDir}`);
 
     // Create a dated subfolder: YYYY-MM-DD
     const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
     const dailyDir = path.join(externalDir, today);
     if (!fs.existsSync(dailyDir)) {
       fs.mkdirSync(dailyDir, { recursive: true });
-      console.log(`[SYNC DEBUG] Created daily folder: ${dailyDir}`);
     }
 
-    const destPath = path.join(dailyDir, backup.filename);
-    console.log(`[SYNC DEBUG] Destination path: ${destPath}`);
-
-    console.log(`[SYNC DEBUG] Transferring ${backup.filename} to external drive...`);
+    const destPath = getBackupFilePath(backup.filename, dailyDir);
     
     // Physical copy into the daily subfolder
     fs.copyFileSync(sourcePath, destPath);
-    console.log(`[SYNC DEBUG] Physical copy complete.`);
 
     // Update DB status
     await updateBackupStatus(id, "status_external", "Success");
-    console.log(`[SYNC DEBUG] Database updated to 'Success' for ID: ${id}`);
     
-    return { ok: true, path: destPath, dailyDir };
+    return { ok: true };
   } catch (error) {
     console.error(`[SYNC DEBUG] ERROR for backup ${id}:`, error.message);
     try {
@@ -270,8 +304,7 @@ export async function executeSystemBackup({ actorId = null } = {}) {
   const backupFilename = `PUP-SYSTEM-GOVERNANCE-BACKUP-${dateStr}-${timeStr}.zip.enc`;
 
   const backupsDir = getBackupsDir();
-  const backupPath = path.join(backupsDir, backupFilename);
-  console.log(`[BACKUP] Creating System Governance Backup: ${backupPath}`);
+  const backupPath = getBackupFilePath(backupFilename, backupsDir);
 
   const localDir = getLocalDir();
   const tempDbPath = path.join(localDir, `system-backup-temp-${Date.now()}.sql`);
@@ -334,8 +367,11 @@ export async function executeSystemBackup({ actorId = null } = {}) {
   return record;
 }
 
-export async function executeOfficeBackup({ officeId = "registrar", actorId = null } = {}) {
-  const normOffice = String(officeId || "registrar").toLowerCase().trim();
+export async function executeOfficeBackup({ officeId, actorId = null } = {}) {
+  const normOffice = String(officeId || "").toLowerCase().trim();
+  if (!normOffice) {
+    throw new Error("Office scope is required to create an office backup.");
+  }
   const officeUpper = normOffice.toUpperCase();
   const timestamp = new Date();
   const dateStr = timestamp.toISOString().split("T")[0]; // YYYY-MM-DD
@@ -343,8 +379,7 @@ export async function executeOfficeBackup({ officeId = "registrar", actorId = nu
   const backupFilename = `PUP-${officeUpper}-BACKUP-${dateStr}-${timeStr}.zip.enc`;
 
   const backupsDir = getBackupsDir();
-  const backupPath = path.join(backupsDir, backupFilename);
-  console.log(`[BACKUP] Creating Office Backup for [${normOffice}]: ${backupPath}`);
+  const backupPath = getBackupFilePath(backupFilename, backupsDir);
 
   const localDir = getLocalDir();
   const tempDbPath = path.join(localDir, `${normOffice}-backup-temp-${Date.now()}.sql`);
@@ -354,6 +389,7 @@ export async function executeOfficeBackup({ officeId = "registrar", actorId = nu
   if (normOffice === "registrar") {
     officeTables = [
       "students",
+      "student_office_memberships",
       "student_accounts",
       "documents",
       "document_requests",
@@ -446,8 +482,7 @@ export async function executeBackup(options = {}) {
   if (options?.scope === "system") {
     return await executeSystemBackup({ actorId: options.actorId });
   }
-  const officeId = options?.officeId || "registrar";
-  return await executeOfficeBackup({ officeId, actorId: options.actorId });
+  return await executeOfficeBackup({ officeId: options?.officeId, actorId: options.actorId });
 }
 
 function getBackupEncryptionKey() {
@@ -568,7 +603,7 @@ export function restorePostgresSql(sqlContent) {
   }
 
   try {
-    execFileSync("psql", [process.env.DATABASE_URL], {
+    execFileSync("psql", ["-v", "ON_ERROR_STOP=1", process.env.DATABASE_URL], {
       input: sqlContent,
       maxBuffer: 100 * 1024 * 1024,
       stdio: ["pipe", "pipe", "pipe"],
@@ -612,7 +647,7 @@ export function restorePostgresSql(sqlContent) {
 
 export async function executeRestoreBackup(
   fileBuffer,
-  { actorId = null, userRole = "Admin", userOffice = "registrar" } = {}
+  { actorId = null, userRole = "Admin", userOffice = null } = {}
 ) {
   if (!fileBuffer || !Buffer.isBuffer(fileBuffer)) {
     throw new Error("Backup restoration requires a valid file buffer.");
@@ -652,6 +687,9 @@ export async function executeRestoreBackup(
 
   // 4. Role & Office Authorization Check
   const isSuper = isSystemAdminRole(userRole);
+  if (!isSuper) {
+    throw new Error("Only System Administrators can restore backup archives.");
+  }
   const isGovernanceBackup = targetTables.some((t) =>
     ["staff", "offices", "modules", "office_modules", "global_audit_logs"].includes(t)
   );
@@ -662,8 +700,11 @@ export async function executeRestoreBackup(
     );
   }
 
-  const normUserOffice = String(userOffice || "registrar").toLowerCase().trim();
+  const normUserOffice = String(userOffice || "").toLowerCase().trim();
   if (!isSuper) {
+    if (!normUserOffice) {
+      throw new Error("An office-scoped administrator must have an office assignment.");
+    }
     if (normUserOffice === "osas") {
       const hasRegistrarOnlyTables = targetTables.some((t) =>
         ["students", "student_accounts", "documents", "document_requests", "recognition_templates"].includes(t)
@@ -720,10 +761,8 @@ export async function executeRestoreBackup(
 
   const restoreTransactionSql = `
 BEGIN;
-SET session_replication_role = 'replica';
 ${deleteStatements}
 ${dataSql}
-SET session_replication_role = 'origin';
 COMMIT;
 `;
 
@@ -746,4 +785,3 @@ COMMIT;
     restoredAt: now,
   };
 }
-

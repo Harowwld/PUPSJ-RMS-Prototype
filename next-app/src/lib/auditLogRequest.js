@@ -14,37 +14,25 @@ async function resolveActor(req) {
     let token = req?.cookies?.get?.(cookieName)?.value || "";
     
     if (!token && req?.headers?.get) {
-      const authHeader = req.headers.get("authorization");
-      if (authHeader && authHeader.startsWith("Bearer ")) {
-        token = authHeader.substring(7);
-      } else {
-        const cookieHeader = req.headers.get("cookie") || "";
-        const match = cookieHeader.match(new RegExp(`(?:^|;\\s*)${cookieName}=([^;]+)`));
-        if (match) token = decodeURIComponent(match[1]);
-      }
+      const cookieHeader = req.headers.get("cookie") || "";
+      const match = cookieHeader.match(new RegExp(`(?:^|;\\s*)${cookieName}=([^;]+)`));
+      if (match) token = decodeURIComponent(match[1]);
     }
 
-    if (!token) {
-      try {
-        const { cookies } = await import("next/headers");
-        const cookieStore = await cookies();
-        token = cookieStore.get(cookieName)?.value || "";
-      } catch {}
-    }
-
-    if (!token) return { actor: "System", role: "System" };
+    if (!token) return { actor: "System", role: "System", officeId: null };
 
     const payload = await verifySessionToken(token);
     const id = String(payload?.sub || "").trim();
-    if (!id) return { actor: "System", role: "System" };
+    if (!id) return { actor: "System", role: "System", officeId: null };
 
     const staff = await getStaffById(id);
     return {
       actor: getStaffDisplayName(staff) || id,
-      role: staff?.role || String(payload?.role || "Staff"),
+      role: staff?.role || "Unknown",
+      officeId: staff?.office_id || null,
     };
   } catch {
-    return { actor: "System", role: "System" };
+    return { actor: "System", role: "System", officeId: null };
   }
 }
 
@@ -52,12 +40,10 @@ export async function writeAuditLog(req, action, overrides = {}) {
   try {
     const base = await resolveActor(req);
     const userAgent = req?.headers?.get?.("user-agent") || "";
-    const officeId = req?.headers?.get?.("x-office-id") || overrides.officeId || overrides.office_id || null;
-
     await createGlobalAuditLog({
       actor: overrides.actor || base.actor,
       role: overrides.role || base.role,
-      officeId: officeId,
+      officeId: overrides.officeId || overrides.office_id || base.officeId || null,
       action: String(action || "").trim(),
       details: overrides.details || "",
       severity: overrides.severity || "INFO",
@@ -79,7 +65,7 @@ export async function writeGlobalAuditLog(req, action, overrides = {}) {
     await createGlobalAuditLog({
       actor: overrides.actor || base.actor,
       role: overrides.role || base.role,
-      officeId: overrides.officeId || overrides.office_id || null,
+      officeId: overrides.officeId || overrides.office_id || base.officeId || null,
       action: String(action || "").trim(),
       details: overrides.details || "",
       severity: overrides.severity || "INFO",

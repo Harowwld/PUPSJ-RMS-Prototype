@@ -47,29 +47,37 @@ async function promoteUniqueMatch(item, student, docType, officeId, rotation = 0
     sizeBytes: buffer.length,
     buffer,
   });
-  await markIngestPromoted(item.id, document.id);
+  await markIngestPromoted(item.id, document.id, null, { officeId });
   try { fs.unlinkSync(sourcePath); } catch {}
   return document;
 }
 
-export async function processNextBatchItem(batchId, officeId = "registrar") {
+export async function processNextBatchItem(batchId, officeId) {
+  if (!String(officeId || "").trim()) throw new Error("Office scope is required");
   const item = await claimNextBatchItem(batchId, officeId);
   if (!item) return null;
 
   const filePath = getIngestFilePath(item.storage_filename);
   if (!fs.existsSync(filePath)) {
-    return markIngestFailed(item.id, "Ingest source file is missing from disk.");
+    return markIngestFailed(item.id, "Ingest source file is missing from disk.", { officeId });
   }
 
   try {
     const [ocrResult, students, docTypes] = await Promise.all([
       performNativeOcr(filePath),
-      query("SELECT student_no, name, course_code, year_level, section, status, storage_room AS room, storage_cabinet AS cabinet, storage_drawer AS drawer FROM students WHERE status = 'Active'"),
+      query(`SELECT s.student_no, s.name, s.course_code, s.year_level, s.section, s.status,
+                    s.storage_room AS room, s.storage_cabinet AS cabinet, s.storage_drawer AS drawer
+               FROM students s
+              WHERE s.status = 'Active'
+                AND EXISTS (SELECT 1 FROM student_office_memberships som
+                             WHERE som.student_no = s.student_no
+                               AND som.office_id = $1
+                               AND som.status = 'Active')`, [officeId]),
       query("SELECT name FROM document_types WHERE office_id = $1 AND status = 'Active' ORDER BY lower(name)", [officeId]),
     ]);
     const text = String(ocrResult?.text || "").trim();
     if (!text && (!ocrResult?.pages || !ocrResult.pages.some((page) => page.observations?.length))) {
-      return saveOcrResult(item.id, { text, name: null, studentNo: null, docType: null, confidence: 0, candidates: [], error: "OCR engine returned no text or observations." });
+      return saveOcrResult(item.id, { text, name: null, studentNo: null, docType: null, confidence: 0, candidates: [], error: "OCR engine returned no text or observations." }, { officeId });
     }
 
     const studentNo = detectStudentNo(text);
@@ -153,7 +161,7 @@ export async function processNextBatchItem(batchId, officeId = "registrar") {
       conflictingCandidates,
     });
     scored.evidence = { ...scored.evidence, detectedRotation };
-    const duplicate = await findDuplicateIngest(item.id, item.content_sha256);
+    const duplicate = await findDuplicateIngest(item.id, item.content_sha256, { officeId });
 
     const saved = await saveOcrResult(item.id, {
       text,
@@ -170,7 +178,7 @@ export async function processNextBatchItem(batchId, officeId = "registrar") {
       pageIndex: coordinateRecognition?.pageIndex ?? null,
       status: duplicate ? "Duplicate" : hasMultipleMatches ? "Conflict" : fallbackSingleMatch ? "Confirmed" : "Needs Review",
       error: duplicate ? `Duplicate content matches ingest item #${duplicate.id}.` : null,
-    });
+    }, { officeId });
 
     const canAutoUpload = !duplicate
       && reviewCandidates.length === 1
@@ -197,7 +205,7 @@ export async function processNextBatchItem(batchId, officeId = "registrar") {
         pageIndex: coordinateRecognition?.pageIndex ?? null,
         status: "Needs Review",
         error: `Automatic student-folder upload failed: ${error.message || "Unknown error"}`,
-      });
+      }, { officeId });
     }
   } catch (error) {
     return saveOcrResult(item.id, {
@@ -208,6 +216,6 @@ export async function processNextBatchItem(batchId, officeId = "registrar") {
       confidence: 0,
       candidates: [],
       error: error?.message || "OCR processing failed.",
-    });
+    }, { officeId });
   }
 }

@@ -624,12 +624,10 @@ export default function GlobalStaffTab({ authUser, showToast }) {
               >
                 <div className="absolute inset-0 overflow-hidden rounded-xl pointer-events-none z-0">
                   <div
-                    className={cn("absolute bottom-0 left-0 w-[70%] h-[80%] bg-gradient-to-tr pointer-events-none", stat.shape1)}
-                    style={{ clipPath: "polygon(0% 100%, 100% 100%, 0% 0%)" }}
+                    className={cn("rms-style-clip-one absolute bottom-0 left-0 w-[70%] h-[80%] bg-gradient-to-tr pointer-events-none", stat.shape1)}
                   />
                   <div
-                    className={cn("absolute bottom-0 left-0 w-[50%] h-[60%] bg-gradient-to-tr pointer-events-none", stat.shape2)}
-                    style={{ clipPath: "polygon(0% 100%, 100% 100%, 0% 25%)" }}
+                    className={cn("rms-style-clip-two absolute bottom-0 left-0 w-[50%] h-[60%] bg-gradient-to-tr pointer-events-none", stat.shape2)}
                   />
                 </div>
 
@@ -1070,11 +1068,8 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                     <td className="py-2 px-4 align-middle">
                       {office ? (
                         <div 
-                          className="inline-flex w-fit items-center justify-center rounded-full px-[10px] py-[2.5px] text-[11px] font-semibold tracking-[0.04em] border-0 select-none"
-                          style={{
-                            backgroundColor: `${office.accent_color || "#800000"}15`,
-                            color: office.accent_color || "#800000"
-                          }}
+                          className="rms-office-accent inline-flex w-fit items-center justify-center rounded-[4px] px-[8px] py-[3px] text-[11px] font-semibold tracking-[0.04em] border-0 select-none"
+                          data-color={office.accent_color || "#800000"}
                         >
                           {office.short_name}
                         </div>

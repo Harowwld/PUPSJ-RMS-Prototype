@@ -38,6 +38,7 @@ export async function countAuditLogs(options) {
   const opt = options || {};
   const search = opt.search || "";
   const actorExact = opt.actorExact || "";
+  const officeId = opt.officeId || opt.office_id || "";
   const role = opt.role || "";
   const severity = opt.severity || "";
   const startDate = opt.startDate || "";
@@ -46,6 +47,11 @@ export async function countAuditLogs(options) {
   let query = "SELECT COUNT(*) as count FROM global_audit_logs";
   let params = [];
   let whereClauses = [];
+
+  if (officeId) {
+    whereClauses.push("office_id = ?");
+    params.push(officeId);
+  }
 
   if (actorExact) {
     whereClauses.push("actor = ?");
@@ -100,6 +106,7 @@ export async function listAuditLogs(options) {
   const offset = opt.offset !== undefined ? opt.offset : 0;
   const search = opt.search || "";
   const actorExact = opt.actorExact || "";
+  const officeId = opt.officeId || opt.office_id || "";
   const role = opt.role || "";
   const severity = opt.severity || "";
   const startDate = opt.startDate || "";
@@ -113,6 +120,11 @@ export async function listAuditLogs(options) {
   let query = "SELECT * FROM global_audit_logs";
   let params = [];
   let whereClauses = [];
+
+  if (officeId) {
+    whereClauses.push("office_id = ?");
+    params.push(officeId);
+  }
 
   if (actorExact) {
     whereClauses.push("actor = ?");
@@ -173,7 +185,7 @@ export async function listAuditLogs(options) {
   return await dbAll(query, params);
 }
 
-export async function getAuditLogStats(actor = "") {
+export async function getAuditLogStats(actor = "", officeId = "") {
   // Main stats
   let mainQuery = "SELECT " +
     'COUNT(*)::int as "totalLogs", ' +
@@ -185,8 +197,12 @@ export async function getAuditLogStats(actor = "") {
     "FROM global_audit_logs";
   
   let params = [];
+  if (officeId) {
+    mainQuery += " WHERE office_id = ?";
+    params.push(officeId);
+  }
   if (actor) {
-    mainQuery += " WHERE actor = ?";
+    mainQuery += params.length ? " AND actor = ?" : " WHERE actor = ?";
     params.push(actor);
   }
 
@@ -208,6 +224,9 @@ export async function getAuditLogStats(actor = "") {
     "FROM global_audit_logs " +
     "WHERE created_at::date >= CURRENT_DATE - INTERVAL '6 days' ";
   
+  if (officeId) {
+    trendQuery += " AND office_id = ? ";
+  }
   if (actor) {
     trendQuery += " AND actor = ? ";
   }

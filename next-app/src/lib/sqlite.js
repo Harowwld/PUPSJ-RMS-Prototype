@@ -238,32 +238,9 @@ export async function getDb() {
     // Ignore
   }
 
-  // 2. Check if we're in a Next.js request context and read headers
-  try {
-    const { headers } = await import("next/headers");
-    const headersList = await headers();
-    const officeId = headersList.get("x-office-id");
-    const userRole = headersList.get("x-user-role");
-
-    if (officeId) {
-      const { getOfficeDb } = await import("./officeDb.js");
-      return getOfficeDb(officeId);
-    }
-
-    // SystemAdmin context: they don't have a default office_id, so they default to 'registrar'
-    // but they can pass an override header (x-office-override)
-    if (userRole === "SystemAdmin" || userRole === "SuperAdmin") {
-      const overrideOfficeId = headersList.get("x-office-override");
-      if (overrideOfficeId) {
-        const { getOfficeDb } = await import("./officeDb.js");
-        return getOfficeDb(overrideOfficeId);
-      }
-    }
-  } catch (e) {
-    // Ignore
-  }
-
-  // 3. Fallback to cached default database (Registrar)
+  // Request handlers must pass an authenticated office scope explicitly. This
+  // legacy helper is reserved for scripts and local maintenance tasks.
+  // Fallback to the default Registrar partition only outside request context.
   if (db) {
     try {
       if (typeof db.pragma !== "function") {

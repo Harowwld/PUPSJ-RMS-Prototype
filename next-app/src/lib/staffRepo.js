@@ -1,13 +1,19 @@
-import crypto from "node:crypto";
 import { query, queryOne } from "./postgres.js";
 import { dbAll, dbGet, dbRun } from "./postgresCompat.js";
+import { hashPassword, verifyPasswordHash as verifyPasswordHashValue } from "./passwordHash.js";
 
-function hashPassword(password) {
-  return crypto.createHash("sha256").update(String(password)).digest("hex");
+function buildStaffScope(officeId) {
+  if (officeId === undefined) return { clause: "", params: [] };
+  if (officeId === null) return { clause: " AND office_id IS NULL", params: [] };
+  return { clause: " AND office_id = ?", params: [officeId] };
 }
 
 export function hashPasswordForStorage(password) {
   return hashPassword(password);
+}
+
+export function verifyPasswordHash(password, stored) {
+  return verifyPasswordHashValue(password, stored);
 }
 
 export async function setStaffPasswordById(id, newPassword) {
@@ -26,7 +32,7 @@ export async function verifyStaffPasswordById(id, password) {
   const existing = await getStaffById(id);
   if (!existing) return false;
   if (!existing.password_hash) return false;
-  return existing.password_hash === hashPassword(password);
+  return verifyPasswordHashValue(password, existing.password_hash).valid;
 }
 
 export async function createStaff({
@@ -127,8 +133,9 @@ export async function listStaff({
   );
 }
 
-export async function getStaffById(id) {
-  const row = await dbGet("SELECT * FROM staff WHERE id = ?", [id]);
+export async function getStaffById(id, { officeId } = {}) {
+  const scope = buildStaffScope(officeId);
+  const row = await dbGet(`SELECT * FROM staff WHERE id = ?${scope.clause}`, [id, ...scope.params]);
   return row || null;
 }
 
@@ -139,8 +146,8 @@ export async function getStaffByUsername(username) {
   return row || null;
 }
 
-export async function updateStaff(originalId, patch) {
-  const existing = await getStaffById(originalId);
+export async function updateStaff(originalId, patch, { officeId } = {}) {
+  const existing = await getStaffById(originalId, { officeId });
   if (!existing) return null;
 
   const nextId = patch.id ?? existing.id;
@@ -163,11 +170,12 @@ export async function updateStaff(originalId, patch) {
         : existing.avatar_filename,
   };
 
+  const scope = buildStaffScope(officeId);
   await dbRun(
     `
     UPDATE staff
     SET id = ?, office_id = ?, fname = ?, lname = ?, role = ?, section = ?, status = ?, email = ?, last_active = ?, avatar_filename = ?, updated_at = datetime('now')
-    WHERE id = ?
+    WHERE id = ?${scope.clause}
   `,
     [
       next.id,
@@ -181,30 +189,33 @@ export async function updateStaff(originalId, patch) {
       next.last_active,
       next.avatar_filename,
       originalId,
+      ...scope.params,
     ]
   );
 
-  return await getStaffById(next.id);
+  return await getStaffById(next.id, { officeId: next.office_id });
 }
 
-export async function archiveStaff(id) {
-  const existing = await getStaffById(id);
+export async function archiveStaff(id, { officeId } = {}) {
+  const existing = await getStaffById(id, { officeId });
   if (!existing) return null;
+  const scope = buildStaffScope(officeId);
   await dbRun(
-    `UPDATE staff SET status = 'Archived', updated_at = datetime('now') WHERE id = ?`,
-    [id]
+    `UPDATE staff SET status = 'Archived', updated_at = datetime('now') WHERE id = ?${scope.clause}`,
+    [id, ...scope.params]
   );
-  return await getStaffById(id);
+  return await getStaffById(id, { officeId });
 }
 
-export async function restoreStaff(id) {
-  const existing = await getStaffById(id);
+export async function restoreStaff(id, { officeId } = {}) {
+  const existing = await getStaffById(id, { officeId });
   if (!existing) return null;
+  const scope = buildStaffScope(officeId);
   await dbRun(
-    `UPDATE staff SET status = 'Active', updated_at = datetime('now') WHERE id = ?`,
-    [id]
+    `UPDATE staff SET status = 'Active', updated_at = datetime('now') WHERE id = ?${scope.clause}`,
+    [id, ...scope.params]
   );
-  return await getStaffById(id);
+  return await getStaffById(id, { officeId });
 }
 
 export async function deleteStaff(id) {

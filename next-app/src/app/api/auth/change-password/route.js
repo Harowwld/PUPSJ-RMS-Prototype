@@ -6,27 +6,21 @@ import {
 import {
   getSessionCookieName,
   signSessionToken,
-  verifySessionToken,
 } from "../../../../lib/jwt";
 import { writeAuditLog } from "../../../../lib/auditLogRequest";
 import { authDebug } from "@/lib/authDebug";
+import { requireAuth, createAuthErrorResponse } from "../../../../lib/authHelpers";
+import { bumpSessionVersion, getSessionVersion, registerSessionToken } from "@/lib/authSessions";
+import { validatePasswordPolicy } from "@/lib/passwordPolicy";
 
 export const runtime = "nodejs";
 
 export async function POST(req) {
-  let session;
-  try {
-    const token = req.cookies.get(getSessionCookieName())?.value || "";
-    if (!token) {
-      authDebug("password_change.missing_session");
-      return NextResponse.json({ ok: false, error: "Not authenticated" }, { status: 401 });
-    }
-    session = await verifySessionToken(token);
-    authDebug("password_change.session_verified", { staffId: session?.sub || null, role: session?.role || null, officeId: session?.office_id || null });
-  } catch {
-    authDebug("password_change.invalid_session");
-    return NextResponse.json({ ok: false, error: "Invalid session" }, { status: 401 });
-  }
+  const access = await requireAuth(req);
+  if (access.error || !access.user) return createAuthErrorResponse(access.error || "Authentication required", access.error?.startsWith("Access denied") ? 403 : 401);
+  if (access.user.principalType !== "staff") return createAuthErrorResponse("Access denied", 403);
+  const session = access.user.payload || {};
+  authDebug("password_change.principal_resolved", { staffId: access.user.id, role: access.user.role, officeId: access.user.office_id || null });
 
   const body = await req.json().catch(() => null);
   if (!body || typeof body !== "object") {
@@ -50,10 +44,11 @@ export async function POST(req) {
     );
   }
 
-  if (newPassword.length < 6) {
-    authDebug("password_change.new_password_too_short", { staffId: id, length: newPassword.length });
+  const passwordPolicy = validatePasswordPolicy(newPassword);
+  if (!passwordPolicy.valid) {
+    authDebug("password_change.password_policy_rejected", { staffId: id, length: newPassword.length });
     return NextResponse.json(
-      { ok: false, error: "Password must be at least 6 characters" },
+      { ok: false, error: passwordPolicy.reason },
       { status: 400 }
     );
   }
@@ -85,6 +80,7 @@ export async function POST(req) {
       { status: 404 }
     );
   }
+  await bumpSessionVersion(id);
   await writeAuditLog(req, `Rotate Password`, { 
     details: `personnel successfully rotated credentials for account ID '${id}'`,
     severity: "WARNING",
@@ -99,8 +95,15 @@ export async function POST(req) {
     username: session?.username || updated.email || null,
     last_active: session?.last_active || updated.last_active || null,
     mustChangePassword: false,
+    session_version: await getSessionVersion(id),
   };
   const nextToken = await signSessionToken(nextPayload);
+  await registerSessionToken(nextToken, {
+    principalId: id,
+    principalType: "staff",
+    role: nextPayload.role,
+    authLevel: "password-change",
+  });
   authDebug("password_change.session_replaced", { staffId: nextPayload.sub, role: nextPayload.role, officeId: nextPayload.office_id, mustChangePassword: false });
   const res = NextResponse.json({ ok: true });
   res.cookies.set({

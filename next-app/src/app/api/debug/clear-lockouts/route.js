@@ -1,10 +1,13 @@
 import { NextResponse } from "next/server";
 import { dbRun } from "../../../../lib/sqlite";
 import { writeAuditLog } from "@/lib/auditLogRequest";
+import { requireSystemAdmin, createAuthErrorResponse } from "../../../../lib/authHelpers";
 
 export const runtime = "nodejs";
 
 export async function POST(req) {
+  const access = await requireSystemAdmin(req);
+  if (access.error || !access.user) return createAuthErrorResponse(access.error || "System administrator access required", access.error?.startsWith("Access denied") ? 403 : 401);
   try {
     // Clear all rate limit violations (lockouts)
     const result = await dbRun("DELETE FROM rate_limit_violations");
@@ -26,6 +29,6 @@ export async function POST(req) {
     });
   } catch (error) {
     console.error('[Clear Lockouts] Error:', error);
-    return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ ok: false, error: "Internal server error" }, { status: 500 });
   }
 }

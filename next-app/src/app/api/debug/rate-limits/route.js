@@ -1,10 +1,13 @@
 import { NextResponse } from "next/server";
 import { dbGet, dbAll } from "../../../../lib/sqlite";
 import { getRateLimitConfig, getRateLimitHits } from "../../../../lib/rateLimitRepo";
+import { requireSystemAdmin, createAuthErrorResponse } from "../../../../lib/authHelpers";
 
 export const runtime = "nodejs";
 
 export async function GET(req) {
+  const access = await requireSystemAdmin(req);
+  if (access.error || !access.user) return createAuthErrorResponse(access.error || "System administrator access required", access.error?.startsWith("Access denied") ? 403 : 401);
   try {
     // Check if rate limit tables exist
     const tables = await dbAll(`
@@ -37,6 +40,6 @@ export async function GET(req) {
     });
   } catch (error) {
     console.error('[Debug Rate Limits] Error:', error);
-    return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ ok: false, error: "Internal server error" }, { status: 500 });
   }
 }

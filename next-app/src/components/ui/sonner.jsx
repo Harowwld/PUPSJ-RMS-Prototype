@@ -1,6 +1,6 @@
 "use client"
 
-import { Toaster as HotToaster, toast as hotToast, useToasterStore } from "react-hot-toast";
+import { toast as hotToast, useToaster } from "react-hot-toast";
 import { toast as sonnerToast } from "sonner";
 import React, { useEffect } from "react";
 
@@ -135,12 +135,7 @@ const triggerCustomToast = (message, options = {}, type = "default") => {
 
       return (
         <div 
-          className={`flex items-center gap-[10px] glass-panel rounded-full w-max max-w-[450px] pointer-events-auto ${animationClass}`}
-          style={{
-            borderRadius: '999px',
-            padding: '8px 16px 8px 10px',
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.25)',
-          }}
+          className={`rms-toast flex items-center gap-[10px] glass-panel rounded-full w-max max-w-[450px] pointer-events-auto ${animationClass}`}
         >
           {/* Left Icon (Stage 2, 3, 5) */}
           {(stage === 2 || stage === 3 || stage === 5) && (
@@ -241,9 +236,10 @@ try {
   console.warn("Could not patch sonner toast exports:", e);
 }
 
-// 5. Custom Toaster Wrapper rendering react-hot-toast's Toaster container
+// 5. Custom Toaster renderer. The package's default renderer emits inline
+// styles, so the viewport and toast content use CSP-safe classes instead.
 const Toaster = () => {
-  const { toasts } = useToasterStore();
+  const { toasts, handlers } = useToaster({ duration: 3000, position: "top-center" });
 
   useEffect(() => {
     // Limit to 3 active visible toasts
@@ -255,20 +251,27 @@ const Toaster = () => {
   }, [toasts]);
 
   return (
-    <HotToaster
-      position="top-center"
-      containerStyle={{
-        top: 16,
-        left: "50%",
-        transform: "translateX(-50%)",
-        zIndex: 99999,
-      }}
-      toastOptions={{
-        duration: 3000,
-      }}
-    />
+    <div
+      className="rms-toast-viewport"
+      onMouseEnter={handlers.startPause}
+      onMouseLeave={handlers.endPause}
+      aria-live="polite"
+    >
+      {toasts.map((toastItem) => {
+        const content = typeof toastItem.message === "function"
+          ? toastItem.message(toastItem)
+          : toastItem.message;
+        return (
+      <div
+        key={toastItem.id}
+        className={toastItem.visible ? "" : "pointer-events-none"}
+      >
+            {content}
+          </div>
+        );
+      })}
+    </div>
   );
 };
 
 export { Toaster };
-

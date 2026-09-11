@@ -24,8 +24,8 @@ export async function markStaffReviewNotificationsSeen(staffId) {
   return await getStaffReviewNotificationsState(staffId);
 }
 
-export async function setNotificationItemState(staffId, notificationIds, field, value) {
-  if (!staffId || !notificationIds) return;
+export async function setNotificationItemState(staffId, notificationIds, field, value, officeId) {
+  if (!staffId || !notificationIds || !officeId) return;
   const ids = Array.isArray(notificationIds) ? notificationIds : [notificationIds];
   const columnName = field === "read" ? "is_read" : "is_archived";
   const booleanValue = Boolean(value);
@@ -34,11 +34,16 @@ export async function setNotificationItemState(staffId, notificationIds, field, 
     await dbRun(
       `
         INSERT INTO staff_notification_item_states (staff_id, notification_id, ${columnName})
-        VALUES (?, ?, ?)
+        SELECT ?, d.id, ?
+        FROM documents d
+        WHERE d.id = ?
+          AND d.office_id = ?
+          AND d.reviewed_at IS NOT NULL
+          AND d.approval_status IN ('Approved', 'Declined')
         ON CONFLICT(staff_id, notification_id) DO UPDATE SET
           ${columnName} = ?
       `,
-      [staffId, id, booleanValue, booleanValue]
+      [staffId, booleanValue, id, officeId, booleanValue]
     );
   }
 }
@@ -180,6 +185,7 @@ export async function listDocumentReviewNotifications({
     `
       SELECT
         d.id,
+        d.office_id,
         d.student_no,
         d.student_name,
         d.doc_type,

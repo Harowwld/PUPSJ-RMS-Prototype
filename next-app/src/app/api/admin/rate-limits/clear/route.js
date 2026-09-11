@@ -1,33 +1,13 @@
 import { NextResponse } from "next/server";
 import { clearRateLimitViolation } from "@/lib/rateLimitRepo";
-import { verifySessionToken } from "@/lib/jwt";
 import { writeAuditLog } from "@/lib/auditLogRequest";
+import { requireAdmin, createAuthErrorResponse } from "@/lib/authHelpers";
 
 export const runtime = "nodejs";
 
-// Helper function to verify admin access
-async function verifyAdmin(req) {
-  const token = req.cookies.get('pup_session')?.value;
-  if (!token) {
-    return { valid: false, error: "Not authenticated" };
-  }
-
-  try {
-    const payload = await verifySessionToken(token);
-    if (payload?.role !== 'Admin' && payload?.role !== 'SuperAdmin') {
-      return { valid: false, error: "Admin access required" };
-    }
-    return { valid: true, payload };
-  } catch (error) {
-    return { valid: false, error: "Invalid session" };
-  }
-}
-
 export async function POST(req) {
-  const auth = await verifyAdmin(req);
-  if (!auth.valid) {
-    return NextResponse.json({ ok: false, error: auth.error }, { status: 401 });
-  }
+  const access = await requireAdmin(req);
+  if (access.error || !access.user) return createAuthErrorResponse(access.error || "Admin access required", access.error?.startsWith("Access denied") ? 403 : 401);
 
   try {
     const body = await req.json();
@@ -60,6 +40,6 @@ export async function POST(req) {
     });
   } catch (error) {
     console.error('[RateLimits Clear API] POST error:', error);
-    return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ ok: false, error: "Internal server error" }, { status: 500 });
   }
 }

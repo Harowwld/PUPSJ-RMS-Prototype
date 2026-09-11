@@ -12,9 +12,9 @@
  * - Global settings
  * - Rate limits (global)
  */
-import crypto from "node:crypto";
 import { query, queryOne, withTransaction } from "./postgres.js";
 import { postgresSql } from "./postgresCompat.js";
+import { hashPassword } from "./passwordHash.js";
 
 let systemDb = global.__systemDb || null;
 
@@ -483,7 +483,7 @@ async function seedSystemDefaults(db) {
   const staffCount = db.prepare("SELECT COUNT(*) as count FROM staff").get();
   if (staffCount.count === 0) {
     const defaultPassword = process.env.DEFAULT_STAFF_PASSWORD || "pupstaff";
-    const passwordHash = crypto.createHash("sha256").update(defaultPassword).digest("hex");
+    const passwordHash = hashPassword(defaultPassword);
 
     db.prepare(`
       INSERT INTO staff (id, office_id, fname, lname, role, section, status, email, password_hash, password_last_changed)
@@ -507,6 +507,7 @@ async function seedSystemDefaults(db) {
     db.exec(`
       INSERT OR IGNORE INTO rate_limits (endpoint_type, identifier, window_seconds, max_requests) VALUES
       ('auth_login', 'default', 900, 5),
+      ('auth_2fa', 'default', 900, 5),
       ('auth_forgot_password', 'default', 3600, 3),
       ('api_general', 'default', 60, 100),
       ('api_sensitive', 'default', 60, 20),
@@ -514,6 +515,9 @@ async function seedSystemDefaults(db) {
     `);
     console.log("[SystemDB] Seeded rate limit defaults.");
   }
+  db.prepare(
+    "INSERT OR IGNORE INTO rate_limits (endpoint_type, identifier, window_seconds, max_requests) VALUES (?, ?, ?, ?)",
+  ).run("auth_2fa", "default", 900, 5);
 }
 
 /**

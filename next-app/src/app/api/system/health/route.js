@@ -8,6 +8,7 @@ import { query, queryOne } from "@/lib/postgres";
 import { dbGet } from "@/lib/postgresCompat";
 
 import { getHealthCache, setHealthCache, clearHealthCache } from "@/lib/healthCache";
+import { requireSystemAdmin, createAuthErrorResponse } from "../../../../lib/authHelpers";
 
 export const runtime = "nodejs";
 
@@ -805,6 +806,8 @@ async function buildHealthData() {
 
 export async function GET(req) {
   try {
+    const access = await requireSystemAdmin(req);
+    if (access.error || !access.user) return createAuthErrorResponse(access.error || "System administrator access required", access.error?.startsWith("Access denied") ? 403 : 401);
     const url = new URL(req.url);
     const force = url.searchParams.get("force") === "true";
     const now = Date.now();
@@ -821,6 +824,6 @@ export async function GET(req) {
     });
   } catch (error) {
     console.error("[HealthAPI Error]:", error);
-    return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ ok: false, error: "Internal server error" }, { status: 500 });
   }
 }

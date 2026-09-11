@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import fs from "node:fs";
-import path from "node:path";
-import { getBackupById, getBackupsDir } from "../../../../../lib/backupsRepo";
+import { getBackupById, getBackupsDir, getBackupFilePath } from "../../../../../lib/backupsRepo";
 import { writeAuditLog } from "../../../../../lib/auditLogRequest";
 import { requireAdmin, createAuthErrorResponse } from "../../../../../lib/authHelpers";
 import { isSystemAdminRole } from "../../../../../lib/roleUtils";
+import { canAccessResource } from "../../../../../lib/resourceAuthorization";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -16,22 +16,19 @@ export async function GET(req) {
       return createAuthErrorResponse(error || "Admin access required", 403);
     }
 
+    if (!isSystemAdminRole(user.role)) {
+      return createAuthErrorResponse("System Administrator authorization required", 403);
+    }
+
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
     if (!id) return NextResponse.json({ ok: false, error: "Missing ID" }, { status: 400 });
 
     const backup = await getBackupById(id);
-    if (!backup) return NextResponse.json({ ok: false, error: "Backup not found" }, { status: 404 });
-
-    if (!isSystemAdminRole(user.role)) {
-      const userOffice = String(user.office_id || user.section || "registrar").toLowerCase().trim();
-      if (backup.scope === "system" || (backup.office_id && backup.office_id.toLowerCase() !== userOffice)) {
-        return NextResponse.json({ ok: false, error: "Forbidden: You do not have permission to download this backup" }, { status: 403 });
-      }
-    }
+    if (!backup || !canAccessResource(user, "backup", backup)) return NextResponse.json({ ok: false, error: "Backup not found" }, { status: 404 });
 
     const backupsDir = getBackupsDir();
-    const filePath = path.join(backupsDir, backup.filename);
+    const filePath = getBackupFilePath(backup.filename, backupsDir);
 
     if (!fs.existsSync(filePath)) {
       return NextResponse.json({ ok: false, error: "File not found on disk" }, { status: 404 });
@@ -56,6 +53,6 @@ export async function GET(req) {
     });
   } catch (error) {
     console.error("Backup Download Error:", error);
-    return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ ok: false, error: "Internal server error" }, { status: 500 });
   }
 }

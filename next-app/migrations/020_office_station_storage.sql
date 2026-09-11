@@ -10,7 +10,6 @@ UPDATE offices
 SET 
   station_name = COALESCE(station_name, 'REG-ARCHIVE-PC01'),
   storage_path = COALESCE(storage_path, '.local/storage/registrar/uploads'),
-  ingest_token = COALESCE(ingest_token, 'station_token_registrar_sec_01'),
   scanner_model = COALESCE(scanner_model, 'Fujitsu fi-7160 Batch Duplex'),
   last_station_ping = NOW()
 WHERE id = 'registrar';
@@ -19,7 +18,6 @@ UPDATE offices
 SET 
   station_name = COALESCE(station_name, 'OSAS-OPERATIONS-PC01'),
   storage_path = COALESCE(storage_path, '.local/storage/osas/uploads'),
-  ingest_token = COALESCE(ingest_token, 'station_token_osas_sec_02'),
   scanner_model = COALESCE(scanner_model, 'Canon imageFORMULA Flatbed/ADF'),
   last_station_ping = NOW()
 WHERE id = 'osas';

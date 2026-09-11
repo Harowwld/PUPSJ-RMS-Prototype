@@ -1019,10 +1019,9 @@ export default function GlobalAuditLogsTab({ showToast }) {
                             <button
                               onClick={() => toggleRow(log.id)}
                               title={isExpanded ? "Collapse Details" : "Expand Details"}
-                              className="mx-auto flex h-7 w-7 items-center justify-center bg-transparent border-none text-[#8E8E93] hover:text-[#111111] dark:hover:text-zinc-200 cursor-pointer transition-transform duration-200"
-                              style={{ transform: isExpanded ? "rotate(180deg)" : "rotate(0deg)" }}
+                              className={cn("mx-auto flex h-7 w-7 items-center justify-center bg-transparent border-none text-[#8E8E93] hover:text-[#111111] dark:hover:text-zinc-200 cursor-pointer transition-transform duration-200", isExpanded ? "rotate-180" : "rotate-0")}
                             >
-                              <i className="ti ti-chevron-down text-[14px]" style={{ fontSize: "14px" }}></i>
+                              <i className="ti ti-chevron-down text-[14px]"></i>
                             </button>
                           </td>
 

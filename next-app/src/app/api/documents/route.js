@@ -5,8 +5,10 @@ import {
 } from "../../../lib/documentsRepo";
 import { createStudent, getStudentByStudentNo } from "../../../lib/studentsRepo";
 import { writeAuditLog } from "../../../lib/auditLogRequest";
-import { requireStaff, createAuthErrorResponse } from "../../../lib/authHelpers";
+import { requireStaff, createAuthErrorResponse, getPrincipalOfficeId } from "../../../lib/authHelpers";
 import { isUniqueViolation } from "../../../lib/dbErrors";
+import { isSystemAdminRole } from "../../../lib/roleUtils";
+import { canAccessResource } from "../../../lib/resourceAuthorization";
 
 export const runtime = "nodejs";
 
@@ -27,9 +29,13 @@ export async function GET(req) {
     String(excludeDeclinedRaw || "").toLowerCase() === "true";
   const limit = searchParams.get("limit") || "50";
   const offset = searchParams.get("offset") || "0";
+  const officeId = getPrincipalOfficeId(user);
+  if (!isSystemAdminRole(user.role) && !officeId) {
+    return createAuthErrorResponse("Office scope is required", 403);
+  }
 
   const rows = await listDocuments({
-    officeId: user.office_id || undefined,
+    officeId: officeId || undefined,
     q: q || undefined,
     studentNo: studentNo || undefined,
     docType: docType || undefined,
@@ -39,7 +45,7 @@ export async function GET(req) {
     offset,
   });
 
-  return NextResponse.json({ ok: true, data: rows });
+  return NextResponse.json({ ok: true, data: rows.filter((row) => canAccessResource(user, "document", row)) });
 }
 
 export async function POST(req) {
@@ -47,6 +53,8 @@ export async function POST(req) {
   if (error || !user) {
     return createAuthErrorResponse(error || "Authentication required", 401);
   }
+  const officeId = getPrincipalOfficeId(user);
+  if (!officeId) return createAuthErrorResponse("Office scope is required", 403);
 
   const form = await req.formData();
   const file = form.get("file");
@@ -88,7 +96,7 @@ export async function POST(req) {
 
   // Server-side safeguard: if studentName is missing, try to look it up from the database.
   if (!studentName && !isNewStudent) {
-    const student = await getStudentByStudentNo(studentNo);
+    const student = await getStudentByStudentNo(studentNo, { officeId });
     if (student) {
       studentName = student.name || "";
     }
@@ -154,6 +162,7 @@ export async function POST(req) {
         cabinet,
         drawer,
         status: "Active",
+        officeId,
       });
     } catch (e) {
       const msg = String(e?.message || "");
@@ -168,10 +177,10 @@ export async function POST(req) {
         msg.includes("Invalid section") ||
         msg.includes("is linked to")
       ) {
-        return NextResponse.json({ ok: false, error: msg }, { status: 400 });
+        return NextResponse.json({ ok: false, error: "Invalid course or section relationship" }, { status: 400 });
       }
       return NextResponse.json(
-        { ok: false, error: msg || "Failed to create student" },
+        { ok: false, error: "Failed to create student" },
         { status: 500 }
       );
     }
@@ -180,7 +189,7 @@ export async function POST(req) {
   const buf = Buffer.from(await file.arrayBuffer());
 
   const row = await createDocument({
-    officeId: user.office_id || "registrar",
+    officeId,
     studentNo,
     studentName,
     docType,
@@ -190,12 +199,15 @@ export async function POST(req) {
     buffer: buf,
     uploadedBy: user.id,
   });
+  if (!row || !canAccessResource(user, "document", row)) {
+    return NextResponse.json({ ok: false, error: "Document could not be created" }, { status: 500 });
+  }
   await writeAuditLog(
     req,
     isNewStudent
       ? `Created student ${studentNo} and uploaded ${docType}`
       : `Uploaded document for student ${studentNo} (${docType})`,
-    { officeId: user.office_id || "registrar" }
+    { officeId }
   );
 
   return NextResponse.json({ ok: true, data: row }, { status: 201 });

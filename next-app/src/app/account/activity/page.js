@@ -193,8 +193,8 @@ function StatCards({ isLoading, stats }) {
             )}
           >
             <div className="absolute inset-0 overflow-hidden rounded-xl pointer-events-none z-0">
-              <div className={cn("absolute bottom-0 left-0 w-[70%] h-[80%] bg-gradient-to-tr pointer-events-none", stat.shape1)} style={{ clipPath: 'polygon(0% 100%, 100% 100%, 0% 0%)' }} />
-              <div className={cn("absolute bottom-0 left-0 w-[50%] h-[60%] bg-gradient-to-tr pointer-events-none", stat.shape2)} style={{ clipPath: 'polygon(0% 100%, 100% 100%, 0% 25%)' }} />
+              <div className={cn("rms-style-clip-one absolute bottom-0 left-0 w-[70%] h-[80%] bg-gradient-to-tr pointer-events-none", stat.shape1)} />
+              <div className={cn("rms-style-clip-two absolute bottom-0 left-0 w-[50%] h-[60%] bg-gradient-to-tr pointer-events-none", stat.shape2)} />
             </div>
             <div className="relative z-10">
               <div className="flex items-end justify-between">
@@ -632,10 +632,9 @@ const LogRow = ({ log, isSelected, isExpanded, toggleRow, setSelectedLog, handle
         <td className="py-0 px-4 align-middle text-center" onClick={(e) => e.stopPropagation()}>
           <button
             onClick={() => toggleRow(log.id)}
-            className="mx-auto flex h-7 w-7 items-center justify-center bg-transparent border-none text-[#8E8E93] hover:text-[#111111] dark:hover:text-zinc-200 cursor-pointer transition-transform duration-fast"
-            style={{ transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}
+            className={cn("mx-auto flex h-7 w-7 items-center justify-center bg-transparent border-none text-[#8E8E93] hover:text-[#111111] dark:hover:text-zinc-200 cursor-pointer transition-transform duration-fast", isExpanded ? "rotate-180" : "rotate-0")}
           >
-            <i className="ti ti-chevron-down text-[14px]" style={{ fontSize: '14px' }}></i>
+            <i className="ti ti-chevron-down text-[14px]"></i>
           </button>
         </td>
         <td className="py-0 px-4 align-middle text-[13px] font-normal text-[#111111] dark:text-zinc-50">

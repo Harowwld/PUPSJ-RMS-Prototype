@@ -4,6 +4,10 @@ import { dbRun, getDb, reloadDb } from "../src/lib/sqlite.js";
 import { createStudent } from "../src/lib/studentsRepo.js";
 
 async function main() {
+  const importOfficeId = String(process.env.STUDENT_IMPORT_OFFICE_ID || "").trim().toLowerCase();
+  if (!importOfficeId) {
+    throw new Error("Set STUDENT_IMPORT_OFFICE_ID before running the student import.");
+  }
   console.log("Wiping active student and document records...");
 
   const db = await getDb();
@@ -83,7 +87,7 @@ async function main() {
       drawer: parseInt(drawer, 10),
     };
 
-    await createStudent(studentRow);
+    await createStudent({ ...studentRow, officeId: importOfficeId });
     addedCount++;
   }
 

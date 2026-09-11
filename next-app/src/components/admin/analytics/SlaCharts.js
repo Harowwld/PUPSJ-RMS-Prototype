@@ -42,7 +42,7 @@ const CustomBarTooltip = ({ active, payload, label }) => {
               : entry.fill;
             return (
               <div key={index} className="flex items-center gap-2">
-                <div className="h-2 w-2 rounded-full" style={{ backgroundColor: indicatorColor }} />
+                <div className="rms-style-background-color h-2 w-2 rounded-full" data-background-color={indicatorColor} />
                 <span className="text-xs font-semibold text-gray-700 dark:text-zinc-200">{entry.name}:</span>
                 <span className="text-xs font-semibold text-gray-900 ml-auto dark:text-zinc-50">{entry.value}</span>
               </div>
@@ -61,7 +61,7 @@ const CustomPieTooltip = ({ active, payload }) => {
     return (
       <div className="rounded-lg border border-gray-100 bg-white p-3 shadow-xl dark:border-white/10 dark:bg-card dark:shadow-none">
         <div className="flex items-center gap-2">
-          <div className="h-2 w-2 rounded-full" style={{ backgroundColor: entry.payload.fill }} />
+          <div className="rms-style-background-color h-2 w-2 rounded-full" data-background-color={entry.payload.fill} />
           <span className="text-xs font-semibold text-gray-700 dark:text-zinc-200">{entry.name}:</span>
           <span className="text-xs font-semibold text-gray-900 dark:text-zinc-50">{entry.value} requests</span>
         </div>
@@ -385,12 +385,7 @@ const SlaCharts = React.memo(function SlaCharts({ data, pieData, onSwitchView })
                           <Cell
                             key={`cell-${index}`}
                             fill={APPLE_STATUS_COLORS[entry.name] || "#e5e7eb"}
-                            style={{
-                              transform: isHovered ? 'scale(1.03)' : 'none',
-                              transformOrigin: '50% 50%',
-                              transition: 'all 0.2s ease-in-out',
-                              cursor: 'pointer'
-                            }}
+                            className={isHovered ? "rms-pie-cell rms-pie-cell-hover" : "rms-pie-cell"}
                           />
                         );
                       })}
@@ -438,8 +433,8 @@ const SlaCharts = React.memo(function SlaCharts({ data, pieData, onSwitchView })
                 >
                   <div className="flex items-center gap-[8px]">
                     <div
-                      className="h-2 w-2 rounded-full shrink-0"
-                      style={{ backgroundColor: color }}
+                      className="rms-style-background-color h-2 w-2 rounded-full shrink-0"
+                      data-background-color={color}
                     />
                     <span className="text-[13px] font-normal text-gray-800 dark:text-zinc-300">
                       {displayName}
@@ -449,9 +444,9 @@ const SlaCharts = React.memo(function SlaCharts({ data, pieData, onSwitchView })
                     <span className="text-[13px] font-normal text-gray-900 dark:text-zinc-50">
                       {d.value}
                     </span>
-                    <span 
-                      className="text-[13px] font-medium"
-                      style={{ color: color }}
+                    <span
+                      className="rms-style-color text-[13px] font-medium"
+                      data-color={color}
                     >
                       {percent}%
                     </span>
@@ -520,4 +515,3 @@ const SlaCharts = React.memo(function SlaCharts({ data, pieData, onSwitchView })
 })
 
 export default SlaCharts
-

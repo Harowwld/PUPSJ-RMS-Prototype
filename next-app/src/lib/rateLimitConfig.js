@@ -6,6 +6,12 @@ export const RATE_LIMIT_CONFIG = {
     maxRequests: 5,      // 5 attempts per 15 minutes
     lockoutMinutes: 1    // Initial lockout: 1 minute
   },
+
+  auth_2fa: {
+    windowSeconds: 900,
+    maxRequests: 5,
+    lockoutMinutes: 5
+  },
   
   auth_forgot_password: {
     windowSeconds: 3600, // 1 hour

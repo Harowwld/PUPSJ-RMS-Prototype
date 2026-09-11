@@ -468,7 +468,7 @@ export default function SystemBackupsTab({ showToast }) {
 
   return (
     <TooltipProvider delayDuration={200}>
-      <div className="animate-fade-up font-inter flex w-full flex-col gap-6" style={{ "--brand-accent": "#000000", "--brand-foreground": "#FFFFFF" }}>
+      <div className="rms-brand-scope animate-fade-up font-inter flex w-full flex-col gap-6" data-brand-accent="#000000" data-brand-foreground="#FFFFFF">
         <div className="relative flex min-h-[600px] w-full items-stretch gap-5">
           
           {/* MAIN CONTENT */}

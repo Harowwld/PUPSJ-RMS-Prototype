@@ -1,18 +1,9 @@
-import crypto from "node:crypto";
 import { getSessionCookieName, signSessionToken, verifySessionToken } from "./jwt.js";
 import { query, queryOne } from "./postgres.js";
-
-function hashPassword(password, salt = crypto.randomBytes(16).toString("hex")) {
-  const hash = crypto.scryptSync(String(password), salt, 64).toString("hex");
-  return `${salt}:${hash}`;
-}
-
-function passwordMatches(password, stored) {
-  const [salt, expected] = String(stored || "").split(":");
-  if (!salt || !expected) return false;
-  const actual = crypto.scryptSync(String(password), salt, 64).toString("hex");
-  return crypto.timingSafeEqual(Buffer.from(actual, "hex"), Buffer.from(expected, "hex"));
-}
+import { getSessionVersion, isSessionActive, registerSessionToken } from "./authSessions.js";
+import { setCSRFTokenCookie } from "./csrfProtection.js";
+import { hashPassword, verifyPasswordHash } from "./passwordHash.js";
+import { validatePasswordPolicy } from "./passwordPolicy.js";
 
 export async function registerStudent({ studentNo, name, firstName, lastName, middleName, password, email, clientType }) {
   const cleanEmail = String(email || "").trim().toLowerCase();
@@ -29,8 +20,9 @@ export async function registerStudent({ studentNo, name, firstName, lastName, mi
       : `${cleanLast || cleanFirst}`.toUpperCase();
   }
 
-  if (!fullName || cleanPass.length < 8) {
-    throw new Error("Full name and an 8-character password are required.");
+  const passwordPolicy = validatePasswordPolicy(cleanPass);
+  if (!fullName || !passwordPolicy.valid) {
+    throw new Error(!fullName ? "Full name and an 8-character password are required." : passwordPolicy.reason);
   }
   if (!cleanEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
     throw new Error("A valid email address is required.");
@@ -51,28 +43,7 @@ export async function registerStudent({ studentNo, name, firstName, lastName, mi
 
   let student = null;
   if (assignedStudentNo) {
-    // If a student number was provided, ensure student record exists in students table
-    student = await queryOne(
-      "SELECT student_no, name, status FROM students WHERE upper(student_no) = upper($1)",
-      [assignedStudentNo]
-    );
-
-    if (!student) {
-      student = await queryOne(
-        `INSERT INTO students (student_no, name, status, course_code)
-         VALUES ($1, $2, 'Active', $3)
-         RETURNING student_no, name, status`,
-        [assignedStudentNo, fullName, resolvedClientType === "Alumni" ? "ALUMNI" : "ENROLLED"]
-      );
-    } else {
-      const existingAcc = await queryOne(
-        "SELECT id, student_no FROM student_accounts WHERE upper(student_no) = upper($1)",
-        [assignedStudentNo]
-      );
-      if (existingAcc) {
-        throw new Error(`An account has already been registered for student identifier "${assignedStudentNo}". Please sign in.`);
-      }
-    }
+    throw new Error("Existing student records require administrator-approved pre-provisioning.");
   }
 
   // 3. Create the student_account (student_no can be NULL if left empty)
@@ -105,16 +76,22 @@ export async function authenticateStudent({ studentNo, username, email, identifi
     [cleanNo, cleanEmail]
   );
   if (!row || String(row.status).toLowerCase() !== "active") return null;
-  const matchesStored = passwordMatches(password, row.password_hash);
-  const isDemoPassword = password === "pupstaff" || password === "student123";
-  if (!matchesStored && !isDemoPassword) return null;
+  const verification = verifyPasswordHash(password, row.password_hash);
+  if (!verification.valid) return null;
+  if (verification.needsRehash && row.id) {
+    await query(
+      "UPDATE student_accounts SET password_hash = $1, updated_at = NOW() WHERE id = $2",
+      [hashPassword(password), row.id]
+    );
+  }
   return row;
 }
 
 export async function createStudentSession(student) {
   const accountId = student.id ? String(student.id) : null;
   const studentNo = student.student_no || null;
-  return signSessionToken({
+  const sessionVersion = await getSessionVersion(accountId || studentNo || student.email);
+  const token = await signSessionToken({
     sub: accountId || studentNo || student.email,
     role: "Student",
     principal_type: "student",
@@ -123,7 +100,16 @@ export async function createStudentSession(student) {
     email: student.email,
     username: student.email || studentNo,
     client_type: student.client_type || "Student",
+    session_version: sessionVersion,
   });
+  await registerSessionToken(token, {
+    principalId: accountId || studentNo || student.email,
+    principalType: "student",
+    role: "Student",
+    username: student.email || studentNo,
+    authLevel: "password",
+  });
+  return token;
 }
 
 export async function getStudentSession(req) {
@@ -131,11 +117,34 @@ export async function getStudentSession(req) {
   if (!token) return null;
   try {
     const payload = await verifySessionToken(token);
-    if (payload?.role !== "Student") return null;
+    if (payload?.role !== "Student" || !(await isSessionActive(payload))) return null;
+
+    const account = payload.account_id
+      ? await queryOne(
+          `SELECT sa.id, sa.student_no, sa.email, sa.status AS account_status,
+                  s.status AS student_status
+           FROM student_accounts sa
+           LEFT JOIN students s ON s.student_no = sa.student_no
+           WHERE sa.id = $1`,
+          [payload.account_id]
+        )
+      : await queryOne(
+          `SELECT sa.id, sa.student_no, sa.email, sa.status AS account_status,
+                  s.status AS student_status
+           FROM student_accounts sa
+           LEFT JOIN students s ON s.student_no = sa.student_no
+           WHERE (sa.student_no IS NOT NULL AND upper(sa.student_no) = upper($1))
+              OR lower(coalesce(sa.email, '')) = lower($2)`,
+          [payload.student_no || "", payload.email || ""]
+        );
+
+    if (!account || String(account.account_status).toLowerCase() !== "active") return null;
+    if (account.student_status && String(account.student_status).toLowerCase() !== "active") return null;
+
     return {
-      accountId: payload.account_id || null,
-      studentNo: payload.student_no ? String(payload.student_no) : null,
-      email: payload.email || null,
+      accountId: account.id || payload.account_id || null,
+      studentNo: account.student_no ? String(account.student_no) : null,
+      email: account.email || payload.email || null,
       payload,
     };
   } catch {
@@ -148,5 +157,5 @@ export function setStudentSessionCookie(response, token) {
     name: getSessionCookieName(), value: token, httpOnly: true, sameSite: "lax",
     secure: process.env.NODE_ENV === "production", path: "/",
   });
-  return response;
+  return setCSRFTokenCookie(response, token);
 }

@@ -33,18 +33,13 @@ export function TOTPChallengeModal({
   const handleSubmit = async (e) => {
     e.preventDefault()
     const trimmed = token.trim()
-    console.log("[TOTP MODAL] handleSubmit called, token:", trimmed)
     if (!trimmed || (trimmed.length !== 6 && trimmed.length !== 8)) {
-      console.log("[TOTP MODAL] Invalid token length")
       setError("Please enter a 6-digit code or 8-character recovery code")
       return
     }
-    console.log("[TOTP MODAL] Calling onConfirm...")
     try {
       await onConfirm(trimmed)
-      console.log("[TOTP MODAL] onConfirm succeeded")
     } catch (err) {
-      console.log("[TOTP MODAL] onConfirm error:", err.message)
       const msg = err?.message || "Invalid verification code"
       setError(msg)
     }
@@ -156,4 +151,3 @@ export async function verifyTOTPWithRetry(token, maxRetries = 1) {
   }
   throw lastError || new Error("Verification failed")
 }
-

@@ -129,7 +129,6 @@ export default function PromptModal({
                   "flex min-h-[100px] w-full rounded-brand border border-gray-300 bg-white px-4 py-3 text-sm shadow-sm transition-all placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon dark:border-white/10 dark:bg-card dark:text-zinc-300 dark:focus:border-zinc-700",
                   isDeclineModal && "rounded-[8px] border-[0.5px] border-gray-300 text-[13px] font-normal tracking-[-0.01em] focus:border-gray-500 focus:ring-0"
                 )}
-                style={isDeclineModal ? { borderWidth: '0.5px', borderStyle: 'solid' } : undefined}
                 value={value ?? ""}
                 onChange={(e) => onChange(e.target.value)}
                 placeholder={placeholder}
@@ -142,7 +141,6 @@ export default function PromptModal({
                   "h-11 rounded-brand border border-gray-300 bg-white px-4 text-sm shadow-sm transition-all placeholder:text-gray-400 focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon dark:border-white/10 dark:bg-card dark:text-zinc-300",
                   isDeclineModal && "h-[36px] rounded-[8px] border-[0.5px] border-gray-300 text-[13px] font-normal tracking-[-0.01em] focus-visible:border-gray-500 focus-visible:ring-0 focus:border-gray-500 focus:ring-0 focus-visible:ring-offset-0 focus:outline-none"
                 )}
-                style={isDeclineModal ? { borderWidth: '0.5px', borderStyle: 'solid' } : undefined}
                 value={value ?? ""}
                 onChange={(e) => onChange(e.target.value)}
                 placeholder={placeholder}

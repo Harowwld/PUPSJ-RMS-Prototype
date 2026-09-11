@@ -3,20 +3,39 @@ import { createStudent, listStudents } from "../../../lib/studentsRepo";
 import { writeAuditLog } from "../../../lib/auditLogRequest";
 import { canonicalizeCabinetId } from "../../../lib/storageLayoutUtils";
 import { isUniqueViolation } from "../../../lib/dbErrors";
+import { requireAdmin, requireStaff, createAuthErrorResponse } from "../../../lib/authHelpers";
+import { isSystemAdminRole, normalizeRole } from "../../../lib/roleUtils";
+import { canAccessResource } from "../../../lib/resourceAuthorization";
 
 export const runtime = "nodejs";
 
+function resolveOfficeId(user, req, requestedOfficeId) {
+  const requested = String(requestedOfficeId || new URL(req.url).searchParams.get("officeId") || "").trim().toLowerCase();
+  if (isSystemAdminRole(user.role)) return requested || "registrar";
+  const ownOffice = String(user.officeId || user.office_id || "").trim().toLowerCase();
+  if (requested && requested !== ownOffice) return null;
+  return ownOffice || null;
+}
+
 export async function GET(req) {
+  const access = await requireStaff(req);
+  if (access.error || !access.user) return createAuthErrorResponse(access.error || "Staff authentication required", access.error?.startsWith("Access denied") ? 403 : 401);
   const { searchParams } = new URL(req.url);
   const q = searchParams.get("q") || "";
   const courseCode = searchParams.get("courseCode") || "";
   const yearLevel = searchParams.get("yearLevel") || "";
   const section = searchParams.get("section") || "";
   const includeArchived = searchParams.get("includeArchived") === "true";
+  if (includeArchived && !isSystemAdminRole(access.user.role) && normalizeRole(access.user.role) !== "Admin") {
+    return createAuthErrorResponse("Admin access required", 403);
+  }
   const limit = searchParams.get("limit") || "200";
   const offset = searchParams.get("offset") || "0";
+  const officeId = resolveOfficeId(access.user, req);
+  if (!officeId) return createAuthErrorResponse("Office scope is required", 403);
 
   const rows = await listStudents({
+    officeId,
     q: q || undefined,
     courseCode: courseCode || undefined,
     yearLevel: yearLevel || undefined,
@@ -26,10 +45,12 @@ export async function GET(req) {
     offset,
   });
 
-  return NextResponse.json({ ok: true, data: rows });
+  return NextResponse.json({ ok: true, data: rows.filter((row) => canAccessResource(access.user, "student", { ...row, office_id: officeId })) });
 }
 
 export async function POST(req) {
+  const access = await requireAdmin(req);
+  if (access.error || !access.user) return createAuthErrorResponse(access.error || "Admin access required", access.error?.startsWith("Access denied") ? 403 : 401);
   const body = await req.json().catch(() => null);
   if (!body || typeof body !== "object") {
     return NextResponse.json(
@@ -47,6 +68,8 @@ export async function POST(req) {
   const cabinet = canonicalizeCabinetId(body.cabinet);
   const drawer = parseInt(body.drawer);
   const status = String(body.status || "Active").trim() || "Active";
+  const officeId = resolveOfficeId(access.user, req, body.officeId || body.office_id);
+  if (!officeId) return createAuthErrorResponse("You cannot access that office", 403);
 
   const studentNoPattern = /^[A-Z0-9][A-Z0-9\-_/.]{1,30}$/i;
 
@@ -100,7 +123,11 @@ export async function POST(req) {
       cabinet,
       drawer,
       status,
+      officeId,
     });
+    if (!row || !canAccessResource(access.user, "student", { ...row, office_id: officeId })) {
+      return NextResponse.json({ ok: false, error: "Student could not be created" }, { status: 500 });
+    }
     await writeAuditLog(req, `Created student`, { details: `${studentNo}` });
 
     return NextResponse.json({ ok: true, data: row }, { status: 201 });
@@ -117,7 +144,7 @@ export async function POST(req) {
       msg.includes("Invalid section") ||
       msg.includes("is linked to")
     ) {
-      return NextResponse.json({ ok: false, error: msg }, { status: 400 });
+      return NextResponse.json({ ok: false, error: "Invalid course or section relationship" }, { status: 400 });
     }
 
     return NextResponse.json(

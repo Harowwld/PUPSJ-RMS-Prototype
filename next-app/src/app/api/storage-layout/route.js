@@ -1,5 +1,11 @@
 import { NextResponse } from "next/server";
-import { requireAdmin, requireStaff, createAuthErrorResponse } from "../../../lib/authHelpers";
+import {
+  getPrincipalOfficeId,
+  requireAdmin,
+  requireStaff,
+  createAuthErrorResponse,
+} from "../../../lib/authHelpers";
+import { isSystemAdminRole } from "../../../lib/roleUtils";
 import { writeAuditLog } from "../../../lib/auditLogRequest";
 import {
   listStudentLocationUsage,
@@ -7,6 +13,7 @@ import {
 } from "../../../lib/studentsRepo";
 import { getStorageLayout, setStorageLayout } from "../../../lib/storageLayoutRepo";
 import { canonicalizeCabinetId } from "../../../lib/storageLayoutUtils";
+import { canAccessResource } from "@/lib/resourceAuthorization";
 
 export const runtime = "nodejs";
 
@@ -42,18 +49,27 @@ function parseLocationKey(key) {
   return { room, cabinet, drawer };
 }
 
+function resolveOfficeId(user, req) {
+  const requested = String(new URL(req.url).searchParams.get("officeId") || "").trim().toLowerCase();
+  if (isSystemAdminRole(user.role)) return requested || "registrar";
+  return getPrincipalOfficeId(user);
+}
+
 export async function GET(req) {
   const { user, error } = await requireStaff(req);
   if (error || !user) {
     return createAuthErrorResponse(error || "Authentication required", 401);
   }
+  const officeId = resolveOfficeId(user, req);
+  if (!officeId) return createAuthErrorResponse("Office scope is required", 403);
+  if (!canAccessResource(user, "storageLayout", { office_id: officeId })) return createAuthErrorResponse("Forbidden", 403);
 
   try {
-    const layout = await getStorageLayout();
+    const layout = await getStorageLayout({ officeId });
     return NextResponse.json({ ok: true, data: layout });
   } catch (err) {
     return NextResponse.json(
-      { ok: false, error: err?.message || "Failed to load storage layout" },
+      { ok: false, error: "Failed to load storage layout" },
       { status: 500 }
     );
   }
@@ -64,6 +80,9 @@ export async function PUT(req) {
   if (error || !user) {
     return createAuthErrorResponse(error || "Admin access required", 403);
   }
+  const officeId = resolveOfficeId(user, req);
+  if (!officeId) return createAuthErrorResponse("Office scope is required", 403);
+  if (!canAccessResource(user, "storageLayout", { office_id: officeId })) return createAuthErrorResponse("Forbidden", 403);
 
   try {
 
@@ -81,7 +100,7 @@ export async function PUT(req) {
     // Prevent deleting locations that are still referenced by student records.
     const proposedSet = buildLayoutLocationSet(incomingLayout);
     if (!skipUsageCheck) {
-      const usage = await listStudentLocationUsage();
+      const usage = await listStudentLocationUsage({ officeId });
       const orphaned = usage.filter((u) => {
         const roomId = Number(u.room);
         const cabId = normalizeCabinetId(u.cabinet);
@@ -129,12 +148,12 @@ export async function PUT(req) {
           to: { ...to, cabinet: normalizeCabinetId(to.cabinet) }
         });
       }
-      const moved = await reassignStudentsByLocationMappings(normalized);
+      const moved = await reassignStudentsByLocationMappings(normalized, { officeId });
       movedCount = Number(moved?.moved || 0);
       movedBreakdown = Array.isArray(moved?.breakdown) ? moved.breakdown : [];
     }
 
-    const saved = await setStorageLayout(incomingLayout);
+    const saved = await setStorageLayout(incomingLayout, { officeId });
     const roomCount = Array.isArray(incomingLayout?.rooms) ? incomingLayout.rooms.length : 0;
     const cabinetCount = (incomingLayout?.rooms || []).reduce((sum, r) => sum + (r.cabinets?.length || 0), 0);
 
@@ -155,9 +174,8 @@ export async function PUT(req) {
     });
   } catch (err) {
     return NextResponse.json(
-      { ok: false, error: err?.message || "Failed to update storage layout" },
+      { ok: false, error: "Failed to update storage layout" },
       { status: 400 }
     );
   }
 }
-

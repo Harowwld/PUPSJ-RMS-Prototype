@@ -112,8 +112,8 @@ export default function HealthSidebar({
             {/* Horizontal progress bar */}
             <div className="w-full h-3 rounded-full bg-[#F2F2F7] dark:bg-zinc-800 overflow-hidden flex">
               <div 
-                className="bg-[#5856D6] h-full"
-                style={{ width: `${(diskUsed / diskTotal) * 100}%` }}
+                className="rms-style-width bg-[#5856D6] h-full"
+                data-width={`${(diskUsed / diskTotal) * 100}%`}
               />
             </div>
           </div>
@@ -132,8 +132,8 @@ export default function HealthSidebar({
               <div className="flex items-center">
                 <span className="text-[13px] font-normal text-[#111111] dark:text-zinc-50">{ramPercent}%</span>
                 <span 
-                  className="w-[6px] h-[6px] rounded-full ml-1.5"
-                  style={{ backgroundColor: ramPercent >= 80 ? "#E5484D" : "#30D158" }}
+                  className="rms-style-background-color w-[6px] h-[6px] rounded-full ml-1.5"
+                  data-background-color={ramPercent >= 80 ? "#E5484D" : "#30D158"}
                 />
               </div>
             </div>
@@ -150,8 +150,8 @@ export default function HealthSidebar({
               <div className="flex items-center">
                 <span className="text-[13px] font-normal text-[#111111] dark:text-zinc-50">{cpuPercent}%</span>
                 <span 
-                  className="w-[6px] h-[6px] rounded-full ml-1.5"
-                  style={{ backgroundColor: cpuPercent >= 80 ? "#E5484D" : "#30D158" }}
+                  className="rms-style-background-color w-[6px] h-[6px] rounded-full ml-1.5"
+                  data-background-color={cpuPercent >= 80 ? "#E5484D" : "#30D158"}
                 />
               </div>
             </div>

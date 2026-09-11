@@ -1,4 +1,7 @@
-import { createHash, randomBytes } from "crypto";
+import { createHmac, randomBytes, timingSafeEqual } from "crypto";
+import { decodeJwt } from "jose";
+
+const API_CONTENT_SECURITY_POLICY = "default-src 'self'; script-src 'none'; style-src 'none'; img-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'self';";
 
 /**
  * CSRF protection utilities for state-changing operations
@@ -9,12 +12,24 @@ import { createHash, randomBytes } from "crypto";
  * @param {string} sessionId - The session identifier
  * @returns {string} CSRF token
  */
-export function generateCSRFToken(sessionId) {
-  const timestamp = Date.now().toString();
-  const random = randomBytes(32).toString('hex');
-  const data = `${sessionId}:${timestamp}:${random}`;
-  
-  return createHash('sha256').update(data).digest('hex');
+function csrfSecret() {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) throw new Error("Missing JWT_SECRET environment variable");
+  return Buffer.from(secret, "utf8");
+}
+
+function signCSRFToken(sessionId, expiresAt, nonce) {
+  return createHmac("sha256", csrfSecret())
+    .update(`${sessionId}:${expiresAt}:${nonce}`)
+    .digest("hex");
+}
+
+export function generateCSRFToken(sessionId, maxAge = 3600000) {
+  const requestedAge = Number(maxAge);
+  const expiresAt = Date.now() + (Number.isFinite(requestedAge) ? requestedAge : 3600000);
+  const nonce = randomBytes(32).toString("hex");
+  const signature = signCSRFToken(sessionId, expiresAt, nonce);
+  return `${expiresAt}.${nonce}.${signature}`;
 }
 
 /**
@@ -28,14 +43,16 @@ export function validateCSRFToken(token, sessionId, maxAge = 3600000) {
   if (!token || !sessionId) return false;
   
   try {
-    // For simplicity, we'll implement a basic validation
-    // In production, you'd want to store tokens server-side with expiration
-    const hash = createHash('sha256').update(sessionId).digest('hex');
-    
-    // Basic validation - token should contain session-derived hash
-    return token.length === 64 && token.includes(hash.substring(0, 16));
+    const [expiresAtRaw, nonce, signature] = String(token).split(".");
+    const expiresAt = Number(expiresAtRaw);
+    if (!Number.isSafeInteger(expiresAt) || !nonce || !signature) return false;
+    const now = Date.now();
+    if (expiresAt <= now || expiresAt - now > maxAge) return false;
+    const expected = signCSRFToken(sessionId, expiresAt, nonce);
+    const actualBytes = Buffer.from(signature, "hex");
+    const expectedBytes = Buffer.from(expected, "hex");
+    return actualBytes.length === expectedBytes.length && timingSafeEqual(actualBytes, expectedBytes);
   } catch (error) {
-    console.error('[CSRF Validation Error]:', error);
     return false;
   }
 }
@@ -53,29 +70,40 @@ export function checkCSRFProtection(req, sessionId) {
     return true;
   }
 
-  // Get token from header or body
+  const cookieHeader = req?.headers?.get?.("cookie") || "";
   const headerToken = req.headers.get('x-csrf-token');
-  let bodyToken = null;
-
-  // Try to get token from request body for JSON requests
-  if (req.headers.get('content-type')?.includes('application/json')) {
-    try {
-      // Note: This would require cloning the request to read the body
-      // For simplicity, we'll rely on header token in most cases
-      bodyToken = null;
-    } catch (error) {
-      // Can't read body, continue with header check
-    }
-  }
-
-  const token = headerToken || bodyToken;
+  const cookieToken = req?.cookies?.get?.("pup_csrf")?.value ||
+    cookieHeader.match(/(?:^|;\s*)pup_csrf=([^;]+)/)?.[1] || null;
+  const token = headerToken || cookieToken;
   
   if (!token) {
-    console.log('[CSRF] Missing CSRF token for state-changing request');
     return false;
   }
 
-  return validateCSRFToken(token, sessionId);
+  const origin = req?.headers?.get?.("origin");
+  if (origin) {
+    try {
+      if (new URL(origin).origin !== new URL(req.url).origin) return false;
+    } catch {
+      return false;
+    }
+  }
+  return validateCSRFToken(decodeURIComponent(token), sessionId);
+}
+
+export function setCSRFTokenCookie(response, sessionToken) {
+  const payload = decodeJwt(sessionToken);
+  if (!payload?.jti) throw new Error("Session token has no jti");
+  response.cookies.set({
+    name: "pup_csrf",
+    value: generateCSRFToken(payload.jti),
+    httpOnly: false,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: 60 * 60,
+  });
+  return response;
 }
 
 /**
@@ -95,7 +123,7 @@ export function addCSRFHeaders(response, token) {
       'X-Frame-Options': 'DENY',
       'X-XSS-Protection': '1; mode=block',
       'Referrer-Policy': 'strict-origin-when-cross-origin',
-      'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; frame-ancestors 'none';",
+      'Content-Security-Policy': API_CONTENT_SECURITY_POLICY,
     }
   });
   
@@ -118,7 +146,7 @@ export function createSecureResponse(data, status = 200, csrfToken = null) {
       'X-Frame-Options': 'DENY',
       'X-XSS-Protection': '1; mode=block',
       'Referrer-Policy': 'strict-origin-when-cross-origin',
-      'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; frame-ancestors 'none';",
+      'Content-Security-Policy': API_CONTENT_SECURITY_POLICY,
     }
   });
 
@@ -199,10 +227,11 @@ const authRateLimiter = new RateLimiter(5, 60000); // 5 requests per minute for 
 const apiRateLimiter = new RateLimiter(100, 60000); // 100 requests per minute for general API
 
 // Cleanup rate limiters periodically
-setInterval(() => {
+const cleanupInterval = setInterval(() => {
   authRateLimiter.cleanup();
   apiRateLimiter.cleanup();
 }, 300000); // Every 5 minutes
+cleanupInterval.unref?.();
 
 /**
  * Rate limiting middleware for authentication endpoints

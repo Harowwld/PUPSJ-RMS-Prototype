@@ -1,15 +1,15 @@
 import { NextResponse } from "next/server";
 import fs from "node:fs";
-import path from "node:path";
 import {
   getBackupById,
   getBackupsDir,
-  getExternalBackupsDir,
+  getBackupFilePath,
   deleteBackupRecord,
 } from "../../../../../lib/backupsRepo";
 import { writeAuditLog } from "../../../../../lib/auditLogRequest";
 import { requireAdmin, createAuthErrorResponse } from "../../../../../lib/authHelpers";
-import { isSystemAdminRole } from "../../../../../lib/roleUtils";
+import { requireTOTP, extractTOTPToken } from "../../../../../lib/totpMiddleware";
+import { canAccessResource } from "../../../../../lib/resourceAuthorization";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -21,6 +21,11 @@ export async function DELETE(req, { params }) {
       return createAuthErrorResponse(error || "Admin access required", 403);
     }
 
+    const totpResult = await requireTOTP(user.id, extractTOTPToken(req.headers), { requireEnabled: true });
+    if (!totpResult.valid) {
+      return NextResponse.json({ ok: false, error: "TOTP verification required", requiresTOTP: true, missingToken: !!totpResult.missing }, { status: 403 });
+    }
+
     const { id: idStr } = await params;
     const id = Number(idStr);
     console.log(`[DELETE BACKUP] Attempting to delete backup with ID: ${id} by user ${user.id}`);
@@ -28,43 +33,23 @@ export async function DELETE(req, { params }) {
     if (isNaN(id)) return NextResponse.json({ ok: false, error: "Invalid ID" }, { status: 400 });
 
     const backup = await getBackupById(id);
-    if (!backup) {
-      console.log(`[DELETE BACKUP] Backup record not found in DB for ID: ${id}`);
-      return NextResponse.json({ ok: false, error: "Backup record not found" }, { status: 409 });
+    if (!backup || !canAccessResource(user, "backup", backup)) {
+      return NextResponse.json({ ok: false, error: "Backup record not found" }, { status: 404 });
     }
 
-    if (!isSystemAdminRole(user.role)) {
-      const userOffice = String(user.office_id || user.section || "registrar").toLowerCase().trim();
-      if (backup.scope === "system" || (backup.office_id && backup.office_id.toLowerCase() !== userOffice)) {
-        return NextResponse.json({ ok: false, error: "Forbidden: You do not have permission to delete this backup" }, { status: 403 });
-      }
-    }
-
-    console.log(`[DELETE BACKUP] Found backup in DB: ${backup.filename}`);
     const backupsDir = getBackupsDir();
-    const filePath = path.resolve(backupsDir, backup.filename);
-    console.log(`[DELETE BACKUP] Resolved absolute file path: ${filePath}`);
+    const filePath = getBackupFilePath(backup.filename, backupsDir);
 
     // Strict deletion: if any existing file cannot be removed, fail and keep DB record.
     if (fs.existsSync(filePath)) {
-      console.log(`[DELETE BACKUP] File exists. Attempting to unlink: ${filePath}`);
       fs.unlinkSync(filePath);
-      console.log(`[DELETE BACKUP] Successfully unlinked local file: ${filePath}`);
-    } else {
-      console.log(`[DELETE BACKUP] Local file NOT FOUND on disk at: ${filePath}`);
     }
 
     // NOTE: External backups are intentionally left untouched (Immutable Archive approach).
     // The web application does not have the authority to delete synced files from the external drive.
 
     // Delete record from database
-    console.log(`[DELETE BACKUP] Deleting record from database for ID: ${id}`);
     const changes = await deleteBackupRecord(id);
-    console.log(`[DELETE BACKUP] DB Changes: ${changes}`);
-
-    if (changes === 0) {
-      console.log(`[DELETE BACKUP] Record was not found or already removed from database for ID: ${id}`);
-    }
     await writeAuditLog(req, `Delete Backup`, { 
       details: `permanently deleted local backup package '${backup.filename}' (ID: ${id}) from primary storage`,
       severity: "WARNING",
@@ -78,6 +63,6 @@ export async function DELETE(req, { params }) {
     });
   } catch (error) {
     console.error("[DELETE BACKUP] Error:", error);
-    return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ ok: false, error: "Internal server error" }, { status: 500 });
   }
 }

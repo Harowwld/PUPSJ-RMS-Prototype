@@ -101,12 +101,6 @@ class RateLimiter {
     // Record this hit
     await recordRateLimitHit(endpointType, identifier, ipAddress, userId);
 
-    // Cache the result
-    cache.set(cacheKey, {
-      timestamp: Date.now(),
-      result
-    });
-
     return result;
   }
 
@@ -232,22 +226,63 @@ export function destroyRateLimiter() {
 // Helper functions for common endpoint types
 export async function checkAuthLoginRateLimit(ipAddress, userId = null) {
   const rateLimiter = getRateLimiter();
-  return await rateLimiter.checkRateLimit('auth_login', ipAddress, { ipAddress, userId });
+  if (userId) {
+    const accountIdentifier = `account:${String(userId).trim().toLowerCase()}`;
+    // This is a pre-authentication identifier (often an email), not a staff FK.
+    return await rateLimiter.checkRateLimit('auth_login', accountIdentifier, { ipAddress });
+  }
+  return await rateLimiter.checkRateLimit('auth_login', ipAddress, { ipAddress });
 }
 
-export async function resetAuthLoginRateLimit(ipAddress) {
+export async function resetAuthLoginRateLimit(ipAddress, userId = null) {
   const rateLimiter = getRateLimiter();
   await rateLimiter.resetRateLimit('auth_login', ipAddress);
+  if (userId) {
+    await rateLimiter.resetRateLimit('auth_login', `account:${String(userId).trim().toLowerCase()}`);
+  }
+}
+
+export async function checkAuth2FARateLimit(ipAddress, userId = null) {
+  const rateLimiter = getRateLimiter();
+  const identifier = `ip:${ipAddress}`;
+  const ipResult = await rateLimiter.checkRateLimit('auth_2fa', identifier, { ipAddress, userId });
+  if (!ipResult.allowed || !userId) return ipResult;
+
+  const accountResult = await rateLimiter.checkRateLimit(
+    'auth_2fa',
+    `account:${String(userId).trim().toLowerCase()}`,
+    { ipAddress, userId },
+  );
+  return accountResult.allowed ? ipResult : accountResult;
+}
+
+export async function resetAuth2FARateLimit(ipAddress, userId = null) {
+  const rateLimiter = getRateLimiter();
+  await rateLimiter.resetRateLimit('auth_2fa', `ip:${ipAddress}`);
+  if (userId) {
+    await rateLimiter.resetRateLimit('auth_2fa', `account:${String(userId).trim().toLowerCase()}`);
+  }
 }
 
 export async function checkAuthForgotPasswordRateLimit(ipAddress, userId = null) {
   const rateLimiter = getRateLimiter();
-  return await rateLimiter.checkRateLimit('auth_forgot_password', ipAddress, { ipAddress, userId });
+  if (userId) {
+    return await rateLimiter.checkRateLimit(
+      'auth_forgot_password',
+      `account:${String(userId).trim().toLowerCase()}`,
+      // Recovery identifiers are not authenticated staff foreign keys.
+      { ipAddress },
+    );
+  }
+  return await rateLimiter.checkRateLimit('auth_forgot_password', ipAddress, { ipAddress });
 }
 
-export async function resetAuthForgotPasswordRateLimit(ipAddress) {
+export async function resetAuthForgotPasswordRateLimit(ipAddress, userId = null) {
   const rateLimiter = getRateLimiter();
   await rateLimiter.resetRateLimit('auth_forgot_password', ipAddress);
+  if (userId) {
+    await rateLimiter.resetRateLimit('auth_forgot_password', `account:${String(userId).trim().toLowerCase()}`);
+  }
 }
 
 export async function checkApiGeneralRateLimit(identifier, ipAddress, userId = null) {

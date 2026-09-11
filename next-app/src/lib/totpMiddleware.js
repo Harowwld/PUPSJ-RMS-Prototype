@@ -1,7 +1,7 @@
 import { getStaffById, verifyRecoveryCode } from "./staffRepo";
 import { verifyTOTP, decryptSecret, isValidToken } from "./totp";
 
-export async function requireTOTP(userId, token) {
+export async function requireTOTP(userId, token, { requireEnabled = false } = {}) {
   if (!userId) {
     return { valid: false, error: "User ID required" };
   }
@@ -11,8 +11,12 @@ export async function requireTOTP(userId, token) {
     return { valid: false, error: "User not found" };
   }
 
-  // If 2FA/TOTP is NOT enabled, we don't need a token.
+  // Sensitive production operations must not silently proceed without a
+  // configured second factor. Development may keep the compatibility path.
   if (!staff.totp_enabled) {
+    if (requireEnabled || process.env.NODE_ENV === "production") {
+      return { valid: false, error: "TOTP must be enabled for this operation" };
+    }
     return { valid: true, error: null };
   }
 

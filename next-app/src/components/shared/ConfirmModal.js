@@ -231,22 +231,15 @@ export default function ConfirmModal({
                           "border-[0.5px] border-gray-250 dark:border-white/10 rounded-[8px] p-0 bg-white dark:bg-card overflow-y-auto",
                           selectedItems.length > 5 ? "max-h-[220px]" : ""
                         )}
-                        style={{ borderWidth: '0.5px', borderStyle: 'solid', borderColor: 'rgba(0,0,0,0.1)' }}
                       >
                         {selectedItems.map((item, idx) => (
                           <div
                             key={idx}
                             className={cn(
                               "text-[13px] font-normal px-[14px] py-[10px] truncate",
-                              isRestoreModal
-                                ? "text-gray-900 dark:text-zinc-100"
-                                : "text-pup-maroon dark:text-red-400"
+                              idx < selectedItems.length - 1 && "border-b-[0.5px] border-solid border-black/5",
+                              isRestoreModal ? "text-gray-900 dark:text-zinc-100" : "text-pup-maroon dark:text-red-400"
                             )}
-                            style={{
-                              borderBottomWidth: idx < selectedItems.length - 1 ? '0.5px' : '0px',
-                              borderBottomStyle: 'solid',
-                              borderBottomColor: 'rgba(0,0,0,0.06)'
-                            }}
                           >
                             {item}
                           </div>
@@ -255,7 +248,6 @@ export default function ConfirmModal({
                     ) : (
                       <div
                         className="border-[0.5px] border-gray-250 dark:border-white/10 rounded-[8px] p-[10px_14px] bg-white dark:bg-card max-h-32 overflow-y-auto space-y-1.5"
-                        style={{ borderWidth: '0.5px', borderStyle: 'solid', borderColor: 'rgba(0,0,0,0.1)' }}
                       >
                         {selectedItems.map((item, idx) => (
                           <div
@@ -317,7 +309,6 @@ export default function ConfirmModal({
                           maxLength={1}
                           inputMode="numeric"
                           className="h-[44px] w-[44px] rounded-[8px] border-[0.5px] border-gray-300 dark:border-zinc-800 bg-white text-center text-[18px] font-semibold text-gray-900 transition-all focus:border-[#e30000] focus:ring-0 focus:outline-none focus-visible:outline-none focus:border-[1.5px] caret-transparent dark:bg-card dark:text-zinc-50"
-                          style={{ borderWidth: '0.5px', borderStyle: 'solid' }}
                           placeholder="0"
                           value={verificationValue[i] || ""}
                           onChange={(e) => handleInputChange(i, e.target.value)}
@@ -423,4 +414,3 @@ export default function ConfirmModal({
     </Dialog>
   );
 }
-

@@ -1,62 +1,53 @@
-// In-memory session store for tracking active sessions
-// Maps session token → { userId, role, loginTime, lastActivity }
+// Compatibility facade for the former process-local session store.
+// Persistent session state is maintained in PostgreSQL by authSessions.js.
+import { verifySessionToken } from "./jwt.js";
+import { query } from "./postgres.js";
+import {
+  registerSessionToken,
+  revokeSession,
+  touchSession as touchPersistentSession,
+  getActiveSessionCount as getPersistentActiveSessionCount,
+  getActiveSessions as getPersistentActiveSessions,
+} from "./authSessions.js";
 
-const sessions = new Map();
-
-const SESSION_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
-
-export function createSession(token, userId, role, username) {
-  sessions.set(token, {
-    userId,
+export async function createSession(token, userId, role, username, options = {}) {
+  return registerSessionToken(token, {
+    principalId: userId,
+    principalType: options.principalType || "staff",
     role,
     username,
-    loginTime: Date.now(),
-    lastActivity: Date.now(),
+    authLevel: options.authLevel || "password",
   });
-  return sessions.get(token);
 }
 
-export function touchSession(token) {
-  const session = sessions.get(token);
-  if (session) {
-    session.lastActivity = Date.now();
-    return session;
-  }
-  return null;
+export async function touchSession(token) {
+  const payload = await verifySessionToken(token).catch(() => null);
+  if (!payload?.jti) return null;
+  return touchPersistentSession(payload.jti);
 }
 
-export function removeSession(token) {
-  return sessions.delete(token);
+export async function removeSession(token) {
+  const payload = await verifySessionToken(token).catch(() => null);
+  if (!payload?.jti) return false;
+  return revokeSession(payload.jti, { principalId: payload.sub, reason: "logout" });
 }
 
-export function getSession(token) {
-  return sessions.get(token) || null;
+export async function getSession(token) {
+  const payload = await verifySessionToken(token).catch(() => null);
+  return payload?.jti ? { jti: payload.jti, userId: payload.sub, role: payload.role } : null;
 }
 
-export function cleanupExpiredSessions() {
-  const now = Date.now();
-  let removed = 0;
-  for (const [token, session] of sessions.entries()) {
-    if (now - session.lastActivity > SESSION_TIMEOUT_MS) {
-      sessions.delete(token);
-      removed++;
-    }
-  }
-  return removed;
+export async function cleanupExpiredSessions() {
+  const rows = await query(
+    "DELETE FROM auth_sessions WHERE expires_at <= NOW() RETURNING jti",
+  );
+  return rows.length;
 }
 
-export function getActiveSessionCount() {
-  cleanupExpiredSessions();
-  return sessions.size;
+export async function getActiveSessionCount() {
+  return getPersistentActiveSessionCount();
 }
 
-export function getActiveSessions() {
-  cleanupExpiredSessions();
-  return Array.from(sessions.values()).map((s) => ({
-    userId: s.userId,
-    role: s.role,
-    username: s.username,
-    loginTime: s.loginTime,
-    lastActivity: s.lastActivity,
-  }));
+export async function getActiveSessions() {
+  return getPersistentActiveSessions();
 }

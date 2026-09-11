@@ -1,25 +1,27 @@
 import { NextResponse } from "next/server";
+import {
+  getPrincipalOfficeId,
+  requireAdmin,
+  createAuthErrorResponse,
+} from "@/lib/authHelpers";
+import { isSystemAdminRole } from "@/lib/roleUtils";
 import { dbAll } from "@/lib/sqlite";
-import { verifySessionToken } from "@/lib/jwt";
 
 export const runtime = "nodejs";
 
 export async function GET(req) {
+  const access = await requireAdmin(req);
+  if (access.error || !access.user) return createAuthErrorResponse(access.error || "Admin access required", access.error?.startsWith("Access denied") ? 403 : 401);
   try {
-    const token = req.cookies.get("pup_session")?.value;
-    if (!token) {
-      return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
+    const officeId = isSystemAdminRole(access.user.role) ? null : getPrincipalOfficeId(access.user);
+    if (!isSystemAdminRole(access.user.role) && !officeId) {
+      return createAuthErrorResponse("Office scope is required", 403);
     }
-    
-    const user = await verifySessionToken(token);
-    if (!user || (user.role !== "Admin" && user.role !== "SuperAdmin")) {
-      return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
-    }
-
     const { searchParams } = new URL(req.url);
     const startDate = searchParams.get("startDate");
     const endDate = searchParams.get("endDate");
 
+    const officeFilter = officeId ? "WHERE office_id = ?" : "";
     const rows = await dbAll(`
       SELECT 
         id, 
@@ -28,7 +30,8 @@ export async function GET(req) {
         created_at, 
         updated_at
       FROM document_requests
-    `);
+      ${officeFilter}
+    `, officeId ? [officeId] : []);
 
     // We process analytics in memory to keep it manageable and extensible
     let startVal = startDate;
@@ -189,6 +192,6 @@ export async function GET(req) {
 
   } catch (error) {
     console.error("[GET /api/analytics/document-requests Error]:", error);
-    return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ ok: false, error: "Internal server error" }, { status: 500 });
   }
 }

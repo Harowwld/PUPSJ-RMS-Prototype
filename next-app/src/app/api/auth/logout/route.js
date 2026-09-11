@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { getSessionCookieName, verifySessionToken } from "../../../../lib/jwt";
-import { removeSession } from "../../../../lib/sessionStore";
 import { writeAuditLog } from "../../../../lib/auditLogRequest";
 import { authDebug } from "@/lib/authDebug";
+import { revokeSession } from "@/lib/authSessions";
+import { checkCSRFProtection } from "../../../../lib/csrfProtection";
 
 export const runtime = "nodejs";
 
@@ -19,7 +20,6 @@ export async function POST(req) {
   const token = req.cookies.get(sessionName)?.value;
 
   if (token) {
-    removeSession(token);
     // Signing out ends this browser session only. It must not deactivate the
     // personnel account itself; otherwise the next valid login is redirected
     // away by AuthGuard as an inactive user.
@@ -27,6 +27,14 @@ export async function POST(req) {
       const payload = await verifySessionToken(token);
       const userId = payload?.sub;
       const username = payload?.username;
+
+      if (!checkCSRFProtection(req, payload?.jti)) {
+        return addSecurityHeaders(NextResponse.json({ ok: false, error: "Invalid CSRF token" }, { status: 403 }));
+      }
+
+      if (payload?.jti) {
+        await revokeSession(payload.jti, { principalId: userId, reason: "logout" });
+      }
 
       if (userId && userId !== "admin") {
         authDebug("logout.session_ended", { staffId: userId });
@@ -59,6 +67,16 @@ export async function POST(req) {
     path: "/",
     maxAge: 0,
     expires: new Date(0), // Ensure immediate expiration
+  });
+  res.cookies.set({
+    name: "pup_csrf",
+    value: "",
+    httpOnly: false,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: 0,
+    expires: new Date(0),
   });
   
   return addSecurityHeaders(res);

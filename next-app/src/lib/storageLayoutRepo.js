@@ -7,6 +7,12 @@ import { canonicalizeCabinetId } from "./storageLayoutUtils.js";
 
 const STORAGE_LAYOUT_KEY = "storage_layout";
 
+function scopedSettingsKey(baseKey, officeId) {
+  const normalized = String(officeId || "").trim().toLowerCase();
+  if (!normalized) throw new Error("Office scope is required");
+  return `${baseKey}:${normalized}`;
+}
+
 function isFiniteNumber(n) {
   return typeof n === "number" && Number.isFinite(n);
 }
@@ -124,10 +130,11 @@ export function getDefaultStorageLayout() {
   return buildDefaultStorageLayout();
 }
 
-export async function getStorageLayout() {
+export async function getStorageLayout({ officeId } = {}) {
+  const key = scopedSettingsKey(STORAGE_LAYOUT_KEY, officeId);
   const row = await dbGet(
     "SELECT value FROM settings WHERE key = ?",
-    [STORAGE_LAYOUT_KEY]
+    [key]
   );
 
   if (!row?.value) {
@@ -144,7 +151,8 @@ export async function getStorageLayout() {
   }
 }
 
-export async function setStorageLayout(layout) {
+export async function setStorageLayout(layout, { officeId } = {}) {
+  const key = scopedSettingsKey(STORAGE_LAYOUT_KEY, officeId);
   const normalized = normalizeStorageLayout(layout);
   if (!normalized) {
     throw new Error("Invalid storage_layout payload");
@@ -153,16 +161,17 @@ export async function setStorageLayout(layout) {
   await dbRun(
     `INSERT INTO settings (key, value) VALUES (?, ?)
      ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = CURRENT_TIMESTAMP`,
-    [STORAGE_LAYOUT_KEY, JSON.stringify(normalized)]
+    [key, JSON.stringify(normalized)]
   );
 
   return normalized;
 }
 
-export async function exportStorageLayoutForDiagnostics() {
+export async function exportStorageLayoutForDiagnostics({ officeId } = {}) {
+  const key = scopedSettingsKey(STORAGE_LAYOUT_KEY, officeId);
   const row = await dbGet(
     "SELECT value FROM settings WHERE key = ?",
-    [STORAGE_LAYOUT_KEY]
+    [key]
   );
   return row?.value ? String(row.value) : null;
 }
@@ -174,10 +183,11 @@ export async function listSettingsKeys() {
 
 const STORAGE_TEMPLATES_KEY = "storage_templates";
 
-export async function getStorageTemplates() {
+export async function getStorageTemplates({ officeId } = {}) {
+  const key = scopedSettingsKey(STORAGE_TEMPLATES_KEY, officeId);
   const row = await dbGet(
     "SELECT value FROM settings WHERE key = ?",
-    [STORAGE_TEMPLATES_KEY]
+    [key]
   );
   const { ROOM_TEMPLATES } = await import("./storageLayoutDefaults.js");
   if (!row?.value) {
@@ -190,20 +200,22 @@ export async function getStorageTemplates() {
   }
 }
 
-export async function setStorageTemplates(templates) {
+export async function setStorageTemplates(templates, { officeId } = {}) {
+  const key = scopedSettingsKey(STORAGE_TEMPLATES_KEY, officeId);
   if (!Array.isArray(templates)) {
     throw new Error("Invalid storage_templates payload");
   }
   await dbRun(
     `INSERT INTO settings (key, value) VALUES (?, ?)
      ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = CURRENT_TIMESTAMP`,
-    [STORAGE_TEMPLATES_KEY, JSON.stringify(templates)]
+    [key, JSON.stringify(templates)]
   );
   return templates;
 }
 
-export async function restoreDefaultStorageTemplates() {
-  await dbRun("DELETE FROM settings WHERE key = ?", [STORAGE_TEMPLATES_KEY]);
+export async function restoreDefaultStorageTemplates({ officeId } = {}) {
+  const key = scopedSettingsKey(STORAGE_TEMPLATES_KEY, officeId);
+  await dbRun("DELETE FROM settings WHERE key = ?", [key]);
   const { ROOM_TEMPLATES } = await import("./storageLayoutDefaults.js");
   return ROOM_TEMPLATES;
 }
