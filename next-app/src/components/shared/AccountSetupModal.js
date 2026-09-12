@@ -14,6 +14,12 @@ import { toast } from "sonner"
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
 
+function getCsrfToken() {
+  if (typeof document === "undefined") return null
+  const match = document.cookie.match(/(?:^|;\s*)pup_csrf=([^;]+)/)
+  return match ? decodeURIComponent(match[1]) : null
+}
+
 export default function AccountSetupModal({ authUser }) {
   const [open, setOpen] = useState(false)
   const [step, setStep] = useState(1) // 1 = Password, 2 = Security
@@ -88,9 +94,13 @@ export default function AccountSetupModal({ authUser }) {
     setPwLoading(true)
 
     try {
+      const csrf = getCsrfToken()
       const res = await fetch("/api/auth/change-password", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(csrf ? { "X-CSRF-Token": csrf } : {})
+        },
         body: JSON.stringify({
           newPassword: pwNext,
         }),
@@ -151,9 +161,13 @@ export default function AccountSetupModal({ authUser }) {
         }))
         .filter((ans) => ans.answer !== "" || questions.find(q => q.id === ans.questionId)?.hasAnswer);
 
+      const csrf = getCsrfToken()
       const res = await fetch("/api/staff/security", {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(csrf ? { "X-CSRF-Token": csrf } : {})
+        },
         body: JSON.stringify({ answers: payload }),
       })
       const json = await res.json()
