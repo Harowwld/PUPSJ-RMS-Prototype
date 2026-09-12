@@ -84,6 +84,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
   // Dialogs
   const [formOpen, setFormOpen] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
+  const [targetIsExistingSysAdmin, setTargetIsExistingSysAdmin] = useState(false)
   const [selectedStaffId, setSelectedStaffId] = useState(null)
   
   const [form, setForm] = useState({
@@ -178,6 +179,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
 
   const handleOpenCreate = () => {
     setIsEditing(false)
+    setTargetIsExistingSysAdmin(false)
     setSelectedStaffId(null)
     setForm({
       id: "",
@@ -197,14 +199,16 @@ export default function GlobalStaffTab({ authUser, showToast }) {
       showToast("Archived accounts cannot be edited. Please restore the account first.", true)
       return
     }
+    const isSysAdmin = member.role === "SystemAdmin" || member.role === "SuperAdmin"
     setIsEditing(true)
+    setTargetIsExistingSysAdmin(isSysAdmin)
     setSelectedStaffId(member.id)
     setForm({
       id: member.id,
-      office_id: member.office_id || offices[0]?.id || "",
+      office_id: member.office_id || "",
       fname: member.fname,
       lname: member.lname,
-      role: member.role === "SystemAdmin" || member.role === "SuperAdmin" ? "Admin" : member.role,
+      role: isSysAdmin ? "SystemAdmin" : member.role,
       section: member.section || "",
       email: member.email,
       status: member.status
@@ -214,7 +218,15 @@ export default function GlobalStaffTab({ authUser, showToast }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    if (!form.office_id) {
+    
+    // Existing accounts cannot be changed or promoted to System Admin
+    if (isEditing && !targetIsExistingSysAdmin && (form.role === "SystemAdmin" || !form.office_id)) {
+      showToast("Existing accounts cannot be made a System Admin", true)
+      return
+    }
+
+    // Non-SystemAdmin accounts must have an assigned office
+    if (form.role !== "SystemAdmin" && !form.office_id) {
       showToast("Please select an assigned office/department", true)
       return
     }
@@ -231,7 +243,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
         role: form.role,
         section: (form.section && form.section.trim()) || "Administration",
         email: form.email.trim(),
-        office_id: form.office_id || null,
+        office_id: form.role === "SystemAdmin" ? null : (form.office_id || null),
         status: form.status
       }
 
@@ -838,6 +850,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                 optionClassName="rounded-lg text-xs font-normal py-1.5 px-2.5 hover:bg-gray-100 dark:hover:bg-zinc-800"
               >
                 <option value="All">All Offices</option>
+                <option value="global">System Admin</option>
                 {(Array.isArray(offices) ? offices : []).map((o) => (
                   <option key={o.id} value={o.id}>
                     {o.short_name}
@@ -856,6 +869,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                 optionClassName="rounded-lg text-xs font-normal py-1.5 px-2.5 hover:bg-gray-100 dark:hover:bg-zinc-800"
               >
                 <option value="All">All Roles</option>
+                <option value="SystemAdmin">System Admin</option>
                 <option value="Admin">Administrator</option>
                 <option value="Staff">Regular Staff</option>
               </Select>
@@ -886,7 +900,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
               )}
               {officeFilter !== "All" && (
                 <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
-                  Office: {(Array.isArray(offices) ? offices : []).find((o) => o.id === officeFilter)?.short_name || officeFilter}
+                  Office: {officeFilter === "global" ? "System Admin" : (Array.isArray(offices) ? offices : []).find((o) => o.id === officeFilter)?.short_name || officeFilter}
                   <button
                     onClick={() => {
                       setOfficeFilter("All")
@@ -900,7 +914,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
               )}
               {roleFilter !== "All" && (
                 <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
-                  Role: {roleFilter === "Admin" ? "Administrator" : roleFilter === "Staff" ? "Regular Staff" : roleFilter}
+                  Role: {roleFilter === "SystemAdmin" ? "System Admin" : roleFilter === "Admin" ? "Administrator" : roleFilter === "Staff" ? "Regular Staff" : roleFilter}
                   <button
                     onClick={() => {
                       setRoleFilter("All")
@@ -1345,17 +1359,27 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                 {/* Office Scope Selection */}
                 <div>
                   <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
-                    Assigned Office / Department *
+                    Assigned Office / Department {form.role !== "SystemAdmin" && "*"}
                   </label>
                   <Select
                     value={form.office_id}
-                    onChange={(e) => setForm(prev => ({ ...prev, office_id: e.target.value }))}
+                    onChange={(e) => {
+                      const val = e.target.value
+                      setForm(prev => ({
+                        ...prev,
+                        office_id: val,
+                        ...(val === "" ? { role: "SystemAdmin" } : (prev.role === "SystemAdmin" ? { role: "Admin" } : {}))
+                      }))
+                    }}
                     className="h-10 rounded-xl bg-white border border-gray-200 text-xs font-normal focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 dark:bg-zinc-950 dark:border-white/10 dark:text-white shadow-none cursor-pointer"
                     menuClassName="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-900 shadow-2xl p-1.5"
                     optionClassName="rounded-lg text-xs font-normal py-2.5 px-3 hover:bg-gray-100 dark:hover:bg-zinc-800"
-                    required
+                    disabled={isEditing && targetIsExistingSysAdmin}
+                    required={form.role !== "SystemAdmin"}
                   >
-                    <option value="" disabled>Select Office / Department</option>
+                    {(!isEditing || targetIsExistingSysAdmin) && (
+                      <option value="">System Admin / Global (No Office Scope)</option>
+                    )}
                     {(Array.isArray(offices) ? offices : []).map(o => (
                       <option key={o.id} value={o.id}>{o.name}</option>
                     ))}
@@ -1369,12 +1393,23 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                   </label>
                   <Select
                     value={form.role}
-                    onChange={(e) => setForm(prev => ({ ...prev, role: e.target.value }))}
+                    onChange={(e) => {
+                      const val = e.target.value
+                      setForm(prev => ({
+                        ...prev,
+                        role: val,
+                        ...(val === "SystemAdmin" ? { office_id: "" } : (!prev.office_id ? { office_id: offices[0]?.id || "" } : {}))
+                      }))
+                    }}
                     className="h-10 rounded-xl bg-white border border-gray-200 text-xs font-normal focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 dark:bg-zinc-950 dark:border-white/10 dark:text-white shadow-none cursor-pointer"
                     menuClassName="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-900 shadow-2xl p-1.5"
                     optionClassName="rounded-lg text-xs font-normal py-2.5 px-3 hover:bg-gray-100 dark:hover:bg-zinc-800"
+                    disabled={isEditing && targetIsExistingSysAdmin}
                     required
                   >
+                    {(!isEditing || targetIsExistingSysAdmin) && (
+                      <option value="SystemAdmin">System Admin</option>
+                    )}
                     <option value="Admin">Administrator</option>
                     <option value="Staff">Records Staff</option>
                   </Select>

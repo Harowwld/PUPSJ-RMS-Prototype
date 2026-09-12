@@ -172,6 +172,26 @@ export async function PATCH(req, ctx) {
   ) {
     return NextResponse.json({ ok: false, error: "You cannot remove the last active system administrator." }, { status: 403 });
   }
+  if (
+    patch.role !== undefined &&
+    !isSystemAdminRole(targetStaff.role) &&
+    isSystemAdminRole(patch.role)
+  ) {
+    return NextResponse.json(
+      { ok: false, error: "Existing personnel accounts cannot be promoted to System Admin." },
+      { status: 400 }
+    );
+  }
+  if (
+    patch.officeId !== undefined &&
+    !isSystemAdminRole(targetStaff.role) &&
+    !patch.officeId
+  ) {
+    return NextResponse.json(
+      { ok: false, error: "Non-System Admin personnel must have an assigned office." },
+      { status: 400 }
+    );
+  }
   if (patch.officeId !== undefined && !isSuper && String(patch.officeId || "") !== String(targetStaff.office_id || "")) {
     return NextResponse.json({ ok: false, error: "You cannot move staff between offices." }, { status: 403 });
   }
