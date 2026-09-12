@@ -958,7 +958,6 @@ export default function Header({ authUser, onLogout, children }) {
                   ) : (
                     initials
                   )}
-                  <span className="absolute bottom-0 right-0 h-2 w-2 rounded-full ring-1.5 ring-white bg-emerald-500 dark:ring-zinc-950" />
                 </div>
 
                 <div className="hidden sm:flex flex-col text-left leading-tight">
