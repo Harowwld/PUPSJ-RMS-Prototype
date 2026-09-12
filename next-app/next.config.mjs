@@ -22,22 +22,6 @@ const nextConfig = {
       "framer-motion",
     ],
   },
-  webpack: (config, { dev }) => {
-    if (dev) {
-      config.watchOptions = {
-        ...config.watchOptions,
-        ignored: [
-          "**/.git/**",
-          "**/node_modules/**",
-          "**/.local/**",
-          "**/.next/**",
-          "**/scripts/**",
-          "**/test/**",
-        ],
-      };
-    }
-    return config;
-  },
 };
 
 export default nextConfig;
