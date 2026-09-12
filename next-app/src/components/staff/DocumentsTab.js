@@ -291,7 +291,6 @@ function DocumentsTable({
                         onClick={() => onViewDetails?.(r)}
                         className="h-8 px-3 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                       >
-                        <i className="ph-bold ph-eye mr-1.5"></i>
                         View
                       </Button>
 
@@ -310,7 +309,6 @@ function DocumentsTable({
                           className="h-8 px-3 text-xs font-semibold rounded-xl! btn-brand-red text-white! active:scale-95 disabled:opacity-50 transition-all cursor-pointer shadow-xs"
                           style={{ color: "#ffffff" }}
                         >
-                          <i className="ph-bold ph-arrow-counter-clockwise mr-1.5"></i>
                           Update
                         </Button>
                       )}
@@ -324,7 +322,6 @@ function DocumentsTable({
                       }
                       className="h-8 px-3 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                     >
-                      <i className="ph-bold ph-scan mr-1.5"></i>
                       Scan
                     </Button>
                   )}
@@ -799,7 +796,6 @@ export default function DocumentsTab({
                             onClick={openEditStudent}
                             className="h-9 px-4 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                           >
-                            <i className="ph-bold ph-user-circle-gear mr-1.5 text-sm"></i>
                             Edit Profile
                           </Button>
                         </div>
@@ -1026,7 +1022,6 @@ export default function DocumentsTab({
                           onClick={() => setConfirmArchiveOpen(true)}
                           className="mt-3 w-full bg-white border border-red-200 text-red-600 hover:bg-red-50 text-xs font-semibold h-9 shadow-xs rounded-xl dark:bg-card"
                         >
-                          <i className="ph-bold ph-archive mr-2"></i>
                           Archive
                         </Button>
                       </div>
@@ -1264,7 +1259,6 @@ export default function DocumentsTab({
                     rel="noreferrer"
                     className="inline-flex h-10 items-center rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 px-4 text-xs font-semibold shadow-xs cursor-pointer active:scale-95 transition-all"
                   >
-                    <i className="ph-bold ph-arrow-square-out mr-2 text-base"></i>
                     Open
                   </a>
                 )}
