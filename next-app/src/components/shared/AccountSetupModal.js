@@ -79,8 +79,8 @@ export default function AccountSetupModal({ authUser }) {
       setPwError("New passwords do not match")
       return
     }
-    if (pwNext.length < 6) {
-      setPwError("Password must be at least 6 characters")
+    if (pwNext.length < 8) {
+      setPwError("Password must be at least 8 characters long.")
       return
     }
 
@@ -307,6 +307,9 @@ export default function AccountSetupModal({ authUser }) {
                         <i className={cn("ph-bold text-[16px]", showPw.next ? "ph-eye-slash" : "ph-eye")}></i>
                       </button>
                     </div>
+                    <p className="mt-1 text-[11px] text-gray-400 dark:text-zinc-500">
+                      Must be at least 8 characters long.
+                    </p>
                   </div>
 
                   <div>

@@ -385,8 +385,8 @@ function AccountPageContent() {
       setPwError("New password cannot be the same as the current password.");
       return;
     }
-    if (pwNext.length < 6) {
-      setPwError("New password must be at least 6 characters.");
+    if (pwNext.length < 8) {
+      setPwError("New password must be at least 8 characters long.");
       return;
     }
 
@@ -1108,6 +1108,9 @@ function AccountPageContent() {
                                 <i className={cn("ph-bold", showPw.next ? "ph-eye-slash" : "ph-eye")}></i>
                               </button>
                             </div>
+                            <p className="text-[10px] text-gray-400 px-1 dark:text-zinc-500">
+                              Must be at least 8 characters long.
+                            </p>
                           </div>
                           <div className="space-y-1">
                             <label className="text-[11px] font-medium uppercase tracking-[0.04em] text-gray-500 px-1 dark:text-zinc-450 block">

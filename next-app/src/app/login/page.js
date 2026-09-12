@@ -244,8 +244,8 @@ export default function Home() {
       setForgotError("Passwords do not match.");
       return;
     }
-    if (forgotNewPassword.length < 6) {
-      setForgotError("New password must be at least 6 characters.");
+    if (forgotNewPassword.length < 8) {
+      setForgotError("New password must be at least 8 characters long.");
       return;
     }
     setForgotError("");
