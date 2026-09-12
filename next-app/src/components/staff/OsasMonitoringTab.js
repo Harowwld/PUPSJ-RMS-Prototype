@@ -241,6 +241,7 @@ export default function OsasMonitoringTab({ showToast }) {
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [draggingProposal, setDraggingProposal] = useState(null);
   const [dragOverColumn, setDragOverColumn] = useState(null);
+  const isDraggingRef = useRef(false);
 
   useEffect(() => {
     try {
@@ -371,10 +372,8 @@ export default function OsasMonitoringTab({ showToast }) {
         return;
       }
 
-      // If moved to Needs Revision or Declined, automatically open review sheet for remarks
-      if (targetStatus === "Needs Revision" || targetStatus === "Declined") {
-        select({ ...proposalToMove, status: targetStatus });
-      } else if (selected?.id === proposalId) {
+      // If the review sheet is already open for this proposal, update its displayed status
+      if (selected?.id === proposalId) {
         setSelected((prev) => ({ ...prev, status: targetStatus }));
         setStatus(targetStatus);
       }
@@ -804,6 +803,7 @@ export default function OsasMonitoringTab({ showToast }) {
                           key={item.id}
                           draggable={true}
                           onDragStart={(e) => {
+                            isDraggingRef.current = true;
                             setDraggingProposal(item);
                             e.dataTransfer.setData("text/plain", String(item.id));
                             e.dataTransfer.effectAllowed = "move";
@@ -811,8 +811,14 @@ export default function OsasMonitoringTab({ showToast }) {
                           onDragEnd={() => {
                             setDraggingProposal(null);
                             setDragOverColumn(null);
+                            setTimeout(() => {
+                              isDraggingRef.current = false;
+                            }, 120);
                           }}
-                          onClick={() => select(item)}
+                          onClick={() => {
+                            if (isDraggingRef.current) return;
+                            select(item);
+                          }}
                           className={cn(
                             "group relative rounded-xl border border-gray-200 bg-white p-3.5 shadow-2xs hover:shadow-md hover:border-pup-maroon/40 dark:border-white/10 dark:bg-card dark:hover:border-red-800/40 transition-all cursor-grab active:cursor-grabbing flex flex-col gap-2.5 active:scale-[0.99] select-none",
                             draggingProposal?.id === item.id && "opacity-35 scale-[0.97] border-dashed border-pup-maroon/60"
