@@ -113,23 +113,31 @@ export default function StudentProfileSheet({
     if (!docTypes || docTypes.length === 0) return [];
     const seen = new Set();
     const uniqueTypes = docTypes.filter((dt) => {
-      const norm = String(dt.name || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+      const name = typeof dt === "string" ? dt : dt?.name;
+      if (!name) return false;
+      const norm = String(name || "").toLowerCase().replace(/[^a-z0-9]/g, "");
       if (seen.has(norm)) return false;
       seen.add(norm);
       return true;
     });
 
-    return uniqueTypes.map((dt) => {
+    return uniqueTypes.map((dt, index) => {
+      const name = typeof dt === "string" ? dt : dt?.name || "";
       const matchDocs = (studentDocs || []).filter(
-        (d) => String(d.doc_type || "").trim().toLowerCase() === String(dt.name || "").trim().toLowerCase()
+        (d) => String(d.doc_type || "").trim().toLowerCase() === String(name || "").trim().toLowerCase()
       );
       const approved = matchDocs.find((d) => d.approval_status === "Approved");
       const pending = matchDocs.find((d) => d.approval_status === "Pending");
       const declined = matchDocs.find((d) => d.approval_status === "Declined");
       const status = approved ? "Approved" : pending ? "Pending" : declined ? "Declined" : "Missing";
+      const uniqueId =
+        typeof dt === "object" && dt?.id
+          ? String(dt.id)
+          : `req-${index}-${String(name).toLowerCase().replace(/[^a-z0-9]/g, "-")}`;
+
       return {
-        id: dt.id,
-        name: dt.name,
+        id: uniqueId,
+        name: name,
         status,
         doc: approved || pending || declined || matchDocs[0] || null,
       };
@@ -361,7 +369,7 @@ export default function StudentProfileSheet({
 
             {complianceView === "checklist" && requirementsList.length > 0 ? (
               <div className="rounded-xl border border-gray-200 dark:border-white/10 overflow-hidden divide-y divide-gray-100 dark:divide-white/5">
-                {requirementsList.map((req) => {
+                {requirementsList.map((req, index) => {
                   const isApproved = req.status === "Approved";
                   const isPending = req.status === "Pending";
                   const isDeclined = req.status === "Declined";
@@ -369,7 +377,7 @@ export default function StudentProfileSheet({
 
                   return (
                     <div
-                      key={req.id}
+                      key={req.id || `req-${index}-${req.name || ""}`}
                       className="p-3 flex items-center justify-between gap-3 hover:bg-gray-50/50 dark:hover:bg-zinc-800/40 transition-colors"
                     >
                       <div className="flex items-center gap-2.5 min-w-0">
@@ -453,9 +461,9 @@ export default function StudentProfileSheet({
               </div>
             ) : (
               <div className="rounded-xl border border-gray-200 dark:border-white/10 overflow-hidden divide-y divide-gray-100 dark:divide-white/5">
-                {studentDocs.map((doc) => (
+                {studentDocs.map((doc, docIdx) => (
                   <div
-                    key={doc.id}
+                    key={doc.id || `doc-${docIdx}`}
                     className="p-3.5 flex items-center justify-between gap-3 hover:bg-gray-50/50 dark:hover:bg-zinc-800/40 transition-colors"
                   >
                     <div className="flex items-center gap-3 min-w-0">
@@ -524,8 +532,8 @@ export default function StudentProfileSheet({
               </div>
             ) : (
               <div className="rounded-xl border border-gray-200 dark:border-white/10 overflow-hidden divide-y divide-gray-100 dark:divide-white/5">
-                {requests.map((req) => (
-                  <div key={req.id} className="p-3 flex items-center justify-between text-xs">
+                {requests.map((req, reqIdx) => (
+                  <div key={req.id || `req-hist-${reqIdx}`} className="p-3 flex items-center justify-between text-xs">
                     <div>
                       <span className="font-semibold text-gray-900 dark:text-zinc-100">
                         {req.doc_type || req.requested_document || "Document Request"}
