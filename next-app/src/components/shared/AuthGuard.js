@@ -4,6 +4,7 @@ import React, { createContext, useContext, useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Skeleton } from "@/components/ui/skeleton"
 import { isAdminRole, isStaffRole, isSuperAdminRole, isSystemAdminRole } from "@/lib/roleUtils"
+import { getRoleBranding } from "@/lib/roleBranding"
 
 export const AuthUserContext = createContext(null)
 export const useAuthUser = () => useContext(AuthUserContext)
@@ -72,6 +73,17 @@ export function AuthGuard({ allowedRoles = NO_REQUIRED_ROLES, children, redirect
 
         const user = json.data
         setCurrentUser(user)
+
+        // Setup role branding CSS variables at root level
+        if (typeof window !== "undefined" && user) {
+          const branding = getRoleBranding(user);
+          if (branding?.color) {
+            document.documentElement.style.setProperty("--brand-accent", branding.color);
+            document.documentElement.style.setProperty("--brand-foreground", branding.foreground || "#ffffff");
+            document.documentElement.setAttribute("data-brand-accent", branding.color);
+            document.documentElement.setAttribute("data-brand-foreground", branding.foreground || "#ffffff");
+          }
+        }
 
         // Setup accessibility scaling and high contrast preferences
         if (user && user.id) {

@@ -2,14 +2,14 @@ import { NextResponse } from "next/server";
 import { listCourses, createCourse, updateCourse, archiveCourse } from "../../../lib/coursesRepo";
 import { createSection } from "../../../lib/sectionsRepo";
 import { writeAuditLog } from "../../../lib/auditLogRequest";
-import { requireAdmin, requireStaff, createAuthErrorResponse } from "../../../lib/authHelpers";
+import { requireAdmin, requireStaff, requireAuth, createAuthErrorResponse } from "../../../lib/authHelpers";
 import { isSystemAdminRole, normalizeRole } from "../../../lib/roleUtils";
 
 export const dynamic = "force-dynamic";
 
 function resolveOfficeId(user, req, requestedOfficeId) {
   const requested = String(requestedOfficeId || new URL(req.url).searchParams.get("officeId") || "").trim().toLowerCase();
-  if (isSystemAdminRole(user.role)) return requested || "registrar";
+  if (isSystemAdminRole(user.role) || user.role === "Student") return requested || "registrar";
   const ownOffice = String(user.officeId || user.office_id || "").trim().toLowerCase();
   if (requested && requested !== ownOffice) return null;
   return ownOffice || null;
@@ -20,8 +20,8 @@ function canViewArchived(user) {
 }
 
 export async function GET(req) {
-  const access = await requireStaff(req);
-  if (access.error || !access.user) return createAuthErrorResponse(access.error || "Staff authentication required", access.error?.startsWith("Access denied") ? 403 : 401);
+  const access = await requireAuth(req, ["Staff", "Admin", "SystemAdmin", "SuperAdmin", "Student"]);
+  if (access.error || !access.user) return createAuthErrorResponse(access.error || "Authentication required", access.error?.startsWith("Access denied") ? 403 : 401);
   try {
     const { searchParams } = new URL(req.url);
     const includeArchived = searchParams.get("includeArchived") === "true";

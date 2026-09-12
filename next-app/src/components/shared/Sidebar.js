@@ -26,6 +26,7 @@ const ICON_MAP = {
   // Staff views
   requests: { icon: "ti ti-arrow-up-right" },
   odrs: { icon: "ti ti-file-text" },
+  compliance: { icon: "ti ti-clipboard-check" },
   osas: { icon: "ti ti-school" },
   osas_monitoring: { icon: "ti ti-clipboard-check" },
   upload: { icon: "ti ti-scan" },

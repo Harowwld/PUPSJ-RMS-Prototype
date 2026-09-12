@@ -16,10 +16,10 @@
 export function normalizeRole(role) {
   const normalized = String(role || "").toLowerCase().trim().replace(/[_-]+/g, " ");
   if (normalized === "student") return "Student";
-  if (normalized === "staff" || normalized === "records staff") return "Staff";
-  if (normalized === "admin" || normalized === "administrator") return "Admin";
   if (normalized === "systemadmin" || normalized === "system admin") return "SystemAdmin";
   if (normalized === "superadmin" || normalized === "super admin") return "SuperAdmin";
+  if (normalized === "admin" || normalized === "administrator" || normalized.endsWith(" admin") || normalized.endsWith(" administrator")) return "Admin";
+  if (normalized === "staff" || normalized === "records staff" || normalized.endsWith(" staff")) return "Staff";
   return null;
 }
 
@@ -62,8 +62,8 @@ export function canAccessOffice(principal, officeId) {
  * @returns {boolean}
  */
 export function isSystemAdminRole(role) {
-  const normalized = String(role || "").toLowerCase().trim();
-  return normalized === "systemadmin" || normalized === "system_admin" || normalized === "system admin" || normalized === "superadmin" || normalized === "super admin";
+  const normalized = String(role || "").toLowerCase().trim().replace(/[_-]+/g, " ");
+  return normalized === "systemadmin" || normalized === "system admin" || normalized === "superadmin" || normalized === "super admin";
 }
 
 /**
@@ -74,10 +74,10 @@ export function isSystemAdminRole(role) {
  * @returns {boolean}
  */
 export function isAdminRole(role) {
-  const normalized = String(role || "").toLowerCase().trim();
+  const normalized = String(role || "").toLowerCase().trim().replace(/[_-]+/g, " ");
   // SystemAdmin is a separate, higher role
   if (isSystemAdminRole(normalized)) return false;
-  return ["admin", "administrator"].includes(normalized);
+  return ["admin", "administrator"].includes(normalized) || normalized.endsWith(" admin") || normalized.endsWith(" administrator");
 }
 
 /**
@@ -96,8 +96,9 @@ export function hasAdminPrivileges(role) {
  * @returns {boolean}
  */
 export function isStaffRole(role) {
-  const normalized = String(role || "").toLowerCase().trim();
-  return normalized === "staff" || normalized === "records staff";
+  const normalized = String(role || "").toLowerCase().trim().replace(/[_-]+/g, " ");
+  if (isSystemAdminRole(normalized) || isAdminRole(normalized)) return false;
+  return normalized === "staff" || normalized === "records staff" || normalized.endsWith(" staff");
 }
 
 /**

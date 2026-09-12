@@ -267,7 +267,7 @@ export default function RegisterAccountTab({
               </div>
             </div>
 
-            <DialogFooter className="p-6 pt-0 bg-white dark:bg-card border-none flex items-center justify-between">
+            <DialogFooter className="m-0 p-6 pt-0 bg-white dark:bg-card border-none flex flex-row items-center justify-between sm:justify-between w-full">
               <Button
                 type="button"
                 variant="outline"

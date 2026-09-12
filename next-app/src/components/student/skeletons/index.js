@@ -12,3 +12,4 @@ export {
   default as StudentActivitySkeleton,
   StudentActivityListSkeleton,
 } from "./StudentActivitySkeleton"
+export { default as StudentComplianceSkeleton } from "./StudentComplianceSkeleton"

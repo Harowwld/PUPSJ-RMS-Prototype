@@ -178,7 +178,8 @@ export default function PromptModal({
               "flex h-10 items-center justify-center rounded-xl! text-xs font-semibold shadow-none! border-none! py-0 px-5 cursor-pointer active:scale-95 disabled:opacity-30 disabled:grayscale-[0.5] disabled:cursor-not-allowed",
               variant === "success" && "btn-brand-green text-white",
               variant === "warning" && (v.confirmStyle || "bg-amber-600 hover:bg-amber-700 active:bg-amber-800 text-white"),
-              (variant === "danger" || variant === "brand" || isDeclineModal || (!variant || variant === "default")) && "btn-brand-red text-white"
+              (variant === "danger" || isDeclineModal) && "bg-red-600 hover:bg-red-700 active:bg-red-800 text-white",
+              (variant === "brand" || (!variant || variant === "default")) && "btn-brand-red"
             )}
           >
             {isLoading ? "Processing..." : confirmLabel}

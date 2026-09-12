@@ -3,26 +3,36 @@ import { dbGet as sysDbGet, dbRun as sysDbRun, dbAll as sysDbAll } from "@/lib/p
 import { writeAuditLog } from "@/lib/auditLogRequest";
 import { hasAllSecurityAnswers } from "@/lib/staffRepo";
 import { hashPassword } from "@/lib/passwordHash";
-import { requireStaff, createAuthErrorResponse } from "@/lib/authHelpers";
+import { requireAuth, createAuthErrorResponse } from "@/lib/authHelpers";
 import { requireTOTP, extractTOTPToken } from "@/lib/totpMiddleware";
 
 export const runtime = "nodejs";
 
 export async function GET(req) {
   try {
-    const access = await requireStaff(req);
-    if (access.error || !access.user) return createAuthErrorResponse(access.error || "Staff authentication required", access.error?.startsWith("Access denied") ? 403 : 401);
+    const access = await requireAuth(req);
+    if (access.error || !access.user) return createAuthErrorResponse(access.error || "Authentication required", 401);
     const user = access.user;
 
     const questions = await sysDbAll("SELECT id, question, is_required FROM security_questions ORDER BY id ASC");
     
-    // Also fetch what they have answered so far, if any
-    const uid = user.sub || user.id;
-    const answeredRows = await sysDbAll("SELECT question_id FROM staff_security_answers WHERE staff_id = ?", [uid]);
-    const answeredSet = new Set((answeredRows || []).map(r => r.question_id));
-    
-    // Use the central logic to determine if the setup is complete
-    const hasAllQuestions = await hasAllSecurityAnswers(uid);
+    let answeredSet = new Set();
+    let hasAllQuestions = false;
+    const isStudent = user.role === "Student" || user.principalType === "student";
+
+    if (isStudent) {
+      const studentAccountId = user.accountId || user.account_id || (Number.isFinite(Number(user.id)) ? Number(user.id) : null);
+      if (studentAccountId) {
+        const answeredRows = await sysDbAll("SELECT question_id FROM student_security_answers WHERE student_account_id = ?", [studentAccountId]);
+        answeredSet = new Set((answeredRows || []).map(r => r.question_id));
+        hasAllQuestions = await hasAllSecurityAnswers(studentAccountId, "Student");
+      }
+    } else {
+      const uid = user.sub || user.id;
+      const answeredRows = await sysDbAll("SELECT question_id FROM staff_security_answers WHERE staff_id = ?", [uid]);
+      answeredSet = new Set((answeredRows || []).map(r => r.question_id));
+      hasAllQuestions = await hasAllSecurityAnswers(uid, user.role);
+    }
 
     const formattedQuestions = (questions || []).map(q => ({
       ...q,
@@ -45,16 +55,19 @@ export async function GET(req) {
 
 export async function PUT(req) {
   try {
-    const access = await requireStaff(req);
-    if (access.error || !access.user) return createAuthErrorResponse(access.error || "Staff authentication required", access.error?.startsWith("Access denied") ? 403 : 401);
+    const access = await requireAuth(req);
+    if (access.error || !access.user) return createAuthErrorResponse(access.error || "Authentication required", 401);
     const user = access.user;
+    const isStudent = user.role === "Student" || user.principalType === "student";
 
-    const totpResult = await requireTOTP(user.id, extractTOTPToken(req.headers), { requireEnabled: true });
-    if (!totpResult.valid) {
-      return NextResponse.json(
-        { ok: false, error: "TOTP verification required: " + totpResult.error, requiresTOTP: true },
-        { status: 403 }
-      );
+    if (!isStudent) {
+      const totpResult = await requireTOTP(user.id, extractTOTPToken(req.headers), { requireEnabled: true });
+      if (!totpResult.valid) {
+        return NextResponse.json(
+          { ok: false, error: "TOTP verification required: " + totpResult.error, requiresTOTP: true },
+          { status: 403 }
+        );
+      }
     }
 
     const { answers } = await req.json();
@@ -62,6 +75,45 @@ export async function PUT(req) {
       return NextResponse.json({ ok: false, error: "Answers array is required" }, { status: 400 });
     }
 
+    if (isStudent) {
+      const studentAccountId = user.accountId || user.account_id || (Number.isFinite(Number(user.id)) ? Number(user.id) : null);
+      if (!studentAccountId) {
+        return NextResponse.json({ ok: false, error: "Student account not found" }, { status: 404 });
+      }
+
+      for (const ans of answers) {
+        if (!ans.questionId) continue;
+
+        const qRow = await sysDbGet("SELECT id, is_required FROM security_questions WHERE id = ?", [ans.questionId]);
+        if (!qRow) continue;
+
+        const answerRaw = String(ans.answer || "").trim();
+        if (answerRaw === "") {
+          if (qRow.is_required) continue;
+          await sysDbRun("DELETE FROM student_security_answers WHERE student_account_id = ? AND question_id = ?", [studentAccountId, qRow.id]);
+          continue;
+        }
+
+        const answerNormalized = answerRaw.toLowerCase();
+        const answerHash = hashPassword(answerNormalized);
+
+        await sysDbRun(`
+          INSERT INTO student_security_answers (student_account_id, question_id, answer_hash, updated_at)
+          VALUES (?, ?, ?, datetime('now'))
+          ON CONFLICT (student_account_id, question_id) DO UPDATE SET
+            answer_hash = EXCLUDED.answer_hash,
+            updated_at = EXCLUDED.updated_at
+        `, [studentAccountId, qRow.id, answerHash]);
+      }
+
+      await writeAuditLog(req, "Updated Security Question", {
+        role: "Student"
+      });
+
+      return NextResponse.json({ ok: true, data: { success: true } });
+    }
+
+    // Staff path
     const uid = user.sub || user.id;
 
     for (const ans of answers) {

@@ -2,15 +2,15 @@ import { NextResponse } from "next/server";
 import { dbAll, dbRun } from "@/lib/postgresCompat";
 import { writeAuditLog } from "@/lib/auditLogRequest";
 import { requireTOTP, extractTOTPToken } from "@/lib/totpMiddleware";
-import { requireSystemAdmin, createAuthErrorResponse } from "@/lib/authHelpers";
+import { requireSystemAdmin, requireAuth, createAuthErrorResponse } from "@/lib/authHelpers";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET(req) {
   try {
-    const access = await requireSystemAdmin(req);
-    if (access.error || !access.user) return createAuthErrorResponse(access.error || "System administrator access required", access.error?.startsWith("Access denied") ? 403 : 401);
+    const access = await requireAuth(req);
+    if (access.error || !access.user) return createAuthErrorResponse(access.error || "Authentication required", 401);
     const rows = await dbAll("SELECT id, question FROM security_questions ORDER BY id ASC");
     const questions = rows.map((row) => row.question || "");
     while (questions.length < 2) {

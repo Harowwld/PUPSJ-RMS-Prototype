@@ -809,7 +809,7 @@ function AccountPageContent() {
                       </div>
                       <p className="text-xs font-normal text-gray-500 dark:text-zinc-400 mt-1 truncate max-w-[180px]">
                         {authUser?.role === "Student" && studentNo ? (
-                          <span><span className="font-mono text-xs text-gray-700 dark:text-zinc-300 font-medium">{studentNo}</span> · {username}</span>
+                          <span className="font-mono text-xs text-gray-700 dark:text-zinc-300 font-medium">{studentNo}</span>
                         ) : (
                           authUser?.email || authUser?.username
                         )}

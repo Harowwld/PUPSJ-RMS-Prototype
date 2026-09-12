@@ -395,6 +395,7 @@ export async function executeOfficeBackup({ officeId, actorId = null } = {}) {
       "students",
       "student_office_memberships",
       "student_accounts",
+      "student_security_answers",
       "documents",
       "document_requests",
       "document_types",
@@ -710,7 +711,7 @@ export async function executeRestoreBackup(
     }
     if (normUserOffice === "osas") {
       const hasRegistrarOnlyTables = targetTables.some((t) =>
-        ["students", "student_accounts", "documents", "document_requests", "recognition_templates"].includes(t)
+        ["students", "student_accounts", "student_security_answers", "documents", "document_requests", "recognition_templates"].includes(t)
       );
       if (hasRegistrarOnlyTables) {
         throw new Error("Unauthorized: You cannot restore Registrar records to OSAS.");

@@ -859,7 +859,7 @@ export default function CampusOperationsTab({ showToast }) {
               )}
             </div>
 
-            <DialogFooter className="p-6 pt-0 bg-white dark:bg-card border-none flex items-center justify-between">
+            <DialogFooter className="m-0 p-6 pt-0 bg-white dark:bg-card border-none flex flex-row items-center justify-between sm:justify-between w-full">
               <span className="text-xs text-gray-500 dark:text-zinc-400">
                 Department: <strong className="text-gray-700 dark:text-zinc-200 uppercase font-semibold">{selectedItem?.officeId}</strong>
               </span>

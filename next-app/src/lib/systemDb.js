@@ -336,6 +336,15 @@ export async function getSystemDb() {
         FOREIGN KEY (question_id) REFERENCES security_questions(id) ON UPDATE CASCADE ON DELETE CASCADE
       );
 
+      CREATE TABLE IF NOT EXISTS student_security_answers (
+        student_account_id INTEGER NOT NULL,
+        question_id INTEGER NOT NULL,
+        answer_hash TEXT NOT NULL,
+        updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+        PRIMARY KEY (student_account_id, question_id),
+        FOREIGN KEY (question_id) REFERENCES security_questions(id) ON UPDATE CASCADE ON DELETE CASCADE
+      );
+
       CREATE TABLE IF NOT EXISTS staff_recovery_codes (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         staff_id TEXT NOT NULL,

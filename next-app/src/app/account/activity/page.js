@@ -37,6 +37,7 @@ import { generateAuditLogsPdf } from "@/lib/pdfGenerator";
 import { generateExportFilename } from "@/lib/exportHelpers";
 import PdfPreviewDialog from "@/components/admin/audit-logs/PdfPreviewDialog";
 import LogDetailSheet from "@/components/admin/audit-logs/LogDetailSheet";
+import LogPagination from "@/components/admin/audit-logs/LogPagination";
 import {
   FadeIn,
   SlideUp,
@@ -289,6 +290,13 @@ function StatCards({ isLoading, stats }) {
   );
 }
 
+function parseDateLocal(str) {
+  if (!str) return undefined;
+  const [y, m, d] = str.split("-").map(Number);
+  if (isNaN(y) || isNaN(m) || isNaN(d)) return undefined;
+  return new Date(y, m - 1, d);
+}
+
 function LogFilters({
   localSearch,
   handleSearchChange,
@@ -299,8 +307,8 @@ function LogFilters({
   logEndDate,
   setLogEndDate,
   setLogPage,
-  logTotal,
-  isLoading,
+  logTotal = 0,
+  isLoading = false,
 }) {
   const handleQuickRange = (range) => {
     const end = new Date();
@@ -317,12 +325,14 @@ function LogFilters({
         end.setHours(23, 59, 59, 999);
         break;
       case "last7":
-        start.setDate(start.getDate() - 7);
+        start.setDate(start.getDate() - 6);
         start.setHours(0, 0, 0, 0);
         break;
       case "last30":
-        start.setDate(start.getDate() - 30);
+        start.setDate(start.getDate() - 29);
         start.setHours(0, 0, 0, 0);
+        break;
+      default:
         break;
     }
 
@@ -334,75 +344,102 @@ function LogFilters({
   const activeShortcut = (() => {
     if (!logStartDate || !logEndDate) return null;
     const todayStr = format(new Date(), "yyyy-MM-dd");
-    
-    // Check Today
+
     if (logStartDate === todayStr && logEndDate === todayStr) return "today";
-    
-    // Check Yesterday
+
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
-    const yesterdayStr = format(yesterday, "yyyy-MM-dd");
-    if (logStartDate === yesterdayStr && logEndDate === yesterdayStr) return "yesterday";
-    
-    // Check 7 days
+    const yestStr = format(yesterday, "yyyy-MM-dd");
+    if (logStartDate === yestStr && logEndDate === yestStr) return "yesterday";
+
     const last7 = new Date();
-    last7.setDate(last7.getDate() - 7);
-    const last7Str = format(last7, "yyyy-MM-dd");
-    if (logStartDate === last7Str && logEndDate === todayStr) return "last7";
-    
-    // Check 30 days
+    last7.setDate(last7.getDate() - 6);
+    if (logStartDate === format(last7, "yyyy-MM-dd") && logEndDate === todayStr) return "last7";
+
     const last30 = new Date();
-    last30.setDate(last30.getDate() - 30);
-    const last30Str = format(last30, "yyyy-MM-dd");
-    if (logStartDate === last30Str && logEndDate === todayStr) return "last30";
-    
+    last30.setDate(last30.getDate() - 29);
+    if (logStartDate === format(last30, "yyyy-MM-dd") && logEndDate === todayStr) return "last30";
+
     return null;
   })();
 
   return (
     <div className={cn(
-      "bg-white border-t border-gray-100 p-4 backdrop-blur-md dark:bg-card/50 dark:border-white/10 transition-all duration-slow",
+      "border-t border-gray-100 dark:border-white/10 p-5 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30 transition-all duration-slow",
       isLoading ? "opacity-40 blur-[1px] grayscale-[0.1]" : "opacity-100"
     )}>
-      <div className="flex w-full flex-wrap items-center gap-5">
+      {/* Left: Severity Filter Line Tabs */}
+      <div className="flex items-center gap-6 shrink-0 select-none overflow-x-auto">
+        {[
+          { key: "All", label: `All Events (${logTotal > 0 ? logTotal.toLocaleString() : 0})` },
+          { key: "INFO", label: "Information" },
+          { key: "WARNING", label: "Warnings" },
+          { key: "CRITICAL", label: "Critical" },
+        ].map((tab) => {
+          const isActive = logSeverityFilter === tab.key;
+          return (
+            <button
+              key={tab.key}
+              type="button"
+              onClick={() => {
+                handleSeverityChange({ target: { value: tab.key } });
+                setLogPage(1);
+              }}
+              className={cn(
+                "relative h-9 flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent whitespace-nowrap",
+                isActive
+                  ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
+                  : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
+              )}
+            >
+              {tab.label}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Right: Search, Severity Select, Time Shortcuts, and Date Range Controls */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 flex-wrap">
         {/* Search */}
-        <div className="flex-[2] min-w-[280px] group relative">
-          <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-            <i className="ph-bold ph-magnifying-glass text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm"></i>
-          </div>
+        <div className="relative flex-1 sm:w-64 min-w-[200px] group">
+          <i className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-xs pointer-events-none" />
           <Input
             type="text"
-            placeholder="Search by action, details, or IP..."
-            className="h-9 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 pl-9 pr-20 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
+            placeholder="Search action, details, IP..."
+            className="pl-8 pr-16 h-9 text-xs w-full bg-white dark:bg-zinc-800 border border-gray-200 dark:border-white/10 rounded-xl placeholder:text-gray-400 dark:placeholder:text-zinc-500 text-gray-900 dark:text-zinc-100 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
             value={localSearch}
             onChange={handleSearchChange}
+            disabled={isLoading}
           />
-          <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[12px] font-normal text-gray-400 dark:text-zinc-500">
+          <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-[11px] text-gray-400 dark:text-zinc-500">
             {logTotal > 0 ? `${logTotal.toLocaleString()} results` : "0 results"}
           </div>
         </div>
 
-        {/* Severity Select */}
-        <div className="min-w-[130px] flex-1">
+        {/* Severity Select Dropdown */}
+        <div className="w-[140px] shrink-0">
           <Select
             value={logSeverityFilter}
             onChange={handleSeverityChange}
-            className="h-9 rounded-xl text-xs font-normal border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-200 cursor-pointer shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
+            disabled={isLoading}
+            className="h-9 rounded-xl border border-gray-200 text-xs font-normal text-[#111111] dark:text-zinc-200 bg-white dark:bg-zinc-800 dark:border-white/10 cursor-pointer shadow-none"
+            menuClassName="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-900 shadow-2xl p-1.5"
+            optionClassName="rounded-lg text-xs font-normal py-1.5 px-2.5 hover:bg-gray-100 dark:hover:bg-zinc-800"
           >
-            <option value="All">Severity</option>
+            <option value="All">All Severities</option>
             <option value="INFO">Information</option>
             <option value="WARNING">Warning</option>
             <option value="CRITICAL">Critical</option>
           </Select>
         </div>
 
-        {/* Time Period shortcuts */}
-        <div className="flex items-center gap-[12px] h-[36px] flex-none">
+        {/* Time Shortcuts */}
+        <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-gray-200/60 dark:border-white/5 shrink-0">
           {[
             { key: "today", label: "Today" },
-            { key: "yesterday", label: "Yesterday" },
-            { key: "last7", label: "7 days" },
-            { key: "last30", label: "30 days" },
+            { key: "yesterday", label: "Yest." },
+            { key: "last7", label: "7d" },
+            { key: "last30", label: "30d" },
           ].map((range) => {
             const isActive = activeShortcut === range.key;
             return (
@@ -411,10 +448,10 @@ function LogFilters({
                 type="button"
                 onClick={() => handleQuickRange(range.key)}
                 className={cn(
-                  "text-[12px] font-normal transition-all bg-transparent border-0 cursor-pointer shadow-none focus:outline-none focus:ring-0 pb-1",
-                  isActive 
-                    ? "text-pup-maroon dark:text-red-500 border-b-[2px] border-pup-maroon dark:border-red-500 font-medium" 
-                    : "text-gray-400 dark:text-zinc-500 hover:text-gray-600 dark:hover:text-zinc-300"
+                  "px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all cursor-pointer whitespace-nowrap",
+                  isActive
+                    ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
+                    : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
                 )}
               >
                 {range.label}
@@ -423,25 +460,25 @@ function LogFilters({
           })}
         </div>
 
-        {/* Date range picker */}
-        <div className="flex items-center gap-2 flex-none">
-          <div className="w-[120px]">
+        {/* Date Pickers */}
+        <div className="flex items-center gap-1.5 shrink-0">
+          <div className="w-[105px]">
             <Popover>
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
                   className={cn(
-                    "h-[36px] w-full justify-start rounded-[8px] border-[0.5px] border-gray-200 dark:border-white/10 bg-white dark:bg-card text-left text-[13px] font-normal shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-white/10",
+                    "h-9 w-full justify-start rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-left text-xs font-normal shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 px-2.5 cursor-pointer",
                     !logStartDate ? "text-gray-400 dark:text-zinc-500" : "text-gray-700 dark:text-zinc-200"
                   )}
                 >
-                  {logStartDate ? format(new Date(logStartDate), "MMM d, yyyy") : "Start Date"}
+                  {logStartDate ? format(parseDateLocal(logStartDate), "MMM d") : "Start"}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto rounded-2xl border border-gray-200 bg-white p-0 shadow-2xl dark:border-white/10 dark:bg-card" align="start">
                 <Calendar
                   mode="single"
-                  selected={logStartDate ? new Date(logStartDate) : undefined}
+                  selected={logStartDate ? parseDateLocal(logStartDate) : undefined}
                   onSelect={(date) => {
                     setLogStartDate(date ? format(date, "yyyy-MM-dd") : "");
                     setLogPage(1);
@@ -451,26 +488,24 @@ function LogFilters({
               </PopoverContent>
             </Popover>
           </div>
-          <div className="text-[12px] text-gray-400 dark:text-zinc-500 shrink-0">
-            →
-          </div>
-          <div className="w-[120px]">
+          <span className="text-[12px] text-gray-400 dark:text-zinc-500">→</span>
+          <div className="w-[105px]">
             <Popover>
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
                   className={cn(
-                    "h-[36px] w-full justify-start rounded-[8px] border-[0.5px] border-gray-200 dark:border-white/10 bg-white dark:bg-card text-left text-[13px] font-normal shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-white/10",
+                    "h-9 w-full justify-start rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-left text-xs font-normal shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 px-2.5 cursor-pointer",
                     !logEndDate ? "text-gray-400 dark:text-zinc-500" : "text-gray-700 dark:text-zinc-200"
                   )}
                 >
-                  {logEndDate ? format(new Date(logEndDate), "MMM d, yyyy") : "End Date"}
+                  {logEndDate ? format(parseDateLocal(logEndDate), "MMM d") : "End"}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto rounded-2xl border border-gray-200 bg-white p-0 shadow-2xl dark:border-white/10 dark:bg-card" align="start">
                 <Calendar
                   mode="single"
-                  selected={logEndDate ? new Date(logEndDate) : undefined}
+                  selected={logEndDate ? parseDateLocal(logEndDate) : undefined}
                   onSelect={(date) => {
                     setLogEndDate(date ? format(date, "yyyy-MM-dd") : "");
                     setLogPage(1);
@@ -955,57 +990,17 @@ function LogTable({
 
         {/* Pagination */}
         {logTotal > 0 && (
-          <div className="flex items-center justify-between border-t border-gray-100 bg-white p-6 px-8 rounded-b-2xl dark:border-white/10 dark:bg-card">
-            <div className="flex items-center gap-8 select-none cursor-default">
-              <div className="flex items-center gap-6 text-[12px] font-normal text-gray-400 dark:text-zinc-500">
-                <span>
-                  Showing {endItem - startItem + 1} of {logTotal}
-                </span>
-
-                <div className="flex items-center gap-1.5 border-l border-gray-200 pl-6 dark:border-white/10">
-                  <span className="text-[12px] text-gray-400 dark:text-zinc-500">Rows:</span>
-                  <div className="flex items-center gap-1">
-                    {[10, 20, 50, 100].map((size) => (
-                      <button
-                        key={size}
-                        type="button"
-                        onClick={() => handleItemsPerPageChange({ target: { value: size } })}
-                        className={`px-2 py-0.5 rounded-[4px] text-[12px] font-normal cursor-pointer transition-colors border-0 ${
-                          itemsPerPage === size
-                            ? "bg-gray-100 text-[#111111] font-medium dark:bg-white/10 dark:text-zinc-50"
-                            : "bg-transparent text-gray-450 dark:text-zinc-550 hover:text-gray-700 dark:hover:text-zinc-300"
-                        }`}
-                      >
-                        {size}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex shrink-0 items-center gap-3 select-none">
-              <button
-                disabled={logPage <= 1}
-                onClick={() => setLogPage((p) => Math.max(1, p - 1))}
-                className="h-8 bg-transparent text-[12px] font-normal text-gray-400 hover:text-pup-maroon dark:text-zinc-500 dark:hover:text-zinc-200 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer border-0 p-0"
-              >
-                Prev
-              </button>
-
-              <div className="flex h-8 min-w-[32px] items-center justify-center rounded-[6px] border border-gray-200/80 bg-white px-2.5 text-[12px] font-medium text-gray-900 dark:border-white/10 dark:bg-card dark:text-zinc-100">
-                {logPage}
-              </div>
-
-              <button
-                disabled={logPage >= totalPages}
-                onClick={() => setLogPage((p) => Math.min(totalPages, p + 1))}
-                className="h-8 bg-transparent text-[12px] font-normal text-gray-400 hover:text-pup-maroon dark:text-zinc-500 dark:hover:text-zinc-200 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer border-0 p-0"
-              >
-                Next
-              </button>
-            </div>
-          </div>
+          <LogPagination
+            logTotal={logTotal}
+            logPage={logPage}
+            setLogPage={setLogPage}
+            itemsPerPage={itemsPerPage}
+            displayCount={displayLogs.length}
+            handleItemsPerPageChange={(size) => {
+              setItemsPerPage(size);
+              setLogPage(1);
+            }}
+          />
         )}
       </div>
     </div>

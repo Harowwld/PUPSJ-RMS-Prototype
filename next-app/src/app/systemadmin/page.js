@@ -135,6 +135,17 @@ function SystemAdminPageContent({ authUser: propAuthUser }) {
     return () => window.removeEventListener("switch-view", handleSwitch)
   }, [router])
 
+  useEffect(() => {
+    const handleZoomChange = (e) => {
+      const { action } = e.detail || {}
+      if (action === "in") setZoomNode((prev) => Math.min(6, prev + 1))
+      else if (action === "out") setZoomNode((prev) => Math.max(0, prev - 1))
+      else if (action === "reset") setZoomNode(3)
+    }
+    window.addEventListener("change-zoom", handleZoomChange)
+    return () => window.removeEventListener("change-zoom", handleZoomChange)
+  }, [])
+
   const handleZoomMouseDown = (e) => {
     e.preventDefault()
     const track = e.currentTarget

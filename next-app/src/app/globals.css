@@ -5,6 +5,11 @@
 
 /* CSP-safe presentation helpers. Dynamic values are carried as data attributes
  * and consumed by typed attr() declarations instead of React style props. */
+:root {
+  --brand-accent: #800000;
+  --brand-foreground: #ffffff;
+}
+
 .rms-brand-scope {
   --brand-accent: #ad2f2f;
   --brand-foreground: #ffffff;
@@ -19,7 +24,7 @@
 }
 
 :root[data-brand-accent] {
-  --brand-accent: attr(data-brand-accent type(<color>), #ad2f2f);
+  --brand-accent: attr(data-brand-accent type(<color>), #800000);
 }
 
 :root[data-brand-foreground] {
@@ -48,47 +53,58 @@
 }
 
 .rms-style-width {
-  width: attr(data-width type(<percentage>), 0%);
+  --rms-width: attr(data-width type(<percentage>), 0%);
+  width: var(--rms-width, 0%);
 }
 
 .rms-style-width[data-width] {
-  width: attr(data-width type(<percentage>), 0%);
+  --rms-width: attr(data-width type(<percentage>), 0%);
+  width: var(--rms-width, 0%);
 }
 
 .rms-style-height {
-  height: attr(data-height type(<percentage>), 0%);
+  --rms-height: attr(data-height type(<percentage>), 0%);
+  height: var(--rms-height, 0%);
 }
 
 .rms-style-left {
-  left: attr(data-left type(<percentage>), 0%);
+  --rms-left: attr(data-left type(<percentage>), 0%);
+  left: var(--rms-left, 0%);
 }
 
 .rms-style-top {
-  top: attr(data-top type(<percentage>), 0%);
+  --rms-top: attr(data-top type(<percentage>), 0%);
+  top: var(--rms-top, 0%);
 }
 
 .rms-style-color {
-  color: attr(data-color type(<color>), currentColor);
+  --rms-color: attr(data-color type(<color>), currentColor);
+  color: var(--rms-color, currentColor);
 }
 
 .rms-style-color[data-text-color] {
-  color: attr(data-text-color type(<color>), currentColor);
+  --rms-text-color: attr(data-text-color type(<color>), currentColor);
+  color: var(--rms-text-color, currentColor);
 }
 
 .rms-style-background-color {
-  background-color: attr(data-color type(<color>), transparent);
+  --rms-bg-color: attr(data-color type(<color>), transparent);
+  background-color: var(--rms-bg-color, transparent);
 }
 
 .rms-style-background-color[data-background-color] {
-  background-color: attr(data-background-color type(<color>), transparent);
+  --rms-bg-color: attr(data-background-color type(<color>), transparent);
+  background-color: var(--rms-bg-color, transparent);
 }
 
 .rms-style-border-color {
-  border-color: attr(data-color type(<color>), currentColor);
+  --rms-border-color: attr(data-color type(<color>), currentColor);
+  border-color: var(--rms-border-color, currentColor);
 }
 
 .rms-style-border-color[data-border-color] {
-  border-color: attr(data-border-color type(<color>), currentColor);
+  --rms-border-color: attr(data-border-color type(<color>), currentColor);
+  border-color: var(--rms-border-color, currentColor);
 }
 
 .rms-style-border-box {
@@ -169,43 +185,61 @@
 }
 
 .rms-wayfinder-node {
-  left: attr(data-left type(<percentage>), 0%);
-  top: attr(data-top type(<percentage>), 0%);
+  --rms-left: attr(data-left type(<percentage>), 0%);
+  --rms-top: attr(data-top type(<percentage>), 0%);
+  left: var(--rms-left, 0%);
+  top: var(--rms-top, 0%);
   transform: translate(-50%, -50%);
 }
 
 .rms-wayfinder-dot {
-  background-color: attr(data-background-color type(<color>), currentColor);
+  --rms-dot-bg: attr(data-background-color type(<color>), currentColor);
+  background-color: var(--rms-dot-bg, currentColor);
 }
 
 .rms-door-position {
-  left: attr(data-left type(<percentage>), 0%);
-  top: attr(data-top type(<percentage>), 0%);
-  width: attr(data-width type(<percentage>), 0%);
-  height: attr(data-height type(<percentage>), 0%);
+  --rms-door-left: attr(data-left type(<percentage>), 0%);
+  --rms-door-top: attr(data-top type(<percentage>), 0%);
+  --rms-door-width: attr(data-width type(<percentage>), 0%);
+  --rms-door-height: attr(data-height type(<percentage>), 0%);
+  left: var(--rms-door-left, 0%);
+  top: var(--rms-door-top, 0%);
+  width: var(--rms-door-width, 0%);
+  height: var(--rms-door-height, 0%);
 }
 
 .rms-cabinet-position {
-  left: attr(data-left type(<percentage>), 0%);
-  top: attr(data-top type(<percentage>), 0%);
-  width: attr(data-width type(<length-percentage>), 0%);
-  height: attr(data-height type(<length-percentage>), 0%);
+  --rms-cab-left: attr(data-left type(<percentage>), 0%);
+  --rms-cab-top: attr(data-top type(<percentage>), 0%);
+  --rms-cab-width: attr(data-width type(<length-percentage>), 0%);
+  --rms-cab-height: attr(data-height type(<length-percentage>), 0%);
+  left: var(--rms-cab-left, 0%);
+  top: var(--rms-cab-top, 0%);
+  width: var(--rms-cab-width, 0%);
+  height: var(--rms-cab-height, 0%);
 }
 
 .rms-folder-back[data-start-color][data-end-color] {
-  background: linear-gradient(180deg, attr(data-start-color type(<color>)) 0%, attr(data-end-color type(<color>)) 100%);
+  --rms-start-color: attr(data-start-color type(<color>), transparent);
+  --rms-end-color: attr(data-end-color type(<color>), transparent);
+  background: linear-gradient(180deg, var(--rms-start-color) 0%, var(--rms-end-color) 100%);
 }
 
 .rms-folder-tab[data-start-color] {
-  background-color: attr(data-start-color type(<color>), transparent);
+  --rms-tab-start: attr(data-start-color type(<color>), transparent);
+  background-color: var(--rms-tab-start, transparent);
 }
 
 .rms-folder-front[data-start-color][data-end-color] {
-  background: linear-gradient(180deg, attr(data-start-color type(<color>)) 0%, attr(data-end-color type(<color>)) 100%);
+  --rms-front-start: attr(data-start-color type(<color>), transparent);
+  --rms-front-end: attr(data-end-color type(<color>), transparent);
+  background: linear-gradient(180deg, var(--rms-front-start) 0%, var(--rms-front-end) 100%);
 }
 
 .rms-folder-card[data-start-color][data-end-color] {
-  background: linear-gradient(135deg, attr(data-start-color type(<color>)) 0%, attr(data-end-color type(<color>)) 100%);
+  --rms-card-start: attr(data-start-color type(<color>), transparent);
+  --rms-card-end: attr(data-end-color type(<color>), transparent);
+  background: linear-gradient(135deg, var(--rms-card-start) 0%, var(--rms-card-end) 100%);
 }
 
 .rms-folder-perspective {
@@ -213,47 +247,62 @@
 }
 
 .rms-office-accent[data-color] {
-  color: attr(data-color type(<color>), currentColor);
-  background-color: color-mix(in srgb, attr(data-color type(<color>), #800000) 8%, transparent);
-  border-color: color-mix(in srgb, attr(data-color type(<color>), #800000) 20%, transparent);
+  --rms-office-color: attr(data-color type(<color>), currentColor);
+  color: var(--rms-office-color, currentColor);
+  background-color: color-mix(in srgb, var(--rms-office-color, #800000) 8%, transparent);
+  border-color: color-mix(in srgb, var(--rms-office-color, #800000) 20%, transparent);
 }
 
 .rms-style-rotate {
-  transform: rotate(attr(data-rotation type(<angle>), 0deg));
+  --rms-rotation: attr(data-rotation type(<angle>), 0deg);
+  transform: rotate(var(--rms-rotation, 0deg));
 }
 
 .rms-progress-transform {
-  transform: translateX(calc(attr(data-progress type(<percentage>), 0%) - 100%));
+  --rms-progress: attr(data-progress type(<percentage>), 0%);
+  transform: translateX(calc(var(--rms-progress, 0%) - 100%));
 }
 
 .rms-style-zoom {
-  zoom: attr(data-zoom type(<number>), 1);
+  --rms-zoom: attr(data-zoom type(<number>), 1);
+  zoom: var(--rms-zoom, 1);
 }
 
 .rms-style-transition-delay {
-  transition-delay: attr(data-transition-delay type(<time>), 0ms);
+  --rms-transition-delay: attr(data-transition-delay type(<time>), 0ms);
+  transition-delay: var(--rms-transition-delay, 0ms);
 }
 
 .rms-style-animation-delay {
-  animation-delay: attr(data-animation-delay type(<time>), 0ms);
+  --rms-animation-delay: attr(data-animation-delay type(<time>), 0ms);
+  animation-delay: var(--rms-animation-delay, 0ms);
 }
 
 .rms-style-aspect-ratio {
-  aspect-ratio: attr(data-aspect-ratio type(<number>), 1);
+  --rms-aspect-ratio: attr(data-aspect-ratio type(<number>), 1);
+  aspect-ratio: var(--rms-aspect-ratio, 1);
 }
 
 .rms-style-positioned-box {
-  left: attr(data-left type(<percentage>), 0%);
-  top: attr(data-top type(<percentage>), 0%);
-  width: attr(data-width type(<percentage>), 0%);
-  height: attr(data-height type(<percentage>), 0%);
+  --rms-box-left: attr(data-left type(<percentage>), 0%);
+  --rms-box-top: attr(data-top type(<percentage>), 0%);
+  --rms-box-width: attr(data-width type(<percentage>), 0%);
+  --rms-box-height: attr(data-height type(<percentage>), 0%);
+  left: var(--rms-box-left, 0%);
+  top: var(--rms-box-top, 0%);
+  width: var(--rms-box-width, 0%);
+  height: var(--rms-box-height, 0%);
 }
 
 .rms-style-preview-image {
-  left: attr(data-left type(<percentage>), 0%);
-  top: attr(data-top type(<percentage>), 0%);
-  width: attr(data-width type(<percentage>), 100%);
-  height: attr(data-height type(<percentage>), 100%);
+  --rms-prev-left: attr(data-left type(<percentage>), 0%);
+  --rms-prev-top: attr(data-top type(<percentage>), 0%);
+  --rms-prev-width: attr(data-width type(<percentage>), 100%);
+  --rms-prev-height: attr(data-height type(<percentage>), 100%);
+  left: var(--rms-prev-left, 0%);
+  top: var(--rms-prev-top, 0%);
+  width: var(--rms-prev-width, 100%);
+  height: var(--rms-prev-height, 100%);
 }
 
 .rms-toast-viewport {
@@ -382,8 +431,10 @@
 }
 
 .rms-tooltip-positioned {
-  top: attr(data-top type(<length>), 0px);
-  left: attr(data-left type(<length>), 0px);
+  --rms-tooltip-top: attr(data-top type(<length>), 0px);
+  --rms-tooltip-left: attr(data-left type(<length>), 0px);
+  top: var(--rms-tooltip-top, 0px);
+  left: var(--rms-tooltip-left, 0px);
 }
 
 .rms-tooltip-visible {
@@ -402,9 +453,12 @@
 }
 
 .rms-select-portal[data-top] {
-  top: attr(data-top type(<length>), 0px);
-  left: attr(data-left type(<length>), 0px);
-  width: attr(data-width type(<length>), auto);
+  --rms-portal-top: attr(data-top type(<length>), 0px);
+  --rms-portal-left: attr(data-left type(<length>), 0px);
+  --rms-portal-width: attr(data-width type(<length>), auto);
+  top: var(--rms-portal-top, 0px);
+  left: var(--rms-portal-left, 0px);
+  width: var(--rms-portal-width, auto);
 }
 
 .rms-liquid-glass-button {
@@ -413,11 +467,13 @@
 }
 
 .rms-liquid-glass-button[data-height] {
-  height: attr(data-height type(<length>), 40px);
+  --rms-btn-height: attr(data-height type(<length>), 40px);
+  height: var(--rms-btn-height, 40px);
 }
 
 .rms-liquid-glass-button[data-radius] {
-  border-radius: attr(data-radius type(<length>), 20px);
+  --rms-btn-radius: attr(data-radius type(<length>), 20px);
+  border-radius: var(--rms-btn-radius, 20px);
 }
 
 .rms-liquid-glass-button[data-theme-color="true"] {
@@ -427,7 +483,8 @@
 }
 
 .rms-liquid-glass-button[data-theme-color="false"] {
-  background: linear-gradient(135deg, attr(data-glass-color type(<color>), rgba(128, 0, 0, 0.15)), rgba(255, 255, 255, 0.05));
+  --rms-btn-glass: attr(data-glass-color type(<color>), rgba(128, 0, 0, 0.15));
+  background: linear-gradient(135deg, var(--rms-btn-glass, rgba(128, 0, 0, 0.15)), rgba(255, 255, 255, 0.05));
   border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
@@ -811,6 +868,40 @@
   --ease-accelerate: cubic-bezier(0.4, 0, 1, 1);
 }
 
+.dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.922 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.556 0 0);
+  --chart-1: oklch(0.488 0.243 264.376);
+  --chart-2: oklch(0.696 0.17 162.48);
+  --chart-3: oklch(0.769 0.188 70.08);
+  --chart-4: oklch(0.627 0.265 303.9);
+  --chart-5: oklch(0.645 0.246 16.439);
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.556 0 0);
+}
+
 @layer base {
   html, body {
     height: auto;
@@ -907,10 +998,10 @@ html, body {
   height: 2.75rem;
   padding: 0 1rem;
   background-color: #fff;
-  border: 1px solid oklch(var(--border));
+  border: 1px solid var(--border);
   border-radius: var(--radius-brand);
   font-size: 0.875rem;
-  color: oklch(var(--foreground));
+  color: var(--foreground);
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -926,7 +1017,7 @@ html, body {
 
 /* Custom Table Polish */
 .table-row-hover:hover {
-  background-color: oklch(var(--accent) / 40%);
+  background-color: color-mix(in srgb, var(--accent) 40%, transparent);
 }
 
 
@@ -959,6 +1050,7 @@ th {
 
 .animate-fade-up {
   /* Disabled entry animations */
+  animation: none;
 }
 
 /* Utility Components */
@@ -1069,21 +1161,14 @@ th {
   @apply bg-zinc-700 text-zinc-400 border-white/5;
 }
 
-/* View Transitions */
-::view-transition-old(root),
-::view-transition-new(root) {
-  animation-duration: 0.3s;
-  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-}
-
 /* Brand Buttons - Solid Maroon Style */
 .btn-brand-red {
-  background-color: var(--color-pup-maroon) !important;
+  background-color: var(--brand-accent, var(--color-pup-maroon)) !important;
   background-image: none !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
   border: none !important;
-  color: #ffffff !important;
+  color: var(--brand-foreground, #ffffff) !important;
   border-radius: var(--radius-xl, 14px) !important;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
   font-weight: 600 !important;
@@ -1092,12 +1177,12 @@ th {
 }
 
 .dark .btn-brand-red {
-  background-color: var(--color-pup-maroon) !important;
+  background-color: var(--brand-accent, var(--color-pup-maroon)) !important;
   box-shadow: none !important;
 }
 
 .btn-brand-red:hover {
-  background-color: var(--color-pup-darkMaroon) !important;
+  background-color: color-mix(in srgb, var(--brand-accent, var(--color-pup-maroon)) 85%, black) !important;
   background-image: none !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
@@ -1106,12 +1191,12 @@ th {
 }
 
 .dark .btn-brand-red:hover {
-  background-color: var(--color-pup-darkMaroon) !important;
+  background-color: color-mix(in srgb, var(--brand-accent, var(--color-pup-maroon)) 85%, black) !important;
   box-shadow: none !important;
 }
 
 .btn-brand-red:active {
-  background-color: var(--color-pup-darkMaroon) !important;
+  background-color: color-mix(in srgb, var(--brand-accent, var(--color-pup-maroon)) 75%, black) !important;
   background-image: none !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;

@@ -120,10 +120,10 @@ export default function ConfirmModal({
     const titleLower = (title || "").toLowerCase();
     if (labelLower === "restore" || titleLower.includes("restore")) {
       resolvedVariant = "success";
-    } else if (labelLower === "archive" || titleLower.includes("archive")) {
-      resolvedVariant = "warning";
-    } else {
+    } else if (labelLower.includes("delete") || titleLower.includes("delete") || labelLower.includes("remove") || titleLower.includes("remove") || labelLower.includes("purge") || titleLower.includes("purge") || labelLower.includes("decline") || titleLower.includes("decline")) {
       resolvedVariant = "danger";
+    } else {
+      resolvedVariant = "brand";
     }
   }
 
@@ -428,8 +428,8 @@ export default function ConfirmModal({
               "h-10 px-5 text-xs font-semibold rounded-xl! shadow-xs transition-all active:scale-95 cursor-pointer disabled:opacity-30 disabled:grayscale-[0.5] disabled:cursor-not-allowed",
               normalizedVariant === "success" && "btn-brand-green text-white",
               (normalizedVariant === "warning" && !isUnsavedChangesModal) && "bg-amber-600 hover:bg-amber-700 active:bg-amber-800 text-white border-0",
-              normalizedVariant === "brand" && "btn-brand-red text-white",
-              normalizedVariant === "danger" && "btn-brand-red text-white",
+              normalizedVariant === "brand" && "btn-brand-red",
+              normalizedVariant === "danger" && "bg-red-600 hover:bg-red-700 active:bg-red-800 text-white border-0",
               isUnsavedChangesModal && "bg-[#FF6410] hover:bg-[#e55300] active:bg-[#cc4a00] text-white border-0",
               isRegistrationModal && "w-[120px]",
               confirmClassName

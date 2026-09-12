@@ -21,6 +21,7 @@ import PromptModal from "@/components/shared/PromptModal"
 import PDFPreviewModal from "@/components/shared/PDFPreviewModal"
 import { TOTPChallengeModal } from "@/components/shared/TOTPChallengeModal"
 import { AdminGuard, useAuthUser } from "@/components/shared/AuthGuard"
+import { getRoleBranding } from "@/lib/roleBranding"
 
 import { generateExportFilename } from "@/lib/exportHelpers"
 import { formatPHDateTime } from "@/lib/timeFormat"
@@ -104,6 +105,17 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
     window.addEventListener("switch-view", handleSwitch)
     return () => window.removeEventListener("switch-view", handleSwitch)
   }, [router])
+
+  useEffect(() => {
+    const handleZoomChange = (e) => {
+      const { action } = e.detail || {}
+      if (action === "in") setZoomNode((prev) => Math.min(6, prev + 1))
+      else if (action === "out") setZoomNode((prev) => Math.max(0, prev - 1))
+      else if (action === "reset") setZoomNode(3)
+    }
+    window.addEventListener("change-zoom", handleZoomChange)
+    return () => window.removeEventListener("change-zoom", handleZoomChange)
+  }, [])
 
 
   const [viewLoading, setViewLoading] = useState({
@@ -1738,8 +1750,18 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
     )
   }
 
+  const roleBranding = getRoleBranding(authUser);
+  const brandAccent = authUser?.accent_color || roleBranding.color || "#EA580C";
+  const brandForeground = roleBranding.foreground || "#FFFFFF";
+
   return (
-    <div className="font-inter flex h-screen overflow-hidden flex-col bg-slate-50/30 dark:bg-zinc-950/30 relative transition-colors duration-300">
+    <div
+      className="font-inter flex h-screen overflow-hidden flex-col bg-slate-50/30 dark:bg-zinc-950/30 relative transition-colors duration-300"
+      style={{
+        "--brand-accent": brandAccent,
+        "--brand-foreground": brandForeground,
+      }}
+    >
       {/* Dynamic Liquid Glass Background Blobs */}
       <div className="liquid-container">
         <div className="liquid-blob liquid-blob-1"></div>

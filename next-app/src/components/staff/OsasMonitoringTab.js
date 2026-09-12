@@ -17,6 +17,7 @@ import {
 import PageHeader from "@/components/shared/PageHeader";
 import { RefreshButton } from "@/components/shared/RefreshButton";
 import OsasMonitoringSkeleton from "@/components/staff/skeletons/OsasMonitoringSkeleton";
+import PDFPreviewModal from "@/components/shared/PDFPreviewModal";
 
 const STATUS_OPTIONS = [
   "Submitted",
@@ -67,7 +68,7 @@ export function getProposalStatusDotClass(status) {
   return "bg-zinc-400";
 }
 
-function FirstPagePreview({ proposalId, title }) {
+function FirstPagePreview({ proposalId, title, onOpenPreview }) {
   const containerRef = useRef(null);
   const canvasRef = useRef(null);
   const [loading, setLoading] = useState(true);
@@ -152,17 +153,18 @@ function FirstPagePreview({ proposalId, title }) {
           </div>
           <p className="text-xs font-semibold text-gray-800 dark:text-zinc-200">Official Document On File</p>
           <p className="text-[11px] text-gray-400 dark:text-zinc-500 max-w-xs mt-0.5 mb-3">
-            Canvas preview could not be rendered inline. You can view or download the complete proposal PDF directly.
+            Canvas preview could not be rendered inline. You can preview or download the complete proposal PDF.
           </p>
-          <a
-            href={`/api/osas/event-proposals/${proposalId}?file=1`}
-            target="_blank"
-            rel="noreferrer"
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={onOpenPreview || (() => window.open(`/api/osas/event-proposals/${proposalId}?file=1`, "_blank"))}
             className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-white dark:bg-zinc-800 border border-gray-200 dark:border-white/10 text-pup-maroon dark:text-red-400 hover:bg-gray-50 shadow-2xs cursor-pointer active:scale-95 transition-all"
           >
-            <span>Open PDF Document</span>
-            <i className="ph-bold ph-arrow-square-out text-xs"></i>
-          </a>
+            <span>Preview PDF Document</span>
+            <i className="ph-bold ph-eye text-xs"></i>
+          </Button>
         </div>
       </div>
     );
@@ -172,7 +174,11 @@ function FirstPagePreview({ proposalId, title }) {
     <div className="space-y-2">
       <div
         ref={containerRef}
-        className="relative flex min-h-[220px] w-full items-center justify-center overflow-hidden rounded-xl border border-gray-200 bg-gray-50/80 p-2 dark:border-white/10 dark:bg-zinc-900/60"
+        onClick={onOpenPreview}
+        className={cn(
+          "relative flex min-h-[220px] w-full items-center justify-center overflow-hidden rounded-xl border border-gray-200 bg-gray-50/80 p-2 dark:border-white/10 dark:bg-zinc-900/60 transition-all",
+          onOpenPreview && "cursor-pointer hover:border-pup-maroon/40 hover:shadow-xs group"
+        )}
         aria-label={`First-page preview of ${title}`}
       >
         {loading && (
@@ -181,19 +187,24 @@ function FirstPagePreview({ proposalId, title }) {
             <span className="text-xs font-medium">Rendering document preview...</span>
           </div>
         )}
-        <canvas ref={canvasRef} className="rounded shadow-xs max-h-[360px] object-contain" />
+        <canvas ref={canvasRef} className="rounded shadow-xs max-h-[360px] object-contain group-hover:opacity-95 transition-opacity" />
+        {onOpenPreview && !loading && (
+          <div className="absolute bottom-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity bg-black/60 text-white text-[11px] font-medium px-2.5 py-1 rounded-lg backdrop-blur-xs flex items-center gap-1 shadow-sm">
+            <i className="ph-bold ph-magnifying-glass-plus"></i>
+            <span>Click to Preview</span>
+          </div>
+        )}
       </div>
       <div className="flex items-center justify-between">
         <span className="text-[11px] text-gray-400 dark:text-zinc-500">Page 1 of official proposal submission</span>
-        <a
-          href={`/api/osas/event-proposals/${proposalId}?file=1`}
-          target="_blank"
-          rel="noreferrer"
-          className="inline-flex items-center gap-1 text-xs font-semibold text-pup-maroon hover:underline dark:text-red-400"
+        <button
+          type="button"
+          onClick={onOpenPreview || (() => window.open(`/api/osas/event-proposals/${proposalId}?file=1`, "_blank"))}
+          className="inline-flex items-center gap-1 text-xs font-semibold text-pup-maroon hover:underline dark:text-red-400 cursor-pointer"
         >
-          <span>Open Full PDF</span>
-          <i className="ph-bold ph-arrow-square-out text-xs"></i>
-        </a>
+          <span>Preview Full PDF</span>
+          <i className="ph-bold ph-eye text-xs"></i>
+        </button>
       </div>
     </div>
   );
@@ -203,6 +214,22 @@ export default function OsasMonitoringTab({ showToast }) {
   const [rows, setRows] = useState([]);
   const [selected, setSelected] = useState(null);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [pdfPreviewOpen, setPdfPreviewOpen] = useState(false);
+  const [pdfPreviewData, setPdfPreviewData] = useState(null);
+
+  const handleOpenPdfPreview = useCallback((proposal) => {
+    if (!proposal?.id) return;
+    setPdfPreviewData({
+      url: `/api/osas/event-proposals/${proposal.id}?file=1`,
+      title: proposal.title || "Event Proposal",
+      subtitle: `Viewing official event proposal submitted by ${proposal.organization_name || proposal.student_name || "Organization"}.`,
+      studentName: proposal.student_name,
+      docType: "Event Proposal",
+      originalFilename: proposal.original_filename || "Proposal.pdf",
+    });
+    setPdfPreviewOpen(true);
+  }, []);
+
   const [viewMode, setViewMode] = useState("list"); // "list" | "kanban"
   const [status, setStatus] = useState("Submitted");
   const [note, setNote] = useState("");
@@ -973,7 +1000,11 @@ export default function OsasMonitoringTab({ showToast }) {
                   <h4 className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-400">
                     Official Proposal Document
                   </h4>
-                  <FirstPagePreview proposalId={selected.id} title={selected.title} />
+                  <FirstPagePreview
+                    proposalId={selected.id}
+                    title={selected.title}
+                    onOpenPreview={() => handleOpenPdfPreview(selected)}
+                  />
                 </div>
 
                 {/* Action Form: Update Status & Publish Note */}
@@ -1098,6 +1129,16 @@ export default function OsasMonitoringTab({ showToast }) {
           )}
         </SheetContent>
       </Sheet>
+
+      {/* PDF Document Preview Modal */}
+      <PDFPreviewModal
+        open={pdfPreviewOpen}
+        onClose={() => {
+          setPdfPreviewOpen(false);
+          setPdfPreviewData(null);
+        }}
+        preview={pdfPreviewData}
+      />
     </div>
   );
 }

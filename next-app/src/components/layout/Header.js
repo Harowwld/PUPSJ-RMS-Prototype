@@ -57,7 +57,7 @@ export default function Header({ authUser, onLogout, children }) {
     return () => window.removeEventListener("avatar-changed", handleAvatarChanged);
   }, []);
 
-  // Global shortcut (Ctrl+K on Windows/Linux or Cmd+K on Mac) to toggle command palette modal
+  // Global shortcut (Ctrl+K to toggle command palette, Ctrl+B to toggle sidebar)
   useEffect(() => {
     const handleKeyDown = (e) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
@@ -69,6 +69,9 @@ export default function Header({ authUser, onLogout, children }) {
           }
           return !prev;
         });
+      } else if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "b") {
+        e.preventDefault();
+        window.dispatchEvent(new CustomEvent("toggle-sidebar"));
       }
     };
     window.addEventListener("keydown", handleKeyDown);
@@ -234,115 +237,592 @@ export default function Header({ authUser, onLogout, children }) {
   })();
 
 
+  // Track active tab view to display "Active" indicator in Command Palette
+  const [currentTab, setCurrentTab] = useState(() => {
+    if (typeof window !== "undefined") {
+      return new URLSearchParams(window.location.search).get("view") || "";
+    }
+    return "";
+  });
+
+  useEffect(() => {
+    const handleSwitch = (e) => {
+      if (e.detail?.view) {
+        setCurrentTab(e.detail.view);
+      }
+    };
+    window.addEventListener("switch-view", handleSwitch);
+    return () => window.removeEventListener("switch-view", handleSwitch);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const v = new URLSearchParams(window.location.search).get("view");
+      if (v) setCurrentTab(v);
+    }
+  }, [pathname, commandOpen]);
+
+  const defaultTab = isStudent
+    ? "odrs"
+    : activeView === "systemadmin"
+      ? "offices"
+      : activeView === "admin"
+        ? "review"
+        : "requests";
+  const activeTabKey = currentTab || defaultTab;
+
   // ---------------------------------------------------------------------------
-  // STRICTLY SCOPED COMMAND PALETTE (CURRENT VIEW'S SIDEBAR + USER ACCOUNT)
+  // STRUCTURED COMMAND PALETTE HIERARCHY (SIDEBAR GROUPS + CONTROLS + ACCOUNT)
   // ---------------------------------------------------------------------------
-  const { sidebarMatches, accountMatches, allSuggestions } = useMemo(() => {
+  const { filteredGroups, flatSuggestions } = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
     const enabledModules = new Set(authUser?.enabled_modules || []);
     const hasModuleFilter = Array.isArray(authUser?.enabled_modules) && authUser.enabled_modules.length > 0;
 
-    // 1. Sidebar items specific to the active view
-    let currentViewSidebarItems = [];
+    let candidateGroups = [];
 
     if (activeView === "systemadmin") {
-      currentViewSidebarItems = [
-        { label: "Departments & Stations", view: "offices", icon: "ph-bold ph-buildings", badge: "View", keywords: "offices departments stations campus registry osas admissions library accounting admin governance units" },
-        { label: "Department Features", view: "modules", icon: "ph-bold ph-squares-four", badge: "View", keywords: "features matrix permissions feature flags modules config toggle access roles" },
-        { label: "Global Directory", view: "staff", icon: "ph-bold ph-users", badge: "View", keywords: "directory personnel users accounts staff global roles administrators employees" },
-        { label: "Platform Audit Trail", view: "logs", icon: "ph-bold ph-history", badge: "View", keywords: "audit logs security platform activity history transactions compliance events" },
-        { label: "Campus Operations", view: "health", icon: "ph-bold ph-activity", badge: "View", keywords: "campus operations system health telemetry status memory database ping metrics activity monitoring registrar odrs osas online services transactions" },
-        { label: "Platform Backups", view: "backups", icon: "ph-bold ph-cloud-arrow-up", badge: "View", keywords: "platform backups platforms backups database snapshots postgres dump restore export recovery archive maintenance automated schedule cloud" },
-        { label: "Landing Page CMS", view: "landing", icon: "ph-bold ph-layout", badge: "View", keywords: "landing page cms public portal content website builder customization homepage portal editor" },
-        
-        // Deep navigation sections for Landing Page CMS
-        { label: "Landing CMS: Hero Section", view: "landing", section: "hero", icon: "ph-bold ph-image", badge: "Section", keywords: "landing cms hero section banner headline slides background photos rotation" },
-        { label: "Landing CMS: Bento Grid", view: "landing", section: "bento", icon: "ph-bold ph-squares-four", badge: "Section", keywords: "landing cms bento grid features cards highlights showcase preview" },
-        { label: "Landing CMS: Workflow & Steps", view: "landing", section: "workflow", icon: "ph-bold ph-git-merge", badge: "Section", keywords: "landing cms workflow steps how it works pipeline guide process" },
-        { label: "Landing CMS: Academic Catalog", view: "landing", section: "catalog", icon: "ph-bold ph-books", badge: "Section", keywords: "landing cms academic catalog courses degrees document types requirements" },
-        { label: "Landing CMS: FAQ Section", view: "landing", section: "faq", icon: "ph-bold ph-question", badge: "Section", keywords: "landing cms faq accordion questions answers help support common inquiries" },
-        { label: "Landing CMS: Institutional Footer", view: "landing", section: "footer", icon: "ph-bold ph-panel-bottom", badge: "Section", keywords: "landing cms footer credentials address contact copyright socials links" },
+      candidateGroups = [
+        {
+          id: "sys_gov",
+          title: "Institutional Governance",
+          badge: "System Admin",
+          items: [
+            {
+              label: "Departments & Stations",
+              view: "offices",
+              icon: "ph-bold ph-buildings",
+              breadcrumb: "Institutional Governance • View",
+              keywords: "offices departments stations campus registry osas admissions library accounting admin governance units colleges",
+            },
+            {
+              label: "Department Features",
+              view: "modules",
+              icon: "ph-bold ph-squares-four",
+              breadcrumb: "Institutional Governance • View",
+              keywords: "features matrix permissions feature flags modules config toggle access roles",
+            },
+          ],
+        },
+        {
+          id: "sys_access",
+          title: "Access & Audit",
+          badge: "System Admin",
+          items: [
+            {
+              label: "Global Directory",
+              view: "staff",
+              icon: "ph-bold ph-users",
+              breadcrumb: "Access & Audit • View",
+              keywords: "directory personnel users accounts staff global roles administrators employees",
+            },
+            {
+              label: "Security Questions",
+              view: "security",
+              icon: "ph-bold ph-shield-check",
+              breadcrumb: "Access & Audit • View",
+              keywords: "security questions password reset recovery verification questions authentication",
+            },
+            {
+              label: "Platform Audit Trail",
+              view: "logs",
+              icon: "ph-bold ph-history",
+              breadcrumb: "Access & Audit • View",
+              keywords: "audit logs security platform activity history transactions compliance events logs",
+            },
+          ],
+        },
+        {
+          id: "sys_ops",
+          title: "Operations & Reliability",
+          badge: "System Admin",
+          items: [
+            {
+              label: "Campus Operations",
+              view: "health",
+              icon: "ph-bold ph-activity",
+              breadcrumb: "Operations & Reliability • View",
+              keywords: "campus operations system health telemetry status memory database ping metrics activity monitoring",
+            },
+            {
+              label: "Platform Backups",
+              view: "backups",
+              icon: "ph-bold ph-cloud-arrow-up",
+              breadcrumb: "Operations & Reliability • View",
+              keywords: "platform backups database snapshots postgres dump restore export recovery archive maintenance automated schedule cloud",
+            },
+          ],
+        },
+        {
+          id: "sys_portal",
+          title: "Public Portal & Content",
+          badge: "System Admin",
+          items: [
+            {
+              label: "Landing Page CMS",
+              view: "landing",
+              icon: "ph-bold ph-layout",
+              breadcrumb: "Public Portal & Content • View",
+              keywords: "landing page cms public portal content website builder customization homepage portal editor",
+            },
+            {
+              label: "Landing CMS: Hero Section",
+              view: "landing",
+              section: "hero",
+              icon: "ph-bold ph-image",
+              breadcrumb: "Landing CMS • Section",
+              keywords: "landing cms hero section banner headline slides background photos rotation",
+            },
+            {
+              label: "Landing CMS: Bento Grid",
+              view: "landing",
+              section: "bento",
+              icon: "ph-bold ph-squares-four",
+              breadcrumb: "Landing CMS • Section",
+              keywords: "landing cms bento grid features cards highlights showcase preview",
+            },
+            {
+              label: "Landing CMS: Workflow & Steps",
+              view: "landing",
+              section: "workflow",
+              icon: "ph-bold ph-git-merge",
+              breadcrumb: "Landing CMS • Section",
+              keywords: "landing cms workflow steps how it works pipeline guide process",
+            },
+            {
+              label: "Landing CMS: Academic Catalog",
+              view: "landing",
+              section: "catalog",
+              icon: "ph-bold ph-books",
+              breadcrumb: "Landing CMS • Section",
+              keywords: "landing cms academic catalog courses degrees document types requirements",
+            },
+            {
+              label: "Landing CMS: FAQ Section",
+              view: "landing",
+              section: "faq",
+              icon: "ph-bold ph-question",
+              breadcrumb: "Landing CMS • Section",
+              keywords: "landing cms faq accordion questions answers help support common inquiries",
+            },
+            {
+              label: "Landing CMS: Institutional Footer",
+              view: "landing",
+              section: "footer",
+              icon: "ph-bold ph-panel-bottom",
+              breadcrumb: "Landing CMS • Section",
+              keywords: "landing cms footer credentials address contact copyright socials links",
+            },
+          ],
+        },
       ];
     } else if (activeView === "admin") {
-      const allAdminTabs = [
-        { label: "Records Review", view: "review", icon: "ph-bold ph-seal-check", module: "records_review", keywords: "approve decline pending documents review scans" },
-        { label: "Compliance Dashboard", view: "digitization", icon: "ph-bold ph-chart-bar", module: "compliance_analytics", keywords: "metrics compliance digitization statistics kpi" },
-        { label: "Requests Analytics", view: "request_analytics", icon: "ph-bold ph-trend-up", module: "request_analytics", keywords: "sla analytics turnaround duration requests" },
-        { label: "Staff Directory", view: "directory", icon: "ph-bold ph-users", module: "staff_directory", keywords: "directory staff users personnel accounts" },
-        { label: "Storage Room Layout Editor", view: "storage_layout", icon: "ph-bold ph-warehouse", module: "storage_layout", keywords: "room cabinet drawer layout 2d map archive physical" },
-        { label: "System Configuration", view: "system_data", icon: "ph-bold ph-gear", module: "system_config", keywords: "courses sections doc types document types config" },
-        { label: "Backup Maintenance", view: "system", icon: "ph-bold ph-database", module: "backup", keywords: "backup restore export encrypted snapshots" },
-        { label: "Audit Logs", view: "logs", icon: "ph-bold ph-clock-counter-clockwise", module: "audit_logs", keywords: "audit trail history logs security" },
+      const allAdminGroups = [
+        {
+          id: "adm_ops",
+          title: "Operations & Analytics",
+          badge: "Office Admin",
+          items: [
+            {
+              label: "Records Review",
+              view: "review",
+              icon: "ph-bold ph-seal-check",
+              module: "records_review",
+              breadcrumb: "Operations & Analytics • View",
+              keywords: "approve decline pending documents review scans verify verification records review queue",
+            },
+            {
+              label: "Compliance Dashboard",
+              view: "digitization",
+              icon: "ph-bold ph-chart-bar",
+              module: "compliance_analytics",
+              breadcrumb: "Operations & Analytics • View",
+              keywords: "metrics compliance digitization statistics kpi analytics progress monitoring",
+            },
+            {
+              label: "Requests Analytics",
+              view: "request_analytics",
+              icon: "ph-bold ph-trend-up",
+              module: "request_analytics",
+              breadcrumb: "Operations & Analytics • View",
+              keywords: "sla analytics turnaround duration requests fulfillment speed document requests",
+            },
+          ],
+        },
+        {
+          id: "adm_user",
+          title: "User Management",
+          badge: "Office Admin",
+          items: [
+            {
+              label: "Staff Directory",
+              view: "directory",
+              icon: "ph-bold ph-users",
+              module: "staff_directory",
+              breadcrumb: "User Management • View",
+              keywords: "directory staff users personnel accounts team members roles active inactive",
+            },
+          ],
+        },
+        {
+          id: "adm_system",
+          title: "System Configuration",
+          badge: "Office Admin",
+          items: [
+            {
+              label: "Storage Room Layout",
+              view: "storage_layout",
+              icon: "ph-bold ph-warehouse",
+              module: "storage_layout",
+              breadcrumb: "System Configuration • View",
+              keywords: "storage room cabinet drawer layout 2d map archive physical locator storage editor",
+            },
+            {
+              label: "System Configuration",
+              view: "system_data",
+              icon: "ph-bold ph-gear",
+              module: "system_config",
+              breadcrumb: "System Configuration • View",
+              keywords: "courses sections doc types document types config system data institutional",
+            },
+            {
+              label: "Backup Maintenance",
+              view: "system",
+              icon: "ph-bold ph-database",
+              module: "backup",
+              breadcrumb: "System Configuration • View",
+              keywords: "backup maintenance database restore export encrypted snapshots recovery snapshots",
+            },
+            {
+              label: "Audit Logs",
+              view: "logs",
+              icon: "ph-bold ph-clock-counter-clockwise",
+              module: "audit_logs",
+              breadcrumb: "System Configuration • View",
+              keywords: "audit trail history logs security compliance user activity events",
+            },
+          ],
+        },
       ];
-      currentViewSidebarItems = allAdminTabs.filter(item => !hasModuleFilter || !item.module || enabledModules.has(item.module));
-    } else if (activeView === "staff") {
-      const allStaffTabs = [
-        // Operations
-        { label: "Document Requests", view: "requests", icon: "ph-bold ph-tray-arrow-up", module: "document_requests", badge: "Operations", keywords: "document requests odrs transcript diploma certification operations" },
-        { label: "OSAS Monitoring", view: "osas_monitoring", icon: "ph-bold ph-student", module: "osas_monitoring", badge: "Operations", keywords: "osas student affairs proposals events monitoring activities organizations" },
-        { label: "Scan & Upload", view: "upload", icon: "ph-bold ph-scan", module: "scan_upload", badge: "Operations", keywords: "scan upload ocr document new ingest single upload file" },
-        { label: "Batch Review", view: "batch_review", icon: "ph-bold ph-check-square", module: "scan_upload", badge: "Operations", keywords: "batch review scan queue bulk verification inspect documents" },
-        { label: "Documents", view: "documents", icon: "ph-bold ph-file-text", module: "documents", badge: "Operations", keywords: "documents student records files matrix status table" },
-        { label: "Notifications", view: "notifications", icon: "ph-bold ph-bell", module: "notifications", badge: "Operations", keywords: "notifications alerts messages unread updates" },
 
-        // Records Archive
-        { label: "Records & Archive", view: "search", icon: "ph-bold ph-archive-box", module: "records_archive", badge: "Records Archive", keywords: "records archive search students repository files folders year" },
-        { label: "Student Directory", view: "students", icon: "ph-bold ph-users", module: "student_directory", badge: "Records Archive", keywords: "student directory students profiles records directory list search archive" },
-        { label: "Storage Explorer", view: "storage", icon: "ph-bold ph-folder-open", module: "storage_explorer", badge: "Records Archive", keywords: "physical archive explorer room cabinet drawer storage 2d locator map" },
+      candidateGroups = allAdminGroups
+        .map((group) => ({
+          ...group,
+          items: group.items.filter((item) => !hasModuleFilter || !item.module || enabledModules.has(item.module)),
+        }))
+        .filter((group) => group.items.length > 0);
+    } else if (activeView === "staff") {
+      const allStaffGroups = [
+        {
+          id: "stf_ops",
+          title: "Operations",
+          badge: "Staff",
+          items: [
+            {
+              label: "Document Requests",
+              view: "requests",
+              icon: "ph-bold ph-tray-arrow-up",
+              module: "document_requests",
+              breadcrumb: "Operations • View",
+              keywords: "document requests odrs transcript diploma certification operations processing client requests",
+            },
+            {
+              label: "OSAS Monitoring",
+              view: "osas_monitoring",
+              icon: "ph-bold ph-student",
+              module: "osas_monitoring",
+              breadcrumb: "Operations • View",
+              keywords: "osas student affairs proposals events monitoring activities organizations student submissions",
+            },
+            {
+              label: "Scan & Upload",
+              view: "upload",
+              icon: "ph-bold ph-scan",
+              module: "scan_upload",
+              breadcrumb: "Operations • View",
+              keywords: "scan upload ocr document new ingest single upload file scanner digitization",
+            },
+            {
+              label: "Batch Review",
+              view: "batch_review",
+              icon: "ph-bold ph-check-square",
+              module: "scan_upload",
+              breadcrumb: "Operations • View",
+              keywords: "batch review scan queue bulk verification inspect documents approve decline scans",
+            },
+            {
+              label: "Documents Matrix",
+              view: "documents",
+              icon: "ph-bold ph-file-text",
+              module: "documents",
+              breadcrumb: "Operations • View",
+              keywords: "documents student records files matrix status table repository search documents",
+            },
+            {
+              label: "Notifications",
+              view: "notifications",
+              icon: "ph-bold ph-bell",
+              module: "notifications",
+              breadcrumb: "Operations • View",
+              keywords: "notifications alerts messages unread updates inbox reminders",
+            },
+          ],
+        },
+        {
+          id: "stf_records",
+          title: "Records Archive",
+          badge: "Staff",
+          items: [
+            {
+              label: "Records & Archive",
+              view: "search",
+              icon: "ph-bold ph-archive-box",
+              module: "records_archive",
+              breadcrumb: "Records Archive • View",
+              keywords: "records archive search students repository files folders year levels browse files",
+            },
+            {
+              label: "Student Directory",
+              view: "students",
+              icon: "ph-bold ph-users",
+              module: "student_directory",
+              breadcrumb: "Records Archive • View",
+              keywords: "student directory students profiles records directory list search archive",
+            },
+            {
+              label: "Storage Explorer",
+              view: "storage",
+              icon: "ph-bold ph-folder-open",
+              module: "storage_explorer",
+              breadcrumb: "Records Archive • View",
+              keywords: "physical archive explorer room cabinet drawer storage 2d locator map locator",
+            },
+          ],
+        },
       ];
-      currentViewSidebarItems = allStaffTabs.filter(item => {
-        if (!hasModuleFilter || !item.module) return true;
-        if (item.view === "students") {
-          return enabledModules.has("student_directory") || enabledModules.has("records_archive");
-        }
-        return enabledModules.has(item.module);
-      });
+
+      candidateGroups = allStaffGroups
+        .map((group) => ({
+          ...group,
+          items: group.items.filter((item) => {
+            if (!hasModuleFilter || !item.module) return true;
+            if (item.view === "students") {
+              return enabledModules.has("student_directory") || enabledModules.has("records_archive");
+            }
+            return enabledModules.has(item.module);
+          }),
+        }))
+        .filter((group) => group.items.length > 0);
+    } else if (isStudent || activeView === "student") {
+      candidateGroups = [
+        {
+          id: "stu_services",
+          title: "Student Services",
+          badge: "Student Portal",
+          items: [
+            {
+              label: "Document Requests",
+              view: "odrs",
+              icon: "ph-bold ph-file-text",
+              breadcrumb: "Student Services • View",
+              keywords: "document requests odrs transcript diploma certificate grades official records tracking new request status",
+            },
+            {
+              label: "Document Checklist & Compliance",
+              view: "compliance",
+              icon: "ph-bold ph-clipboard-check",
+              breadcrumb: "Student Services • View",
+              keywords: "document checklist compliance requirements missing documents submitted documents compliance status form 137 psa birth certificate unsubmitted pending",
+            },
+            {
+              label: "OSAS Submissions",
+              view: "osas",
+              icon: "ph-bold ph-student",
+              breadcrumb: "Student Services • View",
+              keywords: "osas submissions event proposals activity student affairs organizations clearance submit proposal",
+            },
+          ],
+        },
+        {
+          id: "stu_records",
+          title: "Student Records & History",
+          badge: "Student Portal",
+          items: [
+            {
+              label: "My Activity",
+              view: "activity",
+              icon: "ph-bold ph-clock-counter-clockwise",
+              breadcrumb: "Account & Records • View",
+              keywords: "my activity timeline history logs requests actions personal student log",
+            },
+          ],
+        },
+      ];
     }
 
-    const filteredSidebar = q
-      ? currentViewSidebarItems.filter(item => `${item.label} ${item.badge || ""} ${item.keywords || ""}`.toLowerCase().includes(q))
-      : currentViewSidebarItems;
+    // Universal Sidebar Controls & Navigation Utilities
+    const controlsGroup = {
+      id: "controls",
+      title: "Sidebar & Navigation Controls",
+      badge: "Controls",
+      items: [
+        {
+          label: "Toggle Sidebar",
+          action: "toggle-sidebar",
+          icon: "ph-bold ph-sidebar-simple",
+          shortcut: isMac ? "⌘B" : "CTRL B",
+          breadcrumb: "Navigation • Action",
+          keywords: "toggle sidebar collapse expand hide show drawer panel navigation view hide sidebar",
+        },
+        ...(!isStudent ? [
+          {
+            label: "Reset Scale / Zoom (100%)",
+            action: "zoom-reset",
+            icon: "ph-bold ph-arrows-out-line-horizontal",
+            breadcrumb: "Layout Scale • Action",
+            keywords: "reset scale zoom default 100% normal view layout size restore",
+          },
+          {
+            label: "Zoom In (+8%)",
+            action: "zoom-in",
+            icon: "ph-bold ph-magnifying-glass-plus",
+            breadcrumb: "Layout Scale • Action",
+            keywords: "zoom in enlarge scale increase size bigger larger view",
+          },
+          {
+            label: "Zoom Out (-8%)",
+            action: "zoom-out",
+            icon: "ph-bold ph-magnifying-glass-minus",
+            breadcrumb: "Layout Scale • Action",
+            keywords: "zoom out shrink scale decrease size smaller view",
+          },
+        ] : []),
+        ...(hasAdminRights && !isSuperAdmin ? [
+          activeView === "admin" ? {
+            label: "Switch to Staff View",
+            action: "switch-role",
+            targetRole: "staff",
+            icon: "ph-bold ph-users",
+            breadcrumb: "Role Mode • Action",
+            keywords: "switch to staff view operations portal toggle role personnel",
+          } : {
+            label: "Switch to Admin View",
+            action: "switch-role",
+            targetRole: "admin",
+            icon: "ph-bold ph-shield-check",
+            breadcrumb: "Role Mode • Action",
+            keywords: "switch to admin view administrator management toggle role governance",
+          }
+        ] : []),
+        ...((pathname === "/account" || pathname === "/account/activity") ? [
+          {
+            label: "Return to Dashboard",
+            action: "return-dashboard",
+            icon: "ph-bold ph-layout",
+            breadcrumb: "Navigation • Action",
+            keywords: "return back dashboard home main view exit settings leave",
+          }
+        ] : []),
+      ],
+    };
 
-    // 2. Account & Profile items (Always available for active session)
-    const allAccountItems = [
-      {
-        label: "Account Settings",
-        type: "account",
-        url: "/account",
-        icon: "ph-bold ph-gear",
-        keywords: "account settings my profile password credentials preferences security totp",
-      },
-      {
-        label: "My Activity",
-        type: "account",
-        url: "/account/activity",
-        icon: "ph-bold ph-clock-counter-clockwise",
-        keywords: "my activity history personal audit logs login sessions",
-      },
-      {
-        label: "Sign Out",
-        type: "account",
-        action: "logout",
-        icon: "ph-bold ph-sign-out",
-        keywords: "sign out log out exit leave",
-      }
-    ];
+    // User Account & Session Group
+    const accountGroup = {
+      id: "account",
+      title: "Account & Session",
+      badge: "User Profile",
+      items: [
+        {
+          label: "Account Settings",
+          url: "/account",
+          icon: "ph-bold ph-gear",
+          breadcrumb: "Preferences • Settings",
+          keywords: "account settings my profile password credentials preferences security 2fa totp edit profile",
+        },
+        {
+          label: "My Activity",
+          url: isStudent ? undefined : "/account/activity",
+          view: isStudent ? "activity" : undefined,
+          icon: "ph-bold ph-clock-counter-clockwise",
+          breadcrumb: "Audit Logs • Personal",
+          keywords: "my activity history personal audit logs login sessions timeline recent actions",
+        },
+        {
+          label: "Sign Out",
+          action: "logout",
+          icon: "ph-bold ph-sign-out",
+          breadcrumb: "Session • Sign Out",
+          keywords: "sign out log out exit disconnect leave session terminate end",
+        },
+      ],
+    };
 
-    const filteredAccount = q
-      ? allAccountItems.filter(item => `${item.label} ${item.keywords || ""}`.toLowerCase().includes(q))
-      : allAccountItems;
+    const allCandidateGroups = [...candidateGroups, controlsGroup, accountGroup];
+
+    const filtered = allCandidateGroups
+      .map((group) => {
+        if (!q) return group;
+        const matchingItems = group.items.filter((item) => {
+          const matchLabel = item.label?.toLowerCase().includes(q);
+          const matchBreadcrumb = item.breadcrumb?.toLowerCase().includes(q);
+          const matchKeywords = item.keywords?.toLowerCase().includes(q);
+          const matchGroup = group.title?.toLowerCase().includes(q);
+          return matchLabel || matchBreadcrumb || matchKeywords || matchGroup;
+        });
+        return { ...group, items: matchingItems };
+      })
+      .filter((group) => group.items.length > 0);
 
     return {
-      sidebarMatches: filteredSidebar,
-      accountMatches: filteredAccount,
-      allSuggestions: [...filteredSidebar, ...filteredAccount]
+      filteredGroups: filtered,
+      flatSuggestions: filtered.flatMap((g) => g.items),
     };
-  }, [searchQuery, activeView, authUser]);
+  }, [searchQuery, activeView, authUser, isStudent, isSuperAdmin, hasAdminRights, isMac, pathname]);
 
   const handleSelectSuggestion = (item) => {
     setSearchQuery("");
     setCommandOpen(false);
     setFocusedIndex(0);
+
+    if (item.action === "toggle-sidebar") {
+      window.dispatchEvent(new CustomEvent("toggle-sidebar"));
+      return;
+    }
+
+    if (item.action === "zoom-in") {
+      window.dispatchEvent(new CustomEvent("change-zoom", { detail: { action: "in" } }));
+      return;
+    }
+
+    if (item.action === "zoom-out") {
+      window.dispatchEvent(new CustomEvent("change-zoom", { detail: { action: "out" } }));
+      return;
+    }
+
+    if (item.action === "zoom-reset") {
+      window.dispatchEvent(new CustomEvent("change-zoom", { detail: { action: "reset" } }));
+      return;
+    }
+
+    if (item.action === "switch-role") {
+      handleViewSwitch(item.targetRole);
+      return;
+    }
+
+    if (item.action === "return-dashboard") {
+      handleMainDashboardClick();
+      return;
+    }
+
+    if (item.action === "logout") {
+      if (onLogout) onLogout();
+      return;
+    }
+
+    if (item.url) {
+      router.push(item.url);
+      return;
+    }
 
     if (item.view) {
       const isSystemAdmin = activeView === "systemadmin";
@@ -352,40 +832,54 @@ export default function Header({ authUser, onLogout, children }) {
       if (item.section) params.set("section", item.section);
       if (item.officeId) params.set("office", item.officeId);
 
-      if (isSystemAdmin && !onSystemAdminPage) {
+      if (isStudent) {
+        if (!pathname?.startsWith("/student")) {
+          router.push(`/student?${params.toString()}`);
+        } else {
+          window.dispatchEvent(new CustomEvent("switch-view", {
+            detail: { view: item.view }
+          }));
+        }
+      } else if (isSystemAdmin && !onSystemAdminPage) {
         router.push(`/systemadmin?${params.toString()}`);
       } else if (pathname === "/account" || pathname === "/account/activity") {
-        const targetPath = isSystemAdmin ? "/systemadmin" : (activeView === "admin" ? "/admin" : "/staff");
+        const targetPath = isStudent ? "/student" : (isSystemAdmin ? "/systemadmin" : (activeView === "admin" ? "/admin" : "/staff"));
         router.push(`${targetPath}?${params.toString()}`);
       } else {
         window.dispatchEvent(new CustomEvent("switch-view", {
           detail: { view: item.view, section: item.section, officeId: item.officeId }
         }));
       }
-    } else if (item.url) {
-      router.push(item.url);
-    } else if (item.action === "logout") {
-      if (onLogout) onLogout();
     }
   };
 
   const handleCommandKeyDown = (e) => {
-    if (allSuggestions.length === 0) return;
+    if (flatSuggestions.length === 0) return;
 
     if (e.key === "ArrowDown") {
       e.preventDefault();
-      setFocusedIndex((prev) => (prev + 1) % allSuggestions.length);
+      setFocusedIndex((prev) => (prev + 1) % flatSuggestions.length);
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
-      setFocusedIndex((prev) => (prev - 1 + allSuggestions.length) % allSuggestions.length);
+      setFocusedIndex((prev) => (prev - 1 + flatSuggestions.length) % flatSuggestions.length);
     } else if (e.key === "Enter") {
       e.preventDefault();
-      const targetItem = allSuggestions[focusedIndex] || allSuggestions[0];
+      const targetItem = flatSuggestions[focusedIndex] || flatSuggestions[0];
       if (targetItem) handleSelectSuggestion(targetItem);
     } else if (e.key === "Escape") {
       setCommandOpen(false);
     }
   };
+
+  // Scroll focused command item into view
+  useEffect(() => {
+    if (commandOpen) {
+      const el = document.getElementById(`command-item-${focusedIndex}`);
+      if (el) {
+        el.scrollIntoView({ block: "nearest" });
+      }
+    }
+  }, [focusedIndex, commandOpen]);
 
   return (
     <header className="bg-white/75 backdrop-blur-xl dark:bg-zinc-950/75 border-b border-gray-200/80 dark:border-white/10 flex-none z-30 select-none transition-colors duration-200 shadow-[0_1px_6px_rgba(0,0,0,0.02)]">
@@ -603,99 +1097,112 @@ export default function Header({ authUser, onLogout, children }) {
           </div>
 
           {/* Results List */}
-          <div className="max-h-[360px] overflow-y-auto p-2">
-            {/* Sidebar Views Section */}
-            {sidebarMatches.length > 0 && (
-              <div className="mb-2">
-                <div className="px-2.5 py-1 text-[10px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider flex items-center justify-between">
-                  <span>Sidebar Views</span>
-                  <span className="font-medium text-[9px] text-gray-400 dark:text-zinc-500">
-                    {activeView === "systemadmin" ? "System Admin" : (activeView === "admin" ? "Office Admin" : "Staff")}
-                  </span>
-                </div>
-                {sidebarMatches.map((item, idx) => {
-                  const isFocused = focusedIndex === idx;
-                  const itemKey = item.section ? `${item.view}-${item.section}` : (item.view || item.label || idx);
-                  return (
-                    <button
-                      key={itemKey}
-                      type="button"
-                      onClick={() => handleSelectSuggestion(item)}
-                      onMouseEnter={() => setFocusedIndex(idx)}
-                      className={cn(
-                        "w-full text-left flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-all cursor-pointer border-0 outline-none",
-                        isFocused 
-                          ? "bg-pup-maroon/10 text-pup-maroon dark:bg-white/10 dark:text-zinc-50 shadow-2xs" 
-                          : "text-gray-700 dark:text-zinc-300 hover:bg-gray-100/70 dark:hover:bg-white/5"
-                      )}
-                    >
-                      <div className="flex items-center gap-3">
-                        <i className={cn(item.icon, "text-[16px] opacity-80")}></i>
-                        <span className="text-[13px]">{item.label}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {isFocused && (
-                          <span className="text-[10px] font-semibold text-pup-maroon dark:text-zinc-400">
-                            ↵ Select
-                          </span>
-                        )}
-                        <span className="text-[10px] text-gray-400 dark:text-zinc-500 font-normal">
-                          {item.badge || "View"}
+          <div className="max-h-[400px] overflow-y-auto p-2 [scrollbar-width:thin]">
+            {filteredGroups.length > 0 ? (
+              (() => {
+                let currentGlobalIndex = 0;
+                return filteredGroups.map((group) => (
+                  <div key={group.id} className="mb-2.5 last:mb-0">
+                    <div className="px-3 pt-2 pb-1 text-[10.5px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider flex items-center justify-between select-none">
+                      <span className="flex items-center gap-1.5">
+                        <span className="w-1 h-3 rounded-full bg-gray-300 dark:bg-zinc-700" />
+                        <span>{group.title}</span>
+                      </span>
+                      {group.badge && (
+                        <span className="font-semibold text-[9.5px] text-gray-400 dark:text-zinc-500">
+                          {group.badge}
                         </span>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-
-            {/* Account & Profile Actions Section */}
-            {accountMatches.length > 0 && (
-              <div>
-                <div className="px-2.5 py-1 text-[10px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">
-                  Account & Actions
-                </div>
-                {accountMatches.map((item, idx) => {
-                  const globalIdx = sidebarMatches.length + idx;
-                  const isFocused = focusedIndex === globalIdx;
-                  return (
-                    <button
-                      key={item.label}
-                      type="button"
-                      onClick={() => handleSelectSuggestion(item)}
-                      onMouseEnter={() => setFocusedIndex(globalIdx)}
-                      className={cn(
-                        "w-full text-left flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-all cursor-pointer border-0 outline-none",
-                        isFocused 
-                          ? "bg-pup-maroon/10 text-pup-maroon dark:bg-white/10 dark:text-zinc-50 shadow-2xs" 
-                          : "text-gray-700 dark:text-zinc-300 hover:bg-gray-100/70 dark:hover:bg-white/5"
                       )}
-                    >
-                      <div className="flex items-center gap-3">
-                        <i className={cn(item.icon, "text-[16px] opacity-80")}></i>
-                        <span className="text-[13px]">{item.label}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {isFocused && (
-                          <span className="text-[10px] font-semibold text-pup-maroon dark:text-zinc-400">
-                            ↵ Select
-                          </span>
-                        )}
-                        <span className="text-[10px] text-gray-400 dark:text-zinc-500 font-normal">
-                          Action
-                        </span>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            )}
+                    </div>
+                    <div className="flex flex-col gap-0.5">
+                      {group.items.map((item) => {
+                        const globalIdx = currentGlobalIndex++;
+                        const isFocused = focusedIndex === globalIdx;
+                        const itemKey = item.section
+                          ? `${item.view}-${item.section}`
+                          : (item.view || item.url || item.action || item.label);
+                        const isActiveTab =
+                          item.view &&
+                          !item.section &&
+                          item.view === activeTabKey &&
+                          (isStudent
+                            ? pathname?.startsWith("/student")
+                            : activeView === "systemadmin"
+                            ? pathname?.startsWith("/systemadmin") || pathname?.startsWith("/superadmin")
+                            : activeView === "admin"
+                            ? pathname?.startsWith("/admin")
+                            : pathname?.startsWith("/staff"));
 
-            {allSuggestions.length === 0 && (
+                        return (
+                          <button
+                            id={`command-item-${globalIdx}`}
+                            key={itemKey}
+                            type="button"
+                            onClick={() => handleSelectSuggestion(item)}
+                            onMouseEnter={() => setFocusedIndex(globalIdx)}
+                            className={cn(
+                              "w-full text-left flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-all cursor-pointer border-0 outline-none select-none",
+                              isFocused
+                                ? "bg-pup-maroon/10 text-pup-maroon dark:bg-white/10 dark:text-zinc-50 shadow-2xs"
+                                : "text-gray-700 dark:text-zinc-300 hover:bg-gray-100/70 dark:hover:bg-white/5"
+                            )}
+                          >
+                            <div className="flex items-center gap-3 min-w-0 flex-1 pr-2">
+                              <div
+                                className={cn(
+                                  "w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-colors",
+                                  isFocused
+                                    ? "bg-pup-maroon text-white dark:bg-white dark:text-zinc-900"
+                                    : "bg-gray-100 dark:bg-zinc-800 text-gray-500 dark:text-zinc-400"
+                                )}
+                              >
+                                <i className={cn(item.icon, "text-[15px]")}></i>
+                              </div>
+                              <div className="flex flex-col min-w-0 flex-1">
+                                <div className="flex items-center gap-2">
+                                  <span className={cn("text-[13px] font-medium truncate", isFocused && "font-semibold")}>
+                                    {item.label}
+                                  </span>
+                                  {isActiveTab && (
+                                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/40">
+                                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                      Active
+                                    </span>
+                                  )}
+                                </div>
+                                {item.breadcrumb && (
+                                  <span className="text-[10.5px] text-gray-400 dark:text-zinc-500 font-normal truncate mt-0.5">
+                                    {item.breadcrumb}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-2 shrink-0">
+                              {item.shortcut && (
+                                <kbd className="hidden sm:inline-flex items-center px-1.5 py-0.5 text-[9px] font-mono font-bold bg-gray-100 dark:bg-zinc-800 text-gray-500 dark:text-zinc-400 rounded border border-gray-200 dark:border-zinc-700">
+                                  {item.shortcut}
+                                </kbd>
+                              )}
+                              {isFocused && (
+                                <span className="text-[10px] font-semibold text-pup-maroon dark:text-red-400 flex items-center gap-1">
+                                  <span>Select</span>
+                                  <kbd className="px-1 py-0.5 rounded bg-pup-maroon/10 dark:bg-white/10 text-[9px] font-mono">↵</kbd>
+                                </span>
+                              )}
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ));
+              })()
+            ) : (
               <div className="p-8 text-center flex flex-col items-center justify-center text-gray-400 dark:text-zinc-500">
                 <i className="ph-duotone ph-magnifying-glass text-3xl mb-2 opacity-50"></i>
-                <div className="text-sm font-medium">No matching views found</div>
-                <div className="text-xs text-gray-400 mt-1">Try searching for a view name or account action</div>
+                <div className="text-sm font-medium">No matching views or actions found</div>
+                <div className="text-xs text-gray-400 mt-1">Try searching for a sidebar section, view name, or control</div>
               </div>
             )}
           </div>
@@ -716,10 +1223,16 @@ export default function Header({ authUser, onLogout, children }) {
                 <kbd className="px-1.5 py-0.5 rounded bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 font-mono text-[9px] shadow-2xs">ESC</kbd>
                 <span>close</span>
               </span>
+              <span className="hidden md:flex items-center gap-1 text-[10px] text-gray-400">
+                <kbd className="px-1.5 py-0.5 rounded bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 font-mono text-[9px] shadow-2xs">
+                  {isMac ? "⌘B" : "CTRL B"}
+                </kbd>
+                <span>sidebar</span>
+              </span>
             </div>
             <div className="flex items-center gap-1.5 font-medium text-gray-400 dark:text-zinc-500 text-[10px]">
               <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: currentViewColor }} />
-              <span>{isStudent ? "Student" : (activeView === "systemadmin" ? "System Admin" : (activeView === "admin" ? "Office Admin" : "Staff"))}</span>
+              <span>{isStudent ? "Student Portal" : (activeView === "systemadmin" ? "System Admin" : (activeView === "admin" ? "Office Admin" : "Staff"))}</span>
             </div>
           </div>
         </DialogContent>

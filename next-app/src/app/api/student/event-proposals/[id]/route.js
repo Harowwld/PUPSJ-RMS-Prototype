@@ -2,17 +2,11 @@ import fs from "node:fs";
 import path from "node:path";
 import { NextResponse } from "next/server";
 import { query, queryOne } from "@/lib/postgres";
-import { requireOfficeModule } from "@/lib/moduleAccess";
-import { writeGlobalAuditLog } from "@/lib/auditLogRequest";
+import { requireStudent, createAuthErrorResponse } from "@/lib/authHelpers";
 import { canAccessResource } from "@/lib/resourceAuthorization";
+import { writeGlobalAuditLog } from "@/lib/auditLogRequest";
 
 export const runtime = "nodejs";
-const validStatuses = new Set(["Submitted", "Under Review", "Needs Revision", "Approved", "Declined"]);
-
-async function getAuthorizedProposal(id, access) {
-  const proposal = await queryOne("SELECT * FROM event_proposals WHERE id = $1 AND office_id = 'osas'", [id]);
-  return proposal && canAccessResource(access, "proposal", proposal) ? proposal : null;
-}
 
 function resolveProposalFilePath(storageFilename) {
   if (!storageFilename) return null;
@@ -49,15 +43,9 @@ async function synthesizeFallbackPdf(proposal) {
     page.drawText(`Organization: ${proposal.organization_name || "N/A"}`, { x: 50, y: 642, size: 9.5, font: fontRegular, color: darkGray });
     page.drawText(`Lead Proponent: ${proposal.student_name || "Student"} (${proposal.student_no || "N/A"})`, { x: 50, y: 624, size: 9.5, font: fontRegular, color: darkGray });
     page.drawText(`Scheduled Date: ${proposal.event_date || "TBD"}`, { x: 50, y: 606, size: 9.5, font: fontRegular, color: darkGray });
-    page.drawText(`Venue: ${proposal.venue || "TBD"}`, { x: 50, y: 588, size: 9.5, font: fontRegular, color: darkGray });
-    page.drawText(`Status: ${proposal.status || "Submitted"}`, { x: 50, y: 570, size: 9.5, font: fontBold, color: maroon });
+    page.drawText(`Status: ${proposal.status || "Submitted"}`, { x: 50, y: 588, size: 9.5, font: fontBold, color: maroon });
 
-    if (proposal.description) {
-      page.drawText("Project Objectives & Summary:", { x: 50, y: 540, size: 9.5, font: fontBold, color: darkGray });
-      page.drawText(String(proposal.description).slice(0, 260), { x: 50, y: 524, size: 8.5, font: fontRegular, color: darkGray });
-    }
-
-    page.drawText("Verified Archival Record — PUPSJ Records Keeping System", { x: 50, y: 100, size: 8, font: fontRegular, color: rgb(0.6, 0.6, 0.6) });
+    page.drawText("Verified Student Submission — PUPSJ Records Keeping System", { x: 50, y: 100, size: 8, font: fontRegular, color: rgb(0.6, 0.6, 0.6) });
     return Buffer.from(await doc.save());
   } catch {
     return Buffer.from("%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj\n3 0 obj<</Type/Page/MediaBox[0 0 612 792]/Parent 2 0 R>>endobj\nxref\n0 4\n0000000000 65535 f \n0000000010 00000 n \n0000000053 00000 n \n0000000102 00000 n \ntrailer<</Size 4/Root 1 0 R>>\nstartxref\n171\n%%EOF");
@@ -65,12 +53,20 @@ async function synthesizeFallbackPdf(proposal) {
 }
 
 export async function GET(req, ctx) {
-  const access = await requireOfficeModule("osas_monitoring", { officeId: "osas" }, req);
-  if (access === null) return NextResponse.json({ ok: false, error: "Authentication required" }, { status: 401 });
-  if (!access) return NextResponse.json({ ok: false, error: "Forbidden" }, { status: 403 });
+  const access = await requireStudent(req);
+  if (access.error || !access.user) {
+    return createAuthErrorResponse(access.error || "Student authentication required", access.error?.startsWith("Access denied") ? 403 : 401);
+  }
+
   const { id } = await ctx.params;
-  const proposal = await getAuthorizedProposal(id, access);
-  if (!proposal) return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
+  const proposal = await queryOne(
+    "SELECT * FROM event_proposals WHERE id = $1 AND office_id = 'osas' AND student_no = $2",
+    [id, access.user.studentNo]
+  );
+
+  if (!proposal || !canAccessResource(access.user, "proposal", proposal)) {
+    return NextResponse.json({ ok: false, error: "Proposal not found." }, { status: 404 });
+  }
 
   if (new URL(req.url).searchParams.get("file") === "1") {
     let filePath = resolveProposalFilePath(proposal.storage_filename);
@@ -88,6 +84,7 @@ export async function GET(req, ctx) {
         console.warn("Could not cache synthesized PDF to disk:", err?.message);
       }
     }
+
     return new NextResponse(bytes, {
       headers: {
         "Content-Type": proposal.mime_type || "application/pdf",
@@ -96,45 +93,19 @@ export async function GET(req, ctx) {
     });
   }
 
-  const updates = await query("SELECT * FROM transaction_updates WHERE event_proposal_id = $1 ORDER BY created_at ASC", [id]);
-  await writeGlobalAuditLog(req, "Viewed OSAS proposal", {
+  const updates = await query(
+    "SELECT * FROM transaction_updates WHERE event_proposal_id = $1 ORDER BY created_at ASC",
+    [id]
+  );
+
+  await writeGlobalAuditLog(req, "Viewed OSAS event proposal", {
+    actor: access.user.studentNo,
+    role: "Student",
     officeId: "osas",
-    details: `Viewed ${proposal.title}.`,
+    details: `Viewed proposal: ${proposal.title}`,
     entity_type: "event_proposal",
     entity_id: String(id),
   });
+
   return NextResponse.json({ ok: true, data: { ...proposal, updates } });
-}
-
-export async function PATCH(req, ctx) {
-  const access = await requireOfficeModule("osas_monitoring", { officeId: "osas" }, req);
-  if (access === null) return NextResponse.json({ ok: false, error: "Authentication required" }, { status: 401 });
-  if (!access) return NextResponse.json({ ok: false, error: "Forbidden" }, { status: 403 });
-  const { id } = await ctx.params;
-  const existingProposal = await getAuthorizedProposal(id, access);
-  if (!existingProposal) return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
-  const body = await req.json().catch(() => null);
-  const status = String(body?.status || "").trim();
-  const note = String(body?.note || "").trim();
-
-  if (!validStatuses.has(status)) {
-    return NextResponse.json({ ok: false, error: "A valid status is required." }, { status: 400 });
-  }
-  const studentNote = note || `Status updated to ${status} by OSAS.`;
-  const proposal = await queryOne(
-    "UPDATE event_proposals SET status = $1, archived_at = NULL, updated_at = NOW() WHERE id = $2 AND office_id = 'osas' RETURNING *",
-    [status, id]
-  );
-  if (!proposal) return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
-  await query(
-    `INSERT INTO transaction_updates (event_proposal_id, status, message, created_by) VALUES ($1, $2, $3, $4)`,
-    [id, status, studentNote, access.userId || null]
-  );
-  await writeGlobalAuditLog(req, "Updated OSAS proposal status", {
-    officeId: "osas",
-    details: `Changed ${proposal.title} to ${status}. ${studentNote}`,
-    entity_type: "event_proposal",
-    entity_id: String(id),
-  });
-  return NextResponse.json({ ok: true, data: proposal });
 }

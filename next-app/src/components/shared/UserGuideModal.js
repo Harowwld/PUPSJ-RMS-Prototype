@@ -65,7 +65,7 @@ export default function UserGuideModal({ open, onClose }) {
                     {TABS.find(t => t.id === activeTab)?.label}
                   </DialogTitle>
                   <DialogDescription className="text-sm font-medium text-gray-500 mt-1 dark:text-zinc-400">
-                    {activeTab === 'general' && "Welcome to the E-MANAGE Records Management System."}
+                    {activeTab === 'general' && "Welcome to the E-MANAGE Records Keeping System."}
                     {activeTab === 'staff' && "Learn how to manage students, scan documents, and process requests."}
                     {activeTab === 'admin' && "Technical procedures for system administrators and records heads."}
                   </DialogDescription>
@@ -84,7 +84,7 @@ export default function UserGuideModal({ open, onClose }) {
                     <div>
                       <h4 className="font-semibold text-blue-900 text-sm tracking-wide">Notice</h4>
                       <p className="text-sm text-blue-800 font-medium mt-1">
-                        This guide covers the digital mechanics of the Records Management System Prototype. For institutional policies, refer to the official PUP Records Management Manual.
+                        This guide covers the digital mechanics of the Records Keeping System Prototype. For institutional policies, refer to the official PUP Records Keeping Manual.
                       </p>
                     </div>
                   </div>

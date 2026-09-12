@@ -1123,7 +1123,7 @@ export default function Home() {
                   <i className="ph-bold ph-lightning text-amber-500 group-hover:scale-110 transition-transform"></i>
                   <span>Demo Accounts</span>
                   <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-400 dark:text-zinc-400 group-hover:text-gray-700 dark:group-hover:text-zinc-200 transition-colors">
-                    5
+                    {DEMO_ACCOUNTS.length}
                   </span>
                   <i className={`ph-bold ph-caret-up text-[10px] text-gray-400 group-hover:text-gray-600 dark:group-hover:text-zinc-300 transition-transform duration-200 ${demoOpen ? "rotate-180" : ""}`}></i>
                 </button>
@@ -1203,7 +1203,9 @@ export default function Home() {
                     <i className="ph-bold ph-info text-xs"></i>
                     1-click instant fill & sign in
                   </span>
-                  <span className="font-mono text-[9px] text-gray-400">6 mock accounts</span>
+                  <span className="font-mono text-[9px] text-gray-400">
+                    {DEMO_ACCOUNTS.length} mock accounts
+                  </span>
                 </div>
               </PopoverContent>
             </Popover>

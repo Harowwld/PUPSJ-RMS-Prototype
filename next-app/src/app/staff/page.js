@@ -825,6 +825,17 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
   }, [switchView]);
 
   useEffect(() => {
+    const handleZoomChange = (e) => {
+      const { action } = e.detail || {};
+      if (action === "in") setZoomNode((prev) => Math.min(6, prev + 1));
+      else if (action === "out") setZoomNode((prev) => Math.max(0, prev - 1));
+      else if (action === "reset") setZoomNode(3);
+    };
+    window.addEventListener("change-zoom", handleZoomChange);
+    return () => window.removeEventListener("change-zoom", handleZoomChange);
+  }, []);
+
+  useEffect(() => {
     const locateNo = searchParams?.get("locate");
     if (locateNo && students.length > 0 && processedLocateRef.current !== locateNo) {
       processedLocateRef.current = locateNo;

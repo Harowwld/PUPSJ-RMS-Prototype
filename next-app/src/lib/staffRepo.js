@@ -293,7 +293,7 @@ export function getStaffDisplayName(staff) {
   return fullName || staff.email || staff.id;
 }
 
-export async function hasAllSecurityAnswers(id) {
+export async function hasAllSecurityAnswers(id, role = "Staff") {
   // Only check for questions marked as required
   // PostgreSQL stores this field as BOOLEAN (SQLite used INTEGER 1/0).
   // Comparing a boolean column to the integer literal 1 causes auth/me to
@@ -304,7 +304,16 @@ export async function hasAllSecurityAnswers(id) {
   // If no required global questions are defined, we consider the requirement "satisfied"
   if (totalRequired === 0) return true;
 
-  const answers = await dbAll("SELECT question_id FROM staff_security_answers WHERE staff_id = ?", [id]);
+  let answers = [];
+  if (role === "Student" || (typeof id === "number" && !isNaN(id))) {
+    try {
+      answers = await dbAll("SELECT question_id FROM student_security_answers WHERE student_account_id = ?", [Number(id)]);
+    } catch {
+      answers = [];
+    }
+  } else {
+    answers = await dbAll("SELECT question_id FROM staff_security_answers WHERE staff_id = ?", [id]);
+  }
   const answeredSet = new Set((answers || []).map(a => a.question_id));
 
   // Check if every required question has an answer
