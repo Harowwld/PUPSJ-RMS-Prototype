@@ -201,10 +201,10 @@ export default function GlobalStaffTab({ authUser, showToast }) {
     setSelectedStaffId(member.id)
     setForm({
       id: member.id,
-      office_id: member.office_id || "",
+      office_id: member.office_id || offices[0]?.id || "",
       fname: member.fname,
       lname: member.lname,
-      role: member.role,
+      role: member.role === "SystemAdmin" || member.role === "SuperAdmin" ? "Admin" : member.role,
       section: member.section || "",
       email: member.email,
       status: member.status
@@ -214,6 +214,10 @@ export default function GlobalStaffTab({ authUser, showToast }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    if (!form.office_id) {
+      showToast("Please select an assigned office/department", true)
+      return
+    }
     setSubmitLoading(true)
     
     try {
@@ -834,7 +838,6 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                 optionClassName="rounded-lg text-xs font-normal py-1.5 px-2.5 hover:bg-gray-100 dark:hover:bg-zinc-800"
               >
                 <option value="All">All Offices</option>
-                <option value="global">System Admin</option>
                 {(Array.isArray(offices) ? offices : []).map((o) => (
                   <option key={o.id} value={o.id}>
                     {o.short_name}
@@ -853,7 +856,6 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                 optionClassName="rounded-lg text-xs font-normal py-1.5 px-2.5 hover:bg-gray-100 dark:hover:bg-zinc-800"
               >
                 <option value="All">All Roles</option>
-                <option value="SystemAdmin">System Admin</option>
                 <option value="Admin">Administrator</option>
                 <option value="Staff">Regular Staff</option>
               </Select>
@@ -884,7 +886,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
               )}
               {officeFilter !== "All" && (
                 <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
-                  Office: {officeFilter === "global" ? "System Administration" : (Array.isArray(offices) ? offices : []).find((o) => o.id === officeFilter)?.short_name || officeFilter}
+                  Office: {(Array.isArray(offices) ? offices : []).find((o) => o.id === officeFilter)?.short_name || officeFilter}
                   <button
                     onClick={() => {
                       setOfficeFilter("All")
@@ -898,13 +900,13 @@ export default function GlobalStaffTab({ authUser, showToast }) {
               )}
               {roleFilter !== "All" && (
                 <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
-                  Role: {roleFilter === "SystemAdmin" ? "System Admin" : roleFilter}
+                  Role: {roleFilter === "Admin" ? "Administrator" : roleFilter === "Staff" ? "Regular Staff" : roleFilter}
                   <button
                     onClick={() => {
                       setRoleFilter("All")
                       setPage(1)
                     }}
-                    className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
+                    className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-350 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
                   >
                     ×
                   </button>
@@ -1343,7 +1345,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                 {/* Office Scope Selection */}
                 <div>
                   <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
-                    Assigned Office / Department
+                    Assigned Office / Department *
                   </label>
                   <Select
                     value={form.office_id}
@@ -1351,8 +1353,9 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                     className="h-10 rounded-xl bg-white border border-gray-200 text-xs font-normal focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 dark:bg-zinc-950 dark:border-white/10 dark:text-white shadow-none cursor-pointer"
                     menuClassName="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-900 shadow-2xl p-1.5"
                     optionClassName="rounded-lg text-xs font-normal py-2.5 px-3 hover:bg-gray-100 dark:hover:bg-zinc-800"
+                    required
                   >
-                    <option value="">SystemAdmin / Global (No Office Scope)</option>
+                    <option value="" disabled>Select Office / Department</option>
                     {(Array.isArray(offices) ? offices : []).map(o => (
                       <option key={o.id} value={o.id}>{o.name}</option>
                     ))}
@@ -1362,7 +1365,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                 {/* Role Level */}
                 <div>
                   <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
-                    Privilege Level
+                    Privilege Level *
                   </label>
                   <Select
                     value={form.role}
@@ -1370,8 +1373,8 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                     className="h-10 rounded-xl bg-white border border-gray-200 text-xs font-normal focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 dark:bg-zinc-950 dark:border-white/10 dark:text-white shadow-none cursor-pointer"
                     menuClassName="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-900 shadow-2xl p-1.5"
                     optionClassName="rounded-lg text-xs font-normal py-2.5 px-3 hover:bg-gray-100 dark:hover:bg-zinc-800"
+                    required
                   >
-                    <option value="SystemAdmin">System Admin</option>
                     <option value="Admin">Administrator</option>
                     <option value="Staff">Records Staff</option>
                   </Select>
