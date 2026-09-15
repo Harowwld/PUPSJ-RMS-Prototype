@@ -478,7 +478,10 @@ export default function Home() {
         </div>
 
         {/* Top-Left Brand Logo & Name */}
-        <div className="absolute top-6 left-6 flex items-center gap-1 select-none z-20">
+        <div 
+          onClick={() => router.push("/")}
+          className="absolute top-6 left-6 flex items-center gap-1 select-none z-20 cursor-pointer hover:opacity-80 transition-opacity"
+        >
           <img src="/assets/branding/black-icon.png" alt="eManage Logo" className="w-[32px] h-[32px] shrink-0 object-contain p-0.5 dark:hidden" />
           <img src="/assets/branding/white-icon.png" alt="eManage Logo" className="w-[32px] h-[32px] shrink-0 object-contain p-0.5 hidden dark:block" />
           <span className="text-[26px] font-semibold text-[#1D1D1F] dark:text-zinc-50 tracking-tight leading-none">eManage</span>

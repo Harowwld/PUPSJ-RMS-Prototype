@@ -168,9 +168,6 @@ export default function ProcessWorkflow() {
         ref={cardRef}
         className="relative w-full bg-zinc-950 text-white font-inter select-none py-20 sm:py-28 lg:py-32 overflow-hidden"
       >
-        {/* Background ambient lighting effects */}
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-[#800000]/15 rounded-full blur-[140px] pointer-events-none" />
-        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-amber-600/10 rounded-full blur-[160px] pointer-events-none" />
 
         <div className="max-w-7xl mx-auto px-6 sm:px-10 lg:px-16 relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
@@ -261,39 +258,10 @@ export default function ProcessWorkflow() {
                           {step.num || String(idx + 1).padStart(2, "0")}
                         </motion.div>
 
-                        {/* Vertical stem dropping straight down from the circle */}
-                        {idx < steps.length - 1 && (
-                          <motion.div 
-                            initial={{ scaleY: 0, opacity: 0 }}
-                            whileInView={{ scaleY: 1, opacity: 1 }}
-                            viewport={{ once: true }}
-                            transition={{
-                              duration: 0.55,
-                              delay: idx * 0.08 + 0.12,
-                              ease: [0.16, 1, 0.3, 1],
-                            }}
-                            style={{ transformOrigin: "top" }}
-                            className="absolute left-1/2 top-13 sm:top-15 w-[1px] h-12 sm:h-16 -translate-x-1/2 bg-gradient-to-b from-white/30 via-white/10 to-transparent pointer-events-none" 
-                          />
-                        )}
                       </div>
 
                       {/* Step Content */}
                       <div className="pt-1">
-                        {/* Step Header */}
-                        <div className="flex items-center gap-3 mb-2">
-                          <span className="text-[10px] font-mono uppercase tracking-widest text-[#ad2f2f]  font-bold">
-                            Step {step.num || String(idx + 1).padStart(2, "0")}
-                          </span>
-                          {step.summary && (
-                            <>
-                              <span className="w-1 h-1 rounded-full bg-zinc-700" />
-                              <span className="text-[11px] font-mono text-zinc-400">
-                                {step.summary}
-                              </span>
-                            </>
-                          )}
-                        </div>
 
                         {/* Main Title */}
                         <h3 className="text-xl sm:text-2xl font-bold text-white tracking-tight mb-3 group-hover:text-red-100 transition-colors">

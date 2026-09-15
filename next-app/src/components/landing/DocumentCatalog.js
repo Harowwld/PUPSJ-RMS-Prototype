@@ -226,17 +226,14 @@ export default function DocumentCatalog() {
       ref={sectionRef}
       className="relative w-full py-16 sm:py-20 lg:py-24 overflow-hidden bg-white select-none font-inter min-h-0 flex items-center"
     >
-      {/* Ambient background glow */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[100vw] h-[100%] pointer-events-none opacity-30 overflow-hidden">
-        <div className="w-full h-full bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-gray-200/50 via-transparent to-transparent blur-3xl" />
-      </div>
+
 
       {/* Main Content Area */}
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 w-full relative z-20 pointer-events-none flex flex-col items-center">
-        <div className="w-full pointer-events-auto space-y-10 flex flex-col items-center">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full relative z-20 pointer-events-none flex flex-col items-center">
+        <div className="w-full pointer-events-auto flex flex-col items-center">
 
           {/* Section Heading & Subtitle */}
-          <div className="text-center flex flex-col items-center">
+          <div className="text-center flex flex-col items-center mb-12">
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-gray-950 leading-[1.08]">
               {catalogData.heading || "Academic Document Catalog"}
             </h2>
@@ -245,82 +242,51 @@ export default function DocumentCatalog() {
             </p>
           </div>
 
-          {/* Active Document Details Inspector Panel: Stable Height Container */}
-          <div className="relative min-h-[320px] sm:min-h-[340px] w-full max-w-xl flex flex-col">
-            <AnimatePresence mode="wait" initial={false}>
-              <motion.div
-                key={activeDoc?.id || "doc-empty"}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0, transition: { duration: 0.3, ease: "easeOut" } }}
-                exit={{ opacity: 0, y: -10, transition: { duration: 0.2, ease: "easeIn" } }}
-                className="w-full space-y-6 flex flex-col items-center text-center"
+          {/* Document Grid Catalog */}
+          <div className="w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 pb-12">
+            {items.map((doc, idx) => (
+              <div 
+                key={doc.id || idx}
+                className="flex flex-col bg-white border border-black/[0.08] rounded-3xl p-6 sm:p-8 text-left hover:shadow-[0_8px_30px_rgb(0,0,0,0.06)] hover:-translate-y-1 transition-all duration-300 group"
               >
-                {/* Badges */}
-                <div className="flex flex-wrap items-center justify-center gap-2">
-                  <span className="px-3 py-1 rounded-full text-xs font-medium bg-zinc-100 text-zinc-600 border border-black/5">
-                    {activeDoc?.client}
+                <div className="flex items-center justify-between mb-5">
+                  <span className="px-3 py-1 rounded-full text-[10px] font-bold font-mono tracking-wider bg-zinc-100 text-zinc-600 border border-black/5">
+                    {doc.code}
                   </span>
-                  <span className="px-2.5 py-1 rounded-full text-[11px] font-mono font-medium text-emerald-700 bg-emerald-50 border border-emerald-200/60 inline-flex items-center gap-1.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                    {catalogData.badgeText || "Official Credential"}
+                  <span className="text-[10px] font-mono font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-100">
+                    {doc.client}
                   </span>
                 </div>
-
-                {/* Title & Description */}
-                <div className="min-h-[80px] sm:min-h-[86px]">
-                  <h3 className="text-2xl sm:text-3xl font-bold text-gray-950 tracking-tight leading-snug">
-                    {activeDoc?.title}
-                  </h3>
-                  <p className="text-xs sm:text-sm text-gray-600 mt-2.5 leading-relaxed max-w-md mx-auto">
-                    {activeDoc?.description}
-                  </p>
-                </div>
-
-                {/* Filing Requirements Checklist */}
-                <div className="p-5 sm:p-6 rounded-2xl bg-zinc-50 border border-black/5 w-full text-left">
-                  <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-gray-900 mb-4 font-mono">
-                    <i className="ph-bold ph-shield-check text-gray-400 text-base" />
-                    Mandatory Filing Requirements
+                
+                <h3 className="text-xl font-bold text-gray-950 tracking-tight leading-snug mb-3 group-hover:text-[#800000] transition-colors">
+                  {doc.title}
+                </h3>
+                
+                <p className="text-sm text-gray-500 leading-relaxed mb-8 flex-grow">
+                  {doc.description}
+                </p>
+                
+                <div className="pt-5 border-t border-black/5 mt-auto">
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-gray-400 font-mono mb-3 flex items-center gap-1.5">
+                    <i className="ph-bold ph-shield-check text-sm" />
+                    Filing Requirements
                   </div>
-                  <ul className="space-y-3 text-sm text-gray-600">
-                    {activeDoc?.requirements?.map((req, idx) => (
-                      <li key={idx} className="flex items-start gap-3 leading-relaxed">
-                        <span className="mt-0.5 flex-shrink-0 w-4 h-4 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-[10px] font-bold">
-                          <i className="ph-bold ph-check text-[10px]" />
+                  <ul className="space-y-3 text-xs text-gray-600">
+                    {doc.requirements?.slice(0, 2).map((req, i) => (
+                      <li key={i} className="flex items-start gap-2.5 leading-relaxed">
+                        <span className="mt-0.5 flex-shrink-0 w-4 h-4 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-[8px] font-bold">
+                          <i className="ph-bold ph-check" />
                         </span>
-                        <span>{req}</span>
+                        <span className="line-clamp-2">{req}</span>
                       </li>
                     ))}
+                    {doc.requirements?.length > 2 && (
+                       <li className="text-gray-400 italic text-[11px] pl-6.5">+{doc.requirements.length - 2} more...</li>
+                    )}
                   </ul>
                 </div>
-              </motion.div>
-            </AnimatePresence>
-          </div>
-
-          {/* Action Buttons & Pagination */}
-          <div className="space-y-4 pt-4 flex flex-col items-center">
-            {/* Document Pagination Status */}
-            <div className="flex flex-col items-center gap-4">
-              <span className="font-mono text-xs font-bold text-gray-900">
-                {String(safeActiveIndex + 1).padStart(2, "0")}{" "}
-                <span className="text-gray-400 font-normal">/ {String(totalItems).padStart(2, "0")}</span>
-              </span>
-
-              <div className="flex items-center gap-2">
-                {items.map((item, idx) => (
-                  <button
-                    key={item.id}
-                    onClick={() => rotateToIndex(idx)}
-                    className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${
-                      idx === safeActiveIndex
-                        ? "w-8 bg-gray-800"
-                        : "w-2 bg-gray-200 hover:bg-gray-300"
-                    }`}
-                    aria-label={`Go to ${item.title}`}
-                  />
-                ))}
               </div>
-            </div>
+            ))}
           </div>
 
         </div>

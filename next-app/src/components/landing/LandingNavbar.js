@@ -109,7 +109,7 @@ export default function LandingNavbar() {
             }`}
           >
             {/* Top Bar Row - Constrained width like Apple UI */}
-            <div className="w-full max-w-[980px] mx-auto px-4 sm:px-6 flex items-center justify-between h-[46px]">
+            <div className="w-full max-w-[980px] mx-auto px-4 sm:px-6 flex items-center justify-between h-[44px]">
                {/* BRAND LOGO - Smoothly scrolls back to top */}
               <a 
                 href="#" 
@@ -130,10 +130,10 @@ export default function LandingNavbar() {
               <nav className="hidden md:flex items-center gap-1 text-[13px] font-medium text-black">
                 <button 
                   type="button"
-                  onClick={(e) => scrollToSection(e, "catalog")}
+                  onClick={(e) => scrollToSection(e, "about")}
                   className="px-3.5 py-1.5 rounded-full cursor-pointer bg-transparent"
                 >
-                  Services
+                  About
                 </button>
                 <button 
                   type="button"
@@ -144,10 +144,10 @@ export default function LandingNavbar() {
                 </button>
                 <button 
                   type="button"
-                  onClick={(e) => scrollToSection(e, "office")}
+                  onClick={(e) => scrollToSection(e, "catalog")}
                   className="px-3.5 py-1.5 rounded-full cursor-pointer bg-transparent"
                 >
-                  Office Hours
+                  Catalog
                 </button>
                 <button 
                   type="button"
@@ -156,6 +156,13 @@ export default function LandingNavbar() {
                 >
                   FAQ
                 </button>
+                <button 
+                  type="button"
+                  onClick={(e) => scrollToSection(e, "office")}
+                  className="px-3.5 py-1.5 rounded-full cursor-pointer bg-transparent"
+                >
+                  Office Hours
+                </button>
               </nav>
 
               {/* RIGHT ACTION BUTTONS */}
@@ -163,7 +170,7 @@ export default function LandingNavbar() {
                 {sessionUser ? (
                   <Button
                     onClick={() => router.push(getDashboardPath())}
-                    className="h-9 px-4 rounded-full btn-brand-red text-xs font-semibold tracking-wide cursor-pointer text-white active:scale-95 transition-all"
+                    className="h-8 px-4 rounded-full btn-brand-red text-xs font-semibold tracking-wide cursor-pointer text-white active:scale-95 transition-all"
                   >
                     Dashboard ↗
                   </Button>
@@ -171,7 +178,7 @@ export default function LandingNavbar() {
                   <button
                     type="button"
                     onClick={() => router.push("/login")}
-                    className="h-9 px-3 rounded-full text-[13px] font-medium cursor-pointer bg-transparent text-black"
+                    className="h-8 px-3 rounded-full text-[13px] font-medium cursor-pointer bg-transparent text-black"
                   >
                     Sign In
                   </button>
@@ -181,7 +188,7 @@ export default function LandingNavbar() {
                 <button
                   type="button"
                   onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                  className="md:hidden w-9 h-9 rounded-full flex items-center justify-center cursor-pointer text-black"
+                  className="md:hidden w-8 h-8 rounded-full flex items-center justify-center cursor-pointer text-black"
                   aria-label="Toggle navigation drawer"
                 >
                   <i className={`ph-bold ${mobileMenuOpen ? "ph-x" : "ph-list"} text-lg`} />
@@ -201,11 +208,11 @@ export default function LandingNavbar() {
                 >
                   <button
                     type="button"
-                    onClick={(e) => scrollToSection(e, "catalog")}
+                    onClick={(e) => scrollToSection(e, "about")}
                     className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-left text-xs font-semibold text-gray-800  hover:bg-black/[0.04] :bg-white/[0.06] transition-all cursor-pointer"
                   >
-                    <i className="ph-bold ph-files text-base text-[#800000] " />
-                    <span>Services</span>
+                    <i className="ph-bold ph-info text-base text-[#800000] " />
+                    <span>About</span>
                   </button>
                   <button
                     type="button"
@@ -217,11 +224,11 @@ export default function LandingNavbar() {
                   </button>
                   <button
                     type="button"
-                    onClick={(e) => scrollToSection(e, "office")}
+                    onClick={(e) => scrollToSection(e, "catalog")}
                     className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-left text-xs font-semibold text-gray-800  hover:bg-black/[0.04] :bg-white/[0.06] transition-all cursor-pointer"
                   >
-                    <i className="ph-bold ph-clock text-base text-[#800000] " />
-                    <span>Office Hours</span>
+                    <i className="ph-bold ph-files text-base text-[#800000] " />
+                    <span>Catalog</span>
                   </button>
                   <button
                     type="button"
@@ -230,6 +237,14 @@ export default function LandingNavbar() {
                   >
                     <i className="ph-bold ph-question text-base text-[#800000] " />
                     <span>FAQ</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => scrollToSection(e, "office")}
+                    className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-left text-xs font-semibold text-gray-800  hover:bg-black/[0.04] :bg-white/[0.06] transition-all cursor-pointer"
+                  >
+                    <i className="ph-bold ph-clock text-base text-[#800000] " />
+                    <span>Office Hours</span>
                   </button>
                 </motion.div>
               )}

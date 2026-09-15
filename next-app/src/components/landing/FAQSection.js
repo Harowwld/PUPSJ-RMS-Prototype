@@ -98,18 +98,16 @@ export default function FAQSection() {
   return (
     <section 
       id="faq" 
-      className="max-w-7xl mx-auto px-4 sm:px-6 pt-10 sm:pt-16 lg:pt-20 pb-24 sm:pb-32 w-full font-inter select-none scroll-mt-24"
+      className="w-full font-inter select-none scroll-mt-24"
     >
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-60px" }}
         transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-        className="rounded-[2.5rem] bg-zinc-950 text-white border border-white/[0.08] shadow-[0_30px_70px_-20px_rgba(0,0,0,0.6)] overflow-hidden p-8 sm:p-14 relative"
+        className="w-full bg-zinc-950 text-white overflow-hidden py-20 sm:py-28 px-4 sm:px-6 relative"
       >
-        {/* Ambient lighting effects */}
-        <div className="absolute top-0 right-1/4 w-96 h-96 bg-[#800000]/15 rounded-full blur-[140px] pointer-events-none" />
-        <div className="absolute bottom-0 left-1/4 w-96 h-96 bg-zinc-800/30 rounded-full blur-[140px] pointer-events-none" />
+
 
         {/* Section Header */}
         <div className="text-center max-w-2xl mx-auto mb-10 sm:mb-12 relative z-10">

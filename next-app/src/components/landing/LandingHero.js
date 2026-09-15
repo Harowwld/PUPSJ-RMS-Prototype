@@ -80,12 +80,12 @@ export default function LandingHero() {
   return (
     <section 
       ref={heroContainerRef} 
-      className="relative w-full mx-0 px-0 mt-[58px] mb-0 font-inter select-none bg-[#ffffff]"
+      className="relative w-full mx-0 px-0 mt-[69px] mb-0 font-inter select-none bg-[#ffffff]"
     >
       {/* Hero container with gap below navbar */}
       <div 
         ref={heroInnerRef}
-        className="relative w-full h-[calc(100vh-58px)] overflow-hidden flex flex-col justify-between pt-10 sm:pt-14 pb-8 px-6 sm:px-12 lg:px-16 border-none shadow-none bg-[#ffffff]"
+        className="relative w-full h-[75vh] min-h-[550px] overflow-hidden flex flex-col justify-center px-6 sm:px-12 lg:px-16"
       >
         
         {/* BACKGROUND IMAGE CAROUSEL WITH CINEMATIC ATMOSPHERIC MASKS */}
@@ -109,21 +109,21 @@ export default function LandingHero() {
             </div>
           ))}
           {/* Gradient scrims — heavier left for text, lighter right to let image breathe */}
-          <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-white/95 via-white/70 to-white/30" />
-          <div className="absolute inset-0 w-full h-full bg-gradient-to-t from-white via-white/30 to-transparent" />
-          <div className="absolute inset-0 w-full h-full bg-[#800000]/10" />
+          <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-black/95 via-black/70 to-black/30" />
+          <div className="absolute inset-0 w-full h-full bg-gradient-to-t from-black via-black/30 to-transparent" />
+          <div className="absolute inset-0 w-full h-full bg-[#800000]/30" />
         </div>
 
-        {/* MAIN HERO CONTENT — LEFT-ALIGNED ASYMMETRIC (text ~55%, image breathes right) */}
-        <div className="relative z-10 w-full max-w-7xl mx-auto my-auto py-8 sm:py-14 flex flex-col items-start text-left">
-          <div className="w-full max-w-[55%] max-lg:max-w-[70%] max-sm:max-w-full">
+        {/* MAIN HERO CONTENT — CENTERED */}
+        <div className="relative z-10 w-full max-w-7xl mx-auto my-auto py-8 sm:py-14 flex flex-col items-center text-center">
+          <div className="w-full max-w-4xl flex flex-col items-center">
             <h1 
               ref={headlineRef}
               style={{
                 fontSize: "clamp(2.25rem, 5vw, 4.5rem)",
                 lineHeight: 1.04,
               }}
-              className="tanglaw-heading font-extrabold text-[#1D1D1F] tracking-tight sm:tracking-tighter mb-5"
+              className="tanglaw-heading font-extrabold text-white tracking-tight sm:tracking-tighter mb-6"
             >
               <span className="block">{hero.headlineLine1 || "Tanglaw ng Bayan,"}</span>
               <span className="block">
@@ -133,46 +133,47 @@ export default function LandingHero() {
 
             <p 
               ref={descRef}
-              className="text-xs sm:text-sm md:text-base text-gray-700 leading-relaxed max-w-md mb-8 font-normal"
+              className="text-xs sm:text-sm md:text-base text-zinc-300 leading-relaxed max-w-xl mx-auto mb-10 font-normal"
             >
               {hero.description ||
                 "Official institutional records keeping, archive retrieval, and document verification system for Polytechnic University of the Philippines San Juan Campus."}
             </p>
 
-            {/* Action Cluster — left-aligned */}
+            {/* Action Cluster — centered */}
             <div 
               ref={ctaClusterRef}
-              className="flex flex-wrap items-center justify-start gap-4"
+              className="flex flex-wrap items-center justify-center gap-4"
             >
               <Button
                 onClick={() => router.push("/login")}
-                className="h-11 px-7 rounded-full btn-brand-red text-[13px] font-medium text-white active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md"
+                className="h-11 px-8 rounded-full btn-brand-red text-[13px] font-medium text-white active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md"
               >
                 <span>Request</span>
               </Button>
             </div>
           </div>
         </div>
-        {/* APPLE-STYLE FLOATING PAGINATION */}
-        <div className="relative z-10 flex justify-center pb-2 sm:pb-4">
-          <div className="flex items-center gap-2 px-3 py-2">
-            {slides.map((_, idx) => {
-              const isActive = idx === currentSlide;
-              return (
-                <button
-                  key={idx}
-                  type="button"
-                  onClick={() => setCurrentSlide(idx)}
-                  aria-label={`View campus photo ${idx + 1}`}
-                  className={`h-1.5 rounded-full transition-all duration-500 ease-out cursor-pointer ${
-                    isActive 
-                      ? "w-5 bg-white" 
-                      : "w-1.5 bg-white/40 hover:bg-white/70"
-                  }`}
-                />
-              );
-            })}
-          </div>
+      </div>
+
+      {/* APPLE-STYLE PAGINATION OUTSIDE THE IMAGE PANEL */}
+      <div className="w-full flex justify-center py-5 bg-[#ffffff]">
+        <div className="flex items-center gap-2 px-3 py-1">
+          {slides.map((_, idx) => {
+            const isActive = idx === currentSlide;
+            return (
+              <button
+                key={idx}
+                type="button"
+                onClick={() => setCurrentSlide(idx)}
+                aria-label={`View campus photo ${idx + 1}`}
+                className={`h-1.5 rounded-full transition-all duration-500 ease-out cursor-pointer ${
+                  isActive 
+                    ? "w-6 bg-gray-800" 
+                    : "w-1.5 bg-gray-300 hover:bg-gray-400"
+                }`}
+              />
+            );
+          })}
         </div>
       </div>
     </section>
