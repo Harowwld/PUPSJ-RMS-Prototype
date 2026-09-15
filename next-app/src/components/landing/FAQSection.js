@@ -192,10 +192,7 @@ export default function FAQSection() {
                   className="w-full flex items-center justify-between p-5 text-left cursor-pointer select-none transition-colors border-0 bg-transparent"
                   aria-expanded={isOpen}
                 >
-                  <div className="flex items-center gap-3.5 pr-3 min-w-0">
-                    <span className="font-mono text-[11px] font-bold text-red-400 shrink-0">
-                      {String(idx + 1).padStart(2, "0")}
-                    </span>
+                  <div className="flex items-center pr-3 min-w-0">
                     <span className="text-sm font-bold text-white tracking-tight leading-snug">
                       {faq.q}
                     </span>
@@ -223,9 +220,6 @@ export default function FAQSection() {
                         <p className="pt-3.5">{faq.a}</p>
                         {faq.category && (
                           <div className="mt-3.5 flex items-center gap-2">
-                            <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-500">
-                              Topic:
-                            </span>
                             <span className="px-2 py-0.5 rounded-md bg-white/5 border border-white/10 text-[10px] text-zinc-400 font-mono">
                               {faq.category}
                             </span>
