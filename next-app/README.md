@@ -1,4 +1,4 @@
-# PUP E-Manage / PUPSJ Records Management System
+# eManage / PUPSJ Records Management System
 
 Local records-management application for PUP San Juan. The current development setup uses **PostgreSQL running locally through Docker Compose**. SQLite is retained only for legacy migration utilities; it is not the active application database.
 

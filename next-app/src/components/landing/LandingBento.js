@@ -85,15 +85,15 @@ const DEFAULT_BENTO_CONTENT = {
     tab3Label: "Tracking",
     charterItems: [
       { icon: "ph-shield-check", title: "No Unrecorded Delays", desc: "Timestamped upon receipt", bg: "bg-[#800000]" },
-      { icon: "ph-clock", title: "Clear Deadlines", desc: "Always on schedule", bg: "bg-zinc-800 dark:bg-zinc-700" },
+      { icon: "ph-clock", title: "Clear Deadlines", desc: "Always on schedule", bg: "bg-zinc-800 " },
     ],
     artaItems: [
       { icon: "ph-scales", title: "Zero Red Tape", desc: "Strict RA 11032 compliance", bg: "bg-[#800000]" },
-      { icon: "ph-file-text", title: "Citizen's Charter", desc: "Published university SLA standards", bg: "bg-zinc-800 dark:bg-zinc-700" },
+      { icon: "ph-file-text", title: "Citizen's Charter", desc: "Published university SLA standards", bg: "bg-zinc-800 " },
     ],
     auditItems: [
       { icon: "ph-fingerprint", title: "Tamper-Proof Audit Trail", desc: "Every personnel action logged", bg: "bg-[#800000]" },
-      { icon: "ph-check-circle", title: "Live Tracking Updates", desc: "Real-time ticket progression", bg: "bg-zinc-800 dark:bg-zinc-700" },
+      { icon: "ph-check-circle", title: "Live Tracking Updates", desc: "Real-time ticket progression", bg: "bg-zinc-800 " },
     ],
     footerNote: "Fair, transparent university service",
   },
@@ -101,15 +101,15 @@ const DEFAULT_BENTO_CONTENT = {
 
 const SLA_CHIP_STYLES = [
   {
-    bgClass: "bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200/60 dark:border-emerald-800/40 text-emerald-700 dark:text-emerald-300",
+    bgClass: "bg-emerald-50  border-emerald-200/60  text-emerald-700 ",
     activeRing: "ring-2 ring-emerald-500/50 shadow-sm shadow-emerald-500/10 scale-[1.04]",
   },
   {
-    bgClass: "bg-amber-50 dark:bg-amber-950/40 border-amber-200/60 dark:border-amber-800/40 text-amber-700 dark:text-amber-300",
+    bgClass: "bg-amber-50  border-amber-200/60  text-amber-700 ",
     activeRing: "ring-2 ring-amber-500/50 shadow-sm shadow-amber-500/10 scale-[1.04]",
   },
   {
-    bgClass: "bg-red-50 dark:bg-red-950/40 border-red-200/60 dark:border-red-800/40 text-red-700 dark:text-red-300",
+    bgClass: "bg-red-50  border-red-200/60  text-red-700 ",
     activeRing: "ring-2 ring-red-500/50 shadow-sm shadow-red-500/10 scale-[1.04]",
   },
 ];
@@ -193,12 +193,12 @@ export default function LandingBento() {
           transition={{ duration: 0.75, ease: [0.16, 1, 0.3, 1] }}
           className="lg:col-span-7"
         >
-          <span className="text-[11px] font-mono font-bold uppercase tracking-widest text-[#800000] dark:text-red-400 block mb-3">
+          <span className="text-[11px] font-mono font-bold uppercase tracking-widest text-[#800000]  block mb-3">
             {bento.eyebrow}
           </span>
-          <h2 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-[#1d1d1f] dark:text-white tracking-tight leading-[1.06]">
+          <h2 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-[#1d1d1f]  tracking-tight leading-[1.06]">
             {bento.headingLine1}<br />
-            <span className="text-zinc-400 dark:text-zinc-500">{bento.headingLine2}</span>
+            <span className="text-zinc-400 ">{bento.headingLine2}</span>
           </h2>
         </motion.div>
 
@@ -209,7 +209,7 @@ export default function LandingBento() {
           transition={{ duration: 0.75, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
           className="lg:col-span-5"
         >
-          <p className="text-sm sm:text-base text-zinc-600 dark:text-zinc-400 leading-relaxed font-normal max-w-lg">
+          <p className="text-sm sm:text-base text-zinc-600  leading-relaxed font-normal max-w-lg">
             {bento.description}
           </p>
         </motion.div>
@@ -221,7 +221,7 @@ export default function LandingBento() {
           - Row 1: 2 Equal Large Cards (50/50 Split)
           - Row 2: 3 Equal Medium Cards (3-Column Split)
           ========================================================================= */}
-      <div className="rounded-[2.25rem] bg-[#f4f5f7]/70 dark:bg-zinc-900/40 p-3 sm:p-4 lg:p-5 border border-black/[0.04] dark:border-white/[0.06]">
+      <div className="rounded-[2.25rem] bg-[#f4f5f7]/70  p-3 sm:p-4 lg:p-5 border border-black/[0.04] [0.06]">
         
         {/* -----------------------------------------------------------------------
             ROW 1: TWO LARGE CARDS
@@ -238,10 +238,10 @@ export default function LandingBento() {
             transition={{ duration: 0.65, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
             whileHover={{ y: -3 }}
             onClick={() => router.push("/login")}
-            className="rounded-[1.75rem] bg-white dark:bg-zinc-900 border border-black/[0.06] dark:border-white/[0.08] p-6 sm:p-8 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.03)] flex flex-col justify-between cursor-pointer group"
+            className="rounded-[1.75rem] bg-white  border border-black/[0.06] [0.08] p-6 sm:p-8 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.03)] flex flex-col justify-between cursor-pointer group"
           >
             {/* Simulated UI Area */}
-            <div className="rounded-2xl bg-[#f8f9fa] dark:bg-zinc-800/40 p-5 border border-black/[0.03] dark:border-white/[0.04] min-h-[220px] flex flex-col justify-between">
+            <div className="rounded-2xl bg-[#f8f9fa]  p-5 border border-black/[0.03] [0.04] min-h-[220px] flex flex-col justify-between">
               <div>
                 <div className="flex items-center justify-between mb-3 text-[10px] font-mono uppercase tracking-wider text-zinc-400">
                   <span>{bento.card1?.portalTag || "Online Request Portal"}</span>
@@ -249,14 +249,14 @@ export default function LandingBento() {
                 </div>
 
                 {/* Dropdown: Campus */}
-                <div className="p-2.5 px-3 rounded-xl bg-white dark:bg-zinc-800 border border-black/[0.05] dark:border-white/[0.06] flex items-center justify-between text-xs font-semibold text-[#1d1d1f] dark:text-zinc-200 mb-2 shadow-xs">
+                <div className="p-2.5 px-3 rounded-xl bg-white  border border-black/[0.05] [0.06] flex items-center justify-between text-xs font-semibold text-[#1d1d1f]  mb-2 shadow-xs">
                   <span>{bento.card1?.campusLabel || "PUP San Juan Campus"}</span>
                   <i className="ph-bold ph-caret-down text-zinc-400 text-xs" />
                 </div>
 
                 {/* Expanded Accordion: Document & Purpose */}
-                <div className="p-3 rounded-xl bg-white dark:bg-zinc-800 border border-black/[0.05] dark:border-white/[0.06] shadow-xs">
-                  <div className="flex items-center justify-between text-xs font-bold text-[#800000] dark:text-red-400 mb-2">
+                <div className="p-3 rounded-xl bg-white  border border-black/[0.05] [0.06] shadow-xs">
+                  <div className="flex items-center justify-between text-xs font-bold text-[#800000]  mb-2">
                     <span>{bento.card1?.accordionTitle || "Choose Document & Purpose"}</span>
                     <i className="ph-bold ph-caret-up text-xs" />
                   </div>
@@ -277,14 +277,14 @@ export default function LandingBento() {
                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
                             <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
                           </span>
-                          <span className="text-xs font-medium text-zinc-800 dark:text-zinc-200 truncate">
+                          <span className="text-xs font-medium text-zinc-800  truncate">
                             {activeDoc?.name || "Official Document"}
                           </span>
                           <span className="text-[10px] font-mono text-zinc-400 ml-auto shrink-0">
                             {activeDoc?.tag || "Selected"}
                           </span>
                         </div>
-                        <div className="text-[11px] text-zinc-500 dark:text-zinc-400 pl-4 truncate">
+                        <div className="text-[11px] text-zinc-500  pl-4 truncate">
                           Purpose: {activeDoc?.purpose || "General Evaluation"}
                         </div>
                       </motion.div>
@@ -294,9 +294,9 @@ export default function LandingBento() {
               </div>
 
               {/* Status footer pill with live breathing dot */}
-              <div className="mt-3 flex items-center justify-between text-[11px] font-mono text-zinc-400 pt-2 border-t border-black/[0.03] dark:border-white/[0.04]">
+              <div className="mt-3 flex items-center justify-between text-[11px] font-mono text-zinc-400 pt-2 border-t border-black/[0.03] [0.04]">
                 <span>{bento.card1?.studentStub || "Student: 2022-04912-SJ-0"}</span>
-                <span className="inline-flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-semibold">
+                <span className="inline-flex items-center gap-1.5 text-emerald-600  font-semibold">
                   <span className="relative flex h-1.5 w-1.5">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
                     <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />
@@ -308,10 +308,10 @@ export default function LandingBento() {
 
             {/* Typography Section */}
             <div className="mt-6">
-              <h3 className="text-lg sm:text-xl font-bold text-[#1d1d1f] dark:text-white tracking-tight group-hover:text-[#800000] dark:group-hover:text-red-400 transition-colors">
+              <h3 className="text-lg sm:text-xl font-bold text-[#1d1d1f]  tracking-tight group-hover:text-[#800000] :text-red-400 transition-colors">
                 {bento.card1?.title || "Request Online in Minutes"}
               </h3>
-              <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 mt-1.5 leading-relaxed font-normal">
+              <p className="text-xs sm:text-sm text-zinc-500  mt-1.5 leading-relaxed font-normal">
                 {bento.card1?.description || "Select the document you need, specify your purpose, and submit your request straight from your phone or computer."}
               </p>
             </div>
@@ -325,10 +325,10 @@ export default function LandingBento() {
             transition={{ duration: 0.65, delay: 0.24, ease: [0.16, 1, 0.3, 1] }}
             whileHover={{ y: -3 }}
             onClick={() => router.push("/login")}
-            className="rounded-[1.75rem] bg-white dark:bg-zinc-900 border border-black/[0.06] dark:border-white/[0.08] p-6 sm:p-8 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.03)] flex flex-col justify-between cursor-pointer group"
+            className="rounded-[1.75rem] bg-white  border border-black/[0.06] [0.08] p-6 sm:p-8 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.03)] flex flex-col justify-between cursor-pointer group"
           >
             {/* Simulated UI Area */}
-            <div className="rounded-2xl bg-[#f8f9fa] dark:bg-zinc-800/40 p-5 border border-black/[0.03] dark:border-white/[0.04] min-h-[220px] flex flex-col justify-between">
+            <div className="rounded-2xl bg-[#f8f9fa]  p-5 border border-black/[0.03] [0.04] min-h-[220px] flex flex-col justify-between">
               <div>
                 {/* Header Row with ticking icon */}
                 <div className="flex items-center gap-2.5 mb-3">
@@ -339,25 +339,25 @@ export default function LandingBento() {
                   >
                     <i className="ph-bold ph-clock text-xs" />
                   </motion.div>
-                  <span className="text-xs font-bold text-[#1d1d1f] dark:text-white">
+                  <span className="text-xs font-bold text-[#1d1d1f] ">
                     {bento.card2?.headerText || "Clear Pick-Up Schedule"}
                   </span>
                 </div>
 
                 {/* Subtitle hint */}
-                <div className="text-[11px] text-zinc-500 dark:text-zinc-400 flex items-center gap-1.5 mb-3 font-mono">
+                <div className="text-[11px] text-zinc-500  flex items-center gap-1.5 mb-3 font-mono">
                   <i className="ph-bold ph-caret-down text-[10px]" />
                   <span>{bento.card2?.subtitleHint || "Counted in working days once cleared"}</span>
                 </div>
 
-                <p className="text-xs text-zinc-600 dark:text-zinc-300 leading-snug mb-3">
+                <p className="text-xs text-zinc-600  leading-snug mb-3">
                   {bento.card2?.instructionsText || "Processing times depend on the type of document you requested:"}
                 </p>
 
                 {/* Simulated Input Search Box with live radar indicator */}
-                <div className="p-2.5 px-3 rounded-xl bg-white dark:bg-zinc-800 border border-black/[0.06] dark:border-white/[0.08] shadow-xs flex items-center gap-2 mb-2.5">
+                <div className="p-2.5 px-3 rounded-xl bg-white  border border-black/[0.06] [0.08] shadow-xs flex items-center gap-2 mb-2.5">
                   <i className="ph-bold ph-magnifying-glass text-zinc-400 text-xs" />
-                  <span className="text-xs text-zinc-700 dark:text-zinc-200 font-mono flex items-center justify-between w-full">
+                  <span className="text-xs text-zinc-700  font-mono flex items-center justify-between w-full">
                     <span>{bento.card2?.trackingSample || "Tracking #2026-SJ · Clearance Verified"}</span>
                     <span className="relative flex h-2 w-2 shrink-0">
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
@@ -390,17 +390,17 @@ export default function LandingBento() {
                 </div>
               </div>
 
-              <div className="text-[10px] font-mono text-zinc-400 pt-2 border-t border-black/[0.03] dark:border-white/[0.04]">
+              <div className="text-[10px] font-mono text-zinc-400 pt-2 border-t border-black/[0.03] [0.04]">
                 {bento.card2?.sealFooter || "Stamped with the official university dry seal"}
               </div>
             </div>
 
             {/* Typography Section */}
             <div className="mt-6">
-              <h3 className="text-lg sm:text-xl font-bold text-[#1d1d1f] dark:text-white tracking-tight group-hover:text-[#800000] dark:group-hover:text-red-400 transition-colors">
+              <h3 className="text-lg sm:text-xl font-bold text-[#1d1d1f]  tracking-tight group-hover:text-[#800000] :text-red-400 transition-colors">
                 {bento.card2?.title || "Know Exactly When It's Ready"}
               </h3>
-              <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 mt-1.5 leading-relaxed font-normal">
+              <p className="text-xs sm:text-sm text-zinc-500  mt-1.5 leading-relaxed font-normal">
                 {bento.card2?.description || "Every document follows a clear schedule so you know exactly when to visit the Registrar counter."}
               </p>
             </div>
@@ -424,10 +424,10 @@ export default function LandingBento() {
             transition={{ duration: 0.65, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
             whileHover={{ y: -3 }}
             onClick={() => router.push("/login")}
-            className="rounded-[1.75rem] bg-white dark:bg-zinc-900 border border-black/[0.06] dark:border-white/[0.08] p-6 sm:p-7 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.03)] flex flex-col justify-between cursor-pointer group"
+            className="rounded-[1.75rem] bg-white  border border-black/[0.06] [0.08] p-6 sm:p-7 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.03)] flex flex-col justify-between cursor-pointer group"
           >
             {/* Simulated UI Area: Archive Node Map with planetary orbit and pulse waves */}
-            <div className="rounded-2xl bg-[#f8f9fa] dark:bg-zinc-800/40 p-4 border border-black/[0.03] dark:border-white/[0.04] min-h-[180px] flex items-center justify-center relative overflow-hidden">
+            <div className="rounded-2xl bg-[#f8f9fa]  p-4 border border-black/[0.03] [0.04] min-h-[180px] flex items-center justify-center relative overflow-hidden">
               
               {/* Concentric Signal Radar Pulses from Central Node */}
               <motion.div
@@ -446,7 +446,7 @@ export default function LandingBento() {
                 <motion.div 
                   animate={{ scale: [1, 1.05, 1] }}
                   transition={{ repeat: Infinity, duration: 3.5, ease: "easeInOut" }}
-                  className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#800000] to-red-800 text-white flex items-center justify-center shadow-md border-2 border-white dark:border-zinc-800"
+                  className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#800000] to-red-800 text-white flex items-center justify-center shadow-md border-2 border-white "
                 >
                   <i className="ph-bold ph-archive text-xl" />
                 </motion.div>
@@ -458,7 +458,7 @@ export default function LandingBento() {
                 <motion.div 
                   animate={{ y: [-3, 3, -3] }}
                   transition={{ repeat: Infinity, duration: 3.6, ease: "easeInOut" }}
-                  className="absolute top-3 w-8 h-8 rounded-xl liquid-glass-light flex items-center justify-center text-zinc-600 dark:text-zinc-300 text-[10px] font-mono font-bold z-10"
+                  className="absolute top-3 w-8 h-8 rounded-xl liquid-glass-light flex items-center justify-center text-zinc-600  text-[10px] font-mono font-bold z-10"
                 >
                   {bento.card3?.roomCode || "R1"}
                 </motion.div>
@@ -467,7 +467,7 @@ export default function LandingBento() {
                 <motion.div 
                   animate={{ x: [-3, 3, -3] }}
                   transition={{ repeat: Infinity, duration: 4.2, delay: 0.3, ease: "easeInOut" }}
-                  className="absolute left-4 w-8 h-8 rounded-xl liquid-glass-light flex items-center justify-center text-zinc-600 dark:text-zinc-300 text-[10px] font-mono font-bold z-10"
+                  className="absolute left-4 w-8 h-8 rounded-xl liquid-glass-light flex items-center justify-center text-zinc-600  text-[10px] font-mono font-bold z-10"
                 >
                   {bento.card3?.cabinetCode || "C-A"}
                 </motion.div>
@@ -476,7 +476,7 @@ export default function LandingBento() {
                 <motion.div 
                   animate={{ x: [3, -3, 3] }}
                   transition={{ repeat: Infinity, duration: 3.8, delay: 0.6, ease: "easeInOut" }}
-                  className="absolute right-4 w-8 h-8 rounded-xl liquid-glass-light flex items-center justify-center text-zinc-600 dark:text-zinc-300 text-[10px] font-mono font-bold z-10"
+                  className="absolute right-4 w-8 h-8 rounded-xl liquid-glass-light flex items-center justify-center text-zinc-600  text-[10px] font-mono font-bold z-10"
                 >
                   {bento.card3?.drawerCode || "D-2"}
                 </motion.div>
@@ -485,7 +485,7 @@ export default function LandingBento() {
                 <motion.div 
                   animate={{ y: [3, -3, 3], scale: [1, 1.08, 1] }}
                   transition={{ repeat: Infinity, duration: 4.0, delay: 0.9, ease: "easeInOut" }}
-                  className="absolute bottom-3 w-8 h-8 rounded-xl liquid-glass-light flex items-center justify-center text-emerald-600 dark:text-emerald-400 text-xs z-10"
+                  className="absolute bottom-3 w-8 h-8 rounded-xl liquid-glass-light flex items-center justify-center text-emerald-600  text-xs z-10"
                 >
                   <i className="ph-bold ph-stamp" />
                 </motion.div>
@@ -494,17 +494,17 @@ export default function LandingBento() {
                 <motion.div 
                   animate={{ rotate: 360 }}
                   transition={{ repeat: Infinity, duration: 28, ease: "linear" }}
-                  className="w-36 h-36 rounded-full border border-dashed border-zinc-300 dark:border-zinc-700/60" 
+                  className="w-36 h-36 rounded-full border border-dashed border-zinc-300 " 
                 />
               </div>
             </div>
 
             {/* Typography Section */}
             <div className="mt-5">
-              <h3 className="text-base sm:text-lg font-bold text-[#1d1d1f] dark:text-white tracking-tight group-hover:text-[#800000] dark:group-hover:text-red-400 transition-colors">
+              <h3 className="text-base sm:text-lg font-bold text-[#1d1d1f]  tracking-tight group-hover:text-[#800000] :text-red-400 transition-colors">
                 {bento.card3?.title || "Direct from Campus Archives"}
               </h3>
-              <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1.5 leading-relaxed font-normal">
+              <p className="text-xs text-zinc-500  mt-1.5 leading-relaxed font-normal">
                 {bento.card3?.description || "Your online request connects directly to Room 1 archive cabinets, so staff can retrieve your folder faster."}
               </p>
             </div>
@@ -518,10 +518,10 @@ export default function LandingBento() {
             transition={{ duration: 0.65, delay: 0.26, ease: [0.16, 1, 0.3, 1] }}
             whileHover={{ y: -3 }}
             onClick={() => router.push("/login")}
-            className="rounded-[1.75rem] bg-white dark:bg-zinc-900 border border-black/[0.06] dark:border-white/[0.08] p-6 sm:p-7 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.03)] flex flex-col justify-between cursor-pointer group"
+            className="rounded-[1.75rem] bg-white  border border-black/[0.06] [0.08] p-6 sm:p-7 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.03)] flex flex-col justify-between cursor-pointer group"
           >
             {/* Simulated UI Area: Checklist Stack with layered paper float */}
-            <div className="rounded-2xl bg-[#f8f9fa] dark:bg-zinc-800/40 p-4 border border-black/[0.03] dark:border-white/[0.04] min-h-[180px] flex flex-col justify-between">
+            <div className="rounded-2xl bg-[#f8f9fa]  p-4 border border-black/[0.03] [0.04] min-h-[180px] flex flex-col justify-between">
               <div>
                 <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-400 block mb-2">
                   {bento.card4?.checklistHeader || "Checklist"}
@@ -531,21 +531,21 @@ export default function LandingBento() {
                 <motion.div 
                   animate={{ y: [0, -3, 0] }}
                   transition={{ repeat: Infinity, duration: 4.5, ease: "easeInOut" }}
-                  className="p-3 rounded-xl bg-white dark:bg-zinc-800 border border-black/[0.05] dark:border-white/[0.06] shadow-xs"
+                  className="p-3 rounded-xl bg-white  border border-black/[0.05] [0.06] shadow-xs"
                 >
                   <div className="flex items-center gap-2 mb-1.5">
                     <motion.div 
                       animate={{ scale: [1, 1.15, 1] }}
                       transition={{ repeat: Infinity, duration: 3, repeatDelay: 2, ease: "backOut" }}
-                      className="w-5 h-5 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 flex items-center justify-center text-[10px]"
+                      className="w-5 h-5 rounded-full bg-emerald-100  text-emerald-700  flex items-center justify-center text-[10px]"
                     >
                       <i className="ph-bold ph-check" />
                     </motion.div>
-                    <span className="text-xs font-bold text-[#1d1d1f] dark:text-white">
+                    <span className="text-xs font-bold text-[#1d1d1f] ">
                       {bento.card4?.primaryItemTitle || "Student Number & Email"}
                     </span>
                   </div>
-                  <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-snug">
+                  <p className="text-[11px] text-zinc-500  leading-snug">
                     {bento.card4?.primaryItemDesc || "Your official student number and an active email for notifications."}
                   </p>
                 </motion.div>
@@ -554,10 +554,10 @@ export default function LandingBento() {
                 <motion.div 
                   animate={{ y: [0, 2, 0] }}
                   transition={{ repeat: Infinity, duration: 4.5, delay: 0.4, ease: "easeInOut" }}
-                  className="mt-2 p-2 px-3 rounded-xl bg-white/60 dark:bg-zinc-800/60 border border-black/[0.03] dark:border-white/[0.04] flex items-center justify-between text-[11px] text-zinc-500 dark:text-zinc-400"
+                  className="mt-2 p-2 px-3 rounded-xl bg-white/60  border border-black/[0.03] [0.04] flex items-center justify-between text-[11px] text-zinc-500 "
                 >
                   <span>{bento.card4?.secondaryItemTitle || "Campus Clearance Stub"}</span>
-                  <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 font-semibold">
+                  <span className="text-[10px] font-mono text-emerald-600  font-semibold">
                     {bento.card4?.secondaryItemBadge || "Required for TOR"}
                   </span>
                 </motion.div>
@@ -570,10 +570,10 @@ export default function LandingBento() {
 
             {/* Typography Section */}
             <div className="mt-5">
-              <h3 className="text-base sm:text-lg font-bold text-[#1d1d1f] dark:text-white tracking-tight group-hover:text-[#800000] dark:group-hover:text-red-400 transition-colors">
+              <h3 className="text-base sm:text-lg font-bold text-[#1d1d1f]  tracking-tight group-hover:text-[#800000] :text-red-400 transition-colors">
                 {bento.card4?.title || "What You Need to Prepare"}
               </h3>
-              <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1.5 leading-relaxed font-normal">
+              <p className="text-xs text-zinc-500  mt-1.5 leading-relaxed font-normal">
                 {bento.card4?.description || "Have your student number, email, and signed clearance ready so your request is evaluated right away."}
               </p>
             </div>
@@ -587,17 +587,17 @@ export default function LandingBento() {
             transition={{ duration: 0.65, delay: 0.42, ease: [0.16, 1, 0.3, 1] }}
             whileHover={{ y: -3 }}
             onClick={() => router.push("/login")}
-            className="rounded-[1.75rem] bg-white dark:bg-zinc-900 border border-black/[0.06] dark:border-white/[0.08] p-6 sm:p-7 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.03)] flex flex-col justify-between cursor-pointer group"
+            className="rounded-[1.75rem] bg-white  border border-black/[0.06] [0.08] p-6 sm:p-7 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.03)] flex flex-col justify-between cursor-pointer group"
           >
             {/* Simulated UI Area: Tabs + Safeguard Cards with animated layoutId pill */}
             <div 
               onMouseEnter={() => setIsHoveredTab(true)}
               onMouseLeave={() => setIsHoveredTab(false)}
-              className="rounded-2xl bg-[#f8f9fa] dark:bg-zinc-800/40 p-4 border border-black/[0.03] dark:border-white/[0.04] min-h-[180px] flex flex-col justify-between"
+              className="rounded-2xl bg-[#f8f9fa]  p-4 border border-black/[0.03] [0.04] min-h-[180px] flex flex-col justify-between"
             >
               <div>
                 {/* Simple Segmented Tab Bar with layoutId animated pill */}
-                <div className="flex items-center gap-1 p-1 rounded-xl bg-white dark:bg-zinc-800 border border-black/[0.05] dark:border-white/[0.06] mb-3 shadow-2xs">
+                <div className="flex items-center gap-1 p-1 rounded-xl bg-white  border border-black/[0.05] [0.06] mb-3 shadow-2xs">
                   <button
                     type="button"
                     onClick={(e) => {
@@ -607,7 +607,7 @@ export default function LandingBento() {
                     className={`relative flex-1 py-1 rounded-lg text-[10px] font-semibold transition-colors duration-200 ${
                       activeTab === "charter"
                         ? "text-white"
-                        : "text-zinc-500 hover:text-zinc-900 dark:hover:text-white"
+                        : "text-zinc-500 hover:text-zinc-900 :text-white"
                     }`}
                   >
                     {activeTab === "charter" && (
@@ -628,7 +628,7 @@ export default function LandingBento() {
                     className={`relative flex-1 py-1 rounded-lg text-[10px] font-semibold transition-colors duration-200 flex items-center justify-center gap-1 ${
                       activeTab === "arta"
                         ? "text-white"
-                        : "text-zinc-500 hover:text-zinc-900 dark:hover:text-white"
+                        : "text-zinc-500 hover:text-zinc-900 :text-white"
                     }`}
                   >
                     {activeTab === "arta" && (
@@ -652,7 +652,7 @@ export default function LandingBento() {
                     className={`relative flex-1 py-1 rounded-lg text-[10px] font-semibold transition-colors duration-200 ${
                       activeTab === "audit"
                         ? "text-white"
-                        : "text-zinc-500 hover:text-zinc-900 dark:hover:text-white"
+                        : "text-zinc-500 hover:text-zinc-900 :text-white"
                     }`}
                   >
                     {activeTab === "audit" && (
@@ -680,16 +680,16 @@ export default function LandingBento() {
                       {tabData[activeTab]?.map((item, idx) => (
                         <div
                           key={idx}
-                          className="p-2.5 rounded-xl bg-white dark:bg-zinc-800 border border-black/[0.04] dark:border-white/[0.06] flex items-center gap-2.5 shadow-xs"
+                          className="p-2.5 rounded-xl bg-white  border border-black/[0.04] [0.06] flex items-center gap-2.5 shadow-xs"
                         >
-                          <div className={`w-8 h-8 rounded-lg ${item.bg || (idx % 2 === 0 ? "bg-[#800000]" : "bg-zinc-800 dark:bg-zinc-700")} text-white flex items-center justify-center text-xs shrink-0 font-bold`}>
+                          <div className={`w-8 h-8 rounded-lg ${item.bg || (idx % 2 === 0 ? "bg-[#800000]" : "bg-zinc-800 ")} text-white flex items-center justify-center text-xs shrink-0 font-bold`}>
                             <i className={`ph-bold ${item.icon}`} />
                           </div>
                           <div className="overflow-hidden">
-                            <div className="text-xs font-bold text-[#1d1d1f] dark:text-white truncate">
+                            <div className="text-xs font-bold text-[#1d1d1f]  truncate">
                               {item.title}
                             </div>
-                            <div className="text-[10px] text-zinc-500 dark:text-zinc-400 truncate">
+                            <div className="text-[10px] text-zinc-500  truncate">
                               {item.desc}
                             </div>
                           </div>
@@ -707,10 +707,10 @@ export default function LandingBento() {
 
             {/* Typography Section */}
             <div className="mt-5">
-              <h3 className="text-base sm:text-lg font-bold text-[#1d1d1f] dark:text-white tracking-tight group-hover:text-[#800000] dark:group-hover:text-red-400 transition-colors">
+              <h3 className="text-base sm:text-lg font-bold text-[#1d1d1f]  tracking-tight group-hover:text-[#800000] :text-red-400 transition-colors">
                 {bento.card5?.title || "Protected by Law (RA 11032)"}
               </h3>
-              <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1.5 leading-relaxed font-normal">
+              <p className="text-xs text-zinc-500  mt-1.5 leading-relaxed font-normal">
                 {bento.card5?.description || "Backed by the Ease of Doing Business Act. Transparent tracking with zero hidden delays."}
               </p>
             </div>

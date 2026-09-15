@@ -3,14 +3,11 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
+
 import BevelButton from "@/components/ui/bevel-button";
 import MorphButton from "@/components/ui/morph-button";
 
-if (typeof window !== "undefined") {
-  gsap.registerPlugin(ScrollTrigger);
-}
+
 
 const DEFAULT_WORKFLOW_CONTENT = {
   eyebrow: "",
@@ -158,56 +155,18 @@ export default function ProcessWorkflow() {
     router.push(target);
   };
 
-  useEffect(() => {
-    const container = containerRef.current;
-    const card = cardRef.current;
-    if (!container || !card) return;
 
-    const ctx = gsap.context(() => {
-      const isMobile = window.innerWidth < 640;
-      gsap.fromTo(
-        card,
-        {
-          borderRadius: "0px",
-          scale: 1,
-          borderColor: "rgba(255, 255, 255, 0.04)",
-          boxShadow: "0 0 0 rgba(0, 0, 0, 0)",
-        },
-        {
-          borderRadius: isMobile ? "24px" : "40px",
-          scale: isMobile ? 0.975 : 0.955,
-          borderColor: "rgba(255, 255, 255, 0.12)",
-          boxShadow: "0 35px 80px -20px rgba(0, 0, 0, 0.55), 0 0 50px -10px rgba(128, 0, 0, 0.2)",
-          ease: "none",
-          scrollTrigger: {
-            trigger: container,
-            start: "top 85%",
-            end: "top 12%",
-            scrub: 0.8,
-            invalidateOnRefresh: true,
-          },
-        }
-      );
-    }, container);
-
-    return () => ctx.revert();
-  }, []);
 
   return (
     <section 
       ref={containerRef}
       id="workflow" 
-      className="relative w-full bg-white dark:bg-zinc-950 py-4 sm:py-8 lg:py-12 transition-colors overflow-hidden"
+      className="relative w-full bg-white transition-colors overflow-hidden"
     >
-      {/* Scroll-animated dark canvas card — begins full-bleed, smoothly morphs into a rounded framed showcase */}
+      {/* Dark canvas card — full-bleed */}
       <div 
         ref={cardRef}
-        className="relative w-full bg-zinc-950 text-white font-inter select-none py-20 sm:py-28 lg:py-32 overflow-hidden border border-white/[0.06] transition-colors"
-        style={{
-          borderRadius: 0,
-          transformOrigin: "center top",
-          willChange: "transform, border-radius, box-shadow",
-        }}
+        className="relative w-full bg-zinc-950 text-white font-inter select-none py-20 sm:py-28 lg:py-32 overflow-hidden"
       >
         {/* Background ambient lighting effects */}
         <div className="absolute top-0 left-1/4 w-96 h-96 bg-[#800000]/15 rounded-full blur-[140px] pointer-events-none" />
@@ -249,33 +208,7 @@ export default function ProcessWorkflow() {
               </motion.p>
 
               {/* Quick Action cluster */}
-              <motion.div 
-                initial={{ opacity: 0, y: 20, filter: "blur(4px)" }}
-                whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                viewport={{ once: true, margin: "-50px" }}
-                transition={{ duration: 0.7, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-                className="flex flex-wrap items-center gap-3 pt-2"
-              >
-                {workflow.primaryButtonEnabled !== false && (
-                  <BevelButton
-                    onClick={() => handleActionClick(workflow.primaryButtonLink || "/login")}
-                    className="h-11 px-6 rounded-full font-semibold text-xs tracking-wide shadow-[0_10px_25px_rgba(128,0,0,0.3)] cursor-pointer"
-                  >
-                    {workflow.primaryButtonText || "Request Document"}
-                  </BevelButton>
-                )}
 
-                {workflow.secondaryButtonEnabled !== false && (
-                  <MorphButton
-                    variant="secondary"
-                    onClick={() => handleActionClick(workflow.secondaryButtonTarget || "catalog")}
-                    className="relative h-11 px-5 rounded-full text-xs font-medium liquid-glass-dark active:scale-[0.98] cursor-pointer text-white/90"
-                  >
-                    <span>{workflow.secondaryButtonText || "Explore Services (8)"}</span>
-                    <span className="opacity-70 text-[11px] ml-1">↓</span>
-                  </MorphButton>
-                )}
-              </motion.div>
             </div>
 
             {/* =========================================================================
@@ -349,7 +282,7 @@ export default function ProcessWorkflow() {
                       <div className="pt-1">
                         {/* Step Header */}
                         <div className="flex items-center gap-3 mb-2">
-                          <span className="text-[10px] font-mono uppercase tracking-widest text-[#ad2f2f] dark:text-red-400 font-bold">
+                          <span className="text-[10px] font-mono uppercase tracking-widest text-[#ad2f2f]  font-bold">
                             Step {step.num || String(idx + 1).padStart(2, "0")}
                           </span>
                           {step.summary && (

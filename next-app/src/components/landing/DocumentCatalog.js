@@ -208,123 +208,15 @@ export default function DocumentCatalog() {
   }, []);
 
   // Target angle and smooth interpolated angle
-  // FRONT_ANGLE is PI (9 o'clock position on the Ferris wheel, closest to left inspector)
+  // Derived angle based purely on activeIndex (No RAF lag!)
   const FRONT_ANGLE = Math.PI;
-  const targetAngleRef = useRef(FRONT_ANGLE);
-  const currentAngleRef = useRef(FRONT_ANGLE);
-  const [renderAngle, setRenderAngle] = useState(FRONT_ANGLE);
-
-  // Drag interaction state
-  const [isDragging, setIsDragging] = useState(false);
-  const isDraggingRef = useRef(false);
-  const dragStartYRef = useRef(0);
-  const dragStartXRef = useRef(0);
-  const dragStartAngleRef = useRef(FRONT_ANGLE);
+  const step = totalItems > 0 ? (2 * Math.PI) / totalItems : 0;
+  const renderAngle = FRONT_ANGLE - safeActiveIndex * step;
 
   // Move directly to target index
   const rotateToIndex = useCallback((index) => {
-    if (totalItems === 0) return;
-    const step = (2 * Math.PI) / totalItems;
-    const desiredAngle = FRONT_ANGLE - index * step;
-
-    // Find shortest rotational path from current target angle
-    const diff = desiredAngle - targetAngleRef.current;
-    const normalizedDiff = Math.atan2(Math.sin(diff), Math.cos(diff));
-    targetAngleRef.current += normalizedDiff;
     setActiveIndex(index);
-  }, [totalItems, FRONT_ANGLE]);
-
-  // Continuous animation loop (Ferris Wheel rotation)
-  useEffect(() => {
-    let animId;
-    let lastTime = performance.now();
-
-    const tick = (now) => {
-      const dt = Math.min((now - lastTime) / 1000, 0.1);
-      lastTime = now;
-
-      // Auto rotation: slow majestic Ferris wheel turn (~55 seconds per revolution)
-      if (!isHovered && !isDraggingRef.current) {
-        targetAngleRef.current += 0.12 * dt;
-      }
-
-      // Smooth spring lerp toward target angle
-      const angleDiff = targetAngleRef.current - currentAngleRef.current;
-      currentAngleRef.current += angleDiff * Math.min(dt * 8, 0.3);
-
-      setRenderAngle(currentAngleRef.current);
-
-      // Identify which carriage is closest to focal position (FRONT_ANGLE = PI)
-      if (totalItems > 0) {
-        const step = (2 * Math.PI) / totalItems;
-        let closestIdx = 0;
-        let minDiff = Infinity;
-
-        for (let i = 0; i < totalItems; i++) {
-          const itemAngle = currentAngleRef.current + i * step;
-          const diff = Math.abs(Math.atan2(Math.sin(itemAngle - FRONT_ANGLE), Math.cos(itemAngle - FRONT_ANGLE)));
-          if (diff < minDiff) {
-            minDiff = diff;
-            closestIdx = i;
-          }
-        }
-
-        if (closestIdx !== activeIndex) {
-          setActiveIndex(closestIdx);
-        }
-      }
-
-      animId = requestAnimationFrame(tick);
-    };
-
-    animId = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(animId);
-  }, [isHovered, totalItems, activeIndex, FRONT_ANGLE]);
-
-  // Pointer drag event handlers for the Ferris wheel stage
-  const handlePointerDown = (e) => {
-    isDraggingRef.current = true;
-    setIsDragging(true);
-    dragStartYRef.current = e.clientY;
-    dragStartXRef.current = e.clientX;
-    dragStartAngleRef.current = targetAngleRef.current;
-    e.currentTarget.setPointerCapture(e.pointerId);
-  };
-
-  const handlePointerMove = (e) => {
-    if (!isDraggingRef.current) return;
-    const deltaY = e.clientY - dragStartYRef.current;
-    const deltaX = e.clientX - dragStartXRef.current;
-    // Dragging UP/DOWN on a Ferris wheel rotates the wheel
-    targetAngleRef.current = dragStartAngleRef.current - deltaY * 0.003 - deltaX * 0.002;
-  };
-
-  const handlePointerUp = (e) => {
-    if (!isDraggingRef.current) return;
-    isDraggingRef.current = false;
-    setIsDragging(false);
-    setIsHovered(false);
-    try {
-      e.currentTarget.releasePointerCapture(e.pointerId);
-    } catch {}
-
-    // Snap to nearest carriage on release
-    if (totalItems > 0) {
-      const step = (2 * Math.PI) / totalItems;
-      let closestIdx = 0;
-      let minDiff = Infinity;
-
-      for (let i = 0; i < totalItems; i++) {
-        const itemAngle = targetAngleRef.current + i * step;
-        const diff = Math.abs(Math.atan2(Math.sin(itemAngle - FRONT_ANGLE), Math.cos(itemAngle - FRONT_ANGLE)));
-        if (diff < minDiff) {
-          minDiff = diff;
-          closestIdx = i;
-        }
-      }
-      rotateToIndex(closestIdx);
-    }
-  };
+  }, []);
 
   const activeDoc = items[safeActiveIndex] || items[0];
 
@@ -332,73 +224,68 @@ export default function DocumentCatalog() {
     <section
       id="catalog"
       ref={sectionRef}
-      className="relative w-full py-20 sm:py-28 lg:py-36 overflow-hidden bg-white dark:bg-zinc-950 select-none font-inter min-h-[800px] sm:min-h-[860px] lg:min-h-[940px] flex items-center"
+      className="relative w-full py-16 sm:py-20 lg:py-24 overflow-hidden bg-white select-none font-inter min-h-0 flex items-center"
     >
-      {/* Ambient background glow behind rotating documents on the right */}
-      <div className="absolute top-1/2 right-0 -translate-y-1/2 w-[70vw] h-[90%] pointer-events-none opacity-40 dark:opacity-20 overflow-hidden">
-        <div className="w-full h-full bg-radial from-[#800000]/15 via-transparent to-transparent blur-3xl" />
+      {/* Ambient background glow */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[100vw] h-[100%] pointer-events-none opacity-30 overflow-hidden">
+        <div className="w-full h-full bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-gray-200/50 via-transparent to-transparent blur-3xl" />
       </div>
 
-      {/* Main Content Area: Left Column with Breathing Room */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full relative z-20 pointer-events-none">
-        <div className="max-w-xl lg:max-w-[480px] xl:max-w-[520px] pointer-events-auto space-y-7">
+      {/* Main Content Area */}
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 w-full relative z-20 pointer-events-none flex flex-col items-center">
+        <div className="w-full pointer-events-auto space-y-10 flex flex-col items-center">
 
           {/* Section Heading & Subtitle */}
-          <div>
-            {catalogData.eyebrow && (
-              <div className="text-[11px] font-mono uppercase tracking-widest text-[#800000] dark:text-red-400 font-bold mb-2">
-                {catalogData.eyebrow}
-              </div>
-            )}
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-gray-950 dark:text-white leading-[1.08]">
+          <div className="text-center flex flex-col items-center">
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-gray-950 leading-[1.08]">
               {catalogData.heading || "Academic Document Catalog"}
             </h2>
-            <p className="text-sm sm:text-base text-gray-500 dark:text-zinc-400 mt-2.5 leading-relaxed font-normal">
+            <p className="text-sm sm:text-base text-gray-500 mt-4 max-w-xl leading-relaxed font-normal">
               {catalogData.description}
             </p>
           </div>
 
           {/* Active Document Details Inspector Panel: Stable Height Container */}
-          <div className="relative min-h-[320px] sm:min-h-[340px]">
+          <div className="relative min-h-[320px] sm:min-h-[340px] w-full max-w-xl flex flex-col">
             <AnimatePresence mode="wait" initial={false}>
               <motion.div
                 key={activeDoc?.id || "doc-empty"}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1, transition: { duration: 0.2, ease: "easeOut" } }}
-                exit={{ opacity: 0, transition: { duration: 0.15, ease: "easeIn" } }}
-                className="w-full space-y-5"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0, transition: { duration: 0.3, ease: "easeOut" } }}
+                exit={{ opacity: 0, y: -10, transition: { duration: 0.2, ease: "easeIn" } }}
+                className="w-full space-y-6 flex flex-col items-center text-center"
               >
                 {/* Badges */}
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="px-3 py-1 rounded-full text-xs font-semibold bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-black/[0.06] dark:border-white/[0.08]">
+                <div className="flex flex-wrap items-center justify-center gap-2">
+                  <span className="px-3 py-1 rounded-full text-xs font-medium bg-zinc-100 text-zinc-600 border border-black/5">
                     {activeDoc?.client}
                   </span>
-                  <span className="px-2.5 py-1 rounded-full text-[11px] font-mono font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/60 dark:border-emerald-800/40 inline-flex items-center gap-1.5">
+                  <span className="px-2.5 py-1 rounded-full text-[11px] font-mono font-medium text-emerald-700 bg-emerald-50 border border-emerald-200/60 inline-flex items-center gap-1.5">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                     {catalogData.badgeText || "Official Credential"}
                   </span>
                 </div>
 
-                {/* Title & Description with stable min-height */}
+                {/* Title & Description */}
                 <div className="min-h-[80px] sm:min-h-[86px]">
-                  <h3 className="text-2xl sm:text-3xl font-extrabold text-gray-950 dark:text-white tracking-tight leading-snug">
+                  <h3 className="text-2xl sm:text-3xl font-bold text-gray-950 tracking-tight leading-snug">
                     {activeDoc?.title}
                   </h3>
-                  <p className="text-xs sm:text-sm text-gray-600 dark:text-zinc-300 mt-2 leading-relaxed">
+                  <p className="text-xs sm:text-sm text-gray-600 mt-2.5 leading-relaxed max-w-md mx-auto">
                     {activeDoc?.description}
                   </p>
                 </div>
 
-                {/* Filing Requirements Checklist with stable min-height */}
-                <div className="p-4 sm:p-5 rounded-2xl liquid-glass-light min-h-[148px]">
-                  <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-gray-900 dark:text-zinc-100 mb-3 font-mono">
-                    <i className="ph-bold ph-shield-check text-[#800000] dark:text-red-400 text-base" />
+                {/* Filing Requirements Checklist */}
+                <div className="p-5 sm:p-6 rounded-2xl bg-zinc-50 border border-black/5 w-full text-left">
+                  <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-gray-900 mb-4 font-mono">
+                    <i className="ph-bold ph-shield-check text-gray-400 text-base" />
                     Mandatory Filing Requirements
                   </div>
-                  <ul className="space-y-2 text-xs text-gray-600 dark:text-zinc-300">
+                  <ul className="space-y-3 text-sm text-gray-600">
                     {activeDoc?.requirements?.map((req, idx) => (
-                      <li key={idx} className="flex items-start gap-2.5 leading-relaxed">
-                        <span className="mt-0.5 flex-shrink-0 w-4 h-4 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 flex items-center justify-center text-[10px] font-bold">
+                      <li key={idx} className="flex items-start gap-3 leading-relaxed">
+                        <span className="mt-0.5 flex-shrink-0 w-4 h-4 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-[10px] font-bold">
                           <i className="ph-bold ph-check text-[10px]" />
                         </span>
                         <span>{req}</span>
@@ -410,44 +297,24 @@ export default function DocumentCatalog() {
             </AnimatePresence>
           </div>
 
-          {/* Action Buttons & Pagination: Permanently Mounted Without Jitter */}
-          <div className="space-y-4 pt-1">
-            {catalogData.primaryButtonEnabled !== false && (
-              <div>
-                <BevelButton
-                  onClick={() => {
-                    const link = catalogData.primaryButtonLink || "/login";
-                    if (link.startsWith("#")) {
-                      const el = document.getElementById(link.substring(1));
-                      if (el) el.scrollIntoView({ behavior: "smooth" });
-                    } else {
-                      router.push(link);
-                    }
-                  }}
-                  className="h-11 px-7 rounded-full text-xs font-bold tracking-wide cursor-pointer flex items-center gap-2 shadow-md hover:scale-[1.02] active:scale-[0.98] transition-transform"
-                >
-                  <span>{catalogData.primaryButtonText || "Request Credential"}</span>
-                  <i className="ph-bold ph-arrow-right text-xs" />
-                </BevelButton>
-              </div>
-            )}
-
+          {/* Action Buttons & Pagination */}
+          <div className="space-y-4 pt-4 flex flex-col items-center">
             {/* Document Pagination Status */}
-            <div className="flex items-center gap-3 pt-1">
-              <span className="font-mono text-xs font-bold text-gray-900 dark:text-white">
+            <div className="flex flex-col items-center gap-4">
+              <span className="font-mono text-xs font-bold text-gray-900">
                 {String(safeActiveIndex + 1).padStart(2, "0")}{" "}
                 <span className="text-gray-400 font-normal">/ {String(totalItems).padStart(2, "0")}</span>
               </span>
 
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-2">
                 {items.map((item, idx) => (
                   <button
                     key={item.id}
                     onClick={() => rotateToIndex(idx)}
                     className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${
                       idx === safeActiveIndex
-                        ? "w-7 bg-[#800000] dark:bg-red-500"
-                        : "w-1.5 bg-gray-300 dark:bg-zinc-700 hover:bg-gray-400"
+                        ? "w-8 bg-gray-800"
+                        : "w-2 bg-gray-200 hover:bg-gray-300"
                     }`}
                     aria-label={`Go to ${item.title}`}
                   />
@@ -459,70 +326,6 @@ export default function DocumentCatalog() {
         </div>
       </div>
 
-      {/* Circular Rotating Document Stage: Sweeps across the section and out of the screen */}
-      <div
-        className="absolute inset-0 w-full h-full pointer-events-auto cursor-grab active:cursor-grabbing select-none overflow-visible"
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
-        onPointerCancel={handlePointerUp}
-      >
-        {/* Orbiting Document Cards */}
-        <div className="absolute inset-0 w-full h-full pointer-events-none">
-          {items.map((item, idx) => {
-            const step = (2 * Math.PI) / totalItems;
-            const angle = renderAngle + idx * step;
-
-            // Position along the circular orbit
-            const x = wheelGeometry.centerX + wheelGeometry.radius * Math.cos(angle);
-            const y = wheelGeometry.centerY + wheelGeometry.radius * Math.sin(angle);
-
-            // Depth calculation: angle = PI is focal station (closest to left column)
-            // depthFactor = 1.0 at FRONT_ANGLE (PI), 0.0 at 0 (far right off-screen)
-            const depthFactor = (1 - Math.cos(angle)) / 2;
-
-            const scale = (0.76 + 0.28 * depthFactor) * wheelGeometry.scale;
-            const opacity = 0.25 + 0.75 * depthFactor;
-            const zIndex = Math.round(10 + 40 * depthFactor);
-
-            // Subtle organic tilt
-            const subtleTilt = Math.sin(angle) * 2.5;
-
-            const isActive = idx === safeActiveIndex;
-
-            return (
-              <div
-                key={item.id}
-                onClick={() => rotateToIndex(idx)}
-                onMouseEnter={() => setIsHovered(true)}
-                onMouseLeave={() => setIsHovered(false)}
-                className="absolute pointer-events-auto cursor-pointer select-none active:scale-[0.98] transition-transform duration-150 transform-gpu"
-                style={{
-                  left: `${x}px`,
-                  top: `${y}px`,
-                  transform: `translate(-50%, -50%) scale(${scale}) rotateZ(${subtleTilt}deg)`,
-                  opacity: opacity,
-                  zIndex: zIndex,
-                  filter: depthFactor < 0.2 ? "blur(1px)" : "none",
-                  transition: isDragging
-                    ? "none"
-                    : "box-shadow 250ms cubic-bezier(0.23, 1, 0.32, 1), filter 250ms ease-out",
-                }}
-              >
-                <DocumentCardPreview item={item} isActive={isActive} />
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Interactive Instruction Floating Pill */}
-        {catalogData.dragHint && (
-          <div className="absolute bottom-6 right-8 pointer-events-none hidden sm:flex items-center gap-2 px-3.5 py-1.5 rounded-full navbar-liquid-glass text-[11px] font-mono text-gray-500 dark:text-zinc-400 shadow-md">
-            <i className="ph-bold ph-hand-pointing text-xs text-[#800000] dark:text-red-400" />
-            <span>{catalogData.dragHint}</span>
-          </div>
-        )}
-      </div>
 
     </section>
   );

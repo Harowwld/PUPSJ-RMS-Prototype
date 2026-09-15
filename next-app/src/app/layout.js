@@ -25,7 +25,7 @@ const geist = localFont({
 });
 
 export const metadata = {
-  title: "PUP E-Manage",
+  title: "eManage",
   description: "Records Keeping System",
   icons: {
     icon: [
