@@ -5,6 +5,8 @@ import { NextResponse } from "next/server";
 import { getStudentSession } from "@/lib/studentAuth";
 import { query, queryOne } from "@/lib/postgres";
 import { writeGlobalAuditLog } from "@/lib/auditLogRequest";
+import { requireStudent, createAuthErrorResponse } from "@/lib/authHelpers";
+import { canAccessResource } from "@/lib/resourceAuthorization";
 
 export const runtime = "nodejs";
 
@@ -16,9 +18,11 @@ function uploadsDir() {
 }
 
 export async function GET(req) {
-  const session = await getStudentSession(req);
-  if (!session) return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
-  const proposals = await query("SELECT * FROM event_proposals WHERE student_no = $1 ORDER BY created_at DESC", [session.studentNo]);
+  const access = await requireStudent(req);
+  if (access.error || !access.user) return createAuthErrorResponse(access.error || "Student authentication required", access.error?.startsWith("Access denied") ? 403 : 401);
+  const session = { studentNo: access.user.studentNo };
+  const proposals = (await query("SELECT * FROM event_proposals WHERE office_id = 'osas' AND student_no = $1 ORDER BY created_at DESC", [session.studentNo]))
+    .filter((item) => canAccessResource(access.user, "proposal", item));
   const ids = proposals.map((item) => item.id);
   const updates = ids.length
     ? await query("SELECT * FROM transaction_updates WHERE event_proposal_id = ANY($1::bigint[]) ORDER BY created_at ASC", [ids])
@@ -33,8 +37,9 @@ export async function GET(req) {
 }
 
 export async function POST(req) {
-  const session = await getStudentSession(req);
-  if (!session) return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
+  const access = await requireStudent(req);
+  if (access.error || !access.user) return createAuthErrorResponse(access.error || "Student authentication required", access.error?.startsWith("Access denied") ? 403 : 401);
+  const session = { studentNo: access.user.studentNo };
   const form = await req.formData().catch(() => null);
   const title = String(form?.get("title") || "").trim();
   const organizationName = String(form?.get("organizationName") || "").trim();
@@ -56,6 +61,9 @@ export async function POST(req) {
      VALUES ('osas', $1, $2, $3, $4, $5, $6, $7, $8, 'Submitted') RETURNING *`,
     [session.studentNo, title, organizationName, eventDate, file.name || "event-proposal.pdf", storageFilename, file.type, file.size]
   );
+  if (!proposal || !canAccessResource(access.user, "proposal", proposal)) {
+    return NextResponse.json({ ok: false, error: "Proposal could not be submitted" }, { status: 500 });
+  }
   await query(`INSERT INTO transaction_updates (event_proposal_id, status, message)
     VALUES ($1, 'Submitted', 'Event proposal submitted.')`, [proposal.id]);
   await writeGlobalAuditLog(req, "Student event proposal submitted", { actor: session.studentNo, role: "Student", officeId: "osas", details: `Submitted ${title}`, entity_type: "event_proposal", entity_id: String(proposal.id) });

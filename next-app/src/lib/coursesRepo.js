@@ -1,70 +1,86 @@
 import { dbAll, dbGet, dbRun } from "./sqlite";
 
-export async function listCourses({ includeArchived = false } = {}) {
-  const where = includeArchived ? "" : "WHERE status = 'Active'";
+function requireOfficeId(officeId) {
+  const value = String(officeId || "").trim().toLowerCase();
+  if (!value) throw new Error("Office scope is required");
+  return value;
+}
+
+export async function listCourses({ includeArchived = false, officeId } = {}) {
+  const scopedOfficeId = requireOfficeId(officeId);
+  const statusFilter = includeArchived ? "" : " AND status = 'Active'";
   const rows = await dbAll(
-    `SELECT id, code, name, status, created_at FROM courses ${where} ORDER BY code ASC`,
-    []
+    `SELECT id, office_id, code, name, status, created_at FROM courses
+     WHERE office_id = ?${statusFilter}
+     ORDER BY code ASC`,
+    [scopedOfficeId]
   );
   return rows;
 }
 
-export async function createCourse(codeRaw, nameRaw) {
+export async function createCourse(codeRaw, nameRaw, officeId) {
+  const scopedOfficeId = requireOfficeId(officeId);
   const code = String(codeRaw || "").trim().toUpperCase();
   const name = String(nameRaw || "").trim();
 
   if (!code || !name) throw new Error("Missing code or name");
 
-  const existing = await dbGet("SELECT id FROM courses WHERE code = ?", [code]);
+  const existing = await dbGet("SELECT id FROM courses WHERE office_id = ? AND code = ?", [scopedOfficeId, code]);
   if (existing) throw new Error("Course code already exists");
 
-  const res = await dbRun("INSERT INTO courses (code, name, status) VALUES (?, ?, 'Active')", [
+  const res = await dbRun("INSERT INTO courses (office_id, code, name, status) VALUES (?, ?, ?, 'Active')", [
+    scopedOfficeId,
     code,
     name,
   ]);
 
-  return await dbGet("SELECT * FROM courses WHERE id = ?", [res.lastInsertRowid]);
+  return await dbGet("SELECT * FROM courses WHERE office_id = ? AND id = ?", [scopedOfficeId, res.lastInsertRowid]);
 }
 
-export async function updateCourse(id, codeRaw, nameRaw, status = "Active") {
+export async function updateCourse(id, codeRaw, nameRaw, status = "Active", officeId) {
+  const scopedOfficeId = requireOfficeId(officeId);
   const code = String(codeRaw || "").trim().toUpperCase();
   const name = String(nameRaw || "").trim();
 
   if (!code || !name) throw new Error("Missing code or name");
 
-  const existing = await dbGet("SELECT id FROM courses WHERE code = ? AND id != ?", [code, id]);
+  const existing = await dbGet("SELECT id FROM courses WHERE office_id = ? AND code = ? AND id != ?", [scopedOfficeId, code, id]);
   if (existing) throw new Error("Course code already exists");
 
-  await dbRun("UPDATE courses SET code = ?, name = ?, status = ? WHERE id = ?", [
+  await dbRun("UPDATE courses SET code = ?, name = ?, status = ? WHERE office_id = ? AND id = ?", [
     code,
     name,
     status,
+    scopedOfficeId,
     id
   ]);
 
-  return await dbGet("SELECT * FROM courses WHERE id = ?", [id]);
+  return await dbGet("SELECT * FROM courses WHERE office_id = ? AND id = ?", [scopedOfficeId, id]);
 }
 
-export async function archiveCourse(id) {
-  const course = await dbGet("SELECT code FROM courses WHERE id = ?", [id]);
+export async function archiveCourse(id, officeId) {
+  const scopedOfficeId = requireOfficeId(officeId);
+  const course = await dbGet("SELECT code FROM courses WHERE office_id = ? AND id = ?", [scopedOfficeId, id]);
   if (course?.code) {
-    await dbRun("UPDATE sections SET status = 'Archived' WHERE course_code = ? AND status = 'Active'", [course.code]);
+    await dbRun("UPDATE sections SET status = 'Archived' WHERE office_id = ? AND course_code = ? AND status = 'Active'", [scopedOfficeId, course.code]);
   }
-  await dbRun("UPDATE courses SET status = 'Archived' WHERE id = ?", [id]);
+  await dbRun("UPDATE courses SET status = 'Archived' WHERE office_id = ? AND id = ?", [scopedOfficeId, id]);
   return true;
 }
 
-export async function restoreCourse(id) {
-  await dbRun("UPDATE courses SET status = 'Active' WHERE id = ?", [id]);
+export async function restoreCourse(id, officeId) {
+  const scopedOfficeId = requireOfficeId(officeId);
+  await dbRun("UPDATE courses SET status = 'Active' WHERE office_id = ? AND id = ?", [scopedOfficeId, id]);
   return true;
 }
 
-export async function deleteCourse(id) {
+export async function deleteCourse(id, officeId) {
+  const scopedOfficeId = requireOfficeId(officeId);
   // We keep this for hard deletes if ever needed, but internal logic should prefer archiving
-  const course = await dbGet("SELECT code FROM courses WHERE id = ?", [id]);
+  const course = await dbGet("SELECT code FROM courses WHERE office_id = ? AND id = ?", [scopedOfficeId, id]);
   if (course?.code) {
-    await dbRun("UPDATE sections SET course_code = NULL WHERE course_code = ?", [course.code]);
+    await dbRun("UPDATE sections SET course_code = NULL WHERE office_id = ? AND course_code = ?", [scopedOfficeId, course.code]);
   }
-  await dbRun("DELETE FROM courses WHERE id = ?", [id]);
+  await dbRun("DELETE FROM courses WHERE office_id = ? AND id = ?", [scopedOfficeId, id]);
   return true;
 }

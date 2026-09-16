@@ -1,39 +1,23 @@
 import { NextResponse } from "next/server";
 import { systemConfigRepo } from "@/lib/systemConfigRepo";
-import { getSessionCookieName, verifySessionToken } from "@/lib/jwt";
 import { writeAuditLog } from "@/lib/auditLogRequest";
-
-async function isAdmin(req) {
-  const token = req.cookies.get(getSessionCookieName())?.value || "";
-  if (!token) return false;
-  try {
-    const payload = await verifySessionToken(token);
-    const role = String(payload?.role || "").toLowerCase().trim();
-    return ["admin", "administrator", "superadmin"].includes(role);
-  } catch {
-    return false;
-  }
-}
+import { requireSystemAdmin, createAuthErrorResponse } from "@/lib/authHelpers";
 
 export async function GET(req) {
   try {
-    if (!(await isAdmin(req))) {
-      return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 403 });
-    }
-
+    const access = await requireSystemAdmin(req);
+    if (access.error || !access.user) return createAuthErrorResponse(access.error || "System administrator access required", access.error?.startsWith("Access denied") ? 403 : 401);
     const settings = await systemConfigRepo.getSettings();
     return NextResponse.json({ ok: true, data: settings });
   } catch (error) {
-    return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ ok: false, error: "Internal server error" }, { status: 500 });
   }
 }
 
 export async function POST(req) {
   try {
-    if (!(await isAdmin(req))) {
-      return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 403 });
-    }
-
+    const access = await requireSystemAdmin(req);
+    if (access.error || !access.user) return createAuthErrorResponse(access.error || "System administrator access required", access.error?.startsWith("Access denied") ? 403 : 401);
     const body = await req.json();
     const { key, value } = body;
 
@@ -49,6 +33,6 @@ export async function POST(req) {
     });
     return NextResponse.json({ ok: true });
   } catch (error) {
-    return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ ok: false, error: "Internal server error" }, { status: 500 });
   }
 }

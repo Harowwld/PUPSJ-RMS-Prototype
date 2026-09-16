@@ -9,60 +9,56 @@ import {
   reviewDocument,
   updateDocumentMetadata,
 } from "../../../../lib/documentsRepo";
-import { getSessionCookieName, verifySessionToken } from "../../../../lib/jwt";
-import { getStaffById } from "../../../../lib/staffRepo";
 import { writeAuditLog } from "../../../../lib/auditLogRequest";
-import { requireStaff, createAuthErrorResponse } from "../../../../lib/authHelpers";
+import { requireStaff, createAuthErrorResponse, getPrincipalOfficeId } from "../../../../lib/authHelpers";
+import { isSystemAdminRole } from "../../../../lib/roleUtils";
+import { canAccessResource } from "../../../../lib/resourceAuthorization";
 
 export const runtime = "nodejs";
 
-async function getSessionStaff(req) {
-  const token = req.cookies.get(getSessionCookieName())?.value || "";
-  if (!token) return null;
-  const payload = await verifySessionToken(token);
-  const userId = String(payload?.sub || "").trim();
-  if (!userId) return null;
-  return await getStaffById(userId);
-}
-
 function canAccessDocument(user, row) {
-  const role = String(user?.role || "").toLowerCase();
-  return role === "superadmin" || role === "systemadmin" || user?.office_id === row?.office_id;
+  return canAccessResource(user, "document", row);
 }
 
-async function requireDocumentAccess(req, id) {
+async function requireDocumentAccess(req, rawId) {
   const { user, error } = await requireStaff(req);
   if (error || !user) {
     return { response: createAuthErrorResponse(error || "Authentication required", 401) };
   }
-  const row = await getDocumentById(id);
+  const id = Number(rawId);
+  if (!Number.isInteger(id) || id < 1) {
+    return {
+      response: NextResponse.json(
+        { ok: false, error: `Invalid id: ${rawId}` },
+        { status: 400 },
+      ),
+    };
+  }
+  const officeId = isSystemAdminRole(user.role) ? null : getPrincipalOfficeId(user);
+  if (!isSystemAdminRole(user.role) && !officeId) {
+    return { response: createAuthErrorResponse("Office scope is required", 403) };
+  }
+  const row = await getDocumentById(id, officeId ? { officeId } : {});
   if (!row) {
     return { response: NextResponse.json({ ok: false, error: "Not found" }, { status: 404 }) };
   }
   if (!canAccessDocument(user, row)) {
     return { response: NextResponse.json({ ok: false, error: "Forbidden" }, { status: 403 }) };
   }
-  return { user, row };
+  return { user, row, id };
 }
 
 export async function GET(req, ctx) {
   const params = await ctx.params;
   const raw = params.id;
-  const id = Number(raw);
-  if (!Number.isInteger(id) || id < 1) {
-    return NextResponse.json(
-      { ok: false, error: `Invalid id: ${raw}` },
-      { status: 400 }
-    );
-  }
-
-  const access = await requireDocumentAccess(req, id);
+  const access = await requireDocumentAccess(req, raw);
   if (access.response) return access.response;
   const { row } = access;
+  const id = access.id ?? Number(row.id);
 
   const filePath = getDocumentFilePath(row);
 
-  if (!fs.existsSync(filePath)) {
+  if (!filePath || !fs.existsSync(filePath)) {
     return NextResponse.json(
       { ok: false, error: "File missing on disk" },
       { status: 404 }
@@ -91,16 +87,10 @@ export async function GET(req, ctx) {
 export async function PATCH(req, ctx) {
   const params = await ctx.params;
   const raw = params.id;
-  const id = Number(raw);
-  if (!Number.isInteger(id) || id < 1) {
-    return NextResponse.json(
-      { ok: false, error: `Invalid id: ${raw}` },
-      { status: 400 }
-    );
-  }
-
-  const access = await requireDocumentAccess(req, id);
+  const access = await requireDocumentAccess(req, raw);
   if (access.response) return access.response;
+  const { row: accessRow } = access;
+  const id = access.id ?? Number(accessRow.id);
 
   const contentType = String(req.headers.get("content-type") || "").toLowerCase();
   let body = null;
@@ -160,22 +150,16 @@ export async function PATCH(req, ctx) {
       );
     }
 
-    let reviewer = null;
-    try {
-      reviewer = await getSessionStaff(req);
-    } catch {
-      return NextResponse.json({ ok: false, error: "Invalid session" }, { status: 401 });
-    }
-    const role = String(reviewer?.role || "").toLowerCase();
-    if (!reviewer || !["admin", "administrator", "superadmin"].includes(role)) {
+    const reviewer = access.user;
+    if (!isSystemAdminRole(reviewer.role) && reviewer.role !== "Admin") {
       return NextResponse.json({ ok: false, error: "Forbidden" }, { status: 403 });
     }
 
     if (approvalStatus === "Declined") {
       const declined = await declineDocumentAndRemoveFile(id, {
-        reviewedBy: reviewer.id || reviewer.email || "admin",
+        reviewedBy: reviewer.id || null,
         reviewNote: reviewNote || null,
-      });
+      }, { officeId: accessRow.office_id });
       if (!declined) {
         return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
       }
@@ -194,9 +178,9 @@ export async function PATCH(req, ctx) {
 
     const row = await reviewDocument(id, {
       approvalStatus,
-      reviewedBy: reviewer.id || reviewer.email || "admin",
+      reviewedBy: reviewer.id || null,
       reviewNote: reviewNote || null,
-    });
+    }, { officeId: accessRow.office_id });
     if (!row) {
       return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
     }
@@ -209,7 +193,16 @@ export async function PATCH(req, ctx) {
     return NextResponse.json({ ok: true, data: row });
   }
 
-  let row = await updateDocumentMetadata(id, { studentNo, studentName, docType, isPreviewed });
+  let row;
+  try {
+    row = await updateDocumentMetadata(
+      id,
+      { studentNo, studentName, docType, isPreviewed },
+      { officeId: accessRow.office_id },
+    );
+  } catch (err) {
+    return NextResponse.json({ ok: false, error: err.message || "Failed to update document" }, { status: 400 });
+  }
   if (!row) {
     return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
   }
@@ -222,12 +215,16 @@ export async function PATCH(req, ctx) {
       );
     }
     const buf = Buffer.from(await replacementFile.arrayBuffer());
-    row = await replaceDocumentFile(id, {
-      originalFilename: replacementFile.name || "document.pdf",
-      mimeType: replacementFile.type || "application/pdf",
-      sizeBytes: replacementFile.size || buf.length,
-      buffer: buf,
-    });
+    try {
+      row = await replaceDocumentFile(id, {
+        originalFilename: replacementFile.name || "document.pdf",
+        mimeType: replacementFile.type || "application/pdf",
+        sizeBytes: replacementFile.size || buf.length,
+        buffer: buf,
+      }, { officeId: accessRow.office_id });
+    } catch (err) {
+      return NextResponse.json({ ok: false, error: err.message || "Failed to replace file" }, { status: 400 });
+    }
     replaced = true;
   }
   await writeAuditLog(req, replaced ? `Replace Document File` : `Update Document`, {
@@ -242,25 +239,19 @@ export async function PATCH(req, ctx) {
   return NextResponse.json({ ok: true, data: row });
 }
 
-export async function DELETE(_req, ctx) {
+export async function DELETE(req, ctx) {
   const params = await ctx.params;
   const raw = params.id;
-  const id = Number(raw);
-  if (!Number.isInteger(id) || id < 1) {
-    return NextResponse.json(
-      { ok: false, error: `Invalid id: ${raw}` },
-      { status: 400 }
-    );
-  }
-
-  const access = await requireDocumentAccess(_req, id);
+  const access = await requireDocumentAccess(req, raw);
   if (access.response) return access.response;
+  const { row: accessRow } = access;
+  const id = access.id ?? Number(accessRow.id);
 
-  const row = await deleteDocument(id);
+  const row = await deleteDocument(id, { officeId: accessRow.office_id });
   if (!row) {
     return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
   }
-  await writeAuditLog(_req, `Delete Document`, {
+  await writeAuditLog(req, `Delete Document`, {
     details: `permanently removed digital record for student '${row.student_name}' (Document: ${row.doc_type}) from system repository`,
     severity: "WARNING",
     entity_type: "Document",

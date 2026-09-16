@@ -2,12 +2,14 @@
 
 import { Skeleton } from "@/components/ui/skeleton"
 import StudentRequestsTableSkeleton from "./StudentRequestsTableSkeleton"
+import StudentOsasProposalsSkeleton from "./StudentOsasProposalsSkeleton"
+import StudentComplianceSkeleton from "./StudentComplianceSkeleton"
 
-export default function StudentDashboardSkeleton() {
+export default function StudentDashboardSkeleton({ view = "odrs" }) {
   return (
-    <div className="relative flex h-screen min-h-0 flex-col overflow-hidden bg-red-50/20 font-inter dark:bg-red-950/10 select-none">
+    <div className="relative flex h-screen min-h-0 flex-col overflow-hidden bg-slate-50/30 font-inter dark:bg-zinc-950/30 select-none">
       {/* Shared dashboard liquid-gradient background */}
-      <div className="liquid-container pointer-events-none">
+      <div className="liquid-container pointer-events-none opacity-20 dark:opacity-10">
         <div className="liquid-blob liquid-blob-1" />
         <div className="liquid-blob liquid-blob-2" />
         <div className="liquid-blob liquid-blob-3" />
@@ -40,11 +42,11 @@ export default function StudentDashboardSkeleton() {
 
             {/* Navigation Items */}
             <div className="space-y-1.5">
-              <div className="flex items-center gap-3 rounded-brand bg-red-50/60 dark:bg-red-950/30 p-2.5">
+              <div className="flex items-center gap-3 rounded-xl bg-gray-100/80 dark:bg-zinc-800/60 p-2.5">
                 <Skeleton className="h-5 w-5 rounded dark:bg-muted" />
                 <Skeleton className="h-4 w-36 rounded dark:bg-muted" />
               </div>
-              <div className="flex items-center gap-3 rounded-brand p-2.5">
+              <div className="flex items-center gap-3 rounded-xl p-2.5">
                 <Skeleton className="h-5 w-5 rounded dark:bg-muted" />
                 <Skeleton className="h-4 w-32 rounded dark:bg-muted" />
               </div>
@@ -61,66 +63,15 @@ export default function StudentDashboardSkeleton() {
         </aside>
 
         {/* Main Content Skeleton Area */}
-        <main className="relative w-full min-w-0 min-h-0 flex-1 overflow-y-auto bg-red-50/10 dark:bg-red-950/10 backdrop-blur-xs">
-          <div className="flex min-h-0 w-full flex-1 flex-col p-4 sm:p-6">
-            <div className="mx-auto w-full max-w-7xl space-y-6">
-              {/* Page Header Card Skeleton */}
-              <div className="rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div className="flex items-center gap-3">
-                  <Skeleton className="h-10 w-10 rounded-xl dark:bg-muted" />
-                  <div className="space-y-1.5">
-                    <Skeleton className="h-5 w-44 rounded dark:bg-muted" />
-                    <Skeleton className="h-3.5 w-72 sm:w-96 rounded dark:bg-muted" />
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Skeleton className="h-6 w-32 rounded-full dark:bg-muted" />
-                  <Skeleton className="h-9 w-9 rounded-lg dark:bg-muted" />
-                </div>
-              </div>
-
-              {/* Card 1: New Document Request Form Skeleton */}
-              <div className="rounded-brand border border-gray-200 bg-white p-5 sm:p-6 shadow-sm dark:border-white/10 dark:bg-card flex flex-col gap-5">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-100 pb-4 dark:border-white/10">
-                  <div className="flex items-center gap-3">
-                    <Skeleton className="h-10 w-10 rounded-xl dark:bg-muted" />
-                    <div className="space-y-1">
-                      <Skeleton className="h-4 w-44 rounded dark:bg-muted" />
-                      <Skeleton className="h-3 w-64 rounded dark:bg-muted" />
-                    </div>
-                  </div>
-                  <Skeleton className="h-8 w-72 sm:w-80 rounded-lg dark:bg-muted" />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="space-y-1.5">
-                    <Skeleton className="h-3.5 w-24 rounded dark:bg-muted" />
-                    <Skeleton className="h-10 w-full rounded-brand dark:bg-muted" />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Skeleton className="h-3.5 w-28 rounded dark:bg-muted" />
-                    <Skeleton className="h-10 w-full rounded-brand dark:bg-muted" />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Skeleton className="h-3.5 w-28 rounded dark:bg-muted" />
-                    <Skeleton className="h-10 w-full rounded-brand dark:bg-muted" />
-                  </div>
-                </div>
-
-                <div className="space-y-1.5">
-                  <Skeleton className="h-3.5 w-36 rounded dark:bg-muted" />
-                  <Skeleton className="h-20 w-full rounded-brand dark:bg-muted" />
-                </div>
-
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-1">
-                  <Skeleton className="h-3 w-64 rounded dark:bg-muted" />
-                  <Skeleton className="h-10 w-36 rounded-brand dark:bg-muted" />
-                </div>
-              </div>
-
-              {/* Card 2: Request History & Table Skeleton */}
-              <StudentRequestsTableSkeleton rowCount={6} />
-            </div>
+        <main className="relative w-full min-w-0 min-h-0 flex-1 overflow-y-auto bg-white/25 dark:bg-zinc-950/25 backdrop-blur-xs">
+          <div className="flex min-h-0 w-full flex-1 flex-col p-4">
+            {view === "osas" ? (
+              <StudentOsasProposalsSkeleton />
+            ) : view === "compliance" ? (
+              <StudentComplianceSkeleton />
+            ) : (
+              <StudentRequestsTableSkeleton />
+            )}
           </div>
         </main>
       </div>

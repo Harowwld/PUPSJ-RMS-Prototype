@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 import { createDocument, getUploadsDir } from "@/lib/documentsRepo";
 import { writeAuditLog } from "@/lib/auditLogRequest";
 import { createStudent } from "@/lib/studentsRepo";
-import { requireStaff, createAuthErrorResponse } from "@/lib/authHelpers";
+import { requireStaff, createAuthErrorResponse, getPrincipalOfficeId } from "@/lib/authHelpers";
 import {
   getIngestById,
   getIngestFilePath,
@@ -14,6 +14,7 @@ import {
 import { HOT_FOLDER_ALLOWED_MIME_TYPES, isAllowedIngestExtension } from "@/lib/ingestFileTypes";
 import { isUniqueViolation } from "@/lib/dbErrors";
 import { rotateDocumentBuffer } from "@/lib/documentOrientation";
+import { canAccessResource } from "@/lib/resourceAuthorization";
 
 export const runtime = "nodejs";
 
@@ -28,6 +29,8 @@ export async function POST(req, ctx) {
   if (error || !user) {
     return createAuthErrorResponse(error || "Authentication required", 401);
   }
+  const principalOfficeId = getPrincipalOfficeId(user);
+  if (!principalOfficeId) return createAuthErrorResponse("Office scope is required", 403);
 
   const params = await ctx.params;
   const id = Number(params.id);
@@ -35,8 +38,10 @@ export async function POST(req, ctx) {
     return NextResponse.json({ ok: false, error: "Invalid id" }, { status: 400 });
   }
 
-  const ingest = await getIngestById(id);
-  if (!ingest) return NextResponse.json({ ok: false, error: "Ingest item not found" }, { status: 404 });
+  const ingest = await getIngestById(id, { officeId: principalOfficeId });
+  if (!ingest || !canAccessResource(user, "ingest", ingest)) {
+    return NextResponse.json({ ok: false, error: "Ingest item not found" }, { status: 404 });
+  }
   if (String(ingest.status) !== "pending") {
     return NextResponse.json({ ok: false, error: "Ingest item already processed" }, { status: 409 });
   }
@@ -45,7 +50,7 @@ export async function POST(req, ctx) {
     !HOT_FOLDER_ALLOWED_MIME_TYPES.has(String(ingest.mime_type || "")) ||
     !isAllowedIngestExtension(String(ingest.original_filename || ""))
   ) {
-    await markIngestFailed(id, "Ingest file type no longer allowed for promotion");
+    await markIngestFailed(id, "Ingest file type no longer allowed for promotion", { officeId: principalOfficeId });
     return NextResponse.json({ ok: false, error: "Unsupported ingest file type" }, { status: 400 });
   }
 
@@ -58,6 +63,7 @@ export async function POST(req, ctx) {
   const studentName = String(body.studentName || "").trim();
   const docType = String(body.docType || "").trim();
   const isNewStudent = String(body.isNewStudent || "").toLowerCase() === "true";
+  const officeId = principalOfficeId;
   if (!studentNo || !docType) {
     return NextResponse.json({ ok: false, error: "studentNo and docType are required" }, { status: 400 });
   }
@@ -83,16 +89,17 @@ export async function POST(req, ctx) {
         cabinet,
         drawer,
         status: "Active",
+        officeId,
       });
     } catch (e) {
       const msg = String(e?.message || "Failed to create student");
-      return NextResponse.json({ ok: false, error: isUniqueViolation(e) ? "Student already exists" : msg }, { status: isUniqueViolation(e) ? 409 : 400 });
+      return NextResponse.json({ ok: false, error: isUniqueViolation(e) ? "Student already exists" : "Failed to create student" }, { status: isUniqueViolation(e) ? 409 : 400 });
     }
   }
 
   const sourceAbsPath = getIngestFilePath(ingest.storage_filename);
   if (!fs.existsSync(sourceAbsPath)) {
-    await markIngestFailed(id, "Ingest source file missing on disk");
+    await markIngestFailed(id, "Ingest source file missing on disk", { officeId: principalOfficeId });
     return NextResponse.json({ ok: false, error: "Ingest file missing on disk" }, { status: 404 });
   }
 
@@ -100,13 +107,12 @@ export async function POST(req, ctx) {
   const rotation = Number(ingest.match_evidence?.detectedRotation || 0);
   const bytes = await rotateDocumentBuffer(sourceBytes, ingest.original_filename, rotation);
   const ext = path.extname(String(ingest.original_filename || "")).toLowerCase();
-  const officeId = user.office_id || "registrar";
   const targetStorageFilename = `${sanitizeNameForFs(studentNo)}_${sanitizeNameForFs(docType)}_${Date.now()}${ext || ".pdf"}`;
   const targetAbsPath = path.join(getUploadsDir(officeId), targetStorageFilename);
   fs.writeFileSync(targetAbsPath, bytes);
 
   const doc = await createDocument({
-    officeId: user.office_id || "registrar",
+    officeId,
     studentNo,
     studentName: studentName || null,
     docType,
@@ -116,7 +122,7 @@ export async function POST(req, ctx) {
     storageFilename: targetStorageFilename,
     uploadedBy: user.id,
   });
-  await markIngestPromoted(id, doc.id);
+  await markIngestPromoted(id, doc.id, null, { officeId: principalOfficeId });
   await writeAuditLog(req, `Promote Ingest`, { 
     details: `promoted digital artifact '${ingest.original_filename}' to formal record for student '${studentName || studentNo}' (Type: ${docType})`,
     entity_type: "Document",

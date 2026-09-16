@@ -20,7 +20,7 @@ export async function listDocumentRequests({
   studentNo = "",
   clientType = "",
   docType = "",
-  officeId = "registrar",
+  officeId = "",
   limit = 50,
   offset = 0,
   sortBy = "created_at",
@@ -75,7 +75,7 @@ export async function listDocumentRequests({
     `
     SELECT
       dr.*,
-      COALESCE(dr.requester_name, s.name, NULLIF(TRIM(CONCAT_WS(' ', sa.first_name, sa.last_name)), ''), sa.email, 'Alumni Requester') AS student_name,
+      COALESCE(dr.requester_name, s.name, NULLIF(TRIM(CONCAT_WS(' ', sa.first_name, sa.last_name)), ''), sa.email, 'Requester') AS student_name,
       COALESCE(dr.course_code, s.course_code) AS course_code,
       c.name AS course_name,
       sa.email AS requester_email,
@@ -100,7 +100,7 @@ export async function countDocumentRequests({
   studentNo = "",
   clientType = "",
   docType = "",
-  officeId = "registrar",
+  officeId = "",
 } = {}) {
   const filters = [];
   const params = [];
@@ -148,12 +148,18 @@ export async function countDocumentRequests({
   return Number(row?.c) || 0;
 }
 
-export async function getDocumentRequestById(id) {
+export async function getDocumentRequestById(id, { officeId } = {}) {
+  const filters = ["dr.id = ?"];
+  const params = [id];
+  if (officeId) {
+    filters.push("dr.office_id = ?");
+    params.push(officeId);
+  }
   const row = await dbGet(
     `
     SELECT
       dr.*,
-      COALESCE(dr.requester_name, s.name, NULLIF(TRIM(CONCAT_WS(' ', sa.first_name, sa.last_name)), ''), sa.email, 'Alumni Requester') AS student_name,
+      COALESCE(dr.requester_name, s.name, NULLIF(TRIM(CONCAT_WS(' ', sa.first_name, sa.last_name)), ''), sa.email, 'Requester') AS student_name,
       COALESCE(dr.course_code, s.course_code) AS course_code,
       c.name AS course_name,
       sa.email AS requester_email,
@@ -164,9 +170,9 @@ export async function getDocumentRequestById(id) {
     LEFT JOIN students s ON s.student_no = dr.student_no
     LEFT JOIN student_accounts sa ON sa.id = dr.student_account_id
     LEFT JOIN courses c ON c.code = COALESCE(dr.course_code, s.course_code)
-    WHERE dr.id = ?
+    WHERE ${filters.join(" AND ")}
     `,
-    [id]
+    params
   );
   if (!row) return null;
 
@@ -180,7 +186,8 @@ export async function getDocumentRequestById(id) {
 }
 
 export async function createDocumentRequest({
-  studentNo = null,
+  officeId,
+  studentNo,
   docType,
   notes = null,
   createdBy = null,
@@ -188,7 +195,6 @@ export async function createDocumentRequest({
   clientType = "Student",
   courseCode = null,
   requesterName = null,
-  officeId = "registrar",
   studentAccountId = null,
 }) {
   const sn = String(studentNo || "").trim().toUpperCase() || null;
@@ -227,9 +233,11 @@ export async function createDocumentRequest({
 }
 
 export async function updateDocumentRequest(id, fields) {
-  const existing = await dbGet("SELECT id, status, notes FROM document_requests WHERE id = ?", [
-    id,
-  ]);
+  const scope = fields.officeId ? " AND office_id = ?" : "";
+  const existing = await dbGet(
+    `SELECT id, office_id, status, notes FROM document_requests WHERE id = ?${scope}`,
+    fields.officeId ? [id, fields.officeId] : [id]
+  );
   if (!existing) return null;
 
   const cols = [];
@@ -284,4 +292,5 @@ export async function updateDocumentRequest(id, fields) {
   }
 
   return await getDocumentRequestById(id);
+  return await getDocumentRequestById(id, { officeId: fields.officeId });
 }

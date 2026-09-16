@@ -10,11 +10,7 @@ export const ForgotPasswordIdentifySchema = z.object({
 });
 
 export const ForgotPasswordResetSchema = z.object({
-  id: z.string().min(1, "Staff ID is required"),
-  answers: z.array(z.object({
-    question_id: z.number(),
-    answer: z.string().min(1, "Answer is required").trim(),
-  })).min(1, "At least one security answer is required"),
+  resetToken: z.string().min(1, "Reset token is required").trim(),
   newPassword: z.string().min(8, "Password must be at least 8 characters long"),
 });
 

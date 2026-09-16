@@ -2,12 +2,15 @@ import { NextResponse } from "next/server";
 import { getStudentSession } from "@/lib/studentAuth";
 import { query, queryOne } from "@/lib/postgres";
 import { writeGlobalAuditLog } from "@/lib/auditLogRequest";
+import { requireStudent, createAuthErrorResponse } from "@/lib/authHelpers";
+import { canAccessResource } from "@/lib/resourceAuthorization";
 
 export const runtime = "nodejs";
 
 export async function GET(req) {
-  const session = await getStudentSession(req);
-  if (!session) return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
+  const access = await requireStudent(req);
+  if (access.error || !access.user) return createAuthErrorResponse(access.error || "Student authentication required", access.error?.startsWith("Access denied") ? 403 : 401);
+  const session = { accountId: access.user.accountId, studentNo: access.user.studentNo, email: access.user.email };
 
   let accountId = session.accountId;
   let studentNo = session.studentNo;
@@ -29,7 +32,7 @@ export async function GET(req) {
             COALESCE(dr.course_code, s.course_code) AS course_code,
             c.name AS course_name
      FROM document_requests dr
-     LEFT JOIN documents d ON d.id = dr.linked_document_id
+     LEFT JOIN documents d ON d.id = dr.linked_document_id AND d.office_id = 'registrar'
      LEFT JOIN students s ON s.student_no = dr.student_no
      LEFT JOIN courses c ON c.code = COALESCE(dr.course_code, s.course_code)
      WHERE dr.office_id = 'registrar'
@@ -40,19 +43,20 @@ export async function GET(req) {
      ORDER BY dr.created_at DESC`,
     [accountId, studentNo]
   );
+  const authorizedRequests = requests.filter((item) => canAccessResource(access.user, "request", item));
 
   const studentNos = Array.from(
-    new Set([studentNo, ...requests.map((r) => r.student_no)].filter(Boolean))
+    new Set([studentNo, ...authorizedRequests.map((r) => r.student_no)].filter(Boolean))
   );
 
   const documents = studentNos.length
-    ? await query(
+    ? (await query(
         "SELECT * FROM documents WHERE office_id = 'registrar' AND student_no = ANY($1::text[]) ORDER BY created_at DESC",
         [studentNos]
-      )
+      )).filter((item) => canAccessResource(access.user, "document", item))
     : [];
 
-  const ids = requests.map((item) => item.id);
+  const ids = authorizedRequests.map((item) => item.id);
   const updates = ids.length
     ? await query(
         "SELECT * FROM transaction_updates WHERE document_request_id = ANY($1::bigint[]) ORDER BY created_at ASC",
@@ -64,19 +68,21 @@ export async function GET(req) {
     (grouped[key] ||= []).push(item);
     return grouped;
   }, {});
-  requests.forEach((item) => {
+  authorizedRequests.forEach((item) => {
     item.updates = updatesByRequest[String(item.id)] || [];
   });
 
-  return NextResponse.json({ ok: true, data: { requests, documents } });
+  return NextResponse.json({ ok: true, data: { requests: authorizedRequests, documents } });
 }
 
 export async function POST(req) {
-  const session = await getStudentSession(req);
-  if (!session) return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
+  const access = await requireStudent(req);
+  if (access.error || !access.user) return createAuthErrorResponse(access.error || "Student authentication required", access.error?.startsWith("Access denied") ? 403 : 401);
+  const session = { accountId: access.user.accountId, studentNo: access.user.studentNo, email: access.user.email };
 
   const body = await req.json().catch(() => null);
-  const studentNo = String(body?.studentNo || "").trim().toUpperCase() || null;
+  const requestedStudentNo = String(body?.studentNo || "").trim().toUpperCase() || null;
+  const studentNo = session.studentNo || null;
   const docType = String(body?.docType || "").trim();
   const notes = String(body?.notes || body?.description || "").trim();
   const requestedClientType = String(body?.clientType || "").trim();
@@ -97,7 +103,11 @@ export async function POST(req) {
     if (acc) accountId = acc.id;
   }
 
-  const clientType = requestedClientType || acc?.client_type || (studentNo && studentNo.startsWith("ALUM-") ? "Alumni" : "Student");
+  const clientType = acc?.client_type || (studentNo && studentNo.startsWith("ALUM-") ? "Alumni" : "Student");
+
+  if (requestedStudentNo && requestedStudentNo !== studentNo) {
+    return NextResponse.json({ ok: false, error: "Student identity is taken from the authenticated account." }, { status: 403 });
+  }
 
   if (!clientType) {
     return NextResponse.json({ ok: false, error: "Client type is required." }, { status: 400 });
@@ -149,6 +159,9 @@ export async function POST(req) {
      VALUES ('registrar', $1, $2, 'Pending', $3, $4, $5, $6, $7) RETURNING *`,
     [studentNo, docType, notes, clientType, accountId || null, courseCode, requesterName]
   );
+  if (!request || !canAccessResource(access.user, "request", request)) {
+    return NextResponse.json({ ok: false, error: "Request could not be completed" }, { status: 500 });
+  }
 
   await query(
     `INSERT INTO transaction_updates (document_request_id, status, message)

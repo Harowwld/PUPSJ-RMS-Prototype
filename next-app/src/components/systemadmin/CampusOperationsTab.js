@@ -21,6 +21,7 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
 } from "@/components/ui/dialog"
 import PageHeader from "@/components/shared/PageHeader"
 import { RefreshButton } from "@/components/shared/RefreshButton"
@@ -237,10 +238,6 @@ export default function CampusOperationsTab({ showToast }) {
       value: health?.odrs?.total ?? 0,
       sublabel: `${health?.odrs?.activeBacklog ?? 0} needing action · ${health?.odrs?.today ?? 0} received today`,
       color: "blue",
-      shape1: "from-[#0055FF]/40 to-[#007AFF]/0",
-      shape2: "from-[#14C8FF]/30 to-[#007AFF]/0",
-      bg: "from-[#14C8FF] via-[#007AFF] to-[#0055FF] dark:from-[#007AFF] dark:to-[#0033aa]",
-      glass: "glass-stat-card-blue",
     },
     {
       key: "osas",
@@ -248,141 +245,20 @@ export default function CampusOperationsTab({ showToast }) {
       value: health?.osas?.total ?? 0,
       sublabel: `${health?.osas?.activePending ?? 0} awaiting review · ${health?.osas?.totalOrgs ?? 0} student orgs active`,
       color: "emerald",
-      shape1: "from-[#047857]/40 to-[#059669]/0",
-      shape2: "from-[#34d399]/30 to-[#059669]/0",
-      bg: "from-[#34d399] via-[#059669] to-[#047857] dark:from-[#059669] dark:to-[#024e37]",
-      glass: "glass-stat-card-green",
     },
   ], [health])
 
   return (
-    <div className="flex flex-col gap-6 w-full animate-fade-up font-inter">
-      {/* Signature 2 Stat Cards with expandable details */}
-      {loading && !health ? (
-        <KpiStatCardsSkeleton count={2} />
-      ) : (
-        <div
-          ref={statCardsRef}
-          className="grid grid-cols-1 gap-6 md:grid-cols-2 items-start relative z-20 transition-all duration-500"
-        >
-          {statCardsData.map((stat) => (
-            <div
-              key={stat.key}
-              className={cn(
-                "relative group rounded-2xl",
-                selectedKpi === stat.key ? "z-30" : "z-10"
-              )}
-            >
-              <div
-                onClick={() => setSelectedKpi(selectedKpi === stat.key ? null : stat.key)}
-                className={cn(
-                  "relative overflow-hidden rounded-2xl border-none p-5 cursor-pointer bg-gradient-to-br select-none shadow-sm hover:shadow-md transition-shadow",
-                  stat.bg,
-                  stat.glass
-                )}
-              >
-                <div className="absolute inset-0 overflow-hidden rounded-2xl pointer-events-none z-0">
-                  <div
-                    className={cn("absolute bottom-0 left-0 w-[70%] h-[80%] bg-gradient-to-tr pointer-events-none", stat.shape1)}
-                    style={{ clipPath: "polygon(0% 100%, 100% 100%, 0% 0%)" }}
-                  />
-                  <div
-                    className={cn("absolute bottom-0 left-0 w-[50%] h-[60%] bg-gradient-to-tr pointer-events-none", stat.shape2)}
-                    style={{ clipPath: "polygon(0% 100%, 100% 100%, 0% 25%)" }}
-                  />
-                </div>
-
-                <div className="relative z-10">
-                  <div className="flex items-end justify-between">
-                    <div>
-                      <div className="mb-1 flex items-center gap-1.5 text-[14px] font-medium text-white">
-                        {stat.label}
-                      </div>
-                      <div className="text-[38px] lg:text-[44px] font-semibold text-white tracking-tight leading-tight">
-                        {stat.value}
-                      </div>
-                      <div className="mt-1 text-[13px] font-normal text-white/90">
-                        {stat.sublabel}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Expandable details drawer */}
-              <div
-                className={cn(
-                  "absolute top-full left-0 right-0 z-[100] mt-2 rounded-2xl bg-gradient-to-br p-5 shadow-2xl transition-all duration-300 ease-in-out origin-top",
-                  stat.bg,
-                  selectedKpi === stat.key ? "scale-y-100 opacity-100 translate-y-0" : "scale-y-95 opacity-0 -translate-y-2 pointer-events-none"
-                )}
-                onClick={(e) => e.stopPropagation()}
-              >
-                {stat.key === "odrs" && (
-                  <div className="space-y-3 text-white">
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg">
-                        <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Pending Action</span>
-                        <span className="text-base font-black">{health?.odrs?.pending ?? 0}</span>
-                      </div>
-                      <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg">
-                        <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">In Progress</span>
-                        <span className="text-base font-black">{health?.odrs?.inProgress ?? 0}</span>
-                      </div>
-                      <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg">
-                        <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Ready for Pickup</span>
-                        <span className="text-base font-black">{health?.odrs?.ready ?? 0}</span>
-                      </div>
-                      <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg">
-                        <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Completed</span>
-                        <span className="text-base font-black">{health?.odrs?.completed ?? 0}</span>
-                      </div>
-                    </div>
-                    <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg text-xs text-white/90 leading-relaxed">
-                      Online requests for Official Transcripts (TOR), Certifications, and Good Moral documents filed through the student portal.
-                    </div>
-                  </div>
-                )}
-
-                {stat.key === "osas" && (
-                  <div className="space-y-3 text-white">
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg">
-                        <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Submitted</span>
-                        <span className="text-base font-black">{health?.osas?.submitted ?? 0}</span>
-                      </div>
-                      <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg">
-                        <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">In Review</span>
-                        <span className="text-base font-black">{health?.osas?.underReview ?? 0}</span>
-                      </div>
-                      <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg">
-                        <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Needs Revision</span>
-                        <span className="text-base font-black">{health?.osas?.needsRevision ?? 0}</span>
-                      </div>
-                      <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg">
-                        <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Approved</span>
-                        <span className="text-base font-black">{health?.osas?.approved ?? 0}</span>
-                      </div>
-                    </div>
-                    <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg text-xs text-white/90 leading-relaxed">
-                      Campus student organization event permits, activity proposals, and annual compliance submissions for OSAS review.
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Main Container Card */}
-      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
+    <div className="animate-fade-up font-inter flex flex-1 flex-col h-full min-h-0 w-full gap-6">
+      {/* ONE Single Card Container encapsulating Header, Metrics, Toolbar, Table & Pagination */}
+      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none isolate font-inter mb-4 min-h-0 flex-1">
         {/* Header */}
         <PageHeader
           icon="ph-bold ph-activity"
           title="Campus Services & Operations Monitor"
           description="Live tracking of student document requests and student organization proposals across campus departments."
           showBorder={false}
+          className="p-6"
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
           descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
           actions={
@@ -395,6 +271,119 @@ export default function CampusOperationsTab({ showToast }) {
             </div>
           }
         />
+
+        {/* Signature 2 Stat Cards with expandable details */}
+        {loading && !health ? (
+          <div className="px-6 pb-6">
+            <KpiStatCardsSkeleton count={2} />
+          </div>
+        ) : (
+          <div className="px-6 pb-6">
+            <div
+              ref={statCardsRef}
+              className="grid grid-cols-1 gap-4 md:grid-cols-2 items-start relative z-20 transition-all duration-500"
+            >
+              {statCardsData.map((stat) => (
+                <div
+                  key={stat.key}
+                  className={cn(
+                    "relative group rounded-xl",
+                    selectedKpi === stat.key ? "z-30" : "z-10"
+                  )}
+                >
+                  <div
+                    onClick={() => setSelectedKpi(selectedKpi === stat.key ? null : stat.key)}
+                    className={cn(
+                      "relative overflow-hidden rounded-xl border p-4 cursor-pointer select-none transition-all",
+                      "border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-zinc-900/30 hover:border-gray-200 dark:hover:border-white/10",
+                      selectedKpi === stat.key && (stat.color === "blue" ? "border-blue-500/40 ring-1 ring-blue-500/20" : "border-emerald-500/40 ring-1 ring-emerald-500/20")
+                    )}
+                  >
+                    <div className="relative z-10">
+                      <div className="mb-1 flex items-center justify-between">
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
+                          {stat.label}
+                        </span>
+                        <i className={cn("ph-bold ph-caret-down text-xs text-gray-400 transition-transform duration-300", selectedKpi === stat.key && "rotate-180")} />
+                      </div>
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-2xl font-black text-gray-900 dark:text-zinc-50 tracking-tight">
+                          {typeof stat.value === "number" ? stat.value.toLocaleString() : stat.value}
+                        </span>
+                        <span className={cn("text-xs font-medium", 
+                          stat.color === "blue" ? "text-blue-600 dark:text-blue-400" : "text-emerald-600 dark:text-emerald-400"
+                        )}>
+                          {stat.sublabel}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Expandable details drawer */}
+                  <div
+                    className={cn(
+                      "absolute top-full left-0 right-0 z-[100] mt-2 rounded-xl border border-gray-200 bg-white p-4 shadow-xl dark:border-white/10 dark:bg-zinc-900 transition-all duration-300 ease-in-out origin-top",
+                      selectedKpi === stat.key ? "scale-y-100 opacity-100 translate-y-0" : "scale-y-95 opacity-0 -translate-y-2 pointer-events-none"
+                    )}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {stat.key === "odrs" && (
+                      <div className="space-y-3">
+                        <div className="grid grid-cols-2 gap-2">
+                          <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-gray-100 dark:border-white/5">
+                            <span className="block text-[9px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">Pending Action</span>
+                            <span className="text-base font-black text-gray-900 dark:text-zinc-50">{health?.odrs?.pending ?? 0}</span>
+                          </div>
+                          <div className="bg-blue-50 dark:bg-blue-950/30 p-2.5 rounded-lg border border-blue-100 dark:border-blue-900/30">
+                            <span className="block text-[9px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider">In Progress</span>
+                            <span className="text-base font-black text-blue-700 dark:text-blue-400">{health?.odrs?.inProgress ?? 0}</span>
+                          </div>
+                          <div className="bg-amber-50 dark:bg-amber-950/30 p-2.5 rounded-lg border border-amber-100 dark:border-amber-900/30">
+                            <span className="block text-[9px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider">Ready for Pickup</span>
+                            <span className="text-base font-black text-amber-700 dark:text-amber-400">{health?.odrs?.ready ?? 0}</span>
+                          </div>
+                          <div className="bg-emerald-50 dark:bg-emerald-950/30 p-2.5 rounded-lg border border-emerald-100 dark:border-emerald-900/30">
+                            <span className="block text-[9px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Completed</span>
+                            <span className="text-base font-black text-emerald-700 dark:text-emerald-400">{health?.odrs?.completed ?? 0}</span>
+                          </div>
+                        </div>
+                        <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-gray-100 dark:border-white/5 text-xs text-gray-600 dark:text-zinc-300 leading-relaxed">
+                          Online requests for Official Transcripts (TOR), Certifications, and Good Moral documents filed through the student portal.
+                        </div>
+                      </div>
+                    )}
+
+                    {stat.key === "osas" && (
+                      <div className="space-y-3">
+                        <div className="grid grid-cols-2 gap-2">
+                          <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-gray-100 dark:border-white/5">
+                            <span className="block text-[9px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">Submitted</span>
+                            <span className="text-base font-black text-gray-900 dark:text-zinc-50">{health?.osas?.submitted ?? 0}</span>
+                          </div>
+                          <div className="bg-blue-50 dark:bg-blue-950/30 p-2.5 rounded-lg border border-blue-100 dark:border-blue-900/30">
+                            <span className="block text-[9px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider">In Review</span>
+                            <span className="text-base font-black text-blue-700 dark:text-blue-400">{health?.osas?.underReview ?? 0}</span>
+                          </div>
+                          <div className="bg-red-50 dark:bg-red-950/30 p-2.5 rounded-lg border border-red-100 dark:border-red-900/30">
+                            <span className="block text-[9px] font-bold text-red-600 dark:text-red-400 uppercase tracking-wider">Needs Revision</span>
+                            <span className="text-base font-black text-red-700 dark:text-red-400">{health?.osas?.needsRevision ?? 0}</span>
+                          </div>
+                          <div className="bg-emerald-50 dark:bg-emerald-950/30 p-2.5 rounded-lg border border-emerald-100 dark:border-emerald-900/30">
+                            <span className="block text-[9px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Approved</span>
+                            <span className="text-base font-black text-emerald-700 dark:text-emerald-400">{health?.osas?.approved ?? 0}</span>
+                          </div>
+                        </div>
+                        <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-gray-100 dark:border-white/5 text-xs text-gray-600 dark:text-zinc-300 leading-relaxed">
+                          Campus student organization event permits, activity proposals, and annual compliance submissions for OSAS review.
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Navigation Toolbar */}
         <div className="border-t border-gray-100 dark:border-white/10 p-5 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
@@ -471,11 +460,11 @@ export default function CampusOperationsTab({ showToast }) {
         </div>
 
         {/* Cross-Department Activity Stream Table */}
-        <div className="overflow-hidden border-t border-gray-200 dark:border-white/10 bg-white dark:bg-card flex flex-col flex-1">
+        <div className="overflow-hidden rounded-b-2xl border-t border-gray-200 dark:border-white/10 bg-white dark:bg-card flex flex-col flex-1">
             {loading ? (
               <TransactionsTableSkeleton rowCount={8} />
             ) : paginatedTransactions.length === 0 ? (
-              <div className="flex h-[360px] flex-col items-center justify-center p-6 text-center">
+              <div className="flex h-[360px] flex-col items-center justify-center p-6 text-center rounded-b-2xl">
                 <Empty className="flex flex-col items-center justify-center border-0 bg-transparent text-center">
                   <EmptyHeader className="flex flex-col items-center gap-0">
                     <div className="relative mb-6">
@@ -600,12 +589,12 @@ export default function CampusOperationsTab({ showToast }) {
                           {/* Department Badge */}
                           <td className="p-4 align-middle">
                             {isRegistrar ? (
-                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[6px] text-[11px] font-semibold bg-[#800000]/10 text-pup-maroon dark:bg-pup-maroon/20 dark:text-rose-300">
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-[#800000]/10 text-pup-maroon dark:bg-pup-maroon/20 dark:text-rose-300">
                                 <i className="ph-bold ph-certificate text-xs"></i>
                                 Registrar
                               </span>
                             ) : (
-                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[6px] text-[11px] font-semibold bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300">
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300">
                                 <i className="ph-bold ph-student text-xs"></i>
                                 OSAS
                               </span>
@@ -651,7 +640,7 @@ export default function CampusOperationsTab({ showToast }) {
                           {/* Stage Status Badge */}
                           <td className="p-4 align-middle">
                             <span className={cn(
-                              "inline-flex items-center justify-center rounded-[6px] px-[8px] py-[3px] text-[11px] font-medium whitespace-nowrap",
+                              "inline-flex items-center justify-center rounded-full px-[10px] py-[2.5px] text-[11px] font-medium whitespace-nowrap",
                               statusBadgeClass(tx.status)
                             )}>
                               {tx.status === "InProgress" ? "In Progress" : tx.status}
@@ -757,12 +746,12 @@ export default function CampusOperationsTab({ showToast }) {
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 mb-1.5 flex-wrap">
                     {selectedItem?.officeId === "registrar" ? (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[6px] text-[11px] font-semibold bg-[#800000]/10 text-pup-maroon dark:bg-pup-maroon/20 dark:text-rose-300">
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-[#800000]/10 text-pup-maroon dark:bg-pup-maroon/20 dark:text-rose-300">
                         <i className="ph-bold ph-certificate text-xs"></i>
                         Registrar Document Request
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[6px] text-[11px] font-semibold bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300">
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300">
                         <i className="ph-bold ph-student text-xs"></i>
                         OSAS Event Proposal
                       </span>
@@ -799,7 +788,7 @@ export default function CampusOperationsTab({ showToast }) {
                   </span>
                   <div className="flex items-center justify-between mt-1">
                     <span className={cn(
-                      "inline-flex items-center gap-1 rounded-[5px] px-2 py-0.5 text-[11px] font-semibold",
+                      "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold",
                       statusBadgeClass(selectedItem?.status)
                     )}>
                       {selectedItem?.status === "InProgress" ? "In Progress" : selectedItem?.status}
@@ -870,7 +859,7 @@ export default function CampusOperationsTab({ showToast }) {
               )}
             </div>
 
-            <div className="px-6 py-4 bg-white dark:bg-card border-t border-gray-100 dark:border-white/10 flex items-center justify-between">
+            <DialogFooter className="m-0 p-6 pt-0 bg-white dark:bg-card border-none flex flex-row items-center justify-between sm:justify-between w-full">
               <span className="text-xs text-gray-500 dark:text-zinc-400">
                 Department: <strong className="text-gray-700 dark:text-zinc-200 uppercase font-semibold">{selectedItem?.officeId}</strong>
               </span>
@@ -878,11 +867,11 @@ export default function CampusOperationsTab({ showToast }) {
                 type="button"
                 variant="outline"
                 onClick={() => setSelectedItem(null)}
-                className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                className="h-10 px-4 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
               >
                 Close
               </Button>
-            </div>
+            </DialogFooter>
           </DialogContent>
         </Dialog>
       )}

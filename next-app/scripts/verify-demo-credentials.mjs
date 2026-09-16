@@ -3,11 +3,12 @@ dotenv.config({ path: ".env.local" });
 dotenv.config();
 
 const { query, queryOne } = await import("../src/lib/postgres.js");
-const { getStaffByUsername, hasAllSecurityAnswers, hashPasswordForStorage } = await import("../src/lib/staffRepo.js");
+const { getStaffByUsername, hasAllSecurityAnswers, verifyPasswordHash } = await import("../src/lib/staffRepo.js");
 const { authenticateStudent } = await import("../src/lib/studentAuth.js");
 
 console.log("=== RUNNING AUTH & CREDENTIAL TESTS ===");
-const defaultHash = hashPasswordForStorage("pupstaff");
+const staffPassword = process.env.VERIFY_STAFF_PASSWORD || process.env.DEFAULT_STAFF_PASSWORD || "pupstaff";
+const studentPassword = process.env.VERIFY_STUDENT_PASSWORD || "student123";
 
 // Test 1: Staff accounts
 const staffTests = [
@@ -25,7 +26,7 @@ for (const t of staffTests) {
     process.exit(1);
   }
   const hasSec = await hasAllSecurityAnswers(t.id);
-  const pwMatch = byEmail.password_hash === defaultHash;
+  const pwMatch = verifyPasswordHash(staffPassword, byEmail.password_hash).valid;
   const officeMatch = byEmail.office_id === t.office;
   const roleMatch = byEmail.role === t.role;
   console.log(`PASS: ${t.role} (${t.email}) - PW: ${pwMatch}, HasSecurity: ${hasSec}, Role: ${roleMatch}, Office: ${officeMatch}`);
@@ -36,19 +37,17 @@ const osasStaff = await queryOne("SELECT * FROM staff WHERE id = 'PUPOSAS-002' O
 console.log("PASS: OSAS Staff absent (osas admin only):", osasStaff === null);
 
 // Test 3: Student authentication
-const s1 = await authenticateStudent({ studentNo: "student@pup.local", password: "pupstaff" });
-const s2 = await authenticateStudent({ studentNo: "2022-10001-MN-1", password: "pupstaff" });
-const s3 = await authenticateStudent({ studentNo: "2022-10001-MN-1", password: "student123" });
-console.log("PASS: Student auth by email (pupstaff):", Boolean(s1));
-console.log("PASS: Student auth by student_no (pupstaff):", Boolean(s2));
-console.log("PASS: Student auth by student_no (student123):", Boolean(s3));
+const s1 = await authenticateStudent({ studentNo: "student@pup.local", password: studentPassword });
+const s2 = await authenticateStudent({ studentNo: "2022-10001-MN-1", password: studentPassword });
+const s3 = await authenticateStudent({ studentNo: "2022-10001-MN-1", password: studentPassword });
+console.log("PASS: Student auth by email:", Boolean(s1));
+console.log("PASS: Student auth by student_no:", Boolean(s2));
+console.log("PASS: Student auth repeat check:", Boolean(s3));
 
 // Test 4: Verify authentication resolution for all inputs
 const testInputs = [
   { input: "superadmin@pup.local", expectedRole: "SuperAdmin" },
   { input: "PUPSUPERADMIN-001", expectedRole: "SuperAdmin" },
-  { input: "admin.default@pup.local", expectedRole: "SuperAdmin" },
-  { input: "PUPREGISTRAR-001", expectedRole: "SuperAdmin" },
   { input: "admin.registrar@pup.local", expectedRole: "Admin" },
   { input: "PUPREGISTRAR-003", expectedRole: "Admin" },
   { input: "staff.registrar@pup.local", expectedRole: "Staff" },
@@ -62,14 +61,14 @@ const testInputs = [
 for (const t of testInputs) {
   const clean = t.input.trim();
   const lower = clean.toLowerCase();
-  const normalized = (lower === "admin.default@pup.local" || lower === "pupregistrar-001") ? "superadmin@pup.local" : clean;
+  const normalized = clean;
   const staff = await queryOne(
     "SELECT * FROM staff WHERE lower(email) = lower($1) OR lower(id) = lower($1)",
     [normalized]
   );
   if (staff) {
     const hasSec = await hasAllSecurityAnswers(staff.id);
-    const mustChange = (staff.password_hash === defaultHash) && !hasSec;
+    const mustChange = verifyPasswordHash(staffPassword, staff.password_hash).valid && !hasSec;
     if (staff.role !== t.expectedRole) {
       console.error(`FAIL: Expected role ${t.expectedRole} for ${t.input}, got ${staff.role}`);
       process.exit(1);
@@ -80,7 +79,7 @@ for (const t of testInputs) {
     }
     console.log(`PASS: Login resolution [${t.input}] -> role: ${staff.role}, mustChangePassword: false`);
   } else {
-    const student = await authenticateStudent({ studentNo: clean, password: "pupstaff" });
+    const student = await authenticateStudent({ studentNo: clean, password: studentPassword });
     if (!student || t.expectedRole !== "Student") {
       console.error(`FAIL: Could not authenticate student for ${t.input}`);
       process.exit(1);

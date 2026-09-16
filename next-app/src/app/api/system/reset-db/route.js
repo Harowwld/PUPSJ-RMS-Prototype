@@ -1,18 +1,37 @@
-import crypto from "node:crypto";
 import { NextResponse } from "next/server";
 import { query, transaction } from "@/lib/postgres";
 import { createStaff } from "@/lib/staffRepo";
 import { clearHealthCache } from "@/lib/healthCache";
 import { buildDefaultStorageLayout } from "@/lib/storageLayoutDefaults";
+import { requireSystemAdmin, createAuthErrorResponse } from "@/lib/authHelpers";
+import { hashPassword } from "@/lib/passwordHash";
 
 export const runtime = "nodejs";
 
-async function handleResetDb() {
+async function handleResetDb(req) {
+  if (process.env.NODE_ENV === "production") {
+    return NextResponse.json({ ok: false, error: "Database reset is unavailable in production." }, { status: 404 });
+  }
+
+  const { user, error } = await requireSystemAdmin(req);
+  if (error || !user) {
+    const status = error?.startsWith("Access denied") ? 403 : 401;
+    return createAuthErrorResponse(error || "System administrator authentication required", status);
+  }
+
+  const body = await req.json().catch(() => null);
+  if (body?.confirmation !== "RESET_LOCAL_DATABASE") {
+    return NextResponse.json(
+      { ok: false, error: "Explicit reset confirmation is required." },
+      { status: 400 }
+    );
+  }
+
   try {
     await transaction(async ({ query: txQuery }) => {
       await txQuery(`TRUNCATE TABLE
         transaction_updates, event_proposals, document_requests, documents,
-        student_accounts, students, staff, global_audit_logs, backups,
+        student_accounts, student_office_memberships, students, staff, global_audit_logs, backups,
         staff_notification_item_states, staff_notification_state, settings
         RESTART IDENTITY CASCADE`);
     });
@@ -68,6 +87,19 @@ async function handleResetDb() {
       section: "OSAS Admin",
       status: "Active",
       email: "admin.osas@pup.local",
+      password: defaultPassword,
+    });
+
+    // 5. OSAS Staff
+    await createStaff({
+      id: "PUPOSAS-002",
+      officeId: "osas",
+      fname: "Juanito",
+      lname: "Rizal",
+      role: "Staff",
+      section: "Student Affairs",
+      status: "Active",
+      email: "staff.osas@pup.local",
       password: defaultPassword,
     });
 
@@ -161,7 +193,7 @@ async function handleResetDb() {
     ];
     for (const staffId of staffIds) {
       for (const [qid, ans] of defaultAnswers) {
-        const aHash = crypto.createHash("sha256").update(ans.toLowerCase()).digest("hex");
+        const aHash = hashPassword(ans.toLowerCase());
         await query(
           `INSERT INTO staff_security_answers (staff_id, question_id, answer_hash, updated_at)
            VALUES ($1, $2, $3, NOW())
@@ -172,8 +204,7 @@ async function handleResetDb() {
     }
 
     // Seed students & student accounts for demo
-    const studentSalt = "local-test-student-salt";
-    const studentHash = `${studentSalt}:${crypto.scryptSync("student123", studentSalt, 64).toString("hex")}`;
+    const studentHash = hashPassword("student123");
     const demoStudents = [
       ["2022-10001-MN-1", "DELA CRUZ, JUAN A.", "BSIT", 2024, "BSIT-4A", "student@pup.local"],
       ["2023-00001-IT-1", "TEST STUDENT", "BSIT", 4, "BSIT-4A", "test.student@pup.local"],
@@ -202,6 +233,12 @@ async function handleResetDb() {
         [sNo, sName, cCode, yLevel, sSec]
       );
       await query(
+        `INSERT INTO student_office_memberships (student_no, office_id, status)
+         VALUES ($1, 'registrar', 'Active')
+         ON CONFLICT (student_no, office_id) DO UPDATE SET status = 'Active', updated_at = NOW()`,
+        [sNo],
+      );
+      await query(
         `INSERT INTO student_accounts (student_no, email, password_hash, status, first_name, middle_name, last_name, client_type)
          VALUES ($1, $2, $3, 'Active', $4, $5, $6, $7)
          ON CONFLICT (student_no) DO UPDATE SET email = EXCLUDED.email, password_hash = EXCLUDED.password_hash,
@@ -215,7 +252,7 @@ async function handleResetDb() {
     const defaultLayout = buildDefaultStorageLayout();
     await query(
       `INSERT INTO settings (key, value)
-       VALUES ('storage_layout', $1)
+       VALUES ('storage_layout:registrar', $1)
        ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = NOW()`,
       [JSON.stringify(defaultLayout)]
     );
@@ -230,18 +267,21 @@ async function handleResetDb() {
 
     return NextResponse.json({
       ok: true,
-      message: `PostgreSQL data reset successfully. Demo accounts seeded. Default password: ${defaultPassword}`,
+      message: "PostgreSQL data reset successfully. Demo accounts seeded for local development.",
     });
   } catch (error) {
     console.error("[reset-db] Reset failed:", error);
-    return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ ok: false, error: "Internal server error" }, { status: 500 });
   }
 }
 
 export async function GET() {
-  return handleResetDb();
+  return NextResponse.json(
+    { ok: false, error: "Database reset requires POST." },
+    { status: 405, headers: { Allow: "POST" } }
+  );
 }
 
-export async function POST() {
-  return handleResetDb();
+export async function POST(req) {
+  return handleResetDb(req);
 }

@@ -439,7 +439,7 @@ export default function BulkImportTab({
                           ) : (
                             <div
                               className={cn(
-                                "inline-flex w-fit items-center justify-center rounded-[4px] px-[8px] py-[3px] text-[11px] font-medium tracking-[0.04em] whitespace-nowrap",
+                                "inline-flex w-fit items-center justify-center rounded-full px-[10px] py-[2.5px] text-[11px] font-medium tracking-[0.04em] whitespace-nowrap",
                                 row.category.toLowerCase() === "documenttype"
                                   ? "bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-400"
                                   : row.category.toLowerCase() === "course"
@@ -535,7 +535,7 @@ export default function BulkImportTab({
                             <div className="flex items-center justify-end gap-2">
                               <Tooltip>
                                 <TooltipTrigger asChild>
-                                  <div className="inline-flex cursor-help items-center gap-1 rounded-[4px] bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-400 px-[8px] py-[3px] text-[11px] font-medium tracking-[0.04em] whitespace-nowrap">
+                                  <div className="inline-flex cursor-help items-center gap-1 rounded-full bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-400 px-[10px] py-[2.5px] text-[11px] font-medium tracking-[0.04em] whitespace-nowrap">
                                     <i className="ph-bold ph-warning-circle text-xs"></i>
                                     <span>{row.error}</span>
                                   </div>
@@ -560,7 +560,7 @@ export default function BulkImportTab({
                             </div>
                           ) : (
                             <div className="flex items-center justify-end gap-2">
-                              <div className="inline-flex items-center gap-1 rounded-[4px] bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 px-[8px] py-[3px] text-[11px] font-medium tracking-[0.04em] whitespace-nowrap">
+                              <div className="inline-flex items-center gap-1 rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 px-[10px] py-[2.5px] text-[11px] font-medium tracking-[0.04em] whitespace-nowrap">
                                 <i className="ph-bold ph-check-circle text-xs"></i>
                                 <span>Validated</span>
                               </div>
@@ -770,7 +770,7 @@ export default function BulkImportTab({
                 {["Category", "Name", "Code"].map((col) => (
                   <span
                     key={col}
-                    className="bg-[#F2F2F7] rounded-[6px] px-3 py-1 text-[12px] font-medium text-[#111] dark:bg-zinc-800 dark:text-zinc-200 border-0"
+                    className="bg-[#F2F2F7] rounded-full px-3 py-1 text-[12px] font-medium text-[#111] dark:bg-zinc-800 dark:text-zinc-200 border-0"
                   >
                     {col}
                   </span>

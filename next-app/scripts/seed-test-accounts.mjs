@@ -1,14 +1,13 @@
-import crypto from "node:crypto";
 import dotenv from "dotenv";
 import { Pool } from "pg";
+import { hashPassword } from "../src/lib/passwordHash.js";
 
 dotenv.config({ path: ".env.local" });
 dotenv.config();
 
 const password = process.env.DEFAULT_STAFF_PASSWORD || "pupstaff";
-const staffHash = crypto.createHash("sha256").update(password).digest("hex");
-const studentSalt = "local-test-student-salt";
-const studentHash = `${studentSalt}:${crypto.scryptSync("student123", studentSalt, 64).toString("hex")}`;
+const staffHash = hashPassword(password);
+const studentHash = hashPassword("student123");
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
 const staff = [
@@ -16,10 +15,11 @@ const staff = [
   ["PUPREGISTRAR-003", "registrar", "Elias", "Austria", "Admin", "Administrative", "admin.registrar@pup.local"],
   ["PUPREGISTRAR-002", "registrar", "Marcus", "Reyes", "Staff", "Records", "staff.registrar@pup.local"],
   ["PUPOSAS-001", "osas", "Sandra", "Gomez", "Admin", "OSAS Admin", "admin.osas@pup.local"],
+  ["PUPOSAS-002", "osas", "Juanito", "Rizal", "Staff", "Student Affairs", "staff.osas@pup.local"],
 ];
 
 try {
-  // 1. Seed the 4 official demo personnel accounts
+  // 1. Seed the official demo personnel accounts
   for (const [id, office, fname, lname, role, section, email] of staff) {
     await pool.query(`
       INSERT INTO staff (id, office_id, fname, lname, role, section, status, email, password_hash, password_last_changed, updated_at)
@@ -43,7 +43,6 @@ try {
   await pool.query(`UPDATE document_requests SET updated_by = 'PUPREGISTRAR-002' WHERE updated_by = 'records.marcus@pup.local' OR updated_by = 'PUPREGISTRAR-001'`);
   await pool.query(`DELETE FROM staff_security_answers WHERE staff_id = 'PUPREGISTRAR-001'`);
   await pool.query(`DELETE FROM staff WHERE id = 'records.marcus@pup.local' OR email = 'records.marcus@pup.local' OR id = 'PUPREGISTRAR-001' OR email = 'admin.default@pup.local'`);
-  await pool.query(`DELETE FROM staff WHERE id = 'PUPOSAS-002' OR email = 'staff.osas@pup.local'`);
 
   // 3. Ensure security questions and pre-seed recovery answers so demo accounts skip setup modals
   const securityQuestions = [
@@ -66,7 +65,7 @@ try {
   ];
   for (const [staffId] of staff) {
     for (const [qid, ans] of defaultAnswers) {
-      const aHash = crypto.createHash("sha256").update(ans.toLowerCase()).digest("hex");
+      const aHash = hashPassword(ans.toLowerCase());
       await pool.query(`
         INSERT INTO staff_security_answers (staff_id, question_id, answer_hash, updated_at)
         VALUES ($1, $2, $3, NOW())
@@ -89,19 +88,20 @@ try {
     `, [sNo, sName, cCode, yLevel, sSection]);
 
     await pool.query(`
+      INSERT INTO student_office_memberships (student_no, office_id, status, updated_at)
+      VALUES ($1, 'registrar', 'Active', NOW())
+      ON CONFLICT (student_no, office_id) DO UPDATE SET status = 'Active', updated_at = NOW()
+    `, [sNo]);
+
+    await pool.query(`
       INSERT INTO student_accounts (student_no, email, password_hash, status, updated_at)
       VALUES ($1, $2, $3, 'Active', NOW())
-      ON CONFLICT (student_no) DO UPDATE SET email = EXCLUDED.email, password_hash = EXCLUDED.password_hash, status = 'Active', updated_at = NOW()
+      ON CONFLICT (email) DO UPDATE SET student_no = EXCLUDED.student_no, password_hash = EXCLUDED.password_hash, status = 'Active', updated_at = NOW()
     `, [sNo, sEmail, studentHash]);
   }
 
   console.log("=== Demo Accounts Seeded Successfully ===");
-  console.log("1. SuperAdmin:       superadmin@pup.local      (or PUPSUPERADMIN-001)  / " + password + " -> /systemadmin");
-  console.log("2. Registrar Admin:  admin.registrar@pup.local (or PUPREGISTRAR-003) / " + password + " -> /admin");
-  console.log("3. Registrar Staff:  staff.registrar@pup.local (or PUPREGISTRAR-002) / " + password + " -> /staff");
-  console.log("4. OSAS Admin:       admin.osas@pup.local      (or PUPOSAS-001)      / " + password + " -> /admin");
-  console.log("5. Student:          student@pup.local         (or 2022-10001-MN-1)  / " + password + " or student123 -> /student");
+  console.log("Demo personnel and student accounts were seeded. Credentials are supplied through the local setup documentation.");
 } finally {
   await pool.end();
 }
-

@@ -951,21 +951,16 @@ export default function NotificationsTab({
             }
           }}
         >
-          <DialogContent className="flex h-[90vh] w-[96vw] max-w-[96vw] flex-col overflow-hidden border border-gray-200 bg-gray-100 p-0 shadow-2xl transition-all duration-normal xl:max-w-[1400px] rounded-2xl dark:border-white/10 dark:bg-muted">
-            <DialogHeader className="shrink-0 border-b border-gray-100 bg-gray-50 p-6 dark:border-white/10 dark:bg-white/5">
-              <div className="flex items-center justify-between gap-4">
-                <div className="flex items-center gap-4">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-gray-200 bg-white text-pup-maroon dark:text-primary shadow-sm dark:border-white/10 dark:bg-card">
-                    <i className="ph-duotone ph-file-pdf text-xl"></i>
-                  </div>
-                  <div className="min-w-0 text-left">
-                    <DialogTitle className="text-xl font-semibold tracking-tight text-gray-900 dark:text-zinc-50">
-                      Document Review: {selectedNotif?.doc_type || "Loading..."}
-                    </DialogTitle>
-                    <p className="mt-1.5 text-sm font-medium text-gray-500 dark:text-zinc-400">
-                      Viewing review details for student {selectedNotif?.student_no}.
-                    </p>
-                  </div>
+          <DialogContent className="flex h-[90vh] w-[96vw] max-w-[96vw] flex-col overflow-hidden border border-gray-200 bg-gray-100 p-0 shadow-2xl transition-all duration-normal xl:max-w-[1400px] rounded-2xl dark:border-white/10 dark:bg-muted gap-0">
+            <DialogHeader className="shrink-0 border-b border-gray-100 bg-white p-6 pb-4 dark:border-white/10 dark:bg-card text-left">
+              <div className="flex items-start gap-4">
+                <div className="min-w-0 pr-10">
+                  <DialogTitle className="text-[16px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
+                    Document Review: {selectedNotif?.doc_type || "Loading..."}
+                  </DialogTitle>
+                  <DialogDescription className="mt-1 text-[13px] font-normal text-gray-500 dark:text-zinc-400">
+                    Viewing review details for student {selectedNotif?.student_no}.
+                  </DialogDescription>
                 </div>
               </div>
             </DialogHeader>

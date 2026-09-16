@@ -40,8 +40,8 @@ export default function OfficeDocumentsTable({
   const visibleRows = rows.slice((page - 1) * pageSize, page * pageSize)
 
   const containerClasses = embedded
-    ? "border-t border-gray-100 dark:border-white/10 w-full bg-white dark:bg-card flex flex-col"
-    : "rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none"
+    ? "border-t border-gray-100 dark:border-white/10 w-full bg-white dark:bg-card flex flex-col rounded-b-2xl overflow-hidden"
+    : "rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none overflow-hidden"
 
   return (
     <div className={containerClasses}>
@@ -64,7 +64,7 @@ export default function OfficeDocumentsTable({
       </div>
 
       {visibleRows.length === 0 ? (
-        <Empty className="flex min-h-[200px] flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400">
+        <Empty className="flex min-h-[200px] flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400 rounded-b-2xl">
           <EmptyHeader className="flex flex-col items-center gap-0">
             <EmptyMedia className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-gray-100 bg-gray-50 dark:border-white/10 dark:bg-zinc-900">
               <i className="ph-duotone ph-files text-3xl text-gray-400 dark:text-zinc-500" />
@@ -123,7 +123,7 @@ export default function OfficeDocumentsTable({
               </tbody>
             </table>
           </div>
-          <div className="flex items-center justify-between border-t border-gray-100 bg-white p-4 px-6 dark:border-white/10 dark:bg-card mt-auto select-none">
+          <div className="flex items-center justify-between border-t border-gray-100 bg-white p-4 px-6 dark:border-white/10 dark:bg-card mt-auto select-none rounded-b-2xl">
             <div className="flex items-center gap-6 text-xs text-gray-500 dark:text-zinc-400">
               <span>
                 Showing {visibleRows.length} of {rows.length.toLocaleString()}

@@ -3,15 +3,52 @@ import path from "node:path";
 import os from "node:os";
 import { execFileSync } from "node:child_process";
 
-// In-memory simulation state for development/testing
-let simulationEnabled = process.env.EXTERNAL_BACKUP_SIMULATE === "true";
+const FLAG_FILENAME = "external_drive_simulation.flag";
+
+function getFlagPath() {
+  const localData = process.env.LOCAL_DATA_DIR
+    ? path.resolve(process.cwd(), process.env.LOCAL_DATA_DIR)
+    : path.resolve(process.cwd(), ".local");
+  return path.join(localData, FLAG_FILENAME);
+}
 
 export function setSimulationMode(enabled) {
-  simulationEnabled = Boolean(enabled);
+  const isEnabled = Boolean(enabled);
+  if (typeof globalThis !== "undefined") {
+    globalThis.__PUPSJ_SIMULATION_ENABLED = isEnabled;
+  }
+  try {
+    const flagPath = getFlagPath();
+    const dir = path.dirname(flagPath);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    if (isEnabled) {
+      fs.writeFileSync(flagPath, "true", "utf8");
+    } else if (fs.existsSync(flagPath)) {
+      fs.unlinkSync(flagPath);
+    }
+  } catch (err) {
+    console.error("[externalDriveDetector] Failed to write simulation flag:", err);
+  }
 }
 
 export function isSimulationMode() {
-  return simulationEnabled;
+  try {
+    const flagPath = getFlagPath();
+    if (fs.existsSync(flagPath)) {
+      if (typeof globalThis !== "undefined") globalThis.__PUPSJ_SIMULATION_ENABLED = true;
+      return true;
+    } else if (typeof globalThis !== "undefined" && globalThis.__PUPSJ_SIMULATION_ENABLED !== undefined) {
+      if (process.env.EXTERNAL_BACKUP_SIMULATE !== "true") {
+        globalThis.__PUPSJ_SIMULATION_ENABLED = false;
+      }
+    }
+  } catch {}
+  if (typeof globalThis !== "undefined" && globalThis.__PUPSJ_SIMULATION_ENABLED !== undefined) {
+    return Boolean(globalThis.__PUPSJ_SIMULATION_ENABLED);
+  }
+  return process.env.EXTERNAL_BACKUP_SIMULATE === "true";
 }
 
 /**
@@ -240,10 +277,46 @@ function detectWindowsDrives() {
  * Detects whether an actual external drive is attached.
  */
 export function detectExternalDrive(options = {}) {
-  const allowSimulation = options.simulate !== undefined ? options.simulate : simulationEnabled;
+  const allowSimulation = options.simulate !== undefined ? options.simulate : isSimulationMode();
   const configuredPath = process.env.EXTERNAL_BACKUP_PATH || null;
 
-  // 1. Check if configured EXTERNAL_BACKUP_PATH exists on disk and is reachable
+  // 1. If simulation mode is explicitly requested/enabled, use the simulated volume
+  if (allowSimulation) {
+    const localData = process.env.LOCAL_DATA_DIR
+      ? path.resolve(process.cwd(), process.env.LOCAL_DATA_DIR)
+      : path.resolve(process.cwd(), ".local");
+    const emulatedPath = path.resolve(localData, "external_media");
+    if (!fs.existsSync(emulatedPath)) {
+      fs.mkdirSync(emulatedPath, { recursive: true });
+    }
+    const space = getDiskSpace(emulatedPath);
+    return {
+      configured: Boolean(configuredPath),
+      connected: true,
+      path: emulatedPath,
+      mountPoint: emulatedPath,
+      label: "Simulated External Media (Dev Node)",
+      isWritable: true,
+      freeBytes: space?.freeBytes ?? null,
+      totalBytes: space?.totalBytes ?? null,
+      freeFormatted: space?.freeFormatted ?? null,
+      totalFormatted: space?.totalFormatted ?? null,
+      isRemovable: false,
+      isEmulated: true,
+      drives: [
+        {
+          name: "simulated_node",
+          label: "Simulated External Media (Dev Node)",
+          mountPoint: emulatedPath,
+          isWritable: true,
+          freeFormatted: space?.freeFormatted,
+          totalFormatted: space?.totalFormatted,
+        },
+      ],
+    };
+  }
+
+  // 2. Check if configured EXTERNAL_BACKUP_PATH exists on disk and is reachable
   if (configuredPath) {
     try {
       const resolved = path.resolve(configuredPath);
@@ -288,7 +361,7 @@ export function detectExternalDrive(options = {}) {
     }
   }
 
-  // 2. Scan physical hardware / removable USB devices
+  // 3. Scan physical hardware / removable USB devices
   let detectedDrives = [];
   const platform = os.platform();
 
@@ -317,40 +390,6 @@ export function detectExternalDrive(options = {}) {
       isRemovable: true,
       isEmulated: false,
       drives: detectedDrives,
-    };
-  }
-
-  // 3. If simulation mode is explicitly requested/enabled
-  if (allowSimulation) {
-    const localData = process.env.LOCAL_DATA_DIR || path.join(process.cwd(), ".local");
-    const emulatedPath = path.join(localData, "external_media");
-    if (!fs.existsSync(emulatedPath)) {
-      fs.mkdirSync(emulatedPath, { recursive: true });
-    }
-    const space = getDiskSpace(emulatedPath);
-    return {
-      configured: Boolean(configuredPath),
-      connected: true,
-      path: emulatedPath,
-      mountPoint: emulatedPath,
-      label: "Simulated External Media (Dev Node)",
-      isWritable: true,
-      freeBytes: space?.freeBytes ?? null,
-      totalBytes: space?.totalBytes ?? null,
-      freeFormatted: space?.freeFormatted ?? null,
-      totalFormatted: space?.totalFormatted ?? null,
-      isRemovable: false,
-      isEmulated: true,
-      drives: [
-        {
-          name: "simulated_node",
-          label: "Simulated External Media (Dev Node)",
-          mountPoint: emulatedPath,
-          isWritable: true,
-          freeFormatted: space?.freeFormatted,
-          totalFormatted: space?.totalFormatted,
-        },
-      ],
     };
   }
 

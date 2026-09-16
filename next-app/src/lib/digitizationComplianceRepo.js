@@ -8,9 +8,20 @@ function buildDocQualifiesSql(requireApproved) {
   return "(d.approval_status IS NULL OR d.approval_status != 'Declined')";
 }
 
-function buildStudentWhere({ studentStatus, courseCode }) {
+function buildStudentWhere({ studentStatus, courseCode, officeId }) {
   const filters = [];
   const params = [];
+
+  if (officeId) {
+    filters.push(`EXISTS (
+      SELECT 1
+      FROM student_office_memberships som
+      WHERE som.student_no = s.student_no
+        AND som.office_id = ?
+        AND som.status = 'Active'
+    )`);
+    params.push(officeId);
+  }
 
   const cc = String(courseCode || "").trim().toUpperCase();
   if (cc) {
@@ -37,23 +48,35 @@ function buildStudentWhere({ studentStatus, courseCode }) {
 
 function roundPercent(ratio) {
   if (!Number.isFinite(ratio)) return null;
-  return Math.round(ratio * 10000) / 100;
+  return Math.round(ratio * 100);
 }
 
 export async function getDigitizationComplianceSummary({
   studentStatus = "Active",
   courseCode,
   requireApproved = false,
+  officeId,
 } = {}) {
+  const normalizedOfficeId = String(officeId || "").trim().toLowerCase() || null;
   // 1. Get all doc types currently configured in the system
   // Read lookup data from PostgreSQL directly; document_types is part of the
   // migrated schema and the legacy docTypesRepo still targets SQLite.
-  const typeRows = await query("SELECT name FROM document_types WHERE status = 'Active' ORDER BY LOWER(name) ASC");
+  const typeRows = await query(
+    `SELECT name FROM document_types
+      WHERE status = 'Active'${normalizedOfficeId ? " AND office_id = $1" : ""}
+      ORDER BY LOWER(name) ASC`,
+    normalizedOfficeId ? [normalizedOfficeId] : [],
+  );
   const allDocTypes = typeRows.map((row) => String(row?.name || ""));
   const expectedCountPerStudent = allDocTypes.length;
 
   const docQualifies = buildDocQualifiesSql(Boolean(requireApproved));
-  const { where, params } = buildStudentWhere({ studentStatus, courseCode });
+  const { where, params } = buildStudentWhere({
+    studentStatus,
+    courseCode,
+    officeId: normalizedOfficeId,
+  });
+  const documentOfficeFilter = normalizedOfficeId ? "AND d.office_id = ?" : "";
 
   // 2. Fetch course aggregation stats
   const courseRows = await dbAll(
@@ -68,13 +91,19 @@ export async function getDigitizationComplianceSummary({
       SELECT student_no, COUNT(DISTINCT doc_type) AS actual_count
       FROM documents d
       WHERE ${docQualifies}
+        ${documentOfficeFilter}
         AND d.doc_type IN (${allDocTypes.length ? allDocTypes.map(() => "?").join(",") : "NULL"})
       GROUP BY student_no
     ) d_counts ON s.student_no = d_counts.student_no
     ${where}
     GROUP BY s.course_code
     `,
-    [expectedCountPerStudent, ...(allDocTypes.length ? allDocTypes : []), ...params]
+    [
+      expectedCountPerStudent,
+      ...(normalizedOfficeId ? [normalizedOfficeId] : []),
+      ...(allDocTypes.length ? allDocTypes : []),
+      ...params,
+    ]
   );
 
   // 3. Fetch year aggregation stats
@@ -115,8 +144,8 @@ export async function getDigitizationComplianceSummary({
   }).sort((a, b) => a.courseCode.localeCompare(b.courseCode));
 
   const totalCompletenessRatio = expectedCountPerStudent > 0 ? (totalDigitizedDocsCount / expectedCountPerStudent) : totalStudents;
-  const avgCompleteness = totalStudents > 0 ? roundPercent(totalCompletenessRatio / totalStudents) : null;
-  const fullyDigitizedRate = totalStudents > 0 ? roundPercent(fullyDigitizedCount / totalStudents) : null;
+  const avgCompleteness = totalStudents > 0 ? roundPercent(totalCompletenessRatio / totalStudents) : 0;
+  const fullyDigitizedRate = totalStudents > 0 ? roundPercent(fullyDigitizedCount / totalStudents) : 0;
   const totalExpectedDocsCount = totalStudents * expectedCountPerStudent;
 
   const byYear = yearRows.map((row) => ({
@@ -131,9 +160,10 @@ export async function getDigitizationComplianceSummary({
     summary: {
       totalStudents,
       digitizedStudents: fullyDigitizedCount,
+      fullyDigitizedStudents: fullyDigitizedCount,
       notDigitizedStudents: Math.max(0, totalStudents - fullyDigitizedCount),
-      percentDigitized: avgCompleteness,
-      fullyDigitizedRate,
+      percentDigitized: avgCompleteness ?? 0,
+      fullyDigitizedRate: fullyDigitizedRate ?? 0,
       totalDigitizedDocsCount,
       totalExpectedDocsCount,
     },
@@ -144,7 +174,9 @@ export async function getDigitizationComplianceSummary({
       courseCode: String(courseCode || "").trim() || null,
       requireApproved: Boolean(requireApproved),
       definitions: {
-        population: "students table rows matching status and optional course filter",
+        population: normalizedOfficeId
+          ? "students table rows with an active student-office membership matching status and optional course filter"
+          : "students table rows matching status and optional course filter",
         digitizedStudent: "Student who has uploaded all configured document types.",
         expectedCountFormula: `Requirement: All ${expectedCountPerStudent} document types defined in system settings.`,
         completenessMetric: "Average ratio of (Unique Uploaded Types / Total System Types) across all students.",

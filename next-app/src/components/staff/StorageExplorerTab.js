@@ -227,7 +227,7 @@ export default function StorageExplorerTab({
             </div>
 
             {/* Level Inner Content */}
-            <div className="flex w-full flex-col min-h-0 flex-1 mx-auto pt-6 bg-white dark:bg-card">
+            <div className="flex w-full flex-col min-h-0 flex-1 mx-auto pt-6 bg-white dark:bg-card rounded-b-2xl">
               {loading ? (
               <StorageExplorerSkeleton />
             ) : locatorModel?.kind === "rooms" ? (
@@ -576,7 +576,7 @@ export default function StorageExplorerTab({
                                                 {student.name.toUpperCase()}
                                               </p>
                                               {/* Soft Tag for Student Number */}
-                                              <div className="inline-block mt-1.5 bg-[#F5F5F7] border border-[#E5E5EA] rounded-[6px] px-2 py-0.5 text-[13px] font-normal text-[#8E8E93] dark:bg-zinc-850 dark:border-white/5 dark:text-zinc-400">
+                                              <div className="inline-block mt-1.5 bg-[#F5F5F7] border border-[#E5E5EA] rounded-full px-2.5 py-0.5 text-[13px] font-normal text-[#8E8E93] dark:bg-zinc-850 dark:border-white/5 dark:text-zinc-400">
                                                 {student.studentNo}
                                               </div>
                                             </div>
@@ -595,8 +595,8 @@ export default function StorageExplorerTab({
                                                 {student.documents.map((doc) => {
                                                   const isApproved = doc.approvalStatus === "Approved";
                                                   const statusClass = isApproved
-                                                    ? "bg-[#D1FAE5] text-[#065F46] dark:bg-emerald-950/40 dark:text-emerald-400 rounded-[6px]"
-                                                    : "bg-[#FEF3C7] text-[#92400E] dark:bg-amber-950/40 dark:text-amber-400 rounded-[6px]";
+                                                    ? "bg-[#D1FAE5] text-[#065F46] dark:bg-emerald-950/40 dark:text-emerald-400 rounded-full"
+                                                    : "bg-[#FEF3C7] text-[#92400E] dark:bg-amber-950/40 dark:text-amber-400 rounded-full";
 
                                                   return (
                                                     <div

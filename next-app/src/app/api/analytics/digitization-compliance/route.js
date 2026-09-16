@@ -1,26 +1,15 @@
 import { NextResponse } from "next/server";
+import {
+  getPrincipalOfficeId,
+  requireAdmin,
+  createAuthErrorResponse,
+} from "../../../../lib/authHelpers";
+import { isSystemAdminRole } from "../../../../lib/roleUtils";
+import { queryOne } from "../../../../lib/postgres";
 
-import { getSessionCookieName, verifySessionToken } from "../../../../lib/jwt";
-import { getStaffById } from "../../../../lib/staffRepo";
 import { getDigitizationComplianceSummary } from "../../../../lib/digitizationComplianceRepo";
 
 export const runtime = "nodejs";
-
-async function getSessionStaff(req) {
-  const token = req.cookies.get(getSessionCookieName())?.value || "";
-  if (!token) return null;
-
-  const payload = await verifySessionToken(token);
-  const userId = String(payload?.sub || "").trim();
-  if (!userId) return null;
-
-  return await getStaffById(userId);
-}
-
-function isAdminRole(roleRaw) {
-  const role = String(roleRaw || "").toLowerCase();
-  return ["admin", "administrator", "superadmin"].includes(role);
-}
 
 function parseBool(raw) {
   if (raw === null || raw === undefined) return false;
@@ -29,24 +18,23 @@ function parseBool(raw) {
 }
 
 export async function GET(req) {
+  const access = await requireAdmin(req);
+  if (access.error || !access.user) return createAuthErrorResponse(access.error || "Admin access required", access.error?.startsWith("Access denied") ? 403 : 401);
   try {
-    const token = req.cookies.get(getSessionCookieName())?.value || "";
-    if (!token) {
-      return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
-    }
-
-    const payload = await verifySessionToken(token);
-    const userId = String(payload?.sub || "").trim();
-    
-    // Attempt database lookup for fresh role info, but fallback to token payload for resilience
-    const staff = userId ? await getStaffById(userId) : null;
-    const effectiveRole = staff?.role || payload?.role || "";
-
-    if (!isAdminRole(effectiveRole)) {
-      return NextResponse.json({ ok: false, error: "Forbidden" }, { status: 403 });
-    }
-
     const { searchParams } = new URL(req.url);
+    const requestedOfficeId = String(searchParams.get("officeId") || "").trim().toLowerCase();
+    const isGlobalAdmin = isSystemAdminRole(access.user.role);
+    const officeId = isGlobalAdmin ? requestedOfficeId || null : getPrincipalOfficeId(access.user);
+    if (!isGlobalAdmin && !officeId) {
+      return createAuthErrorResponse("Office scope is required", 403);
+    }
+    if (isGlobalAdmin && requestedOfficeId) {
+      const office = await queryOne(
+        "SELECT id FROM offices WHERE lower(id) = lower($1) AND status = 'Active'",
+        [requestedOfficeId],
+      );
+      if (!office) return NextResponse.json({ ok: false, error: "Office not found" }, { status: 404 });
+    }
     const statusParam = searchParams.get("status");
     const studentStatus =
       statusParam === null || statusParam === ""
@@ -68,12 +56,13 @@ export async function GET(req) {
       courseCode: courseCode.trim() || undefined,
       requireApproved,
       threshold,
+      officeId,
     });
 
     return NextResponse.json({ ok: true, data });
   } catch (err) {
     return NextResponse.json(
-      { ok: false, error: err?.message || "Failed to load digitization compliance" },
+      { ok: false, error: "Failed to load digitization compliance" },
       { status: 500 }
     );
   }

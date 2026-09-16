@@ -123,7 +123,7 @@ const StaffTableRow = React.memo(({
       </td>
       <td className="py-0 px-4 align-middle">
         <div className={cn(
-          "inline-flex w-fit items-center justify-center rounded-[4px] px-[8px] py-[3px] text-[11px] font-medium tracking-[0.04em]",
+          "inline-flex w-fit items-center justify-center rounded-full px-[10px] py-[3px] text-[11px] font-medium tracking-[0.04em]",
           s.role === "SystemAdmin" || s.role === "SuperAdmin"
             ? "bg-gray-900 text-white dark:bg-zinc-100 dark:text-zinc-950"
             : s.role === "Admin"
@@ -219,7 +219,7 @@ const StaffTableRow = React.memo(({
                     <button
                       onClick={() => onDeleteUser(s.id)}
                       aria-label="Archive Staff Member"
-                      className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 dark:text-zinc-400 hover:text-red-600 dark:hover:text-red-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
+                      className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 dark:text-zinc-400 hover:text-amber-600 dark:hover:text-amber-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
                     >
                       <i className="ph-bold ph-archive text-[16px]"></i>
                     </button>
@@ -400,6 +400,26 @@ export default function StaffDirectoryTab({
     onSelectionChange(new Set())
     setLastSelectedId(null)
   }, [activeTab, displayPage, onSelectionChange])
+
+  // Prune stale selected IDs when filtered staff updates
+  useEffect(() => {
+    if (!selectedIds || selectedIds.size === 0) return
+    const validIds = new Set(filteredStaff.map((s) => s.id))
+    let needsPruning = false
+    for (const id of selectedIds) {
+      if (!validIds.has(id)) {
+        needsPruning = true
+        break
+      }
+    }
+    if (needsPruning) {
+      const next = new Set()
+      for (const id of selectedIds) {
+        if (validIds.has(id)) next.add(id)
+      }
+      onSelectionChange(next)
+    }
+  }, [filteredStaff, selectedIds, onSelectionChange])
 
   const toggleSelectAll = (checked) => {
     if (checked) {
@@ -660,7 +680,7 @@ export default function StaffDirectoryTab({
             <DirectoryTableSkeleton rowCount={8} />
           </div>
         ) : error ? (
-          <div className="p-6 border-t border-gray-100 dark:border-white/10">
+          <div className="p-6 border-t border-gray-100 dark:border-white/10 rounded-b-2xl">
             <Empty className="flex h-[320px] flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400">
               <EmptyHeader className="flex flex-col items-center gap-0">
                 <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
@@ -676,7 +696,7 @@ export default function StaffDirectoryTab({
             </Empty>
           </div>
         ) : (
-          <div className="w-full flex flex-col flex-1 min-h-0 border-t border-gray-100 dark:border-white/10">
+          <div className={cn("w-full flex flex-col flex-1 min-h-0 border-t border-gray-100 dark:border-white/10", filteredStaff.length === 0 && "rounded-b-2xl overflow-hidden")}>
             <div className="w-full overflow-x-auto">
               <table className="min-w-full text-sm">
                 <thead className="sticky top-0 z-10 border-b-[0.5px] border-black/10 dark:border-white/10 bg-white dark:bg-card">
@@ -917,46 +937,19 @@ export default function StaffDirectoryTab({
         )}
       </Card>
 
-      {selectedIds.size > 1 && (
-        <FloatingActionBar
-          selectedCount={selectedIds.size}
-          selectionStatus="Selected Personnel"
-          onCancel={() => onSelectionChange(new Set())}
-          customContent={
-            <div className="flex items-center gap-3">
-              <button
-                type="button"
-                onClick={() => onSelectionChange(new Set())}
-                className="h-auto text-[13px] font-normal text-[#8E8E93] hover:text-[#111111] dark:hover:text-white bg-transparent hover:bg-transparent border-0 p-0 shadow-none cursor-pointer"
-              >
-                Deselect All
-              </button>
-
-              {activeTab === "active" ? (
-                <Button
-                  size="sm"
-                  onClick={() => {
-                    onBulkArchive(Array.from(selectedIds))
-                  }}
-                  className="flex h-[36px] px-5 items-center justify-center rounded-xl btn-brand-red text-[13px] font-medium text-white active:scale-95 transition-all dark:shadow-none cursor-pointer"
-                >
-                  Archive
-                </Button>
-              ) : (
-                <Button
-                  size="sm"
-                  onClick={() => {
-                    onBulkRestore(Array.from(selectedIds))
-                  }}
-                  className="flex h-[36px] px-5 items-center justify-center rounded-xl btn-brand-green text-[13px] font-medium text-white active:scale-95 transition-all dark:shadow-none cursor-pointer"
-                >
-                  Restore
-                </Button>
-              )}
-            </div>
+      <FloatingActionBar
+        selectedCount={selectedIds.size}
+        onCancel={() => onSelectionChange(new Set())}
+        onAction={() => {
+          if (activeTab === "active") {
+            onBulkArchive(Array.from(selectedIds))
+          } else {
+            onBulkRestore(Array.from(selectedIds))
           }
-        />
-      )}
+        }}
+        actionLabel={activeTab === "active" ? "Archive" : "Restore"}
+        actionVariant={activeTab === "active" ? "danger" : "success"}
+      />
     </div>
     </TooltipProvider>
   )

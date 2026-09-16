@@ -1,9 +1,7 @@
 import { NextResponse } from "next/server";
 
-import { getSessionCookieName, verifySessionToken } from "../../../lib/jwt";
-import { getStaffById } from "../../../lib/staffRepo";
 import { writeAuditLog } from "../../../lib/auditLogRequest";
-import { isAdminRole } from "../../../lib/roleUtils";
+import { isSystemAdminRole } from "../../../lib/roleUtils";
 import {
   listDocumentRequests,
   countDocumentRequests,
@@ -12,33 +10,17 @@ import {
 import { getStudentByStudentNo } from "../../../lib/studentsRepo";
 import { dbGet } from "../../../lib/postgresCompat";
 import { listDocuments } from "../../../lib/documentsRepo";
+import { getPrincipalOfficeId, requireStaff, createAuthErrorResponse } from "../../../lib/authHelpers";
+import { canAccessResource } from "@/lib/resourceAuthorization";
 
 export const runtime = "nodejs";
 
-async function getSessionStaff(req) {
-  const token = req.cookies.get(getSessionCookieName())?.value || "";
-  if (!token) return null;
-  try {
-    const payload = await verifySessionToken(token);
-    const userId = String(payload?.sub || "").trim();
-    if (!userId) return null;
-    return await getStaffById(userId);
-  } catch {
-    return null;
-  }
-}
-
-function isActiveStaffOrAdmin(staff) {
-  if (!staff) return false;
-  if (isAdminRole(staff.role)) return true;
-  return String(staff.status || "").toLowerCase() === "active";
-}
-
 export async function GET(req) {
-  const staff = await getSessionStaff(req);
-  if (!staff || !isActiveStaffOrAdmin(staff)) {
-    return NextResponse.json({ ok: false, error: "Forbidden" }, { status: 403 });
-  }
+  const access = await requireStaff(req);
+  if (access.error || !access.user) return createAuthErrorResponse(access.error || "Staff authentication required", access.error?.startsWith("Access denied") ? 403 : 401);
+  const staff = access.user;
+  const officeId = isSystemAdminRole(staff.role) ? "" : getPrincipalOfficeId(staff);
+  if (!isSystemAdminRole(staff.role) && !officeId) return NextResponse.json({ ok: false, error: "Forbidden" }, { status: 403 });
 
   const { searchParams } = new URL(req.url);
   const q = searchParams.get("q") || "";
@@ -58,7 +40,7 @@ export async function GET(req) {
       studentNo: studentNo || undefined,
       clientType: clientType || undefined,
       docType: docType || undefined,
-      officeId: "registrar",
+      officeId,
       limit,
       offset,
       sortBy,
@@ -70,18 +52,18 @@ export async function GET(req) {
       studentNo: studentNo || undefined,
       clientType: clientType || undefined,
       docType: docType || undefined,
-      officeId: "registrar",
+      officeId,
     }),
   ]);
 
-  return NextResponse.json({ ok: true, data: rows, total });
+  const authorizedRows = rows.filter((row) => canAccessResource(staff, "request", row));
+  return NextResponse.json({ ok: true, data: authorizedRows, total });
 }
 
 export async function POST(req) {
-  const staff = await getSessionStaff(req);
-  if (!staff || !isActiveStaffOrAdmin(staff)) {
-    return NextResponse.json({ ok: false, error: "Forbidden" }, { status: 403 });
-  }
+  const access = await requireStaff(req);
+  if (access.error || !access.user) return createAuthErrorResponse(access.error || "Staff authentication required", access.error?.startsWith("Access denied") ? 403 : 401);
+  const staff = access.user;
 
   const body = await req.json().catch(() => null);
   if (!body || typeof body !== "object") {
@@ -98,6 +80,13 @@ export async function POST(req) {
   const requesterName = String(body.requesterName || "").trim();
   const notes =
     body.notes != null ? String(body.notes).trim() || null : null;
+  const officeId = isSystemAdminRole(staff.role)
+    ? String(body.officeId || "registrar").trim().toLowerCase()
+    : getPrincipalOfficeId(staff);
+
+  if (!officeId) {
+    return NextResponse.json({ ok: false, error: "Staff office is required" }, { status: 403 });
+  }
 
   if (!docType) {
     return NextResponse.json(
@@ -115,7 +104,7 @@ export async function POST(req) {
 
   let student = null;
   if (studentNo) {
-    student = await getStudentByStudentNo(studentNo);
+    student = await getStudentByStudentNo(studentNo, { officeId });
     if (!student && clientType === "Student") {
       return NextResponse.json(
         { ok: false, error: "Student record not found" },
@@ -125,8 +114,8 @@ export async function POST(req) {
   }
 
   const typeRow = await dbGet(
-    "SELECT name FROM document_types WHERE name = ?",
-    [docType]
+    "SELECT name FROM document_types WHERE office_id = ? AND name = ?",
+    [officeId, docType]
   );
   if (!typeRow) {
     return NextResponse.json(
@@ -138,6 +127,7 @@ export async function POST(req) {
   let autoLinkedId = null;
   if (studentNo) {
     const existingDocs = await listDocuments({
+      officeId,
       studentNo,
       docType,
       excludeDeclined: true,
@@ -151,6 +141,7 @@ export async function POST(req) {
   }
 
   const row = await createDocumentRequest({
+    officeId,
     studentNo,
     docType,
     notes,
@@ -159,7 +150,6 @@ export async function POST(req) {
     clientType,
     courseCode: courseCode || student?.course_code || null,
     requesterName: requesterName || student?.name || null,
-    officeId: "registrar",
   });
 
   if (!row) {
@@ -169,7 +159,10 @@ export async function POST(req) {
     );
   }
 
-  const displayName = requesterName || student?.name || studentNo || "Alumni Requester";
+  const displayName = requesterName || student?.name || studentNo || "Requester";
+  if (!canAccessResource(staff, "request", row)) {
+    return NextResponse.json({ ok: false, error: "Request could not be created" }, { status: 500 });
+  }
   await writeAuditLog(req, `Create Document Request`, { 
     details: `initiated document request for '${displayName}' (${clientType})${studentNo ? ` (ID: ${studentNo})` : ""}${courseCode ? ` - Program: ${courseCode}` : ""} - Category: ${docType}`,
     entity_type: "DocumentRequest",

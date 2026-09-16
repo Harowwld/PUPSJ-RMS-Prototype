@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
-import { getSessionCookieName, verifySessionToken } from "../../../../lib/jwt";
 import { getStaffById, hasAllSecurityAnswers } from "../../../../lib/staffRepo";
 import { getOfficeById } from "../../../../lib/officesRepo";
-import { getOfficeModules } from "../../../../lib/modulesRepo";
+import { getOfficeModules, listAllModules } from "../../../../lib/modulesRepo";
 import { query, queryOne } from "@/lib/postgres";
 import { authDebug } from "@/lib/authDebug";
 import { getRoleBranding } from "@/lib/roleBranding";
+import { isSystemAdminRole } from "@/lib/roleUtils";
+import { requireAuth, createAuthErrorResponse } from "../../../../lib/authHelpers";
 
 export const runtime = "nodejs";
 
@@ -19,19 +20,14 @@ function addSecurityHeaders(response) {
 
 export async function GET(req) {
   try {
-    const cookieName = getSessionCookieName();
-    const token = req.cookies.get(cookieName)?.value || "";
-    
-    if (!token) {
-      authDebug("session_check.missing_cookie", { cookieName });
-      return addSecurityHeaders(NextResponse.json({ ok: false, error: "Not authenticated: Missing token cookie" }, { status: 401 }));
-    }
+    const access = await requireAuth(req);
+    if (access.error || !access.user) return createAuthErrorResponse(access.error || "Authentication required", access.error?.startsWith("Access denied") ? 403 : 401);
+    const principal = access.user;
+    const sessionPayload = principal.payload || {};
+    const userId = principal.id || null;
+    authDebug("session_check.principal_resolved", { staffId: userId, role: principal.role || null, officeId: principal.office_id || null, mustChangePassword: Boolean(sessionPayload.mustChangePassword) });
 
-    const payload = await verifySessionToken(token);
-    const userId = payload.sub || null;
-    authDebug("session_check.token_verified", { staffId: userId, role: payload.role || null, officeId: payload.office_id || null, mustChangePassword: Boolean(payload.mustChangePassword) });
-
-    if (payload.role === "Student") {
+    if (principal.principalType === "student") {
       const student = await queryOne(`
         SELECT 
           sa.id AS account_id,
@@ -54,7 +50,7 @@ export async function GET(req) {
            OR (lower(sa.email) = lower($2) AND $2 IS NOT NULL)
            OR (sa.student_no IS NOT NULL AND upper(sa.student_no) = upper($3) AND $3 IS NOT NULL)
         LIMIT 1
-      `, [payload.account_id || (Number.isFinite(Number(userId)) ? Number(userId) : null), payload.email || payload.username || null, payload.student_no || null]);
+      `, [principal.accountId || (Number.isFinite(Number(userId)) ? Number(userId) : null), principal.email || null, principal.studentNo || null]);
 
       if (!student) return addSecurityHeaders(NextResponse.json({ ok: false, error: "Student account not found" }, { status: 401 }));
 
@@ -115,7 +111,7 @@ export async function GET(req) {
         ? await queryOne("SELECT * FROM staff WHERE id = $1", [userId])
         : await getStaffById(userId))
       : null;
-    const currentRole = staff?.role || payload.role || null;
+    const currentRole = staff?.role || principal.role || null;
     const currentStatus = staff?.status || "Inactive";
     // Account setup must use the same requirement for PostgreSQL and the old
     // local adapter. Treating all PostgreSQL users as already configured made
@@ -129,8 +125,6 @@ export async function GET(req) {
     let accentColor = "#800000"; // default maroon
     let enabledModules = [];
     let stationName = null;
-    let storagePath = null;
-    let inboundPath = null;
     let scannerModel = null;
 
     if (staff && staff.office_id) {
@@ -141,15 +135,13 @@ export async function GET(req) {
         officeName = office.name;
         accentColor = office.accent_color || "#800000";
         stationName = office.station_name || `${staff.office_id.toUpperCase()}-STATION-01`;
-        storagePath = office.storage_path || `.local/storage/${staff.office_id}/uploads`;
-        inboundPath = office.inbound_path || ".local/hot-folder/INBOUND";
         scannerModel = office.scanner_model || "High-Speed Document Scanner";
         const modules = process.env.DATABASE_URL
           ? await query("SELECT m.* FROM modules m JOIN office_modules om ON om.module_id = m.id WHERE om.office_id = $1 AND om.enabled = true", [staff.office_id])
           : await getOfficeModules(staff.office_id);
         enabledModules = (modules || []).map(m => m.id);
       }
-    } else if (currentRole === "SuperAdmin") {
+    } else if (isSystemAdminRole(currentRole)) {
       officeName = "Super Administration";
       accentColor = "#000000";
       // SuperAdmin has access to everything
@@ -194,16 +186,14 @@ export async function GET(req) {
         accent_color: accentColor,
         enabled_modules: enabledModules,
         station_name: stationName,
-        storage_path: storagePath,
-        inbound_path: inboundPath,
         scanner_model: scannerModel,
-        username: payload.username || null,
+        username: principal.email || sessionPayload.username || null,
         fname: staff?.fname || "",
         lname: staff?.lname || "",
-        mustChangePassword: Boolean(payload.mustChangePassword),
+        mustChangePassword: Boolean(sessionPayload.mustChangePassword),
         mustSetSecurityQuestions: !hasSecurity,
         totp_enabled: Boolean(staff?.totp_enabled),
-        last_active: payload.last_active || null,
+        last_active: sessionPayload.last_active || null,
         password_last_changed: staff?.password_last_changed || null,
         avatar_filename: staff?.avatar_filename || null,
         preferences,
@@ -212,6 +202,6 @@ export async function GET(req) {
   } catch (err) {
     authDebug("session_check.failed", { message: err instanceof Error ? err.message : String(err) });
     console.error("[GET /api/auth/me Error]:", err);
-    return addSecurityHeaders(NextResponse.json({ ok: false, error: "Invalid session: " + err.message }, { status: 401 }));
+    return addSecurityHeaders(NextResponse.json({ ok: false, error: "Invalid session" }, { status: 401 }));
   }
 }

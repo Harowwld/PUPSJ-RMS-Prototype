@@ -2,51 +2,93 @@ import { NextResponse } from "next/server";
 import { getSessionCookieName, verifySessionToken } from "./jwt";
 import { getStaffById } from "./staffRepo";
 import { logUnauthorizedAccess, logForbiddenAccess, logInvalidSession } from "./securityAuditLogger";
+import { isSessionActive } from "./authSessions.js";
+import { queryOne } from "./postgres.js";
+import { isStudentRole, isSystemAdminRole, normalizeRole } from "./roleUtils.js";
+import { checkCSRFProtection } from "./csrfProtection.js";
 
 /**
  * Validates session and returns user information with role verification
  * @param {Request} req - The request object
  * @returns {Promise<{user: object, error: string|null}>}
  */
-export async function validateSession(req) {
+export async function getAuthenticatedPrincipal(req) {
   try {
-    let token = extractTokenFromHeaders(req) || "";
-    if (!token) {
-      try {
-        const { cookies } = await import("next/headers");
-        const cookieStore = await cookies();
-        token = cookieStore.get(getSessionCookieName())?.value || "";
-      } catch {}
-    }
+    const token = extractTokenFromHeaders(req) || "";
     
     if (!token) {
       await logUnauthorizedAccess(req, "Missing session token");
-      return { user: null, error: "Not authenticated: Missing session token" };
+      return null;
     }
 
     const payload = await verifySessionToken(token);
-    const userId = payload?.sub;
-    
-    if (!userId) {
-      await logInvalidSession(req, "Missing user ID in session payload");
-      return { user: null, error: "Invalid session: Missing user ID" };
+    if (["POST", "PUT", "PATCH", "DELETE"].includes(String(req?.method || "").toUpperCase()) &&
+        !checkCSRFProtection(req, payload.jti)) {
+      await logInvalidSession(req, "Missing or invalid CSRF token");
+      return null;
+    }
+    if (payload?.purpose && payload.purpose !== "access") {
+      await logInvalidSession(req, "Non-access token used for an authenticated request");
+      return null;
+    }
+    if (!(await isSessionActive(payload))) {
+      await logInvalidSession(req, "Revoked or incomplete session token");
+      return null;
     }
 
-    // Fetch fresh user data from database
+    const userId = String(payload?.sub || "").trim();
+    const tokenRole = normalizeRole(payload?.role);
+    if (!userId || !tokenRole) {
+      await logInvalidSession(req, "Missing principal identity or role in session payload");
+      return null;
+    }
+
+    if (isStudentRole(tokenRole)) {
+      const account = await queryOne(
+        `SELECT sa.id, sa.student_no, sa.email, sa.first_name, sa.middle_name, sa.last_name, sa.avatar_filename,
+                sa.status AS account_status, s.status AS student_status, s.name
+           FROM student_accounts sa
+           LEFT JOIN students s ON s.student_no = sa.student_no
+          WHERE sa.id = $1`,
+        [payload.account_id || userId]
+      );
+      if (!account || String(account.account_status).toLowerCase() !== "active" ||
+          (account.student_status && String(account.student_status).toLowerCase() !== "active")) {
+        await logUnauthorizedAccess(req, "Inactive or missing student account", { userId });
+        return null;
+      }
+      return {
+        id: String(account.id),
+        accountId: account.id,
+        principalType: "student",
+        role: "Student",
+        officeId: null,
+        office_id: null,
+        studentNo: account.student_no ? String(account.student_no) : null,
+        student_no: account.student_no ? String(account.student_no) : null,
+        email: account.email || null,
+        status: "Active",
+        sessionId: payload.jti,
+        jti: payload.jti,
+        fname: account.first_name || "",
+        lname: account.last_name || "",
+        avatar_filename: account.avatar_filename || null,
+        payload,
+      };
+    }
+
     const staff = await getStaffById(userId);
-    if (!staff) {
-      await logInvalidSession(req, `User not found: ${userId}`);
-      return { user: null, error: "User not found" };
+    const currentRole = normalizeRole(staff?.role);
+    if (!staff || staff.status !== "Active" || !currentRole || currentRole !== tokenRole) {
+      await logInvalidSession(req, "Missing, inactive, or role-changed staff account", { userId });
+      return null;
     }
 
-    if (staff.status !== "Active") {
-      await logUnauthorizedAccess(req, `Inactive account access attempt: ${staff.status}`, { userId, status: staff.status });
-      return { user: null, error: "Account is inactive" };
-    }
-
-    const user = {
+    return {
       id: staff.id,
-      role: staff.role || payload.role,
+      principalType: "staff",
+      role: currentRole,
+      officeId: staff.office_id || null,
       office_id: staff.office_id || null,
       section: staff.section || null,
       email: staff.email,
@@ -54,14 +96,24 @@ export async function validateSession(req) {
       lname: staff.lname,
       status: staff.status,
       totp_enabled: Boolean(staff.totp_enabled),
+      avatar_filename: staff.avatar_filename || null,
       mustChangePassword: Boolean(payload.mustChangePassword),
+      studentNo: null,
+      sessionId: payload.jti,
+      jti: payload.jti,
+      payload,
     };
-
-    return { user, error: null };
   } catch (err) {
-    console.error("[validateSession Error]:", err);
-    return { user: null, error: "Invalid session: " + err.message };
+    await logInvalidSession(req, "Authentication principal resolution failed");
+    return null;
   }
+}
+
+export async function validateSession(req) {
+  const user = await getAuthenticatedPrincipal(req);
+  return user
+    ? { user, error: null }
+    : { user: null, error: "Invalid or missing session" };
 }
 
 /**
@@ -71,8 +123,7 @@ export async function validateSession(req) {
  */
 export function isAdmin(user) {
   if (!user) return false;
-  const role = String(user.role || "").toLowerCase();
-  return ["admin", "administrator", "superadmin", "systemadmin"].includes(role);
+  return isSystemAdminRole(user.role) || normalizeRole(user.role) === "Admin";
 }
 
 /**
@@ -82,7 +133,12 @@ export function isAdmin(user) {
  */
 export function isStaff(user) {
   if (!user) return false;
-  return user.status === "Active";
+  return user.status === "Active" && !isStudentRole(user.role);
+}
+
+export function getPrincipalOfficeId(user) {
+  const officeId = user?.officeId ?? user?.office_id;
+  return officeId ? String(officeId).trim().toLowerCase() : null;
 }
 
 /**
@@ -99,10 +155,10 @@ export async function requireAuth(req, allowedRoles = []) {
   }
 
   if (allowedRoles.length > 0) {
-      const userRole = String(user.role || "").toLowerCase();
-      const hasRequiredRole = userRole === "superadmin" || userRole === "systemadmin" || allowedRoles.some(role => 
-        String(role).toLowerCase() === userRole
-      );
+      const userRole = normalizeRole(user.role);
+      const requiredRoles = allowedRoles.map(normalizeRole).filter(Boolean);
+      const hasRequiredRole = requiredRoles.includes(userRole) ||
+        (isSystemAdminRole(userRole) && !requiredRoles.includes("Student"));
       
       if (!hasRequiredRole) {
         await logForbiddenAccess(req, allowedRoles.join(" or "), user.role, { userId: user.id, userRole: user.role });
@@ -149,7 +205,14 @@ export async function requireSuperAdmin(req) {
  * @returns {Promise<{user: object, error: string|null}>}
  */
 export async function requireStaff(req) {
-  return requireAuth(req); // Any authenticated user with active status
+  return requireAuth(req, ["Staff", "Admin", "SystemAdmin", "SuperAdmin"]);
+}
+
+/**
+ * Middleware function for student-only routes.
+ */
+export async function requireStudent(req) {
+  return requireAuth(req, ["Student"]);
 }
 
 /**
@@ -159,23 +222,27 @@ export async function requireStaff(req) {
  * @returns {NextResponse}
  */
 export function createAuthErrorResponse(error, status = 401) {
+  const message = String(error || "").trim().toLowerCase();
+  const isAuthenticationFailure = message === "unauthorized" ||
+    message.includes("authentication required") ||
+    message.includes("invalid or missing session") ||
+    message.includes("invalid session") ||
+    message.includes("missing session");
+  const responseStatus = status === 403 && isAuthenticationFailure ? 401 : status;
+
   return NextResponse.json(
     { ok: false, error }, 
-    { status }
+    { status: responseStatus }
   );
 }
 
 /**
- * Extracts session token from request headers (for API calls)
+ * Extracts the browser session token from the request.
+ * Machine bearer tokens are handled only by their dedicated ingest route.
  * @param {Request} req - The request object
  * @returns {string|null}
  */
 export function extractTokenFromHeaders(req) {
-  const authHeader = req?.headers?.get?.("authorization");
-  if (authHeader && authHeader.startsWith("Bearer ")) {
-    return authHeader.substring(7);
-  }
-  
   const cookieName = getSessionCookieName();
   const cookieHeader = req?.headers?.get?.("cookie");
   if (cookieHeader) {
@@ -198,15 +265,6 @@ export function extractTokenFromHeaders(req) {
  * @returns {Promise<string>} The user's full name or an empty string if not authenticated.
  */
 export async function getSessionActorName(req) {
-  const token = extractTokenFromHeaders(req) || "";
-  if (!token) return "";
-  try {
-    const payload = await verifySessionToken(token);
-    const id = String(payload?.sub || "").trim();
-    if (!id) return "";
-    const staff = await getStaffById(id);
-    return `${staff?.fname || ""} ${staff?.lname || ""}`.trim();
-  } catch {
-    return "";
-  }
+  const principal = await getAuthenticatedPrincipal(req);
+  return `${principal?.fname || ""} ${principal?.lname || ""}`.trim() || principal?.studentNo || "";
 }

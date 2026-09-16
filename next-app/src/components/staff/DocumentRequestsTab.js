@@ -13,6 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import {
   Sheet,
@@ -40,6 +41,11 @@ import {
   ALLOWED_STATUS_TRANSITIONS,
   TERMINAL_REQUEST_STATUSES,
 } from "@/lib/constants";
+import {
+  getArtaClassification,
+  getRequestCharterStatus,
+  ARTA_TIERS,
+} from "@/lib/citizenCharter";
 
 const STATUS_OPTIONS = [
   "Pending",
@@ -99,6 +105,7 @@ export default function DocumentRequestsTab({
   const [statusFilter, setStatusFilter] = useState("");
   const [clientTypeFilter, setClientTypeFilter] = useState("");
   const [docTypeFilter, setDocTypeFilter] = useState("");
+  const [charterFilter, setCharterFilter] = useState("");
   const [page, setPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [sortBy, setSortBy] = useState("created_at");
@@ -409,7 +416,7 @@ export default function DocumentRequestsTab({
     }
     if (createClientType === "Alumni") {
       if (!createRequesterName.trim()) {
-        showToast?.({ title: "Validation Error", description: "Please provide the alumni requester name." }, true);
+        showToast?.({ title: "Validation Error", description: "Please provide the requester name." }, true);
         return;
       }
       if (!createCourseCode) {
@@ -451,16 +458,25 @@ export default function DocumentRequestsTab({
 
   const totalPages = Math.max(1, Math.ceil(total / itemsPerPage));
 
+  const displayedRows = useMemo(() => {
+    if (!charterFilter) return rows;
+    return rows.filter((r) => {
+      const charter = getRequestCharterStatus(r);
+      return charter.status === charterFilter;
+    });
+  }, [rows, charterFilter]);
+
   const handleClearFilters = () => {
     setQ("");
     setStatusFilter("");
     setClientTypeFilter("");
     setDocTypeFilter("");
+    setCharterFilter("");
     setPage(1);
   };
 
   const hasActiveFilters = Boolean(
-    q || statusFilter || clientTypeFilter || docTypeFilter
+    q || statusFilter || clientTypeFilter || docTypeFilter || charterFilter
   );
 
   return (
@@ -472,7 +488,7 @@ export default function DocumentRequestsTab({
           <PageHeader
             icon="ph-tray"
             title="Document Requests"
-            description="Manage and track student and alumni document requests (ODRS)."
+            description="Manage and track student document requests (ODRS)."
             showBorder={false}
             className="p-6"
             titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
@@ -598,6 +614,27 @@ export default function DocumentRequestsTab({
                     ))}
                   </Select>
                 </div>
+
+                {/* Citizen's Charter Status Select Popover */}
+                <div className="w-full sm:w-[170px] shrink-0">
+                  <Select
+                    value={charterFilter}
+                    onChange={(e) => {
+                      setCharterFilter(e.target.value);
+                      setPage(1);
+                    }}
+                    className="h-9 rounded-xl border border-gray-200 dark:border-white/10 text-xs font-normal text-[#111111] dark:text-zinc-200 cursor-pointer shadow-none"
+                    menuClassName="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-900 shadow-2xl p-1.5"
+                    optionClassName="rounded-lg text-xs font-normal py-1.5 px-2.5 hover:bg-gray-100 dark:hover:bg-zinc-800"
+                  >
+                    <option value="">All Charter Status</option>
+                    <option value="OnTrack">On Schedule</option>
+                    <option value="DueSoon">Due Today</option>
+                    <option value="Overdue">Overdue (RA 11032)</option>
+                    <option value="Compliant">Met SLA</option>
+                    <option value="Delayed">Delayed</option>
+                  </Select>
+                </div>
               </div>
             </div>
           )}
@@ -610,7 +647,7 @@ export default function DocumentRequestsTab({
                   Active filters:
                 </span>
                 {q && (
-                  <div className="flex items-center gap-[6px] rounded-[6px] bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
+                  <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
                     Search: {q}
                     <button
                       onClick={() => {
@@ -624,7 +661,7 @@ export default function DocumentRequestsTab({
                   </div>
                 )}
                 {clientTypeFilter && (
-                  <div className="flex items-center gap-[6px] rounded-[6px] bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
+                  <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
                     Client: {clientTypeFilter === "Student" ? "Students" : "Alumni"}
                     <button
                       onClick={() => {
@@ -638,7 +675,7 @@ export default function DocumentRequestsTab({
                   </div>
                 )}
                 {statusFilter && (
-                  <div className="flex items-center gap-[6px] rounded-[6px] bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
+                  <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
                     Status: {statusFilter === "InProgress" ? "In Progress" : statusFilter}
                     <button
                       onClick={() => {
@@ -652,11 +689,25 @@ export default function DocumentRequestsTab({
                   </div>
                 )}
                 {docTypeFilter && (
-                  <div className="flex items-center gap-[6px] rounded-[6px] bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
+                  <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
                     Document: {docTypeFilter}
                     <button
                       onClick={() => {
                         setDocTypeFilter("");
+                        setPage(1);
+                      }}
+                      className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
+                    >
+                      ×
+                    </button>
+                  </div>
+                )}
+                {charterFilter && (
+                  <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
+                    Charter: {charterFilter === "OnTrack" ? "On Schedule" : charterFilter === "DueSoon" ? "Due Today" : charterFilter === "Overdue" ? "Overdue" : charterFilter === "Compliant" ? "Met SLA" : charterFilter}
+                    <button
+                      onClick={() => {
+                        setCharterFilter("");
                         setPage(1);
                       }}
                       className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
@@ -678,11 +729,11 @@ export default function DocumentRequestsTab({
           )}
 
           {/* 4. Full-Width Table Body */}
-          <div className="w-full flex flex-col flex-1 min-h-0 border-t border-gray-100 dark:border-white/10">
+          <div className={cn("w-full flex flex-col flex-1 min-h-0 border-t border-gray-100 dark:border-white/10", total === 0 && "rounded-b-2xl overflow-hidden")}>
             {(loading && !isManualLoading) ? (
               <DocumentRequestsTableSkeleton rowCount={itemsPerPage} embedded={true} />
             ) : error ? (
-              <div className="p-12">
+              <div className="p-12 rounded-b-2xl">
                 <Empty className="h-[320px] flex flex-col items-center justify-center text-center text-gray-500 border-0 dark:text-zinc-400">
                   <EmptyHeader className="flex flex-col items-center gap-0">
                     <EmptyMedia className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm dark:bg-card dark:border-white/10 dark:shadow-none">
@@ -697,7 +748,7 @@ export default function DocumentRequestsTab({
               </div>
             ) : (
               <div className="overflow-x-auto flex-1">
-                <table className={cn("min-w-full text-sm table-fixed", rows.length === 0 && "h-full")}>
+                <table className={cn("min-w-full text-sm table-fixed", displayedRows.length === 0 && "h-full")}>
                   <thead className="sticky top-0 z-10 border-b border-gray-100 dark:border-white/10 bg-white dark:bg-card">
                     <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">
                       <th className="p-4 w-20">
@@ -752,6 +803,11 @@ export default function DocumentRequestsTab({
                           <SortIndicator column="status" sortBy={sortBy} sortOrder={sortOrder} />
                         </button>
                       </th>
+                      <th className="p-4 min-w-[190px]">
+                        <span className="flex items-center text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">
+                          Turnaround (RA 11032)
+                        </span>
+                      </th>
                       <th className="p-4 min-w-[170px]">
                         <button
                           type="button"
@@ -770,10 +826,10 @@ export default function DocumentRequestsTab({
                       </th>
                     </tr>
                   </thead>
-                  <tbody className={cn("divide-y divide-gray-100 dark:divide-white/10", rows.length === 0 && "h-full")}>
-                    {rows.length === 0 ? (
+                  <tbody className={cn("divide-y divide-gray-100 dark:divide-white/10", displayedRows.length === 0 && "h-full")}>
+                    {displayedRows.length === 0 ? (
                       <tr className="border-0 hover:bg-transparent h-full">
-                        <td colSpan={6} className="p-0 border-0 h-full">
+                        <td colSpan={7} className="p-0 border-0 h-full">
                           <Empty className="flex h-[360px] flex-col items-center justify-center border-0 bg-transparent text-center">
                             <EmptyHeader className="flex flex-col items-center gap-0">
                               <div className="relative mb-6">
@@ -785,7 +841,7 @@ export default function DocumentRequestsTab({
                               <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">No Document Requests Found</EmptyTitle>
                               <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400">
                                 {clientTypeFilter === "Alumni"
-                                  ? "No alumni requests found matching your filters."
+                                  ? "No document requests found matching your filters."
                                   : clientTypeFilter === "Student"
                                   ? "No student requests found matching your filters."
                                   : "No document requests match your active filters."}
@@ -795,10 +851,11 @@ export default function DocumentRequestsTab({
                         </td>
                       </tr>
                     ) : (
-                      rows.map((r) => {
+                      displayedRows.map((r) => {
                         const student = studentMap.get(String(r.student_no || "").toUpperCase());
                         const loc = student || (r.room ? { room: r.room, cabinet: r.cabinet, drawer: r.drawer, studentNo: r.student_no, name: r.student_name } : null);
                         const isAlumni = r.client_type === "Alumni";
+                        const charter = getRequestCharterStatus(r);
 
                         return (
                           <tr
@@ -819,7 +876,7 @@ export default function DocumentRequestsTab({
                                 </span>
                                 <span
                                   className={cn(
-                                    "inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium",
+                                    "inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium",
                                     isAlumni
                                       ? "bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-300 border border-purple-200/50 dark:border-purple-800/30"
                                       : "bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-200/50 dark:border-blue-800/30"
@@ -835,7 +892,7 @@ export default function DocumentRequestsTab({
                                   <span className="italic text-amber-600 dark:text-amber-400">No Student ID</span>
                                 )}
                                 {r.course_code && (
-                                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-gray-100 dark:bg-zinc-800 text-gray-700 dark:text-zinc-300">
+                                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-gray-100 dark:bg-zinc-800 text-gray-700 dark:text-zinc-300">
                                     {r.course_code}
                                   </span>
                                 )}
@@ -844,10 +901,16 @@ export default function DocumentRequestsTab({
                                     type="button"
                                     onClick={(e) => {
                                       e.stopPropagation();
-                                      onLocateOnMap(loc);
+                                      onLocateOnMap({
+                                        room: loc.room,
+                                        cabinet: loc.cabinet,
+                                        drawer: loc.drawer,
+                                        studentNo: r.student_no,
+                                        name: r.student_name || r.requester_name,
+                                      });
                                     }}
-                                    title="Locate on storage map"
-                                    className="inline-flex items-center gap-1 rounded-lg bg-red-50 hover:bg-red-100 px-2 py-0.5 text-[11px] font-medium tracking-[0.04em] text-pup-maroon dark:bg-red-950/40 dark:text-primary dark:hover:bg-red-950/60 border border-red-100/30 dark:border-white/5 cursor-pointer transition-colors whitespace-nowrap"
+                                    title="View student location on storage map"
+                                    className="inline-flex items-center gap-1 rounded-full bg-red-50 hover:bg-red-100 px-2.5 py-0.5 text-[11px] font-medium tracking-[0.04em] text-pup-maroon dark:bg-red-950/40 dark:text-primary dark:hover:bg-red-950/60 border border-red-100/30 dark:border-white/5 cursor-pointer transition-colors whitespace-nowrap"
                                   >
                                     <i className="ph-bold ph-map-pin text-[10px]"></i>
                                     RM{loc.room} · CAB-{loc.cabinet} · DRW-{loc.drawer}
@@ -856,13 +919,29 @@ export default function DocumentRequestsTab({
                               </div>
                             </td>
                             <td className="py-0 px-4 align-middle">
-                              <div className="inline-flex w-fit items-center justify-center rounded-lg bg-gray-100 px-2.5 py-1 text-[11px] font-medium text-gray-900 dark:bg-zinc-800 dark:text-zinc-100 whitespace-nowrap">
+                              <div className="inline-flex w-fit items-center justify-center rounded-full bg-gray-100 px-[10px] py-[2.5px] text-[11px] font-medium text-gray-900 dark:bg-zinc-800 dark:text-zinc-100 whitespace-nowrap">
                                 {r.doc_type}
                               </div>
                             </td>
                             <td className="py-0 px-4 align-middle">
-                              <div className={cn("inline-flex w-fit items-center justify-center rounded-lg px-2.5 py-1 text-[11px] font-medium tracking-[0.04em] whitespace-nowrap", statusBadgeClass(r.status))}>
+                              <div className={cn("inline-flex w-fit items-center justify-center rounded-full px-[10px] py-[2.5px] text-[11px] font-medium tracking-[0.04em] whitespace-nowrap", statusBadgeClass(r.status))}>
                                 {r.status === "InProgress" ? "In Progress" : r.status}
+                              </div>
+                            </td>
+                            <td className="py-0 px-4 align-middle">
+                              <div className="flex flex-col gap-1">
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                  <span className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium whitespace-nowrap", charter.tier.badgeClass)}>
+                                    {charter.tier.shortLabel}
+                                  </span>
+                                  <span className={cn("inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold whitespace-nowrap", charter.badgeClass)}>
+                                    <i className={cn("ph-bold text-[10px]", charter.icon || "ph-clock")} />
+                                    {charter.label}
+                                  </span>
+                                </div>
+                                <span className="text-[11px] text-gray-400 dark:text-zinc-500 truncate" title={`Target: ${charter.deadlineFormatted}`}>
+                                  Target: {charter.deadlineFormatted}
+                                </span>
                               </div>
                             </td>
                             <td className="py-0 px-4 align-middle text-[13px] font-normal text-[#8E8E93] dark:text-zinc-500 whitespace-nowrap">
@@ -975,7 +1054,7 @@ export default function DocumentRequestsTab({
                   <SheetDescription className="mt-1 text-left text-xs font-normal text-gray-500 dark:text-zinc-400 flex items-center gap-2">
                     <span>Request #{selectedId}</span>
                     {detail && (
-                      <span className={cn("inline-flex px-2 py-0.5 rounded text-[10px] font-medium", statusBadgeClass(detail.status))}>
+                      <span className={cn("inline-flex px-2.5 py-0.5 rounded-full text-[10px] font-medium", statusBadgeClass(detail.status))}>
                         {detail.status === "InProgress" ? "In Progress" : detail.status}
                       </span>
                     )}
@@ -1010,7 +1089,7 @@ export default function DocumentRequestsTab({
                             </span>
                             <span
                               className={cn(
-                                "inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium shrink-0",
+                                "inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium shrink-0",
                                 detail.client_type === "Alumni"
                                   ? "bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-300 border border-purple-200/50 dark:border-purple-800/30"
                                   : "bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-200/50 dark:border-blue-800/30"
@@ -1050,7 +1129,7 @@ export default function DocumentRequestsTab({
                               Physical Archive
                             </span>
                             {studentForRequest || detail.room ? (
-                              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200/50 dark:border-emerald-800/30">
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200/50 dark:border-emerald-800/30">
                                 Mapped
                               </span>
                             ) : null}
@@ -1065,7 +1144,7 @@ export default function DocumentRequestsTab({
                             <div className="text-xs text-amber-700 dark:text-amber-400 font-normal">
                               {detail.student_no
                                 ? "Student record not loaded — check student number."
-                                : "No physical storage mapped for this alumni record."}
+                                : "No physical storage mapped for this record."}
                             </div>
                           )}
                         </div>
@@ -1106,7 +1185,7 @@ export default function DocumentRequestsTab({
                         Document Requested
                       </span>
                       <div className="w-full h-full bg-[#F5F5F7] dark:bg-zinc-800/40 border border-[#E5E5EA] dark:border-white/10 rounded-xl p-4 flex flex-col justify-between space-y-2">
-                        <span className="inline-flex w-fit items-center rounded-lg bg-white dark:bg-zinc-800 border border-[#E5E5EA] dark:border-white/10 px-2.5 py-1 text-xs font-semibold text-gray-900 dark:text-zinc-100">
+                        <span className="inline-flex w-fit items-center rounded-full bg-white dark:bg-zinc-800 border border-[#E5E5EA] dark:border-white/10 px-3 py-1 text-xs font-semibold text-gray-900 dark:text-zinc-100">
                           {detail.doc_type}
                         </span>
                         <span className="text-[11px] text-gray-500 dark:text-zinc-400 flex items-center gap-1.5">
@@ -1126,6 +1205,41 @@ export default function DocumentRequestsTab({
                       </div>
                     </div>
                   </div>
+
+                  {/* Citizen's Charter (RA 11032) Turnaround Standard Card */}
+                  {(() => {
+                    const charter = getRequestCharterStatus(detail);
+                    return (
+                      <div className="flex flex-col">
+                        <span className="text-[11px] font-semibold uppercase tracking-wider text-[#8E8E93] dark:text-zinc-400 mb-1.5 flex items-center justify-between">
+                          <span>Citizen&apos;s Charter (RA 11032) Turnaround</span>
+                          <span className="text-[10px] font-normal lowercase tracking-normal text-gray-400">
+                            working days only
+                          </span>
+                        </span>
+                        <div className="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-[#F5F5F7] dark:bg-zinc-800/40 p-4 space-y-2.5">
+                          <div className="flex flex-wrap items-center justify-between gap-2">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className={cn("inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold", charter.tier.badgeClass)}>
+                                {charter.tier.name} ({charter.tier.days} Days)
+                              </span>
+                              <span className={cn("inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold", charter.badgeClass)}>
+                                <i className={cn("ph-bold", charter.icon || "ph-clock")} />
+                                {charter.label}
+                              </span>
+                            </div>
+                            <div className="text-right text-xs">
+                              <span className="text-gray-500 dark:text-zinc-400">Statutory Deadline: </span>
+                              <span className="font-semibold text-gray-900 dark:text-zinc-100">{charter.deadlineFormatted}</span>
+                            </div>
+                          </div>
+                          <p className="text-xs text-gray-600 dark:text-zinc-300 leading-relaxed">
+                            {charter.detail}. {charter.tier.description}.
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })()}
 
                   {/* Update Status & Timeline Message Card */}
                   <div className="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-900/40 p-4 space-y-3.5">
@@ -1301,16 +1415,15 @@ export default function DocumentRequestsTab({
 
         {/* 7. Dialog: Create Request */}
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-          <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-white border border-gray-200 shadow-2xl rounded-2xl dark:bg-card dark:border-white/10">
-            <DialogHeader className="p-6 border-b border-gray-100 bg-gray-50 dark:border-white/10 dark:bg-white/5">
+          <DialogContent className="w-full max-w-2xl overflow-hidden rounded-2xl border border-gray-200 bg-white p-0 shadow-2xl sm:max-w-2xl dark:border-white/10 dark:bg-card flex flex-col gap-0">
+            <DialogHeader className="bg-white p-6 pb-0 dark:bg-card border-none text-left">
               <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-xl border border-red-100 dark:border-zinc-800 bg-red-50 text-pup-maroon dark:text-primary shadow-sm flex items-center justify-center shrink-0 dark:bg-red-950/30 dark:text-primary dark:shadow-none">
-                  <i className="ph-duotone ph-pencil-line text-xl"></i>
-                </div>
-                <div className="min-w-0">
-                  <DialogTitle className="text-lg font-semibold tracking-tight text-gray-900 dark:text-zinc-50">New Document Request</DialogTitle>
-                  <DialogDescription className="text-sm font-medium text-gray-600 mt-1 dark:text-zinc-300">
-                    Create a document request for a student or alumni.
+                <div className="min-w-0 pr-8">
+                  <DialogTitle className="text-[16px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
+                    New Document Request
+                  </DialogTitle>
+                  <DialogDescription className="mt-1 text-[13px] font-normal text-gray-500 dark:text-zinc-400">
+                    Create a document request for a student or alumni record.
                   </DialogDescription>
                 </div>
               </div>
@@ -1540,7 +1653,7 @@ export default function DocumentRequestsTab({
               </div>
 
               {/* Dialog Actions */}
-              <div className="p-4 px-6 border-t border-gray-100 bg-white flex flex-col-reverse sm:flex-row sm:justify-end gap-2 dark:border-white/10 dark:bg-card">
+              <DialogFooter className="m-0 p-6 pt-0 bg-white dark:bg-card border-none flex items-center justify-end gap-2.5">
                 <Button
                   type="button"
                   variant="outline"
@@ -1564,7 +1677,7 @@ export default function DocumentRequestsTab({
                     "Create"
                   )}
                 </Button>
-              </div>
+              </DialogFooter>
             </form>
           </DialogContent>
         </Dialog>
@@ -1606,7 +1719,7 @@ export default function DocumentRequestsTab({
                 )}
               </div>
             </div>
-            <div className="p-6 pt-0 border-none bg-white dark:bg-card flex justify-end items-center gap-3">
+            <DialogFooter className="m-0 p-6 pt-0 bg-white dark:bg-card border-none flex items-center justify-end gap-2.5">
               <Button
                 type="button"
                 variant="outline"
@@ -1636,7 +1749,7 @@ export default function DocumentRequestsTab({
                   Locate
                 </Button>
               ) : null}
-            </div>
+            </DialogFooter>
           </DialogContent>
         </Dialog>
       </div>

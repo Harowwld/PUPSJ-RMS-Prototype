@@ -29,6 +29,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
+  DialogFooter,
 } from "@/components/ui/dialog"
 import { cn } from "@/lib/utils"
 
@@ -47,6 +48,7 @@ export default function DocTypesTab({
   filteredDocTypes,
   filteredDocTypesFull,
   selectedDocTypes,
+  setSelectedDocTypes,
   toggleDocTypeSelected,
   toggleAllDocTypes,
   executeBulkTaxonomyAction,
@@ -126,6 +128,14 @@ export default function DocTypesTab({
       const json = await res.json()
       if (!res.ok || !json.ok) throw new Error(json.error || "Archive failed")
       setConfirmOpen(false)
+      if (setSelectedDocTypes) {
+        setSelectedDocTypes((prev) => {
+          if (!prev || !prev[id]) return prev
+          const next = { ...prev }
+          delete next[id]
+          return next
+        })
+      }
       showToast({ title: "Document Type Archived", description: "The selected document type has been successfully moved to the archive." })
       if (loadAll) loadAll()
     } catch (err) {
@@ -143,6 +153,14 @@ export default function DocTypesTab({
       const json = await res.json()
       if (!res.ok || !json.ok) throw new Error(json.error || "Restore failed")
       setConfirmOpen(false)
+      if (setSelectedDocTypes) {
+        setSelectedDocTypes((prev) => {
+          if (!prev || !prev[id]) return prev
+          const next = { ...prev }
+          delete next[id]
+          return next
+        })
+      }
       showToast({ title: "Document Type Restored", description: "The document type has been successfully restored from the archive." })
       if (loadAll) loadAll()
     } catch (err) {
@@ -248,7 +266,7 @@ export default function DocTypesTab({
         ? "These document types will be visible for new records again."
         : "These document types will be hidden from new registrations but their history will be preserved.",
       confirmLabel: showArchived ? "Restore" : "Archive",
-      variant: showArchived ? "success" : "danger",
+      variant: showArchived ? "success" : "warning",
       buttonIcon: showArchived ? "ph-bold ph-archive-restore" : "ph-bold ph-archive",
       icon: showArchived ? "ph-duotone ph-archive-restore" : "ph-duotone ph-archive",
       selectedItems: selectedNames,
@@ -295,7 +313,10 @@ export default function DocTypesTab({
             <div className="flex items-center gap-6 select-none">
               <button
                 type="button"
-                onClick={() => setShowArchived(false)}
+                onClick={() => {
+                  setShowArchived(false)
+                  setPageDoc(1)
+                }}
                 className={cn(
                   "relative pb-4 -mb-[17px] text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent",
                   !showArchived
@@ -307,7 +328,10 @@ export default function DocTypesTab({
               </button>
               <button
                 type="button"
-                onClick={() => setShowArchived(true)}
+                onClick={() => {
+                  setShowArchived(true)
+                  setPageDoc(1)
+                }}
                 className={cn(
                   "relative pb-4 -mb-[17px] text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent",
                   showArchived
@@ -505,11 +529,11 @@ export default function DocTypesTab({
                         </td>
                         <td className="py-0 px-6 align-middle">
                           {newDocTypeName.trim() ? (
-                            <div className="inline-flex w-fit items-center justify-center rounded-[4px] px-[8px] py-[3px] text-[11px] font-medium tracking-[0.04em] bg-orange-100 text-orange-800 dark:bg-orange-950/40 dark:text-orange-400">
+                            <div className="inline-flex w-fit items-center justify-center rounded-full px-[10px] py-[2.5px] text-[11px] font-medium tracking-[0.04em] bg-orange-100 text-orange-800 dark:bg-orange-950/40 dark:text-orange-400">
                               Draft
                             </div>
                           ) : (
-                            <div className="inline-flex w-fit items-center justify-center rounded-[4px] px-[8px] py-[3px] text-[11px] font-medium tracking-[0.04em] bg-gray-100 text-[#8E8E93] dark:bg-zinc-800 dark:text-zinc-500">
+                            <div className="inline-flex w-fit items-center justify-center rounded-full px-[10px] py-[2.5px] text-[11px] font-medium tracking-[0.04em] bg-gray-100 text-[#8E8E93] dark:bg-zinc-800 dark:text-zinc-500">
                               New
                             </div>
                           )}
@@ -563,11 +587,11 @@ export default function DocTypesTab({
                           </td>
                           <td className="py-0 px-6 align-middle">
                             {dt.status === "Archived" ? (
-                              <div className="inline-flex w-fit items-center justify-center rounded-[4px] px-[8px] py-[3px] text-[11px] font-medium tracking-[0.04em] bg-red-100 text-red-800 dark:bg-red-950/40 dark:text-red-400">
+                              <div className="inline-flex w-fit items-center justify-center rounded-full px-[10px] py-[2.5px] text-[11px] font-medium tracking-[0.04em] bg-red-100 text-red-800 dark:bg-red-950/40 dark:text-red-400">
                                 Archived
                               </div>
                             ) : (
-                              <div className="inline-flex w-fit items-center justify-center rounded-[4px] px-[8px] py-[3px] text-[11px] font-medium tracking-[0.04em] bg-green-100 text-green-800 dark:bg-emerald-950/40 dark:text-emerald-400">
+                              <div className="inline-flex w-fit items-center justify-center rounded-full px-[10px] py-[2.5px] text-[11px] font-medium tracking-[0.04em] bg-green-100 text-green-800 dark:bg-emerald-950/40 dark:text-emerald-400">
                                 Active
                               </div>
                             )}
@@ -633,7 +657,7 @@ export default function DocTypesTab({
                                         message:
                                           "This document type will be hidden from new registrations but its history will be preserved.",
                                         confirmLabel: "Archive",
-                                        variant: "danger",
+                                        variant: "warning",
                                         buttonIcon: "ph-bold ph-archive",
                                         icon: "ph-duotone ph-archive",
                                         selectedItems: [dt.name],
@@ -642,7 +666,7 @@ export default function DocTypesTab({
                                       setConfirmOpen(true)
                                     }}
                                     aria-label="Archive Document Type"
-                                    className="w-7 h-7 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/30 text-gray-500 hover:text-red-600 dark:text-zinc-400 dark:hover:text-red-400 transition-colors flex items-center justify-center border-0 bg-transparent cursor-pointer active:scale-95"
+                                    className="w-7 h-7 rounded-lg hover:bg-amber-50 dark:hover:bg-amber-950/30 text-gray-500 hover:text-amber-600 dark:text-zinc-400 dark:hover:text-amber-400 transition-colors flex items-center justify-center border-0 bg-transparent cursor-pointer active:scale-95"
                                   >
                                     <i className="ph-bold ph-archive text-[16px]"></i>
                                   </button>
@@ -808,7 +832,7 @@ export default function DocTypesTab({
                 />
               </div>
             </div>
-            <div className="px-6 py-4 border-t border-gray-100 dark:border-white/10 flex items-center justify-end gap-2 bg-gray-50/50 dark:bg-zinc-900/20">
+            <DialogFooter className="p-6 pt-0 bg-white dark:bg-card border-none flex items-center justify-end gap-2.5">
               <Button
                 type="button"
                 variant="outline"
@@ -816,7 +840,7 @@ export default function DocTypesTab({
                   setIsAddDocTypeOpen(false)
                   setNewDocTypeName("")
                 }}
-                className="flex h-10 items-center justify-center rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-5 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
+                className="flex h-10 items-center justify-center rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
               >
                 Cancel
               </Button>
@@ -826,7 +850,7 @@ export default function DocTypesTab({
               >
                 Create
               </Button>
-            </div>
+            </DialogFooter>
           </form>
         </DialogContent>
       </Dialog>
@@ -869,7 +893,7 @@ export default function DocTypesTab({
                 required
               />
             </div>
-            <div className="px-6 py-4 border-t border-gray-100 dark:border-white/10 flex items-center justify-end gap-2 bg-gray-50/50 dark:bg-zinc-900/20">
+            <DialogFooter className="p-6 pt-0 bg-white dark:bg-card border-none flex items-center justify-end gap-2.5">
               <Button
                 type="button"
                 variant="outline"
@@ -879,7 +903,7 @@ export default function DocTypesTab({
                   setNewDocTypeName("")
                   setEditDocType({ id: null, name: "" })
                 }}
-                className="flex h-10 items-center justify-center rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-5 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
+                className="flex h-10 items-center justify-center rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
               >
                 Cancel
               </Button>
@@ -889,7 +913,7 @@ export default function DocTypesTab({
               >
                 Save
               </Button>
-            </div>
+            </DialogFooter>
           </form>
         </DialogContent>
       </Dialog>

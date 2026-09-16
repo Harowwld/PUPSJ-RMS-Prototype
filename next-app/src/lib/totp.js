@@ -2,10 +2,10 @@ import speakeasy from "speakeasy";
 import QRCode from "qrcode";
 import crypto from "node:crypto";
 
-const ENCRYPTION_KEY = process.env.TOTP_SECRET_KEY || process.env.JWT_SECRET || "default-dev-key-change-in-prod";
-
 function getEncryptionKey() {
-  return crypto.createHash("sha256").update(ENCRYPTION_KEY).digest();
+  const encryptionKey = process.env.TOTP_SECRET_KEY || process.env.JWT_SECRET;
+  if (!encryptionKey) throw new Error("Missing TOTP_SECRET_KEY or JWT_SECRET environment variable");
+  return crypto.createHash("sha256").update(encryptionKey).digest();
 }
 
 export function encryptSecret(secret) {
@@ -54,21 +54,6 @@ export function verifyTOTP(token, secret) {
   const tokenStr = token.trim();
   if (tokenStr.length !== 6) return false;
   
-  // Debug: show secret and expected values
-  console.log("[TOTP DEBUG] Secret (base32):", secret);
-  console.log("[TOTP DEBUG] Input token:", tokenStr);
-  
-  const now = Math.floor(Date.now() / 1000);
-  const epoch = 30;
-  const currentWindow = Math.floor(now / epoch);
-  
-  // Generate expected tokens for each window using time offset
-  const expectedCurrent = speakeasy.totp({ secret, encoding: "base32", time: now });
-  const expectedPrev = speakeasy.totp({ secret, encoding: "base32", time: now - epoch });
-  const expectedNext = speakeasy.totp({ secret, encoding: "base32", time: now + epoch });
-  console.log("[TOTP DEBUG] Expected tokens:", { prev: expectedPrev, current: expectedCurrent, next: expectedNext });
-  console.log("[TOTP DEBUG] Current window:", currentWindow, "epoch:", epoch, "time:", new Date().toISOString());
-  
   // Use speakeasy to verify - it handles time drift automatically
   // speakeasy returns the expected token (string) on failure, true on success
   const verified = speakeasy.totp.verify({
@@ -78,9 +63,7 @@ export function verifyTOTP(token, secret) {
     window: 1,
   });
   
-  const isValid = verified === true;
-  console.log("[TOTP DEBUG] Verification result:", verified, "-> isValid:", isValid);
-  return isValid;
+  return verified === true;
 }
 
 export function isValidToken(token) {

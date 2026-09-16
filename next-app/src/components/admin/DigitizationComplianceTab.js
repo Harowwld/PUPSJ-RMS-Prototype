@@ -385,222 +385,14 @@ export default function DigitizationComplianceTab({
 
   return (
     <div className="flex flex-col flex-1 h-full min-h-0 w-full gap-6 animate-fade-up font-inter">
-      {/* 1. Color Stat Cards / Skeletons at the Top */}
-      {loading && !data ? (
-        <KpiStatCardsSkeleton count={3} />
-      ) : !error && data ? (
-        <div className={cn(
-          "transition-all duration-slow", 
-          (loading && !manualLoading) ? "opacity-40 blur-[1px] grayscale-[0.1]" : "opacity-100"
-        )}>
-          {/* Stats Cards */}
-          <div ref={statCardsRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 relative z-20">
-            {/* Completeness Card */}
-            <div className={cn(
-              "relative group rounded-xl",
-              selectedKpi === "completeness" ? "z-30" : "z-10"
-            )}>
-              <div 
-                onClick={() => setSelectedKpi(selectedKpi === "completeness" ? null : "completeness")}
-                className="relative overflow-hidden rounded-xl border-none bg-gradient-to-br from-[#f87171] via-[#dc2626] to-[#b91c1c] dark:from-[#dc2626] dark:to-[#7f1d1d] p-5 cursor-pointer glass-stat-card-red select-none"
-              >
-                  <div className="absolute inset-0 overflow-hidden rounded-xl pointer-events-none z-0">
-                    <div className="absolute bottom-0 left-0 w-[70%] h-[80%] bg-gradient-to-tr from-[#b91c1c]/40 to-[#dc2626]/0 pointer-events-none" style={{ clipPath: 'polygon(0% 100%, 100% 100%, 0% 0%)' }} />
-                    <div className="absolute bottom-0 left-0 w-[50%] h-[60%] bg-gradient-to-tr from-[#f87171]/30 to-[#dc2626]/0 pointer-events-none" style={{ clipPath: 'polygon(0% 100%, 100% 100%, 0% 25%)' }} />
-                  </div>
-                <div className="relative z-10">
-                  <div className="mb-1 flex items-center gap-1.5 text-[14px] font-medium text-white">
-                    Completeness
-                    <TooltipProvider delayDuration={200}>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <i className="ph-bold ph-info cursor-help text-xs text-white hover:text-white transition-colors" />
-                        </TooltipTrigger>
-                        <TooltipContent 
-                          side="right" 
-                          sideOffset={10}
-                          className="max-w-xs rounded-md border-red-900 bg-[#7a1e28] p-4 text-white shadow-2xl"
-                        >
-                          <p className="mb-1 text-[10px] font-semibold tracking-widest text-red-100">Metric Scope</p>
-                          <p className="text-[11px] font-medium text-red-100/90">
-                             This shows the cumulative digitization health across the selected dataset. It is calculated based on total uploaded documents vs. total system requirements.
-                          </p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  </div>
-                  <div className="text-[48px] font-semibold text-white">
-                    {summary?.percentDigitized != null ? `${summary.percentDigitized}%` : "0%"}
-                  </div>
-                  <div className="mt-1 text-[13px] font-normal text-white">
-                    Overall record health
-                  </div>
-                </div>
-              </div>
-
-              {/* Absolute details container */}
-              <div className={cn(
-                "absolute top-full left-0 right-0 z-[100] mt-2 rounded-xl bg-gradient-to-br from-[#f87171] via-[#dc2626] to-[#b91c1c] dark:from-[#dc2626] dark:to-[#7f1d1d] p-5 shadow-2xl transition-all duration-300 ease-in-out origin-top",
-                selectedKpi === "completeness" ? "scale-y-100 opacity-100 translate-y-0" : "scale-y-95 opacity-0 -translate-y-2 pointer-events-none"
-              )} onClick={(e) => e.stopPropagation()}>
-                <div className="space-y-4">
-                  {summary && (
-                    <>
-                      <div className="grid grid-cols-2 gap-2 text-white">
-                        <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg text-white">
-                          <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Completeness</span>
-                          <span className="text-lg font-black">{summary.percentDigitized}%</span>
-                        </div>
-                        <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg text-white">
-                          <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Digitized Files</span>
-                          <span className="text-lg font-black">{summary.totalDigitizedDocsCount?.toLocaleString()}</span>
-                        </div>
-                      </div>
-
-                      <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg flex justify-between items-center text-xs text-white">
-                        <span className="font-semibold text-white/80">Expected Documents</span>
-                        <span className="font-bold">{summary.totalExpectedDocsCount?.toLocaleString()}</span>
-                      </div>
-
-                      {byCourse && byCourse.length > 0 && (
-                        <div>
-                          <h4 className="text-[10px] font-bold text-white/80 mb-1.5 uppercase tracking-wide">Course Completeness</h4>
-                          <div className="max-h-32 overflow-y-auto space-y-1 pr-1">
-                            {byCourse.map((c) => (
-                              <div key={c.courseCode} className="flex justify-between items-center text-[11px] py-1 border-b border-white/10 text-white/95">
-                                <span className="truncate max-w-[150px]" title={c.courseCode}>{c.courseCode}</span>
-                                <span className="font-bold">{c.percent}%</span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Students Card */}
-            <div className={cn(
-              "relative group rounded-xl",
-              selectedKpi === "students" ? "z-30" : "z-10"
-            )}>
-              <div 
-                onClick={() => setSelectedKpi(selectedKpi === "students" ? null : "students")}
-                className="relative overflow-hidden rounded-xl border-none bg-gradient-to-br from-[#14C8FF] via-[#007AFF] to-[#0055FF] dark:from-[#007AFF] dark:to-[#0033aa] p-5 cursor-pointer glass-stat-card-blue select-none"
-              >
-                  <div className="absolute inset-0 overflow-hidden rounded-xl pointer-events-none z-0">
-                    <div className="absolute bottom-0 left-0 w-[70%] h-[80%] bg-gradient-to-tr from-[#0055FF]/40 to-[#007AFF]/0 pointer-events-none" style={{ clipPath: 'polygon(0% 100%, 100% 100%, 0% 0%)' }} />
-                    <div className="absolute bottom-0 left-0 w-[50%] h-[60%] bg-gradient-to-tr from-[#14C8FF]/30 to-[#007AFF]/0 pointer-events-none" style={{ clipPath: 'polygon(0% 100%, 100% 100%, 0% 25%)' }} />
-                  </div>
-                <div className="relative z-10">
-                  <div className="mb-1 flex items-center gap-1.5 text-[14px] font-medium text-white">
-                    Students
-                  </div>
-                  <div className="text-[48px] font-semibold text-white">
-                    {summary?.totalStudents?.toLocaleString?.() ?? summary?.totalStudents}
-                  </div>
-                  <div className="mt-1 text-[13px] font-normal text-white">
-                    Total Enrollment
-                  </div>
-                </div>
-              </div>
-
-              {/* Absolute details container */}
-              <div className={cn(
-                "absolute top-full left-0 right-0 z-[100] mt-2 rounded-xl bg-gradient-to-br from-[#14C8FF] via-[#007AFF] to-[#0055FF] dark:from-[#007AFF] dark:to-[#0033aa] p-5 shadow-2xl transition-all duration-300 ease-in-out origin-top",
-                selectedKpi === "students" ? "scale-y-100 opacity-100 translate-y-0" : "scale-y-95 opacity-0 -translate-y-2 pointer-events-none"
-              )} onClick={(e) => e.stopPropagation()}>
-                <div className="space-y-4">
-                  {summary && (
-                    <>
-                      <div className="grid grid-cols-2 gap-2 text-white">
-                        <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg text-white">
-                          <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Enrollment</span>
-                          <span className="text-lg font-black">{summary.totalStudents?.toLocaleString()}</span>
-                        </div>
-                        <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg text-white">
-                          <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Digitized Students</span>
-                          <span className="text-lg font-black">{summary.digitizedStudents?.toLocaleString()}</span>
-                        </div>
-                      </div>
-
-                      <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg flex justify-between items-center text-xs text-white">
-                        <span className="font-semibold text-white/80">Remaining Partially Digitized</span>
-                        <span className="font-bold text-red-200">{summary.notDigitizedStudents?.toLocaleString()}</span>
-                      </div>
-                    </>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Complete Card */}
-            <div className={cn(
-              "relative group rounded-xl",
-              selectedKpi === "complete" ? "z-30" : "z-10"
-            )}>
-              <div 
-                onClick={() => setSelectedKpi(selectedKpi === "complete" ? null : "complete")}
-                className="relative overflow-hidden rounded-xl border-none bg-gradient-to-br from-[#34d399] via-[#059669] to-[#047857] dark:from-[#059669] dark:to-[#024e37] p-5 cursor-pointer glass-stat-card-green select-none"
-              >
-                  <div className="absolute inset-0 overflow-hidden rounded-xl pointer-events-none z-0">
-                    <div className="absolute bottom-0 left-0 w-[70%] h-[80%] bg-gradient-to-tr from-[#047857]/40 to-[#059669]/0 pointer-events-none" style={{ clipPath: 'polygon(0% 100%, 100% 100%, 0% 0%)' }} />
-                    <div className="absolute bottom-0 left-0 w-[50%] h-[60%] bg-gradient-to-tr from-[#34d399]/30 to-[#059669]/0 pointer-events-none" style={{ clipPath: 'polygon(0% 100%, 100% 100%, 0% 25%)' }} />
-                  </div>
-                <div className="relative z-10">
-                  <div className="mb-1 flex items-center gap-1.5 text-[14px] font-medium text-white">
-                    Complete
-                  </div>
-                  <div className="text-[48px] font-semibold text-white">
-                    {summary?.digitizedStudents?.toLocaleString?.() ?? summary?.digitizedStudents}
-                  </div>
-                  <div className="mt-1 text-[13px] font-normal text-white flex items-center gap-1.5">
-                    <i className="ph-bold ph-trend-up text-white" /> 100% Validated
-                  </div>
-                </div>
-              </div>
-
-              {/* Absolute details container */}
-              <div className={cn(
-                "absolute top-full left-0 right-0 z-[100] mt-2 rounded-xl bg-gradient-to-br from-[#34d399] via-[#059669] to-[#047857] dark:from-[#059669] dark:to-[#024e37] p-5 shadow-2xl transition-all duration-300 ease-in-out origin-top",
-                selectedKpi === "complete" ? "scale-y-100 opacity-100 translate-y-0" : "scale-y-95 opacity-0 -translate-y-2 pointer-events-none"
-              )} onClick={(e) => e.stopPropagation()}>
-                <div className="space-y-4">
-                  {summary && (
-                    <>
-                      <div className="grid grid-cols-2 gap-2 text-white">
-                        <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg text-white">
-                          <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Complete</span>
-                          <span className="text-lg font-black">{summary.digitizedStudents?.toLocaleString()}</span>
-                        </div>
-                        <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg text-white">
-                          <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Completeness Rate</span>
-                          <span className="text-lg font-black">{summary.fullyDigitizedRate}%</span>
-                        </div>
-                      </div>
-
-                      <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg flex justify-between items-center text-xs text-white">
-                        <span className="font-semibold text-white/80">Validated student records</span>
-                        <span className="font-bold text-emerald-300">100% Correct</span>
-                      </div>
-                    </>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      ) : null}
-
-      {/* 2. Unified Single Card Container: Header, Filters, Target Metrics & Program Breakdown Table */}
-      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none isolate">
+      {/* Unified Single Card Container: Header, Metrics, Filters, Target Metrics & Program Breakdown Table */}
+      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none isolate font-inter mb-4 min-h-0 flex-1">
         <PageHeader
           icon="ph-chart-pie"
           title="Compliance Analysis"
           description="Monitor digitization completeness."
           showBorder={false}
+          className="p-6"
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
           descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
           actions={
@@ -644,6 +436,238 @@ export default function DigitizationComplianceTab({
             </div>
           }
         />
+
+        {/* 2. Top Summary Metrics Banner */}
+        {loading && !data ? (
+          <div className="px-6 pb-6">
+            <KpiStatCardsSkeleton count={3} />
+          </div>
+        ) : !error && data ? (
+          <div className="px-6 pb-6">
+            <div className={cn(
+              "transition-all duration-slow", 
+              (loading && !manualLoading) ? "opacity-40 blur-[1px] grayscale-[0.1]" : "opacity-100"
+            )}>
+              {/* Stats Cards */}
+              <div ref={statCardsRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 relative z-20">
+                {/* Completeness Card */}
+                <div className={cn(
+                  "relative group rounded-xl",
+                  selectedKpi === "completeness" ? "z-30" : "z-10"
+                )}>
+                  <div 
+                    onClick={() => setSelectedKpi(selectedKpi === "completeness" ? null : "completeness")}
+                    className={cn(
+                      "relative overflow-hidden rounded-xl border p-4 cursor-pointer select-none transition-all",
+                      "border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-zinc-900/30 hover:border-gray-200 dark:hover:border-white/10",
+                      selectedKpi === "completeness" && "border-red-500/40 dark:border-red-500/40 ring-1 ring-red-500/20"
+                    )}
+                  >
+                    <div className="relative z-10">
+                      <div className="mb-1 flex items-center justify-between">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
+                            Completeness
+                          </span>
+                          <TooltipProvider delayDuration={200}>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <i className="ph-bold ph-info cursor-help text-xs text-gray-400 hover:text-gray-600 dark:hover:text-zinc-300 transition-colors" />
+                              </TooltipTrigger>
+                              <TooltipContent 
+                                side="right" 
+                                className="max-w-[280px] bg-white dark:bg-zinc-900 text-gray-900 dark:text-zinc-100 p-3 rounded-xl shadow-xl border border-gray-200 dark:border-white/10 text-xs font-normal"
+                              >
+                                <p className="font-semibold text-pup-maroon dark:text-red-400 mb-1">Digitization Formula</p>
+                                <p className="leading-relaxed text-gray-600 dark:text-zinc-300 mb-2">
+                                  Percentage of expected mandatory documents uploaded across all active/selected students.
+                                </p>
+                                <div className="p-2 bg-gray-50 dark:bg-zinc-800/60 rounded-lg text-[11px] font-mono border border-gray-200/60 dark:border-white/5">
+                                  (Digitized Docs / Expected Docs) × 100
+                                </div>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        </div>
+                        <i className={cn("ph-bold ph-caret-down text-xs text-gray-400 transition-transform duration-300", selectedKpi === "completeness" && "rotate-180")} />
+                      </div>
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-2xl font-black text-gray-900 dark:text-zinc-50 tracking-tight">
+                          {summary?.percentDigitized ?? 0}%
+                        </span>
+                        <span className="text-xs font-medium text-red-600 dark:text-red-400">
+                          Digitized Documents
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Absolute details container */}
+                  <div className={cn(
+                    "absolute top-full left-0 right-0 z-[100] mt-2 rounded-xl border border-gray-200 bg-white p-4 shadow-xl dark:border-white/10 dark:bg-zinc-900 transition-all duration-300 ease-in-out origin-top",
+                    selectedKpi === "completeness" ? "scale-y-100 opacity-100 translate-y-0" : "scale-y-95 opacity-0 -translate-y-2 pointer-events-none"
+                  )} onClick={(e) => e.stopPropagation()}>
+                    <div className="space-y-3">
+                      {summary && (
+                        <>
+                          <div className="grid grid-cols-2 gap-2">
+                            <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-gray-100 dark:border-white/5">
+                              <span className="block text-[9px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">Completeness</span>
+                              <span className="text-lg font-black text-gray-900 dark:text-zinc-50">{summary.percentDigitized ?? 0}%</span>
+                            </div>
+                            <div className="bg-red-50 dark:bg-red-950/30 p-2.5 rounded-lg border border-red-100 dark:border-red-900/30">
+                              <span className="block text-[9px] font-bold text-red-600 dark:text-red-400 uppercase tracking-wider">Digitized Files</span>
+                              <span className="text-lg font-black text-red-700 dark:text-red-400">{summary.totalDigitizedDocsCount?.toLocaleString()}</span>
+                            </div>
+                          </div>
+
+                          <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-gray-100 dark:border-white/5 flex justify-between items-center text-xs">
+                            <span className="font-semibold text-gray-600 dark:text-zinc-400">Expected Documents</span>
+                            <span className="font-bold text-gray-900 dark:text-zinc-50">{summary.totalExpectedDocsCount?.toLocaleString()}</span>
+                          </div>
+
+                          {byCourse && byCourse.length > 0 && (
+                            <div>
+                              <h4 className="text-[10px] font-bold text-gray-400 dark:text-zinc-500 mb-1.5 uppercase tracking-wide">Course Completeness</h4>
+                              <div className="max-h-32 overflow-y-auto space-y-1 pr-1">
+                                {byCourse.map((c) => (
+                                  <div key={c.courseCode} className="flex justify-between items-center text-[11px] py-1 border-b border-gray-100 dark:border-white/5 text-gray-700 dark:text-zinc-300">
+                                    <span className="truncate max-w-[150px]" title={c.courseCode}>{c.courseCode}</span>
+                                    <span className="font-bold text-gray-900 dark:text-zinc-50">{c.percent}%</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Students Card */}
+                <div className={cn(
+                  "relative group rounded-xl",
+                  selectedKpi === "students" ? "z-30" : "z-10"
+                )}>
+                  <div 
+                    onClick={() => setSelectedKpi(selectedKpi === "students" ? null : "students")}
+                    className={cn(
+                      "relative overflow-hidden rounded-xl border p-4 cursor-pointer select-none transition-all",
+                      "border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-zinc-900/30 hover:border-gray-200 dark:hover:border-white/10",
+                      selectedKpi === "students" && "border-blue-500/40 dark:border-blue-500/40 ring-1 ring-blue-500/20"
+                    )}
+                  >
+                    <div className="relative z-10">
+                      <div className="mb-1 flex items-center justify-between">
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
+                          Students
+                        </span>
+                        <i className={cn("ph-bold ph-caret-down text-xs text-gray-400 transition-transform duration-300", selectedKpi === "students" && "rotate-180")} />
+                      </div>
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-2xl font-black text-gray-900 dark:text-zinc-50 tracking-tight">
+                          {summary?.totalStudents?.toLocaleString?.() ?? summary?.totalStudents ?? 0}
+                        </span>
+                        <span className="text-xs font-medium text-blue-600 dark:text-blue-400">
+                          Total Enrollment
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Absolute details container */}
+                  <div className={cn(
+                    "absolute top-full left-0 right-0 z-[100] mt-2 rounded-xl border border-gray-200 bg-white p-4 shadow-xl dark:border-white/10 dark:bg-zinc-900 transition-all duration-300 ease-in-out origin-top",
+                    selectedKpi === "students" ? "scale-y-100 opacity-100 translate-y-0" : "scale-y-95 opacity-0 -translate-y-2 pointer-events-none"
+                  )} onClick={(e) => e.stopPropagation()}>
+                    <div className="space-y-3">
+                      {summary && (
+                        <>
+                          <div className="grid grid-cols-2 gap-2">
+                            <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-gray-100 dark:border-white/5">
+                              <span className="block text-[9px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">Enrollment</span>
+                              <span className="text-lg font-black text-gray-900 dark:text-zinc-50">{summary.totalStudents?.toLocaleString()}</span>
+                            </div>
+                            <div className="bg-blue-50 dark:bg-blue-950/30 p-2.5 rounded-lg border border-blue-100 dark:border-blue-900/30">
+                              <span className="block text-[9px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider">Digitized Students</span>
+                              <span className="text-lg font-black text-blue-700 dark:text-blue-400">{summary.digitizedStudents?.toLocaleString()}</span>
+                            </div>
+                          </div>
+
+                          <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-gray-100 dark:border-white/5 flex justify-between items-center text-xs">
+                            <span className="font-semibold text-gray-600 dark:text-zinc-400">Remaining Partially Digitized</span>
+                            <span className="font-bold text-amber-600 dark:text-amber-400">{summary.notDigitizedStudents?.toLocaleString()}</span>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Complete Card */}
+                <div className={cn(
+                  "relative group rounded-xl",
+                  selectedKpi === "complete" ? "z-30" : "z-10"
+                )}>
+                  <div 
+                    onClick={() => setSelectedKpi(selectedKpi === "complete" ? null : "complete")}
+                    className={cn(
+                      "relative overflow-hidden rounded-xl border p-4 cursor-pointer select-none transition-all",
+                      "border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-zinc-900/30 hover:border-gray-200 dark:hover:border-white/10",
+                      selectedKpi === "complete" && "border-emerald-500/40 dark:border-emerald-500/40 ring-1 ring-emerald-500/20"
+                    )}
+                  >
+                    <div className="relative z-10">
+                      <div className="mb-1 flex items-center justify-between">
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
+                          Complete
+                        </span>
+                        <i className={cn("ph-bold ph-caret-down text-xs text-gray-400 transition-transform duration-300", selectedKpi === "complete" && "rotate-180")} />
+                      </div>
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-2xl font-black text-gray-900 dark:text-zinc-50 tracking-tight">
+                          {summary?.fullyDigitizedRate ?? 0}%
+                        </span>
+                        <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                          {(summary?.digitizedStudents ?? summary?.fullyDigitizedStudents ?? 0).toLocaleString()} Fully Digitized
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Absolute details container */}
+                  <div className={cn(
+                    "absolute top-full left-0 right-0 z-[100] mt-2 rounded-xl border border-gray-200 bg-white p-4 shadow-xl dark:border-white/10 dark:bg-zinc-900 transition-all duration-300 ease-in-out origin-top",
+                    selectedKpi === "complete" ? "scale-y-100 opacity-100 translate-y-0" : "scale-y-95 opacity-0 -translate-y-2 pointer-events-none"
+                  )} onClick={(e) => e.stopPropagation()}>
+                    <div className="space-y-3">
+                      {summary && (
+                        <>
+                          <div className="grid grid-cols-2 gap-2">
+                            <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-gray-100 dark:border-white/5">
+                              <span className="block text-[9px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">Fully Digitized</span>
+                              <span className="text-lg font-black text-gray-900 dark:text-zinc-50">{(summary?.digitizedStudents ?? summary?.fullyDigitizedStudents ?? 0).toLocaleString()}</span>
+                            </div>
+                            <div className="bg-emerald-50 dark:bg-emerald-950/30 p-2.5 rounded-lg border border-emerald-100 dark:border-emerald-900/30">
+                              <span className="block text-[9px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Completion Rate</span>
+                              <span className="text-lg font-black text-emerald-700 dark:text-emerald-400">{summary?.fullyDigitizedRate ?? 0}%</span>
+                            </div>
+                          </div>
+
+                          <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-gray-100 dark:border-white/5 flex justify-between items-center text-xs">
+                            <span className="font-semibold text-gray-600 dark:text-zinc-400">Validated student records</span>
+                            <span className="font-bold text-emerald-600 dark:text-emerald-400">100% Correct</span>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : null}
 
         {/* Navigation Toolbar */}
         <div className="border-t border-gray-100 dark:border-white/10 p-5 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
@@ -888,7 +912,7 @@ export default function DigitizationComplianceTab({
         {loading && !data ? (
           <ComplianceTableSkeleton rowCount={6} embedded={true} />
         ) : error ? (
-          <div className="flex min-h-[380px] flex-col items-center justify-center border-t border-gray-100 dark:border-white/10 bg-transparent text-center p-6">
+          <div className="flex min-h-[380px] flex-col items-center justify-center border-t border-gray-100 dark:border-white/10 bg-transparent text-center p-6 rounded-b-2xl">
             <Empty className="flex flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400">
               <EmptyHeader className="flex flex-col items-center gap-0">
                 <div className="relative mb-6">
@@ -914,7 +938,7 @@ export default function DigitizationComplianceTab({
           </div>
         ) : data ? (
           <div className={cn(
-            "flex flex-1 flex-col min-h-0 overflow-hidden border-t border-gray-100 dark:border-white/10", 
+            "flex flex-1 flex-col min-h-0 overflow-hidden rounded-b-2xl border-t border-gray-100 dark:border-white/10", 
             (loading && !manualLoading) ? "opacity-40 blur-[1px] grayscale-[0.1]" : "opacity-100"
           )}>
             <div className="flex items-center justify-between gap-6 px-6 py-3.5 bg-gray-50/40 dark:bg-zinc-900/30 border-b border-gray-100 dark:border-white/10">

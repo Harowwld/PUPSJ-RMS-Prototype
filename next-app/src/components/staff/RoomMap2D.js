@@ -487,7 +487,7 @@ export default function RoomMap2D({
               return (
                 <div className={cn(placementClasses[placement], "pointer-events-none select-none")}>
                   <div className={cn(
-                    "inline-flex w-fit items-center justify-center rounded-[4px] px-[8px] py-[2.5px] text-[11px] font-medium tracking-[0.04em] whitespace-nowrap shadow-xs border font-sans",
+                    "inline-flex w-fit items-center justify-center rounded-full px-[10px] py-[2px] text-[11px] font-medium tracking-[0.04em] whitespace-nowrap shadow-xs border font-sans",
                     isTarget
                       ? "text-white"
                       : isSelected

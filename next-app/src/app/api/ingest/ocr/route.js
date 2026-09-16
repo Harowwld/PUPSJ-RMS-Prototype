@@ -80,7 +80,7 @@ export async function POST(req) {
   } catch (err) {
     console.error("[POST /api/ingest/ocr] failed:", err);
     return NextResponse.json(
-      { ok: false, error: err.message || "Failed to process native OCR" },
+      { ok: false, error: "Failed to process native OCR" },
       { status: 500 }
     );
   }

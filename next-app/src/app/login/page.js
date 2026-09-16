@@ -63,6 +63,16 @@ const DEMO_ACCOUNTS = [
     badgeColor: "bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300",
   },
   {
+    role: "OSAS Staff",
+    title: "Student Affairs Personnel",
+    department: "Event Proposals & Organization Monitoring",
+    email: "staff.osas@pup.local",
+    badge: "OSAS",
+    icon: "ph-student",
+    accent: "text-sky-800 dark:text-sky-200 bg-sky-50 dark:bg-sky-950/40 border-sky-200/80 dark:border-sky-900/60",
+    badgeColor: "bg-sky-100 dark:bg-sky-900/60 text-sky-700 dark:text-sky-300",
+  },
+  {
     role: "Student",
     title: "Undergraduate / Alumni",
     department: "ODRS Online Document Requests",
@@ -234,8 +244,8 @@ export default function Home() {
       setForgotError("Passwords do not match.");
       return;
     }
-    if (forgotNewPassword.length < 6) {
-      setForgotError("New password must be at least 6 characters.");
+    if (forgotNewPassword.length < 8) {
+      setForgotError("New password must be at least 8 characters long.");
       return;
     }
     setForgotError("");
@@ -1157,7 +1167,7 @@ export default function Home() {
                   <i className="ph-bold ph-lightning text-amber-500 group-hover:scale-110 transition-transform"></i>
                   <span>Demo Accounts</span>
                   <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-400 dark:text-zinc-400 group-hover:text-gray-700 dark:group-hover:text-zinc-200 transition-colors">
-                    5
+                    {DEMO_ACCOUNTS.length}
                   </span>
                   <i className={`ph-bold ph-caret-up text-[10px] text-gray-400 group-hover:text-gray-600 dark:group-hover:text-zinc-300 transition-transform duration-200 ${demoOpen ? "rotate-180" : ""}`}></i>
                 </button>
@@ -1237,7 +1247,9 @@ export default function Home() {
                     <i className="ph-bold ph-info text-xs"></i>
                     1-click instant fill & sign in
                   </span>
-                  <span className="font-mono text-[9px] text-gray-400">5 mock accounts</span>
+                  <span className="font-mono text-[9px] text-gray-400">
+                    {DEMO_ACCOUNTS.length} mock accounts
+                  </span>
                 </div>
               </PopoverContent>
             </Popover>

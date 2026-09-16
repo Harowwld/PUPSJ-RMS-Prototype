@@ -5,11 +5,12 @@
  *   pnpm populate-sample-data
  *   pnpm populate-sample-data --force   # also replaces storage_layout
  */
-import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import dotenv from "dotenv";
+import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
+import { hashPassword } from "../src/lib/passwordHash.js";
 
 dotenv.config({ path: ".env.local" });
 dotenv.config();
@@ -21,12 +22,8 @@ if (!process.env.DATABASE_URL) {
   throw new Error("DATABASE_URL is required. Start PostgreSQL and check next-app/.env.local.");
 }
 
-const passwordHash = crypto
-  .createHash("sha256")
-  .update(process.env.DEFAULT_STAFF_PASSWORD || "pupstaff")
-  .digest("hex");
-const studentSalt = "local-test-student-salt";
-const studentPasswordHash = `${studentSalt}:${crypto.scryptSync("student123", studentSalt, 64).toString("hex")}`;
+const passwordHash = hashPassword(process.env.DEFAULT_STAFF_PASSWORD || "pupstaff");
+const studentPasswordHash = hashPassword("student123");
 
 const students = [
   ["2023-00001-IT-1", "TEST STUDENT", "BSIT", 4, "BSIT-4A", 1, "2027", 1],
@@ -71,6 +68,86 @@ const requests = [
   [5, "2020-50006-MN-0", "Certificate of Good Moral", "Pending", "Urgent request for scholarship application", "PUPREGISTRAR-002"],
 ];
 
+async function generateProposalPdf({ title, orgName, eventDate, venue, desc, studentNo, studentName, status }) {
+  const doc = await PDFDocument.create();
+  const page = doc.addPage([612, 792]);
+  const fontBold = await doc.embedFont(StandardFonts.HelveticaBold);
+  const fontRegular = await doc.embedFont(StandardFonts.Helvetica);
+  const fontOblique = await doc.embedFont(StandardFonts.HelveticaOblique);
+
+  const maroon = rgb(0.502, 0, 0);
+  const darkGray = rgb(0.2, 0.2, 0.2);
+  const lightGray = rgb(0.4, 0.4, 0.4);
+  const strokeGray = rgb(0.85, 0.85, 0.85);
+  const bgBox = rgb(0.97, 0.97, 0.98);
+
+  // Institution Header
+  page.drawText("POLYTECHNIC UNIVERSITY OF THE PHILIPPINES", { x: 50, y: 745, size: 12, font: fontBold, color: maroon });
+  page.drawText("SAN JUAN CAMPUS  |  OFFICE OF STUDENT AFFAIRS AND SERVICES", { x: 50, y: 730, size: 8, font: fontBold, color: darkGray });
+  page.drawLine({ start: { x: 50, y: 720 }, end: { x: 562, y: 720 }, thickness: 1.5, color: maroon });
+
+  // Title
+  page.drawText("STUDENT ACTIVITY & EVENT PROPOSAL", { x: 50, y: 698, size: 13, font: fontBold, color: darkGray });
+  page.drawText("Form OSAS-EP-2026 | San Juan Campus Student Activity Clearance", { x: 50, y: 684, size: 8, font: fontOblique, color: lightGray });
+
+  // Event Details Card
+  page.drawRectangle({ x: 50, y: 550, width: 512, height: 120, borderColor: strokeGray, borderWidth: 1, color: bgBox });
+
+  const drawField = (label, val, y, isBold = false) => {
+    page.drawText(label, { x: 62, y, size: 8.5, font: fontBold, color: darkGray });
+    page.drawText(String(val || ""), { x: 170, y, size: 8.5, font: isBold ? fontBold : fontRegular, color: isBold ? maroon : darkGray });
+  };
+
+  drawField("Organization:", orgName, 650, true);
+  drawField("Event Title:", title, 632, true);
+  drawField("Target Event Date:", `${eventDate} (Scheduled Activity)`, 614);
+  drawField("Venue / Room:", venue, 596);
+  drawField("Lead Proponent:", `${studentName || "Student Proponent"} (${studentNo})`, 578);
+  drawField("Workflow Status:", `${status} - OSAS Directorate Review`, 560);
+
+  // Section: Rationale & Objectives
+  page.drawText("PROJECT RATIONALE & OBJECTIVES", { x: 50, y: 528, size: 9.5, font: fontBold, color: maroon });
+  page.drawLine({ start: { x: 50, y: 520 }, end: { x: 562, y: 520 }, thickness: 0.5, color: strokeGray });
+  page.drawText(desc.slice(0, 95), { x: 50, y: 505, size: 8.5, font: fontRegular, color: darkGray });
+  if (desc.length > 95) {
+    page.drawText(desc.slice(95, 190), { x: 50, y: 492, size: 8.5, font: fontRegular, color: darkGray });
+  }
+
+  // Section: Estimated Budget & Capacity
+  page.drawText("ESTIMATED BUDGET & PARTICIPANT CAPACITY", { x: 50, y: 460, size: 9.5, font: fontBold, color: maroon });
+  page.drawLine({ start: { x: 50, y: 452 }, end: { x: 562, y: 452 }, thickness: 0.5, color: strokeGray });
+  page.drawText("Expected Participants: Accredited PUP San Juan Students and Registered Org Members", { x: 50, y: 436, size: 8.5, font: fontRegular, color: darkGray });
+  page.drawText("Funding Source: Organization Operational Fund (Zero Mandatory Student Assessment)", { x: 50, y: 421, size: 8.5, font: fontRegular, color: darkGray });
+
+  // Section: Safety & Logistics Confirmation
+  page.drawText("FACILITY & SAFETY CLEARANCE COMPLIANCE", { x: 50, y: 390, size: 9.5, font: fontBold, color: maroon });
+  page.drawLine({ start: { x: 50, y: 382 }, end: { x: 562, y: 382 }, thickness: 0.5, color: strokeGray });
+  page.drawText("1. Building Administration clearance for venue console and facility reservation.", { x: 50, y: 366, size: 8, font: fontRegular, color: darkGray });
+  page.drawText("2. University Health & Safety protocols, first aid emergency standby, and campus security notification.", { x: 50, y: 351, size: 8, font: fontRegular, color: darkGray });
+  page.drawText("3. Pre-event briefing and waste segregation compliance supervised by the organizing committee.", { x: 50, y: 336, size: 8, font: fontRegular, color: darkGray });
+
+  // Signatures
+  page.drawRectangle({ x: 50, y: 190, width: 512, height: 110, borderColor: strokeGray, borderWidth: 1, color: rgb(1, 1, 1) });
+  page.drawText("SIGNATORIES & ENDORSEMENTS", { x: 62, y: 282, size: 8.5, font: fontBold, color: darkGray });
+
+  page.drawLine({ start: { x: 62, y: 235 }, end: { x: 200, y: 235 }, thickness: 1, color: darkGray });
+  page.drawText("Organization President", { x: 75, y: 222, size: 7.5, font: fontRegular, color: lightGray });
+  page.drawText(studentName ? studentName.split(",")[0] : "STUDENT LEADER", { x: 80, y: 240, size: 8, font: fontBold, color: darkGray });
+
+  page.drawLine({ start: { x: 235, y: 235 }, end: { x: 375, y: 235 }, thickness: 1, color: darkGray });
+  page.drawText("Faculty Adviser", { x: 275, y: 222, size: 7.5, font: fontRegular, color: lightGray });
+  page.drawText("PROF. ENGR. R. ALVAREZ", { x: 245, y: 240, size: 8, font: fontBold, color: darkGray });
+
+  page.drawLine({ start: { x: 410, y: 235 }, end: { x: 545, y: 235 }, thickness: 1, color: darkGray });
+  page.drawText("OSAS Director / Head", { x: 440, y: 222, size: 7.5, font: fontRegular, color: lightGray });
+  page.drawText("DR. SANDRA GOMEZ", { x: 440, y: 240, size: 8, font: fontBold, color: maroon });
+
+  // Footer
+  page.drawText("Polytechnic University of the Philippines San Juan | Records Management System - OSAS Archival Copy", { x: 50, y: 155, size: 7, font: fontOblique, color: lightGray });
+
+  return Buffer.from(await doc.save());
+}
+
 const proposals = [
   [
     "2022-10001-MN-1",
@@ -81,7 +158,12 @@ const proposals = [
     "Inter-collegiate programming contest, tech symposium, and innovation showcase for IT and CS majors.",
     "sample-jpcs-tech-summit.pdf",
     "Under Review",
-    "Initial safety and venue clearance verified. Endorsement letter pending OSAS head sign-off."
+    "Initial safety and venue clearance verified. Endorsement letter pending OSAS head sign-off.",
+    null,
+    [
+      ["Submitted", "Event proposal submitted by organization president."],
+      ["Under Review", "Initial safety and venue clearance verified. Endorsement letter pending OSAS head sign-off."],
+    ],
   ],
   [
     "2022-10002-MN-2",
@@ -92,7 +174,13 @@ const proposals = [
     "Mandatory leadership development and student council budget consultation for accredited org leaders.",
     "sample-csc-leadership-congress.pdf",
     "Approved",
-    "Approved by OSAS Director. Activity permit issued."
+    "Approved by OSAS Director. Activity permit #OSAS-2026-042 issued.",
+    null,
+    [
+      ["Submitted", "Event proposal submitted by CSC."],
+      ["Under Review", "Gymnasium booking requested from Facilities Office."],
+      ["Approved", "Approved by OSAS Director. Activity permit #OSAS-2026-042 issued."],
+    ],
   ],
   [
     "2023-20003-MN-0",
@@ -103,7 +191,11 @@ const proposals = [
     "Welcoming event for batch 2026 freshmen, campus tour, and student organization fair.",
     "sample-acss-freshmen-gala.pdf",
     "Submitted",
-    null
+    null,
+    null,
+    [
+      ["Submitted", "Event proposal submitted for ACSS freshmen orientation."],
+    ],
   ],
   [
     "2024-40005-MN-2",
@@ -114,7 +206,13 @@ const proposals = [
     "Educational forum on personal wealth management, stock investing, and digital banking literacy.",
     "sample-jfinex-finance-forum.pdf",
     "Needs Revision",
-    "Please attach the certified guest speaker profile and updated venue sanitation plan."
+    "Please attach the certified guest speaker profile and updated venue sanitation plan.",
+    null,
+    [
+      ["Submitted", "Proposal submitted for JFINEX forum."],
+      ["Under Review", "Evaluating invited speaker credentials and room capacity."],
+      ["Needs Revision", "Please attach the certified guest speaker profile and updated venue sanitation plan."],
+    ],
   ],
   [
     "2021-30004-MN-1",
@@ -125,7 +223,61 @@ const proposals = [
     "Hands-on technical workshop on network security fundamentals and cyber hygiene.",
     "sample-acss-cyber-defense.pdf",
     "Approved",
-    "Security protocols approved. Laboratory reservation confirmed."
+    "Security protocols approved. Laboratory reservation confirmed.",
+    null,
+    [
+      ["Submitted", "Proposal submitted for cybersecurity lab session."],
+      ["Under Review", "IT laboratory administrator coordinating workstation network isolation."],
+      ["Approved", "Security protocols approved. Laboratory reservation confirmed."],
+    ],
+  ],
+  [
+    "2025-10001-SJ-0",
+    "Campus Mental Health Awareness Week & Wellness Fair",
+    "Red Cross Youth - PUP San Juan Chapter",
+    "2026-10-08",
+    "Student Center & University Clinic Lobby",
+    "Interactive wellness booths, peer counseling orientation, and stress-reduction workshops.",
+    "sample-rcy-mental-health-fair.pdf",
+    "Submitted",
+    null,
+    null,
+    [
+      ["Submitted", "Event proposal and volunteer roster submitted."],
+    ],
+  ],
+  [
+    "2025-60007-MN-0",
+    "Inter-College Debate Championship: The San Juan Cup",
+    "Guild of English Majors & Orators",
+    "2026-11-12",
+    "PUP San Juan Amphitheater",
+    "Parliamentary debate tournament featuring inter-departmental student teams discussing youth and education issues.",
+    "sample-gem-debate-cup.pdf",
+    "Under Review",
+    "Judging panel guidelines under evaluation by Student Affairs Committee.",
+    null,
+    [
+      ["Submitted", "Proposal submitted with preliminary rulebook."],
+      ["Under Review", "Judging panel guidelines under evaluation by Student Affairs Committee."],
+    ],
+  ],
+  [
+    "2025-60008-MN-1",
+    "Overnight E-Sports LAN Tournament & Gaming Festival",
+    "PUP San Juan Gaming Guild",
+    "2026-10-30",
+    "University Gymnasium",
+    "Collegiate gaming tournament and live exhibition match for PC and mobile games.",
+    "sample-gaming-guild-lan.pdf",
+    "Declined",
+    "Campus security regulations strictly prohibit overnight student gatherings past 10:00 PM. Please restructure into a day-time program.",
+    null,
+    [
+      ["Submitted", "Tournament proposal and equipment manifest submitted."],
+      ["Under Review", "Coordinating with Security Office on event duration."],
+      ["Declined", "Campus security regulations strictly prohibit overnight student gatherings past 10:00 PM. Please restructure into a day-time program."],
+    ],
   ],
 ];
 
@@ -188,7 +340,7 @@ export async function seed({ force: forceOverride } = {}) {
     ];
     for (const [staffId] of officialStaff) {
       for (const [qid, ans] of defaultAnswers) {
-        const aHash = crypto.createHash("sha256").update(ans.toLowerCase()).digest("hex");
+        const aHash = hashPassword(ans.toLowerCase());
         await run(
           `INSERT INTO staff_security_answers (staff_id, question_id, answer_hash, updated_at)
            VALUES ($1, $2, $3, NOW())
@@ -243,8 +395,10 @@ export async function seed({ force: forceOverride } = {}) {
 
     const uploadsDir = path.join(process.env.LOCAL_DATA_DIR || ".local", "uploads");
     const osasUploadsDir = path.join(process.env.LOCAL_DATA_DIR || ".local", "osas", "uploads");
+    const osasStorageDir = path.join(process.env.LOCAL_DATA_DIR || ".local", "storage", "osas", "uploads");
     fs.mkdirSync(uploadsDir, { recursive: true });
     fs.mkdirSync(osasUploadsDir, { recursive: true });
+    fs.mkdirSync(osasStorageDir, { recursive: true });
 
     for (const [legacyId, studentNo, studentName, docType, filename] of documents) {
       const storageFilename = `sample-${legacyId}-${filename}`;
@@ -267,7 +421,7 @@ export async function seed({ force: forceOverride } = {}) {
 
     for (const [legacyId, studentNo, studentName, docType, filename] of osasDocuments) {
       const storageFilename = `sample-${legacyId}-${filename}`;
-      fs.writeFileSync(path.join(uploadsDir, storageFilename), minimalPdf);
+      fs.writeFileSync(path.join(osasUploadsDir, storageFilename), minimalPdf);
       await run(
         `INSERT INTO documents (office_id, student_no, student_name, doc_type, original_filename, storage_filename, mime_type, size_bytes, approval_status, legacy_id)
          VALUES ('osas',$1,$2,$3,$4,$5,'application/pdf',$6,'Pending',$7)
@@ -294,38 +448,48 @@ export async function seed({ force: forceOverride } = {}) {
       }
     }
 
-    for (const [studentNo, title, orgName, eventDate, venue, desc, filename, status, reviewNote] of proposals) {
+    for (const [studentNo, title, orgName, eventDate, venue, desc, filename, status, reviewNote, archivedAt, updates] of proposals) {
       const storageFilename = `sample-prop-${filename}`;
-      fs.writeFileSync(path.join(osasUploadsDir, storageFilename), minimalPdf);
+      const studentObj = students.find((s) => s[0] === studentNo);
+      const studentName = studentObj ? studentObj[1] : "STUDENT";
+      const pdfBytes = await generateProposalPdf({
+        title, orgName, eventDate, venue, desc, studentNo, studentName, status
+      });
+      fs.writeFileSync(path.join(osasUploadsDir, storageFilename), pdfBytes);
+      fs.writeFileSync(path.join(osasStorageDir, storageFilename), pdfBytes);
+
       const existing = await runOne(`SELECT id FROM event_proposals WHERE title = $1 AND organization_name = $2`, [title, orgName]);
       let propId = existing?.id;
+      const reviewedAt = reviewNote ? (archivedAt || new Date().toISOString()) : null;
       if (!propId) {
-        const reviewedAt = reviewNote ? new Date().toISOString() : null;
         const propRow = await runOne(
           `INSERT INTO event_proposals (
              office_id, student_no, title, organization_name, event_date, venue,
              description, storage_filename, original_filename, mime_type, size_bytes,
-             status, review_note, reviewed_at
+             status, review_note, reviewed_at, archived_at
            )
-           VALUES ('osas', $1, $2, $3, $4, $5, $6, $7, $8, 'application/pdf', $9, $10, $11, $12)
+           VALUES ('osas', $1, $2, $3, $4, $5, $6, $7, $8, 'application/pdf', $9, $10, $11, $12, $13)
            RETURNING id`,
-          [studentNo, title, orgName, eventDate, venue, desc, storageFilename, filename, minimalPdf.length, status, reviewNote, reviewedAt],
+          [studentNo, title, orgName, eventDate, venue, desc, storageFilename, filename, pdfBytes.length, status, reviewNote, reviewedAt, archivedAt || null],
         );
         propId = propRow?.id;
       } else {
         await run(
           `UPDATE event_proposals
-           SET student_no=$1, event_date=$2, venue=$3, description=$4, status=$5, review_note=$6, updated_at=NOW()
-           WHERE id=$7`,
-          [studentNo, eventDate, venue, desc, status, reviewNote, propId],
+           SET student_no=$1, event_date=$2, venue=$3, description=$4, status=$5, review_note=$6, reviewed_at=$7, archived_at=$8, size_bytes=$9, updated_at=NOW()
+           WHERE id=$10`,
+          [studentNo, eventDate, venue, desc, status, reviewNote, reviewedAt, archivedAt || null, pdfBytes.length, propId],
         );
       }
-      if (propId) {
-        await run(
-          `INSERT INTO transaction_updates (event_proposal_id, status, message)
-           VALUES ($1, $2, $3)`,
-          [propId, status, reviewNote || `Proposal submitted for ${orgName}`],
-        ).catch(() => {});
+      if (propId && Array.isArray(updates)) {
+        await run(`DELETE FROM transaction_updates WHERE event_proposal_id = $1`, [propId]);
+        for (const [uStatus, uMsg] of updates) {
+          await run(
+            `INSERT INTO transaction_updates (event_proposal_id, status, message, created_by)
+             VALUES ($1, $2, $3, $4)`,
+            [propId, uStatus, uMsg, uStatus === "Submitted" ? null : "PUPOSAS-001"],
+          );
+        }
       }
     }
 

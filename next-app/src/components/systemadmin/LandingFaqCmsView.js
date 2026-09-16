@@ -988,7 +988,8 @@ export default function LandingFaqCmsView({ showToast }) {
         }
         isPersonnelModal={true}
         isAppleStyled={true}
-        isArchiveModal={true}
+        variant="danger"
+        isDeleteModal={true}
       />
     </div>
   )

@@ -1,25 +1,13 @@
 import { NextResponse } from "next/server";
 import { getOfficeById, updateOffice, deactivateOffice } from "@/lib/officesRepo";
-import { verifySessionToken, getSessionCookieName } from "@/lib/jwt";
 import { writeGlobalAuditLog } from "@/lib/auditLogRequest";
+import { requireSystemAdmin, createAuthErrorResponse } from "@/lib/authHelpers";
 
 export const runtime = "nodejs";
 
-async function isSuperAdmin(req) {
-  try {
-    const token = req.cookies.get(getSessionCookieName())?.value;
-    if (!token) return false;
-    const payload = await verifySessionToken(token);
-    return payload.role === "SuperAdmin";
-  } catch {
-    return false;
-  }
-}
-
 export async function GET(req, { params }) {
-  if (!await isSuperAdmin(req)) {
-    return NextResponse.json({ ok: false, error: "Forbidden" }, { status: 403 });
-  }
+  const access = await requireSystemAdmin(req);
+  if (access.error || !access.user) return createAuthErrorResponse(access.error || "System administrator access required", access.error?.startsWith("Access denied") ? 403 : 401);
 
   const { id } = await params;
   try {
@@ -29,14 +17,13 @@ export async function GET(req, { params }) {
     }
     return NextResponse.json({ ok: true, data: office });
   } catch (err) {
-    return NextResponse.json({ ok: false, error: err.message }, { status: 500 });
+    return NextResponse.json({ ok: false, error: "Internal server error" }, { status: 500 });
   }
 }
 
 export async function PATCH(req, { params }) {
-  if (!await isSuperAdmin(req)) {
-    return NextResponse.json({ ok: false, error: "Forbidden" }, { status: 403 });
-  }
+  const access = await requireSystemAdmin(req);
+  if (access.error || !access.user) return createAuthErrorResponse(access.error || "System administrator access required", access.error?.startsWith("Access denied") ? 403 : 401);
 
   const { id } = await params;
   try {
@@ -110,14 +97,13 @@ export async function PATCH(req, { params }) {
 
     return NextResponse.json({ ok: true, data: updated });
   } catch (err) {
-    return NextResponse.json({ ok: false, error: err.message }, { status: 400 });
+    return NextResponse.json({ ok: false, error: "Request could not be completed" }, { status: 400 });
   }
 }
 
 export async function DELETE(req, { params }) {
-  if (!await isSuperAdmin(req)) {
-    return NextResponse.json({ ok: false, error: "Forbidden" }, { status: 403 });
-  }
+  const access = await requireSystemAdmin(req);
+  if (access.error || !access.user) return createAuthErrorResponse(access.error || "System administrator access required", access.error?.startsWith("Access denied") ? 403 : 401);
 
   const { id } = await params;
   try {
@@ -140,6 +126,6 @@ export async function DELETE(req, { params }) {
 
     return NextResponse.json({ ok: true, message: "Office archived successfully", data: updated });
   } catch (err) {
-    return NextResponse.json({ ok: false, error: err.message }, { status: 500 });
+    return NextResponse.json({ ok: false, error: "Internal server error" }, { status: 500 });
   }
 }

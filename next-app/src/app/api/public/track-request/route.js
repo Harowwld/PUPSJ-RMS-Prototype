@@ -4,7 +4,7 @@ import { dbGet, dbAll } from "@/lib/postgresCompat.js";
 export const runtime = "nodejs";
 
 function maskStudentNo(sn) {
-  if (!sn) return "Alumni Record";
+  if (!sn) return "Record";
   const s = String(sn).trim();
   if (s.length <= 6) return "****";
   // e.g. 2022-00123-SJ-0 -> 2022-****-0

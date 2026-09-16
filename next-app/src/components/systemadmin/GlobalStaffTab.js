@@ -84,6 +84,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
   // Dialogs
   const [formOpen, setFormOpen] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
+  const [targetIsExistingSysAdmin, setTargetIsExistingSysAdmin] = useState(false)
   const [selectedStaffId, setSelectedStaffId] = useState(null)
   
   const [form, setForm] = useState({
@@ -178,6 +179,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
 
   const handleOpenCreate = () => {
     setIsEditing(false)
+    setTargetIsExistingSysAdmin(false)
     setSelectedStaffId(null)
     setForm({
       id: "",
@@ -197,14 +199,16 @@ export default function GlobalStaffTab({ authUser, showToast }) {
       showToast("Archived accounts cannot be edited. Please restore the account first.", true)
       return
     }
+    const isSysAdmin = member.role === "SystemAdmin" || member.role === "SuperAdmin"
     setIsEditing(true)
+    setTargetIsExistingSysAdmin(isSysAdmin)
     setSelectedStaffId(member.id)
     setForm({
       id: member.id,
       office_id: member.office_id || "",
       fname: member.fname,
       lname: member.lname,
-      role: member.role,
+      role: isSysAdmin ? "SystemAdmin" : member.role,
       section: member.section || "",
       email: member.email,
       status: member.status
@@ -214,6 +218,18 @@ export default function GlobalStaffTab({ authUser, showToast }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    
+    // Existing accounts cannot be changed or promoted to System Admin
+    if (isEditing && !targetIsExistingSysAdmin && (form.role === "SystemAdmin" || !form.office_id)) {
+      showToast("Existing accounts cannot be made a System Admin", true)
+      return
+    }
+
+    // Non-SystemAdmin accounts must have an assigned office
+    if (form.role !== "SystemAdmin" && !form.office_id) {
+      showToast("Please select an assigned office/department", true)
+      return
+    }
     setSubmitLoading(true)
     
     try {
@@ -227,7 +243,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
         role: form.role,
         section: (form.section && form.section.trim()) || "Administration",
         email: form.email.trim(),
-        office_id: form.office_id || null,
+        office_id: form.role === "SystemAdmin" ? null : (form.office_id || null),
         status: form.status
       }
 
@@ -270,6 +286,12 @@ export default function GlobalStaffTab({ authUser, showToast }) {
       })
       const json = await res.json()
       if (res.ok && json.ok) {
+        setSelectedIds((prev) => {
+          if (!prev.has(archiveTarget.id)) return prev
+          const next = new Set(prev)
+          next.delete(archiveTarget.id)
+          return next
+        })
         showToast(`Personnel account for ${archiveTarget.fname} ${archiveTarget.lname} has been archived.`)
         setArchiveTarget(null)
         invalidateDataCache("systemadmin_staff")
@@ -296,6 +318,12 @@ export default function GlobalStaffTab({ authUser, showToast }) {
       })
       const json = await res.json()
       if (res.ok && json.ok) {
+        setSelectedIds((prev) => {
+          if (!prev.has(restoreTarget.id)) return prev
+          const next = new Set(prev)
+          next.delete(restoreTarget.id)
+          return next
+        })
         showToast(`Personnel account for ${restoreTarget.fname} ${restoreTarget.lname} has been restored to Active.`)
         setRestoreTarget(null)
         invalidateDataCache("systemadmin_staff")
@@ -376,6 +404,27 @@ export default function GlobalStaffTab({ authUser, showToast }) {
     setSelectedIds(new Set())
     setLastSelectedId(null)
   }, [statusFilter, page, pageSize, search, officeFilter, roleFilter])
+
+  // Prune stale selected IDs when filtered staff updates
+  useEffect(() => {
+    setSelectedIds((prev) => {
+      if (prev.size === 0) return prev
+      const validIds = new Set(filteredStaff.map((s) => s.id))
+      let needsPruning = false
+      for (const id of prev) {
+        if (!validIds.has(id)) {
+          needsPruning = true
+          break
+        }
+      }
+      if (!needsPruning) return prev
+      const next = new Set()
+      for (const id of prev) {
+        if (validIds.has(id)) next.add(id)
+      }
+      return next
+    })
+  }, [filteredStaff])
 
   const toggleSelectAll = (checked) => {
     if (checked) {
@@ -567,10 +616,6 @@ export default function GlobalStaffTab({ authUser, showToast }) {
       value: stats.total,
       sublabel: `${stats.assignedOffices} campus partitions represented`,
       color: "blue",
-      shape1: "from-[#0055FF]/40 to-[#007AFF]/0",
-      shape2: "from-[#14C8FF]/30 to-[#007AFF]/0",
-      bg: "from-[#14C8FF] via-[#007AFF] to-[#0055FF] dark:from-[#007AFF] dark:to-[#0033aa]",
-      glass: "glass-stat-card-blue",
     },
     {
       key: "active",
@@ -578,10 +623,6 @@ export default function GlobalStaffTab({ authUser, showToast }) {
       value: stats.active,
       sublabel: `${stats.inactive} suspended or archived`,
       color: "emerald",
-      shape1: "from-[#047857]/40 to-[#059669]/0",
-      shape2: "from-[#34d399]/30 to-[#059669]/0",
-      bg: "from-[#34d399] via-[#059669] to-[#047857] dark:from-[#059669] dark:to-[#024e37]",
-      glass: "glass-stat-card-green",
     },
     {
       key: "admins",
@@ -589,135 +630,13 @@ export default function GlobalStaffTab({ authUser, showToast }) {
       value: stats.admins,
       sublabel: `${stats.regular} standard records staff`,
       color: "amber",
-      shape1: "from-[#b45309]/40 to-[#d97706]/0",
-      shape2: "from-[#fbbf24]/30 to-[#d97706]/0",
-      bg: "from-[#fbbf24] via-[#d97706] to-[#b45309] dark:from-[#d97706] dark:to-[#78350f]",
-      glass: "glass-stat-card-orange",
     },
   ]
 
   return (
-    <div className="flex flex-col gap-6 w-full animate-fade-up font-inter">
-      {/* Stat Cards */}
-      {loading ? (
-        <KpiStatCardsSkeleton count={3} />
-      ) : (
-        <div
-          ref={statCardsRef}
-          className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 items-start relative z-20 transition-all duration-500"
-        >
-          {statCardsData.map((stat) => (
-            <div
-              key={stat.key}
-              className={cn(
-                "relative group rounded-xl",
-                selectedKpi === stat.key ? "z-30" : "z-10"
-              )}
-            >
-              <div
-                onClick={() => setSelectedKpi(selectedKpi === stat.key ? null : stat.key)}
-                className={cn(
-                  "relative overflow-hidden rounded-xl border-none p-5 cursor-pointer bg-gradient-to-br select-none",
-                  stat.bg,
-                  stat.glass
-                )}
-              >
-                <div className="absolute inset-0 overflow-hidden rounded-xl pointer-events-none z-0">
-                  <div
-                    className={cn("absolute bottom-0 left-0 w-[70%] h-[80%] bg-gradient-to-tr pointer-events-none", stat.shape1)}
-                    style={{ clipPath: "polygon(0% 100%, 100% 100%, 0% 0%)" }}
-                  />
-                  <div
-                    className={cn("absolute bottom-0 left-0 w-[50%] h-[60%] bg-gradient-to-tr pointer-events-none", stat.shape2)}
-                    style={{ clipPath: "polygon(0% 100%, 100% 100%, 0% 25%)" }}
-                  />
-                </div>
-
-                <div className="relative z-10">
-                  <div className="flex items-end justify-between">
-                    <div>
-                      <div className="mb-1 flex items-center gap-1.5 text-[14px] font-medium text-white">
-                        {stat.label}
-                      </div>
-                      <div className="text-[48px] font-semibold text-white tracking-tight">
-                        {stat.value.toLocaleString()}
-                      </div>
-                      <div className="mt-1 text-[13px] font-normal text-white">
-                        {stat.sublabel}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Absolute details container */}
-              <div
-                className={cn(
-                  "absolute top-full left-0 right-0 z-[100] mt-2 rounded-xl bg-gradient-to-br p-5 shadow-2xl transition-all duration-300 ease-in-out origin-top",
-                  stat.bg,
-                  selectedKpi === stat.key ? "scale-y-100 opacity-100 translate-y-0" : "scale-y-95 opacity-0 -translate-y-2 pointer-events-none"
-                )}
-                onClick={(e) => e.stopPropagation()}
-              >
-                {stat.key === "total" && (
-                  <div className="space-y-3 text-white">
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg">
-                        <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Total Accounts</span>
-                        <span className="text-lg font-black">{stats.total}</span>
-                      </div>
-                      <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg">
-                        <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Offices Covered</span>
-                        <span className="text-lg font-black">{stats.assignedOffices}</span>
-                      </div>
-                    </div>
-                    <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg text-xs text-white/90 leading-relaxed">
-                      Directory registry of all personnel across all campus partitions and centralized administrative systems.
-                    </div>
-                  </div>
-                )}
-                {stat.key === "active" && (
-                  <div className="space-y-3 text-white">
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg">
-                        <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Active Staff</span>
-                        <span className="text-lg font-black">{stats.active}</span>
-                      </div>
-                      <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg">
-                        <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Suspended</span>
-                        <span className="text-lg font-black">{stats.inactive}</span>
-                      </div>
-                    </div>
-                    <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg text-xs text-white/90 leading-relaxed">
-                      Personnel in good standing with active operational privileges and live credentials.
-                    </div>
-                  </div>
-                )}
-                {stat.key === "admins" && (
-                  <div className="space-y-3 text-white">
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg">
-                        <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Admin Level</span>
-                        <span className="text-lg font-black">{stats.admins}</span>
-                      </div>
-                      <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg">
-                        <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Regular Staff</span>
-                        <span className="text-lg font-black">{stats.regular}</span>
-                      </div>
-                    </div>
-                    <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg text-xs text-white/90 leading-relaxed">
-                      Staff members holding elevated administrator or system administrator privileges.
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Main Table Card with Header, Toolbar & Active Filter Chips */}
-      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
+    <div className="animate-fade-up font-inter flex flex-1 flex-col h-full min-h-0 w-full gap-6">
+      {/* ONE Single Card Container encapsulating Header, Metrics, Toolbar, Table & Pagination */}
+      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none isolate font-inter mb-4 min-h-0 flex-1">
         <PageHeader
           icon="ph-users"
           title={
@@ -732,6 +651,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
           }
           description="Manage system access, office assignments, and authorization settings for all administrators and records staff."
           showBorder={false}
+          className="p-6"
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
           descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
           actions={
@@ -753,6 +673,125 @@ export default function GlobalStaffTab({ authUser, showToast }) {
             </div>
           }
         />
+
+        {/* Stat Cards */}
+        {loading ? (
+          <div className="px-6 pb-6">
+            <KpiStatCardsSkeleton count={3} />
+          </div>
+        ) : (
+          <div className="px-6 pb-6">
+            <div
+              ref={statCardsRef}
+              className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 items-start relative z-20 transition-all duration-500"
+            >
+              {statCardsData.map((stat) => (
+                <div
+                  key={stat.key}
+                  className={cn(
+                    "relative group rounded-xl",
+                    selectedKpi === stat.key ? "z-30" : "z-10"
+                  )}
+                >
+                  <div
+                    onClick={() => setSelectedKpi(selectedKpi === stat.key ? null : stat.key)}
+                    className={cn(
+                      "relative overflow-hidden rounded-xl border p-4 cursor-pointer select-none transition-all",
+                      "border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-zinc-900/30 hover:border-gray-200 dark:hover:border-white/10",
+                      selectedKpi === stat.key && (
+                        stat.color === "blue" ? "border-blue-500/40 ring-1 ring-blue-500/20" :
+                        stat.color === "emerald" ? "border-emerald-500/40 ring-1 ring-emerald-500/20" :
+                        "border-amber-500/40 ring-1 ring-amber-500/20"
+                      )
+                    )}
+                  >
+                    <div className="relative z-10">
+                      <div className="mb-1 flex items-center justify-between">
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
+                          {stat.label}
+                        </span>
+                        <i className={cn("ph-bold ph-caret-down text-xs text-gray-400 transition-transform duration-300", selectedKpi === stat.key && "rotate-180")} />
+                      </div>
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-2xl font-black text-gray-900 dark:text-zinc-50 tracking-tight">
+                          {stat.value.toLocaleString()}
+                        </span>
+                        <span className={cn("text-xs font-medium", 
+                          stat.color === "blue" ? "text-blue-600 dark:text-blue-400" :
+                          stat.color === "emerald" ? "text-emerald-600 dark:text-emerald-400" :
+                          "text-amber-600 dark:text-amber-400"
+                        )}>
+                          {stat.sublabel}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Absolute details container */}
+                  <div
+                    className={cn(
+                      "absolute top-full left-0 right-0 z-[100] mt-2 rounded-xl border border-gray-200 bg-white p-4 shadow-xl dark:border-white/10 dark:bg-zinc-900 transition-all duration-300 ease-in-out origin-top",
+                      selectedKpi === stat.key ? "scale-y-100 opacity-100 translate-y-0" : "scale-y-95 opacity-0 -translate-y-2 pointer-events-none"
+                    )}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {stat.key === "total" && (
+                      <div className="space-y-3">
+                        <div className="grid grid-cols-2 gap-2">
+                          <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-gray-100 dark:border-white/5">
+                            <span className="block text-[9px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">Total Accounts</span>
+                            <span className="text-lg font-black text-gray-900 dark:text-zinc-50">{stats.total}</span>
+                          </div>
+                          <div className="bg-blue-50 dark:bg-blue-950/30 p-2.5 rounded-lg border border-blue-100 dark:border-blue-900/30">
+                            <span className="block text-[9px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider">Offices Covered</span>
+                            <span className="text-lg font-black text-blue-700 dark:text-blue-400">{stats.assignedOffices}</span>
+                          </div>
+                        </div>
+                        <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-gray-100 dark:border-white/5 text-xs text-gray-600 dark:text-zinc-300 leading-relaxed">
+                          Directory registry of all personnel across all campus partitions and centralized administrative systems.
+                        </div>
+                      </div>
+                    )}
+                    {stat.key === "active" && (
+                      <div className="space-y-3">
+                        <div className="grid grid-cols-2 gap-2">
+                          <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-gray-100 dark:border-white/5">
+                            <span className="block text-[9px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">Active Staff</span>
+                            <span className="text-lg font-black text-gray-900 dark:text-zinc-50">{stats.active}</span>
+                          </div>
+                          <div className="bg-emerald-50 dark:bg-emerald-950/30 p-2.5 rounded-lg border border-emerald-100 dark:border-emerald-900/30">
+                            <span className="block text-[9px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Suspended</span>
+                            <span className="text-lg font-black text-emerald-700 dark:text-emerald-400">{stats.inactive}</span>
+                          </div>
+                        </div>
+                        <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-gray-100 dark:border-white/5 text-xs text-gray-600 dark:text-zinc-300 leading-relaxed">
+                          Personnel in good standing with active operational privileges and live credentials.
+                        </div>
+                      </div>
+                    )}
+                    {stat.key === "admins" && (
+                      <div className="space-y-3">
+                        <div className="grid grid-cols-2 gap-2">
+                          <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-gray-100 dark:border-white/5">
+                            <span className="block text-[9px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">Admin Level</span>
+                            <span className="text-lg font-black text-gray-900 dark:text-zinc-50">{stats.admins}</span>
+                          </div>
+                          <div className="bg-amber-50 dark:bg-amber-950/30 p-2.5 rounded-lg border border-amber-100 dark:border-amber-900/30">
+                            <span className="block text-[9px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider">Regular Staff</span>
+                            <span className="text-lg font-black text-amber-700 dark:text-amber-400">{stats.regular}</span>
+                          </div>
+                        </div>
+                        <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-gray-100 dark:border-white/5 text-xs text-gray-600 dark:text-zinc-300 leading-relaxed">
+                          Staff members holding elevated administrator or system administrator privileges.
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Navigation Toolbar */}
         <div className="border-t border-gray-100 dark:border-white/10 p-5 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
@@ -846,7 +885,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                 Active filters:
               </span>
               {search && (
-                <div className="flex items-center gap-[6px] rounded-[6px] bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
+                <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
                   Search: {search}
                   <button
                     onClick={() => {
@@ -860,8 +899,8 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                 </div>
               )}
               {officeFilter !== "All" && (
-                <div className="flex items-center gap-[6px] rounded-[6px] bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
-                  Office: {officeFilter === "global" ? "System Administration" : (Array.isArray(offices) ? offices : []).find((o) => o.id === officeFilter)?.short_name || officeFilter}
+                <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
+                  Office: {officeFilter === "global" ? "System Admin" : (Array.isArray(offices) ? offices : []).find((o) => o.id === officeFilter)?.short_name || officeFilter}
                   <button
                     onClick={() => {
                       setOfficeFilter("All")
@@ -874,14 +913,14 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                 </div>
               )}
               {roleFilter !== "All" && (
-                <div className="flex items-center gap-[6px] rounded-[6px] bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
-                  Role: {roleFilter === "SystemAdmin" ? "System Admin" : roleFilter}
+                <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
+                  Role: {roleFilter === "SystemAdmin" ? "System Admin" : roleFilter === "Admin" ? "Administrator" : roleFilter === "Staff" ? "Regular Staff" : roleFilter}
                   <button
                     onClick={() => {
                       setRoleFilter("All")
                       setPage(1)
                     }}
-                    className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
+                    className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-350 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
                   >
                     ×
                   </button>
@@ -900,11 +939,11 @@ export default function GlobalStaffTab({ authUser, showToast }) {
         )}
 
         {/* Content Section: Directory Table inside the single Card */}
-        <div className="overflow-hidden border-t border-gray-200 dark:border-white/10 bg-white dark:bg-card flex flex-col flex-1">
+        <div className="overflow-hidden rounded-b-2xl border-t border-gray-200 dark:border-white/10 bg-white dark:bg-card flex flex-col flex-1">
           {loading ? (
             <DirectoryTableSkeleton rowCount={8} />
           ) : filteredStaff.length === 0 ? (
-            <div className="flex h-[380px] flex-col items-center justify-center p-6 text-center">
+            <div className="flex h-[380px] flex-col items-center justify-center p-6 text-center rounded-b-2xl">
           <Empty className="flex flex-col items-center justify-center border-0 bg-transparent text-center">
             <EmptyHeader className="flex flex-col items-center gap-0">
               <div className="relative mb-6">
@@ -941,7 +980,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
               ) : statusFilter === "Active" ? (
                 <Button
                   onClick={handleOpenCreate}
-                  className="mt-6 flex h-10 items-center justify-center rounded-xl btn-brand-red text-white px-5 text-xs font-semibold shadow-xs cursor-pointer active:scale-95 transition-all"
+                  className="mt-6 flex h-10 items-center justify-center rounded-xl! btn-brand-red text-white px-5 text-xs font-semibold shadow-xs cursor-pointer active:scale-95 transition-all"
                 >
                   Register
                 </Button>
@@ -950,8 +989,9 @@ export default function GlobalStaffTab({ authUser, showToast }) {
           </Empty>
         </div>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="min-w-full text-sm">
+        <>
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-sm">
             <thead className="sticky top-0 z-10 border-b-[0.5px] border-black/10 dark:border-white/10 bg-white dark:bg-card">
               <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500 h-11 select-none">
                 <th className="w-12 py-0 px-4 text-center align-middle">
@@ -1069,17 +1109,18 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                     </td>
                     <td className="py-2 px-4 align-middle">
                       {office ? (
-                        <div 
-                          className="inline-flex w-fit items-center justify-center rounded-[4px] px-[8px] py-[3px] text-[11px] font-semibold tracking-[0.04em] border-0 select-none"
+                        <span 
+                          className="rms-office-accent inline-flex w-fit items-center justify-center rounded-full px-[10px] py-[2.5px] text-[11px] font-semibold tracking-[0.04em] border-0 select-none"
+                          data-color={office.accent_color || "#800000"}
                           style={{
-                            backgroundColor: `${office.accent_color || "#800000"}15`,
-                            color: office.accent_color || "#800000"
+                            color: office.accent_color || "#800000",
+                            backgroundColor: `color-mix(in srgb, ${office.accent_color || "#800000"} 12%, transparent)`,
                           }}
                         >
                           {office.short_name}
-                        </div>
+                        </span>
                       ) : (
-                        <span className="inline-flex w-fit items-center justify-center rounded-[4px] px-[8px] py-[3px] text-[11px] font-semibold tracking-[0.04em] bg-gray-900 text-white dark:bg-zinc-100 dark:text-zinc-950 select-none">
+                        <span className="inline-flex w-fit items-center justify-center rounded-full px-[10px] py-[2.5px] text-[11px] font-semibold tracking-[0.04em] bg-gray-900 text-white dark:bg-zinc-100 dark:text-zinc-950 select-none">
                           Platform Level
                         </span>
                       )}
@@ -1087,7 +1128,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                     <td className="py-2 px-4 align-middle">
                       <div 
                         className={cn(
-                          "inline-flex w-fit items-center justify-center rounded-[4px] px-[8px] py-[3px] text-[11px] font-medium tracking-[0.04em]",
+                          "inline-flex w-fit items-center justify-center rounded-full px-[10px] py-[2.5px] text-[11px] font-medium tracking-[0.04em]",
                           member.role === "SystemAdmin" || member.role === "SuperAdmin"
                             ? "bg-gray-900 text-white dark:bg-zinc-100 dark:text-zinc-950"
                             : member.role === "Admin"
@@ -1169,60 +1210,61 @@ export default function GlobalStaffTab({ authUser, showToast }) {
               })}
             </tbody>
           </table>
+        </div>
 
-          {/* Pagination Footer */}
-          <div className="flex items-center justify-between border-t border-gray-100 dark:border-white/10 bg-gray-50/30 dark:bg-zinc-900/20 p-4 px-6">
-            <div className="flex items-center gap-6 text-xs text-gray-500 dark:text-zinc-400 select-none">
-              <span>Showing {paginatedStaff.length} of {filteredStaff.length}</span>
-              <div className="flex items-center gap-2">
-                <span>Rows:</span>
-                {[10, 20, 50, 100].map(sz => (
-                  <button
-                    key={sz}
-                    onClick={() => {
-                      setPageSize(sz)
-                      setPage(1)
-                    }}
-                    className={cn(
-                      "px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer",
-                      pageSize === sz 
-                        ? "bg-gray-100 dark:bg-zinc-800 text-gray-900 dark:text-zinc-100" 
-                        : "text-gray-400 hover:text-gray-600 dark:hover:text-zinc-200"
-                    )}
-                  >
-                    {sz}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div className="flex items-center gap-2 select-none">
-              <Button
-                variant="ghost"
-                size="sm"
-                disabled={page <= 1}
-                onClick={() => setPage(p => p - 1)}
-                className="text-xs text-gray-500 dark:text-zinc-400 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
-              >
-                Prev
-              </Button>
-              <div className="h-8 w-8 rounded-xl border border-[#e5e5ea] dark:border-zinc-800 flex items-center justify-center text-xs font-bold text-gray-800 dark:text-zinc-200 bg-white dark:bg-zinc-900">
-                {page}
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                disabled={endIndex >= filteredStaff.length}
-                onClick={() => setPage(p => p + 1)}
-                className="text-xs text-gray-500 dark:text-zinc-400 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
-              >
-                Next
-              </Button>
+        {/* Pagination Footer */}
+        <div className="flex items-center justify-between border-t border-gray-100 dark:border-white/10 bg-gray-50/30 dark:bg-zinc-900/20 p-4 px-6 rounded-b-2xl">
+          <div className="flex items-center gap-6 text-xs text-gray-500 dark:text-zinc-400 select-none">
+            <span>Showing {paginatedStaff.length} of {filteredStaff.length}</span>
+            <div className="flex items-center gap-2">
+              <span>Rows:</span>
+              {[10, 20, 50, 100].map(sz => (
+                <button
+                  key={sz}
+                  onClick={() => {
+                    setPageSize(sz)
+                    setPage(1)
+                  }}
+                  className={cn(
+                    "px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer",
+                    pageSize === sz 
+                      ? "bg-gray-100 dark:bg-zinc-800 text-gray-900 dark:text-zinc-100" 
+                      : "text-gray-400 hover:text-gray-600 dark:hover:text-zinc-200"
+                  )}
+                >
+                  {sz}
+                </button>
+              ))}
             </div>
           </div>
+          <div className="flex items-center gap-2 select-none">
+            <Button
+              variant="ghost"
+              size="sm"
+              disabled={page <= 1}
+              onClick={() => setPage(p => p - 1)}
+              className="text-xs text-gray-500 dark:text-zinc-400 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
+            >
+              Prev
+            </Button>
+            <div className="h-8 w-8 rounded-xl border border-[#e5e5ea] dark:border-zinc-800 flex items-center justify-center text-xs font-bold text-gray-800 dark:text-zinc-200 bg-white dark:bg-zinc-900">
+              {page}
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              disabled={endIndex >= filteredStaff.length}
+              onClick={() => setPage(p => p + 1)}
+              className="text-xs text-gray-500 dark:text-zinc-400 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
+            >
+              Next
+            </Button>
+          </div>
         </div>
-      )}
-      </div>
-    </Card>
+      </>
+    )}
+    </div>
+  </Card>
 
       {/* Register / Edit Form Dialog */}
       <Dialog open={formOpen} onOpenChange={setFormOpen}>
@@ -1317,16 +1359,27 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                 {/* Office Scope Selection */}
                 <div>
                   <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
-                    Assigned Office / Department
+                    Assigned Office / Department {form.role !== "SystemAdmin" && "*"}
                   </label>
                   <Select
                     value={form.office_id}
-                    onChange={(e) => setForm(prev => ({ ...prev, office_id: e.target.value }))}
+                    onChange={(e) => {
+                      const val = e.target.value
+                      setForm(prev => ({
+                        ...prev,
+                        office_id: val,
+                        ...(val === "" ? { role: "SystemAdmin" } : (prev.role === "SystemAdmin" ? { role: "Admin" } : {}))
+                      }))
+                    }}
                     className="h-10 rounded-xl bg-white border border-gray-200 text-xs font-normal focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 dark:bg-zinc-950 dark:border-white/10 dark:text-white shadow-none cursor-pointer"
                     menuClassName="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-900 shadow-2xl p-1.5"
                     optionClassName="rounded-lg text-xs font-normal py-2.5 px-3 hover:bg-gray-100 dark:hover:bg-zinc-800"
+                    disabled={isEditing && targetIsExistingSysAdmin}
+                    required={form.role !== "SystemAdmin"}
                   >
-                    <option value="">SystemAdmin / Global (No Office Scope)</option>
+                    {(!isEditing || targetIsExistingSysAdmin) && (
+                      <option value="">System Admin / Global (No Office Scope)</option>
+                    )}
                     {(Array.isArray(offices) ? offices : []).map(o => (
                       <option key={o.id} value={o.id}>{o.name}</option>
                     ))}
@@ -1336,16 +1389,27 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                 {/* Role Level */}
                 <div>
                   <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
-                    Privilege Level
+                    Privilege Level *
                   </label>
                   <Select
                     value={form.role}
-                    onChange={(e) => setForm(prev => ({ ...prev, role: e.target.value }))}
+                    onChange={(e) => {
+                      const val = e.target.value
+                      setForm(prev => ({
+                        ...prev,
+                        role: val,
+                        ...(val === "SystemAdmin" ? { office_id: "" } : (!prev.office_id ? { office_id: offices[0]?.id || "" } : {}))
+                      }))
+                    }}
                     className="h-10 rounded-xl bg-white border border-gray-200 text-xs font-normal focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 dark:bg-zinc-950 dark:border-white/10 dark:text-white shadow-none cursor-pointer"
                     menuClassName="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-900 shadow-2xl p-1.5"
                     optionClassName="rounded-lg text-xs font-normal py-2.5 px-3 hover:bg-gray-100 dark:hover:bg-zinc-800"
+                    disabled={isEditing && targetIsExistingSysAdmin}
+                    required
                   >
-                    <option value="SystemAdmin">System Admin</option>
+                    {(!isEditing || targetIsExistingSysAdmin) && (
+                      <option value="SystemAdmin">System Admin</option>
+                    )}
                     <option value="Admin">Administrator</option>
                     <option value="Staff">Records Staff</option>
                   </Select>
@@ -1423,6 +1487,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
         title="Archive Personnel Account"
         message="This account will be restricted immediately but can be restored later."
         confirmLabel="Archive"
+        variant="warning"
         icon="ph-duotone ph-archive"
         buttonIcon="ph-bold ph-archive"
         selectedItems={[
@@ -1442,6 +1507,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
         title="Restore Personnel Account"
         message="This account will be reactivated and the personnel will be able to log in again."
         confirmLabel="Restore"
+        variant="success"
         icon="ph-duotone ph-archive-restore"
         buttonIcon="ph-bold ph-archive-restore"
         selectedItems={[
@@ -1461,6 +1527,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
         title="Batch Archive Personnel"
         message={`${selectedIds.size} personnel profiles will be archived and their system access revoked immediately.`}
         confirmLabel="Archive"
+        variant="warning"
         icon="ph-duotone ph-archive"
         buttonIcon="ph-bold ph-archive"
         selectedItems={Array.from(selectedIds).map((id) => {
@@ -1481,6 +1548,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
         title="Batch Restore Personnel"
         message={`${selectedIds.size} personnel profiles will be reactivated and able to log in again.`}
         confirmLabel="Restore"
+        variant="success"
         icon="ph-duotone ph-archive-restore"
         buttonIcon="ph-bold ph-archive-restore"
         selectedItems={Array.from(selectedIds).map((id) => {
@@ -1493,42 +1561,19 @@ export default function GlobalStaffTab({ authUser, showToast }) {
       />
 
       {/* Floating Action Bar */}
-      {selectedIds.size > 1 && (
-        <FloatingActionBar
-          selectedCount={selectedIds.size}
-          selectionStatus="Selected Personnel"
-          onCancel={() => setSelectedIds(new Set())}
-          customContent={
-            <div className="flex items-center gap-3">
-              <button
-                type="button"
-                onClick={() => setSelectedIds(new Set())}
-                className="h-auto text-[13px] font-normal text-[#8E8E93] hover:text-[#111111] dark:hover:text-white bg-transparent hover:bg-transparent border-0 p-0 shadow-none cursor-pointer"
-              >
-                Deselect All
-              </button>
-
-              {statusFilter === "Active" ? (
-                <Button
-                  size="sm"
-                  onClick={() => setBulkArchiveOpen(true)}
-                  className="flex h-[36px] px-5 items-center justify-center rounded-xl btn-brand-red text-[13px] font-medium text-white active:scale-95 transition-all dark:shadow-none cursor-pointer"
-                >
-                  Archive
-                </Button>
-              ) : (
-                <Button
-                  size="sm"
-                  onClick={() => setBulkRestoreOpen(true)}
-                  className="flex h-[36px] px-5 items-center justify-center rounded-xl bg-slate-900 hover:bg-slate-800 text-[13px] font-medium text-white active:scale-95 transition-all dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 cursor-pointer shadow-none border-none"
-                >
-                  Restore
-                </Button>
-              )}
-            </div>
+      <FloatingActionBar
+        selectedCount={selectedIds.size}
+        onCancel={() => setSelectedIds(new Set())}
+        onAction={() => {
+          if (statusFilter === "Active") {
+            setBulkArchiveOpen(true)
+          } else {
+            setBulkRestoreOpen(true)
           }
-        />
-      )}
+        }}
+        actionLabel={statusFilter === "Active" ? "Archive" : "Restore"}
+        actionVariant={statusFilter === "Active" ? "danger" : "success"}
+      />
     </div>
   )
 }

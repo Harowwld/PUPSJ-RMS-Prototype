@@ -1,14 +1,16 @@
 import { NextResponse } from "next/server";
 import { dbAll, dbRun } from "@/lib/postgresCompat";
 import { writeAuditLog } from "@/lib/auditLogRequest";
-import { verifySessionToken, getSessionCookieName } from "@/lib/jwt";
 import { requireTOTP, extractTOTPToken } from "@/lib/totpMiddleware";
+import { requireSystemAdmin, requireAuth, createAuthErrorResponse } from "@/lib/authHelpers";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET(req) {
   try {
+    const access = await requireAuth(req);
+    if (access.error || !access.user) return createAuthErrorResponse(access.error || "Authentication required", 401);
     const rows = await dbAll("SELECT id, question FROM security_questions ORDER BY id ASC");
     const questions = rows.map((row) => row.question || "");
     while (questions.length < 2) {
@@ -18,25 +20,18 @@ export async function GET(req) {
     return NextResponse.json({ ok: true, data: questions });
   } catch (error) {
     console.error("[GET /api/system/security-questions Error]:", error);
-    return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ ok: false, error: "Internal server error" }, { status: 500 });
   }
 }
 
 export async function PUT(req) {
   try {
-    const token = req.cookies.get(getSessionCookieName())?.value;
-    if (!token) {
-      return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
-    }
-    
-    const user = await verifySessionToken(token);
-    const userRole = String(user?.role || "").toLowerCase();
-    if (!user || (userRole !== "admin" && userRole !== "superadmin")) {
-      return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
-    }
+    const access = await requireSystemAdmin(req);
+    if (access.error || !access.user) return createAuthErrorResponse(access.error || "System administrator access required", access.error?.startsWith("Access denied") ? 403 : 401);
+    const user = access.user;
 
     const totpToken = extractTOTPToken(req.headers);
-    const totpResult = await requireTOTP(user.sub, totpToken);
+    const totpResult = await requireTOTP(user.id, totpToken, { requireEnabled: true });
     if (!totpResult.valid) {
       return NextResponse.json(
         { ok: false, error: "TOTP verification required: " + totpResult.error, requiresTOTP: true },
@@ -94,6 +89,6 @@ export async function PUT(req) {
     return NextResponse.json({ ok: true, data: questions });
   } catch (error) {
     console.error("[PUT /api/system/security-questions Error]:", error);
-    return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ ok: false, error: "Internal server error" }, { status: 500 });
   }
 }

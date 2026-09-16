@@ -1,58 +1,21 @@
 import { NextResponse } from "next/server";
-import { getSessionCookieName, verifySessionToken } from "@/lib/jwt";
 import { populateSampleData } from "@/lib/seedRepo";
-import { getStaffById } from "@/lib/staffRepo";
-import { queryOne } from "@/lib/postgres";
-import { hasAdminPrivileges } from "@/lib/roleUtils";
+import { requireSystemAdmin, createAuthErrorResponse } from "@/lib/authHelpers";
 
 export const runtime = "nodejs";
 
 async function handleSeed(req) {
-  const token = req.cookies.get(getSessionCookieName())?.value || "";
-  let user = null;
-  let tokenPayload = null;
-
-  if (token) {
-    try {
-      tokenPayload = await verifySessionToken(token);
-      if (tokenPayload?.sub) {
-        user = await getStaffById(tokenPayload.sub);
-        if (!user && (tokenPayload.sub === "PUPSUPERADMIN-001" || tokenPayload.sub === "PUPREGISTRAR-001")) {
-          user = await getStaffById("PUPSUPERADMIN-001");
-        }
-      }
-    } catch {}
+  if (process.env.NODE_ENV === "production") {
+    return NextResponse.json({ ok: false, error: "Mock data seeding is unavailable in production." }, { status: 404 });
   }
 
-  const bypassToken = req.nextUrl.searchParams.get("bypass");
+  const { user, error } = await requireSystemAdmin(req);
+  if (error || !user) {
+    const status = error?.startsWith("Access denied") ? 403 : 401;
+    return createAuthErrorResponse(error || "System administrator authentication required", status);
+  }
+
   const force = req.nextUrl.searchParams.get("force") === "true";
-  const masterSecret = process.env.JWT_SECRET || "pup-secret-fallback";
-  const isBypass = Boolean(
-    bypassToken &&
-    (bypassToken === masterSecret || bypassToken === "pup-secret-fallback")
-  );
-
-  // Check if we're in bootstrap mode (no staff at all in system database)
-  const staffCountRow = await queryOne("SELECT COUNT(*)::int AS count FROM staff");
-  const staffCount = staffCountRow?.count || 0;
-
-  if (!isBypass) {
-    if (staffCount > 0) {
-      const effectiveRole = user?.role || tokenPayload?.role;
-      if (!user && !tokenPayload) {
-        return NextResponse.json(
-          { ok: false, error: "Authentication required. Use ?bypass=[JWT_SECRET] if locked out." },
-          { status: 401 }
-        );
-      }
-      if (!hasAdminPrivileges(effectiveRole)) {
-        return NextResponse.json(
-          { ok: false, error: "Only administrators can seed mock data." },
-          { status: 403 }
-        );
-      }
-    }
-  }
 
   try {
     const result = await populateSampleData({ force });
@@ -64,14 +27,17 @@ async function handleSeed(req) {
   } catch (error) {
     console.error("[SeedAPI] Error seeding data:", error);
     return NextResponse.json(
-      { ok: false, error: error.message },
+      { ok: false, error: "Internal server error" },
       { status: 500 }
     );
   }
 }
 
-export async function GET(req) {
-  return handleSeed(req);
+export async function GET() {
+  return NextResponse.json(
+    { ok: false, error: "Mock data seeding requires POST." },
+    { status: 405, headers: { Allow: "POST" } }
+  );
 }
 
 export async function POST(req) {

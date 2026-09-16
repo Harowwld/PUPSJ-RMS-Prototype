@@ -1,28 +1,16 @@
 import { NextResponse } from "next/server";
-import { getSessionCookieName, verifySessionToken } from "@/lib/jwt";
 import { getStaffById, updateStaffPreferences } from "@/lib/staffRepo";
 import { writeAuditLog } from "@/lib/auditLogRequest";
+import { requireAuth, createAuthErrorResponse } from "@/lib/authHelpers";
 
 export const runtime = "nodejs";
 
-async function getAuthUser(req) {
-  const cookieName = getSessionCookieName();
-  const token = req.cookies.get(cookieName)?.value || "";
-  if (!token) return null;
-  try {
-    const payload = await verifySessionToken(token);
-    return payload.sub || null;
-  } catch {
-    return null;
-  }
-}
-
 export async function GET(req) {
   try {
-    const userId = await getAuthUser(req);
-    if (!userId) {
-      return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
-    }
+    const access = await requireAuth(req);
+    if (access.error || !access.user) return createAuthErrorResponse(access.error || "Authentication required", access.error?.startsWith("Access denied") ? 403 : 401);
+    if (access.user.principalType !== "staff") return createAuthErrorResponse("Access denied", 403);
+    const userId = access.user.id;
 
     const staff = await getStaffById(userId);
     const defaultPreferences = {
@@ -44,16 +32,16 @@ export async function GET(req) {
 
     return NextResponse.json({ ok: true, data: preferences });
   } catch (error) {
-    return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ ok: false, error: "Internal server error" }, { status: 500 });
   }
 }
 
 export async function POST(req) {
   try {
-    const userId = await getAuthUser(req);
-    if (!userId) {
-      return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
-    }
+    const access = await requireAuth(req);
+    if (access.error || !access.user) return createAuthErrorResponse(access.error || "Authentication required", access.error?.startsWith("Access denied") ? 403 : 401);
+    if (access.user.principalType !== "staff") return createAuthErrorResponse("Access denied", 403);
+    const userId = access.user.id;
 
     const body = await req.json().catch(() => null) || {};
     const { preferences } = body;
@@ -70,6 +58,6 @@ export async function POST(req) {
     });
     return NextResponse.json({ ok: true, data: updatedPrefs });
   } catch (error) {
-    return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ ok: false, error: "Internal server error" }, { status: 500 });
   }
 }

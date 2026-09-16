@@ -3,10 +3,14 @@ import { createDocTypeFull } from "../../../../lib/docTypesRepo";
 import { createCourse } from "../../../../lib/coursesRepo";
 import { createSection } from "../../../../lib/sectionsRepo";
 import { writeAuditLog } from "../../../../lib/auditLogRequest";
+import { requireAdmin, createAuthErrorResponse } from "../../../../lib/authHelpers";
+import { canAccessOffice, isSystemAdminRole } from "../../../../lib/roleUtils";
 
 export const runtime = "nodejs";
 
 export async function POST(req) {
+  const access = await requireAdmin(req);
+  if (access.error || !access.user) return createAuthErrorResponse(access.error || "Admin access required", access.error?.startsWith("Access denied") ? 403 : 401);
   const body = await req.json().catch(() => null);
   if (!body || !Array.isArray(body.rows)) {
     return NextResponse.json(
@@ -16,6 +20,13 @@ export async function POST(req) {
   }
 
   const { rows } = body;
+  const requestedOffice = body.officeId || body.office_id;
+  const officeId = isSystemAdminRole(access.user.role)
+    ? String(requestedOffice || "registrar").trim().toLowerCase()
+    : String(access.user.officeId || access.user.office_id || "").trim().toLowerCase();
+  if (!officeId || (!isSystemAdminRole(access.user.role) && !canAccessOffice(access.user, officeId))) {
+    return createAuthErrorResponse("You cannot access that office", 403);
+  }
   let successCount = 0;
   let failCount = 0;
 
@@ -36,16 +47,16 @@ export async function POST(req) {
     try {
       if (cat === "documenttype" || cat === "document type") {
         if (!name) throw new Error("Missing name");
-        await createDocTypeFull(name);
+        await createDocTypeFull(name, officeId);
         successCount++;
       } else if (cat === "course") {
         if (!code || !name) throw new Error("Course requires code and name");
-        await createCourse(code, name);
+        await createCourse(code, name, officeId);
         successCount++;
       } else if (cat === "section") {
         if (!name) throw new Error("Missing name");
         const safeCode = code ? code : "UNKN";
-        await createSection(name, safeCode);
+        await createSection(name, safeCode, officeId);
         successCount++;
       } else {
         // Unknown category - count as failure

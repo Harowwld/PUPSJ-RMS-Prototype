@@ -136,6 +136,17 @@ export default function BackupTab({
     setJumpPage(String(page))
   }, [page])
 
+  // Prune stale selected backup IDs when backups update
+  useEffect(() => {
+    if (!backups) return
+    setSelectedBackupIds((prev) => {
+      if (prev.length === 0) return prev
+      const validIds = new Set(backups.map((b) => b?.id).filter(Boolean))
+      const pruned = prev.filter((id) => validIds.has(id))
+      return pruned.length !== prev.length ? pruned : prev
+    })
+  }, [backups])
+
   useEffect(() => {
     const timer = setTimeout(() => {
       setBackupSearch(localSearch)
@@ -293,8 +304,8 @@ export default function BackupTab({
             <Card className="flex-1 flex flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none isolate">
               <PageHeader
                 icon="ph-hard-drives"
-                title="Records Archive & Backup"
-                description="Create and restore system backups, and save offline copies to an external drive for safekeeping."
+                title="Office Partition Backup & Archive"
+                description="Create and restore office partition backups, and save offline copies to an external drive for safekeeping."
                 showBorder={false}
                 titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
                 descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
@@ -397,8 +408,8 @@ export default function BackupTab({
                     className="h-8 px-3 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all inline-flex items-center gap-1.5"
                     title="Rescan USB ports and mount points for connected storage"
                   >
-                    <i className={cn("ph-bold ph-arrows-clockwise text-xs", isRescanning && "animate-spin")} />
-                    <span>{isRescanning ? "Scanning..." : "Detect Drive"}</span>
+                    {isRescanning && <i className="ph-bold ph-arrows-clockwise text-xs animate-spin" />}
+                    <span>{isRescanning ? "Scanning..." : "Detect"}</span>
                   </Button>
 
                   <Button
@@ -414,8 +425,7 @@ export default function BackupTab({
                     )}
                     title={externalDrive?.isEmulated ? "Disable simulated demo drive" : "Simulate an external storage drive for demonstration"}
                   >
-                    <i className="ph-bold ph-flask text-xs" />
-                    <span>{externalDrive?.isEmulated ? "Exit Demo" : "Simulate Drive"}</span>
+                    <span>{externalDrive?.isEmulated ? "Exit" : "Simulate"}</span>
                   </Button>
                 </div>
               </div>
@@ -442,11 +452,11 @@ export default function BackupTab({
               />
 
               {isLoading && !isManualLoading ? (
-                <div className="flex-1 flex flex-col min-h-0 border-t border-gray-100 dark:border-white/10">
+                <div className="flex-1 flex flex-col min-h-0 border-t border-gray-100 dark:border-white/10 rounded-b-2xl overflow-hidden">
                   <BackupTableSkeleton embedded={true} />
                 </div>
               ) : error ? (
-                <div className="flex-1 flex min-h-[400px] flex-col items-center justify-center p-6">
+                <div className="flex-1 flex min-h-[400px] flex-col items-center justify-center p-6 rounded-b-2xl">
                   <Empty className="flex h-[350px] flex-col items-center justify-center border-0 bg-transparent text-center">
                     <EmptyHeader className="flex flex-col items-center gap-0">
                       <div className="relative mb-6">
@@ -525,7 +535,7 @@ export default function BackupTab({
                     </div>
                   )}
 
-                  <div className="flex-1 flex flex-col min-h-0">
+                  <div className="flex-1 flex flex-col min-h-0 rounded-b-2xl overflow-hidden">
                     <BackupTable
                       backups={backups}
                       sortedAndPaginatedBackups={sortedAndPaginatedBackups}

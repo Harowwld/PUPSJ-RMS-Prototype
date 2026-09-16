@@ -59,17 +59,9 @@ function TooltipPortal({ tooltip }) {
   return (
     <div
       ref={tooltipRef}
-      style={{
-        position: "absolute",
-        top: `${coords.top}px`,
-        left: `${coords.left}px`,
-        pointerEvents: "none",
-        zIndex: 99999,
-        transition: "opacity 140ms cubic-bezier(0.25, 1, 0.5, 1), transform 140ms cubic-bezier(0.25, 1, 0.5, 1)",
-        opacity: mounted ? 1 : 0,
-        transform: mounted ? "scale(1) translateY(0)" : "scale(0.95) translateY(2px)",
-      }}
-      className="px-2.5 py-1.5 rounded-[8px] text-[12px] font-medium tracking-tight text-white dark:text-zinc-100 bg-black/80 dark:bg-zinc-950/80 backdrop-blur-md shadow-[0_4px_12px_rgba(0,0,0,0.15)] border border-white/10 dark:border-white/5 select-none text-center max-w-[240px] whitespace-pre-line"
+      data-top={`${coords.top}px`}
+      data-left={`${coords.left}px`}
+      className={`rms-tooltip rms-tooltip-positioned px-2.5 py-1.5 rounded-[8px] text-[12px] font-medium tracking-tight text-white dark:text-zinc-100 bg-black/80 dark:bg-zinc-950/80 backdrop-blur-md shadow-[0_4px_12px_rgba(0,0,0,0.15)] border border-white/10 dark:border-white/5 select-none text-center max-w-[240px] whitespace-pre-line ${mounted ? "rms-tooltip-visible" : "rms-tooltip-hidden"}`}
     >
       {text}
     </div>

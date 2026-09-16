@@ -243,8 +243,7 @@ export default function AutoBackupSchedule({ showToast, scope = "system", embedd
                 Automatic Backups
               </h4>
               {schedule.enabled && (
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200/60 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/40 px-2.5 py-0.5 text-[11px] font-semibold">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="inline-flex items-center rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200/60 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/40 px-2.5 py-0.5 text-[11px] font-semibold">
                   Active
                 </span>
               )}

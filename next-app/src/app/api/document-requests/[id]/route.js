@@ -1,9 +1,7 @@
 import { NextResponse } from "next/server";
 
-import { getSessionCookieName, verifySessionToken } from "../../../../lib/jwt";
-import { getStaffById } from "../../../../lib/staffRepo";
 import { writeAuditLog } from "../../../../lib/auditLogRequest";
-import { isAdminRole } from "../../../../lib/roleUtils";
+import { isSystemAdminRole } from "../../../../lib/roleUtils";
 import {
   getDocumentRequestById,
   updateDocumentRequest,
@@ -11,33 +9,17 @@ import {
 } from "../../../../lib/documentRequestsRepo";
 import { canTransitionRequestStatus } from "../../../../lib/constants";
 import { getDocumentById } from "../../../../lib/documentsRepo";
+import { requireStaff, createAuthErrorResponse } from "../../../../lib/authHelpers";
+import { canAccessResource } from "../../../../lib/resourceAuthorization";
 
 export const runtime = "nodejs";
 
-async function getSessionStaff(req) {
-  const token = req.cookies.get(getSessionCookieName())?.value || "";
-  if (!token) return null;
-  try {
-    const payload = await verifySessionToken(token);
-    const userId = String(payload?.sub || "").trim();
-    if (!userId) return null;
-    return await getStaffById(userId);
-  } catch {
-    return null;
-  }
-}
-
-function isActiveStaffOrAdmin(staff) {
-  if (!staff) return false;
-  if (isAdminRole(staff.role)) return true;
-  return String(staff.status || "").toLowerCase() === "active";
-}
-
 export async function GET(req, ctx) {
-  const staff = await getSessionStaff(req);
-  if (!staff || !isActiveStaffOrAdmin(staff)) {
-    return NextResponse.json({ ok: false, error: "Forbidden" }, { status: 403 });
-  }
+  const access = await requireStaff(req);
+  if (access.error || !access.user) return createAuthErrorResponse(access.error || "Staff authentication required", access.error?.startsWith("Access denied") ? 403 : 401);
+  const staff = access.user;
+  const officeId = isSystemAdminRole(staff.role) ? "" : staff.officeId;
+  if (!isSystemAdminRole(staff.role) && !officeId) return NextResponse.json({ ok: false, error: "Forbidden" }, { status: 403 });
 
   const params = await ctx.params;
   const id = parseInt(String(params?.id || ""), 10);
@@ -45,8 +27,8 @@ export async function GET(req, ctx) {
     return NextResponse.json({ ok: false, error: "Invalid id" }, { status: 400 });
   }
 
-  const row = await getDocumentRequestById(id);
-  if (!row) {
+  const row = await getDocumentRequestById(id, { officeId });
+  if (!row || !canAccessResource(staff, "request", row)) {
     return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
   }
 
@@ -60,10 +42,11 @@ export async function GET(req, ctx) {
 }
 
 export async function PATCH(req, ctx) {
-  const staff = await getSessionStaff(req);
-  if (!staff || !isActiveStaffOrAdmin(staff)) {
-    return NextResponse.json({ ok: false, error: "Forbidden" }, { status: 403 });
-  }
+  const access = await requireStaff(req);
+  if (access.error || !access.user) return createAuthErrorResponse(access.error || "Staff authentication required", access.error?.startsWith("Access denied") ? 403 : 401);
+  const staff = access.user;
+  const officeId = isSystemAdminRole(staff.role) ? "" : staff.officeId;
+  if (!isSystemAdminRole(staff.role) && !officeId) return NextResponse.json({ ok: false, error: "Forbidden" }, { status: 403 });
 
   const params = await ctx.params;
   const id = parseInt(String(params?.id || ""), 10);
@@ -71,8 +54,8 @@ export async function PATCH(req, ctx) {
     return NextResponse.json({ ok: false, error: "Invalid id" }, { status: 400 });
   }
 
-  const existing = await getDocumentRequestById(id);
-  if (!existing) {
+  const existing = await getDocumentRequestById(id, { officeId });
+  if (!existing || !canAccessResource(staff, "request", existing)) {
     return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
   }
 
@@ -84,7 +67,7 @@ export async function PATCH(req, ctx) {
     );
   }
 
-  const patch = { updatedBy: staff.id };
+  const patch = { updatedBy: staff.id, officeId };
 
   if (body.status !== undefined) {
     const s = String(body.status || "");
@@ -130,7 +113,7 @@ export async function PATCH(req, ctx) {
           { status: 400 }
         );
       }
-      const doc = await getDocumentById(docId);
+      const doc = await getDocumentById(docId, { officeId });
       if (!doc) {
         return NextResponse.json(
           { ok: false, error: "Linked document not found" },

@@ -43,7 +43,7 @@ function getModuleIcon(m) {
   if (m?.id === "system_config") return "ph-bold ph-gear"
   if (m?.id === "backup") return "ph-bold ph-database-backup"
   if (m?.id === "audit_logs") return "ph-bold ph-shield-check"
-  if (m?.id === "alumni_requests") return "ph-bold ph-tray-arrow-up"
+  if (m?.id === "document_requests") return "ph-bold ph-tray-arrow-up"
   if (m?.id === "scan_upload") return "ph-bold ph-scan"
   if (m?.id === "documents") return "ph-bold ph-file-text"
   if (m?.id === "notifications") return "ph-bold ph-bell"
@@ -57,7 +57,7 @@ function getModuleTargetText(m) {
   if (m?.id === "scan_upload") return "Document Scanning Station"
   if (m?.id === "documents") return "Student Records Search"
   if (m?.id === "records_review") return "Document Approvals"
-  if (m?.id === "alumni_requests") return "Student Document Requests"
+  if (m?.id === "document_requests") return "Student Document Requests"
   if (m?.id === "compliance_analytics") return "Digitization Progress Reports"
   if (m?.id === "request_analytics") return "Request Turnaround Reports"
   if (m?.id === "records_archive" || m?.id === "storage_explorer") return "Physical File Archive Finder"
@@ -74,7 +74,7 @@ function StatusChip({ status }) {
   return (
     <span
       className={cn(
-        "rounded-[4px] px-[8px] py-[3px] text-[11px] font-medium tracking-[0.04em] select-none inline-flex items-center",
+        "rounded-full px-[10px] py-[2.5px] text-[11px] font-medium tracking-[0.04em] select-none inline-flex items-center",
         isInactive
           ? "bg-gray-100 text-[#8E8E93] dark:bg-zinc-800 dark:text-zinc-400"
           : "bg-[#D1FAE5] text-[#065F46] dark:bg-emerald-950/40 dark:text-emerald-400"
@@ -633,7 +633,7 @@ export default function ModuleConfigTab({ showToast }) {
                 Active filters:
               </span>
               {searchQuery && (
-                <div className="flex items-center gap-[6px] rounded-[6px] bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
+                <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
                   Search: {searchQuery}
                   <button
                     onClick={() => setSearchQuery("")}
@@ -644,7 +644,7 @@ export default function ModuleConfigTab({ showToast }) {
                 </div>
               )}
               {categoryFilter !== "All" && (
-                <div className="flex items-center gap-[6px] rounded-[6px] bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
+                <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
                   Role: {categoryFilter === "admin" ? "Supervisors & Heads" : "Staff Tools"}
                   <button
                     onClick={() => setCategoryFilter("All")}
@@ -655,7 +655,7 @@ export default function ModuleConfigTab({ showToast }) {
                 </div>
               )}
               {moduleStatusFilter !== "All" && (
-                <div className="flex items-center gap-[6px] rounded-[6px] bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
+                <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
                   Feature: {moduleStatusFilter === "enabled" ? "Enabled Only" : "Disabled Only"}
                   <button
                     onClick={() => setModuleStatusFilter("All")}
@@ -678,12 +678,12 @@ export default function ModuleConfigTab({ showToast }) {
         )}
 
         {/* Content Section: By Office or Matrix inside the single Card */}
-        <div className="overflow-hidden border-t border-gray-200 dark:border-white/10 bg-white dark:bg-card flex flex-col flex-1">
+        <div className="overflow-hidden rounded-b-2xl border-t border-gray-200 dark:border-white/10 bg-white dark:bg-card flex flex-col flex-1">
           {/* VIEW 1: BY OFFICE */}
           {viewMode === "office" && (
             <div className="flex flex-col flex-1">
               {filteredOffices.length === 0 ? (
-                <div className="flex h-[380px] flex-col items-center justify-center p-6 text-center">
+                <div className="flex h-[380px] flex-col items-center justify-center p-6 text-center rounded-b-2xl">
               <Empty className="flex flex-col items-center justify-center border-0 bg-transparent text-center">
                 <EmptyHeader className="flex flex-col items-center gap-0">
                   <div className="relative mb-6">
@@ -773,7 +773,7 @@ export default function ModuleConfigTab({ showToast }) {
 
                           <div className="flex items-center gap-1.5 shrink-0">
                             {isOfficeArchived ? (
-                              <span className="rounded-[4px] px-[6px] py-[2px] text-[10px] font-medium tracking-[0.04em] bg-gray-100 text-[#8E8E93] dark:bg-zinc-800 dark:text-zinc-400">
+                              <span className="rounded-full px-2 py-0.5 text-[10px] font-medium tracking-[0.04em] bg-gray-100 text-[#8E8E93] dark:bg-zinc-800 dark:text-zinc-400">
                                 Archived
                               </span>
                             ) : (
@@ -1188,7 +1188,7 @@ export default function ModuleConfigTab({ showToast }) {
                               {o.short_name}
                             </span>
                             {isArchived ? (
-                              <span className="rounded-[4px] px-[6px] py-[1.5px] text-[9.5px] font-medium tracking-[0.04em] bg-gray-100 text-[#8E8E93] dark:bg-zinc-800 dark:text-zinc-400 normal-case">
+                              <span className="rounded-full px-2 py-0.5 text-[9.5px] font-medium tracking-[0.04em] bg-gray-100 text-[#8E8E93] dark:bg-zinc-800 dark:text-zinc-400 normal-case">
                                 Archived
                               </span>
                             ) : (

@@ -56,16 +56,14 @@ export default function ContinuousScanningPanel({ onOpenReview, showToast = () =
       });
     }
     setCurrentFile(rows.find((row) => row.review_status === "Processing")?.original_filename || "");
-    if (data.total > 0) {
-      setStats({
-        total: rows.length,
-        remaining: processingRows.length,
-        succeeded: successfulRows.length,
-        confirmed: confirmedRows.length,
-        review: reviewRows.length,
-        failed: failedRows.length,
-      });
-    }
+    setStats(data.total > 0 ? {
+      total: rows.length,
+      remaining: processingRows.length,
+      succeeded: successfulRows.length,
+      confirmed: confirmedRows.length,
+      review: reviewRows.length,
+      failed: failedRows.length,
+    } : EMPTY_STATS);
     return data;
   }, []);
 

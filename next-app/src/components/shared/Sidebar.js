@@ -26,6 +26,7 @@ const ICON_MAP = {
   // Staff views
   requests: { icon: "ti ti-arrow-up-right" },
   odrs: { icon: "ti ti-file-text" },
+  compliance: { icon: "ti ti-clipboard-check" },
   osas: { icon: "ti ti-school" },
   osas_monitoring: { icon: "ti ti-clipboard-check" },
   upload: { icon: "ti ti-scan" },
@@ -88,17 +89,16 @@ export default function Sidebar({ open = true, items, activeKey, onSelect, onLog
     <aside
       ref={sidebarRef}
       className={cn(
-        "z-10 flex-col gap-[2px] bg-white/20 backdrop-blur-md dark:bg-zinc-950/25 select-none sticky top-0 h-screen overflow-hidden hidden md:flex shrink-0 will-change-[width]",
+        "rms-sidebar z-10 flex-col gap-[2px] bg-white/20 backdrop-blur-md dark:bg-zinc-950/25 select-none sticky top-0 h-screen overflow-hidden hidden md:flex shrink-0 will-change-[width]",
         open ? "w-[275px] py-2 px-2" : "w-[68px] py-2 px-2"
       )}
-      style={{ 
-        borderRight: "0.5px solid rgba(255,255,255,0.18)",
-        transition: "width 320ms cubic-bezier(0.16, 1, 0.3, 1), padding 320ms cubic-bezier(0.16, 1, 0.3, 1)",
-      }}
     >
       <div className="flex flex-col gap-[2px] flex-1 h-full overflow-y-auto w-full items-stretch [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <div 
-          className="flex items-center mb-1.5 w-full h-[36px] px-1 overflow-hidden shrink-0"
+          className={cn(
+            "flex items-center mb-1.5 w-full h-[36px] overflow-hidden shrink-0 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]",
+            open ? "px-1 justify-start" : "px-0 justify-center"
+          )}
         >
           <button
             type="button"
@@ -111,7 +111,7 @@ export default function Sidebar({ open = true, items, activeKey, onSelect, onLog
             data-tooltip-placement="right"
             className="flex w-[36px] h-[36px] items-center justify-center rounded-[8px] hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/5 active:scale-95 cursor-pointer transition-all duration-200 ease-out shrink-0"
           >
-            <i className={cn("text-[21px] transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]", open ? "ti ti-panel-left-dashed" : "ti ti-panel-left")} style={{ color: activeColor }}></i>
+            <i className={cn("rms-style-color text-[21px] transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]", open ? "ti ti-panel-left-dashed" : "ti ti-panel-left")} data-color={activeColor} style={{ color: activeColor }}></i>
           </button>
 
           {/* Zoom Control when Sidebar is Visible */}
@@ -138,13 +138,15 @@ export default function Sidebar({ open = true, items, activeKey, onSelect, onLog
                   className="relative w-[50px] h-[14px] flex items-center group cursor-pointer shrink-0"
                 >
                   <div className="absolute left-0 right-0 h-[2.5px] bg-[#D1D1D6] dark:bg-zinc-700 rounded-full"></div>
-                  <div 
-                    className="absolute left-0 h-[2.5px] rounded-full"
-                    style={{ width: `${(zoomNode / 6) * 100}%`, backgroundColor: activeColor }}
+                  <div
+                    className="rms-style-width rms-style-background-color absolute left-0 h-[2.5px] rounded-full"
+                    data-width={`${(zoomNode / 6) * 100}%`}
+                    data-background-color={activeColor}
                   ></div>
-                  <div 
-                    className="absolute -translate-x-1/2 w-[12px] h-[12px] rounded-full bg-white dark:bg-zinc-900 shadow-xs"
-                    style={{ left: `${(zoomNode / 6) * 100}%`, border: `2px solid ${activeColor}` }}
+                  <div
+                    className="rms-style-left rms-style-border-color absolute -translate-x-1/2 w-[12px] h-[12px] rounded-full bg-white dark:bg-zinc-900 shadow-xs border-2"
+                    data-left={`${(zoomNode / 6) * 100}%`}
+                    data-border-color={activeColor}
                   ></div>
                 </div>
                 <button
@@ -180,11 +182,7 @@ export default function Sidebar({ open = true, items, activeKey, onSelect, onLog
             return (
               <div
                 key={`header-${idx}`}
-                className="relative w-full flex items-center select-none overflow-hidden h-[22px] shrink-0"
-                style={{ 
-                  marginTop: idx === 0 ? "4px" : "16px",
-                  marginBottom: "4px",
-                }}
+                className={cn("relative w-full flex items-center select-none overflow-hidden h-[22px] shrink-0 mb-1", idx === 0 ? "mt-1" : "mt-4")}
               >
                 <span
                   className={cn(
@@ -220,22 +218,29 @@ export default function Sidebar({ open = true, items, activeKey, onSelect, onLog
                   onClick={() => toggleAccordion(item.key)}
                   title={!open ? item.label : undefined}
                   data-tooltip-placement="right"
+                  data-background-color={hasActiveChild && !isExpanded ? activeColor : undefined}
+                  style={hasActiveChild && !isExpanded ? { backgroundColor: activeColor } : undefined}
                   className={cn(
-                    "flex w-full h-[38px] items-center rounded-[8px] text-[14px] outline-none cursor-pointer transition-colors duration-200 ease-out relative group select-none px-1 overflow-hidden shrink-0",
+                    "flex w-full h-[38px] items-center rounded-[8px] text-[14px] outline-none cursor-pointer transition-colors duration-200 ease-out relative group select-none overflow-hidden shrink-0",
+                    open ? "px-1 justify-start" : "px-0 justify-center",
                     hasActiveChild && !isExpanded
-                      ? "text-white font-medium shadow-2xs"
+                      ? "text-white font-medium shadow-2xs rms-style-background-color"
                       : "text-[#1D1D1F] dark:text-zinc-200 hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/5 font-normal"
                   )}
-                  style={{
-                    backgroundColor: hasActiveChild && !isExpanded ? activeColor : undefined,
-                  }}
                 >
-                  <div className="flex items-center min-w-0 flex-1 overflow-hidden">
-                    <span className="w-[36px] h-[36px] flex items-center justify-center shrink-0">
+                  <div className={cn("flex items-center overflow-hidden", open ? "min-w-0 flex-1" : "justify-center w-full")}>
+                    <span className="relative w-[36px] h-[36px] flex items-center justify-center shrink-0">
                       <i
-                        className={cn(iconName, "text-[19px] transition-colors shrink-0")}
+                        data-color={hasActiveChild && !isExpanded ? "#FFFFFF" : staffIconColor}
                         style={{ color: hasActiveChild && !isExpanded ? "#FFFFFF" : staffIconColor }}
+                        className={cn("rms-style-color", iconName, "text-[19px] transition-colors shrink-0")}
                       ></i>
+                      {/* Collapsed notification dot */}
+                      <span
+                        data-background-color={activeColor}
+                        style={{ backgroundColor: activeColor }}
+                        className={cn("rms-style-background-color absolute top-1 right-1 h-2 w-2 rounded-full ring-2 ring-white dark:ring-zinc-950 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]", !open && item.badge > 0 ? "opacity-100 scale-100" : "opacity-0 scale-0 pointer-events-none")}
+                      />
                     </span>
                     <span
                       className={cn(
@@ -260,12 +265,10 @@ export default function Sidebar({ open = true, items, activeKey, onSelect, onLog
                   >
                     {item.badge > 0 && (
                       <span
-                        className="flex h-[16px] min-w-[16px] shrink-0 items-center justify-center rounded-full px-1 text-[10px] font-semibold"
-                        style={
-                          hasActiveChild && !isExpanded
-                            ? { backgroundColor: "#FFFFFF", color: activeColor }
-                            : { backgroundColor: activeColor, color: "#FFFFFF" }
-                        }
+                        className="rms-style-background-color rms-style-color flex h-[16px] min-w-[16px] shrink-0 items-center justify-center rounded-full px-1 text-[10px] font-semibold"
+                        data-background-color={hasActiveChild && !isExpanded ? "#FFFFFF" : activeColor}
+                        data-color={hasActiveChild && !isExpanded ? activeColor : "#FFFFFF"}
+                        style={{ backgroundColor: hasActiveChild && !isExpanded ? "#FFFFFF" : activeColor, color: hasActiveChild && !isExpanded ? activeColor : "#FFFFFF" }}
                       >
                         {item.badge > 99 ? "99+" : item.badge}
                       </span>
@@ -277,15 +280,6 @@ export default function Sidebar({ open = true, items, activeKey, onSelect, onLog
                       )}
                     ></i>
                   </div>
-
-                  {/* Collapsed notification dot */}
-                  <span
-                    className={cn(
-                      "absolute top-1.5 right-1.5 h-2 w-2 rounded-full ring-2 ring-white dark:ring-zinc-950 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]",
-                      !open && item.badge > 0 ? "opacity-100 scale-100" : "opacity-0 scale-0 pointer-events-none"
-                    )}
-                    style={{ backgroundColor: activeColor }}
-                  />
                 </button>
 
                 <div
@@ -308,22 +302,23 @@ export default function Sidebar({ open = true, items, activeKey, onSelect, onLog
                           onClick={(e) => handleLinkClick(e, child.key)}
                           title={!open ? child.label : undefined}
                           data-tooltip-placement="right"
+                          data-background-color={isActive ? activeColor : undefined}
+                          data-transition-delay={isExpanded ? `${childIdx * 30}ms` : "0ms"}
+                          style={isActive ? { backgroundColor: activeColor } : undefined}
                           className={cn(
-                            "flex w-full h-[38px] items-center rounded-[8px] text-[14px] outline-none cursor-pointer transition-colors duration-200 ease-out relative group select-none pl-4 pr-1 overflow-hidden shrink-0",
+                            "rms-style-transition-delay flex w-full h-[38px] items-center rounded-[8px] text-[14px] outline-none cursor-pointer transition-colors duration-200 ease-out relative group select-none overflow-hidden shrink-0",
+                            open ? "pl-4 pr-1 justify-start" : "px-0 justify-center",
                             isActive
-                              ? "text-white font-medium shadow-2xs"
+                              ? "text-white font-medium shadow-2xs rms-style-background-color"
                               : "text-[#1D1D1F] dark:text-zinc-200 hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/5 font-normal"
                           )}
-                          style={{
-                            backgroundColor: isActive ? activeColor : undefined,
-                            transitionDelay: isExpanded ? `${childIdx * 30}ms` : "0ms",
-                          }}
                         >
-                          <div className="flex items-center min-w-0 flex-1 overflow-hidden">
+                          <div className={cn("flex items-center overflow-hidden", open ? "min-w-0 flex-1" : "justify-center w-full")}>
                             <span className="w-[36px] h-[36px] flex items-center justify-center shrink-0">
                               <i
-                                className={cn(childIconName, "text-[19px] transition-colors shrink-0")}
+                                data-color={isActive ? "#FFFFFF" : staffIconColor}
                                 style={{ color: isActive ? "#FFFFFF" : staffIconColor }}
+                                className={cn("rms-style-color", childIconName, "text-[19px] transition-colors shrink-0")}
                               ></i>
                             </span>
                             <span
@@ -347,12 +342,10 @@ export default function Sidebar({ open = true, items, activeKey, onSelect, onLog
                           >
                             {child.badge > 0 && (
                               <span
-                                className="flex h-[16px] min-w-[16px] shrink-0 items-center justify-center rounded-full px-1 text-[10px] font-semibold"
-                                style={
-                                  isActive
-                                    ? { backgroundColor: "#FFFFFF", color: activeColor }
-                                    : { backgroundColor: activeColor, color: "#FFFFFF" }
-                                }
+                                className="rms-style-background-color rms-style-color flex h-[16px] min-w-[16px] shrink-0 items-center justify-center rounded-full px-1 text-[10px] font-semibold"
+                                data-background-color={isActive ? "#FFFFFF" : activeColor}
+                                data-color={isActive ? activeColor : "#FFFFFF"}
+                                style={{ backgroundColor: isActive ? "#FFFFFF" : activeColor, color: isActive ? activeColor : "#FFFFFF" }}
                               >
                                 {child.badge > 99 ? "99+" : child.badge}
                               </span>
@@ -379,22 +372,29 @@ export default function Sidebar({ open = true, items, activeKey, onSelect, onLog
               onClick={(e) => handleLinkClick(e, item.key)}
               title={!open ? item.label : undefined}
               data-tooltip-placement="right"
+              data-background-color={isActive ? activeColor : undefined}
+              style={isActive ? { backgroundColor: activeColor } : undefined}
               className={cn(
-                "flex w-full h-[38px] items-center rounded-[8px] text-[14px] outline-none cursor-pointer transition-colors duration-200 ease-out relative group select-none px-1 overflow-hidden shrink-0",
+                "flex w-full h-[38px] items-center rounded-[8px] text-[14px] outline-none cursor-pointer transition-colors duration-200 ease-out relative group select-none overflow-hidden shrink-0",
+                open ? "px-1 justify-start" : "px-0 justify-center",
                 isActive
-                  ? "text-white font-medium shadow-2xs"
+                  ? "text-white font-medium shadow-2xs rms-style-background-color"
                   : "text-[#1D1D1F] dark:text-zinc-200 hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/5 font-normal"
               )}
-              style={{
-                backgroundColor: isActive ? activeColor : undefined,
-              }}
             >
-              <div className="flex items-center min-w-0 flex-1 overflow-hidden">
-                <span className="w-[36px] h-[36px] flex items-center justify-center shrink-0">
+              <div className={cn("flex items-center overflow-hidden", open ? "min-w-0 flex-1" : "justify-center w-full")}>
+                <span className="relative w-[36px] h-[36px] flex items-center justify-center shrink-0">
                   <i
-                    className={cn(iconName, "text-[19px] transition-colors shrink-0")}
+                    data-color={isActive ? "#FFFFFF" : staffIconColor}
                     style={{ color: isActive ? "#FFFFFF" : staffIconColor }}
+                    className={cn("rms-style-color", iconName, "text-[19px] transition-colors shrink-0")}
                   ></i>
+                  {/* Collapsed notification dot */}
+                  <span
+                    data-background-color={activeColor}
+                    style={{ backgroundColor: activeColor }}
+                    className={cn("rms-style-background-color absolute top-1 right-1 h-2 w-2 rounded-full ring-2 ring-white dark:ring-zinc-950 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]", !open && item.badge > 0 ? "opacity-100 scale-100" : "opacity-0 scale-0 pointer-events-none")}
+                  />
                 </span>
                 <span
                   className={cn(
@@ -419,26 +419,15 @@ export default function Sidebar({ open = true, items, activeKey, onSelect, onLog
               >
                 {item.badge > 0 && (
                   <span
-                    className="flex h-[16px] min-w-[16px] shrink-0 items-center justify-center rounded-full px-1 text-[10px] font-semibold"
-                    style={
-                      isActive
-                        ? { backgroundColor: "#FFFFFF", color: activeColor }
-                        : { backgroundColor: activeColor, color: "#FFFFFF" }
-                    }
+                    className="rms-style-background-color rms-style-color flex h-[16px] min-w-[16px] shrink-0 items-center justify-center rounded-full px-1 text-[10px] font-semibold"
+                    data-background-color={isActive ? "#FFFFFF" : activeColor}
+                    data-color={isActive ? activeColor : "#FFFFFF"}
+                    style={{ backgroundColor: isActive ? "#FFFFFF" : activeColor, color: isActive ? activeColor : "#FFFFFF" }}
                   >
                     {item.badge > 99 ? "99+" : item.badge}
                   </span>
                 )}
               </div>
-
-              {/* Collapsed notification dot */}
-              <span
-                className={cn(
-                  "absolute top-1.5 right-1.5 h-2 w-2 rounded-full ring-2 ring-white dark:ring-zinc-950 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]",
-                  !open && item.badge > 0 ? "opacity-100 scale-100" : "opacity-0 scale-0 pointer-events-none"
-                )}
-                style={{ backgroundColor: activeColor }}
-              />
             </a>
           )
         })}

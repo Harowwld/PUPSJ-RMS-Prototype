@@ -252,7 +252,7 @@ export default function BackupTable({
                             <TooltipTrigger asChild>
                               <div
                                 className={cn(
-                                  "inline-flex items-center gap-1 rounded-[4px] px-[8px] py-[3px] text-[11px] font-medium tracking-[0.04em] select-none",
+                                  "inline-flex items-center gap-1 rounded-full px-[10px] py-[2.5px] text-[11px] font-medium tracking-[0.04em] select-none",
                                   b.status_local === "Success"
                                     ? "bg-[#D1FAE5] text-[#065F46] dark:bg-emerald-950/40 dark:text-emerald-400"
                                     : "bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-zinc-400"
@@ -266,7 +266,7 @@ export default function BackupTable({
                               <p className="font-semibold">Internal Storage</p>
                               <p className="text-[11px] opacity-80">
                                 {b.status_local === "Success"
-                                  ? "Backup safely saved on internal system storage"
+                                    ? "Backup safely saved on internal system storage"
                                   : "Preparing backup"}
                               </p>
                             </TooltipContent>
@@ -276,7 +276,7 @@ export default function BackupTable({
                           {b.status_external === "Success" ? (
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                <div className="inline-flex items-center gap-1 rounded-[4px] px-[8px] py-[3px] text-[11px] font-medium tracking-[0.04em] select-none bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-200/50 dark:border-blue-900/40">
+                                <div className="inline-flex items-center gap-1 rounded-full px-[10px] py-[2.5px] text-[11px] font-medium tracking-[0.04em] select-none bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-200/50 dark:border-blue-900/40">
                                   <i className="ph-bold ph-check-circle text-[11px]" />
                                   <span>External Drive</span>
                                 </div>
@@ -291,7 +291,7 @@ export default function BackupTable({
                           ) : !externalDriveConnected ? (
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                <div className="inline-flex items-center gap-1 rounded-[4px] px-[8px] py-[3px] text-[11px] font-medium tracking-[0.04em] select-none bg-gray-100 text-gray-500 dark:bg-zinc-800 dark:text-zinc-500 border border-gray-200 dark:border-white/10 cursor-not-allowed">
+                                <div className="inline-flex items-center gap-1 rounded-full px-[10px] py-[2.5px] text-[11px] font-medium tracking-[0.04em] select-none bg-gray-100 text-gray-500 dark:bg-zinc-800 dark:text-zinc-500 border border-gray-200 dark:border-white/10 cursor-not-allowed">
                                   <i className="ph-bold ph-plugs text-[11px]" />
                                   <span>Drive Offline</span>
                                 </div>
@@ -299,7 +299,7 @@ export default function BackupTable({
                               <TooltipContent className="text-xs">
                                 <p className="font-semibold">External Drive Disconnected</p>
                                 <p className="text-[11px] opacity-80">
-                                  Connect an external USB drive and click &quot;Detect Drive&quot; to copy this backup.
+                                  Connect an external USB drive and click &quot;Detect&quot; to copy this backup.
                                 </p>
                               </TooltipContent>
                             </Tooltip>
@@ -314,7 +314,7 @@ export default function BackupTable({
                                   }}
                                   disabled={localLoading?.syncingId === b.id}
                                   className={cn(
-                                    "h-[22px] px-2 rounded-[4px] text-[11px] font-medium tracking-[0.04em] active:scale-95 transition-all cursor-pointer inline-flex items-center gap-1 border",
+                                    "h-[22px] px-2.5 rounded-full text-[11px] font-medium tracking-[0.04em] active:scale-95 transition-all cursor-pointer inline-flex items-center gap-1 border",
                                     b.status_external === "Failed"
                                       ? "border-amber-300 dark:border-amber-800/60 bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 hover:bg-amber-100"
                                       : "border-blue-200 dark:border-blue-800/60 bg-white dark:bg-zinc-800 text-blue-700 dark:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-950/30"
@@ -326,10 +326,7 @@ export default function BackupTable({
                                       <span>Copying...</span>
                                     </>
                                   ) : (
-                                    <>
-                                      <i className="ph-bold ph-hard-drives text-[11px]" />
-                                      <span>{b.status_external === "Failed" ? "Retry Copy" : "Copy to Drive"}</span>
-                                    </>
+                                    <span>{b.status_external === "Failed" ? "Retry" : "Copy"}</span>
                                   )}
                                 </button>
                               </TooltipTrigger>
@@ -345,7 +342,7 @@ export default function BackupTable({
                       </td>
                     ) : (
                       <td className="py-2 px-4 align-middle text-center">
-                        <div className="inline-flex w-fit items-center justify-center rounded-[4px] px-[8px] py-[3px] text-[11px] font-medium tracking-[0.04em] select-none bg-[#D1FAE5] text-[#065F46] dark:bg-emerald-950/40 dark:text-emerald-400">
+                        <div className="inline-flex w-fit items-center justify-center rounded-full px-[10px] py-[2.5px] text-[11px] font-medium tracking-[0.04em] select-none bg-[#D1FAE5] text-[#065F46] dark:bg-emerald-950/40 dark:text-emerald-400">
                           Ready
                         </div>
                       </td>

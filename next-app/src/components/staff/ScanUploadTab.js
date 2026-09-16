@@ -597,18 +597,6 @@ export default function ScanUploadTab({
                   {authUser?.station_name || `${(authUser?.office_id || "REG").toUpperCase()}-ARCHIVE-PC01`}
                 </span>
               </div>
-
-              <span className="text-gray-300 dark:text-zinc-700">·</span>
-
-              <div className="flex items-center gap-1.5">
-                <i className="ph-bold ph-printer text-pup-maroon dark:text-red-400 text-xs"></i>
-                <span className="text-[10px] font-bold text-gray-500 dark:text-zinc-400 uppercase tracking-wider">
-                  Scanner:
-                </span>
-                <span className="font-medium text-gray-700 dark:text-zinc-300">
-                  {authUser?.scanner_model || "High-Speed Document Scanner"}
-                </span>
-              </div>
             </div>
 
             <div className="flex items-center gap-2">
@@ -667,7 +655,7 @@ export default function ScanUploadTab({
             </button>
           </div>
 
-          <CardContent className="flex flex-col p-6 pt-3">
+          <CardContent className="flex flex-col p-6 pt-3 rounded-b-2xl">
           {loading ? (
             <ScanUploadSkeleton />
           ) : error ? (

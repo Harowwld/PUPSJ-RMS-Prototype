@@ -1,11 +1,13 @@
 import { NextResponse } from "next/server";
-import { createAuditLog, listAuditLogs, countAuditLogs } from "../../../lib/auditLogsRepo";
-import { getSessionActorName } from "../../../lib/authHelpers";
-import { getStudentSession } from "../../../lib/studentAuth";
+import { listAuditLogs, countAuditLogs } from "../../../lib/auditLogsRepo";
+import { getPrincipalOfficeId, isAdmin, requireAuth, createAuthErrorResponse } from "../../../lib/authHelpers";
+import { isSystemAdminRole } from "../../../lib/roleUtils";
 
 export const runtime = "nodejs";
 
 export async function GET(req) {
+  const auth = await requireAuth(req);
+  if (auth.error || !auth.user) return createAuthErrorResponse(auth.error || "Authentication required", auth.error?.startsWith("Access denied") ? 403 : 401);
   const { searchParams } = new URL(req.url);
   const limit = parseInt(searchParams.get("limit") || "200");
   const offset = parseInt(searchParams.get("offset") || "0");
@@ -17,63 +19,23 @@ export async function GET(req) {
   const sortBy = searchParams.get("sortBy") || "created_at";
   const sortOrder = searchParams.get("sortOrder") || "DESC";
   const mine = searchParams.get("mine") === "1";
-  const actorExact = mine ? await getSessionActorName(req) : "";
-
-  const studentSession = mine ? await getStudentSession(req) : null;
-  const resolvedActor = studentSession?.studentNo || actorExact;
+  const isStudent = auth.user.principalType === "student";
+  const isGlobalAdmin = isSystemAdminRole(auth.user.role);
+  const officeId = isGlobalAdmin || isStudent ? "" : getPrincipalOfficeId(auth.user);
+  if (!mine && !isAdmin(auth.user)) return createAuthErrorResponse("Access denied", 403);
+  if (!isStudent && !isGlobalAdmin && !officeId) return createAuthErrorResponse("Office scope is required", 403);
+  const resolvedActor = mine
+    ? (auth.user.studentNo || `${auth.user.fname || ""} ${auth.user.lname || ""}`.trim())
+    : "";
 
   if (mine && !resolvedActor) {
     return NextResponse.json({ ok: true, data: [], total: 0 });
   }
 
   const [rows, total] = await Promise.all([
-    listAuditLogs({ limit, offset, search, actorExact: resolvedActor, role: studentSession ? "Student" : role, severity, startDate, endDate, sortBy, sortOrder }),
-    countAuditLogs({ search, actorExact: resolvedActor, role: studentSession ? "Student" : role, severity, startDate, endDate }),
+    listAuditLogs({ limit, offset, search, actorExact: resolvedActor, officeId, role: isStudent ? "Student" : role, severity, startDate, endDate, sortBy, sortOrder }),
+    countAuditLogs({ search, actorExact: resolvedActor, officeId, role: isStudent ? "Student" : role, severity, startDate, endDate }),
   ]);
 
   return NextResponse.json({ ok: true, data: rows, total });
-}
-
-export async function POST(req) {
-  const body = await req.json().catch(() => null);
-  if (!body || typeof body !== "object") {
-    return NextResponse.json(
-      { ok: false, error: "Invalid JSON body" },
-      { status: 400 }
-    );
-  }
-
-  const userAgent = req.headers.get("user-agent") || "";
-  const forwardedFor = req.headers.get("x-forwarded-for");
-  const remoteIp = forwardedFor ? forwardedFor.split(",")[0].trim() : "localhost";
-
-  const actor = String(body.actor || "").trim();
-  const role = String(body.role || "").trim();
-  const action = String(body.action || "").trim();
-  const details = String(body.details || "").trim();
-  const severity = String(body.severity || "INFO").trim();
-  const entityType = String(body.entity_type || "").trim();
-  const entityId = String(body.entity_id || "").trim();
-  const ip = body.ip || remoteIp;
-
-  if (!actor || !role || !action) {
-    return NextResponse.json(
-      { ok: false, error: "Missing required fields" },
-      { status: 400 }
-    );
-  }
-
-  await createAuditLog({
-    actor,
-    role,
-    action,
-    details,
-    severity,
-    user_agent: body.user_agent || userAgent,
-    entity_type: entityType,
-    entity_id: entityId,
-    ip
-  });
-
-  return NextResponse.json({ ok: true }, { status: 201 });
 }

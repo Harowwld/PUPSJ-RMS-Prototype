@@ -1,25 +1,28 @@
 import { NextResponse } from "next/server";
+import {
+  getPrincipalOfficeId,
+  requireAdmin,
+  createAuthErrorResponse,
+} from "@/lib/authHelpers";
+import { isSystemAdminRole } from "@/lib/roleUtils";
 import { dbAll } from "@/lib/sqlite";
-import { verifySessionToken } from "@/lib/jwt";
+import { getRequestCharterStatus } from "@/lib/citizenCharter";
 
 export const runtime = "nodejs";
 
 export async function GET(req) {
+  const access = await requireAdmin(req);
+  if (access.error || !access.user) return createAuthErrorResponse(access.error || "Admin access required", access.error?.startsWith("Access denied") ? 403 : 401);
   try {
-    const token = req.cookies.get("pup_session")?.value;
-    if (!token) {
-      return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
+    const officeId = isSystemAdminRole(access.user.role) ? null : getPrincipalOfficeId(access.user);
+    if (!isSystemAdminRole(access.user.role) && !officeId) {
+      return createAuthErrorResponse("Office scope is required", 403);
     }
-    
-    const user = await verifySessionToken(token);
-    if (!user || (user.role !== "Admin" && user.role !== "SuperAdmin")) {
-      return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
-    }
-
     const { searchParams } = new URL(req.url);
     const startDate = searchParams.get("startDate");
     const endDate = searchParams.get("endDate");
 
+    const officeFilter = officeId ? "WHERE office_id = ?" : "";
     const rows = await dbAll(`
       SELECT 
         id, 
@@ -28,7 +31,8 @@ export async function GET(req) {
         created_at, 
         updated_at
       FROM document_requests
-    `);
+      ${officeFilter}
+    `, officeId ? [officeId] : []);
 
     // We process analytics in memory to keep it manageable and extensible
     let startVal = startDate;
@@ -97,6 +101,16 @@ export async function GET(req) {
       console.error("Error populating trend intervals:", e);
     }
 
+    let compliantCompleted = 0;
+    let delayedCompleted = 0;
+    let activeOverdue = 0;
+    let activeDueSoon = 0;
+    const tierStats = {
+      Simple: { total: 0, compliant: 0 },
+      Complex: { total: 0, compliant: 0 },
+      HighlyTechnical: { total: 0, compliant: 0 },
+    };
+
     for (const r of (rows || [])) {
       // Lexicographical date filtering (User Recommendation)
       const createdDate = r.created_at ? String(r.created_at).substring(0, 10) : "";
@@ -111,6 +125,30 @@ export async function GET(req) {
 
       if (r.status === "Completed") {
           totalCompleted++;
+      }
+
+      // Citizen's Charter 3-7-20 Status Evaluation
+      const charter = getRequestCharterStatus(r);
+      const tierKey = charter.tier.key;
+      if (tierStats[tierKey]) {
+        tierStats[tierKey].total++;
+        if (charter.isCompliant) {
+          tierStats[tierKey].compliant++;
+        }
+      }
+
+      if (r.status === "Completed") {
+        if (charter.isCompliant) {
+          compliantCompleted++;
+        } else {
+          delayedCompleted++;
+        }
+      } else if (!["Cancelled", "Shredded"].includes(r.status)) {
+        if (charter.isOverdue) {
+          activeOverdue++;
+        } else if (charter.isDueSoon) {
+          activeDueSoon++;
+        }
       }
 
       // Chronological Trends
@@ -170,6 +208,10 @@ export async function GET(req) {
         return { name: `${monthNames[parseInt(m, 10) - 1] || m} ${parseInt(d, 10)}`, count };
       });
 
+    const overallComplianceRate = totalCompleted > 0
+      ? Math.round((compliantCompleted / totalCompleted) * 100)
+      : 100;
+
     return NextResponse.json({
         ok: true,
         data: {
@@ -182,13 +224,19 @@ export async function GET(req) {
                 daily: dailyTrend
             },
             sla: {
-                totalCompleted
+                totalCompleted,
+                compliantCompleted,
+                delayedCompleted,
+                activeOverdue,
+                activeDueSoon,
+                complianceRate: overallComplianceRate,
+                tierStats
             }
         }
     });
 
   } catch (error) {
     console.error("[GET /api/analytics/document-requests Error]:", error);
-    return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ ok: false, error: "Internal server error" }, { status: 500 });
   }
 }

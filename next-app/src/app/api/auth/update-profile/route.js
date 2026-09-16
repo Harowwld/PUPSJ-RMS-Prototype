@@ -1,22 +1,17 @@
 import { NextResponse } from "next/server";
-import { getSessionCookieName, verifySessionToken } from "@/lib/jwt";
 import { updateStaff, getStaffByUsername, getStaffById } from "@/lib/staffRepo";
 import { writeAuditLog, writeGlobalAuditLog } from "@/lib/auditLogRequest";
 import { query, queryOne } from "@/lib/postgres";
-import { createStudentSession } from "@/lib/studentAuth";
+import { requireAuth, createAuthErrorResponse } from "../../../../lib/authHelpers";
 
 export const runtime = "nodejs";
 
 export async function POST(req) {
   try {
-    const cookieName = getSessionCookieName();
-    const token = req.cookies.get(cookieName)?.value || "";
-    if (!token) {
-      return NextResponse.json({ ok: false, error: "Not authenticated" }, { status: 401 });
-    }
-
-    const payload = await verifySessionToken(token);
-    const userId = payload.sub || null;
+    const access = await requireAuth(req);
+    if (access.error || !access.user) return createAuthErrorResponse(access.error || "Authentication required", access.error?.startsWith("Access denied") ? 403 : 401);
+    const principal = access.user;
+    const userId = principal.id || null;
     if (!userId || userId === "admin") {
       return NextResponse.json({ ok: false, error: "Cannot update built-in admin account" }, { status: 403 });
     }
@@ -29,8 +24,8 @@ export async function POST(req) {
     // ----------------------------------------------------
     // Student Profile Update
     // ----------------------------------------------------
-    if (payload.role === "Student") {
-      const accountId = payload.account_id || (Number.isFinite(Number(userId)) ? Number(userId) : null);
+    if (principal.principalType === "student") {
+      const accountId = principal.accountId || (Number.isFinite(Number(userId)) ? Number(userId) : null);
       const studentAccount = await queryOne(
         `SELECT sa.*, s.name, s.course_code 
          FROM student_accounts sa 
@@ -39,7 +34,7 @@ export async function POST(req) {
             OR (sa.student_no IS NOT NULL AND upper(sa.student_no) = upper($2) AND $2 IS NOT NULL)
             OR (lower(sa.email) = lower($3) AND $3 IS NOT NULL)
          LIMIT 1`,
-        [accountId, payload.student_no || null, payload.email || payload.username || null]
+        [accountId, principal.studentNo || null, principal.email || null]
       );
 
       if (!studentAccount) {
@@ -63,59 +58,24 @@ export async function POST(req) {
         return NextResponse.json({ ok: false, error: "Invalid client type. Must be Student or Alumni." }, { status: 400 });
       }
 
-      // Check student number uniqueness if provided and changed
-      let studentNoChanged = false;
-      if (newStudentNo && newStudentNo !== currentStudentNo.toUpperCase()) {
-        const existingStudent = await queryOne(
-          "SELECT student_no FROM students WHERE upper(student_no) = upper($1) AND upper(student_no) <> upper($2)",
-          [newStudentNo, currentStudentNo]
-        );
-        if (existingStudent) {
-          return NextResponse.json({ ok: false, error: "That student number is already assigned to another student record." }, { status: 409 });
-        }
-        studentNoChanged = true;
-      } else if (!newStudentNo && currentStudentNo) {
-        studentNoChanged = true;
+      if (newStudentNo !== currentStudentNo.toUpperCase()) {
+        return NextResponse.json({ ok: false, error: "Student identity cannot be changed from the authenticated account." }, { status: 403 });
       }
 
       const middleInitial = cleanMiddle ? ` ${cleanMiddle[0].toUpperCase()}.` : "";
       const formattedFullName = `${cleanLast.toUpperCase()}, ${cleanFirst.toUpperCase()}${middleInitial}`;
 
-      if (newStudentNo) {
-        // Ensure student record exists in students table
-        const studentRow = await queryOne("SELECT student_no FROM students WHERE upper(student_no) = upper($1)", [newStudentNo]);
-        if (!studentRow) {
-          await query(
-            `INSERT INTO students (student_no, name, status, course_code)
-             VALUES ($1, $2, 'Active', $3)`,
-            [newStudentNo, formattedFullName, cleanClientType === "Alumni" ? "ALUMNI" : "ENROLLED"]
-          );
-        } else {
-          await query(
-            `UPDATE students 
-             SET name = $1, course_code = CASE WHEN $2 = 'Alumni' THEN 'ALUMNI' ELSE course_code END, updated_at = NOW() 
-             WHERE upper(student_no) = upper($3)`,
-            [formattedFullName, cleanClientType, newStudentNo]
-          );
-        }
-
-        if (currentStudentNo && currentStudentNo.toUpperCase() !== newStudentNo) {
-          // If previous student_no existed, update referencing records via CASCADE
-          await query("UPDATE students SET student_no = $1, name = $2 WHERE upper(student_no) = upper($3)", [newStudentNo, formattedFullName, currentStudentNo]);
-        }
-      }
-
       await query(
         `UPDATE student_accounts 
-         SET student_no = $1, first_name = $2, middle_name = $3, last_name = $4, client_type = $5, updated_at = NOW() 
-         WHERE id = $6`,
-        [newStudentNo, cleanFirst, cleanMiddle, cleanLast, cleanClientType, studentAccount.id]
+         SET first_name = $1, middle_name = $2, last_name = $3, client_type = $4, updated_at = NOW()
+         WHERE id = $5`,
+        [cleanFirst, cleanMiddle, cleanLast, cleanClientType, studentAccount.id]
       );
 
       await writeGlobalAuditLog(req, "Student profile updated", {
-        actor: newStudentNo || cleanEmail,
+        actor: currentStudentNo || cleanEmail,
         role: "Student",
-        details: `Updated profile details (Name: ${formattedFullName}, Client Type: ${cleanClientType}${studentNoChanged ? `, Student No: ${newStudentNo || "cleared"}` : ""})`,
+        details: `Updated profile details (Name: ${formattedFullName}, Client Type: ${cleanClientType})`,
         entity_type: "student_account",
         entity_id: String(studentAccount.id),
       });
@@ -124,7 +84,7 @@ export async function POST(req) {
         ok: true,
         data: {
           account_id: studentAccount.id,
-          student_no: newStudentNo || "",
+          student_no: currentStudentNo || "",
           fname: cleanFirst,
           lname: cleanLast,
           mname: cleanMiddle,
@@ -132,22 +92,6 @@ export async function POST(req) {
           client_type: cleanClientType,
         },
       });
-
-      if (studentNoChanged) {
-        const newToken = await createStudentSession({
-          id: studentAccount.id,
-          student_no: newStudentNo,
-          email: cleanEmail,
-          client_type: cleanClientType,
-        });
-        response.cookies.set(cookieName, newToken, {
-          httpOnly: true,
-          sameSite: "lax",
-          path: "/",
-          secure: process.env.NODE_ENV === "production",
-          maxAge: 60 * 60 * 24 * 7,
-        });
-      }
 
       return response;
     }
@@ -188,6 +132,6 @@ export async function POST(req) {
       data: updated,
     });
   } catch (err) {
-    return NextResponse.json({ ok: false, error: "Failed to update profile", details: err?.message }, { status: 500 });
+    return NextResponse.json({ ok: false, error: "Failed to update profile" }, { status: 500 });
   }
 }

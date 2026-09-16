@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import fs from "node:fs";
-import path from "node:path";
 import { 
   executeBackup, 
   executeSystemBackup,
@@ -9,20 +8,21 @@ import {
   syncBackupExternally,
   getBackupById,
   getBackupsDir,
+  getBackupFilePath,
+  getPrincipalOfficeId,
   deleteBackupRecord
 } from "../../../../lib/backupsRepo";
 import { writeAuditLog } from "../../../../lib/auditLogRequest";
 import { requireTOTP, extractTOTPToken } from "../../../../lib/totpMiddleware";
 import { requireAdmin, createAuthErrorResponse } from "../../../../lib/authHelpers";
 import { isSystemAdminRole } from "../../../../lib/roleUtils";
+import { canAccessResource } from "../../../../lib/resourceAuthorization";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 function getUserOfficeId(user) {
-  if (user?.office_id) return String(user.office_id).toLowerCase().trim();
-  if (user?.section) return String(user.section).toLowerCase().trim();
-  return "registrar";
+  return getPrincipalOfficeId(user);
 }
 
 /**
@@ -56,6 +56,7 @@ export async function GET(req) {
       // Office Admin is strictly isolated to their own office partition
       scope = "office";
       officeId = getUserOfficeId(user);
+      if (!officeId) return createAuthErrorResponse("Office scope is required", 403);
     }
 
     const data = await listBackups({ 
@@ -66,10 +67,10 @@ export async function GET(req) {
       officeId 
     });
 
-    return NextResponse.json({ ok: true, data });
+    return NextResponse.json({ ok: true, data: data.filter((backup) => canAccessResource(user, "backup", backup)) });
   } catch (error) {
     console.error("Backup List Error:", error);
-    return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ ok: false, error: "Internal server error" }, { status: 500 });
   }
 }
 
@@ -79,56 +80,60 @@ export async function GET(req) {
  * Office Admin creates isolated office partition backups (documents + data)
  */
 export async function POST(req) {
-  console.log("[BACKUP API] POST request received");
   const { user, error } = await requireAdmin(req);
   if (error || !user) {
-    console.log("[BACKUP API] Admin check failed:", error);
     return createAuthErrorResponse(error || "Admin access required", 403);
   }
 
-  console.log("[BACKUP API] Admin verified:", user.id);
+  const isSuper = isSystemAdminRole(user.role);
+  const userOffice = getUserOfficeId(user);
+
+  // Parse request body for scope/office preferences
+  const body = await req.json().catch(() => ({}));
+  const requestedScope = body?.scope || (isSuper ? "system" : "office");
+
+  if (!isSuper) {
+    if (requestedScope === "system") {
+      return createAuthErrorResponse("System Administrator authorization required for platform governance backups", 403);
+    }
+    if (!userOffice) {
+      return createAuthErrorResponse("Office scope is required", 403);
+    }
+  }
+
   const totpToken = extractTOTPToken(req.headers);
-  console.log("[BACKUP API] Extracted TOTP token:", totpToken ? "PRESENT" : "MISSING");
   
-  const totpResult = await requireTOTP(user.id, totpToken);
+  const totpResult = await requireTOTP(user.id, totpToken, { requireEnabled: true });
   if (!totpResult.valid) {
-    console.log("[BACKUP API] TOTP verification failed:", totpResult.error);
     return NextResponse.json(
       { 
         ok: false, 
         error: "TOTP verification required: " + totpResult.error, 
-        requiresTOTP: true,
+        requiresTOTP: !totpResult.notConfigured,
+        totpNotConfigured: !!totpResult.notConfigured,
         missingToken: !!totpResult.missing
       },
       { status: 403 }
     );
   }
 
-  // Parse request body for scope/office preferences
-  const body = await req.json().catch(() => ({}));
-  const isSuper = isSystemAdminRole(user.role);
-
-  console.log(`[BACKUP API] TOTP verified. Initiating backup (isSuper=${isSuper}, requestedScope=${body?.scope})...`);
-
   try {
     let record = null;
     let logDescription = "";
 
-    if (isSuper) {
-      const requestedScope = body?.scope || "system";
-      if (requestedScope === "system") {
-        record = await executeSystemBackup({ actorId: user.id });
-        logDescription = `initiated platform governance backup (Package: ${record?.filename})`;
-      } else {
-        const targetOffice = (body?.officeId || "registrar").toLowerCase();
-        record = await executeOfficeBackup({ officeId: targetOffice, actorId: user.id });
-        logDescription = `initiated [${targetOffice}] office partition backup (Package: ${record?.filename})`;
-      }
+    if (isSuper && requestedScope === "system") {
+      record = await executeSystemBackup({ actorId: user.id });
+      logDescription = `initiated platform governance backup (Package: ${record?.filename})`;
     } else {
-      // Enforce office isolation: office admin can only backup their own partition
-      const officeId = getUserOfficeId(user);
-      record = await executeOfficeBackup({ officeId, actorId: user.id });
-      logDescription = `initiated [${officeId}] office partition backup (Package: ${record?.filename})`;
+      const targetOffice = isSuper
+        ? (body?.officeId || userOffice || "registrar").toLowerCase()
+        : (userOffice || "registrar").toLowerCase();
+      record = await executeOfficeBackup({ officeId: targetOffice, actorId: user.id });
+      logDescription = `initiated [${targetOffice}] office partition backup (Package: ${record?.filename})`;
+    }
+
+    if (!record || !canAccessResource(user, "backup", record)) {
+      return NextResponse.json({ ok: false, error: "Backup could not be created" }, { status: 500 });
     }
 
     const filename = record?.filename || "unknown-backup.zip.enc";
@@ -156,7 +161,7 @@ export async function POST(req) {
     });
   } catch (error) {
     console.error("[BACKUP API] Backup Creation Error:", error);
-    return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ ok: false, error: "Internal server error" }, { status: 500 });
   }
 }
 
@@ -181,6 +186,22 @@ export async function DELETE(req) {
 
     const isSuper = isSystemAdminRole(user.role);
     const userOffice = getUserOfficeId(user);
+    if (!isSuper && !userOffice) return createAuthErrorResponse("Office scope is required", 403);
+
+    const totpToken = extractTOTPToken(req.headers);
+    const totpResult = await requireTOTP(user.id, totpToken, { requireEnabled: true });
+    if (!totpResult.valid) {
+      return NextResponse.json(
+        { 
+          ok: false, 
+          error: "TOTP verification required: " + totpResult.error, 
+          requiresTOTP: !totpResult.notConfigured, 
+          totpNotConfigured: !!totpResult.notConfigured,
+          missingToken: !!totpResult.missing 
+        },
+        { status: 403 }
+      );
+    }
 
     console.log(`[BULK DELETE BACKUP] User ${user.id} attempting to delete backups: ${ids.join(", ")}`);
 
@@ -190,21 +211,13 @@ export async function DELETE(req) {
     for (const id of ids) {
       try {
         const backup = await getBackupById(id);
-        if (!backup) {
-          errors.push(`Backup ${id} not found`);
+        if (!backup || !canAccessResource(user, "backup", backup)) {
+          errors.push("Backup unavailable");
           continue;
         }
 
-        // Office isolation check
-        if (!isSuper) {
-          if (backup.scope === "system" || (backup.office_id && backup.office_id.toLowerCase() !== userOffice)) {
-            errors.push(`Permission denied: Backup ${id} does not belong to your office`);
-            continue;
-          }
-        }
-
         const backupsDir = getBackupsDir();
-        const filePath = path.resolve(backupsDir, backup.filename);
+        const filePath = getBackupFilePath(backup.filename, backupsDir);
         
         if (fs.existsSync(filePath)) {
           fs.unlinkSync(filePath);
@@ -218,7 +231,7 @@ export async function DELETE(req) {
           }
         }
       } catch (err) {
-        errors.push(`Error deleting ${id}: ${err.message}`);
+        errors.push("Error deleting backup");
       }
     }
 
@@ -238,6 +251,6 @@ export async function DELETE(req) {
     });
   } catch (error) {
     console.error("[BULK DELETE BACKUP] Global Error:", error);
-    return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ ok: false, error: "Internal server error" }, { status: 500 });
   }
 }

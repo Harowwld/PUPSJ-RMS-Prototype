@@ -1,14 +1,20 @@
 import crypto from "node:crypto";
 import { query, queryOne } from "./postgres.js";
 import { dbAll, dbGet, dbRun } from "./postgresCompat.js";
+import { hashPassword, verifyPasswordHash as verifyPasswordHashValue } from "./passwordHash.js";
 
-function hashPassword(password, salt = crypto.randomBytes(16).toString("hex")) {
-  const hash = crypto.scryptSync(String(password), salt, 64).toString("hex");
-  return `${salt}:${hash}`;
+function buildStaffScope(officeId) {
+  if (officeId === undefined) return { clause: "", params: [] };
+  if (officeId === null) return { clause: " AND office_id IS NULL", params: [] };
+  return { clause: " AND office_id = ?", params: [officeId] };
 }
 
 export function hashPasswordForStorage(password) {
   return hashPassword(password);
+}
+
+export function verifyPasswordHash(password, stored) {
+  return verifyPasswordHashValue(password, stored);
 }
 
 export async function setStaffPasswordById(id, newPassword) {
@@ -27,25 +33,11 @@ export async function verifyStaffPasswordById(id, password) {
   const existing = await getStaffById(id);
   if (!existing) return false;
   if (!existing.password_hash) return false;
-  
-  if (existing.password_hash.includes(":")) {
-    const [salt, expected] = existing.password_hash.split(":");
-    if (!salt || !expected) return false;
-    const actual = crypto.scryptSync(String(password), salt, 64).toString("hex");
-    try {
-      return crypto.timingSafeEqual(Buffer.from(actual, "hex"), Buffer.from(expected, "hex"));
-    } catch {
-      return false;
-    }
-  } else {
-    // Legacy SHA-256 fallback and auto-upgrade
-    const legacyHash = crypto.createHash("sha256").update(String(password)).digest("hex");
-    const isMatch = existing.password_hash === legacyHash;
-    if (isMatch) {
-      await setStaffPasswordById(id, password);
-    }
-    return isMatch;
+  const result = verifyPasswordHashValue(password, existing.password_hash);
+  if (result.valid && result.needsRehash) {
+    await setStaffPasswordById(id, password);
   }
+  return result.valid;
 }
 
 export async function createStaff({
@@ -146,8 +138,9 @@ export async function listStaff({
   );
 }
 
-export async function getStaffById(id) {
-  const row = await dbGet("SELECT * FROM staff WHERE id = ?", [id]);
+export async function getStaffById(id, { officeId } = {}) {
+  const scope = buildStaffScope(officeId);
+  const row = await dbGet(`SELECT * FROM staff WHERE id = ?${scope.clause}`, [id, ...scope.params]);
   return row || null;
 }
 
@@ -158,8 +151,8 @@ export async function getStaffByUsername(username) {
   return row || null;
 }
 
-export async function updateStaff(originalId, patch) {
-  const existing = await getStaffById(originalId);
+export async function updateStaff(originalId, patch, { officeId } = {}) {
+  const existing = await getStaffById(originalId, { officeId });
   if (!existing) return null;
 
   const nextId = patch.id ?? existing.id;
@@ -182,11 +175,12 @@ export async function updateStaff(originalId, patch) {
         : existing.avatar_filename,
   };
 
+  const scope = buildStaffScope(officeId);
   await dbRun(
     `
     UPDATE staff
     SET id = ?, office_id = ?, fname = ?, lname = ?, role = ?, section = ?, status = ?, email = ?, last_active = ?, avatar_filename = ?, updated_at = datetime('now')
-    WHERE id = ?
+    WHERE id = ?${scope.clause}
   `,
     [
       next.id,
@@ -200,30 +194,33 @@ export async function updateStaff(originalId, patch) {
       next.last_active,
       next.avatar_filename,
       originalId,
+      ...scope.params,
     ]
   );
 
-  return await getStaffById(next.id);
+  return await getStaffById(next.id, { officeId: next.office_id });
 }
 
-export async function archiveStaff(id) {
-  const existing = await getStaffById(id);
+export async function archiveStaff(id, { officeId } = {}) {
+  const existing = await getStaffById(id, { officeId });
   if (!existing) return null;
+  const scope = buildStaffScope(officeId);
   await dbRun(
-    `UPDATE staff SET status = 'Archived', updated_at = datetime('now') WHERE id = ?`,
-    [id]
+    `UPDATE staff SET status = 'Archived', updated_at = datetime('now') WHERE id = ?${scope.clause}`,
+    [id, ...scope.params]
   );
-  return await getStaffById(id);
+  return await getStaffById(id, { officeId });
 }
 
-export async function restoreStaff(id) {
-  const existing = await getStaffById(id);
+export async function restoreStaff(id, { officeId } = {}) {
+  const existing = await getStaffById(id, { officeId });
   if (!existing) return null;
+  const scope = buildStaffScope(officeId);
   await dbRun(
-    `UPDATE staff SET status = 'Active', updated_at = datetime('now') WHERE id = ?`,
-    [id]
+    `UPDATE staff SET status = 'Active', updated_at = datetime('now') WHERE id = ?${scope.clause}`,
+    [id, ...scope.params]
   );
-  return await getStaffById(id);
+  return await getStaffById(id, { officeId });
 }
 
 export async function deleteStaff(id) {
@@ -300,7 +297,7 @@ export function getStaffDisplayName(staff) {
   return fullName || staff.email || staff.id;
 }
 
-export async function hasAllSecurityAnswers(id) {
+export async function hasAllSecurityAnswers(id, role = "Staff") {
   // Only check for questions marked as required
   // PostgreSQL stores this field as BOOLEAN (SQLite used INTEGER 1/0).
   // Comparing a boolean column to the integer literal 1 causes auth/me to
@@ -311,7 +308,16 @@ export async function hasAllSecurityAnswers(id) {
   // If no required global questions are defined, we consider the requirement "satisfied"
   if (totalRequired === 0) return true;
 
-  const answers = await dbAll("SELECT question_id FROM staff_security_answers WHERE staff_id = ?", [id]);
+  let answers = [];
+  if (role === "Student" || (typeof id === "number" && !isNaN(id))) {
+    try {
+      answers = await dbAll("SELECT question_id FROM student_security_answers WHERE student_account_id = ?", [Number(id)]);
+    } catch {
+      answers = [];
+    }
+  } else {
+    answers = await dbAll("SELECT question_id FROM staff_security_answers WHERE staff_id = ?", [id]);
+  }
   const answeredSet = new Set((answers || []).map(a => a.question_id));
 
   // Check if every required question has an answer

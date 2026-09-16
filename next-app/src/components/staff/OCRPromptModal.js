@@ -8,7 +8,9 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
+  DialogFooter,
 } from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
 
 function studentKey(s) {
   return String(s?.studentNo ?? s?.student_no ?? "")
@@ -51,7 +53,7 @@ export default function OCRPromptModal({
         }
       }}
     >
-      <DialogContent className="max-h-[90vh] overflow-hidden border border-gray-200 bg-white p-0 shadow-2xl sm:max-w-lg dark:border-white/10 dark:bg-card">
+      <DialogContent className="max-h-[90vh] overflow-hidden border border-gray-200 bg-white p-0 shadow-2xl sm:max-w-lg dark:border-white/10 dark:bg-card gap-0">
         <DialogHeader className="border-b border-gray-100 bg-gray-50 p-6 dark:border-white/10 dark:bg-white/5">
           <div className="flex items-start gap-4">
             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-amber-100/30 bg-amber-50 text-amber-600 shadow-sm dark:bg-amber-950/30 dark:text-amber-400 dark:shadow-none">
@@ -129,23 +131,24 @@ export default function OCRPromptModal({
           </div>
         </div>
 
-        <div className="flex flex-col-reverse gap-2 border-t border-gray-100 bg-white p-4 sm:flex-row sm:justify-end dark:border-white/10 dark:bg-card">
-          <button
+        <DialogFooter className="p-6 pt-0 bg-white dark:bg-card border-none flex items-center justify-end gap-2.5">
+          <Button
             type="button"
+            variant="outline"
             onClick={onClose}
-            className="h-11 rounded-brand border border-gray-300 px-5 text-sm font-semibold text-gray-700 hover:bg-gray-50 dark:text-zinc-200 dark:hover:bg-white/10 dark:bg-card dark:border-white/10"
+            className="h-10 px-4 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
           >
             Cancel
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
             onClick={() => selected && onConfirmStudent(selected)}
             disabled={!selected}
-            className={`h-11 rounded-brand px-5 text-sm font-semibold shadow-sm transition-all ${ selected ? "btn-brand-red" : "cursor-not-allowed bg-gray-100 text-gray-400 dark:bg-muted dark:text-zinc-500" }`}
+            className="h-10 px-5 text-xs font-semibold rounded-xl! btn-brand-red text-white shadow-xs cursor-pointer active:scale-95 disabled:opacity-50 transition-all border-0"
           >
             Confirm
-          </button>
-        </div>
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   )

@@ -1,25 +1,13 @@
 import { NextResponse } from "next/server";
 import { listOffices, createOffice, listOfficesWithStats } from "@/lib/officesRepo";
-import { verifySessionToken, getSessionCookieName } from "@/lib/jwt";
 import { writeGlobalAuditLog } from "@/lib/auditLogRequest";
+import { requireSystemAdmin, createAuthErrorResponse } from "@/lib/authHelpers";
 
 export const runtime = "nodejs";
 
-async function isSuperAdmin(req) {
-  try {
-    const token = req.cookies.get(getSessionCookieName())?.value;
-    if (!token) return false;
-    const payload = await verifySessionToken(token);
-    return payload.role === "SuperAdmin";
-  } catch {
-    return false;
-  }
-}
-
 export async function GET(req) {
-  if (!await isSuperAdmin(req)) {
-    return NextResponse.json({ ok: false, error: "Forbidden" }, { status: 403 });
-  }
+  const access = await requireSystemAdmin(req);
+  if (access.error || !access.user) return createAuthErrorResponse(access.error || "System administrator access required", access.error?.startsWith("Access denied") ? 403 : 401);
 
   try {
     const { searchParams } = new URL(req.url);
@@ -30,14 +18,13 @@ export async function GET(req) {
     const offices = stats ? await listOfficesWithStats() : await listOffices({ status, q });
     return NextResponse.json({ ok: true, data: offices });
   } catch (err) {
-    return NextResponse.json({ ok: false, error: err.message }, { status: 500 });
+    return NextResponse.json({ ok: false, error: "Internal server error" }, { status: 500 });
   }
 }
 
 export async function POST(req) {
-  if (!await isSuperAdmin(req)) {
-    return NextResponse.json({ ok: false, error: "Forbidden" }, { status: 403 });
-  }
+  const access = await requireSystemAdmin(req);
+  if (access.error || !access.user) return createAuthErrorResponse(access.error || "System administrator access required", access.error?.startsWith("Access denied") ? 403 : 401);
 
   try {
     const body = await req.json();
@@ -52,11 +39,8 @@ export async function POST(req) {
       });
     }
 
-    // Surface the auto-provisioned default admin account (id + default password)
-    // so the SuperAdmin sees the credentials right after creation.
-    const admin = office?._admin || null;
-    return NextResponse.json({ ok: true, data: office, admin });
+    return NextResponse.json({ ok: true, data: office });
   } catch (err) {
-    return NextResponse.json({ ok: false, error: err.message }, { status: 400 });
+    return NextResponse.json({ ok: false, error: "Request could not be completed" }, { status: 400 });
   }
 }

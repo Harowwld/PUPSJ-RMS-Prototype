@@ -12,9 +12,9 @@
  * - Global settings
  * - Rate limits (global)
  */
-import crypto from "node:crypto";
 import { query, queryOne, withTransaction } from "./postgres.js";
 import { postgresSql } from "./postgresCompat.js";
+import { hashPassword } from "./passwordHash.js";
 
 let systemDb = global.__systemDb || null;
 
@@ -119,7 +119,7 @@ export const MODULE_REGISTRY = [
 
   // Staff modules
   {
-    id: "alumni_requests",
+    id: "document_requests",
     name: "Document Requests",
     description: "Online and staff-mediated document request management (ODRS)",
     category: "staff",
@@ -227,7 +227,7 @@ export const DEFAULT_OFFICE_MODULES = {
     // All modules enabled for Registrar
     "records_review", "compliance_analytics", "request_analytics",
     "staff_directory", "storage_layout", "system_config", "backup", "audit_logs",
-    "alumni_requests", "scan_upload", "documents", "notifications",
+    "document_requests", "scan_upload", "documents", "notifications",
     "records_archive", "storage_explorer",
   ],
   osas: [
@@ -333,6 +333,15 @@ export async function getSystemDb() {
         updated_at TEXT NOT NULL DEFAULT (datetime('now')),
         PRIMARY KEY (staff_id, question_id),
         FOREIGN KEY (staff_id) REFERENCES staff(id) ON UPDATE CASCADE ON DELETE CASCADE,
+        FOREIGN KEY (question_id) REFERENCES security_questions(id) ON UPDATE CASCADE ON DELETE CASCADE
+      );
+
+      CREATE TABLE IF NOT EXISTS student_security_answers (
+        student_account_id INTEGER NOT NULL,
+        question_id INTEGER NOT NULL,
+        answer_hash TEXT NOT NULL,
+        updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+        PRIMARY KEY (student_account_id, question_id),
         FOREIGN KEY (question_id) REFERENCES security_questions(id) ON UPDATE CASCADE ON DELETE CASCADE
       );
 
@@ -483,9 +492,7 @@ async function seedSystemDefaults(db) {
   const staffCount = db.prepare("SELECT COUNT(*) as count FROM staff").get();
   if (staffCount.count === 0) {
     const defaultPassword = process.env.DEFAULT_STAFF_PASSWORD || "pupstaff";
-    const salt = crypto.randomBytes(16).toString("hex");
-    const hash = crypto.scryptSync(defaultPassword, salt, 64).toString("hex");
-    const passwordHash = `${salt}:${hash}`;
+    const passwordHash = hashPassword(defaultPassword);
 
     db.prepare(`
       INSERT INTO staff (id, office_id, fname, lname, role, section, status, email, password_hash, password_last_changed)
@@ -509,6 +516,7 @@ async function seedSystemDefaults(db) {
     db.exec(`
       INSERT OR IGNORE INTO rate_limits (endpoint_type, identifier, window_seconds, max_requests) VALUES
       ('auth_login', 'default', 900, 5),
+      ('auth_2fa', 'default', 900, 5),
       ('auth_forgot_password', 'default', 3600, 3),
       ('api_general', 'default', 60, 100),
       ('api_sensitive', 'default', 60, 20),
@@ -516,6 +524,9 @@ async function seedSystemDefaults(db) {
     `);
     console.log("[SystemDB] Seeded rate limit defaults.");
   }
+  db.prepare(
+    "INSERT OR IGNORE INTO rate_limits (endpoint_type, identifier, window_seconds, max_requests) VALUES (?, ?, ?, ?)",
+  ).run("auth_2fa", "default", 900, 5);
 }
 
 /**

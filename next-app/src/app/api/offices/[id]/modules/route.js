@@ -7,6 +7,9 @@ export const runtime = "nodejs";
 
 export async function GET(req, { params }) {
   const session = await requireSuperAdminSession(req);
+  if (session === null) {
+    return NextResponse.json({ ok: false, error: "Authentication required" }, { status: 401 });
+  }
   if (!session) {
     return NextResponse.json({ ok: false, error: "Forbidden" }, { status: 403 });
   }
@@ -18,12 +21,15 @@ export async function GET(req, { params }) {
       ORDER BY m.category, m.sort_order`, [id]);
     return NextResponse.json({ ok: true, data: modules });
   } catch (err) {
-    return NextResponse.json({ ok: false, error: err.message }, { status: 500 });
+    return NextResponse.json({ ok: false, error: "Internal server error" }, { status: 500 });
   }
 }
 
 export async function PUT(req, { params }) {
   const session = await requireSuperAdminSession(req);
+  if (session === null) {
+    return NextResponse.json({ ok: false, error: "Authentication required" }, { status: 401 });
+  }
   if (!session) {
     return NextResponse.json({ ok: false, error: "Forbidden" }, { status: 403 });
   }
@@ -58,6 +64,6 @@ export async function PUT(req, { params }) {
     });
     return NextResponse.json({ ok: true, data: updated });
   } catch (err) {
-    return NextResponse.json({ ok: false, error: err.message }, { status: 500 });
+    return NextResponse.json({ ok: false, error: "Internal server error" }, { status: 500 });
   }
 }

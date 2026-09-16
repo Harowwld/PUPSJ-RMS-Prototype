@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import {
   getStaffByUsername,
-  hashPasswordForStorage,
+  setStaffPasswordById,
+  verifyPasswordHash,
   touchStaffLastActiveById,
   getStaffDisplayName,
   hasAllSecurityAnswers,
@@ -14,6 +15,8 @@ import { LoginSchema } from "../../../../lib/authSchemas";
 import { query, queryOne } from "@/lib/postgres";
 import { authDebug } from "@/lib/authDebug";
 import { authenticateStudent, createStudentSession, setStudentSessionCookie } from "@/lib/studentAuth";
+import { setCSRFTokenCookie } from "../../../../lib/csrfProtection";
+import { getSessionVersion, registerSessionToken } from "@/lib/authSessions";
 
 export const runtime = "nodejs";
 
@@ -35,6 +38,28 @@ function addSecurityHeaders(response) {
   return response;
 }
 
+function rateLimitResponse(rateLimitResult) {
+  if (rateLimitResult.allowed) return null;
+  return addSecurityHeaders(NextResponse.json(
+    {
+      ok: false,
+      error: rateLimitResult.reason === 'locked_out'
+        ? `Account temporarily locked due to too many failed attempts. Please try again later.`
+        : 'Too many login attempts. Please try again later.',
+      retryAfter: rateLimitResult.resetTime ? Math.ceil((rateLimitResult.resetTime - Date.now()) / 1000) : undefined
+    },
+    {
+      status: 429,
+      headers: rateLimitResult.resetTime ? {
+        'Retry-After': Math.ceil((rateLimitResult.resetTime - Date.now()) / 1000),
+        'X-RateLimit-Limit': rateLimitResult.limit,
+        'X-RateLimit-Remaining': Math.max(0, rateLimitResult.remaining || 0),
+        'X-RateLimit-Reset': new Date(rateLimitResult.resetTime).toISOString()
+      } : {}
+    }
+  ));
+}
+
 export async function POST(req) {
   // 1. Check Rate Limit (Moved back to route handler from middleware)
   const forwardedFor = req.headers.get('x-forwarded-for');
@@ -43,28 +68,10 @@ export async function POST(req) {
                     realIP ? realIP.trim() : 
                     req.ip || 'unknown';
 
-  const rateLimitResult = process.env.DATABASE_URL ? { allowed: true } : await checkAuthLoginRateLimit(ipAddress);
-  authDebug("login.request", { rateLimitAllowed: rateLimitResult.allowed, database: Boolean(process.env.DATABASE_URL) });
-  if (!rateLimitResult.allowed) {
-    return addSecurityHeaders(NextResponse.json(
-      { 
-        ok: false, 
-        error: rateLimitResult.reason === 'locked_out' 
-          ? `Account temporarily locked due to too many failed attempts. Please try again later.`
-          : 'Too many login attempts. Please try again later.',
-        retryAfter: rateLimitResult.resetTime ? Math.ceil((rateLimitResult.resetTime - Date.now()) / 1000) : undefined
-      },
-      { 
-        status: 429,
-        headers: rateLimitResult.resetTime ? {
-          'Retry-After': Math.ceil((rateLimitResult.resetTime - Date.now()) / 1000),
-          'X-RateLimit-Limit': rateLimitResult.limit,
-          'X-RateLimit-Remaining': Math.max(0, rateLimitResult.remaining || 0),
-          'X-RateLimit-Reset': new Date(rateLimitResult.resetTime).toISOString()
-        } : {}
-      }
-    ));
-  }
+  const ipRateLimitResult = await checkAuthLoginRateLimit(ipAddress);
+  authDebug("login.request", { rateLimitAllowed: ipRateLimitResult.allowed });
+  const ipRateLimitResponse = rateLimitResponse(ipRateLimitResult);
+  if (ipRateLimitResponse) return ipRateLimitResponse;
 
   // 2. Validate Input
   const body = await req.json().catch(() => null);
@@ -83,6 +90,10 @@ export async function POST(req) {
 
   // 2. Authenticate
   const cleanUsername = String(username || "").trim();
+  const rateLimitIdentifier = cleanUsername.toLowerCase();
+  const accountRateLimitResult = await checkAuthLoginRateLimit(ipAddress, rateLimitIdentifier);
+  const accountRateLimitResponse = rateLimitResponse(accountRateLimitResult);
+  if (accountRateLimitResponse) return accountRateLimitResponse;
   const lowerUser = cleanUsername.toLowerCase();
   const isSuperAdminAlias = lowerUser === "admin.default@pup.local" || lowerUser === "pupregistrar-001";
   const searchIdentifier = isSuperAdminAlias ? "superadmin@pup.local" : cleanUsername;
@@ -142,11 +153,15 @@ export async function POST(req) {
     return addSecurityHeaders(NextResponse.json({ ok: false, error: "Account has no password" }, { status: 401 }));
   }
 
-  const hashed = hashPasswordForStorage(password);
-  if (hashed !== stored) {
+  const passwordVerification = verifyPasswordHash(password, stored);
+  if (!passwordVerification.valid) {
     authDebug("login.password_rejected", { staffId: staff.id, status: staff.status });
     await audit(req, "Login Attempt", `authentication failure: invalid credentials provided for recognized account '${username}'`, "WARNING");
     return addSecurityHeaders(NextResponse.json({ ok: false, error: "Invalid credentials" }, { status: 401 }));
+  }
+
+  if (passwordVerification.needsRehash) {
+    await setStaffPasswordById(staff.id, password);
   }
 
   // 3. Create Session or Require 2FA
@@ -160,13 +175,11 @@ export async function POST(req) {
       { status: 500 }
     ));
   }
+  const sessionVersion = await getSessionVersion(touched.id);
 
   // Check if 2FA is enabled
   if (touched.totp_enabled) {
     authDebug("login.requires_totp", { staffId: touched.id, role: touched.role, officeId: touched.office_id || null });
-    // Reset login rate limit as they successfully provided correct password
-    if (!process.env.DATABASE_URL) await resetAuthLoginRateLimit(ipAddress);
-
     // Generate a temporary token for 2FA verification
     const tempPayload = {
       sub: touched.id,
@@ -174,9 +187,17 @@ export async function POST(req) {
       role: touched.role || "Staff",
       office_id: touched.office_id || null,
       username: touched.email,
+      session_version: sessionVersion,
     };
     // Sign with a short expiry (e.g., 5 minutes)
     const tempToken = await signSessionToken(tempPayload, "5m");
+    await registerSessionToken(tempToken, {
+      principalId: touched.id,
+      principalType: "staff",
+      role: touched.role || "Staff",
+      username: touched.email,
+      authLevel: "2fa-challenge",
+    });
     
     return addSecurityHeaders(NextResponse.json({
       ok: true,
@@ -189,9 +210,8 @@ export async function POST(req) {
   }
 
   const defaultPassword = process.env.DEFAULT_STAFF_PASSWORD || "pupstaff";
-  const defaultHash = hashPasswordForStorage(defaultPassword);
   const hasSecurity = await hasAllSecurityAnswers(touched.id);
-  const mustChangePassword = (stored === defaultHash) && !hasSecurity;
+  const mustChangePassword = verifyPasswordHash(defaultPassword, touched.password_hash).valid && !hasSecurity;
   authDebug("login.session_issued", {
     staffId: touched.id,
     role: touched.role || "Staff",
@@ -206,12 +226,13 @@ export async function POST(req) {
     username: touched.email,
     last_active: touched.last_active,
     mustChangePassword,
+    session_version: sessionVersion,
   };
   const token = await signSessionToken(sessionPayload);
-  createSession(token, touched.id, touched.role || "Staff", touched.email);
+  await createSession(token, touched.id, touched.role || "Staff", touched.email, { authLevel: "password" });
   
   // Reset login rate limit on full successful login
-  if (!process.env.DATABASE_URL) await resetAuthLoginRateLimit(ipAddress);
+  await resetAuthLoginRateLimit(ipAddress, rateLimitIdentifier);
 
   await audit(req, "User Login", `personnel '${getStaffDisplayName(touched)}' successfully authenticated into the system repository`);
 
@@ -236,5 +257,5 @@ export async function POST(req) {
     path: "/",
   });
 
-  return addSecurityHeaders(res);
+  return addSecurityHeaders(setCSRFTokenCookie(res, token));
 }

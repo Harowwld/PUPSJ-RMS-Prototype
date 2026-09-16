@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { getSessionCookieName, verifySessionToken } from "../../../../lib/jwt";
 import { getStaffById } from "../../../../lib/staffRepo";
 import { dbGet, dbRun } from "../../../../lib/sqlite";
 import {
@@ -17,27 +16,15 @@ import {
 } from "../../../../lib/staffRepo";
 import crypto from "node:crypto";
 import { writeAuditLog } from "../../../../lib/auditLogRequest";
+import { requireAuth, createAuthErrorResponse } from "../../../../lib/authHelpers";
 
 export const runtime = "nodejs";
 
-async function getAuthenticatedUser(req) {
-  const token = req.cookies.get(getSessionCookieName())?.value || "";
-  if (!token) return null;
-  try {
-    const payload = await verifySessionToken(token);
-    const userId = payload?.sub;
-    if (!userId) return null;
-    return { userId, payload };
-  } catch {
-    return null;
-  }
-}
-
 export async function GET(req) {
-  const user = await getAuthenticatedUser(req);
-  if (!user) {
-    return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
-  }
+  const access = await requireAuth(req);
+  if (access.error || !access.user) return createAuthErrorResponse(access.error || "Authentication required", access.error?.startsWith("Access denied") ? 403 : 401);
+  if (access.user.principalType !== "staff") return createAuthErrorResponse("Access denied", 403);
+  const user = { userId: access.user.id, payload: access.user.payload };
 
   const staff = await getStaffById(user.userId);
   if (!staff) {
@@ -55,10 +42,10 @@ export async function GET(req) {
 }
 
 export async function POST(req) {
-  const user = await getAuthenticatedUser(req);
-  if (!user) {
-    return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
-  }
+  const access = await requireAuth(req);
+  if (access.error || !access.user) return createAuthErrorResponse(access.error || "Authentication required", access.error?.startsWith("Access denied") ? 403 : 401);
+  if (access.user.principalType !== "staff") return createAuthErrorResponse("Access denied", 403);
+  const user = { userId: access.user.id, payload: access.user.payload };
 
   const body = await req.json().catch(() => null);
   if (!body || typeof body !== "object") {
@@ -109,10 +96,7 @@ async function handleSetup(req, user, body) {
   }
 
   const { secret, otpauthUrl } = generateTOTPSecret(staff.email);
-  console.log("[TOTP Setup] Generated secret:", secret);
-  console.log("[TOTP Setup] OTPAuth URL:", otpauthUrl);
   const encrypted = encryptSecret(secret);
-  console.log("[TOTP Setup] Encrypted secret:", encrypted);
   const qrDataUrl = await generateQRCode(otpauthUrl);
 
   const serialKey = generateSerialKey();
@@ -136,7 +120,6 @@ async function handleSetup(req, user, body) {
 
 async function handleVerify(req, user, body) {
   const { token } = body;
-  console.log("[TOTP Verify] User:", user.userId, "Token received:", token);
   if (!isValidToken(token)) {
     return NextResponse.json({ ok: false, error: "Invalid token format" }, { status: 400 });
   }
@@ -147,19 +130,17 @@ async function handleVerify(req, user, body) {
   }
 
   const decrypted = decryptSecret(staff.totp_secret);
-  console.log("[TOTP Verify] Decrypted secret:", decrypted ? "OK" : "FAILED");
   if (!decrypted) {
     return NextResponse.json({ ok: false, error: "Failed to decrypt TOTP secret" }, { status: 500 });
   }
 
   const isValid = verifyTOTP(token, decrypted);
-  console.log("[TOTP Verify] Result:", isValid);
   if (!isValid) {
     return NextResponse.json({ ok: false, error: "Invalid verification code" }, { status: 401 });
   }
 
   await dbRun(
-    "UPDATE staff SET totp_enabled = 1, updated_at = datetime('now') WHERE id = ?",
+    "UPDATE staff SET totp_enabled = TRUE, updated_at = datetime('now') WHERE id = ?",
     [user.userId]
   );
 
@@ -173,7 +154,6 @@ async function handleVerify(req, user, body) {
 
 async function handleDisable(req, user, body) {
   const { token } = body;
-  console.log("[TOTP Disable] User:", user.userId, "Token received:", token);
   if (!isValidToken(token)) {
     return NextResponse.json({ ok: false, error: "Invalid token format" }, { status: 400 });
   }
@@ -184,19 +164,17 @@ async function handleDisable(req, user, body) {
   }
 
   const decrypted = decryptSecret(staff.totp_secret);
-  console.log("[TOTP Disable] Decrypted secret:", decrypted ? "OK" : "FAILED");
   if (!decrypted) {
     return NextResponse.json({ ok: false, error: "Failed to decrypt TOTP secret" }, { status: 500 });
   }
 
   const isValid = verifyTOTP(token, decrypted);
-  console.log("[TOTP Disable] Result:", isValid);
   if (!isValid) {
     return NextResponse.json({ ok: false, error: "Invalid verification code" }, { status: 401 });
   }
 
   const recoveryCodesCount = await getRecoveryCodesCount(user.userId);
-  const nextTotpEnabled = recoveryCodesCount > 0 ? 1 : 0;
+  const nextTotpEnabled = recoveryCodesCount > 0;
 
   await dbRun(
     "UPDATE staff SET totp_secret = NULL, totp_enabled = ?, updated_at = datetime('now') WHERE id = ?",
@@ -213,7 +191,6 @@ async function handleDisable(req, user, body) {
 
 async function handleValidate(req, user, body) {
   const { token } = body;
-  console.log("[TOTP Validate] User:", user.userId, "Token received:", token);
   if (!isValidToken(token)) {
     return NextResponse.json({ ok: false, error: "Invalid token format" }, { status: 400 });
   }
@@ -224,13 +201,11 @@ async function handleValidate(req, user, body) {
   }
 
   const decrypted = decryptSecret(staff.totp_secret);
-  console.log("[TOTP Validate] Decrypted secret:", decrypted ? "OK" : "FAILED");
   if (!decrypted) {
     return NextResponse.json({ ok: false, error: "Failed to decrypt TOTP secret" }, { status: 500 });
   }
 
   const isValid = verifyTOTP(token, decrypted);
-  console.log("[TOTP Validate] Result:", isValid);
   return NextResponse.json({ ok: isValid, data: { valid: isValid } });
 }
 
@@ -243,7 +218,7 @@ async function handleGenerateRecoveryCodes(req, user, body) {
   const codes = await generateRecoveryCodes(user.userId);
 
   await dbRun(
-    "UPDATE staff SET totp_enabled = 1, updated_at = datetime('now') WHERE id = ?",
+    "UPDATE staff SET totp_enabled = TRUE, updated_at = datetime('now') WHERE id = ?",
     [user.userId]
   );
 
@@ -270,7 +245,7 @@ async function handleDisableRecoveryCodes(req, user, body) {
 
   if (!staff.totp_secret) {
     await dbRun(
-      "UPDATE staff SET totp_enabled = 0, updated_at = datetime('now') WHERE id = ?",
+      "UPDATE staff SET totp_enabled = FALSE, updated_at = datetime('now') WHERE id = ?",
       [user.userId]
     );
   }

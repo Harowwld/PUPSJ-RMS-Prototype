@@ -9,7 +9,7 @@ export default function RecordsReviewTableSkeleton({ rowCount = 8, embedded = fa
       className={cn(
         "overflow-hidden flex flex-col flex-1 isolate select-none",
         embedded
-          ? "border-t border-gray-100 dark:border-white/10"
+          ? "border-t border-gray-100 dark:border-white/10 rounded-b-2xl"
           : "rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card"
       )}
     >
@@ -69,7 +69,7 @@ export default function RecordsReviewTableSkeleton({ rowCount = 8, embedded = fa
 
                 {/* Document Type */}
                 <td className="py-0 px-6 align-middle">
-                  <Skeleton className="h-6 w-32 rounded-lg dark:bg-muted" />
+                  <Skeleton className="h-6 w-32 rounded-full dark:bg-muted" />
                 </td>
 
                 {/* File Details */}
@@ -109,10 +109,7 @@ export default function RecordsReviewTableSkeleton({ rowCount = 8, embedded = fa
 
       {/* Pagination Footer */}
       <div
-        className={cn(
-          "flex items-center justify-between border-t border-[#e5e5ea] dark:border-[#3a3a3c] bg-white dark:bg-card p-4 px-6 mt-auto",
-          !embedded && "rounded-b-2xl"
-        )}
+        className="flex items-center justify-between border-t border-[#e5e5ea] dark:border-[#3a3a3c] bg-white dark:bg-card p-4 px-6 mt-auto rounded-b-2xl"
       >
         <Skeleton className="h-3.5 w-40 rounded dark:bg-muted" />
         <div className="flex items-center gap-2">

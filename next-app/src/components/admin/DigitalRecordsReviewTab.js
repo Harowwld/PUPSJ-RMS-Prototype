@@ -221,10 +221,32 @@ export default function DigitalRecordsReviewTab({
     setLastSelectedId(null)
   }, [currentPage, statusFilter, docTypeFilter, searchQuery, dateFrom, dateTo])
 
+  // Prune stale selections when records dataset updates
+  useEffect(() => {
+    if (!records) return
+    setSelectedIds((prev) => {
+      if (prev.size === 0) return prev
+      const validIds = new Set(records.map((r) => r.id))
+      let needsPruning = false
+      for (const id of prev) {
+        if (!validIds.has(id)) {
+          needsPruning = true
+          break
+        }
+      }
+      if (!needsPruning) return prev
+      const next = new Set()
+      for (const id of prev) {
+        if (validIds.has(id)) next.add(id)
+      }
+      return next
+    })
+  }, [records])
+
   useEffect(() => {
     let cancelled = false
     fetch("/api/doc-types")
-      .then((res) => res.json())
+      .then((res) => (res.ok ? res.json().catch(() => null) : null))
       .then((json) => {
         if (!cancelled && json?.ok && Array.isArray(json.data)) {
           setActiveDocTypes(json.data)
@@ -438,6 +460,12 @@ export default function DigitalRecordsReviewTab({
 
   const handleApprove = async (id) => {
     try {
+      setSelectedIds((prev) => {
+        if (!prev.has(id)) return prev
+        const next = new Set(prev)
+        next.delete(id)
+        return next
+      })
       await onApprove(id, true) // suppress standard toast
       toast.success("Record Approved", {
         description: "The digital record has been finalized.",
@@ -456,21 +484,8 @@ export default function DigitalRecordsReviewTab({
     if (ids.length === 0) return
     try {
       if (onBulkApprove) {
-        await onBulkApprove(ids)
         setSelectedIds(new Set())
-        toast.success("Records Approved", {
-          description: `Successfully approved ${ids.length} digital records.`,
-          action: {
-            label: "UNDO",
-            onClick: async () => {
-              // Bulk undo by setting all back to Pending
-              for (const id of ids) {
-                await onSetStatus(id, "Pending", "Undo bulk approval", true) // suppress nested toasts
-              }
-              toast.success("Bulk Approval Undone")
-            }
-          }
-        })
+        await onBulkApprove(ids)
       }
     } catch (err) {}
   }
@@ -511,7 +526,7 @@ export default function DigitalRecordsReviewTab({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ isPreviewed: true }),
     })
-      .then((res) => res.json())
+      .then((res) => (res.ok ? res.json().catch(() => null) : null))
       .then((json) => {
         if (json?.ok && onRefresh) {
           onRefresh();
@@ -532,11 +547,25 @@ export default function DigitalRecordsReviewTab({
 
   const stats = useMemo(() => {
     const today = new Date().toLocaleDateString("en-CA") // YYYY-MM-DD
-    const fortyEightHoursAgo = Date.now() - 48 * 60 * 60 * 1000
 
     const pending = (records || []).filter((r) => r.approval_status === "Pending")
     const approvedRecords = (records || []).filter((r) => r.approval_status === "Approved")
     const declinedRecords = (records || []).filter((r) => r.approval_status === "Declined")
+
+    const pendingToday = pending.filter((r) => {
+      if (!r.created_at) return false
+      const raw = String(r.created_at)
+      let dStr = ""
+      if (/^\d{4}-\d{2}-\d{2}/.test(raw)) {
+        dStr = raw.substring(0, 10)
+      } else {
+        try {
+          const d = new Date(r.created_at)
+          if (!isNaN(d.getTime())) dStr = format(d, "yyyy-MM-dd")
+        } catch (e) {}
+      }
+      return dStr === today
+    }).length
 
     const approvedToday = approvedRecords.filter((r) => {
       if (!r.reviewed_at) return false
@@ -568,18 +597,13 @@ export default function DigitalRecordsReviewTab({
       return dStr === today
     }).length
 
-    const slaBreachRecords = pending.filter(
-      (r) => new Date(r.created_at).getTime() < fortyEightHoursAgo
-    )
-
     return {
       pending: pending.length,
+      pendingToday,
       approvedToday,
       totalApproved: approvedRecords.length,
       declinedToday,
       totalDeclined: declinedRecords.length,
-      hasSlaBreach: slaBreachRecords.length > 0,
-      slaBreachCount: slaBreachRecords.length,
     }
   }, [records])
 
@@ -661,292 +685,296 @@ export default function DigitalRecordsReviewTab({
   return (
     <TooltipProvider delayDuration={200}>
       <div className="animate-fade-up font-inter flex flex-1 flex-col h-full min-h-0 w-full gap-6">
-        {/* Color Stat Cards / Skeletons at the Top */}
-        {(isLoading && !isManualLoading) && !records ? (
-          <KpiStatCardsSkeleton count={3} />
-        ) : !error ? (
-          <div ref={statCardsRef} className="grid grid-cols-1 gap-6 md:grid-cols-3 items-start relative z-20">
-            {/* Stat Card 1: Pending Review */}
-            <div className={cn(
-              "relative group rounded-xl",
-              selectedKpi === "pending" ? "z-30" : "z-10"
-            )}>
-              <div 
-                onClick={() => setSelectedKpi(selectedKpi === "pending" ? null : "pending")}
-                className="relative overflow-hidden rounded-xl border-none bg-gradient-to-br from-[#14C8FF] via-[#007AFF] to-[#0055FF] dark:from-[#007AFF] dark:to-[#0033aa] p-5 cursor-pointer glass-stat-card-blue select-none"
-              >
-                  <div className="absolute inset-0 overflow-hidden rounded-xl pointer-events-none z-0">
-                    <div className="absolute bottom-0 left-0 w-[70%] h-[80%] bg-gradient-to-tr from-[#0055FF]/40 to-[#007AFF]/0 pointer-events-none" style={{ clipPath: 'polygon(0% 100%, 100% 100%, 0% 0%)' }} />
-                    <div className="absolute bottom-0 left-0 w-[50%] h-[60%] bg-gradient-to-tr from-[#14C8FF]/30 to-[#007AFF]/0 pointer-events-none" style={{ clipPath: 'polygon(0% 100%, 100% 100%, 0% 25%)' }} />
-                  </div>
-                  <div className="relative z-10 flex flex-col justify-between h-full">
-                    <div>
-                      <div className="mb-1 flex items-center justify-between">
-                        <div className="flex items-center gap-1.5 font-medium text-white animate-fade-in text-[14px]">
-                          Pending Review
-                        </div>
-                        {stats.hasSlaBreach && !isLoading && (
+        {/* ONE Single Card Container encapsulating Header, Metrics, Toolbar, Table & Pagination */}
+        <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none isolate font-inter mb-4 min-h-0 flex-1">
+          <PageHeader
+            icon="ph-seal-check"
+            title="Records Review"
+            description="Verify student record submissions."
+            showBorder={false}
+            className="p-6"
+            titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
+            descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
+            actions={
+              <div className="flex items-center gap-6">
+                <RefreshButton 
+                  onRefresh={onRefresh} 
+                  isLoading={isManualLoading} 
+                  title="Refresh Review Data"
+                />
+
+                <div className="h-6 w-px bg-gray-200 dark:bg-zinc-800" />
+
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={handleExportCSV}
+                    disabled={isLoading || isExporting}
+                    className="flex h-10 items-center justify-center rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
+                  >
+                    {isExporting ? (
+                      <i className="ph-bold ph-spinner animate-spin text-[16px]"></i>
+                    ) : (
+                      "Export"
+                    )}
+                  </Button>
+                </div>
+              </div>
+            }
+          />
+
+          {/* Color Stat Cards / Skeletons at the Top */}
+          {(isLoading && !isManualLoading) && !records ? (
+            <div className="px-6 pb-6">
+              <KpiStatCardsSkeleton count={3} />
+            </div>
+          ) : !error ? (
+            <div className="px-6 pb-6">
+              <div ref={statCardsRef} className="grid grid-cols-1 gap-4 md:grid-cols-3 items-start relative z-20">
+                {/* Stat Card 1: Pending Review */}
+                <div className={cn(
+                  "relative group rounded-xl",
+                  selectedKpi === "pending" ? "z-30" : "z-10"
+                )}>
+                  <div 
+                    onClick={() => setSelectedKpi(selectedKpi === "pending" ? null : "pending")}
+                    className={cn(
+                      "relative overflow-hidden rounded-xl border p-4 cursor-pointer select-none transition-all",
+                      "border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-zinc-900/30 hover:border-gray-200 dark:hover:border-white/10",
+                      selectedKpi === "pending" && "border-blue-500/40 dark:border-blue-500/40 ring-1 ring-blue-500/20"
+                    )}
+                  >
+                    <div className="relative z-10 flex flex-col justify-between h-full">
+                      <div>
+                        <div className="mb-1 flex items-center justify-between">
+                          <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
+                            Pending Review
+                          </span>
                           <div className="flex items-center gap-1.5">
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Badge className="bg-[#FEE2E2] text-[#991B1B] hover:bg-[#FEE2E2] dark:bg-red-950/40 dark:text-red-400 dark:hover:bg-red-950/40 border border-red-200/50 dark:border-red-500/20 text-[10px] font-bold px-2 py-0.5 tracking-wide cursor-help rounded-[4px]">
-                                  SLA Warning
-                                </Badge>
-                              </TooltipTrigger>
-                              <TooltipContent side="top" className="bg-red-600 text-white border-red-500 max-w-[200px]">
-                                <p className="font-semibold text-xs tracking-tight">SLA Breach Detected</p>
-                                <p className="text-[10px] font-medium opacity-90 mt-0.5">
-                                  {stats.slaBreachCount} {stats.slaBreachCount === 1 ? "record has" : "records have"} been pending for more than 48 hours.
-                                </p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </div>
-                        )}
-                      </div>
-                      <div className="font-semibold text-white tracking-tight text-[48px]">
-                        {stats.pending.toLocaleString()}
-                      </div>
-                      <div className="mt-1 font-normal text-white text-[13px]">
-                        Waiting to be checked
-                      </div>
-                    </div>
-                  </div>
-              </div>
-
-              {/* Absolute details container */}
-              <div className={cn(
-                "absolute top-full left-0 right-0 z-[100] mt-2 rounded-xl bg-gradient-to-br from-[#14C8FF] via-[#007AFF] to-[#0055FF] dark:from-[#007AFF] dark:to-[#0033aa] p-5 shadow-2xl transition-all duration-300 ease-in-out origin-top",
-                selectedKpi === "pending" ? "scale-y-100 opacity-100 translate-y-0" : "scale-y-95 opacity-0 -translate-y-2 pointer-events-none"
-              )} onClick={(e) => e.stopPropagation()}>
-                <div className="space-y-4">
-                  {activeKpiDetails && (
-                    <>
-                      <div className="grid grid-cols-2 gap-2">
-                        <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg text-white">
-                          <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Total Pending</span>
-                          <span className="text-lg font-black">{stats.pending}</span>
-                        </div>
-                        <div className="bg-[#b91c1c]/40 backdrop-blur-sm p-2.5 rounded-lg text-white">
-                          <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">SLA Warnings</span>
-                          <span className="text-lg font-black">{stats.slaBreachCount}</span>
-                        </div>
-                      </div>
-
-                      {activeKpiDetails.oldestPendingAge > 0 && (
-                        <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg flex items-center justify-between text-xs text-white">
-                          <span className="font-medium text-white/80">Oldest pending record</span>
-                          <span className="font-bold">{activeKpiDetails.oldestPendingAge} hours</span>
-                        </div>
-                      )}
-
-                      <div>
-                        <h4 className="text-[10px] font-bold text-white/80 mb-1.5 uppercase tracking-wide">Type Breakdown</h4>
-                        <div className="max-h-32 overflow-y-auto space-y-1 pr-1">
-                          {activeKpiDetails.pendingBreakdown && activeKpiDetails.pendingBreakdown.length === 0 ? (
-                            <p className="text-[11px] text-white/60 text-center py-2">No pending records</p>
-                          ) : (
-                            activeKpiDetails.pendingBreakdown && activeKpiDetails.pendingBreakdown.map(({ type, count }) => (
-                              <div key={type} className="flex justify-between items-center text-[11px] py-1 border-b border-white/10 text-white/95">
-                                <span className="truncate max-w-[150px]" title={type}>{type}</span>
-                                <span className="font-bold">{count}</span>
-                              </div>
-                            ))
-                          )}
-                        </div>
-                      </div>
-                    </>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Stat Card 2: Approved Today */}
-            <div className={cn(
-              "relative group rounded-xl",
-              selectedKpi === "approved" ? "z-30" : "z-10"
-            )}>
-              <div 
-                onClick={() => setSelectedKpi(selectedKpi === "approved" ? null : "approved")}
-                className="relative overflow-hidden rounded-xl border-none bg-gradient-to-br from-[#34d399] via-[#059669] to-[#047857] dark:from-[#059669] dark:to-[#024e37] p-5 cursor-pointer glass-stat-card-green select-none"
-              >
-                  <div className="absolute inset-0 overflow-hidden rounded-xl pointer-events-none z-0">
-                    <div className="absolute bottom-0 left-0 w-[70%] h-[80%] bg-gradient-to-tr from-[#047857]/40 to-[#059669]/0 pointer-events-none" style={{ clipPath: 'polygon(0% 100%, 100% 100%, 0% 0%)' }} />
-                    <div className="absolute bottom-0 left-0 w-[50%] h-[60%] bg-gradient-to-tr from-[#34d399]/30 to-[#059669]/0 pointer-events-none" style={{ clipPath: 'polygon(0% 100%, 100% 100%, 0% 25%)' }} />
-                  </div>
-                  <div className="relative z-10 flex flex-col justify-between h-full">
-                    <div>
-                      <div className="mb-1 flex items-center gap-1.5 font-medium text-white text-[14px]">
-                        Approved Today
-                      </div>
-                      <div className="font-semibold text-white tracking-tight text-[48px]">
-                        {stats.approvedToday.toLocaleString()}
-                      </div>
-                      <div className="mt-1 font-normal text-white text-[13px]">
-                        Verified correct ({stats.totalApproved.toLocaleString()} total)
-                      </div>
-                    </div>
-                  </div>
-              </div>
-
-              {/* Absolute details container */}
-              <div className={cn(
-                "absolute top-full left-0 right-0 z-[100] mt-2 rounded-xl bg-gradient-to-br from-[#34d399] via-[#059669] to-[#047857] dark:from-[#059669] dark:to-[#024e37] p-5 shadow-2xl transition-all duration-300 ease-in-out origin-top",
-                selectedKpi === "approved" ? "scale-y-100 opacity-100 translate-y-0" : "scale-y-95 opacity-0 -translate-y-2 pointer-events-none"
-              )} onClick={(e) => e.stopPropagation()}>
-                <div className="space-y-4">
-                  {activeKpiDetails && (
-                    <>
-                      <div className="grid grid-cols-2 gap-2">
-                        <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg text-white">
-                          <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Approved Today</span>
-                          <span className="text-lg font-black">{stats.approvedToday}</span>
-                        </div>
-                        <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg text-white">
-                          <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Total Approved</span>
-                          <span className="text-lg font-black">{stats.totalApproved}</span>
-                        </div>
-                      </div>
-
-                      <div>
-                        <h4 className="text-[10px] font-bold text-white/80 mb-1.5 uppercase tracking-wide">Type Breakdown</h4>
-                        <div className="max-h-32 overflow-y-auto space-y-1 pr-1">
-                          {activeKpiDetails.approvedBreakdown && activeKpiDetails.approvedBreakdown.length === 0 ? (
-                            <p className="text-[11px] text-white/60 text-center py-2">No approved records</p>
-                          ) : (
-                            activeKpiDetails.approvedBreakdown && activeKpiDetails.approvedBreakdown.map(({ type, count }) => (
-                              <div key={type} className="flex justify-between items-center text-[11px] py-1 border-b border-white/10 text-white/95">
-                                <span className="truncate max-w-[150px]" title={type}>{type}</span>
-                                <span className="font-bold">{count}</span>
-                              </div>
-                            ))
-                          )}
-                        </div>
-                      </div>
-                    </>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Stat Card 3: Returned Today */}
-            <div className={cn(
-              "relative group rounded-xl",
-              selectedKpi === "declined" ? "z-30" : "z-10"
-            )}>
-              <div 
-                onClick={() => setSelectedKpi(selectedKpi === "declined" ? null : "declined")}
-                className="relative overflow-hidden rounded-xl border-none bg-gradient-to-br from-[#f87171] via-[#dc2626] to-[#b91c1c] dark:from-[#dc2626] dark:to-[#7f1d1d] p-5 cursor-pointer glass-stat-card-red select-none"
-              >
-                  <div className="absolute inset-0 overflow-hidden rounded-xl pointer-events-none z-0">
-                    <div className="absolute bottom-0 left-0 w-[70%] h-[80%] bg-gradient-to-tr from-[#b91c1c]/40 to-[#dc2626]/0 pointer-events-none" style={{ clipPath: 'polygon(0% 100%, 100% 100%, 0% 0%)' }} />
-                    <div className="absolute bottom-0 left-0 w-[50%] h-[60%] bg-gradient-to-tr from-[#f87171]/30 to-[#dc2626]/0 pointer-events-none" style={{ clipPath: 'polygon(0% 100%, 100% 100%, 0% 25%)' }} />
-                  </div>
-                  <div className="relative z-10 flex flex-col justify-between h-full">
-                    <div>
-                      <div className="mb-1 flex items-center gap-1.5 font-medium text-white text-[14px]">
-                        Returned Today
-                      </div>
-                      <div className="font-semibold text-white tracking-tight text-[48px]">
-                        {stats.declinedToday.toLocaleString()}
-                      </div>
-                      <div className="mt-1 font-normal text-white text-[13px]">
-                        Found with errors ({stats.totalDeclined.toLocaleString()} total)
-                      </div>
-                    </div>
-                  </div>
-              </div>
-
-              {/* Absolute details container */}
-              <div className={cn(
-                "absolute top-full left-0 right-0 z-[100] mt-2 rounded-xl bg-gradient-to-br from-[#f87171] via-[#dc2626] to-[#b91c1c] dark:from-[#dc2626] dark:to-[#7f1d1d] p-5 shadow-2xl transition-all duration-300 ease-in-out origin-top",
-                selectedKpi === "declined" ? "scale-y-100 opacity-100 translate-y-0" : "scale-y-95 opacity-0 -translate-y-2 pointer-events-none"
-              )} onClick={(e) => e.stopPropagation()}>
-                <div className="space-y-4">
-                  {activeKpiDetails && (
-                    <>
-                      <div className="grid grid-cols-2 gap-2">
-                        <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg text-white">
-                          <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Returned Today</span>
-                          <span className="text-lg font-black">{stats.declinedToday}</span>
-                        </div>
-                        <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg text-white">
-                          <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Total Returned</span>
-                          <span className="text-lg font-black">{stats.totalDeclined}</span>
-                        </div>
-                      </div>
-
-                      {activeKpiDetails.declineReasons && activeKpiDetails.declineReasons.length > 0 && (
-                        <div>
-                          <h4 className="text-[10px] font-bold text-white/80 mb-1.5 uppercase tracking-wide">Top Reasons</h4>
-                          <div className="space-y-1">
-                            {activeKpiDetails.declineReasons.map(({ reason, count }) => (
-                              <div key={reason} className="flex justify-between items-center text-[11px] py-0.5 text-white/90">
-                                <span className="truncate max-w-[150px] font-medium" title={reason}>&ldquo;{reason}&rdquo;</span>
-                                <span className="font-bold">{count}</span>
-                              </div>
-                            ))}
+                            <i className={cn("ph-bold ph-caret-down text-xs text-gray-400 transition-transform duration-300", selectedKpi === "pending" && "rotate-180")} />
                           </div>
                         </div>
-                      )}
-
-                      <div>
-                        <h4 className="text-[10px] font-bold text-white/80 mb-1.5 uppercase tracking-wide">Type Breakdown</h4>
-                        <div className="max-h-32 overflow-y-auto space-y-1 pr-1">
-                          {activeKpiDetails.declinedBreakdown && activeKpiDetails.declinedBreakdown.length === 0 ? (
-                            <p className="text-[11px] text-white/60 text-center py-2">No returned records</p>
-                          ) : (
-                            activeKpiDetails.declinedBreakdown && activeKpiDetails.declinedBreakdown.map(({ type, count }) => (
-                              <div key={type} className="flex justify-between items-center text-[11px] py-1 border-b border-white/10 text-white/95">
-                                <span className="truncate max-w-[150px]" title={type}>{type}</span>
-                                <span className="font-bold">{count}</span>
-                              </div>
-                            ))
-                          )}
+                        <div className="flex items-baseline gap-2">
+                          <span className="text-2xl font-black text-gray-900 dark:text-zinc-50 tracking-tight">
+                            {stats.pending.toLocaleString()}
+                          </span>
+                          <span className="text-xs font-medium text-blue-600 dark:text-blue-400">
+                            Waiting to be checked
+                          </span>
                         </div>
                       </div>
-                    </>
-                  )}
+                    </div>
+                  </div>
+
+                  {/* Absolute details container */}
+                  <div className={cn(
+                    "absolute top-full left-0 right-0 z-[100] mt-2 rounded-xl border border-gray-200 bg-white p-4 shadow-xl dark:border-white/10 dark:bg-zinc-900 transition-all duration-300 ease-in-out origin-top",
+                    selectedKpi === "pending" ? "scale-y-100 opacity-100 translate-y-0" : "scale-y-95 opacity-0 -translate-y-2 pointer-events-none"
+                  )} onClick={(e) => e.stopPropagation()}>
+                    <div className="space-y-3">
+                      {activeKpiDetails && (
+                        <>
+                          <div className="grid grid-cols-2 gap-2">
+                            <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-gray-100 dark:border-white/5">
+                              <span className="block text-[9px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">Total Pending</span>
+                              <span className="text-lg font-black text-gray-900 dark:text-zinc-50">{stats.pending}</span>
+                            </div>
+                            <div className="bg-blue-50 dark:bg-blue-950/30 p-2.5 rounded-lg border border-blue-100 dark:border-blue-900/30">
+                              <span className="block text-[9px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider">Pending Today</span>
+                              <span className="text-lg font-black text-blue-700 dark:text-blue-400">{stats.pendingToday}</span>
+                            </div>
+                          </div>
+
+                          {activeKpiDetails.oldestPendingAge > 0 && (
+                            <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-gray-100 dark:border-white/5 flex items-center justify-between text-xs">
+                              <span className="font-medium text-gray-600 dark:text-zinc-400">Oldest pending record</span>
+                              <span className="font-bold text-gray-900 dark:text-zinc-50">{activeKpiDetails.oldestPendingAge} hours</span>
+                            </div>
+                          )}
+
+                          <div>
+                            <h4 className="text-[10px] font-bold text-gray-400 dark:text-zinc-500 mb-1.5 uppercase tracking-wide">Type Breakdown</h4>
+                            <div className="max-h-32 overflow-y-auto space-y-1 pr-1">
+                              {activeKpiDetails.pendingBreakdown && activeKpiDetails.pendingBreakdown.length === 0 ? (
+                                <p className="text-[11px] text-gray-400 dark:text-zinc-500 text-center py-2">No pending records</p>
+                              ) : (
+                                activeKpiDetails.pendingBreakdown && activeKpiDetails.pendingBreakdown.map(({ type, count }) => (
+                                  <div key={type} className="flex justify-between items-center text-[11px] py-1 border-b border-gray-100 dark:border-white/5 text-gray-700 dark:text-zinc-300">
+                                    <span className="truncate max-w-[150px]" title={type}>{type}</span>
+                                    <span className="font-bold text-gray-900 dark:text-zinc-50">{count}</span>
+                                  </div>
+                                ))
+                              )}
+                            </div>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Stat Card 2: Approved Today */}
+                <div className={cn(
+                  "relative group rounded-xl",
+                  selectedKpi === "approved" ? "z-30" : "z-10"
+                )}>
+                  <div 
+                    onClick={() => setSelectedKpi(selectedKpi === "approved" ? null : "approved")}
+                    className={cn(
+                      "relative overflow-hidden rounded-xl border p-4 cursor-pointer select-none transition-all",
+                      "border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-zinc-900/30 hover:border-gray-200 dark:hover:border-white/10",
+                      selectedKpi === "approved" && "border-emerald-500/40 dark:border-emerald-500/40 ring-1 ring-emerald-500/20"
+                    )}
+                  >
+                    <div className="relative z-10 flex flex-col justify-between h-full">
+                      <div>
+                        <div className="mb-1 flex items-center justify-between">
+                          <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
+                            Approved Today
+                          </span>
+                          <i className={cn("ph-bold ph-caret-down text-xs text-gray-400 transition-transform duration-300", selectedKpi === "approved" && "rotate-180")} />
+                        </div>
+                        <div className="flex items-baseline gap-2">
+                          <span className="text-2xl font-black text-gray-900 dark:text-zinc-50 tracking-tight">
+                            {stats.approvedToday.toLocaleString()}
+                          </span>
+                          <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                            Verified correct ({stats.totalApproved.toLocaleString()} total)
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Absolute details container */}
+                  <div className={cn(
+                    "absolute top-full left-0 right-0 z-[100] mt-2 rounded-xl border border-gray-200 bg-white p-4 shadow-xl dark:border-white/10 dark:bg-zinc-900 transition-all duration-300 ease-in-out origin-top",
+                    selectedKpi === "approved" ? "scale-y-100 opacity-100 translate-y-0" : "scale-y-95 opacity-0 -translate-y-2 pointer-events-none"
+                  )} onClick={(e) => e.stopPropagation()}>
+                    <div className="space-y-3">
+                      {activeKpiDetails && (
+                        <>
+                          <div className="grid grid-cols-2 gap-2">
+                            <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-gray-100 dark:border-white/5">
+                              <span className="block text-[9px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">Approved Today</span>
+                              <span className="text-lg font-black text-gray-900 dark:text-zinc-50">{stats.approvedToday}</span>
+                            </div>
+                            <div className="bg-emerald-50 dark:bg-emerald-950/30 p-2.5 rounded-lg border border-emerald-100 dark:border-emerald-900/30">
+                              <span className="block text-[9px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Total Approved</span>
+                              <span className="text-lg font-black text-emerald-700 dark:text-emerald-400">{stats.totalApproved}</span>
+                            </div>
+                          </div>
+
+                          <div>
+                            <h4 className="text-[10px] font-bold text-gray-400 dark:text-zinc-500 mb-1.5 uppercase tracking-wide">Type Breakdown</h4>
+                            <div className="max-h-32 overflow-y-auto space-y-1 pr-1">
+                              {activeKpiDetails.approvedBreakdown && activeKpiDetails.approvedBreakdown.length === 0 ? (
+                                <p className="text-[11px] text-gray-400 dark:text-zinc-500 text-center py-2">No approved records</p>
+                              ) : (
+                                activeKpiDetails.approvedBreakdown && activeKpiDetails.approvedBreakdown.map(({ type, count }) => (
+                                  <div key={type} className="flex justify-between items-center text-[11px] py-1 border-b border-gray-100 dark:border-white/5 text-gray-700 dark:text-zinc-300">
+                                    <span className="truncate max-w-[150px]" title={type}>{type}</span>
+                                    <span className="font-bold text-gray-900 dark:text-zinc-50">{count}</span>
+                                  </div>
+                                ))
+                              )}
+                            </div>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Stat Card 3: Returned Today */}
+                <div className={cn(
+                  "relative group rounded-xl",
+                  selectedKpi === "declined" ? "z-30" : "z-10"
+                )}>
+                  <div 
+                    onClick={() => setSelectedKpi(selectedKpi === "declined" ? null : "declined")}
+                    className={cn(
+                      "relative overflow-hidden rounded-xl border p-4 cursor-pointer select-none transition-all",
+                      "border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-zinc-900/30 hover:border-gray-200 dark:hover:border-white/10",
+                      selectedKpi === "declined" && "border-red-500/40 dark:border-red-500/40 ring-1 ring-red-500/20"
+                    )}
+                  >
+                    <div className="relative z-10 flex flex-col justify-between h-full">
+                      <div>
+                        <div className="mb-1 flex items-center justify-between">
+                          <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
+                            Returned Today
+                          </span>
+                          <i className={cn("ph-bold ph-caret-down text-xs text-gray-400 transition-transform duration-300", selectedKpi === "declined" && "rotate-180")} />
+                        </div>
+                        <div className="flex items-baseline gap-2">
+                          <span className="text-2xl font-black text-gray-900 dark:text-zinc-50 tracking-tight">
+                            {stats.declinedToday.toLocaleString()}
+                          </span>
+                          <span className="text-xs font-medium text-red-600 dark:text-red-400">
+                            Found with errors ({stats.totalDeclined.toLocaleString()} total)
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Absolute details container */}
+                  <div className={cn(
+                    "absolute top-full left-0 right-0 z-[100] mt-2 rounded-xl border border-gray-200 bg-white p-4 shadow-xl dark:border-white/10 dark:bg-zinc-900 transition-all duration-300 ease-in-out origin-top",
+                    selectedKpi === "declined" ? "scale-y-100 opacity-100 translate-y-0" : "scale-y-95 opacity-0 -translate-y-2 pointer-events-none"
+                  )} onClick={(e) => e.stopPropagation()}>
+                    <div className="space-y-3">
+                      {activeKpiDetails && (
+                        <>
+                          <div className="grid grid-cols-2 gap-2">
+                            <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-gray-100 dark:border-white/5">
+                              <span className="block text-[9px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">Returned Today</span>
+                              <span className="text-lg font-black text-gray-900 dark:text-zinc-50">{stats.declinedToday}</span>
+                            </div>
+                            <div className="bg-red-50 dark:bg-red-950/30 p-2.5 rounded-lg border border-red-100 dark:border-red-900/30">
+                              <span className="block text-[9px] font-bold text-red-600 dark:text-red-400 uppercase tracking-wider">Total Returned</span>
+                              <span className="text-lg font-black text-red-700 dark:text-red-400">{stats.totalDeclined}</span>
+                            </div>
+                          </div>
+
+                          {activeKpiDetails.declineReasons && activeKpiDetails.declineReasons.length > 0 && (
+                            <div>
+                              <h4 className="text-[10px] font-bold text-gray-400 dark:text-zinc-500 mb-1.5 uppercase tracking-wide">Top Reasons</h4>
+                              <div className="space-y-1">
+                                {activeKpiDetails.declineReasons.map(({ reason, count }) => (
+                                  <div key={reason} className="flex justify-between items-center text-[11px] py-0.5 text-gray-700 dark:text-zinc-300">
+                                    <span className="truncate max-w-[150px] font-medium" title={reason}>&ldquo;{reason}&rdquo;</span>
+                                    <span className="font-bold text-gray-900 dark:text-zinc-50">{count}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          <div>
+                            <h4 className="text-[10px] font-bold text-gray-400 dark:text-zinc-500 mb-1.5 uppercase tracking-wide">Type Breakdown</h4>
+                            <div className="max-h-32 overflow-y-auto space-y-1 pr-1">
+                              {activeKpiDetails.declinedBreakdown && activeKpiDetails.declinedBreakdown.length === 0 ? (
+                                <p className="text-[11px] text-gray-400 dark:text-zinc-500 text-center py-2">No returned records</p>
+                              ) : (
+                                activeKpiDetails.declinedBreakdown && activeKpiDetails.declinedBreakdown.map(({ type, count }) => (
+                                  <div key={type} className="flex justify-between items-center text-[11px] py-1 border-b border-gray-100 dark:border-white/5 text-gray-700 dark:text-zinc-300">
+                                    <span className="truncate max-w-[150px]" title={type}>{type}</span>
+                                    <span className="font-bold text-gray-900 dark:text-zinc-50">{count}</span>
+                                  </div>
+                                ))
+                              )}
+                            </div>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        ) : null}
-
-      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none isolate">
-        <PageHeader
-          icon="ph-seal-check"
-          title="Records Review"
-          description="Verify student record submissions."
-          showBorder={false}
-          titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
-          descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
-          actions={
-            <div className="flex items-center gap-6">
-              <RefreshButton 
-                onRefresh={onRefresh} 
-                isLoading={isManualLoading} 
-                title="Refresh Review Data"
-              />
-
-              <div className="h-6 w-px bg-gray-200 dark:bg-zinc-800" />
-
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  onClick={handleExportCSV}
-                  disabled={isLoading || isExporting}
-                  className="flex h-10 items-center justify-center rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
-                >
-                  {isExporting ? (
-                    <i className="ph-bold ph-spinner animate-spin text-[16px]"></i>
-                  ) : (
-                    "Export"
-                  )}
-                </Button>
-              </div>
-            </div>
-          }
-        />
+          ) : null}
 
         {/* Navigation Toolbar */}
         <div className="border-t border-gray-100 dark:border-white/10 p-5 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
@@ -1215,7 +1243,7 @@ export default function DigitalRecordsReviewTab({
         {(isLoading && !isManualLoading) && (!records || records.length === 0) ? (
           <RecordsReviewTableSkeleton rowCount={8} embedded={true} />
         ) : error ? (
-          <div className="flex min-h-[420px] flex-col items-center justify-center border-t border-gray-100 dark:border-white/10 bg-transparent text-center p-6">
+          <div className="flex min-h-[420px] flex-col items-center justify-center border-t border-gray-100 dark:border-white/10 bg-transparent text-center p-6 rounded-b-2xl">
             <Empty className="flex flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400">
               <EmptyHeader className="flex flex-col items-center gap-0">
                 <div className="relative mb-6">
@@ -1234,7 +1262,7 @@ export default function DigitalRecordsReviewTab({
             </Empty>
           </div>
         ) : (
-          <div className="overflow-hidden border-t border-gray-200 dark:border-white/10 bg-white dark:bg-card flex flex-col flex-1">
+          <div className="overflow-hidden rounded-b-2xl border-t border-gray-200 dark:border-white/10 bg-white dark:bg-card flex flex-col flex-1">
             <div className="overflow-x-auto">
               <table className="min-w-full text-sm">
                 <thead className="sticky top-0 z-10 border-b border-gray-200 bg-white dark:bg-card dark:border-white/10">
@@ -1358,16 +1386,13 @@ export default function DigitalRecordsReviewTab({
                   ) : (
                     paginatedRecords.map((r) => {
                       const isSelected = selectedIds.has(r.id)
-                      const fortyEightHoursAgo = Date.now() - 48 * 60 * 60 * 1000
-                      const isSlaBreached = r.approval_status === "Pending" && new Date(r.created_at).getTime() < fortyEightHoursAgo
 
                       return (
                         <tr
                           key={r.id}
                           className={cn(
                             "group h-[52px] border-b-[0.5px] border-gray-100 dark:border-white/10 last:border-b-0 transition-all duration-fast hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none cursor-pointer",
-                            isSelected && "bg-blue-50/60 dark:bg-blue-950/20",
-                            isSlaBreached && !isSelected && "bg-amber-50/30 dark:bg-amber-950/5"
+                            isSelected && "bg-blue-50/60 dark:bg-blue-950/20"
                           )}
                           onClick={(e) => toggleSelectRow(r.id, e)}
                         >
@@ -1395,7 +1420,7 @@ export default function DigitalRecordsReviewTab({
                             </div>
                           </td>
                           <td className="py-0 px-4 align-middle">
-                            <span className="inline-flex w-fit items-center justify-center rounded-[4px] bg-gray-100 px-[8px] py-[3px] text-[11px] font-medium text-gray-900 dark:bg-zinc-800 dark:text-zinc-100">
+                            <span className="inline-flex w-fit items-center justify-center rounded-full bg-gray-100 px-[10px] py-[2.5px] text-[11px] font-medium text-gray-900 dark:bg-zinc-800 dark:text-zinc-100">
                               {r.doc_type}
                             </span>
                           </td>
@@ -1411,17 +1436,12 @@ export default function DigitalRecordsReviewTab({
                             <div className="flex items-center gap-3">
                               <span
                                 className={cn(
-                                  "inline-flex w-fit items-center justify-center rounded-[4px] px-[8px] py-[3px] text-[11px] font-medium uppercase tracking-[0.04em] shadow-none transition-all",
+                                  "inline-flex w-fit items-center justify-center rounded-full px-[10px] py-[2.5px] text-[11px] font-medium uppercase tracking-[0.04em] shadow-none transition-all",
                                   getStatusBadge(r.approval_status)
                                 )}
                               >
                                 {r.approval_status || "Pending"}
                               </span>
-                              {isSlaBreached && (
-                                <div className="flex h-5 w-5 animate-pulse items-center justify-center rounded-full bg-red-100 text-red-600 shadow-sm dark:shadow-none">
-                                  <i className="ph-bold ph-warning-diamond text-[10px]"></i>
-                                </div>
-                              )}
                             </div>
                           </td>
                           <td className="py-0 px-4 align-middle">
@@ -1449,7 +1469,7 @@ export default function DigitalRecordsReviewTab({
                                 <TooltipContent side="top">Preview</TooltipContent>
                               </Tooltip>
 
-                              {r.approval_status === "Pending" ? (
+                              {r.approval_status === "Pending" && (
                                  <>
                                    <Tooltip>
                                      <TooltipTrigger asChild>
@@ -1467,7 +1487,15 @@ export default function DigitalRecordsReviewTab({
                                    <Tooltip>
                                      <TooltipTrigger asChild>
                                        <button
-                                         onClick={() => onDecline(r.id)}
+                                         onClick={() => {
+                                           setSelectedIds((prev) => {
+                                             if (!prev.has(r.id)) return prev
+                                             const next = new Set(prev)
+                                             next.delete(r.id)
+                                             return next
+                                           })
+                                           onDecline(r.id)
+                                         }}
                                          aria-label="Decline Document"
                                          className="w-7 h-7 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/30 text-gray-500 hover:text-red-600 dark:text-zinc-400 dark:hover:text-red-400 transition-colors flex items-center justify-center border-0 bg-transparent cursor-pointer active:scale-95"
                                        >
@@ -1477,20 +1505,6 @@ export default function DigitalRecordsReviewTab({
                                      <TooltipContent side="top">Decline</TooltipContent>
                                    </Tooltip>
                                  </>
-                              ) : (
-                                // Revert/Undo Action
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <button
-                                      onClick={() => onSetStatus(r.id, "Pending", "Undo review action")}
-                                      aria-label="Undo Review Action"
-                                      className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 transition-colors flex items-center justify-center border-0 bg-transparent cursor-pointer active:scale-95"
-                                    >
-                                      <i className="ph-bold ph-arrow-counter-clockwise text-[16px]"></i>
-                                    </button>
-                                  </TooltipTrigger>
-                                  <TooltipContent side="top">Undo</TooltipContent>
-                                </Tooltip>
                               )}
                             </div>
                           </td>
@@ -1564,42 +1578,28 @@ export default function DigitalRecordsReviewTab({
       </Card>
 
       {/* Floating Bulk Action Bar */}
-      {selectedIds.size > 1 && (
+      {selectedIds.size > 0 && (
         (() => {
           const selectedRecords = paginatedRecords.filter((r) => selectedIds.has(r.id))
-          const allPending = selectedRecords.every((r) => r.approval_status === "Pending")
+          const allPending = selectedRecords.length > 0 && selectedRecords.every((r) => r.approval_status === "Pending")
 
           if (allPending) {
             return (
               <FloatingActionBar
                 selectedCount={selectedIds.size}
-                selectionStatus="Selected Records"
                 onCancel={() => setSelectedIds(new Set())}
-                customContent={
-                  <div className="flex items-center gap-3">
-                    <button
-                      type="button"
-                      onClick={() => setSelectedIds(new Set())}
-                      className="h-auto text-[13px] font-normal text-[#8E8E93] hover:text-[#111111] dark:hover:text-white bg-transparent hover:bg-transparent border-0 p-0 shadow-none cursor-pointer"
-                    >
-                      Deselect All
-                    </button>
-                    <Button
-                      size="sm"
-                      onClick={handleBulkApprove}
-                      className="flex h-[36px] w-[90px] items-center justify-center rounded-[8px] btn-brand-green text-[13px] font-medium text-white active:scale-95 transition-all dark:shadow-none cursor-pointer"
-                    >
-                      Approve
-                    </Button>
-                    <Button
-                      size="sm"
-                      onClick={handleBulkDecline}
-                      className="flex h-[36px] w-[90px] items-center justify-center rounded-[8px] btn-brand-red text-[13px] font-medium text-white active:scale-95 transition-all dark:shadow-none cursor-pointer"
-                    >
-                      Decline
-                    </Button>
-                  </div>
-                }
+                actions={[
+                  {
+                    label: "Approve",
+                    variant: "success",
+                    onClick: handleBulkApprove,
+                  },
+                  {
+                    label: "Decline",
+                    variant: "danger",
+                    onClick: handleBulkDecline,
+                  },
+                ]}
               />
             )
           }
@@ -1608,20 +1608,11 @@ export default function DigitalRecordsReviewTab({
             <FloatingActionBar
               selectedCount={selectedIds.size}
               onCancel={() => setSelectedIds(new Set())}
-              customContent={
-                <div className="flex items-center gap-3">
-                  <span className="text-[12px] font-medium text-amber-700 bg-amber-50 px-3 py-1.5 rounded-[8px] border border-amber-200 dark:bg-amber-950/20 dark:text-amber-500/90 dark:border-amber-900/50">
-                    <i className="ph-fill ph-warning-circle mr-1.5"></i>
-                    Contains reviewed records. Bulk actions disabled.
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => setSelectedIds(new Set())}
-                    className="h-auto text-[13px] font-normal text-[#8E8E93] hover:text-[#111111] dark:hover:text-white bg-transparent hover:bg-transparent border-0 p-0 shadow-none cursor-pointer"
-                  >
-                    Deselect All
-                  </button>
-                </div>
+              actions={
+                <span className="text-[12px] font-medium text-amber-700 bg-amber-50 px-3 py-1.5 rounded-lg border border-amber-200 dark:bg-amber-950/20 dark:text-amber-500/90 dark:border-amber-900/50 flex items-center">
+                  <i className="ph-fill ph-warning-circle mr-1.5"></i>
+                  Contains reviewed records. Bulk actions disabled.
+                </span>
               }
             />
           )

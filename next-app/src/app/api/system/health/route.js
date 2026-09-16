@@ -8,6 +8,7 @@ import { query, queryOne } from "@/lib/postgres";
 import { dbGet } from "@/lib/postgresCompat";
 
 import { getHealthCache, setHealthCache, clearHealthCache } from "@/lib/healthCache";
+import { requireAdmin, createAuthErrorResponse } from "../../../../lib/authHelpers";
 
 export const runtime = "nodejs";
 
@@ -436,7 +437,7 @@ async function readOfficeModuleStatuses() {
         o.status AS office_status,
         o.station_name,
         o.last_station_ping,
-        COALESCE(bool_or(om.enabled) FILTER (WHERE om.module_id = 'alumni_requests'), false) AS odrs_enabled,
+        COALESCE(bool_or(om.enabled) FILTER (WHERE om.module_id = 'document_requests'), false) AS odrs_enabled,
         COALESCE(bool_or(om.enabled) FILTER (WHERE om.module_id = 'osas_monitoring'), false) AS osas_enabled,
         COALESCE(bool_or(om.enabled) FILTER (WHERE om.module_id = 'records_review'), false) AS review_enabled
       FROM offices o
@@ -805,6 +806,8 @@ async function buildHealthData() {
 
 export async function GET(req) {
   try {
+    const access = await requireAdmin(req);
+    if (access.error || !access.user) return createAuthErrorResponse(access.error || "Administrator access required", access.error?.startsWith("Access denied") ? 403 : 401);
     const url = new URL(req.url);
     const force = url.searchParams.get("force") === "true";
     const now = Date.now();
@@ -821,6 +824,6 @@ export async function GET(req) {
     });
   } catch (error) {
     console.error("[HealthAPI Error]:", error);
-    return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ ok: false, error: "Internal server error" }, { status: 500 });
   }
 }

@@ -6,6 +6,8 @@ import { Dialog as DialogPrimitive } from "@base-ui/react/dialog"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { XIcon } from "lucide-react"
+import { useAuthUser } from "@/components/shared/AuthGuard"
+import { getRoleBranding } from "@/lib/roleBranding"
 
 function Dialog({
   ...props
@@ -49,7 +51,7 @@ function DialogOverlay({
     <DialogPrimitive.Backdrop
       data-slot="dialog-overlay"
       className={cn(
-        "fixed inset-0 isolate z-50 bg-black/10",
+        "fixed inset-0 isolate z-[70] bg-black/40 backdrop-blur-xs transition-opacity duration-150 data-ending-style:opacity-0 data-starting-style:opacity-0",
         className
       )}
       {...props} />
@@ -60,18 +62,30 @@ function DialogContent({
   className,
   children,
   hideClose = false,
+  style,
   ...props
 }) {
+  const authUser = useAuthUser?.() ?? null;
+  const branding = authUser ? getRoleBranding(authUser) : null;
+  const brandStyles = branding ? {
+    "--brand-accent": branding.color,
+    "--brand-foreground": branding.foreground,
+  } : undefined;
+
   return (
     <DialogPortal>
       <DialogOverlay />
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
+      <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 pointer-events-none">
         <DialogPrimitive.Popup
           data-slot="dialog-content"
           className={cn(
             "pointer-events-auto grid w-full max-w-full gap-4 rounded-2xl bg-popover p-4 text-sm text-popover-foreground ring-1 ring-foreground/10 outline-none sm:max-w-sm",
             className
           )}
+          style={{
+            ...brandStyles,
+            ...style,
+          }}
           {...props}>
           {children}
           {!hideClose && (

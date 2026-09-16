@@ -6,6 +6,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
+  DialogFooter,
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -19,6 +20,8 @@ export default function PromptModal({
   onChange,
   onConfirm,
   onCancel,
+  onOpenChange,
+  onClose,
   confirmLabel = "Confirm",
   cancelLabel = "Cancel",
   placeholder = "",
@@ -72,9 +75,15 @@ export default function PromptModal({
 
   const v = variantClasses[variant] || variantClasses.default
 
+  const handleCancel = () => {
+    if (typeof onCancel === "function") onCancel();
+    if (typeof onClose === "function") onClose();
+    if (typeof onOpenChange === "function") onOpenChange(false);
+  };
+
   return (
-    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onCancel()}>
-      <DialogContent className="overflow-hidden rounded-2xl border border-gray-200 bg-white p-0 shadow-2xl sm:max-w-lg dark:border-white/10 dark:bg-card">
+    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && handleCancel()}>
+      <DialogContent className="overflow-hidden rounded-2xl border border-gray-200 bg-white p-0 shadow-2xl sm:max-w-lg dark:border-white/10 dark:bg-card gap-0">
         <DialogHeader className="bg-white p-6 pb-0 dark:bg-card border-none min-w-0">
           <div className="flex items-start gap-4 w-full">
             <div className="min-w-0 flex-1">
@@ -129,7 +138,6 @@ export default function PromptModal({
                   "flex min-h-[100px] w-full rounded-brand border border-gray-300 bg-white px-4 py-3 text-sm shadow-sm transition-all placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon dark:border-white/10 dark:bg-card dark:text-zinc-300 dark:focus:border-zinc-700",
                   isDeclineModal && "rounded-[8px] border-[0.5px] border-gray-300 text-[13px] font-normal tracking-[-0.01em] focus:border-gray-500 focus:ring-0"
                 )}
-                style={isDeclineModal ? { borderWidth: '0.5px', borderStyle: 'solid' } : undefined}
                 value={value ?? ""}
                 onChange={(e) => onChange(e.target.value)}
                 placeholder={placeholder}
@@ -142,7 +150,6 @@ export default function PromptModal({
                   "h-11 rounded-brand border border-gray-300 bg-white px-4 text-sm shadow-sm transition-all placeholder:text-gray-400 focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon dark:border-white/10 dark:bg-card dark:text-zinc-300",
                   isDeclineModal && "h-[36px] rounded-[8px] border-[0.5px] border-gray-300 text-[13px] font-normal tracking-[-0.01em] focus-visible:border-gray-500 focus-visible:ring-0 focus:border-gray-500 focus:ring-0 focus-visible:ring-offset-0 focus:outline-none"
                 )}
-                style={isDeclineModal ? { borderWidth: '0.5px', borderStyle: 'solid' } : undefined}
                 value={value ?? ""}
                 onChange={(e) => onChange(e.target.value)}
                 placeholder={placeholder}
@@ -152,11 +159,11 @@ export default function PromptModal({
           </div>
         </div>
 
-        <div className="flex flex-row justify-end gap-2.5 bg-white p-6 pt-0 dark:bg-card border-none">
+        <DialogFooter className="p-6 pt-0 bg-white dark:bg-card border-none flex items-center justify-end gap-2.5">
           <Button
             type="button"
             variant="outline"
-            onClick={onCancel}
+            onClick={handleCancel}
             className="h-10 px-4 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
             disabled={isLoading}
           >
@@ -168,14 +175,16 @@ export default function PromptModal({
             onClick={onConfirm}
             disabled={isLoading || confirmDisabled}
             className={cn(
-              "flex h-10 items-center justify-center rounded-xl! btn-brand-red text-xs font-semibold text-white shadow-none! border-none! py-0 px-5 cursor-pointer active:scale-95 disabled:opacity-30 disabled:grayscale-[0.5] disabled:cursor-not-allowed",
-              variant === "success" && "bg-emerald-600 hover:bg-emerald-700 text-white",
-              variant === "warning" && (v.confirmStyle || "bg-amber-600 hover:bg-amber-700 text-white")
+              "flex h-10 items-center justify-center rounded-xl! text-xs font-semibold shadow-none! border-none! py-0 px-5 cursor-pointer active:scale-95 disabled:opacity-30 disabled:grayscale-[0.5] disabled:cursor-not-allowed",
+              variant === "success" && "btn-brand-green text-white",
+              variant === "warning" && (v.confirmStyle || "bg-amber-600 hover:bg-amber-700 active:bg-amber-800 text-white"),
+              (variant === "danger" || isDeclineModal) && "bg-red-600 hover:bg-red-700 active:bg-red-800 text-white",
+              (variant === "brand" || (!variant || variant === "default")) && "btn-brand-red"
             )}
           >
             {isLoading ? "Processing..." : confirmLabel}
           </Button>
-        </div>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   )

@@ -6,10 +6,10 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { LiquidGlassButton } from "@/components/ui/liquid-glass-button";
 import { useMemo, useRef, useEffect } from "react";
 
 export default function ConfirmModal({
@@ -21,11 +21,13 @@ export default function ConfirmModal({
   confirmText,
   cancelLabel = "Cancel",
   onConfirm,
-  onCancel = () => {},
+  onCancel,
+  onClose,
   onOpenChange,
   isLoading = false,
   disabled = false,
-  variant = "danger",
+  variant,
+  confirmVariant,
   selectedItems = [],
   note,
   icon: customIcon,
@@ -99,21 +101,52 @@ export default function ConfirmModal({
     },
   };
 
-  const normalizedVariant = variant === "destructive" ? "danger" : variant;
+  const displayConfirmLabel = confirmLabel || confirmText || "Confirm";
+  const displayMessage = message || description;
+
+  // Resolve effective variant with semantic priority
+  let resolvedVariant = variant || (confirmVariant === "destructive" ? "danger" : confirmVariant === "default" ? "brand" : confirmVariant);
+
+  if (isRestoreModal) {
+    resolvedVariant = "success";
+  } else if (isArchiveModal) {
+    resolvedVariant = "warning";
+  } else if (isDeleteModal || isDeleteBackup) {
+    resolvedVariant = "danger";
+  } else if (isUnsavedChangesModal) {
+    resolvedVariant = "warning";
+  } else if (!resolvedVariant) {
+    const labelLower = displayConfirmLabel.toLowerCase();
+    const titleLower = (title || "").toLowerCase();
+    if (labelLower === "restore" || titleLower.includes("restore")) {
+      resolvedVariant = "success";
+    } else if (labelLower.includes("delete") || titleLower.includes("delete") || labelLower.includes("remove") || titleLower.includes("remove") || labelLower.includes("purge") || titleLower.includes("purge") || labelLower.includes("decline") || titleLower.includes("decline")) {
+      resolvedVariant = "danger";
+    } else {
+      resolvedVariant = "brand";
+    }
+  }
+
+  const normalizedVariant = resolvedVariant === "destructive" ? "danger" : (resolvedVariant || "danger");
   const v = variantClasses[normalizedVariant] || variantClasses.default;
   const displayIcon = customIcon || v.icon;
   const displayButtonIcon = customButtonIcon || v.buttonIcon;
-  const displayMessage = message || description;
-  const displayConfirmLabel = confirmLabel || confirmText || "Confirm";
+
+  const handleCancel = () => {
+    if (typeof onCancel === "function") {
+      onCancel();
+    }
+    if (typeof onClose === "function") {
+      onClose();
+    }
+    if (typeof onOpenChange === "function") {
+      onOpenChange(false);
+    }
+  };
 
   const handleOpenChange = (isOpen) => {
     if (!isOpen) {
-      if (typeof onCancel === "function") {
-        onCancel();
-      }
-      if (typeof onOpenChange === "function") {
-        onOpenChange(false);
-      }
+      handleCancel();
     } else {
       if (typeof onOpenChange === "function") {
         onOpenChange(true);
@@ -166,7 +199,7 @@ export default function ConfirmModal({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent
         className={cn(
-          "sm:max-w-lg p-0 overflow-hidden bg-white border border-gray-200 shadow-2xl rounded-2xl dark:bg-card dark:border-white/10"
+          "sm:max-w-lg p-0 overflow-hidden bg-white border border-gray-200 shadow-2xl rounded-2xl dark:bg-card dark:border-white/10 gap-0"
         )}
       >
         <DialogHeader className={cn(
@@ -214,7 +247,7 @@ export default function ConfirmModal({
         </DialogHeader>
 
         {(selectedItems.length > 0 || isVerificationEnabled) && (
-          <div className={cn("p-6 space-y-5 bg-white min-w-0 dark:bg-card", isAppleStyled && "py-4")}>
+          <div className={cn("p-6 space-y-5 bg-white min-w-0 dark:bg-card", isAppleStyled && "px-6 pt-2 pb-4")}>
             {selectedItems.length > 0 && (
               <div>
                 <p className={cn(
@@ -231,22 +264,19 @@ export default function ConfirmModal({
                           "border-[0.5px] border-gray-250 dark:border-white/10 rounded-[8px] p-0 bg-white dark:bg-card overflow-y-auto",
                           selectedItems.length > 5 ? "max-h-[220px]" : ""
                         )}
-                        style={{ borderWidth: '0.5px', borderStyle: 'solid', borderColor: 'rgba(0,0,0,0.1)' }}
                       >
                         {selectedItems.map((item, idx) => (
                           <div
                             key={idx}
                             className={cn(
                               "text-[13px] font-normal px-[14px] py-[10px] truncate",
-                              isRestoreModal
-                                ? "text-gray-900 dark:text-zinc-100"
+                              idx < selectedItems.length - 1 && "border-b-[0.5px] border-solid border-black/5",
+                              normalizedVariant === "success" 
+                                ? "text-emerald-700 dark:text-emerald-400 font-medium"
+                                : normalizedVariant === "warning"
+                                ? "text-amber-800 dark:text-amber-400 font-medium"
                                 : "text-pup-maroon dark:text-red-400"
                             )}
-                            style={{
-                              borderBottomWidth: idx < selectedItems.length - 1 ? '0.5px' : '0px',
-                              borderBottomStyle: 'solid',
-                              borderBottomColor: 'rgba(0,0,0,0.06)'
-                            }}
                           >
                             {item}
                           </div>
@@ -255,13 +285,16 @@ export default function ConfirmModal({
                     ) : (
                       <div
                         className="border-[0.5px] border-gray-250 dark:border-white/10 rounded-[8px] p-[10px_14px] bg-white dark:bg-card max-h-32 overflow-y-auto space-y-1.5"
-                        style={{ borderWidth: '0.5px', borderStyle: 'solid', borderColor: 'rgba(0,0,0,0.1)' }}
                       >
                         {selectedItems.map((item, idx) => (
                           <div
                             key={idx}
                             className={cn(
-                              (isArchiveModal || isRestoreModal)
+                              normalizedVariant === "success"
+                                ? "text-[13px] font-medium text-emerald-700 dark:text-emerald-400 truncate"
+                                : normalizedVariant === "warning"
+                                ? "text-[13px] font-medium text-amber-800 dark:text-amber-400 truncate"
+                                : normalizedVariant === "danger"
                                 ? "text-[13px] font-normal text-pup-maroon dark:text-red-400 truncate"
                                 : "text-[12px] font-normal text-gray-500 dark:text-zinc-400 truncate"
                             )}
@@ -278,7 +311,10 @@ export default function ConfirmModal({
                           key={idx}
                           className="flex items-center gap-2 px-2 py-1.5 rounded bg-white border border-gray-100 shadow-sm overflow-hidden w-full dark:bg-card dark:border-white/10"
                         >
-                          <div className={`w-1.5 h-1.5 shrink-0 rounded-full ${variant === "success" ? "bg-emerald-500" : (variant === "warning" ? "bg-amber-500" : "bg-red-500")}`} />
+                          <div className={cn(
+                            "w-1.5 h-1.5 shrink-0 rounded-full",
+                            normalizedVariant === "success" ? "bg-emerald-500" : normalizedVariant === "warning" ? "bg-amber-500" : "bg-red-500"
+                          )} />
                           <div className="flex-1 min-w-0">
                             <p className="truncate text-[11px] font-semibold text-gray-700 dark:text-zinc-200">
                               {item}
@@ -317,7 +353,6 @@ export default function ConfirmModal({
                           maxLength={1}
                           inputMode="numeric"
                           className="h-[44px] w-[44px] rounded-[8px] border-[0.5px] border-gray-300 dark:border-zinc-800 bg-white text-center text-[18px] font-semibold text-gray-900 transition-all focus:border-[#e30000] focus:ring-0 focus:outline-none focus-visible:outline-none focus:border-[1.5px] caret-transparent dark:bg-card dark:text-zinc-50"
-                          style={{ borderWidth: '0.5px', borderStyle: 'solid' }}
                           placeholder="0"
                           value={verificationValue[i] || ""}
                           onChange={(e) => handleInputChange(i, e.target.value)}
@@ -375,52 +410,35 @@ export default function ConfirmModal({
           </div>
         )}
 
-        <div className={cn(
-          "p-4 border-t border-gray-100 dark:border-white/10 bg-white dark:bg-card flex flex-col-reverse sm:flex-row sm:justify-end gap-2.5",
-          isAppleStyled && "border-none p-6 pt-0 gap-2.5 justify-end flex-row items-center",
-          (!selectedItems.length && !isVerificationEnabled) && "pt-0 border-t-0"
-        )}>
+        <DialogFooter className="p-6 pt-0 bg-white dark:bg-card border-none flex items-center justify-end gap-2.5">
           <Button
             type="button"
             variant="outline"
-            onClick={typeof onCancel === "function" ? onCancel : () => handleOpenChange(false)}
-            className={cn(
-              "h-11 rounded-brand px-6 text-sm font-semibold border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 transition-all active:scale-95 cursor-pointer shadow-xs",
-              isAppleStyled && "h-10 px-4 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
-            )}
+            onClick={handleCancel}
+            className="h-10 px-4 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
             disabled={isLoading}
           >
             {cancelLabel}
           </Button>
-          <LiquidGlassButton
+          <Button
             type="button"
             onClick={onConfirm}
             disabled={isLoading || disabled || !isVerified}
-            height={isAppleStyled ? 36 : 44}
-            radius={isAppleStyled ? 18 : 22}
-            glassColor="rgba(10, 132, 255, 0.15)"
             className={cn(
-              "px-6 text-sm font-semibold gap-2 flex items-center transition-all active:scale-95 disabled:opacity-30 disabled:grayscale-[0.5] disabled:cursor-not-allowed",
-              !isAppleStyled && "shadow-sm",
-              (normalizedVariant === "success" && !isRestoreModal) && "btn-brand-green",
-              (!isAppleStyled && normalizedVariant === "warning" && !isUnsavedChangesModal) && (v.confirmStyle || "bg-amber-600 hover:bg-amber-700 text-white"),
-              (!isAppleStyled && normalizedVariant === "brand") && "btn-brand-red hover:from-red-700 hover:to-red-900",
-              (!isAppleStyled && v.confirmVariant === "destructive") && "btn-brand-red",
-              (!isAppleStyled && v.confirmVariant === "default" && !["success", "warning", "brand"].includes(normalizedVariant)) && "bg-gray-900 hover:bg-gray-800 text-white dark:bg-zinc-800 dark:hover:bg-zinc-700 dark:text-zinc-50 dark:border-white/10",
-              (isAppleStyled && !isRestoreModal && !isUnsavedChangesModal && normalizedVariant !== "warning") && "btn-brand-red rounded-xl! h-10 px-5 text-xs font-semibold text-white shadow-none! border-none! cursor-pointer",
-              (isAppleStyled && normalizedVariant === "warning" && !isUnsavedChangesModal) && "bg-amber-600 hover:bg-amber-700 text-white rounded-xl! h-10 px-5 text-xs font-semibold shadow-none! border-none! cursor-pointer",
-              isRestoreModal && "bg-slate-900 hover:bg-slate-800 active:bg-black text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 rounded-xl! h-10 px-5 text-xs font-semibold shadow-none! border-none! cursor-pointer",
-              isUnsavedChangesModal && "bg-[#FF6410] hover:bg-[#e55300] active:bg-[#cc4a00] text-white rounded-xl! h-10 px-5 text-xs font-semibold shadow-none! border-none! cursor-pointer",
+              "h-10 px-5 text-xs font-semibold rounded-xl! shadow-xs transition-all active:scale-95 cursor-pointer disabled:opacity-30 disabled:grayscale-[0.5] disabled:cursor-not-allowed",
+              normalizedVariant === "success" && "btn-brand-green text-white",
+              (normalizedVariant === "warning" && !isUnsavedChangesModal) && "bg-amber-600 hover:bg-amber-700 active:bg-amber-800 text-white border-0",
+              normalizedVariant === "brand" && "btn-brand-red",
+              normalizedVariant === "danger" && "bg-red-600 hover:bg-red-700 active:bg-red-800 text-white border-0",
+              isUnsavedChangesModal && "bg-[#FF6410] hover:bg-[#e55300] active:bg-[#cc4a00] text-white border-0",
               isRegistrationModal && "w-[120px]",
               confirmClassName
             )}
           >
-            {!isAppleStyled && <i className={`${displayButtonIcon} text-lg`}></i>}
             {isLoading ? "Processing..." : displayConfirmLabel}
-          </LiquidGlassButton>
-        </div>
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
 }
-

@@ -10,21 +10,36 @@ export const ROLE_BRANDING = {
   yellow: { key: "yellow", color: "#EDBB00", foreground: "#1C1C1E", iconSrc: "/assets/branding/yellow-icon.png" },
 };
 
-function isOsas(officeId, officeName) {
-  return /osas|student affairs/i.test(`${officeId || ""} ${officeName || ""}`);
+function getContextText(ctx = {}) {
+  if (typeof ctx === "string") return ctx;
+  return [
+    ctx.officeId,
+    ctx.office_id,
+    ctx.officeName,
+    ctx.office_name,
+    ctx.office,
+    ctx.section,
+    ctx.role,
+    ctx.department,
+  ].filter(Boolean).join(" ");
 }
 
-function isAro(officeId, officeName) {
-  return /aro|registrar|academic records/i.test(`${officeId || ""} ${officeName || ""}`);
+function isOsas(ctx = {}) {
+  return /osas|student affairs/i.test(getContextText(ctx));
 }
 
-function isSecondaryOffice(officeId, officeName) {
-  return /guidance|clinic|health|library|finance|accounting|cashier/i.test(`${officeId || ""} ${officeName || ""}`);
+function isAro(ctx = {}) {
+  return /aro|registrar|academic records/i.test(getContextText(ctx));
+}
+
+function isSecondaryOffice(ctx = {}) {
+  return /guidance|clinic|health|library|finance|accounting|cashier/i.test(getContextText(ctx));
 }
 
 /** Resolve the supplied color/icon branding from the authenticated context. */
 export function getRoleBranding(context = {}) {
-  const { role, officeId = context.office_id, officeName = context.office_name } = context;
+  const ctx = context || {};
+  const role = ctx.role;
 
   if (String(role || "").toLowerCase().trim() === "student") return ROLE_BRANDING.red;
 
@@ -35,16 +50,22 @@ export function getRoleBranding(context = {}) {
 
   // 2. Admin Level (Office-Scoped Administrator)
   if (isAdminRole(role)) {
-    if (isAro(officeId, officeName)) return ROLE_BRANDING.orange;
-    if (isOsas(officeId, officeName)) return ROLE_BRANDING.blue;
-    if (isSecondaryOffice(officeId, officeName)) return ROLE_BRANDING.green;
+    if (isOsas(ctx)) return ROLE_BRANDING.blue;
+    if (isAro(ctx)) return ROLE_BRANDING.orange;
+    if (isSecondaryOffice(ctx)) return ROLE_BRANDING.green;
     return ROLE_BRANDING.orange;
   }
 
   // 3. Staff Level (Operational Records Staff)
-  if (isStaffRole(role) || isOsas(officeId, officeName) || isAro(officeId, officeName)) {
+  if (isStaffRole(role)) {
     return ROLE_BRANDING.yellow;
   }
 
+  // 4. Office-based resolution when role is omitted or contextual
+  if (isOsas(ctx)) return ROLE_BRANDING.blue;
+  if (isAro(ctx)) return ROLE_BRANDING.orange;
+  if (isSecondaryOffice(ctx)) return ROLE_BRANDING.green;
+
   return ROLE_BRANDING.black;
 }
+

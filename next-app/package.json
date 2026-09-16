@@ -22,6 +22,8 @@
     "db:seed:sample": "node scripts/populate-sample-data.mjs",
     "test:recognition": "node --test test/recognition.test.mjs",
     "populate-sample-data": "node scripts/populate-sample-data.mjs",
+    "db:seed:sample": "node scripts/populate-sample-data.mjs",
+    "test:security": "node --experimental-test-module-mocks --test test/security/*.test.mjs",
     "hot-folder-watcher": "node scripts/hot-folder-watcher/watch.mjs"
   },
   "dependencies": {
@@ -35,6 +37,7 @@
     "cn": "^0.2.6",
     "date-fns": "^4.1.0",
     "framer-motion": "^12.40.0",
+    "gsap": "^3.15.0",
     "gsap": "^3.15.0",
     "jose": "^5.2.4",
     "jspdf": "^4.2.1",

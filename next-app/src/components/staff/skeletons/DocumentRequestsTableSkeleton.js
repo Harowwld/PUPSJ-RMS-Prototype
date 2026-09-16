@@ -7,7 +7,9 @@ export default function DocumentRequestsTableSkeleton({ rowCount = 7, embedded =
   return (
     <div className={cn(
       "flex flex-col flex-1 w-full isolate select-none font-inter",
-      !embedded && "overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card"
+      embedded
+        ? "overflow-hidden rounded-b-2xl border-t border-gray-100 dark:border-white/10"
+        : "overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card"
     )}>
       <div className="overflow-x-auto">
         <table className="min-w-full text-sm table-fixed">
@@ -62,7 +64,7 @@ export default function DocumentRequestsTableSkeleton({ rowCount = 7, embedded =
 
                 {/* Document Type */}
                 <td className="p-4 align-middle">
-                  <Skeleton className="h-6 w-32 rounded-lg dark:bg-muted" />
+                  <Skeleton className="h-6 w-32 rounded-full dark:bg-muted" />
                 </td>
 
                 {/* Status */}
@@ -89,7 +91,7 @@ export default function DocumentRequestsTableSkeleton({ rowCount = 7, embedded =
       </div>
 
       {/* Pagination Footer */}
-      <div className="flex items-center justify-between border-t border-gray-100 bg-white p-4 px-6 dark:border-white/10 dark:bg-card mt-auto">
+      <div className="flex items-center justify-between border-t border-gray-100 bg-white p-4 px-6 dark:border-white/10 dark:bg-card mt-auto rounded-b-2xl">
         <Skeleton className="h-3.5 w-36 rounded dark:bg-muted" />
         <div className="flex items-center gap-2">
           <Skeleton className="h-8 w-16 rounded-lg dark:bg-muted" />

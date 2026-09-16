@@ -21,6 +21,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { canonicalizeCabinetId } from "@/lib/storageLayoutUtils";
 import { cn } from "@/lib/utils";
+import { getRoleBranding } from "@/lib/roleBranding";
 import { PageTransition } from "@/components/ui/motion";
 import StaffTabSkeleton from "@/components/staff/skeletons/StaffTabSkeleton";
 
@@ -80,7 +81,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
   const validViews = ["requests", "osas_monitoring", "students", "upload", "batch_review", "documents", "notifications", "search", "storage"];
   const initialView = validViews.includes(searchParams?.get("view"))
     ? searchParams.get("view")
-    : "requests";
+    : (initialAuthUser?.office_id === "osas" ? "osas_monitoring" : "requests");
 
   const [view, setView] = useState(initialView);
   const [authUser, setAuthUser] = useState(initialAuthUser);
@@ -150,7 +151,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
     const enabled = new Set(authUser.enabled_modules)
     
     const MODULE_KEY_MAP = {
-      requests: "alumni_requests",
+      requests: "document_requests",
       osas_monitoring: "osas_monitoring",
       students: "student_directory",
       upload: "scan_upload",
@@ -224,6 +225,28 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
   const [bulkArchiveLoading, setBulkArchiveLoading] = useState(false);
   const [bulkRestoreOpen, setBulkRestoreOpen] = useState(false);
   const [bulkRestoreLoading, setBulkRestoreLoading] = useState(false);
+
+  // Prune any stale selectedStudentIds when students datasets update
+  useEffect(() => {
+    setSelectedStudentIds((prev) => {
+      if (prev.size === 0) return prev;
+      const allAvailable = [...students, ...archivedStudents];
+      const validIds = new Set(allAvailable.map((s) => s.studentNo));
+      let needsPruning = false;
+      for (const id of prev) {
+        if (!validIds.has(id)) {
+          needsPruning = true;
+          break;
+        }
+      }
+      if (!needsPruning) return prev;
+      const next = new Set();
+      for (const id of prev) {
+        if (validIds.has(id)) next.add(id);
+      }
+      return next;
+    });
+  }, [students, archivedStudents]);
 
   const [currentLocatorLevel, setCurrentLocatorLevel] = useState("rooms");
   const [selectedRoom, setSelectedRoom] = useState(null);
@@ -802,6 +825,17 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
   }, [switchView]);
 
   useEffect(() => {
+    const handleZoomChange = (e) => {
+      const { action } = e.detail || {};
+      if (action === "in") setZoomNode((prev) => Math.min(6, prev + 1));
+      else if (action === "out") setZoomNode((prev) => Math.max(0, prev - 1));
+      else if (action === "reset") setZoomNode(3);
+    };
+    window.addEventListener("change-zoom", handleZoomChange);
+    return () => window.removeEventListener("change-zoom", handleZoomChange);
+  }, []);
+
+  useEffect(() => {
     const locateNo = searchParams?.get("locate");
     if (locateNo && students.length > 0 && processedLocateRef.current !== locateNo) {
       processedLocateRef.current = locateNo;
@@ -1067,7 +1101,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
     if (!authUser) return
     const enabled = new Set(authUser.enabled_modules || [])
     const MODULE_KEY_MAP = {
-      requests: "alumni_requests",
+      requests: "document_requests",
       osas_monitoring: "osas_monitoring",
       students: "student_directory",
       upload: "scan_upload",
@@ -1516,8 +1550,12 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
     );
   }
 
+  const roleBranding = getRoleBranding(authUser);
+  const brandAccent = authUser?.accent_color || roleBranding.color || "#EDBB00";
+  const brandForeground = roleBranding.foreground || "#FFFFFF";
+
   return (
-    <div className="h-screen overflow-hidden flex flex-col bg-slate-50/30 dark:bg-zinc-950/30 font-inter relative transition-colors duration-300" style={{ "--brand-accent": authUser?.accent_color || "#EDBB00", "--brand-foreground": "#FFFFFF" }}>
+    <div className="h-screen overflow-hidden flex flex-col bg-slate-50/30 dark:bg-zinc-950/30 font-inter relative transition-colors duration-300" style={{ "--brand-accent": brandAccent, "--brand-foreground": brandForeground }}>
       {/* Dynamic Liquid Glass Background Blobs */}
       <div className="liquid-container">
         <div className="liquid-blob liquid-blob-1"></div>
@@ -1588,6 +1626,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
           >
             <TabsContent value="students" className="h-full m-0 border-0 focus-visible:ring-0">
             <StudentDirectoryTab
+              authUser={authUser}
               loading={!storageLayout || loading}
               students={students}
               archivedStudents={archivedStudents}
@@ -1658,6 +1697,12 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
                   if (!res.ok || !json?.ok) {
                     throw new Error(json?.error || "Failed to restore student record");
                   }
+                  setSelectedStudentIds((prev) => {
+                    if (!prev.has(studentNo)) return prev;
+                    const next = new Set(prev);
+                    next.delete(studentNo);
+                    return next;
+                  });
                   showToast({ title: "Record Restored", description: `Student ${studentNo} is now active.` });
                   fetchData();
                 } catch (err) {
@@ -2017,6 +2062,12 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
                   if (!res.ok || !json?.ok) {
                     throw new Error(json?.error || "Failed to archive student record");
                   }
+                  setSelectedStudentIds((prev) => {
+                    if (!prev.has(studentNo)) return prev;
+                    const next = new Set(prev);
+                    next.delete(studentNo);
+                    return next;
+                  });
                   showToast({ title: "Record Archived", description: `Student ${studentNo} and their documents are now hidden.` });
                   // Clear search to hide the archived student
                   const cleared = { studentNo: "", studentName: "", docType: "" };
@@ -2027,7 +2078,6 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
                   showToast({ title: "Archive Failed", description: err.message }, true);
                 }
               }}
-              archivedStudents={archivedStudents}
               currentStudent={(() => {
                 const uniqueNo = Array.from(new Set(docsRows.map(r => r.student_no)));
                 const targetNo = uniqueNo.length === 1 ? uniqueNo[0] : docsForm.studentNo;

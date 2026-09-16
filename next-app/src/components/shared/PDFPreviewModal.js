@@ -23,6 +23,11 @@ function PDFFrame({ docId, url }) {
   const resolvedSrc = url || (docId ? `/api/documents/${docId}` : "")
   const finalSrc = resolvedSrc ? (resolvedSrc.includes("#") ? resolvedSrc : `${resolvedSrc}#toolbar=0&navpanes=0`) : ""
 
+  useEffect(() => {
+    const timer = setTimeout(() => setFrameReady(true), 1200)
+    return () => clearTimeout(timer)
+  }, [finalSrc])
+
   return (
     <div className="relative min-h-0 min-w-0 flex-1 flex flex-col">
       {!frameReady ? (
@@ -77,24 +82,46 @@ export default function PDFPreviewModal({ open, onClose, preview }) {
     >
       <DialogContent 
         hideClose={true}
-        className="flex h-[90vh] w-[96vw] max-w-[96vw] flex-col overflow-hidden border border-gray-200 bg-gray-100 p-0 shadow-2xl transition-all duration-normal ease-standard xl:max-w-[1400px] rounded-2xl dark:border-white/10 dark:bg-muted z-[60] gap-0"
+        className="flex h-[90vh] w-[96vw] max-w-[96vw] flex-col overflow-hidden border border-gray-200 bg-gray-100 p-0 shadow-2xl transition-all duration-normal ease-standard xl:max-w-[1400px] rounded-2xl dark:border-white/10 dark:bg-muted z-[70] gap-0"
       >
         <DialogHeader className="shrink-0 border-b border-gray-100 dark:border-white/10 bg-gray-50 dark:bg-white/5 px-6 py-4">
-          <div className="flex items-center justify-between w-full">
-            <div className="min-w-0">
-              <DialogTitle className="text-left font-semibold text-gray-900 dark:text-zinc-50 text-[15px] tracking-[-0.01em]">
+          <div className="flex items-center justify-between w-full gap-4">
+            <div className="min-w-0 flex-1">
+              <DialogTitle className="text-left font-semibold text-gray-900 dark:text-zinc-50 text-[15px] tracking-[-0.01em] truncate">
                 Document Preview: {preview?.title || preview?.docType || preview?.originalFilename || "Preview"}
               </DialogTitle>
               <p className="text-left font-normal text-gray-500 dark:text-zinc-400 text-xs mt-0.5">
-                Reviewing digitized record for <span className="font-semibold text-pup-maroon dark:text-rose-400">{preview?.studentName || "student"}</span>. Ensure all identifiers and data are clearly legible.
+                {preview?.subtitle ? (
+                  preview.subtitle
+                ) : (
+                  <>
+                    Reviewing digitized record for{" "}
+                    <span className="font-semibold text-pup-maroon dark:text-rose-400">
+                      {preview?.studentName || "student"}
+                    </span>
+                    . Ensure all identifiers and data are clearly legible.
+                  </>
+                )}
               </p>
             </div>
-            <button
-              onClick={onClose}
-              className="p-0 border-0 bg-transparent text-gray-400 hover:text-gray-900 dark:text-zinc-500 dark:hover:text-zinc-100 focus:outline-none cursor-pointer transition-colors flex items-center justify-center w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800"
-            >
-              <i className="ph-bold ph-x text-[16px]"></i>
-            </button>
+            <div className="flex items-center gap-1.5 shrink-0">
+              <button
+                type="button"
+                onClick={() => setIsFullscreen(!isFullscreen)}
+                className="p-0 border-0 bg-transparent text-gray-400 hover:text-gray-900 dark:text-zinc-500 dark:hover:text-zinc-100 focus:outline-none cursor-pointer transition-colors flex items-center justify-center w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800"
+                title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
+              >
+                <i className={cn("text-[16px]", isFullscreen ? "ph-bold ph-corners-in" : "ph-bold ph-corners-out")}></i>
+              </button>
+              <button
+                type="button"
+                onClick={onClose}
+                className="p-0 border-0 bg-transparent text-gray-400 hover:text-gray-900 dark:text-zinc-500 dark:hover:text-zinc-100 focus:outline-none cursor-pointer transition-colors flex items-center justify-center w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800"
+                title="Close"
+              >
+                <i className="ph-bold ph-x text-[16px]"></i>
+              </button>
+            </div>
           </div>
         </DialogHeader>
 

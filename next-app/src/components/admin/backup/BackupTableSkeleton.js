@@ -9,7 +9,7 @@ export default function BackupTableSkeleton({ rowCount = 8, embedded = false, cl
       className={cn(
         "flex-1 flex h-fit min-h-[600px] flex-col overflow-hidden isolate",
         embedded
-          ? ""
+          ? "rounded-b-2xl"
           : "rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card",
         className
       )}
@@ -67,7 +67,7 @@ export default function BackupTableSkeleton({ rowCount = 8, embedded = false, cl
                   </div>
                 </td>
                 <td className="py-2 px-4 align-middle text-center">
-                  <Skeleton className="h-[22px] w-14 rounded-[4px] mx-auto dark:bg-muted" />
+                  <Skeleton className="h-[22px] w-14 rounded-full mx-auto dark:bg-muted" />
                 </td>
                 <td className="py-0 px-4 pr-6 align-middle text-right">
                   <div className="flex items-center justify-end gap-1.5">

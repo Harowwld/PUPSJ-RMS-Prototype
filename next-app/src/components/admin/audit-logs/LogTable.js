@@ -124,7 +124,7 @@ const LogRow = React.memo(function LogRow({
         <td className="py-0 px-4 align-middle">
           <span
             className={cn(
-              "inline-flex w-fit items-center justify-center rounded-[4px] px-[8px] py-[3px] text-[11px] font-medium tracking-[0.04em] shadow-none transition-all",
+              "inline-flex w-fit items-center justify-center rounded-full px-[10px] py-[2.5px] text-[11px] font-medium tracking-[0.04em] shadow-none transition-all",
               severityInfo.classes
             )}
           >
@@ -238,7 +238,7 @@ export default function LogTable({
       <div className={cn(
         "flex flex-1 min-h-[320px] flex-col items-center justify-center p-6 text-center text-gray-500 dark:text-zinc-400",
         embedded
-          ? "border-t border-gray-100 dark:border-white/10"
+          ? "border-t border-gray-100 dark:border-white/10 rounded-b-2xl"
           : "overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card"
       )}>
         <Empty className="flex flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400">
@@ -266,7 +266,7 @@ export default function LogTable({
       <div className={cn(
         "flex-1 min-h-0 flex flex-col overflow-hidden isolate",
         embedded
-          ? "border-t border-gray-100 dark:border-white/10"
+          ? "border-t border-gray-100 dark:border-white/10 rounded-b-2xl"
           : "rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card"
       )}>
         <div className="flex-1 overflow-hidden overflow-x-auto select-none">

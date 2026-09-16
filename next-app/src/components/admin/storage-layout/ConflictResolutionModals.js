@@ -8,7 +8,9 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
 } from "@/components/ui/dialog"
+import { Select } from "@/components/ui/select"
 import { cn } from "@/lib/utils"
 
 const ConflictResolutionModals = memo(({
@@ -34,115 +36,46 @@ const ConflictResolutionModals = memo(({
 }) => {
   return (
     <>
-      <Dialog open={applyReportOpen} onOpenChange={setApplyReportOpen}>
-        <DialogContent className="sm:max-w-3xl p-0 overflow-hidden bg-white border border-gray-200 shadow-2xl rounded-2xl dark:bg-card dark:border-white/10">
-          <DialogHeader className="p-6 border-b border-gray-100 bg-transparent dark:border-white/10 dark:bg-transparent">
-            <div className="flex items-start gap-4">
-              <div className="w-12 h-12 rounded-xl border border-blue-100/30 bg-blue-50 text-blue-600 shadow-sm flex items-center justify-center shrink-0 dark:bg-blue-950/30 dark:text-blue-400 dark:shadow-none">
-                <i className="ph-duotone ph-seal-check text-xl"></i>
-              </div>
-              <div className="min-w-0">
-                <DialogTitle className="text-lg font-semibold tracking-tight text-gray-900 dark:text-zinc-50">
-                  Template Apply Report
-                </DialogTitle>
-                <DialogDescription className="text-sm font-medium mt-1.5 text-gray-600 dark:text-zinc-300">
-                  Per-drawer reassignment results from the latest template apply.
-                </DialogDescription>
-              </div>
-            </div>
-          </DialogHeader>
-          <div className="p-6">
-            <div className="max-h-[50vh] overflow-hidden overflow-auto rounded-xl border border-gray-200 dark:border-white/10">
-              <table className="min-w-full text-sm">
-                <thead className="sticky top-0 z-10 border-b border-gray-200 bg-transparent dark:border-white/10 dark:bg-transparent">
-                  <tr className="text-left text-xs tracking-wider text-gray-600 dark:text-zinc-300 dark:border-white/10">
-                    <th className="p-3 font-semibold">From</th>
-                    <th className="p-3 font-semibold">To</th>
-                    <th className="p-3 font-semibold">Moved</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100 dark:divide-white/10">
-                  {applyReportRows.length === 0 ? (
-                    <tr>
-                      <td className="p-3 text-gray-600 dark:text-zinc-300" colSpan={3}>
-                        No reassignment details were returned.
-                      </td>
-                    </tr>
-                  ) : (
-                    applyReportRows.map((r, idx) => (
-                      <tr
-                        key={`${idx}-${r?.from?.room}-${r?.from?.cabinet}-${r?.from?.drawer}`}
-                      >
-                        <td className="p-3 text-gray-900 dark:text-zinc-50">
-                          Room {r?.from?.room} / Cabinet {r?.from?.cabinet} /
-                          Drawer {r?.from?.drawer}
-                        </td>
-                        <td className="p-3 text-gray-900 dark:text-zinc-50">
-                          Room {r?.to?.room} / Cabinet {r?.to?.cabinet} / Drawer{" "}
-                          {r?.to?.drawer}
-                        </td>
-                        <td className="p-3">
-                          <span className="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-800 dark:bg-emerald-950/30">
-                            {Number(r?.moved || 0)}
-                          </span>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-          <div className="px-6 py-4 border-t border-gray-100 dark:border-white/10 flex items-center justify-end gap-2 bg-gray-50/50 dark:bg-zinc-900/20">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setApplyReportOpen(false)}
-              className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
-            >
-              Close
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
+      {/* 1. Template Conflict Resolution Modal */}
       <Dialog
         open={templateConflictOpen}
         onOpenChange={setTemplateConflictOpen}
       >
-        <DialogContent className="sm:max-w-4xl p-0 overflow-hidden bg-white border border-gray-200 shadow-2xl rounded-2xl dark:bg-card dark:border-white/10">
-          <DialogHeader className="p-6 border-b border-gray-100 bg-transparent dark:border-white/10 dark:bg-transparent">
-            <div className="flex items-start gap-4">
-              <div className="w-12 h-12 rounded-xl border border-amber-100/30 bg-amber-50 text-amber-600 shadow-sm flex items-center justify-center shrink-0 dark:bg-amber-950/30 dark:text-amber-400 dark:shadow-none">
-                <i className="ph-duotone ph-warning text-xl"></i>
-              </div>
-              <div className="min-w-0">
-                <DialogTitle className="text-lg font-semibold tracking-tight text-gray-900 dark:text-zinc-50">
-                  Template Conflict Resolution
-                </DialogTitle>
-                <DialogDescription className="text-sm font-medium mt-1.5 text-gray-600 dark:text-zinc-300">
-                  This template would remove drawers that still contain student records. Map them to new locations.
-                </DialogDescription>
-              </div>
-            </div>
+        <DialogContent className="sm:max-w-4xl p-0 overflow-hidden bg-white border border-gray-200 shadow-2xl rounded-2xl dark:bg-card dark:border-white/10 gap-0">
+          <DialogHeader className="bg-white p-6 pb-0 dark:bg-card border-none text-left">
+            <DialogTitle className="text-[17px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
+              Template Conflict Resolution
+            </DialogTitle>
+            <DialogDescription className="mt-1 text-[13px] font-normal text-gray-500 dark:text-zinc-400 leading-relaxed">
+              The selected room template removes drawers that currently store student documents. Reassign these records to continue.
+            </DialogDescription>
           </DialogHeader>
-          <div className="p-6 space-y-4">
-            <div className="rounded-xl border border-gray-200 bg-gray-50/50 p-3.5 dark:border-white/10 dark:bg-zinc-900/30">
-              <div className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-gray-500 dark:text-zinc-400">
-                Reassignment Mode
+
+          <div className="p-6 space-y-5">
+            {/* Reassignment Mode Control Panel */}
+            <div className="rounded-xl border border-gray-200/80 bg-gray-50/60 p-4 dark:border-white/10 dark:bg-zinc-900/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <div className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
+                  Reassignment Strategy
+                </div>
+                <div className="text-[12px] text-gray-500 dark:text-zinc-400 mt-0.5">
+                  {reassignmentMode === "auto"
+                    ? "Automatically maps displaced drawers to available drawers in the selected template."
+                    : "Manually choose destination drawers from dropdowns or drag-and-drop targets."}
+                </div>
               </div>
-              <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-gray-200/60 dark:border-white/5 w-fit">
+              <div className="flex items-center gap-1 bg-gray-200/60 dark:bg-zinc-800/80 p-1 rounded-xl border border-gray-200/60 dark:border-white/5 shrink-0">
                 <button
                   type="button"
                   onClick={() => setReassignmentMode("manual")}
                   className={cn(
-                    "px-4 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer select-none",
+                    "px-4 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer select-none active:scale-95",
                     reassignmentMode === "manual"
                       ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
                       : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
                   )}
                 >
-                  Manual (Drag & Drop)
+                  Manual
                 </button>
                 <button
                   type="button"
@@ -151,61 +84,93 @@ const ConflictResolutionModals = memo(({
                     setTemplateMappingDraft(buildAutoMappings())
                   }}
                   className={cn(
-                    "px-4 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer select-none",
+                    "px-4 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer select-none active:scale-95",
                     reassignmentMode === "auto"
                       ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
                       : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
                   )}
                 >
-                  Map
+                  Auto Map
                 </button>
               </div>
             </div>
-            <div className="max-h-[45vh] overflow-hidden overflow-auto rounded-xl border border-gray-200 shadow-xs dark:border-white/10 dark:shadow-none">
+
+            {/* Conflict Resolution Mapping Table */}
+            <div className="max-h-[46vh] overflow-auto rounded-xl border border-gray-200/80 dark:border-white/10 shadow-xs bg-white dark:bg-card">
               <table className="min-w-full text-sm">
-                <thead className="sticky top-0 z-10 border-b border-gray-200 bg-gray-50/75 dark:border-white/10 dark:bg-zinc-900/40">
-                  <tr className="text-left text-xs tracking-wider text-gray-600 dark:text-zinc-300 dark:border-white/10">
-                    <th className="p-3 font-semibold">Current Drawer</th>
-                    <th className="p-3 font-semibold">Records</th>
-                    <th className="p-3 font-semibold">Move To</th>
+                <thead className="sticky top-0 z-10 border-b border-gray-200/80 bg-gray-50/90 dark:border-white/10 dark:bg-zinc-900/60 backdrop-blur-xs">
+                  <tr className="text-left text-[11px] font-semibold uppercase tracking-[0.04em] text-gray-500 dark:text-zinc-400">
+                    <th className="py-3 px-4 w-[28%] font-semibold">Displaced Drawer</th>
+                    <th className="py-3 px-4 w-[18%] font-semibold">Affected Records</th>
+                    <th className="py-3 px-4 w-[54%] font-semibold">Target Destination</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100 dark:divide-white/10 bg-white dark:bg-card">
+                <tbody className="divide-y divide-gray-100 dark:divide-white/5 bg-white dark:bg-card">
                   {templateConflictRows.map((row) => (
-                    <tr key={row.sourceKey}>
-                      <td className="p-3 font-semibold text-gray-900 dark:text-zinc-50">
-                        {row.sourceLabel}
+                    <tr key={row.sourceKey} className="hover:bg-gray-50/40 dark:hover:bg-white/2 transition-colors">
+                      <td className="py-3.5 px-4 align-top">
+                        <div className="flex items-center gap-2.5">
+                          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-100 text-gray-600 dark:bg-zinc-800 dark:text-zinc-300 shrink-0">
+                            <i className="ph-bold ph-archive text-sm" />
+                          </div>
+                          <div>
+                            <div className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
+                              {row.sourceLabel}
+                            </div>
+                            <div className="text-[11px] text-gray-400 dark:text-zinc-500">
+                              Current Location
+                            </div>
+                          </div>
+                        </div>
+
+                        {reassignmentMode === "manual" && (
+                          <div
+                            draggable
+                            onDragStart={() => setDragSourceKey(row.sourceKey)}
+                            className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-gray-50/80 px-2.5 py-1 text-[11px] font-semibold text-gray-600 dark:border-white/10 dark:bg-zinc-800/80 dark:text-zinc-300 cursor-grab active:cursor-grabbing hover:bg-gray-100 dark:hover:bg-zinc-700/60 transition-all select-none shadow-2xs"
+                            title="Drag to any destination option on the right"
+                          >
+                            <i className="ph-bold ph-dots-six-vertical text-gray-400 dark:text-zinc-500" />
+                            <span>Drag Handle</span>
+                          </div>
+                        )}
                       </td>
-                      <td className="p-3">
-                        <span className="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2.5 py-0.5 text-xs font-semibold text-amber-900 dark:bg-amber-950/30">
-                          {row.count}
+
+                      <td className="py-3.5 px-4 align-top">
+                        <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-200/80 bg-amber-50 px-2.5 py-0.5 text-xs font-semibold text-amber-800 dark:border-amber-900/40 dark:bg-amber-950/40 dark:text-amber-300">
+                          <span className="h-1.5 w-1.5 rounded-full bg-amber-500 shrink-0" />
+                          {row.count} {row.count === 1 ? "record" : "records"}
                         </span>
                       </td>
-                      <td className="p-3">
-                        <div
-                          draggable={reassignmentMode === "manual"}
-                          onDragStart={() => setDragSourceKey(row.sourceKey)}
-                          className={cn(
-                            "mb-2 rounded-lg border px-2.5 py-2 text-xs font-semibold transition-all",
-                            reassignmentMode === "manual"
-                              ? "cursor-grab border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 shadow-xs hover:border-gray-300"
-                              : "border-gray-200 bg-gray-100 text-gray-400 dark:border-white/10 dark:bg-card dark:text-zinc-500"
-                          )}
-                          title={
-                            reassignmentMode === "manual"
-                              ? "Drag this source to a target option below"
-                              : "Switch to Manual mode to drag"
+
+                      <td className="py-3.5 px-4 align-top space-y-2">
+                        {/* Unified Select Dropdown */}
+                        <Select
+                          value={templateMappingDraft[row.sourceKey] || ""}
+                          onChange={(e) =>
+                            setTemplateMappingDraft((prev) => ({
+                              ...prev,
+                              [row.sourceKey]: e.target.value,
+                            }))
                           }
+                          placeholder="Select target drawer..."
+                          className="h-9 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-xs font-medium text-gray-900 dark:text-zinc-100 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80"
+                          menuClassName="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-900 shadow-2xl p-1.5"
+                          optionClassName="rounded-lg text-xs font-normal py-1.5 px-2.5 hover:bg-gray-100 dark:hover:bg-zinc-800"
                         >
-                          <i className="ph-bold ph-dots-six-vertical mr-1.5 opacity-40"></i>
-                          Drag Source
-                        </div>
-                        <div className="grid max-h-32 grid-cols-1 gap-1.5 overflow-auto p-0.5">
+                          <option value="" disabled>Select destination drawer...</option>
+                          {templateTargetOptions.map((opt) => (
+                            <option key={opt.key} value={opt.key}>
+                              {opt.label}
+                            </option>
+                          ))}
+                        </Select>
+
+                        {/* Interactive Drag & Drop Target Chips */}
+                        <div className="grid max-h-28 grid-cols-1 sm:grid-cols-2 gap-1.5 overflow-auto p-0.5">
                           {templateTargetOptions.map((opt) => {
                             const selected =
-                              String(
-                                templateMappingDraft[row.sourceKey] || ""
-                              ) === opt.key
+                              String(templateMappingDraft[row.sourceKey] || "") === opt.key
                             return (
                               <button
                                 key={opt.key}
@@ -231,13 +196,16 @@ const ConflictResolutionModals = memo(({
                                   }))
                                 }}
                                 className={cn(
-                                  "rounded-lg border px-3 py-2 text-left text-[11px] transition-all cursor-pointer",
+                                  "flex items-center justify-between rounded-lg border px-2.5 py-1.5 text-left text-xs transition-all cursor-pointer select-none",
                                   selected
-                                    ? "border-red-200 bg-red-50 font-semibold text-pup-maroon dark:border-red-900/40 dark:bg-red-950/30 dark:text-primary shadow-xs"
-                                    : "border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-600 dark:text-zinc-300 font-medium hover:border-gray-300 hover:bg-gray-50 dark:hover:bg-zinc-700"
+                                    ? "border-pup-maroon bg-red-50/80 font-semibold text-pup-maroon dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-300 shadow-2xs ring-1 ring-pup-maroon/20"
+                                    : "border-gray-200/80 dark:border-white/10 bg-white dark:bg-zinc-800/80 text-gray-600 dark:text-zinc-300 font-normal hover:border-gray-300 hover:bg-gray-50 dark:hover:bg-zinc-700/60"
                                 )}
                               >
-                                {opt.label}
+                                <span className="truncate">{opt.label}</span>
+                                {selected && (
+                                  <i className="ph-bold ph-check text-xs text-pup-maroon dark:text-red-400 ml-1.5 shrink-0" />
+                                )}
                               </button>
                             )
                           })}
@@ -249,7 +217,8 @@ const ConflictResolutionModals = memo(({
               </table>
             </div>
           </div>
-          <div className="px-6 py-4 border-t border-gray-100 dark:border-white/10 flex items-center justify-end gap-2 bg-gray-50/50 dark:bg-zinc-900/20">
+
+          <DialogFooter className="p-6 pt-4 bg-white dark:bg-card border-t border-gray-100 dark:border-white/10 flex items-center justify-end gap-2.5">
             <Button
               type="button"
               variant="outline"
@@ -261,51 +230,51 @@ const ConflictResolutionModals = memo(({
             <Button
               type="button"
               onClick={openApplyPreview}
-              className="h-10 px-5 text-xs font-semibold rounded-xl btn-brand-red text-white shadow-xs active:scale-95 transition-all cursor-pointer border-0"
+              className="h-10 px-5 text-xs font-semibold rounded-xl! btn-brand-red text-white shadow-xs active:scale-95 transition-all cursor-pointer border-0"
             >
-              Continue
+              Continue to Preview
             </Button>
-          </div>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 
+      {/* 2. Confirm Reassignment Preview Modal */}
       <Dialog open={applyPreviewOpen} onOpenChange={setApplyPreviewOpen}>
-        <DialogContent className="sm:max-w-3xl p-0 overflow-hidden bg-white border border-gray-200 shadow-2xl rounded-2xl dark:bg-card dark:border-white/10">
-          <DialogHeader className="p-6 border-b border-gray-100 bg-transparent dark:border-white/10 dark:bg-transparent">
-            <div className="flex items-start gap-4">
-              <div className="w-12 h-12 rounded-xl border border-blue-100/30 bg-blue-50 text-blue-600 shadow-sm flex items-center justify-center shrink-0 dark:bg-blue-950/30 dark:text-blue-400 dark:shadow-none">
-                <i className="ph-duotone ph-list-checks text-xl"></i>
-              </div>
-              <div className="min-w-0">
-                <DialogTitle className="text-lg font-semibold tracking-tight text-gray-900 dark:text-zinc-50">
-                  Confirm Reassignment
-                </DialogTitle>
-                <DialogDescription className="text-sm font-medium mt-1.5 text-gray-600 dark:text-zinc-300">
-                  Review the exact drawer movements before applying template changes.
-                </DialogDescription>
-              </div>
-            </div>
+        <DialogContent className="sm:max-w-3xl p-0 overflow-hidden bg-white border border-gray-200 shadow-2xl rounded-2xl dark:bg-card dark:border-white/10 gap-0">
+          <DialogHeader className="bg-white p-6 pb-0 dark:bg-card border-none text-left">
+            <DialogTitle className="text-[17px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
+              Confirm Reassignment
+            </DialogTitle>
+            <DialogDescription className="mt-1 text-[13px] font-normal text-gray-500 dark:text-zinc-400 leading-relaxed">
+              Review the drawer migrations before applying the new room layout template.
+            </DialogDescription>
           </DialogHeader>
+
           <div className="p-6">
-            <div className="max-h-[50vh] overflow-hidden overflow-auto rounded-xl border border-gray-200 shadow-xs dark:border-white/10 dark:shadow-none">
+            <div className="max-h-[50vh] overflow-auto rounded-xl border border-gray-200/80 dark:border-white/10 bg-white dark:bg-card shadow-xs">
               <table className="min-w-full text-sm">
-                <thead className="sticky top-0 z-10 border-b border-gray-200 bg-gray-50/75 dark:border-white/10 dark:bg-zinc-900/40">
-                  <tr className="text-left text-xs tracking-wider text-gray-600 dark:text-zinc-300 dark:border-white/10">
-                    <th className="p-3 font-semibold">Before</th>
-                    <th className="p-3 font-semibold">After</th>
-                    <th className="p-3 font-semibold text-center">Records</th>
+                <thead className="sticky top-0 z-10 border-b border-gray-200/80 bg-gray-50/90 dark:border-white/10 dark:bg-zinc-900/60 backdrop-blur-xs">
+                  <tr className="text-left text-[11px] font-semibold uppercase tracking-[0.04em] text-gray-500 dark:text-zinc-400">
+                    <th className="py-3 px-4 font-semibold">Original Location</th>
+                    <th className="py-3 px-4 font-semibold">New Destination</th>
+                    <th className="py-3 px-4 font-semibold text-center">Records Moved</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100 dark:divide-white/10 bg-white dark:bg-card">
+                <tbody className="divide-y divide-gray-100 dark:divide-white/5 bg-white dark:bg-card">
                   {applyPreviewRows.map((r) => (
-                    <tr key={r.fromKey}>
-                      <td className="p-3 text-gray-700 font-medium dark:text-zinc-200">{r.fromLabel}</td>
-                      <td className="p-3 text-gray-900 font-semibold dark:text-zinc-50">
-                        <i className="ph-bold ph-arrow-right mr-2 text-gray-300 dark:text-zinc-600"></i>
-                        {r.toLabel}
+                    <tr key={r.fromKey} className="hover:bg-gray-50/40 dark:hover:bg-white/2 transition-colors">
+                      <td className="py-3 px-4 text-xs font-medium text-gray-700 dark:text-zinc-300">
+                        {r.fromLabel}
                       </td>
-                      <td className="p-3 text-center">
-                        <span className="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2.5 py-0.5 text-xs font-semibold text-amber-900 dark:bg-amber-950/30">
+                      <td className="py-3 px-4 text-xs font-semibold text-gray-900 dark:text-zinc-100">
+                        <div className="flex items-center gap-2">
+                          <i className="ph-bold ph-arrow-right text-gray-400 dark:text-zinc-600 text-xs shrink-0" />
+                          <span>{r.toLabel}</span>
+                        </div>
+                      </td>
+                      <td className="py-3 px-4 text-center">
+                        <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-200/80 bg-amber-50 px-2.5 py-0.5 text-xs font-semibold text-amber-800 dark:border-amber-900/40 dark:bg-amber-950/40 dark:text-amber-300">
+                          <span className="h-1.5 w-1.5 rounded-full bg-amber-500 shrink-0" />
                           {r.count}
                         </span>
                       </td>
@@ -315,7 +284,8 @@ const ConflictResolutionModals = memo(({
               </table>
             </div>
           </div>
-          <div className="px-6 py-4 border-t border-gray-100 dark:border-white/10 flex items-center justify-end gap-2 bg-gray-50/50 dark:bg-zinc-900/20">
+
+          <DialogFooter className="p-6 pt-4 bg-white dark:bg-card border-t border-gray-100 dark:border-white/10 flex items-center justify-end gap-2.5">
             <Button
               type="button"
               variant="outline"
@@ -327,11 +297,82 @@ const ConflictResolutionModals = memo(({
             <Button
               type="button"
               onClick={applyTemplateWithMappings}
-              className="h-10 px-5 text-xs font-semibold rounded-xl btn-brand-red text-white shadow-xs active:scale-95 transition-all cursor-pointer border-0"
+              className="h-10 px-5 text-xs font-semibold rounded-xl! btn-brand-red text-white shadow-xs active:scale-95 transition-all cursor-pointer border-0"
             >
-              Apply
+              Apply Template
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* 3. Template Apply Results Report Modal */}
+      <Dialog open={applyReportOpen} onOpenChange={setApplyReportOpen}>
+        <DialogContent className="sm:max-w-3xl p-0 overflow-hidden bg-white border border-gray-200 shadow-2xl rounded-2xl dark:bg-card dark:border-white/10 gap-0">
+          <DialogHeader className="bg-white p-6 pb-0 dark:bg-card border-none text-left">
+            <DialogTitle className="text-[17px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
+              Template Apply Report
+            </DialogTitle>
+            <DialogDescription className="mt-1 text-[13px] font-normal text-gray-500 dark:text-zinc-400 leading-relaxed">
+              Per-drawer reassignment results from the latest template application.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="p-6">
+            <div className="max-h-[50vh] overflow-auto rounded-xl border border-gray-200/80 dark:border-white/10 bg-white dark:bg-card shadow-xs">
+              <table className="min-w-full text-sm">
+                <thead className="sticky top-0 z-10 border-b border-gray-200/80 bg-gray-50/90 dark:border-white/10 dark:bg-zinc-900/60 backdrop-blur-xs">
+                  <tr className="text-left text-[11px] font-semibold uppercase tracking-[0.04em] text-gray-500 dark:text-zinc-400">
+                    <th className="py-3 px-4 font-semibold">From Location</th>
+                    <th className="py-3 px-4 font-semibold">To Destination</th>
+                    <th className="py-3 px-4 font-semibold text-center">Records Migrated</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100 dark:divide-white/5 bg-white dark:bg-card">
+                  {applyReportRows.length === 0 ? (
+                    <tr>
+                      <td className="py-6 px-4 text-center text-xs text-gray-500 dark:text-zinc-400" colSpan={3}>
+                        No reassignment details were returned.
+                      </td>
+                    </tr>
+                  ) : (
+                    applyReportRows.map((r, idx) => (
+                      <tr
+                        key={`${idx}-${r?.from?.room}-${r?.from?.cabinet}-${r?.from?.drawer}`}
+                        className="hover:bg-gray-50/40 dark:hover:bg-white/2 transition-colors"
+                      >
+                        <td className="py-3 px-4 text-xs font-medium text-gray-700 dark:text-zinc-300">
+                          Room {r?.from?.room} · Cabinet {r?.from?.cabinet} · Drawer {r?.from?.drawer}
+                        </td>
+                        <td className="py-3 px-4 text-xs font-semibold text-gray-900 dark:text-zinc-100">
+                          <div className="flex items-center gap-2">
+                            <i className="ph-bold ph-arrow-right text-gray-400 dark:text-zinc-600 text-xs shrink-0" />
+                            <span>Room {r?.to?.room} · Cabinet {r?.to?.cabinet} · Drawer {r?.to?.drawer}</span>
+                          </div>
+                        </td>
+                        <td className="py-3 px-4 text-center">
+                          <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200/80 bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-800 dark:border-emerald-900/40 dark:bg-emerald-950/40 dark:text-emerald-300">
+                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 shrink-0" />
+                            {Number(r?.moved || 0)}
+                          </span>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
+
+          <DialogFooter className="p-6 pt-4 bg-white dark:bg-card border-t border-gray-100 dark:border-white/10 flex items-center justify-end gap-2.5">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setApplyReportOpen(false)}
+              className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+            >
+              Close
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </>
@@ -341,4 +382,3 @@ const ConflictResolutionModals = memo(({
 ConflictResolutionModals.displayName = "ConflictResolutionModals"
 
 export default ConflictResolutionModals
-

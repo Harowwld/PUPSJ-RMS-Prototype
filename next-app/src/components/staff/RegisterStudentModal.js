@@ -23,6 +23,7 @@ export default function RegisterStudentModal({
   storageLayout = null,
   onSuccess,
   showToast,
+  authUser = null,
 }) {
   const currentYear = new Date().getFullYear();
 
@@ -181,18 +182,19 @@ export default function RegisterStudentModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-full max-w-2xl overflow-hidden rounded-2xl border border-gray-200 bg-white p-0 shadow-2xl dark:border-white/10 dark:bg-card">
-        <DialogHeader className="bg-white p-6 pb-2 dark:bg-card border-none">
-          <DialogTitle className="text-[17px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
-            Register Student Record
-          </DialogTitle>
-          <DialogDescription className="mt-1 text-[13px] font-normal text-gray-500 dark:text-zinc-400">
-            Enroll a new student profile and allocate physical archive storage coordinates.
-          </DialogDescription>
-        </DialogHeader>
+      <DialogContent className="w-full max-w-4xl sm:max-w-4xl overflow-hidden rounded-2xl border border-gray-200 bg-white p-0 shadow-2xl dark:border-white/10 dark:bg-card">
+        <form onSubmit={handleSubmit}>
+          <DialogHeader className="bg-white p-6 pb-2 dark:bg-card border-none text-left">
+            <DialogTitle className="text-[17px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
+              Register Student Record
+            </DialogTitle>
+            <DialogDescription className="mt-1 text-[13px] font-normal text-gray-500 dark:text-zinc-400">
+              Enroll a new student profile and allocate physical archive storage coordinates.
+            </DialogDescription>
+          </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="p-6 pt-2 space-y-5">
-          {formError && (
+          <div className="p-6 pt-2 space-y-5">
+            {formError && (
             <div className="rounded-xl border border-red-200 bg-red-50 p-3.5 text-xs font-medium text-red-700 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-400">
               <i className="ph-bold ph-warning-circle mr-1.5 text-sm inline-block align-sub"></i>
               {formError}
@@ -240,8 +242,8 @@ export default function RegisterStudentModal({
             <h4 className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
               Academic Program & Section
             </h4>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+              <div className="md:col-span-6">
                 <label className="mb-1.5 block text-xs font-medium text-gray-700 dark:text-zinc-300">
                   Degree Program <span className="text-red-500">*</span>
                 </label>
@@ -260,7 +262,7 @@ export default function RegisterStudentModal({
                 />
               </div>
 
-              <div>
+              <div className="md:col-span-3">
                 <label className="mb-1.5 block text-xs font-medium text-gray-700 dark:text-zinc-300">
                   Entry Year <span className="text-red-500">*</span>
                 </label>
@@ -276,7 +278,7 @@ export default function RegisterStudentModal({
                 />
               </div>
 
-              <div>
+              <div className="md:col-span-3">
                 <label className="mb-1.5 block text-xs font-medium text-gray-700 dark:text-zinc-300">
                   Section <span className="text-red-500">*</span>
                 </label>
@@ -360,21 +362,22 @@ export default function RegisterStudentModal({
               </div>
             </div>
           </div>
+          </div>
 
-          <DialogFooter className="pt-4 border-t border-gray-100 dark:border-white/5 flex items-center justify-end gap-3">
+          <DialogFooter className="p-6 pt-0 bg-white dark:bg-card border-none flex items-center justify-end gap-2.5">
             <Button
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
               disabled={isSubmitting}
-              className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+              className="h-10 px-4 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
             >
               Cancel
             </Button>
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all"
+              className="flex h-10 px-5 text-xs font-semibold rounded-xl! btn-brand-red text-white! active:scale-95 disabled:opacity-50 transition-all cursor-pointer shadow-xs"
             >
               {isSubmitting ? (
                 <span className="flex items-center gap-2">
@@ -382,7 +385,7 @@ export default function RegisterStudentModal({
                   Registering...
                 </span>
               ) : (
-                "Enroll Student"
+                "Register"
               )}
             </Button>
           </DialogFooter>

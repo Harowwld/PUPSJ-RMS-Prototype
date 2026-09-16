@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils"
 export default function OfficeGridSkeleton({ layoutView = "grid", count = 6 }) {
   if (layoutView === "table") {
     return (
-      <div className="overflow-hidden bg-white dark:bg-card flex flex-col flex-1 isolate">
+      <div className="overflow-hidden rounded-b-2xl bg-white dark:bg-card flex flex-col flex-1 isolate">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs text-gray-600 dark:text-zinc-400">
             <thead className="sticky top-0 z-10 border-b-[0.5px] border-black/10 dark:border-white/10 bg-white dark:bg-card">
@@ -84,6 +84,26 @@ export default function OfficeGridSkeleton({ layoutView = "grid", count = 6 }) {
             </tbody>
           </table>
         </div>
+
+        {/* Pagination Footer Skeleton */}
+        <div className="flex items-center justify-between border-t border-[#e5e5ea] dark:border-[#3a3a3c] bg-white dark:bg-[#1c1c1e] p-4 px-6 rounded-b-2xl mt-auto">
+          <div className="flex items-center gap-6">
+            <Skeleton className="h-4 w-36 rounded dark:bg-muted" />
+            <div className="flex items-center gap-2">
+              <Skeleton className="h-3 w-8 rounded dark:bg-muted" />
+              <div className="flex items-center gap-1">
+                {[1, 2, 3, 4].map((j) => (
+                  <Skeleton key={j} className="h-6 w-7 rounded-lg dark:bg-muted" />
+                ))}
+              </div>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Skeleton className="h-8 w-12 rounded-xl dark:bg-muted" />
+            <Skeleton className="h-8 w-8 rounded-xl dark:bg-muted" />
+            <Skeleton className="h-8 w-12 rounded-xl dark:bg-muted" />
+          </div>
+        </div>
       </div>
     )
   }
@@ -118,12 +138,6 @@ export default function OfficeGridSkeleton({ layoutView = "grid", count = 6 }) {
               <div className="space-y-1.5 mb-4">
                 <Skeleton className="h-3 w-full rounded dark:bg-muted" />
                 <Skeleton className="h-3 w-3/4 rounded dark:bg-muted" />
-              </div>
-
-              {/* Token Bar */}
-              <div className="p-2 rounded-lg bg-gray-50 dark:bg-zinc-800/40 border border-gray-100 dark:border-white/5 flex items-center justify-between mb-4">
-                <Skeleton className="h-3 w-28 font-mono rounded dark:bg-muted" />
-                <Skeleton className="h-4 w-4 rounded dark:bg-muted" />
               </div>
 
               {/* Metrics deep links */}

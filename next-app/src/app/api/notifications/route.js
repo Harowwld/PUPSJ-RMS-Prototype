@@ -1,7 +1,4 @@
 import { NextResponse } from "next/server";
-import { getSessionCookieName, verifySessionToken } from "../../../lib/jwt";
-import { getStaffById } from "../../../lib/staffRepo";
-import { isAdminRole } from "../../../lib/roleUtils";
 import { writeAuditLog } from "@/lib/auditLogRequest";
 import {
   getStaffReviewNotificationsState,
@@ -10,28 +7,17 @@ import {
   setNotificationItemState,
   markAllStaffNotificationsReadState,
 } from "../../../lib/notificationsRepo";
+import { requireStaff, createAuthErrorResponse, getPrincipalOfficeId } from "../../../lib/authHelpers";
+import { canAccessResource } from "@/lib/resourceAuthorization";
 
 export const runtime = "nodejs";
 
-async function getSessionStaff(req) {
-  const token = req.cookies.get(getSessionCookieName())?.value || "";
-  if (!token) return null;
-  const payload = await verifySessionToken(token);
-  const userId = String(payload?.sub || "").trim();
-  if (!userId) return null;
-  return await getStaffById(userId);
-}
-
 export async function GET(req) {
-  let staff = null;
-  try {
-    staff = await getSessionStaff(req);
-  } catch {
-    return NextResponse.json({ ok: false, error: "Invalid session" }, { status: 401 });
-  }
-  if (!staff) {
-    return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
-  }
+  const access = await requireStaff(req);
+  if (access.error || !access.user) return createAuthErrorResponse(access.error || "Staff authentication required", access.error?.startsWith("Access denied") ? 403 : 401);
+  const staff = access.user;
+  const officeId = getPrincipalOfficeId(staff);
+  if (!officeId) return createAuthErrorResponse("Office scope is required", 403);
 
   const { searchParams } = new URL(req.url);
   const limit = searchParams.get("limit") || "20";
@@ -49,7 +35,7 @@ export async function GET(req) {
     offset,
     lastSeenReviewedAt: state.lastSeenReviewedAt,
     staffId: staff.id,
-    officeId: staff.office_id || "registrar",
+    officeId,
     sortBy,
     sortOrder,
     tab,
@@ -61,7 +47,7 @@ export async function GET(req) {
   return NextResponse.json({
     ok: true,
     data: {
-      items: res.items,
+      items: res.items.filter((item) => canAccessResource(staff, "notification", item)),
       total: res.total,
       unreadCount: res.unreadCount,
       lastSeenReviewedAt: state.lastSeenReviewedAt,
@@ -72,15 +58,11 @@ export async function GET(req) {
 }
 
 export async function POST(req) {
-  let staff = null;
-  try {
-    staff = await getSessionStaff(req);
-  } catch {
-    return NextResponse.json({ ok: false, error: "Invalid session" }, { status: 401 });
-  }
-  if (!staff) {
-    return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
-  }
+  const access = await requireStaff(req);
+  if (access.error || !access.user) return createAuthErrorResponse(access.error || "Staff authentication required", access.error?.startsWith("Access denied") ? 403 : 401);
+  const staff = access.user;
+  const officeId = getPrincipalOfficeId(staff);
+  if (!officeId) return createAuthErrorResponse("Office scope is required", 403);
 
   const contentType = String(req.headers.get("content-type") || "").toLowerCase();
   let action = "markSeen";
@@ -94,25 +76,25 @@ export async function POST(req) {
   }
 
   if (action === "markSeen") {
-    await markAllStaffNotificationsReadState(staff.id, staff.office_id || "registrar", true);
+    await markAllStaffNotificationsReadState(staff.id, officeId, true);
     await markStaffReviewNotificationsSeen(staff.id);
   } else if (action === "markAllUnread") {
-    await markAllStaffNotificationsReadState(staff.id, staff.office_id || "registrar", false);
+    await markAllStaffNotificationsReadState(staff.id, officeId, false);
   } else if (action === "markRead") {
     if (ids.length > 0) {
-      await setNotificationItemState(staff.id, ids, "read", 1);
+      await setNotificationItemState(staff.id, ids, "read", 1, officeId);
     }
   } else if (action === "markUnread") {
     if (ids.length > 0) {
-      await setNotificationItemState(staff.id, ids, "read", 0);
+      await setNotificationItemState(staff.id, ids, "read", 0, officeId);
     }
   } else if (action === "archive") {
     if (ids.length > 0) {
-      await setNotificationItemState(staff.id, ids, "archive", 1);
+      await setNotificationItemState(staff.id, ids, "archive", 1, officeId);
     }
   } else if (action === "unarchive") {
     if (ids.length > 0) {
-      await setNotificationItemState(staff.id, ids, "archive", 0);
+      await setNotificationItemState(staff.id, ids, "archive", 0, officeId);
     }
   } else {
     return NextResponse.json({ ok: false, error: "Invalid action" }, { status: 400 });
@@ -132,7 +114,7 @@ export async function POST(req) {
     offset: 0,
     lastSeenReviewedAt: state.lastSeenReviewedAt,
     staffId: staff.id,
-    officeId: staff.office_id || "registrar",
+    officeId,
   });
 
   return NextResponse.json({

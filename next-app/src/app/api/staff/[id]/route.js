@@ -1,33 +1,62 @@
 import { NextResponse } from "next/server";
 import { archiveStaff, restoreStaff, getStaffById, updateStaff } from "../../../../lib/staffRepo";
 import { writeAuditLog } from "../../../../lib/auditLogRequest";
-import { getSessionCookieName, verifySessionToken } from "../../../../lib/jwt";
 import { requireTOTP, extractTOTPToken } from "../../../../lib/totpMiddleware";
 import { isUniqueViolation } from "../../../../lib/dbErrors";
+import { requireAdmin, createAuthErrorResponse, getPrincipalOfficeId } from "../../../../lib/authHelpers";
+import { canManageStaffRole, canAccessOffice, canDeactivateStaffAccount, isSystemAdminRole, normalizeRole } from "../../../../lib/roleUtils";
+import { canAccessResource } from "../../../../lib/resourceAuthorization";
+import { bumpSessionVersion } from "@/lib/authSessions";
+import { queryOne } from "@/lib/postgres";
 
 export const runtime = "nodejs";
 
-async function getCurrentUserId(req) {
+async function getStaffDisplayNameById(id, officeId) {
   try {
-    const token = req.cookies.get(getSessionCookieName())?.value || "";
-    if (!token) return null;
-    const payload = await verifySessionToken(token);
-    return payload.sub || null;
-  } catch (err) {
-    return null;
-  }
-}
-
-async function getStaffDisplayNameById(id) {
-  try {
-    const s = await getStaffById(id);
+    const s = await getStaffById(id, officeId ? { officeId } : {});
     return s ? `${s.fname} ${s.lname}` : id;
   } catch {
     return id;
   }
 }
 
+async function getScopedTargetStaff(id, user) {
+  const officeId = isSystemAdminRole(user.role) ? null : getPrincipalOfficeId(user);
+  if (!isSystemAdminRole(user.role) && !officeId) {
+    return { error: "Office scope is required" };
+  }
+  const row = await getStaffById(id, officeId ? { officeId } : {});
+  return {
+    officeId,
+    row: row && canAccessResource(user, "staff", row) ? row : null,
+  };
+}
+
+async function getActiveGlobalAdminCount() {
+  const row = await queryOne(
+    `SELECT COUNT(*)::int AS count
+       FROM staff
+      WHERE status = 'Active'
+        AND lower(role) IN ('systemadmin', 'system_admin', 'system admin', 'superadmin', 'super admin')`,
+  );
+  return Number(row?.count || 0);
+}
+
+async function canDeactivateTarget(actorId, targetStaff) {
+  if (!canDeactivateStaffAccount({
+    actorId,
+    targetId: targetStaff?.id,
+    targetRole: targetStaff?.role,
+    activeGlobalAdminCount: Number.POSITIVE_INFINITY,
+  })) return false;
+  if (String(targetStaff?.status || "").toLowerCase() !== "active") return true;
+  const activeGlobalAdminCount = await getActiveGlobalAdminCount();
+  return canDeactivateStaffAccount({ actorId, targetId: targetStaff.id, targetRole: targetStaff.role, activeGlobalAdminCount });
+}
+
 export async function PATCH(req, ctx) {
+  const access = await requireAdmin(req);
+  if (access.error || !access.user) return createAuthErrorResponse(access.error || "Admin access required", access.error?.startsWith("Access denied") ? 403 : 401);
   const params = await ctx.params;
   const raw = params.id;
   const id = String(raw || "").trim();
@@ -38,19 +67,18 @@ export async function PATCH(req, ctx) {
     );
   }
 
-  const currentUserId = await getCurrentUserId(req);
-  if (!currentUserId) {
-    return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
-  }
+  const currentUserId = access.user.id;
 
-  const targetStaff = await getStaffById(id);
+  const targetAccess = await getScopedTargetStaff(id, access.user);
+  if (targetAccess.error) return createAuthErrorResponse(targetAccess.error, 403);
+  const targetStaff = targetAccess.row;
   if (!targetStaff) {
     return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
   }
 
-  const currentUser = await getStaffById(currentUserId);
-  const isSuper = currentUser?.role === "SuperAdmin" || currentUser?.role === "SystemAdmin";
-  const isAdmin = currentUser?.role === "Admin";
+  const currentUser = access.user;
+  const isSuper = isSystemAdminRole(currentUser.role);
+  const isAdmin = normalizeRole(currentUser.role) === "Admin";
 
   const body = await req.json().catch(() => null);
   if (!body || typeof body !== "object") {
@@ -62,7 +90,7 @@ export async function PATCH(req, ctx) {
 
   // Permission Check
   if (currentUserId !== id) {
-    if (!isSuper && (!isAdmin || currentUser?.office_id !== targetStaff.office_id)) {
+    if (!isSuper && (!isAdmin || currentUser.office_id !== targetStaff.office_id)) {
       return NextResponse.json({ ok: false, error: "Forbidden" }, { status: 403 });
     }
   } else {
@@ -72,15 +100,29 @@ export async function PATCH(req, ctx) {
     }
   }
 
-  const name = await getStaffDisplayNameById(id);
+  const name = await getStaffDisplayNameById(id, targetStaff.office_id);
 
   // Handle explicit status toggle (archiving/restoring)
   const isStatusToggle = body.status !== undefined && Object.keys(body).length === 1;
   if (isStatusToggle) {
     try {
+      const totpToken = extractTOTPToken(req.headers);
+      const totpResult = await requireTOTP(currentUserId, totpToken, { requireEnabled: true });
+      if (!totpResult.valid) {
+        return NextResponse.json(
+          { ok: false, error: "TOTP verification required: " + totpResult.error, requiresTOTP: true },
+          { status: 403 }
+        );
+      }
+      if (body.status === "Inactive" || body.status === "Archived") {
+        if (!(await canDeactivateTarget(currentUserId, targetStaff))) {
+          return NextResponse.json({ ok: false, error: "You cannot disable yourself or the last active system administrator." }, { status: 403 });
+        }
+      }
       if (body.status === "Active") {
-        const row = await restoreStaff(id);
+        const row = await restoreStaff(id, { officeId: targetStaff.office_id });
         if (!row) return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
+        await bumpSessionVersion(id);
         await writeAuditLog(req, `Restore Account`, { 
           details: `restored system access permissions for personnel account '${name}' (ID: ${id})`,
           entity_type: "User",
@@ -88,8 +130,9 @@ export async function PATCH(req, ctx) {
         });
         return NextResponse.json({ ok: true, data: row });
       } else if (body.status === "Inactive" || body.status === "Archived") {
-        const row = await archiveStaff(id);
+        const row = await archiveStaff(id, { officeId: targetStaff.office_id });
         if (!row) return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
+        await bumpSessionVersion(id);
         await writeAuditLog(req, `Archive Account`, { 
           details: `archived personnel profile for '${name}' (ID: ${id}) and suspended all associated credentials`,
           severity: "WARNING",
@@ -101,7 +144,7 @@ export async function PATCH(req, ctx) {
     } catch (statusErr) {
       console.error("[api/staff/[id]] status toggle error:", statusErr);
       return NextResponse.json(
-        { ok: false, error: statusErr.message || "Failed to update personnel status" },
+        { ok: false, error: "Failed to update personnel status" },
         { status: 500 }
       );
     }
@@ -118,10 +161,45 @@ export async function PATCH(req, ctx) {
     lastActive: body.lastActive === undefined ? undefined : String(body.lastActive).trim(),
   };
 
-  const needsTOTP = patch.role !== undefined || patch.officeId !== undefined;
+  if (patch.role !== undefined && !canManageStaffRole(currentUser.role, patch.role)) {
+    return NextResponse.json({ ok: false, error: "You are not authorized to assign that role." }, { status: 403 });
+  }
+  if (
+    patch.role !== undefined &&
+    isSystemAdminRole(targetStaff.role) &&
+    !isSystemAdminRole(patch.role) &&
+    !(await canDeactivateTarget(currentUserId, targetStaff))
+  ) {
+    return NextResponse.json({ ok: false, error: "You cannot remove the last active system administrator." }, { status: 403 });
+  }
+  if (
+    patch.role !== undefined &&
+    !isSystemAdminRole(targetStaff.role) &&
+    isSystemAdminRole(patch.role)
+  ) {
+    return NextResponse.json(
+      { ok: false, error: "Existing personnel accounts cannot be promoted to System Admin." },
+      { status: 400 }
+    );
+  }
+  if (
+    patch.officeId !== undefined &&
+    !isSystemAdminRole(targetStaff.role) &&
+    !patch.officeId
+  ) {
+    return NextResponse.json(
+      { ok: false, error: "Non-System Admin personnel must have an assigned office." },
+      { status: 400 }
+    );
+  }
+  if (patch.officeId !== undefined && !isSuper && String(patch.officeId || "") !== String(targetStaff.office_id || "")) {
+    return NextResponse.json({ ok: false, error: "You cannot move staff between offices." }, { status: 403 });
+  }
+
+  const needsTOTP = Object.keys(patch).some((key) => patch[key] !== undefined);
   if (needsTOTP) {
     const totpToken = extractTOTPToken(req.headers);
-    const totpResult = await requireTOTP(currentUserId, totpToken);
+    const totpResult = await requireTOTP(currentUserId, totpToken, { requireEnabled: true });
     if (!totpResult.valid) {
       return NextResponse.json(
         { ok: false, error: "TOTP verification required: " + totpResult.error, requiresTOTP: true },
@@ -131,19 +209,12 @@ export async function PATCH(req, ctx) {
   }
 
   try {
-    if (currentUserId === id && patch.role !== undefined) {
-      const existing = await getStaffById(id);
-      if (existing && existing.role !== patch.role) {
-        return NextResponse.json(
-          { ok: false, error: "You cannot change your own role." },
-          { status: 403 }
-        );
-      }
-    }
-
-    const row = await updateStaff(id, patch);
+    const row = await updateStaff(id, patch, { officeId: targetStaff.office_id });
     if (!row) {
       return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
+    }
+    if (patch.role !== undefined || patch.officeId !== undefined || patch.status !== undefined) {
+      await bumpSessionVersion(id);
     }
     await writeAuditLog(req, `Update Account`, { 
       details: `modified profile configuration and registry metadata for personnel '${name}' (ID: ${id})`,
@@ -169,6 +240,8 @@ export async function PATCH(req, ctx) {
 }
 
 export async function DELETE(req, ctx) {
+  const access = await requireAdmin(req);
+  if (access.error || !access.user) return createAuthErrorResponse(access.error || "Admin access required", access.error?.startsWith("Access denied") ? 403 : 401);
   const params = await ctx.params;
   const raw = params.id;
   const id = String(raw || "").trim();
@@ -179,26 +252,25 @@ export async function DELETE(req, ctx) {
     );
   }
 
-  const currentUserId = await getCurrentUserId();
-  if (!currentUserId) {
-    return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
-  }
+  const currentUserId = access.user.id;
 
-  const targetStaff = await getStaffById(id);
+  const targetAccess = await getScopedTargetStaff(id, access.user);
+  if (targetAccess.error) return createAuthErrorResponse(targetAccess.error, 403);
+  const targetStaff = targetAccess.row;
   if (!targetStaff) {
     return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
   }
 
-  const currentUser = await getStaffById(currentUserId);
-  const isSuper = currentUser?.role === "SuperAdmin" || currentUser?.role === "SystemAdmin";
-  const isAdmin = currentUser?.role === "Admin";
+  const currentUser = access.user;
+  const isSuper = isSystemAdminRole(currentUser.role);
+  const isAdmin = normalizeRole(currentUser.role) === "Admin";
 
-  if (!isSuper && (!isAdmin || currentUser?.office_id !== targetStaff.office_id)) {
+  if (!isSuper && (!isAdmin || currentUser.office_id !== targetStaff.office_id)) {
     return NextResponse.json({ ok: false, error: "Forbidden" }, { status: 403 });
   }
 
   const totpToken = extractTOTPToken(req.headers);
-  const totpResult = await requireTOTP(currentUserId, totpToken);
+  const totpResult = await requireTOTP(currentUserId, totpToken, { requireEnabled: true });
   if (!totpResult.valid) {
     return NextResponse.json(
       { ok: false, error: "TOTP verification required: " + totpResult.error, requiresTOTP: true },
@@ -213,10 +285,15 @@ export async function DELETE(req, ctx) {
     );
   }
 
-  const row = await archiveStaff(id);
+  if (!(await canDeactivateTarget(currentUserId, targetStaff))) {
+    return NextResponse.json({ ok: false, error: "You cannot disable yourself or the last active system administrator." }, { status: 403 });
+  }
+
+  const row = await archiveStaff(id, { officeId: targetStaff.office_id });
   if (!row) {
     return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
   }
+  await bumpSessionVersion(id);
   const name = `${targetStaff.fname} ${targetStaff.lname}`;
   await writeAuditLog(req, `Archive Account`, { 
     details: `archived personnel profile for '${name}' (ID: ${id}) via administrative DELETE protocol`,
@@ -228,7 +305,9 @@ export async function DELETE(req, ctx) {
   return NextResponse.json({ ok: true, data: row });
 }
 
-export async function GET(_req, ctx) {
+export async function GET(req, ctx) {
+  const access = await requireAdmin(req);
+  if (access.error || !access.user) return createAuthErrorResponse(access.error || "Admin access required", access.error?.startsWith("Access denied") ? 403 : 401);
   const params = await ctx.params;
   const raw = params.id;
   const id = String(raw || "").trim();
@@ -239,22 +318,21 @@ export async function GET(_req, ctx) {
     );
   }
 
-  const currentUserId = await getCurrentUserId();
-  if (!currentUserId) {
-    return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
-  }
+  const currentUserId = access.user.id;
 
-  const row = await getStaffById(id);
+  const targetAccess = await getScopedTargetStaff(id, access.user);
+  if (targetAccess.error) return createAuthErrorResponse(targetAccess.error, 403);
+  const row = targetAccess.row;
   if (!row) {
     return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
   }
 
   // Permission Check
   if (currentUserId !== id) {
-    const currentUser = await getStaffById(currentUserId);
-    const isSuper = currentUser?.role === "SuperAdmin" || currentUser?.role === "SystemAdmin";
-    const isAdmin = currentUser?.role === "Admin";
-    if (!isSuper && (!isAdmin || currentUser?.office_id !== row.office_id)) {
+    const currentUser = access.user;
+    const isSuper = isSystemAdminRole(currentUser.role);
+    const isAdmin = normalizeRole(currentUser.role) === "Admin";
+    if (!isSuper && (!isAdmin || currentUser.office_id !== row.office_id)) {
       return NextResponse.json({ ok: false, error: "Forbidden" }, { status: 403 });
     }
   }

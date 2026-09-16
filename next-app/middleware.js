@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSessionCookieName, verifySessionToken } from "./src/lib/jwt";
+import { isPublicSessionPath } from "./src/lib/middlewarePolicy.js";
 
 function constantTimeEqual(a, b) {
   const sa = String(a || "");
@@ -12,12 +13,22 @@ function constantTimeEqual(a, b) {
   return diff === 0;
 }
 
-function addSecurityHeaders(response) {
+function createRequestNonce() {
+  return btoa(crypto.randomUUID());
+}
+
+function continueWithNonce(req, nonce) {
+  const requestHeaders = new Headers(req.headers);
+  requestHeaders.set("x-nonce", nonce);
+  return NextResponse.next({ request: { headers: requestHeaders } });
+}
+
+function addSecurityHeaders(response, nonce) {
   response.headers.set('X-Content-Type-Options', 'nosniff');
   response.headers.set('X-Frame-Options', 'DENY');
   response.headers.set('X-XSS-Protection', '1; mode=block');
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
-  response.headers.set('Content-Security-Policy', "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; frame-ancestors 'none';");
+  response.headers.set('Content-Security-Policy', `default-src 'self'; script-src 'self' 'nonce-${nonce}' 'strict-dynamic'; style-src 'self' 'nonce-${nonce}'; style-src-attr 'none'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self';`);
   response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
   return response;
 }
@@ -25,6 +36,7 @@ function addSecurityHeaders(response) {
 export async function middleware(req) {
   const { pathname } = req.nextUrl;
   const method = String(req.method || "GET").toUpperCase();
+  const nonce = createRequestNonce();
 
   // 1. Hot-folder ingest auth
   if (pathname === "/api/ingest/hot-folder" && method === "POST") {
@@ -33,42 +45,31 @@ export async function middleware(req) {
     const token = (match?.[1] || "").trim();
     const expected = String(process.env.HOT_FOLDER_INGEST_TOKEN || "").trim();
     if (!expected || !token || !constantTimeEqual(token, expected)) {
-      return addSecurityHeaders(NextResponse.json({ ok: false, error: "Invalid ingest token" }, { status: 401 }));
+      return addSecurityHeaders(NextResponse.json({ ok: false, error: "Invalid ingest token" }, { status: 401 }), nonce);
     }
-    return addSecurityHeaders(NextResponse.next());
+    return addSecurityHeaders(continueWithNonce(req, nonce), nonce);
   }
 
   // 2. Allow specific auth endpoints to skip session check
   // Note: Rate limiting for these is handled within the route handlers to avoid Edge Runtime issues
-  if (
-    pathname.startsWith("/api/auth/login") || 
-    pathname.startsWith("/api/auth/student/") ||
-    pathname.startsWith("/api/auth/logout") ||
-    pathname.startsWith("/api/auth/me") ||
-    pathname.startsWith("/api/auth/forgot-password") ||
-    pathname.startsWith("/api/public/") ||
-    (pathname.startsWith("/api/landing/") && method === "GET") ||
-    pathname === "/api/doc-types" ||
-    pathname === "/api/system/reset-db" ||
-    pathname === "/api/system/seed-mock-data"
-  ) {
-    return addSecurityHeaders(NextResponse.next());
+  if (isPublicSessionPath(pathname)) {
+    return addSecurityHeaders(continueWithNonce(req, nonce), nonce);
   }
 
   // 3. Public routes
   if (pathname === "/" || pathname === "/login" || pathname === "/student") {
-    return addSecurityHeaders(NextResponse.next());
+    return addSecurityHeaders(continueWithNonce(req, nonce), nonce);
   }
 
   // 4. Session validation for all other protected routes
   const token = req.cookies.get(getSessionCookieName())?.value || "";
   if (!token) {
     if (pathname.startsWith("/api/")) {
-      return addSecurityHeaders(NextResponse.json({ ok: false, error: "Not authenticated (Middleware)" }, { status: 401 }));
+      return addSecurityHeaders(NextResponse.json({ ok: false, error: "Not authenticated (Middleware)" }, { status: 401 }), nonce);
     }
     const url = req.nextUrl.clone();
-    url.pathname = "/login";
-    return addSecurityHeaders(NextResponse.redirect(url));
+    url.pathname = "/";
+    return addSecurityHeaders(NextResponse.redirect(url), nonce);
   }
 
   let payload;
@@ -76,11 +77,11 @@ export async function middleware(req) {
     payload = await verifySessionToken(token);
   } catch (err) {
     if (pathname.startsWith("/api/")) {
-      return addSecurityHeaders(NextResponse.json({ ok: false, error: "Invalid session (Middleware): " + err.message }, { status: 401 }));
+      return addSecurityHeaders(NextResponse.json({ ok: false, error: "Invalid session" }, { status: 401 }), nonce);
     }
     const url = req.nextUrl.clone();
-    url.pathname = "/login";
-    return addSecurityHeaders(NextResponse.redirect(url));
+    url.pathname = "/";
+    return addSecurityHeaders(NextResponse.redirect(url), nonce);
   }
 
   const role = String(payload?.role || "").toLowerCase().trim();
@@ -92,7 +93,7 @@ export async function middleware(req) {
     if (!isStudent) {
       const url = req.nextUrl.clone();
       url.pathname = "/";
-      return addSecurityHeaders(NextResponse.redirect(url));
+      return addSecurityHeaders(NextResponse.redirect(url), nonce);
     }
   }
 
@@ -106,7 +107,7 @@ export async function middleware(req) {
     ) {
       const url = req.nextUrl.clone();
       url.pathname = "/student";
-      return addSecurityHeaders(NextResponse.redirect(url));
+      return addSecurityHeaders(NextResponse.redirect(url), nonce);
     }
   }
 
@@ -116,7 +117,7 @@ export async function middleware(req) {
       const url = req.nextUrl.clone();
       url.pathname = isSystemAdmin || isAdmin ? "/admin" : "/staff";
       if (!isAdmin && !isSystemAdmin) url.pathname = "/";
-      return addSecurityHeaders(NextResponse.redirect(url));
+      return addSecurityHeaders(NextResponse.redirect(url), nonce);
     }
   }
 
@@ -124,7 +125,7 @@ export async function middleware(req) {
     if (!isAdmin && !isSystemAdmin) {
       const url = req.nextUrl.clone();
       url.pathname = "/staff";
-      return addSecurityHeaders(NextResponse.redirect(url));
+      return addSecurityHeaders(NextResponse.redirect(url), nonce);
     }
   }
 
@@ -132,29 +133,13 @@ export async function middleware(req) {
     if (!role) {
       const url = req.nextUrl.clone();
       url.pathname = "/";
-      return addSecurityHeaders(NextResponse.redirect(url));
+      return addSecurityHeaders(NextResponse.redirect(url), nonce);
     }
   }
 
-  // 6. Forward verified session payload in request headers to route handlers
-  const requestHeaders = new Headers(req.headers);
-  requestHeaders.set("x-office-id", payload?.office_id || "");
-  requestHeaders.set("x-user-role", payload?.role || "");
-  requestHeaders.set("x-user-id", payload?.sub || "");
-
-  if (payload?.role === "SystemAdmin" || payload?.role === "SuperAdmin") {
-    const { searchParams } = new URL(req.url);
-    const override = searchParams.get("officeId") || searchParams.get("office_id");
-    if (override) {
-      requestHeaders.set("x-office-override", override);
-    }
-  }
-
-  return addSecurityHeaders(NextResponse.next({
-    request: {
-      headers: requestHeaders,
-    }
-  }));
+  // Route handlers resolve the current principal and office from the request
+  // cookie. Middleware payload claims are only used for coarse redirects.
+  return addSecurityHeaders(continueWithNonce(req, nonce), nonce);
 }
 
 export const config = {

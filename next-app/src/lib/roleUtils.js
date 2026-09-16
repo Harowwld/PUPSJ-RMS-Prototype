@@ -9,13 +9,61 @@
  */
 
 /**
+ * Convert all supported role spellings to the documented canonical labels.
+ * SystemAdmin and SuperAdmin remain distinct labels for compatibility, but
+ * both are global administrator roles and are treated as equivalent by policy.
+ */
+export function normalizeRole(role) {
+  const normalized = String(role || "").toLowerCase().trim().replace(/[_-]+/g, " ");
+  if (normalized === "student") return "Student";
+  if (normalized === "systemadmin" || normalized === "system admin") return "SystemAdmin";
+  if (normalized === "superadmin" || normalized === "super admin") return "SuperAdmin";
+  if (normalized === "admin" || normalized === "administrator" || normalized.endsWith(" admin") || normalized.endsWith(" administrator")) return "Admin";
+  if (normalized === "staff" || normalized === "records staff" || normalized.endsWith(" staff")) return "Staff";
+  return null;
+}
+
+export function isStudentRole(role) {
+  return normalizeRole(role) === "Student";
+}
+
+export function canManageGlobal(role) {
+  return isSystemAdminRole(role);
+}
+
+export function canManageStaffRole(actorRole, targetRole) {
+  const actor = normalizeRole(actorRole);
+  const target = normalizeRole(targetRole);
+  if (!actor || !target || target === "Student") return false;
+  if (isSystemAdminRole(actor)) return true;
+  return actor === "Admin" && (target === "Admin" || target === "Staff");
+}
+
+/**
+ * Prevent an administrator from removing their own access or the last active
+ * global administrator's access.
+ */
+export function canDeactivateStaffAccount({ actorId, targetId, targetRole, activeGlobalAdminCount }) {
+  if (!actorId || !targetId || String(actorId) === String(targetId)) return false;
+  if (isSystemAdminRole(targetRole) && Number(activeGlobalAdminCount) <= 1) return false;
+  return true;
+}
+
+export function canAccessOffice(principal, officeId) {
+  if (!principal || !officeId) return false;
+  if (isSystemAdminRole(principal.role)) return true;
+  const principalOffice = principal.officeId ?? principal.office_id;
+  return Boolean(principalOffice) && String(principalOffice).toLowerCase() === String(officeId).toLowerCase();
+}
+
+/**
  * Check if a role string represents a SystemAdmin role (global, above all offices)
  * @param {string} role - The role to check
  * @returns {boolean}
  */
 export function isSystemAdminRole(role) {
-  const normalized = String(role || "").toLowerCase().trim();
-  return normalized === "systemadmin" || normalized === "system_admin" || normalized === "system admin" || normalized === "superadmin" || normalized === "super admin";
+  const normalized = String(role || "").toLowerCase().trim().replace(/[_-]+/g, " ");
+  return normalized === "systemadmin" || normalized === "system admin" || normalized === "superadmin" || normalized === "super admin";
 }
 
 /**
@@ -26,10 +74,10 @@ export function isSystemAdminRole(role) {
  * @returns {boolean}
  */
 export function isAdminRole(role) {
-  const normalized = String(role || "").toLowerCase().trim();
+  const normalized = String(role || "").toLowerCase().trim().replace(/[_-]+/g, " ");
   // SystemAdmin is a separate, higher role
   if (isSystemAdminRole(normalized)) return false;
-  return ["admin", "administrator"].includes(normalized);
+  return ["admin", "administrator"].includes(normalized) || normalized.endsWith(" admin") || normalized.endsWith(" administrator");
 }
 
 /**
@@ -48,8 +96,9 @@ export function hasAdminPrivileges(role) {
  * @returns {boolean}
  */
 export function isStaffRole(role) {
-  const normalized = String(role || "").toLowerCase().trim();
-  return normalized === "staff" || normalized === "records staff";
+  const normalized = String(role || "").toLowerCase().trim().replace(/[_-]+/g, " ");
+  if (isSystemAdminRole(normalized) || isAdminRole(normalized)) return false;
+  return normalized === "staff" || normalized === "records staff" || normalized.endsWith(" staff");
 }
 
 /**

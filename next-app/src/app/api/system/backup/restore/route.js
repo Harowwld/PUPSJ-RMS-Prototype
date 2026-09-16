@@ -3,6 +3,8 @@ import { requireAdmin, createAuthErrorResponse } from "@/lib/authHelpers";
 import { requireTOTP, extractTOTPToken } from "@/lib/totpMiddleware";
 import { executeRestoreBackup } from "@/lib/backupsRepo";
 import { writeAuditLog } from "@/lib/auditLogRequest";
+import { getPrincipalOfficeId } from "@/lib/backupsRepo";
+import { isSystemAdminRole } from "@/lib/roleUtils";
 
 export const runtime = "nodejs";
 
@@ -14,17 +16,23 @@ export async function POST(req) {
     }
 
     const totpToken = extractTOTPToken(req.headers);
-    const totpResult = await requireTOTP(user.id, totpToken);
+    const totpResult = await requireTOTP(user.id, totpToken, { requireEnabled: true });
     if (!totpResult.valid) {
       return NextResponse.json(
         {
           ok: false,
           error: "TOTP verification required: " + totpResult.error,
-          requiresTOTP: true,
+          requiresTOTP: !totpResult.notConfigured,
+          totpNotConfigured: !!totpResult.notConfigured,
           missingToken: !!totpResult.missing,
         },
         { status: 403 }
       );
+    }
+
+    const userOffice = getPrincipalOfficeId(user);
+    if (!isSystemAdminRole(user.role) && !userOffice) {
+      return createAuthErrorResponse("Office scope is required", 403);
     }
 
     const formData = await req.formData();
@@ -42,7 +50,7 @@ export async function POST(req) {
     const result = await executeRestoreBackup(fileBuffer, {
       actorId: user.id,
       userRole: user.role,
-      userOffice: user.office_id || user.section || "registrar",
+      userOffice,
     });
 
     const fileName = file.name || "backup-archive";
@@ -50,7 +58,7 @@ export async function POST(req) {
       details: `Restored backup package '${fileName}' (${result.tablesRestored.length} tables, ${result.filesRestored} files)`,
       severity: "CRITICAL",
       entity_type: "Backup",
-      officeId: user.office_id || user.section || null,
+      officeId: userOffice,
     });
 
     return NextResponse.json({

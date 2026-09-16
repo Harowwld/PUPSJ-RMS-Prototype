@@ -840,11 +840,14 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
       const res = await fetch("/api/storage-layout", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(layout),
+        body: JSON.stringify({ ...layout, version: layout.version || 2 }),
       })
       const json = await res.json()
       if (!res.ok || !json?.ok) throw new Error(json?.error || "Save failed")
       
+      if (json.data) {
+        setLayout(json.data)
+      }
       setIsDirty?.(false)
       setSaveConfirmOpen(false)
       showToast?.({
@@ -1474,7 +1477,8 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
         title="Restore Default Templates" 
         message="This will delete all custom layout templates and restore the factory default room layouts. Are you sure you want to proceed?" 
         confirmLabel="Restore" 
-        variant="warning" 
+        variant="success" 
+        isRestoreModal={true}
         onConfirm={restoreDefaultTemplates} 
         isLoading={saving}
         isAppleStyled={true}
