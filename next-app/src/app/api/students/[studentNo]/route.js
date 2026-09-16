@@ -9,7 +9,8 @@ import { writeAuditLog } from "../../../../lib/auditLogRequest";
 import { canonicalizeCabinetId } from "../../../../lib/storageLayoutUtils";
 import { requireAdmin, requireStaff, createAuthErrorResponse } from "../../../../lib/authHelpers";
 import { isSystemAdminRole } from "../../../../lib/roleUtils";
-import { canAccessResource } from "../../../../lib/resourceAuthorization";
+import { canAccessResource } from "@/lib/resourceAuthorization";
+import { sanitizeUser } from "@/lib/dataSanitizer";
 
 export const runtime = "nodejs";
 
@@ -42,7 +43,7 @@ export async function GET(req, ctx) {
     return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
   }
 
-  return NextResponse.json({ ok: true, data: row });
+  return NextResponse.json({ ok: true, data: sanitizeUser(row) });
 }
 
 export async function PATCH(req, ctx) {
@@ -85,7 +86,7 @@ export async function PATCH(req, ctx) {
       entity_type: "Student",
       entity_id: studentNo
     });
-    return NextResponse.json({ ok: true, data: row });
+    return NextResponse.json({ ok: true, data: sanitizeUser(row) });
   } else if (body.status === "Archived") {
     const row = await archiveStudent(studentNo, {
       officeId: isSystemAdminRole(access.user.role) ? undefined : officeId,
@@ -97,7 +98,7 @@ export async function PATCH(req, ctx) {
       entity_type: "Student",
       entity_id: studentNo
     });
-    return NextResponse.json({ ok: true, data: row });
+    return NextResponse.json({ ok: true, data: sanitizeUser(row) });
   }
 
   const row = await updateStudent(studentNo, {
@@ -122,7 +123,7 @@ export async function PATCH(req, ctx) {
     entity_id: studentNo
   });
 
-  return NextResponse.json({ ok: true, data: row });
+  return NextResponse.json({ ok: true, data: sanitizeUser(row) });
 }
 
 export async function DELETE(req, ctx) {
@@ -158,5 +159,5 @@ export async function DELETE(req, ctx) {
     entity_id: studentNo
   });
 
-  return NextResponse.json({ ok: true, data: row });
+  return NextResponse.json({ ok: true, data: sanitizeUser(row) });
 }

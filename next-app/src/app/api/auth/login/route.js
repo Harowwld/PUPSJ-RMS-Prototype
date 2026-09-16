@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { verifyTurnstileToken } from "@/lib/turnstile";
 import {
   getStaffByUsername,
   setStaffPasswordById,
@@ -86,7 +87,17 @@ export async function POST(req) {
     ));
   }
 
-  const { username, password } = validation.data;
+  const { username, password, cfTurnstileResponse } = validation.data;
+
+  // 3. Verify Turnstile Token
+  const isTurnstileValid = await verifyTurnstileToken(cfTurnstileResponse);
+  if (!isTurnstileValid) {
+    authDebug("login.bot_detected", { reason: "Turnstile verification failed" });
+    return addSecurityHeaders(NextResponse.json(
+      { ok: false, error: "Bot verification failed. Please refresh the page and try again." },
+      { status: 403 }
+    ));
+  }
 
   // 2. Authenticate
   const cleanUsername = String(username || "").trim();

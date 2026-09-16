@@ -5,7 +5,8 @@ import { canonicalizeCabinetId } from "../../../lib/storageLayoutUtils";
 import { isUniqueViolation } from "../../../lib/dbErrors";
 import { requireAdmin, requireStaff, createAuthErrorResponse } from "../../../lib/authHelpers";
 import { isSystemAdminRole, normalizeRole } from "../../../lib/roleUtils";
-import { canAccessResource } from "../../../lib/resourceAuthorization";
+import { canAccessResource } from "@/lib/resourceAuthorization";
+import { sanitizeUser } from "@/lib/dataSanitizer";
 
 export const runtime = "nodejs";
 
@@ -45,7 +46,8 @@ export async function GET(req) {
     offset,
   });
 
-  return NextResponse.json({ ok: true, data: rows.filter((row) => canAccessResource(access.user, "student", { ...row, office_id: officeId })) });
+  const accessibleRows = rows.filter((row) => canAccessResource(access.user, "student", { ...row, office_id: officeId }));
+  return NextResponse.json({ ok: true, data: sanitizeUser(accessibleRows) });
 }
 
 export async function POST(req) {

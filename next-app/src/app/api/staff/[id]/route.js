@@ -5,7 +5,8 @@ import { requireTOTP, extractTOTPToken } from "../../../../lib/totpMiddleware";
 import { isUniqueViolation } from "../../../../lib/dbErrors";
 import { requireAdmin, createAuthErrorResponse, getPrincipalOfficeId } from "../../../../lib/authHelpers";
 import { canManageStaffRole, canAccessOffice, canDeactivateStaffAccount, isSystemAdminRole, normalizeRole } from "../../../../lib/roleUtils";
-import { canAccessResource } from "../../../../lib/resourceAuthorization";
+import { canAccessResource } from "@/lib/resourceAuthorization";
+import { sanitizeUser } from "@/lib/dataSanitizer";
 import { bumpSessionVersion } from "@/lib/authSessions";
 import { queryOne } from "@/lib/postgres";
 
@@ -128,7 +129,7 @@ export async function PATCH(req, ctx) {
           entity_type: "User",
           entity_id: id
         });
-        return NextResponse.json({ ok: true, data: row });
+        return NextResponse.json({ ok: true, data: sanitizeUser(row) });
       } else if (body.status === "Inactive" || body.status === "Archived") {
         const row = await archiveStaff(id, { officeId: targetStaff.office_id });
         if (!row) return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
@@ -139,7 +140,7 @@ export async function PATCH(req, ctx) {
           entity_type: "User",
           entity_id: id
         });
-        return NextResponse.json({ ok: true, data: row });
+        return NextResponse.json({ ok: true, data: sanitizeUser(row) });
       }
     } catch (statusErr) {
       console.error("[api/staff/[id]] status toggle error:", statusErr);
@@ -222,7 +223,7 @@ export async function PATCH(req, ctx) {
       entity_id: id
     });
 
-    return NextResponse.json({ ok: true, data: row });
+    return NextResponse.json({ ok: true, data: sanitizeUser(row) });
   } catch (e) {
     const msg = String(e?.message || "");
     if (isUniqueViolation(e)) {
@@ -302,7 +303,7 @@ export async function DELETE(req, ctx) {
     entity_id: id
   });
 
-  return NextResponse.json({ ok: true, data: row });
+  return NextResponse.json({ ok: true, data: sanitizeUser(row) });
 }
 
 export async function GET(req, ctx) {
@@ -337,5 +338,5 @@ export async function GET(req, ctx) {
     }
   }
 
-  return NextResponse.json({ ok: true, data: row });
+  return NextResponse.json({ ok: true, data: sanitizeUser(row) });
 }
