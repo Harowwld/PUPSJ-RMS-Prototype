@@ -82,12 +82,12 @@ export async function createStaff({
     [
       id,
       officeId || null,
-      fname,
-      lname,
+      encryptPII(fname),
+      encryptPII(lname),
       role,
       section,
       status || "Active",
-      email,
+      encryptPII(email ? String(email).toLowerCase() : ""),
       lastActive || null,
       password ? hashPassword(password) : null,
     ]
@@ -128,24 +128,35 @@ export async function listStaff({
 
 
 
-  const where = filters.length ? `WHERE ${filters.join(" AND ")}` : "";
   const lim = Math.min(Math.max(parseInt(limit) || 200, 1), 500);
   const off = Math.max(parseInt(offset) || 0, 0);
 
+  const cleanQ = String(q || "").trim();
+  const isIdOnly = Boolean(cleanQ && /^PUP/i.test(cleanQ));
+
+  if (isIdOnly) {
+    filters.push("LOWER(id) LIKE LOWER(?)");
+    params.push(`%${cleanQ}%`);
+  }
+
+  const where = filters.length ? `WHERE ${filters.join(" AND ")}` : "";
+
   let rows;
-  if (!q) {
+  if (!cleanQ || isIdOnly) {
+    const orderClause = isIdOnly ? "ORDER BY id ASC" : "ORDER BY updated_at DESC";
     rows = await dbAll(
-      `SELECT * FROM staff ${where} ORDER BY updated_at DESC LIMIT ? OFFSET ?`,
+      `SELECT * FROM staff ${where} ${orderClause} LIMIT ? OFFSET ?`,
       [...params, lim, off]
     );
+    return (rows || []).map(decryptStaffRow);
   } else {
     rows = await dbAll(`SELECT * FROM staff ${where}`, [...params]);
   }
 
   let decryptedRows = (rows || []).map(decryptStaffRow);
   
-  if (q) {
-    const search = q.toLowerCase();
+  if (cleanQ) {
+    const search = cleanQ.toLowerCase();
     decryptedRows = decryptedRows.filter(r => {
       if (r.id && r.id.toLowerCase().includes(search)) return true;
       if (r.fname && r.fname.toLowerCase().includes(search)) return true;
@@ -155,9 +166,13 @@ export async function listStaff({
     });
     
     decryptedRows.sort((a, b) => {
-      const nameA = (a.lname || '').toLowerCase();
-      const nameB = (b.lname || '').toLowerCase();
-      return nameA < nameB ? -1 : (nameA > nameB ? 1 : 0);
+      const lnameA = (a.lname || '').toLowerCase();
+      const lnameB = (b.lname || '').toLowerCase();
+      const lnameComp = lnameA.localeCompare(lnameB);
+      if (lnameComp !== 0) return lnameComp;
+      const fnameA = (a.fname || '').toLowerCase();
+      const fnameB = (b.fname || '').toLowerCase();
+      return fnameA.localeCompare(fnameB);
     });
 
     return decryptedRows.slice(off, off + lim);
@@ -175,8 +190,11 @@ export async function getStaffById(id, { officeId } = {}) {
 export async function getStaffByUsername(username) {
   const u = String(username || "").trim();
   if (!u) return null;
-  const row = await dbGet("SELECT * FROM staff WHERE email = ? OR lower(id) = lower(?)", [encryptPII(u.toLowerCase()), u]);
-  return row || null;
+  const row = await dbGet(
+    "SELECT * FROM staff WHERE email = ? OR lower(email) = lower(?) OR lower(id) = lower(?)",
+    [encryptPII(u.toLowerCase()), u, u]
+  );
+  return decryptStaffRow(row) || null;
 }
 
 export async function updateStaff(originalId, patch, { officeId } = {}) {
@@ -187,12 +205,12 @@ export async function updateStaff(originalId, patch, { officeId } = {}) {
   const next = {
     id: nextId,
     office_id: patch.officeId !== undefined ? patch.officeId : (patch.office_id !== undefined ? patch.office_id : existing.office_id),
-    fname: patch.fname ?? existing.fname,
-    lname: patch.lname ?? existing.lname,
+    fname: patch.fname !== undefined ? encryptPII(patch.fname) : encryptPII(existing.fname),
+    lname: patch.lname !== undefined ? encryptPII(patch.lname) : encryptPII(existing.lname),
     role: patch.role ?? existing.role,
     section: patch.section ?? existing.section,
     status: patch.status ?? existing.status,
-    email: patch.email ?? existing.email,
+    email: patch.email !== undefined ? encryptPII(String(patch.email).toLowerCase()) : encryptPII(existing.email ? String(existing.email).toLowerCase() : ""),
     last_active:
       patch.lastActive === undefined ? existing.last_active : patch.lastActive,
     avatar_filename:

@@ -73,8 +73,9 @@ export async function authenticateStudent({ studentNo, username, email, identifi
      FROM student_accounts sa 
      LEFT JOIN students s ON s.student_no = sa.student_no
      WHERE (sa.student_no IS NOT NULL AND upper(sa.student_no) = $1) 
-        OR coalesce(sa.email, '') = $2`,
-    [cleanNo, encryptPII(cleanEmail)]
+        OR coalesce(sa.email, '') = $2
+        OR lower(coalesce(sa.email, '')) = lower($3)`,
+    [cleanNo, encryptPII(cleanEmail), cleanEmail]
   );
   const row = decryptStudentRow(rowQuery);
   if (!row || String(row.status).toLowerCase() !== "active") return null;
@@ -148,17 +149,19 @@ export async function getStudentSession(req) {
            FROM student_accounts sa
            LEFT JOIN students s ON s.student_no = sa.student_no
            WHERE (sa.student_no IS NOT NULL AND upper(sa.student_no) = upper($1))
-              OR coalesce(sa.email, '') = $2`,
-          [payload.student_no || "", payload.email || ""]
+              OR coalesce(sa.email, '') = $2
+              OR lower(coalesce(sa.email, '')) = lower($3)`,
+          [payload.student_no || "", encryptPII((payload.email || "").toLowerCase()), (payload.email || "").toLowerCase()]
         );
 
     if (!account || String(account.account_status).toLowerCase() !== "active") return null;
     if (account.student_status && String(account.student_status).toLowerCase() !== "active") return null;
 
+    const decryptedAccount = decryptStudentRow(account);
     return {
-      accountId: account.id || payload.account_id || null,
-      studentNo: account.student_no ? String(account.student_no) : null,
-      email: account.email || payload.email || null,
+      accountId: decryptedAccount.id || payload.account_id || null,
+      studentNo: decryptedAccount.student_no ? String(decryptedAccount.student_no) : null,
+      email: decryptedAccount.email || payload.email || null,
       payload,
     };
   } catch {

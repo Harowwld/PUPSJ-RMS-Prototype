@@ -6,6 +6,7 @@ import { isSessionActive } from "./authSessions.js";
 import { queryOne } from "./postgres.js";
 import { isStudentRole, isSystemAdminRole, normalizeRole } from "./roleUtils.js";
 import { checkCSRFProtection } from "./csrfProtection.js";
+import { decryptStudentRow } from "./studentAuth.js";
 
 /**
  * Validates session and returns user information with role verification
@@ -57,22 +58,23 @@ export async function getAuthenticatedPrincipal(req) {
         await logUnauthorizedAccess(req, "Inactive or missing student account", { userId });
         return null;
       }
+      const decryptedAccount = decryptStudentRow(account);
       return {
-        id: String(account.id),
-        accountId: account.id,
+        id: String(decryptedAccount.id),
+        accountId: decryptedAccount.id,
         principalType: "student",
         role: "Student",
         officeId: null,
         office_id: null,
-        studentNo: account.student_no ? String(account.student_no) : null,
-        student_no: account.student_no ? String(account.student_no) : null,
-        email: account.email || null,
+        studentNo: decryptedAccount.student_no ? String(decryptedAccount.student_no) : null,
+        student_no: decryptedAccount.student_no ? String(decryptedAccount.student_no) : null,
+        email: decryptedAccount.email || null,
         status: "Active",
         sessionId: payload.jti,
         jti: payload.jti,
-        fname: account.first_name || "",
-        lname: account.last_name || "",
-        avatar_filename: account.avatar_filename || null,
+        fname: decryptedAccount.first_name || "",
+        lname: decryptedAccount.last_name || "",
+        avatar_filename: decryptedAccount.avatar_filename || null,
         payload,
       };
     }

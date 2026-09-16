@@ -1,6 +1,7 @@
 import dotenv from "dotenv";
 import { Pool } from "pg";
 import { hashPassword } from "../src/lib/passwordHash.js";
+import { encryptPII } from "../src/lib/piiEncryption.js";
 
 dotenv.config({ path: ".env.local" });
 dotenv.config();
@@ -35,7 +36,7 @@ try {
         password_hash = $8,
         password_last_changed = NOW(),
         updated_at = NOW()
-    `, [id, office, fname, lname, role, section, email, staffHash]);
+    `, [id, office, encryptPII(fname), encryptPII(lname), role, section, encryptPII(email.toLowerCase()), staffHash]);
   }
 
   // 2. Map legacy sample records and purge legacy accounts

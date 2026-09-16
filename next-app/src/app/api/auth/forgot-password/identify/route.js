@@ -4,6 +4,7 @@ import { query, queryOne } from "@/lib/postgres";
 import { ForgotPasswordIdentifySchema } from "@/lib/authSchemas";
 import { checkAuthForgotPasswordRateLimit } from "@/lib/rateLimiter";
 import { writeGlobalAuditLog } from "@/lib/auditLogRequest";
+import { getStaffByUsername } from "@/lib/staffRepo";
 
 export const runtime = "nodejs";
 

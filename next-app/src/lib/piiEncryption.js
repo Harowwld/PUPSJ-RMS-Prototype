@@ -20,6 +20,9 @@ function getEncryptionKey() {
  */
 export function encryptPII(text) {
   if (!text) return text;
+  if (typeof text === 'string' && text.startsWith('enc:v1:')) {
+    return text;
+  }
   try {
     const key = getEncryptionKey();
     // Deterministic IV based on the text itself (HMAC)
