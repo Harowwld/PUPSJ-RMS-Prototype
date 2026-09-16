@@ -118,20 +118,10 @@ async function _POST(req) {
   const isSuperAdminAlias = lowerUser === "admin.default@pup.local" || lowerUser === "pupregistrar-001";
   const searchIdentifier = isSuperAdminAlias ? "superadmin@pup.local" : cleanUsername;
 
-  let staff = process.env.DATABASE_URL
-    ? await queryOne(
-        "SELECT * FROM staff WHERE lower(email) = lower($1) OR lower(id) = lower($1)",
-        [searchIdentifier]
-      )
-    : await getStaffByUsername(searchIdentifier);
+  let staff = await getStaffByUsername(searchIdentifier);
 
   if (!staff && isSuperAdminAlias) {
-    staff = process.env.DATABASE_URL
-      ? await queryOne(
-          "SELECT * FROM staff WHERE lower(email) = lower($1) OR lower(id) = lower($1)",
-          [cleanUsername]
-        )
-      : await getStaffByUsername(cleanUsername);
+    staff = await getStaffByUsername(cleanUsername);
   }
 
   if (!staff) {

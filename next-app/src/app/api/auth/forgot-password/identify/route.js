@@ -59,11 +59,8 @@ export async function POST(req) {
     ));
   }
 
-  const staff = await queryOne(
-    `SELECT id, email FROM staff
-      WHERE (lower(email) = $1 OR lower(id) = $1) AND status = 'Active'`,
-    [identifier],
-  );
+  let staff = await getStaffByUsername(identifier);
+  if (staff && staff.status !== "Active") staff = null;
 
   if (staff) {
     const resetToken = crypto.randomBytes(32).toString("base64url");

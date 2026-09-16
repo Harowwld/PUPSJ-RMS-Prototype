@@ -56,6 +56,8 @@ export async function POST(req) {
         [resetRow.staff_id],
       );
       if (!staff || staff.status !== "Active") throw new Error("Invalid or expired password reset token.");
+      staff.fname = decryptPII(staff.fname);
+      staff.lname = decryptPII(staff.lname);
 
       await txQuery(
         "UPDATE staff SET password_hash = $1, updated_at = NOW(), password_last_changed = NOW() WHERE id = $2",

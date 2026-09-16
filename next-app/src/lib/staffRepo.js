@@ -17,6 +17,15 @@ export function verifyPasswordHash(password, stored) {
   return verifyPasswordHashValue(password, stored);
 }
 
+
+function decryptStaffRow(row) {
+  if (!row) return row;
+  if (row.fname) row.fname = decryptPII(row.fname);
+  if (row.lname) row.lname = decryptPII(row.lname);
+  if (row.email) row.email = decryptPII(row.email);
+  return row;
+}
+
 export async function setStaffPasswordById(id, newPassword) {
   const existing = await getStaffById(id);
   if (!existing) return null;
@@ -116,38 +125,32 @@ export async function listStaff({
     params.push(status);
   }
 
-  if (q) {
-    filters.push("(id LIKE ? OR fname LIKE ? OR lname LIKE ? OR email LIKE ?)");
-    const like = `%${q}%`;
-    params.push(like, like, like, like);
-  }
+
 
   const where = filters.length ? `WHERE ${filters.join(" AND ")}` : "";
-  const lim = Math.min(Math.max(parseInt(limit) || 200, 1), 500);
-  const off = Math.max(parseInt(offset) || 0, 0);
 
-  return await dbAll(
+
+  const rows = await dbAll(
     `
       SELECT *
       FROM staff
       ${where}
       ORDER BY lname ASC, fname ASC
-      LIMIT ? OFFSET ?
     `,
-    [...params, lim, off]
+    [...params]
   );
 }
 
 export async function getStaffById(id, { officeId } = {}) {
   const scope = buildStaffScope(officeId);
   const row = await dbGet(`SELECT * FROM staff WHERE id = ?${scope.clause}`, [id, ...scope.params]);
-  return row || null;
+  return decryptStaffRow(row) || null;
 }
 
 export async function getStaffByUsername(username) {
   const u = String(username || "").trim();
   if (!u) return null;
-  const row = await dbGet("SELECT * FROM staff WHERE lower(email) = lower(?) OR lower(id) = lower(?)", [u, u]);
+  const row = await dbGet("SELECT * FROM staff WHERE email = ? OR lower(id) = lower(?)", [encryptPII(u.toLowerCase()), u]);
   return row || null;
 }
 

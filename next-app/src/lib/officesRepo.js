@@ -33,7 +33,7 @@ export async function getOfficeById(id){
   await ensureOfficeStationColumns();
   return queryOne("SELECT * FROM offices WHERE id=$1",[id]);
 }
-export async function createDefaultOfficeAdmin({officeId,shortName}){const id=getDefaultOfficeAdminId(officeId),email=`admin.${officeId}@pup.local`;const e=await queryOne("SELECT * FROM staff WHERE id=$1 OR lower(email)=lower($2)",[id,email]);if(e)return {id:e.id,email:e.email,defaultPassword:null,created:false};await query("INSERT INTO staff(id,office_id,fname,lname,role,section,status,email,password_hash,password_last_changed,updated_at) VALUES($1,$2,$3,'Admin','Admin','Administrative','Active',$4,$5,NOW(),NOW())",[id,officeId,shortName||officeId,email,hashPassword(DEFAULT_STAFF_PASSWORD)]);return {id,email,defaultPassword:DEFAULT_STAFF_PASSWORD,created:true};}
+export async function createDefaultOfficeAdmin({officeId,shortName}){const id=getDefaultOfficeAdminId(officeId),email=`admin.${officeId}@pup.local`;const e=await queryOne("SELECT * FROM staff WHERE id=$1 OR email=$2",[id,encryptPII(email.toLowerCase())]);if(e)return {id:e.id,email:e.email,defaultPassword:null,created:false};await query("INSERT INTO staff(id,office_id,fname,lname,role,section,status,email,password_hash,password_last_changed,updated_at) VALUES($1,$2,$3,'Admin','Admin','Administrative','Active',$4,$5,NOW(),NOW())",[id,officeId,encryptPII(shortName||officeId),encryptPII("Admin"),encryptPII(email),hashPassword(DEFAULT_STAFF_PASSWORD)]);return {id,email,defaultPassword:DEFAULT_STAFF_PASSWORD,created:true};}
 export async function createOffice({
   id,
   name,

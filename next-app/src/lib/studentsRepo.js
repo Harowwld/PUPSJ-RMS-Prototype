@@ -247,18 +247,16 @@ export async function listStudents({
   }
 
   const where = filters.length ? `WHERE ${filters.join(" AND ")}` : "";
-  const lim = Math.min(Math.max(parseInt(limit) || 200, 1), 500);
-  const off = Math.max(parseInt(offset) || 0, 0);
 
-  return await dbAll(
+
+  const rows = await dbAll(
     `
       SELECT ${STUDENT_SELECT}
       FROM students
       ${where}
       ORDER BY name ASC
-      LIMIT ? OFFSET ?
     `,
-    [...params, lim, off]
+    [...params]
   );
 }
 
@@ -271,7 +269,7 @@ export async function getStudentByStudentNo(studentNo, { officeId } = {}) {
     params.push(...officeScope.params);
   }
   const row = await dbGet(`SELECT ${STUDENT_SELECT} FROM students WHERE ${filters.join(" AND ")}`, params);
-  return row || null;
+  
 }
 
 export async function updateStudent(studentNo, patch) {

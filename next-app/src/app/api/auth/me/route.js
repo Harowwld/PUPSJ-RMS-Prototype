@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getStaffById, hasAllSecurityAnswers } from "../../../../lib/staffRepo";
+import { getStaffById, getStaffByUsername, hasAllSecurityAnswers } from "../../../../lib/staffRepo";
 import { getOfficeById } from "../../../../lib/officesRepo";
 import { getOfficeModules, listAllModules } from "../../../../lib/modulesRepo";
 import { query, queryOne } from "@/lib/postgres";
