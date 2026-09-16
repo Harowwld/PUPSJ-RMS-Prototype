@@ -86,6 +86,17 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
   const [view, setView] = useState(initialView);
   const [authUser, setAuthUser] = useState(initialAuthUser);
 
+  const roleBranding = getRoleBranding(authUser);
+  const brandAccent = authUser?.accent_color || roleBranding.color || "#EDBB00";
+  const brandForeground = roleBranding.foreground || "#FFFFFF";
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && brandAccent) {
+      document.documentElement.style.setProperty("--brand-accent", brandAccent);
+      document.documentElement.style.setProperty("--brand-foreground", brandForeground);
+    }
+  }, [brandAccent, brandForeground]);
+
   const switchView = useCallback((nextView) => {
     setView(nextView);
     // Update URL without a full refresh
@@ -571,7 +582,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
       /* ignore */
     }
     localStorage.setItem("pup-logout", Date.now());
-    router.push("/");
+    window.location.href = "/";
   };
 
   const getStudentFolderYear = (s) => {
@@ -1549,10 +1560,6 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
       </div>
     );
   }
-
-  const roleBranding = getRoleBranding(authUser);
-  const brandAccent = authUser?.accent_color || roleBranding.color || "#EDBB00";
-  const brandForeground = roleBranding.foreground || "#FFFFFF";
 
   return (
     <div className="h-screen overflow-hidden flex flex-col bg-slate-50/30 dark:bg-zinc-950/30 font-inter relative transition-colors duration-300" style={{ "--brand-accent": brandAccent, "--brand-foreground": brandForeground }}>

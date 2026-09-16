@@ -20,13 +20,24 @@ export default function LandingNavbar() {
       try {
         const res = await fetch("/api/auth/me", { cache: "no-store" });
         const json = await res.json().catch(() => null);
-        if (isMounted && res.ok && json?.ok && json?.data) {
-          setSessionUser(json.data);
+        if (isMounted) {
+          if (res.ok && json?.ok && json?.data) {
+            setSessionUser(json.data);
+          } else {
+            setSessionUser(null);
+          }
         }
       } catch (err) {
-        // Unauthenticated visitor is expected
+        if (isMounted) setSessionUser(null);
       }
     })();
+
+    const handleStorageChange = (e) => {
+      if (e.key === "pup-logout") {
+        setSessionUser(null);
+      }
+    };
+    window.addEventListener("storage", handleStorageChange);
 
     const handleScroll = () => {
       setScrolled(window.scrollY > 45);
@@ -61,6 +72,7 @@ export default function LandingNavbar() {
       isMounted = false;
       window.removeEventListener("scroll", handleScroll);
       window.removeEventListener("resize", handleResize);
+      window.removeEventListener("storage", handleStorageChange);
     };
   }, []);
 

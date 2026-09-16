@@ -42,7 +42,7 @@ const CustomBarTooltip = ({ active, payload, label }) => {
               : entry.fill;
             return (
               <div key={index} className="flex items-center gap-2">
-                <div className="rms-style-background-color h-2 w-2 rounded-full" data-background-color={indicatorColor} />
+                <div className="rms-style-background-color h-2 w-2 rounded-full" data-background-color={indicatorColor} style={{ backgroundColor: indicatorColor }} />
                 <span className="text-xs font-semibold text-gray-700 dark:text-zinc-200">{entry.name}:</span>
                 <span className="text-xs font-semibold text-gray-900 ml-auto dark:text-zinc-50">{entry.value}</span>
               </div>
@@ -61,7 +61,7 @@ const CustomPieTooltip = ({ active, payload }) => {
     return (
       <div className="rounded-lg border border-gray-100 bg-white p-3 shadow-xl dark:border-white/10 dark:bg-card dark:shadow-none">
         <div className="flex items-center gap-2">
-          <div className="rms-style-background-color h-2 w-2 rounded-full" data-background-color={entry.payload.fill} />
+          <div className="rms-style-background-color h-2 w-2 rounded-full" data-background-color={entry.payload.fill} style={{ backgroundColor: entry.payload.fill }} />
           <span className="text-xs font-semibold text-gray-700 dark:text-zinc-200">{entry.name}:</span>
           <span className="text-xs font-semibold text-gray-900 dark:text-zinc-50">{entry.value} requests</span>
         </div>
@@ -435,6 +435,7 @@ const SlaCharts = React.memo(function SlaCharts({ data, pieData, onSwitchView })
                     <div
                       className="rms-style-background-color h-2 w-2 rounded-full shrink-0"
                       data-background-color={color}
+                      style={{ backgroundColor: color }}
                     />
                     <span className="text-[13px] font-normal text-gray-800 dark:text-zinc-300">
                       {displayName}
@@ -447,6 +448,7 @@ const SlaCharts = React.memo(function SlaCharts({ data, pieData, onSwitchView })
                     <span
                       className="rms-style-color text-[13px] font-medium"
                       data-color={color}
+                      style={{ color }}
                     >
                       {percent}%
                     </span>

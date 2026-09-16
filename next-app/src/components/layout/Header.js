@@ -95,13 +95,11 @@ export default function Header({ authUser, onLogout, children }) {
   const branding = getRoleBranding(authUser);
 
   useEffect(() => {
-    document.documentElement.style.setProperty("--brand-accent", branding.color);
-    document.documentElement.style.setProperty("--brand-foreground", branding.foreground);
-    return () => {
-      document.documentElement.style.removeProperty("--brand-accent");
-      document.documentElement.style.removeProperty("--brand-foreground");
-    };
-  }, [branding.color, branding.foreground]);
+    if (branding?.color) {
+      document.documentElement.style.setProperty("--brand-accent", branding.color);
+      document.documentElement.style.setProperty("--brand-foreground", branding.foreground || "#ffffff");
+    }
+  }, [branding?.color, branding?.foreground]);
 
   useEffect(() => {
     if (isSuperAdmin) {
@@ -197,9 +195,25 @@ export default function Header({ authUser, onLogout, children }) {
     if (isSuperAdmin) router.prefetch("/systemadmin");
   }, [router, isSuperAdmin]);
 
+  const handleLogoutAction = () => {
+    if (typeof window !== "undefined") {
+      document.documentElement.style.setProperty("--brand-accent", "#800000");
+      document.documentElement.style.setProperty("--brand-foreground", "#ffffff");
+      document.documentElement.removeAttribute("data-brand-accent");
+      document.documentElement.removeAttribute("data-brand-foreground");
+    }
+    if (onLogout) {
+      onLogout();
+      return;
+    }
+    fetch("/api/auth/logout", { method: "POST" }).catch(() => {});
+    localStorage.setItem("pup-logout", Date.now().toString());
+    window.location.href = "/";
+  };
+
   const handleSessionExpiredRedirect = () => {
     setShowSessionExpired(false);
-    router.push("/");
+    window.location.href = "/";
   };
 
   const isSettingsActive = pathname === "/account";
@@ -815,7 +829,7 @@ export default function Header({ authUser, onLogout, children }) {
     }
 
     if (item.action === "logout") {
-      if (onLogout) onLogout();
+      handleLogoutAction();
       return;
     }
 
@@ -1042,7 +1056,7 @@ export default function Header({ authUser, onLogout, children }) {
 
                <DropdownMenuGroup className="p-1.5">
                  <DropdownMenuItem
-                   onClick={onLogout}
+                   onClick={handleLogoutAction}
                    className="cursor-pointer rounded-[8px] flex items-center gap-3 font-normal text-[15px] py-2.5 px-3 text-[#FF3B30] dark:text-[#FF453A] hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors outline-none"
                  >
                    <i className="ti ti-circle-x text-[19px] text-[#FF3B30] dark:text-[#FF453A] shrink-0 flex items-center justify-center h-[19px] w-[19px] leading-none"></i>

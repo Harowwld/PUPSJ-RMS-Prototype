@@ -3,6 +3,7 @@ import { getSessionCookieName, verifySessionToken } from "../../../../lib/jwt";
 import { writeAuditLog } from "../../../../lib/auditLogRequest";
 import { authDebug } from "@/lib/authDebug";
 import { revokeSession } from "@/lib/authSessions";
+import { isAllowedOrigin } from "@/lib/csrfProtection";
 
 export const runtime = "nodejs";
 
@@ -15,19 +16,12 @@ function addSecurityHeaders(response) {
 }
 
 export async function POST(req) {
-  const origin = req?.headers?.get?.("origin");
-  if (origin) {
-    try {
-      if (new URL(origin).origin !== new URL(req.url).origin) {
-        return addSecurityHeaders(NextResponse.json({ ok: false, error: "Cross-origin request forbidden" }, { status: 403 }));
-      }
-    } catch {
-      return addSecurityHeaders(NextResponse.json({ ok: false, error: "Invalid origin" }, { status: 403 }));
-    }
+  if (!isAllowedOrigin(req)) {
+    return addSecurityHeaders(NextResponse.json({ ok: false, error: "Cross-origin request forbidden" }, { status: 403 }));
   }
 
   const sessionName = getSessionCookieName();
-  const token = req.cookies.get(sessionName)?.value;
+  const token = req.cookies.get(sessionName)?.value || req.cookies.get("pup_session")?.value;
 
   if (token) {
     // Signing out ends this browser session only. It must not deactivate the
@@ -64,26 +58,19 @@ export async function POST(req) {
   }
 
   const res = NextResponse.json({ ok: true });
-  res.cookies.set({
-    name: sessionName,
-    value: "",
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
-    maxAge: 0,
-    expires: new Date(0), // Ensure immediate expiration
-  });
-  res.cookies.set({
-    name: "pup_csrf",
-    value: "",
-    httpOnly: false,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
-    maxAge: 0,
-    expires: new Date(0),
-  });
-  
+  const cookieNamesToClear = Array.from(new Set([sessionName, "pup_session", "pup_auth_token", "pup_csrf"]));
+  for (const name of cookieNamesToClear) {
+    res.cookies.set({
+      name,
+      value: "",
+      httpOnly: name !== "pup_csrf",
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+      maxAge: 0,
+      expires: new Date(0), // Ensure immediate expiration
+    });
+  }
+
   return addSecurityHeaders(res);
 }
