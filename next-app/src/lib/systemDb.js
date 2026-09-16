@@ -15,6 +15,7 @@
 import { query, queryOne, withTransaction } from "./postgres.js";
 import { postgresSql } from "./postgresCompat.js";
 import { hashPassword } from "./passwordHash.js";
+import { encryptPII } from "./piiEncryption.js";
 
 let systemDb = global.__systemDb || null;
 
@@ -499,12 +500,12 @@ async function seedSystemDefaults(db) {
       VALUES (?, NULL, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
     `).run(
       "PUPSUPERADMIN-001",
-      "System",
-      "Administrator",
+      encryptPII("System"),
+      encryptPII("Administrator"),
       "SuperAdmin",
       "System Administration",
       "Active",
-      "superadmin@pup.local",
+      encryptPII("superadmin@pup.local"),
       passwordHash
     );
     console.log("[SystemDB] Seeded default SystemAdmin account.");
