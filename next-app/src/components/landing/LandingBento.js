@@ -474,7 +474,7 @@ export default function LandingBento() {
 
 const CursorOverlay = ({ animationName, delay = "0s" }) => (
   <div 
-    className="absolute z-50 pointer-events-none hidden lg:block"
+    className="absolute z-50 pointer-events-none"
     style={{ animation: `${animationName} 6s infinite ${delay}`, left: '50%', top: '80%', opacity: 0 }}
   >
     <svg 
