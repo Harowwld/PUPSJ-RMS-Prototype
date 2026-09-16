@@ -1,7 +1,11 @@
 import crypto from "node:crypto";
 import { query, queryOne } from "./postgres.js";
 export const DEFAULT_STAFF_PASSWORD=process.env.DEFAULT_STAFF_PASSWORD||"pupstaff";
-const hash=v=>crypto.createHash("sha256").update(String(v)).digest("hex");
+const hash = v => {
+  const salt = crypto.randomBytes(16).toString("hex");
+  const hashed = crypto.scryptSync(String(v), salt, 64).toString("hex");
+  return `${salt}:${hashed}`;
+};
 export const getDefaultOfficeAdminId=id=>`PUP${String(id||"").trim().toUpperCase()}-001`;
 let columnsEnsured = false;
 export async function ensureOfficeStationColumns() {

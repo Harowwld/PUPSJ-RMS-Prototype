@@ -483,7 +483,9 @@ async function seedSystemDefaults(db) {
   const staffCount = db.prepare("SELECT COUNT(*) as count FROM staff").get();
   if (staffCount.count === 0) {
     const defaultPassword = process.env.DEFAULT_STAFF_PASSWORD || "pupstaff";
-    const passwordHash = crypto.createHash("sha256").update(defaultPassword).digest("hex");
+    const salt = crypto.randomBytes(16).toString("hex");
+    const hash = crypto.scryptSync(defaultPassword, salt, 64).toString("hex");
+    const passwordHash = `${salt}:${hash}`;
 
     db.prepare(`
       INSERT INTO staff (id, office_id, fname, lname, role, section, status, email, password_hash, password_last_changed)

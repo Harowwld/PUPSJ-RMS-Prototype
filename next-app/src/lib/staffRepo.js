@@ -2,8 +2,9 @@ import crypto from "node:crypto";
 import { query, queryOne } from "./postgres.js";
 import { dbAll, dbGet, dbRun } from "./postgresCompat.js";
 
-function hashPassword(password) {
-  return crypto.createHash("sha256").update(String(password)).digest("hex");
+function hashPassword(password, salt = crypto.randomBytes(16).toString("hex")) {
+  const hash = crypto.scryptSync(String(password), salt, 64).toString("hex");
+  return `${salt}:${hash}`;
 }
 
 export function hashPasswordForStorage(password) {
@@ -26,7 +27,25 @@ export async function verifyStaffPasswordById(id, password) {
   const existing = await getStaffById(id);
   if (!existing) return false;
   if (!existing.password_hash) return false;
-  return existing.password_hash === hashPassword(password);
+  
+  if (existing.password_hash.includes(":")) {
+    const [salt, expected] = existing.password_hash.split(":");
+    if (!salt || !expected) return false;
+    const actual = crypto.scryptSync(String(password), salt, 64).toString("hex");
+    try {
+      return crypto.timingSafeEqual(Buffer.from(actual, "hex"), Buffer.from(expected, "hex"));
+    } catch {
+      return false;
+    }
+  } else {
+    // Legacy SHA-256 fallback and auto-upgrade
+    const legacyHash = crypto.createHash("sha256").update(String(password)).digest("hex");
+    const isMatch = existing.password_hash === legacyHash;
+    if (isMatch) {
+      await setStaffPasswordById(id, password);
+    }
+    return isMatch;
+  }
 }
 
 export async function createStaff({
