@@ -824,11 +824,6 @@ export default function LandingFaqCmsView({ showToast }) {
 
                 {/* Section Header */}
                 <div className="text-center max-w-2xl mx-auto mb-8 sm:mb-12 relative z-10">
-                  {faqData.eyebrow && (
-                    <span className="inline-block px-3 py-1 rounded-full bg-pup-maroon/20 border border-pup-maroon/40 text-red-400 font-mono text-[11px] font-semibold uppercase tracking-wider mb-3">
-                      {faqData.eyebrow}
-                    </span>
-                  )}
                   <h2 className="text-2xl sm:text-4xl lg:text-5xl font-extrabold text-white tracking-tight leading-tight">
                     {faqData.heading || "Frequently Asked Questions"}
                   </h2>

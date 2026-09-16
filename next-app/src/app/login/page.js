@@ -480,11 +480,11 @@ export default function Home() {
         {/* Top-Left Brand Logo & Name */}
         <div 
           onClick={() => router.push("/")}
-          className="absolute top-6 left-6 flex items-center gap-1 select-none z-20 cursor-pointer hover:opacity-80 transition-opacity"
+          className="absolute top-[6px] left-3 sm:left-4 flex items-center gap-0.5 select-none z-20 cursor-pointer"
         >
-          <img src="/assets/branding/black-icon.png" alt="eManage Logo" className="w-[32px] h-[32px] shrink-0 object-contain p-0.5 dark:hidden" />
-          <img src="/assets/branding/white-icon.png" alt="eManage Logo" className="w-[32px] h-[32px] shrink-0 object-contain p-0.5 hidden dark:block" />
-          <span className="text-[26px] font-semibold text-[#1D1D1F] dark:text-zinc-50 tracking-tight leading-none">eManage</span>
+          <img src="/assets/branding/black-icon.png" alt="eManage Logo" className="w-[26px] h-[26px] shrink-0 object-contain p-0.5 dark:hidden" />
+          <img src="/assets/branding/white-icon.png" alt="eManage Logo" className="w-[26px] h-[26px] shrink-0 object-contain p-0.5 hidden dark:block" />
+          <span className="text-[22px] font-bold text-[#1D1D1F] dark:text-zinc-50 tracking-tight leading-none">eManage</span>
         </div>
 
         <div className="w-full max-w-[550px] p-4 z-10">

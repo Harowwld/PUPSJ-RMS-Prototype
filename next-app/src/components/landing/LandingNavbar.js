@@ -12,6 +12,7 @@ export default function LandingNavbar() {
   const [sessionUser, setSessionUser] = useState(null);
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [activeSection, setActiveSection] = useState("");
 
   useEffect(() => {
     let isMounted = true;
@@ -29,6 +30,22 @@ export default function LandingNavbar() {
 
     const handleScroll = () => {
       setScrolled(window.scrollY > 45);
+      
+      const sections = ["about", "workflow", "catalog", "faq", "office"];
+      let current = "";
+      for (const section of sections) {
+        const element = document.getElementById(section);
+        if (element) {
+          const rect = element.getBoundingClientRect();
+          if (rect.top <= 150) {
+            current = section;
+          }
+        }
+      }
+      if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 50) {
+        current = "office";
+      }
+      setActiveSection(current);
     };
     handleScroll();
     const handleResize = () => {
@@ -64,6 +81,7 @@ export default function LandingNavbar() {
       window.history.pushState(null, "", window.location.pathname);
     }
     setMobileMenuOpen(false);
+    setActiveSection("");
   };
 
   // Smooth animated transition to specific section with focus pulse
@@ -72,6 +90,7 @@ export default function LandingNavbar() {
     const element = document.getElementById(targetId);
     if (!element) return;
 
+    setActiveSection(targetId);
     const navOffset = 76;
     const elementPosition = element.getBoundingClientRect().top;
     const offsetPosition = elementPosition + window.pageYOffset - navOffset;
@@ -128,41 +147,31 @@ export default function LandingNavbar() {
 
               {/* NAVIGATION LINKS WITH SMOOTH ANIMATION (Desktop) */}
               <nav className="hidden md:flex items-center gap-1 text-[13px] font-medium text-black">
-                <button 
-                  type="button"
-                  onClick={(e) => scrollToSection(e, "about")}
-                  className="px-3.5 py-1.5 rounded-full cursor-pointer bg-transparent"
-                >
-                  About
-                </button>
-                <button 
-                  type="button"
-                  onClick={(e) => scrollToSection(e, "workflow")}
-                  className="px-3.5 py-1.5 rounded-full cursor-pointer bg-transparent"
-                >
-                  How It Works
-                </button>
-                <button 
-                  type="button"
-                  onClick={(e) => scrollToSection(e, "catalog")}
-                  className="px-3.5 py-1.5 rounded-full cursor-pointer bg-transparent"
-                >
-                  Catalog
-                </button>
-                <button 
-                  type="button"
-                  onClick={(e) => scrollToSection(e, "faq")}
-                  className="px-3.5 py-1.5 rounded-full cursor-pointer bg-transparent"
-                >
-                  FAQ
-                </button>
-                <button 
-                  type="button"
-                  onClick={(e) => scrollToSection(e, "office")}
-                  className="px-3.5 py-1.5 rounded-full cursor-pointer bg-transparent"
-                >
-                  Office Hours
-                </button>
+                {[
+                  { id: "about", label: "About" },
+                  { id: "workflow", label: "How It Works" },
+                  { id: "catalog", label: "Catalog" },
+                  { id: "faq", label: "FAQ" },
+                  { id: "office", label: "Office Hours" }
+                ].map((item) => (
+                  <button 
+                    key={item.id}
+                    type="button"
+                    onClick={(e) => scrollToSection(e, item.id)}
+                    className={`relative px-3.5 py-1.5 rounded-full cursor-pointer transition-colors ${activeSection === item.id ? "text-black font-semibold" : "bg-transparent text-black/90 hover:text-black/60"}`}
+                  >
+                    {item.label}
+                    {activeSection === item.id && (
+                      <motion.div
+                        layoutId="navUnderline"
+                        className="absolute bottom-[2px] left-3.5 right-3.5 h-[1.5px] bg-black"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ duration: 0.3 }}
+                      />
+                    )}
+                  </button>
+                ))}
               </nav>
 
               {/* RIGHT ACTION BUTTONS */}

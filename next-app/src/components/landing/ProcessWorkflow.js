@@ -138,7 +138,7 @@ export default function ProcessWorkflow() {
   // Handle smooth navigation / scrolling
   const handleActionClick = (target, type = "link") => {
     if (!target) return;
-    if (target === "catalog" || target.startsWith("#")) {
+    if (target === "catalog" || target.startsWith("#") || type === "scroll") {
       const targetId = target.replace(/^#/, "");
       const el = document.getElementById(targetId);
       if (el) {
@@ -148,11 +148,8 @@ export default function ProcessWorkflow() {
       }
       return;
     }
-    if (target.startsWith("http://") || target.startsWith("https://")) {
-      window.open(target, "_blank");
-      return;
-    }
-    router.push(target);
+    // Always open portal links in a new tab per user request
+    window.open(target, "_blank");
   };
 
 
@@ -251,7 +248,7 @@ export default function ProcessWorkflow() {
                           }}
                           className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center font-mono text-xs sm:text-sm font-extrabold transition-all duration-300 ${
                             isSelected
-                              ? "bg-[#800000] text-white border-2 border-red-400/80 shadow-[0_0_25px_rgba(128,0,0,0.5)] scale-105"
+                              ? "bg-[#800000] text-white border-2 border-red-400/80 scale-105"
                               : "liquid-glass-dark text-zinc-400 group-hover:border-white/25 group-hover:text-white"
                           }`}
                         >

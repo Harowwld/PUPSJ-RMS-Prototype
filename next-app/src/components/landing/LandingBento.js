@@ -163,7 +163,7 @@ export default function LandingBento() {
           - Row 1: 2 Equal Large Cards (50/50 Split)
           - Row 2: 3 Equal Medium Cards (3-Column Split)
           ========================================================================= */}
-      <div className="w-full flex flex-col gap-4 sm:gap-5">
+      <div className="w-full flex flex-col gap-4 sm:gap-5 border border-[#f5f5f7] p-4 sm:p-6 bg-[#f5f5f7]">
         
         {/* -----------------------------------------------------------------------
             ROW 1: TWO LARGE CARDS
@@ -180,35 +180,45 @@ export default function LandingBento() {
             transition={{ duration: 0.65, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
             whileHover={{ y: -3 }}
 
-            className="rounded-[2rem] bg-white border border-black/[0.04] shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] p-8 sm:p-10 flex flex-col justify-between transition-all duration-300 group"
+            className="rounded-none bg-white border border-black/[0.04] shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] p-5 sm:p-8 lg:p-10 flex flex-col justify-between transition-all duration-300 group"
           >
             {/* Simulated UI Area */}
-            <div className="rounded-2xl bg-[#f5f5f7] p-6 border-none min-h-[220px] flex flex-col justify-center items-center relative overflow-hidden">
-              {/* Connecting line behind steps */}
-              <div className="absolute left-[calc(50%-72px)] top-10 bottom-10 w-0.5 bg-zinc-200/60 z-0"></div>
+            <div className="rounded-none bg-[#f5f5f7] p-4 sm:p-6 border-none min-h-[220px] flex flex-col justify-center items-center relative overflow-hidden">
               
+              {/* Full-Card Success Overlay */}
+              <div className="absolute inset-0 bg-emerald-500/85 backdrop-blur-[2px] z-20 flex flex-col items-center justify-center text-white opacity-0 pointer-events-none" style={{ animation: 'submitOverlay 6s infinite 0s' }}>
+                <div className="w-12 h-12 rounded-full bg-white/30 flex items-center justify-center mb-3">
+                  <i className="ph-bold ph-check text-2xl drop-shadow-sm" />
+                </div>
+                <span className="font-bold text-sm tracking-wide drop-shadow-sm">Submitted!</span>
+              </div>
+
               <div className="relative z-10 w-full max-w-[180px] flex flex-col gap-5">
+                {/* Connecting line between Step 1 and Step 2 */}
+                <div className="absolute left-[17px] top-[18px] h-[56px] w-0.5 bg-zinc-200/60 z-[-1]">
+                  <div className="absolute top-0 left-0 w-full bg-emerald-500" style={{ animation: 'stepLineFill 6s infinite 0s', height: '0%' }}></div>
+                </div>
+                
+                <CursorOverlay animationName="cursorCard1" delay="0s" />
                 {/* Step 1 */}
                 <div className="flex items-center gap-4 group/step">
-                  <div className="w-9 h-9 rounded-full bg-white shadow-sm flex items-center justify-center text-zinc-400 group-hover/step:text-[#800000] transition-colors border border-black/5 shrink-0">
+                  <div className="w-9 h-9 rounded-full bg-white shadow-sm flex items-center justify-center text-zinc-400 group-hover/step:text-[#800000] transition-all border border-black/5 shrink-0" style={{ animation: 'objInteract1 6s infinite 0s, step1GreenCircle 6s infinite 0s' }}>
                     <i className="ph-bold ph-file-text text-base" />
                   </div>
-                  <span className="text-xs font-semibold text-zinc-600 group-hover/step:text-zinc-900 transition-colors">Select Document</span>
+                  <span className="text-xs font-semibold text-zinc-600 transition-colors" style={{ animation: 'step1GreenText 6s infinite 0s' }}>Select Document</span>
                 </div>
                 {/* Step 2 */}
                 <div className="flex items-center gap-4 group/step">
-                  <div className="w-9 h-9 rounded-full bg-white shadow-sm flex items-center justify-center text-zinc-400 group-hover/step:text-[#800000] transition-colors border border-black/5 shrink-0">
+                  <div className="w-9 h-9 rounded-full bg-white shadow-sm flex items-center justify-center text-zinc-400 group-hover/step:text-[#800000] transition-all border border-black/5 shrink-0" style={{ animation: 'objInteract2 6s infinite 0s, step2GreenCircle 6s infinite 0s' }}>
                     <i className="ph-bold ph-target text-base" />
                   </div>
-                  <span className="text-xs font-semibold text-zinc-600 group-hover/step:text-zinc-900 transition-colors">Specify Purpose</span>
+                  <span className="text-xs font-semibold text-zinc-600 transition-colors" style={{ animation: 'step2GreenText 6s infinite 0s' }}>Specify Purpose</span>
                 </div>
                 {/* Step 3 */}
-                <div className="flex items-center gap-4 group/step">
-                  <div className="w-9 h-9 rounded-full bg-[#800000] shadow-md flex items-center justify-center text-white shrink-0">
-                    <i className="ph-bold ph-paper-plane-right text-base" />
-                  </div>
-                  <span className="text-xs font-semibold text-[#800000]">Submit Online</span>
-                </div>
+                <button className="relative px-5 py-2.5 rounded-full text-xs font-bold flex items-center justify-center gap-2 w-[120px] transition-all mx-auto" style={{ animation: 'objInteract3 6s infinite 0s, submitButtonEnable 6s infinite 0s' }}>
+                  Submit
+                  <i className="ph-bold ph-paper-plane-right text-base" />
+                </button>
               </div>
             </div>
 
@@ -231,17 +241,18 @@ export default function LandingBento() {
             transition={{ duration: 0.65, delay: 0.24, ease: [0.16, 1, 0.3, 1] }}
             whileHover={{ y: -3 }}
 
-            className="rounded-[2rem] bg-white border border-black/[0.04] shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] p-8 sm:p-10 flex flex-col justify-between transition-all duration-300 group"
+            className="rounded-none bg-white border border-black/[0.04] shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] p-5 sm:p-8 lg:p-10 flex flex-col justify-between transition-all duration-300 group"
           >
             {/* Simulated UI Area */}
-            <div className="rounded-2xl bg-[#f5f5f7] p-6 border-none min-h-[220px] flex flex-col justify-center items-center relative overflow-hidden">
+            <div className="rounded-none bg-[#f5f5f7] p-4 sm:p-6 border-none min-h-[220px] flex flex-col justify-center items-center relative overflow-hidden">
+              <CursorOverlay animationName="cursorCard2" delay="1s" />
               {/* Connecting line behind steps */}
               <div className="absolute left-[calc(50%-78px)] top-10 bottom-10 w-0.5 bg-zinc-200/60 z-0"></div>
               
               <div className="relative z-10 w-full max-w-[190px] flex flex-col gap-4">
                 {/* Step 1 */}
                 <div className="flex items-center gap-4">
-                  <div className="w-9 h-9 rounded-full bg-white shadow-sm flex items-center justify-center text-[#800000] border border-black/5 shrink-0">
+                  <div className="w-9 h-9 rounded-full bg-white shadow-sm flex items-center justify-center text-[#800000] border border-black/5 shrink-0 transition-all" style={{ animation: 'objInteract1 6s infinite 1s' }}>
                     <i className="ph-bold ph-calendar-check text-base" />
                   </div>
                   <div className="flex flex-col">
@@ -251,7 +262,7 @@ export default function LandingBento() {
                 </div>
                 {/* Step 2 */}
                 <div className="flex items-center gap-4">
-                  <div className="w-9 h-9 rounded-full bg-white shadow-sm flex items-center justify-center text-[#800000] border border-black/5 shrink-0">
+                  <div className="w-9 h-9 rounded-full bg-white shadow-sm flex items-center justify-center text-[#800000] border border-black/5 shrink-0 transition-all" style={{ animation: 'objInteract2 6s infinite 1s' }}>
                     <i className="ph-bold ph-bell-ringing text-base" />
                   </div>
                   <div className="flex flex-col">
@@ -261,7 +272,7 @@ export default function LandingBento() {
                 </div>
                 {/* Step 3 */}
                 <div className="flex items-center gap-4">
-                  <div className="w-9 h-9 rounded-full bg-[#800000] shadow-md flex items-center justify-center text-white shrink-0">
+                  <div className="w-9 h-9 rounded-full bg-[#800000] shadow-md flex items-center justify-center text-white shrink-0 transition-all" style={{ animation: 'objInteract3 6s infinite 1s' }}>
                     <i className="ph-bold ph-handshake text-base" />
                   </div>
                   <div className="flex flex-col">
@@ -301,37 +312,41 @@ export default function LandingBento() {
             transition={{ duration: 0.65, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
             whileHover={{ y: -3 }}
 
-            className="rounded-[2rem] bg-white border border-black/[0.04] shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] p-8 sm:p-10 flex flex-col justify-between transition-all duration-300 group"
+            className="rounded-none bg-white border border-black/[0.04] shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] p-5 sm:p-8 lg:p-10 flex flex-col justify-between transition-all duration-300 group"
           >
             {/* Simulated UI Area: Flow Diagram */}
-            <div className="rounded-2xl bg-[#f5f5f7] p-4 border-none min-h-[180px] flex items-center justify-center relative overflow-hidden">
+            <div className="rounded-none bg-[#f5f5f7] p-4 border-none min-h-[180px] flex items-center justify-center relative overflow-hidden">
               <div className="flex items-center gap-2 sm:gap-4 relative z-10">
+                 <CursorOverlay animationName="cursorCard3" delay="2s" />
                  {/* Online Request */}
                  <div className="flex flex-col items-center gap-2">
-                   <div className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center text-[#800000] border border-black/5">
+                   <div className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center text-[#800000] border border-black/5 transition-all" style={{ animation: 'objInteract1 6s infinite 2s' }}>
                      <i className="ph-bold ph-laptop text-lg" />
                    </div>
-                   <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-wider">Online</span>
+                   <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-wider">Request</span>
                  </div>
                  
-                 {/* Dashed line */}
-                 <div className="w-6 sm:w-8 h-0 border-t-2 border-dashed border-zinc-300"></div>
+                 {/* Dashed line 1 */}
+                 <div className="w-6 sm:w-8 h-0 border-t-2 border-dashed border-zinc-300 relative -translate-y-[10px]">
+                   <div className="absolute top-[-2px] left-0 h-0 border-t-2 border-solid border-blue-500" style={{ animation: 'lineFill1 6s infinite 2s', width: '0%' }}></div>
+                 </div>
 
                  {/* Room 1 */}
                  <div className="flex flex-col items-center gap-2">
-                   <div className="w-12 h-12 rounded-full bg-[#800000] shadow-md flex items-center justify-center text-white relative">
-                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#800000] opacity-30" />
+                   <div className="w-12 h-12 rounded-full bg-[#800000] shadow-md flex items-center justify-center text-white relative transition-all" style={{ animation: 'objInteract3 6s infinite 2s, room1CircleReveal 6s infinite 2s' }}>
                      <i className="ph-bold ph-archive text-xl relative z-10" />
                    </div>
-                   <span className="text-[9px] font-bold text-[#800000] uppercase tracking-wider">Room 1</span>
+                   <span className="text-[9px] font-bold text-[#800000] uppercase tracking-wider" style={{ animation: 'room1TextReveal 6s infinite 2s' }}>Room 1</span>
                  </div>
                  
-                 {/* Dashed line */}
-                 <div className="w-6 sm:w-8 h-0 border-t-2 border-dashed border-zinc-300"></div>
+                 {/* Dashed line 2 */}
+                 <div className="w-6 sm:w-8 h-0 border-t-2 border-dashed border-zinc-300 relative -translate-y-[10px]">
+                   <div className="absolute top-[-2px] right-0 h-0 border-t-2 border-solid border-blue-500" style={{ animation: 'lineFill2 6s infinite 2s', width: '0%' }}></div>
+                 </div>
 
                  {/* Staff */}
                  <div className="flex flex-col items-center gap-2">
-                   <div className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center text-[#800000] border border-black/5">
+                   <div className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center text-[#800000] border border-black/5 transition-all" style={{ animation: 'objInteract2 6s infinite 2s' }}>
                      <i className="ph-bold ph-users text-lg" />
                    </div>
                    <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-wider">Staff</span>
@@ -358,32 +373,32 @@ export default function LandingBento() {
             transition={{ duration: 0.65, delay: 0.26, ease: [0.16, 1, 0.3, 1] }}
             whileHover={{ y: -3 }}
 
-            className="rounded-[2rem] bg-white border border-black/[0.04] shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] p-8 sm:p-10 flex flex-col justify-between transition-all duration-300 group"
+            className="rounded-none bg-white border border-black/[0.04] shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] p-5 sm:p-8 lg:p-10 flex flex-col justify-between transition-all duration-300 group"
           >
             {/* Simulated UI Area: Flow Diagram */}
-            <div className="rounded-2xl bg-[#f5f5f7] p-6 border-none min-h-[180px] flex flex-col justify-center items-center relative overflow-hidden gap-5">
-              
+            <div className="rounded-none bg-[#f5f5f7] p-6 border-none min-h-[180px] flex flex-col justify-center items-center relative overflow-hidden gap-5">
+              <CursorOverlay animationName="cursorCard4" delay="3s" />
               <div className="w-full max-w-[190px] flex flex-col gap-4 relative z-10">
                 {/* Step 1 */}
                 <div className="flex items-center gap-4">
-                  <div className="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center text-emerald-600 border border-black/5 shrink-0">
-                    <i className="ph-bold ph-check text-[14px]" />
+                  <div className="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center text-emerald-600 border border-black/5 shrink-0 transition-all" style={{ animation: 'objInteract1 6s infinite 3s' }}>
+                    <i className="ph-bold ph-check text-[14px] opacity-0" style={{ animation: 'checkReveal1 6s infinite 3s' }} />
                   </div>
                   <span className="text-xs font-semibold text-zinc-900">Student Number</span>
                 </div>
                 {/* Step 2 */}
                 <div className="flex items-center gap-4">
-                  <div className="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center text-emerald-600 border border-black/5 shrink-0">
-                    <i className="ph-bold ph-check text-[14px]" />
+                  <div className="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center text-emerald-600 border border-black/5 shrink-0 transition-all" style={{ animation: 'objInteract2 6s infinite 3s' }}>
+                    <i className="ph-bold ph-check text-[14px] opacity-0" style={{ animation: 'checkReveal2 6s infinite 3s' }} />
                   </div>
                   <span className="text-xs font-semibold text-zinc-900">Active Email</span>
                 </div>
                 {/* Step 3 */}
                 <div className="flex items-center gap-4">
-                  <div className="w-8 h-8 rounded-full bg-emerald-100 shadow-sm flex items-center justify-center text-emerald-700 border border-black/5 shrink-0">
-                    <i className="ph-bold ph-check text-[14px]" />
+                  <div className="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center text-emerald-600 border border-black/5 shrink-0 transition-all" style={{ animation: 'objInteract3 6s infinite 3s' }}>
+                    <i className="ph-bold ph-check text-[14px] opacity-0" style={{ animation: 'checkReveal3 6s infinite 3s' }} />
                   </div>
-                  <span className="text-xs font-semibold text-emerald-800">Campus Clearance</span>
+                  <span className="text-xs font-semibold text-zinc-900">Campus Clearance</span>
                 </div>
               </div>
             </div>
@@ -407,26 +422,33 @@ export default function LandingBento() {
             transition={{ duration: 0.65, delay: 0.42, ease: [0.16, 1, 0.3, 1] }}
             whileHover={{ y: -3 }}
 
-            className="rounded-[2rem] bg-white border border-black/[0.04] shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] p-8 sm:p-10 flex flex-col justify-between transition-all duration-300 group"
+            className="rounded-none bg-white border border-black/[0.04] shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] p-5 sm:p-8 lg:p-10 flex flex-col justify-between transition-all duration-300 group"
           >
             {/* Simulated UI Area: Flow Diagram */}
-            <div className="rounded-2xl bg-[#f5f5f7] p-4 border-none min-h-[180px] flex items-center justify-center relative overflow-hidden gap-6">
+            <div className="rounded-none bg-[#f5f5f7] p-4 border-none min-h-[180px] flex items-center justify-center relative overflow-hidden gap-6">
               <div className="w-16 h-16 rounded-2xl bg-white shadow-sm flex flex-col items-center justify-center text-[#800000] border border-black/5 shrink-0 relative">
                  <i className="ph-bold ph-shield-check text-3xl" />
                  <span className="absolute -bottom-2.5 bg-[#800000] text-white text-[8px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">RA 11032</span>
               </div>
               
-              <div className="flex flex-col gap-3">
-                 <div className="flex items-center gap-2">
-                   <i className="ph-fill ph-check-circle text-emerald-500 text-sm" />
+              <div className="flex flex-col gap-4 relative">
+                 <CursorOverlay animationName="cursorCard5" delay="4s" />
+                 <div className="flex items-center gap-4">
+                   <div className="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center text-emerald-600 border border-black/5 shrink-0 transition-all" style={{ animation: 'objInteract1 6s infinite 4s' }}>
+                     <i className="ph-bold ph-check text-[14px] opacity-0" style={{ animation: 'checkReveal1 6s infinite 4s' }} />
+                   </div>
                    <span className="text-xs font-semibold text-zinc-700">Zero Red Tape</span>
                  </div>
-                 <div className="flex items-center gap-2">
-                   <i className="ph-fill ph-check-circle text-emerald-500 text-sm" />
+                 <div className="flex items-center gap-4">
+                   <div className="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center text-emerald-600 border border-black/5 shrink-0 transition-all" style={{ animation: 'objInteract2 6s infinite 4s' }}>
+                     <i className="ph-bold ph-check text-[14px] opacity-0" style={{ animation: 'checkReveal2 6s infinite 4s' }} />
+                   </div>
                    <span className="text-xs font-semibold text-zinc-700">No Hidden Delays</span>
                  </div>
-                 <div className="flex items-center gap-2">
-                   <i className="ph-fill ph-check-circle text-emerald-500 text-sm" />
+                 <div className="flex items-center gap-4">
+                   <div className="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center text-emerald-600 border border-black/5 shrink-0 transition-all" style={{ animation: 'objInteract3 6s infinite 4s' }}>
+                     <i className="ph-bold ph-check text-[14px] opacity-0" style={{ animation: 'checkReveal3 6s infinite 4s' }} />
+                   </div>
                    <span className="text-xs font-semibold text-zinc-700">Transparent Tracking</span>
                  </div>
               </div>
@@ -449,3 +471,161 @@ export default function LandingBento() {
     </section>
   );
 }
+
+const CursorOverlay = ({ animationName, delay = "0s" }) => (
+  <div 
+    className="absolute z-50 pointer-events-none hidden lg:block"
+    style={{ animation: `${animationName} 6s infinite ${delay}`, left: '50%', top: '80%', opacity: 0 }}
+  >
+    <svg 
+      width="24" 
+      height="24" 
+      viewBox="0 0 24 24" 
+      fill="none" 
+      xmlns="http://www.w3.org/2000/svg"
+      className="drop-shadow-md text-black"
+      style={{ animation: `cursorClick 6s infinite ${delay}` }}
+    >
+      <path 
+        d="M5.5 3.21V20.8c0 .45.54.67.85.35l4.86-4.86a.5.5 0 0 1 .35-.15h6.42c.45 0 .67-.54.35-.85L6.35 3.35a.5.5 0 0 0-.85.35Z" 
+        fill="currentColor" 
+        stroke="white" 
+        strokeWidth="1.5"
+      />
+    </svg>
+    <div className="absolute top-0 left-0 w-6 h-6 rounded-full border-2 border-[#800000] opacity-0 -translate-x-1.5 -translate-y-1.5" style={{ animation: `cursorRipple 6s infinite ${delay}` }}></div>
+    <style dangerouslySetInnerHTML={{__html: `
+      @keyframes cursorCard1 {
+        0%, 100% { left: 18px; top: 180px; opacity: 0; }
+        10% { opacity: 1; }
+        15%, 25% { left: 18px; top: 18px; opacity: 1; }
+        40%, 50% { left: 18px; top: 74px; opacity: 1; }
+        65%, 75% { left: 60px; top: 130px; opacity: 1; }
+        90% { opacity: 0; }
+      }
+      @keyframes cursorCard2 {
+        0%, 100% { left: 50%; top: 80%; opacity: 0; }
+        10% { opacity: 1; }
+        15%, 25% { left: calc(50% - 78px); top: calc(50% - 52px); opacity: 1; }
+        40%, 50% { left: calc(50% - 78px); top: 50%; opacity: 1; }
+        65%, 75% { left: calc(50% - 78px); top: calc(50% + 52px); opacity: 1; }
+        90% { opacity: 0; }
+      }
+      @keyframes cursorCard3 {
+        0%, 100% { left: 50%; top: 150px; opacity: 0; }
+        10% { opacity: 1; }
+        15%, 25% { left: 20px; top: 24px; opacity: 1; }
+        40%, 50% { left: calc(100% - 20px); top: 24px; opacity: 1; }
+        65%, 75% { left: 50%; top: 24px; opacity: 1; }
+        90% { opacity: 0; }
+      }
+      @keyframes cursorCard4 {
+        0%, 100% { left: 50%; top: 80%; opacity: 0; }
+        10% { opacity: 1; }
+        15%, 25% { left: calc(50% - 79px); top: calc(50% - 48px); opacity: 1; }
+        40%, 50% { left: calc(50% - 79px); top: 50%; opacity: 1; }
+        65%, 75% { left: calc(50% - 79px); top: calc(50% + 48px); opacity: 1; }
+        90% { opacity: 0; }
+      }
+      @keyframes cursorCard5 {
+        0%, 100% { left: 16px; top: 160px; opacity: 0; }
+        10% { opacity: 1; }
+        15%, 25% { left: 16px; top: 16px; opacity: 1; }
+        40%, 50% { left: 16px; top: 64px; opacity: 1; }
+        65%, 75% { left: 16px; top: 112px; opacity: 1; }
+        90% { opacity: 0; }
+      }
+      @keyframes cursorClick {
+        0%, 18%, 24%, 43%, 49%, 68%, 74%, 100% { transform: scale(1); }
+        20%, 22%, 45%, 47%, 70%, 72% { transform: scale(0.85); }
+      }
+      @keyframes cursorRipple {
+        0%, 19%, 23%, 44%, 48%, 69%, 73%, 100% { transform: scale(0.5); opacity: 0; }
+        20%, 45%, 70% { transform: scale(2); opacity: 0.8; }
+        22%, 47%, 72% { transform: scale(2.5); opacity: 0; }
+      }
+      @keyframes objInteract1 {
+        0%, 18%, 24%, 100% { transform: scale(1); filter: brightness(1); box-shadow: 0 0 0 0px rgba(128,0,0,0); }
+        20%, 22% { transform: scale(0.9); filter: brightness(0.85); box-shadow: 0 0 0 4px rgba(128,0,0,0.15); }
+      }
+      @keyframes objInteract2 {
+        0%, 43%, 49%, 100% { transform: scale(1); filter: brightness(1); box-shadow: 0 0 0 0px rgba(128,0,0,0); }
+        45%, 47% { transform: scale(0.9); filter: brightness(0.85); box-shadow: 0 0 0 4px rgba(128,0,0,0.15); }
+      }
+      @keyframes objInteract3 {
+        0%, 68%, 74%, 100% { transform: scale(1); filter: brightness(1); box-shadow: 0 0 0 0px rgba(128,0,0,0); }
+        70%, 72% { transform: scale(0.9); filter: brightness(0.85); box-shadow: 0 0 0 4px rgba(128,0,0,0.15); }
+      }
+      @keyframes checkReveal1 {
+        0%, 21.99% { opacity: 0; transform: scale(0.5); }
+        22%, 95% { opacity: 1; transform: scale(1); }
+        96%, 100% { opacity: 0; transform: scale(0.5); }
+      }
+      @keyframes checkReveal2 {
+        0%, 46.99% { opacity: 0; transform: scale(0.5); }
+        47%, 95% { opacity: 1; transform: scale(1); }
+        96%, 100% { opacity: 0; transform: scale(0.5); }
+      }
+      @keyframes checkReveal3 {
+        0%, 71.99% { opacity: 0; transform: scale(0.5); }
+        72%, 95% { opacity: 1; transform: scale(1); }
+        96%, 100% { opacity: 0; transform: scale(0.5); }
+      }
+      @keyframes lineFill1 {
+        0%, 21.99% { width: 0%; }
+        30%, 95% { width: 100%; }
+        96%, 100% { width: 0%; }
+      }
+      @keyframes lineFill2 {
+        0%, 46.99% { width: 0%; }
+        55%, 95% { width: 100%; }
+        96%, 100% { width: 0%; }
+      }
+      @keyframes room1CircleReveal {
+        0%, 71.99% { background-color: #e4e4e7; color: #a1a1aa; }
+        72%, 95% { background-color: #800000; color: #ffffff; }
+        96%, 100% { background-color: #e4e4e7; color: #a1a1aa; }
+      }
+      @keyframes room1TextReveal {
+        0%, 71.99% { color: #a1a1aa; }
+        72%, 95% { color: #800000; }
+        96%, 100% { color: #a1a1aa; }
+      }
+      @keyframes submitOverlay {
+        0%, 71.99% { opacity: 0; transform: scale(0.95); }
+        76%, 92% { opacity: 1; transform: scale(1); }
+        96%, 100% { opacity: 0; transform: scale(1.05); }
+      }
+      @keyframes step1GreenCircle {
+        0%, 21.99% { background-color: white; color: #a1a1aa; border-color: rgba(0,0,0,0.05); }
+        22%, 95% { background-color: #10b981; color: white; border-color: transparent; }
+        96%, 100% { background-color: white; color: #a1a1aa; border-color: rgba(0,0,0,0.05); }
+      }
+      @keyframes step1GreenText {
+        0%, 21.99% { color: #52525b; }
+        22%, 95% { color: #10b981; }
+        96%, 100% { color: #52525b; }
+      }
+      @keyframes stepLineFill {
+        0%, 21.99% { height: 0%; }
+        35%, 95% { height: 100%; }
+        96%, 100% { height: 0%; }
+      }
+      @keyframes step2GreenCircle {
+        0%, 46.99% { background-color: white; color: #a1a1aa; border-color: rgba(0,0,0,0.05); }
+        47%, 95% { background-color: #10b981; color: white; border-color: transparent; }
+        96%, 100% { background-color: white; color: #a1a1aa; border-color: rgba(0,0,0,0.05); }
+      }
+      @keyframes step2GreenText {
+        0%, 46.99% { color: #52525b; }
+        47%, 95% { color: #10b981; }
+        96%, 100% { color: #52525b; }
+      }
+      @keyframes submitButtonEnable {
+        0%, 47% { background-color: #e4e4e7; color: #a1a1aa; box-shadow: none; }
+        51%, 95% { background-color: #800000; color: #ffffff; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); }
+        96%, 100% { background-color: #e4e4e7; color: #a1a1aa; box-shadow: none; }
+      }
+    `}} />
+  </div>
+);
