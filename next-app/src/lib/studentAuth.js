@@ -1,3 +1,4 @@
+import { encryptPII, decryptPII } from "./piiEncryption.js";
 import { getSessionCookieName, signSessionToken, verifySessionToken } from "./jwt.js";
 import { query, queryOne } from "./postgres.js";
 import { getSessionVersion, isSessionActive, registerSessionToken } from "./authSessions.js";

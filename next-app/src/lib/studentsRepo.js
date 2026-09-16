@@ -1,3 +1,5 @@
+import { encryptPII, decryptPII } from "./piiEncryption.js";
+import { decryptStudentRow } from "./studentAuth.js";
 import { dbAll, dbGet, dbRun } from "./postgresCompat.js";
 import { canonicalizeCabinetId } from "./storageLayoutUtils.js";
 

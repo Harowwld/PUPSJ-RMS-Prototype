@@ -1,3 +1,4 @@
+import { encryptPII, decryptPII } from "./piiEncryption.js";
 import crypto from "node:crypto";
 import { query, queryOne } from "./postgres.js";
 import { hashPassword } from "./passwordHash.js";

@@ -1,6 +1,7 @@
 import crypto from "node:crypto";
 import { query, queryOne } from "./postgres.js";
 import { dbAll, dbGet, dbRun } from "./postgresCompat.js";
+import { encryptPII, decryptPII } from "./piiEncryption.js";
 import { hashPassword, verifyPasswordHash as verifyPasswordHashValue } from "./passwordHash.js";
 
 function buildStaffScope(officeId) {
