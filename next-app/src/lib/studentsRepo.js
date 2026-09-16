@@ -242,43 +242,43 @@ export async function listStudents({
     params.push(status);
   }
 
-  if (q) {
-    filters.push("(student_no LIKE ? OR name LIKE ?)");
-    const like = `%${q}%`;
-    params.push(like, like);
-  }
+
 
   const where = filters.length ? `WHERE ${filters.join(" AND ")}` : "";
-const rows = await dbAll(
-    `
-      SELECT ${STUDENT_SELECT}
-      FROM students
-      ${where}
-    `,
-    [...params]
-  );
-  
-  let decryptedRows = (rows || []).map(decryptStudentRow);
-  if (q) {
-    const search = q.toLowerCase();
-    decryptedRows = decryptedRows.filter(r => 
-      (r.student_no && r.student_no.toLowerCase().includes(search)) ||
-      (r.name && r.name.toLowerCase().includes(search)) ||
-      (r.email && r.email.toLowerCase().includes(search))
-    );
-  }
   const lim = Math.min(Math.max(parseInt(limit) || 200, 1), 500);
   const off = Math.max(parseInt(offset) || 0, 0);
-  
-  decryptedRows.sort((a, b) => {
-    const nameA = (a.name || '').toLowerCase();
-    const nameB = (b.name || '').toLowerCase();
-    if (nameA < nameB) return -1;
-    if (nameA > nameB) return 1;
-    return 0;
-  });
 
-  return decryptedRows.slice(off, off + lim);
+  let rows;
+  if (!q) {
+    rows = await dbAll(
+      `SELECT ${STUDENT_SELECT} FROM students ${where} ORDER BY updated_at DESC LIMIT ? OFFSET ?`,
+      [...params, lim, off]
+    );
+  } else {
+    rows = await dbAll(`SELECT ${STUDENT_SELECT} FROM students ${where}`, [...params]);
+  }
+
+  let decryptedRows = (rows || []).map(decryptStudentRow);
+  
+  if (q) {
+    const search = q.toLowerCase();
+    decryptedRows = decryptedRows.filter(r => {
+      if (r.student_no && r.student_no.toLowerCase().includes(search)) return true;
+      if (r.name && r.name.toLowerCase().includes(search)) return true;
+      if (r.email && r.email.toLowerCase().includes(search)) return true;
+      return false;
+    });
+    
+    decryptedRows.sort((a, b) => {
+      const nameA = (a.name || '').toLowerCase();
+      const nameB = (b.name || '').toLowerCase();
+      return nameA < nameB ? -1 : (nameA > nameB ? 1 : 0);
+    });
+
+    return decryptedRows.slice(off, off + lim);
+  }
+  
+  return decryptedRows;
 }
 
 export async function getStudentByStudentNo(studentNo, { officeId } = {}) {

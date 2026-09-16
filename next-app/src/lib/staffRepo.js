@@ -129,39 +129,41 @@ export async function listStaff({
 
 
   const where = filters.length ? `WHERE ${filters.join(" AND ")}` : "";
-
-
-const rows = await dbAll(
-    `
-      SELECT *
-      FROM staff
-      ${where}
-    `,
-    [...params]
-  );
-  
-  let decryptedRows = (rows || []).map(decryptStaffRow);
-  if (q) {
-    const search = q.toLowerCase();
-    decryptedRows = decryptedRows.filter(r => 
-      (r.id && r.id.toLowerCase().includes(search)) ||
-      (r.fname && r.fname.toLowerCase().includes(search)) ||
-      (r.lname && r.lname.toLowerCase().includes(search)) ||
-      (r.email && r.email.toLowerCase().includes(search))
-    );
-  }
   const lim = Math.min(Math.max(parseInt(limit) || 200, 1), 500);
   const off = Math.max(parseInt(offset) || 0, 0);
-  
-  decryptedRows.sort((a, b) => {
-    const lnameA = (a.lname || '').toLowerCase();
-    const lnameB = (b.lname || '').toLowerCase();
-    if (lnameA < lnameB) return -1;
-    if (lnameA > lnameB) return 1;
-    return 0;
-  });
 
-  return decryptedRows.slice(off, off + lim);
+  let rows;
+  if (!q) {
+    rows = await dbAll(
+      `SELECT * FROM staff ${where} ORDER BY updated_at DESC LIMIT ? OFFSET ?`,
+      [...params, lim, off]
+    );
+  } else {
+    rows = await dbAll(`SELECT * FROM staff ${where}`, [...params]);
+  }
+
+  let decryptedRows = (rows || []).map(decryptStaffRow);
+  
+  if (q) {
+    const search = q.toLowerCase();
+    decryptedRows = decryptedRows.filter(r => {
+      if (r.id && r.id.toLowerCase().includes(search)) return true;
+      if (r.fname && r.fname.toLowerCase().includes(search)) return true;
+      if (r.lname && r.lname.toLowerCase().includes(search)) return true;
+      if (r.email && r.email.toLowerCase().includes(search)) return true;
+      return false;
+    });
+    
+    decryptedRows.sort((a, b) => {
+      const nameA = (a.lname || '').toLowerCase();
+      const nameB = (b.lname || '').toLowerCase();
+      return nameA < nameB ? -1 : (nameA > nameB ? 1 : 0);
+    });
+
+    return decryptedRows.slice(off, off + lim);
+  }
+  
+  return decryptedRows;
 }
 
 export async function getStaffById(id, { officeId } = {}) {
