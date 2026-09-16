@@ -1,5 +1,6 @@
 "use client"
 
+import LucideIcon from "@/components/shared/LucideIcon";
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
@@ -72,7 +73,7 @@ export default function PdfPreviewDialog({
                 cursor: 'pointer'
               }}
             >
-              <i className="ph-bold ph-x text-[16px]"></i>
+              <LucideIcon  className="ph-bold ph-x text-[16px]"></LucideIcon>
             </button>
           </DialogClose>
         </DialogHeader>
@@ -88,7 +89,7 @@ export default function PdfPreviewDialog({
                     onClick={() => setIsFullscreenPreview(false)}
                     className="h-10 w-10 rounded-full bg-black/50 text-white hover:bg-black/70 backdrop-blur-md border-0"
                   >
-                    <i className="ph-bold ph-x text-lg"></i>
+                    <LucideIcon  className="ph-bold ph-x text-lg"></LucideIcon>
                   </Button>
                 </div>
               )}
@@ -112,7 +113,7 @@ export default function PdfPreviewDialog({
             <div className="flex flex-1 items-center justify-center bg-white p-6 dark:bg-card">
               <div className="max-w-lg text-center">
                 <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-gray-50 dark:border-white/10 dark:bg-card">
-                  <i className="ph-bold ph-circle-notch animate-spin text-xl text-pup-maroon dark:text-primary"></i>
+                  <LucideIcon  className="ph-bold ph-circle-notch animate-spin text-xl text-pup-maroon dark:text-primary"></LucideIcon>
                 </div>
                 <p className="text-sm font-semibold text-gray-600 dark:text-zinc-300">
                   Preparing report...
@@ -132,7 +133,7 @@ export default function PdfPreviewDialog({
             onClick={() => setIsFullscreenPreview(!isFullscreenPreview)}
             className="text-[#8E8E93] hover:text-[#111] dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/10 transition-colors rounded-xl shadow-none border-0 p-0 h-10 w-10 cursor-pointer"
           >
-            <i className="ph-bold ph-arrows-out text-[16px]"></i>
+            <LucideIcon  className="ph-bold ph-arrows-out text-[16px]"></LucideIcon>
           </Button>
 
           <div className="flex items-center gap-2.5 ml-auto">

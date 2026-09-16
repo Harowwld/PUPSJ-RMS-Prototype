@@ -1,3 +1,4 @@
+import LucideIcon from "@/components/shared/LucideIcon";
 import { useState, useRef, useEffect } from "react"
 import { cn } from "@/lib/utils"
 
@@ -52,7 +53,7 @@ export default function SlaKpiCards({ total, completionRate, completed, sla }) {
                       {activeOverdue} Overdue
                     </span>
                   )}
-                  <i className={cn("ph-bold ph-caret-down text-xs text-gray-400 transition-transform duration-300", selectedKpi === "rate" && "rotate-180")} />
+                  <LucideIcon  className={cn("ph-bold ph-caret-down text-xs text-gray-400 transition-transform duration-300", selectedKpi === "rate" && "rotate-180")} />
                 </div>
               </div>
               <div className="flex items-baseline gap-2">
@@ -117,7 +118,7 @@ export default function SlaKpiCards({ total, completionRate, completed, sla }) {
                 <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
                   Total Requests
                 </span>
-                <i className={cn("ph-bold ph-caret-down text-xs text-gray-400 transition-transform duration-300", selectedKpi === "total" && "rotate-180")} />
+                <LucideIcon  className={cn("ph-bold ph-caret-down text-xs text-gray-400 transition-transform duration-300", selectedKpi === "total" && "rotate-180")} />
               </div>
               <div className="flex items-baseline gap-2">
                 <span className="text-2xl font-black text-gray-900 dark:text-zinc-50 tracking-tight">

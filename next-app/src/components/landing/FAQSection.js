@@ -1,5 +1,5 @@
 "use client";
-
+import LucideIcon from "@/components/shared/LucideIcon";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -198,7 +198,7 @@ export default function FAQSection() {
                     "w-7 h-7 rounded-full flex items-center justify-center shrink-0 transition-transform duration-300",
                     isOpen ? "bg-[#800000] text-white rotate-180" : "bg-white/10 text-zinc-400"
                   )}>
-                    <i className="ph-bold ph-caret-down text-xs" />
+                    <LucideIcon  className="ph-bold ph-caret-down text-xs" />
                   </div>
                 </button>
 

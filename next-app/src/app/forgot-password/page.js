@@ -1,5 +1,5 @@
 "use client";
-
+import LucideIcon from "@/components/shared/LucideIcon";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -236,7 +236,7 @@ export default function ForgotPasswordPage() {
 
                   {forgotError && (
                     <div className="h-5 mt-1.5 text-left flex items-center gap-1.5 text-[#E5484D] animate-in fade-in duration-200">
-                      <i className="ph-bold ph-warning-circle text-[14px] shrink-0 mt-[1px]"></i>
+                      <LucideIcon  className="ph-bold ph-warning-circle text-[14px] shrink-0 mt-[1px]"></LucideIcon>
                       <p className="text-[12px] font-normal leading-none">
                         {forgotError}
                       </p>
@@ -252,7 +252,7 @@ export default function ForgotPasswordPage() {
                     className="w-full h-11 rounded-[8px] btn-brand-red text-[13px] font-medium text-white active:scale-95 disabled:opacity-50 transition-all flex items-center justify-center"
                   >
                     {forgotLoading ? (
-                      <i className="ph-bold ph-spinner animate-spin text-lg flex items-center justify-center"></i>
+                      <LucideIcon  className="ph-bold ph-spinner animate-spin text-lg flex items-center justify-center"></LucideIcon>
                     ) : (
                       <span>Locate Account</span>
                     )}
@@ -337,7 +337,7 @@ export default function ForgotPasswordPage() {
 
                   {forgotError && (
                     <div className="h-5 mt-1.5 text-left flex items-center gap-1.5 text-[#E5484D] animate-in fade-in duration-200">
-                      <i className="ph-bold ph-warning-circle text-[14px] shrink-0 mt-[1px]"></i>
+                      <LucideIcon  className="ph-bold ph-warning-circle text-[14px] shrink-0 mt-[1px]"></LucideIcon>
                       <p className="text-[12px] font-normal leading-none">
                         {forgotError}
                       </p>
@@ -353,7 +353,7 @@ export default function ForgotPasswordPage() {
                     className="w-full h-11 rounded-[8px] btn-brand-red text-[13px] font-medium text-white active:scale-95 disabled:opacity-50 transition-all flex items-center justify-center"
                   >
                     {forgotLoading ? (
-                      <i className="ph-bold ph-spinner animate-spin text-lg flex items-center justify-center"></i>
+                      <LucideIcon  className="ph-bold ph-spinner animate-spin text-lg flex items-center justify-center"></LucideIcon>
                     ) : (
                       <span>Reset Password</span>
                     )}

@@ -1,3 +1,4 @@
+import LucideIcon from "@/components/shared/LucideIcon";
 import { useState, useRef, useEffect } from "react"
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
@@ -103,7 +104,7 @@ export default function StatCards({ isLoading, logStats }) {
                   <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
                     {stat.label}
                   </span>
-                  <i className={cn("ph-bold ph-caret-down text-xs text-gray-400 transition-transform duration-300", selectedKpi === stat.key && "rotate-180")} />
+                  <LucideIcon  className={cn("ph-bold ph-caret-down text-xs text-gray-400 transition-transform duration-300", selectedKpi === stat.key && "rotate-180")} />
                 </div>
                 <div className="flex items-baseline gap-2">
                   <span className="text-2xl font-black text-gray-900 dark:text-zinc-50 tracking-tight">

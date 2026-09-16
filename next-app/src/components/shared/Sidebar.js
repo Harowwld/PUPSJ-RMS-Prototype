@@ -1,5 +1,6 @@
 "use client"
 
+import LucideIcon from "@/components/shared/LucideIcon";
 import { useState, useEffect, useRef } from "react"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
@@ -111,7 +112,7 @@ export default function Sidebar({ open = true, items, activeKey, onSelect, onLog
             data-tooltip-placement="right"
             className="flex w-[36px] h-[36px] items-center justify-center rounded-[8px] hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/5 active:scale-95 cursor-pointer transition-all duration-200 ease-out shrink-0"
           >
-            <i className={cn("rms-style-color text-[21px] transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]", open ? "ti ti-panel-left-dashed" : "ti ti-panel-left")} data-color={activeColor} style={{ color: activeColor }}></i>
+            <LucideIcon  className={cn("rms-style-color text-[21px] transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]", open ? "ti ti-panel-left-dashed" : "ti ti-panel-left")} data-color={activeColor} style={{ color: activeColor }}></LucideIcon>
           </button>
 
           {/* Zoom Control when Sidebar is Visible */}
@@ -168,7 +169,7 @@ export default function Sidebar({ open = true, items, activeKey, onSelect, onLog
                     title="Reset scale to 100% (Default)"
                     className="flex items-center gap-1 px-1.5 h-6 text-[10px] font-semibold text-gray-600 dark:text-zinc-300 hover:text-gray-900 dark:hover:text-white bg-gray-200/80 hover:bg-gray-300 dark:bg-zinc-800 dark:hover:bg-zinc-700 rounded-md transition-colors cursor-pointer border-0 shadow-2xs shrink-0 select-none"
                   >
-                    <i className="ti ti-rotate-2 text-[11px]"></i>
+                    <LucideIcon  className="ti ti-rotate-2 text-[11px]"></LucideIcon>
                     <span>Reset</span>
                   </button>
                 )}
@@ -230,11 +231,11 @@ export default function Sidebar({ open = true, items, activeKey, onSelect, onLog
                 >
                   <div className={cn("flex items-center overflow-hidden", open ? "min-w-0 flex-1" : "justify-center w-full")}>
                     <span className="relative w-[36px] h-[36px] flex items-center justify-center shrink-0">
-                      <i
+                      <LucideIcon 
                         data-color={hasActiveChild && !isExpanded ? "#FFFFFF" : staffIconColor}
                         style={{ color: hasActiveChild && !isExpanded ? "#FFFFFF" : staffIconColor }}
                         className={cn("rms-style-color", iconName, "text-[19px] transition-colors shrink-0")}
-                      ></i>
+                      ></LucideIcon>
                       {/* Collapsed notification dot */}
                       <span
                         data-background-color={activeColor}
@@ -273,12 +274,12 @@ export default function Sidebar({ open = true, items, activeKey, onSelect, onLog
                         {item.badge > 99 ? "99+" : item.badge}
                       </span>
                     )}
-                    <i
+                    <LucideIcon 
                       className={cn(
                         "ti ti-chevron-down text-xs transition-transform duration-200 ease-[cubic-bezier(0.16,1,0.3,1)]",
                         isExpanded && "rotate-180"
                       )}
-                    ></i>
+                    ></LucideIcon>
                   </div>
                 </button>
 
@@ -315,11 +316,11 @@ export default function Sidebar({ open = true, items, activeKey, onSelect, onLog
                         >
                           <div className={cn("flex items-center overflow-hidden", open ? "min-w-0 flex-1" : "justify-center w-full")}>
                             <span className="w-[36px] h-[36px] flex items-center justify-center shrink-0">
-                              <i
+                              <LucideIcon 
                                 data-color={isActive ? "#FFFFFF" : staffIconColor}
                                 style={{ color: isActive ? "#FFFFFF" : staffIconColor }}
                                 className={cn("rms-style-color", childIconName, "text-[19px] transition-colors shrink-0")}
-                              ></i>
+                              ></LucideIcon>
                             </span>
                             <span
                               className={cn(
@@ -384,11 +385,11 @@ export default function Sidebar({ open = true, items, activeKey, onSelect, onLog
             >
               <div className={cn("flex items-center overflow-hidden", open ? "min-w-0 flex-1" : "justify-center w-full")}>
                 <span className="relative w-[36px] h-[36px] flex items-center justify-center shrink-0">
-                  <i
+                  <LucideIcon 
                     data-color={isActive ? "#FFFFFF" : staffIconColor}
                     style={{ color: isActive ? "#FFFFFF" : staffIconColor }}
                     className={cn("rms-style-color", iconName, "text-[19px] transition-colors shrink-0")}
-                  ></i>
+                  ></LucideIcon>
                   {/* Collapsed notification dot */}
                   <span
                     data-background-color={activeColor}

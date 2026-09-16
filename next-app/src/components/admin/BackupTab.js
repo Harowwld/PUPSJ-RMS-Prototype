@@ -1,5 +1,6 @@
 "use client"
 
+import LucideIcon from "@/components/shared/LucideIcon";
 import { useMemo, useRef, useState, useEffect } from "react"
 import {
   Card,
@@ -331,7 +332,7 @@ export default function BackupTab({
                         className="flex h-10 items-center justify-center rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-5 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
                       >
                         {localLoading.uploading ? (
-                          <i className="ph-bold ph-spinner animate-spin text-[16px]"></i>
+                          <LucideIcon  className="ph-bold ph-spinner animate-spin text-[16px]"></LucideIcon>
                         ) : (
                           "Restore"
                         )}
@@ -342,7 +343,7 @@ export default function BackupTab({
                         className="flex h-10 items-center justify-center rounded-xl! btn-brand-red px-5 active:scale-95 transition-all text-xs font-semibold text-white shadow-xs cursor-pointer border-0"
                       >
                         {localLoading.generating ? (
-                          <i className="ph-bold ph-spinner animate-spin text-[16px]"></i>
+                          <LucideIcon  className="ph-bold ph-spinner animate-spin text-[16px]"></LucideIcon>
                         ) : (
                           "Create"
                         )}
@@ -368,7 +369,7 @@ export default function BackupTab({
                       ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border-emerald-200/60 dark:border-emerald-900/40"
                       : "bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border-amber-200/60 dark:border-amber-900/40"
                   )}>
-                    <i className="ph-bold ph-hard-drives text-[18px]" />
+                    <LucideIcon  className="ph-bold ph-hard-drives text-[18px]" />
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
@@ -408,7 +409,7 @@ export default function BackupTab({
                     className="h-8 px-3 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all inline-flex items-center gap-1.5"
                     title="Rescan USB ports and mount points for connected storage"
                   >
-                    {isRescanning && <i className="ph-bold ph-arrows-clockwise text-xs animate-spin" />}
+                    {isRescanning && <LucideIcon  className="ph-bold ph-arrows-clockwise text-xs animate-spin" />}
                     <span>{isRescanning ? "Scanning..." : "Detect"}</span>
                   </Button>
 
@@ -462,7 +463,7 @@ export default function BackupTab({
                       <div className="relative mb-6">
                         <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
                         <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
-                          <i className="ph-duotone ph-warning-circle text-xl text-gray-300 dark:text-zinc-650" />
+                          <LucideIcon  className="ph-duotone ph-warning-circle text-xl text-gray-300 dark:text-zinc-650" />
                         </EmptyMedia>
                       </div>
                       <EmptyTitle className="text-lg font-semibold tracking-tight text-gray-900 dark:text-zinc-50">

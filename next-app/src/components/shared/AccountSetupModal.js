@@ -1,5 +1,6 @@
 "use client"
 
+import LucideIcon from "@/components/shared/LucideIcon";
 import { useState, useEffect } from "react"
 import {
   Dialog,
@@ -221,9 +222,9 @@ export default function AccountSetupModal({ authUser }) {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   {needsPassword && step > 1 ? (
-                    <i className="ph-bold ph-check text-[14px] text-emerald-600 dark:text-emerald-450 shrink-0"></i>
+                    <LucideIcon  className="ph-bold ph-check text-[14px] text-emerald-600 dark:text-emerald-450 shrink-0"></LucideIcon>
                   ) : (
-                    <i className="ph-bold ph-circle text-[14px] text-pup-maroon dark:text-red-400 shrink-0"></i>
+                    <LucideIcon  className="ph-bold ph-circle text-[14px] text-pup-maroon dark:text-red-400 shrink-0"></LucideIcon>
                   )}
                   <span className="text-[10px] font-semibold uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-550">
                     Step 1
@@ -257,7 +258,7 @@ export default function AccountSetupModal({ authUser }) {
             >
               <div className="flex items-center gap-2">
                 {step === 2 ? (
-                  <i className="ph-bold ph-circle text-[14px] text-pup-maroon dark:text-red-400 shrink-0"></i>
+                  <LucideIcon  className="ph-bold ph-circle text-[14px] text-pup-maroon dark:text-red-400 shrink-0"></LucideIcon>
                 ) : (
                   <div className="w-[14px] h-[14px] shrink-0" />
                 )}
@@ -294,7 +295,7 @@ export default function AccountSetupModal({ authUser }) {
 
                 {pwError && (
                   <div className="flex items-center gap-2 rounded-[8px] border border-red-100 bg-red-50 p-3 text-xs font-semibold text-red-700 dark:border-red-900/30 dark:bg-red-950/30 dark:text-red-400 animate-in shake-1">
-                    <i className="ph-fill ph-warning-circle text-base"></i>
+                    <LucideIcon  className="ph-fill ph-warning-circle text-base"></LucideIcon>
                     {pwError}
                   </div>
                 )}
@@ -318,7 +319,7 @@ export default function AccountSetupModal({ authUser }) {
                         onClick={() => setShowPw(prev => ({ ...prev, next: !prev.next }))}
                         className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-pup-maroon dark:hover:text-red-500 transition-colors dark:text-zinc-500 dark:hover:text-red-500"
                       >
-                        <i className={cn("ph-bold text-[16px]", showPw.next ? "ph-eye-slash" : "ph-eye")}></i>
+                        <LucideIcon  className={cn("ph-bold text-[16px]", showPw.next ? "ph-eye-slash" : "ph-eye")}></LucideIcon>
                       </button>
                     </div>
                     <p className="mt-1 text-[11px] text-gray-400 dark:text-zinc-500">
@@ -344,7 +345,7 @@ export default function AccountSetupModal({ authUser }) {
                         onClick={() => setShowPw(prev => ({ ...prev, confirm: !prev.confirm }))}
                         className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-pup-maroon dark:hover:text-red-500 transition-colors dark:text-zinc-500 dark:hover:text-red-500"
                       >
-                        <i className={cn("ph-bold text-[16px]", showPw.confirm ? "ph-eye-slash" : "ph-eye")}></i>
+                        <LucideIcon  className={cn("ph-bold text-[16px]", showPw.confirm ? "ph-eye-slash" : "ph-eye")}></LucideIcon>
                       </button>
                     </div>
                   </div>
@@ -380,7 +381,7 @@ export default function AccountSetupModal({ authUser }) {
 
                 {secError && (
                   <div className="flex items-center gap-2 rounded-[8px] border border-red-100 bg-red-50 p-3 text-xs font-semibold text-red-700 dark:border-red-900/30 dark:bg-red-950/30 dark:text-red-400 animate-in shake-1">
-                    <i className="ph-fill ph-warning-circle text-base"></i>
+                    <LucideIcon  className="ph-fill ph-warning-circle text-base"></LucideIcon>
                     {secError}
                   </div>
                 )}

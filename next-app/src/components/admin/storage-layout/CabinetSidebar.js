@@ -1,5 +1,6 @@
 "use client"
 
+import LucideIcon from "@/components/shared/LucideIcon";
 import React, { memo } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -90,7 +91,7 @@ const CabinetSidebar = memo(({
           <div>
             {!selectedCabinet ? (
               <div className="flex h-[320px] flex-col items-center justify-center text-center">
-                <i className="ph-duotone ph-mouse-left-click text-[24px] text-gray-300 dark:text-zinc-600"></i>
+                <LucideIcon  className="ph-duotone ph-mouse-left-click text-[24px] text-gray-300 dark:text-zinc-600"></LucideIcon>
                 <h3 className="text-sm font-semibold text-gray-900 dark:text-zinc-50 mt-3">
                   No cabinet selected
                 </h3>
@@ -108,7 +109,7 @@ const CabinetSidebar = memo(({
                       onClick={() => setCarouselIndex(prev => Math.max(0, prev - 1))}
                       className="px-3 h-full flex items-center justify-center text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-200 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer border-r border-gray-200 dark:border-white/10"
                     >
-                      <i className="ph-bold ph-caret-left text-xs" />
+                      <LucideIcon  className="ph-bold ph-caret-left text-xs" />
                     </button>
 
                     <div className="flex-1 text-center text-xs font-medium text-gray-900 dark:text-zinc-50 select-none">
@@ -121,7 +122,7 @@ const CabinetSidebar = memo(({
                       onClick={() => setCarouselIndex(prev => Math.min(selectedCabinetIds.size - 1, prev + 1))}
                       className="px-3 h-full flex items-center justify-center text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-200 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer border-l border-gray-200 dark:border-white/10"
                     >
-                      <i className="ph-bold ph-caret-right text-xs" />
+                      <LucideIcon  className="ph-bold ph-caret-right text-xs" />
                     </button>
                   </div>
                 )}

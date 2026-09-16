@@ -1,3 +1,4 @@
+import LucideIcon from "@/components/shared/LucideIcon";
 import { useState, useMemo, useEffect } from "react"
 import RoomMap2D from "@/components/staff/RoomMap2D"
 import PageHeader from "@/components/shared/PageHeader"
@@ -143,7 +144,7 @@ export default function StorageExplorerTab({
               onClick={() => onSwitchView("search")}
               className="flex h-10 items-center gap-2 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
             >
-              <i className="ph-bold ph-arrow-left text-[14px]"></i>
+              <LucideIcon  className="ph-bold ph-arrow-left text-[14px]"></LucideIcon>
               Records & Archive
             </Button>
           }
@@ -219,7 +220,7 @@ export default function StorageExplorerTab({
                     }}
                     className="h-8 px-2 font-semibold text-[13px] text-gray-500 hover:text-gray-900 hover:bg-transparent dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-transparent transition-colors flex items-center gap-1.5 rounded-brand shadow-none! border-0!"
                   >
-                    <i className="ph-bold ph-eye-slash text-[14px]" />
+                    <LucideIcon  className="ph-bold ph-eye-slash text-[14px]" />
                     Unfocus
                   </Button>
                 </div>
@@ -310,14 +311,14 @@ export default function StorageExplorerTab({
                                   "flex items-center text-xs font-medium",
                                   isTarget ? "text-white/80" : "text-gray-550 dark:text-zinc-400"
                                 )}>
-                                  <i className="ph-bold ph-warehouse text-sm mr-2 opacity-80" />
+                                  <LucideIcon  className="ph-bold ph-warehouse text-sm mr-2 opacity-80" />
                                   <span>{r.cabinetsCount} Cabinets installed</span>
                                 </div>
                                 <div className={cn(
                                   "flex items-center text-xs font-medium",
                                   isTarget ? "text-white/80" : "text-gray-550 dark:text-zinc-400"
                                 )}>
-                                  <i className="ph-bold ph-folder-open text-sm mr-2 opacity-80" />
+                                  <LucideIcon  className="ph-bold ph-folder-open text-sm mr-2 opacity-80" />
                                   <span>{r.occupiedCount} Archived student folders</span>
                                 </div>
                               </div>
@@ -487,7 +488,7 @@ export default function StorageExplorerTab({
                           className="rounded-full p-[6px] text-[#8E8E93] hover:bg-[#F5F5F7] hover:text-gray-900 dark:hover:bg-zinc-800 dark:hover:text-zinc-200 transition-all pointer-events-auto flex items-center justify-center cursor-pointer"
                           title={activeStudent ? "Unfocus student" : "Back to Cabinets"}
                         >
-                          <i className="ph-bold ph-x text-[16px]"></i>
+                          <LucideIcon  className="ph-bold ph-x text-[16px]"></LucideIcon>
                         </button>
                       </div>
 
@@ -540,14 +541,14 @@ export default function StorageExplorerTab({
                                   }}
                                 >
                                   <div className="flex items-center gap-2">
-                                    <i className={cn(
+                                    <LucideIcon  className={cn(
                                       "ph-bold text-[16px]",
                                       isDrawerTarget
                                         ? "ph-map-pin"
                                         : hasOccupants
                                           ? "ph-folder-open text-[#0A84FF]"
                                           : "ph-folder text-[#8E8E93]"
-                                    )}></i>
+                                    )}></LucideIcon>
                                     <span className="text-[14px] font-bold">
                                       Drawer {d.drawer}
                                     </span>
@@ -581,7 +582,7 @@ export default function StorageExplorerTab({
                                               </div>
                                             </div>
                                             {isTargetPerson && (
-                                              <i 
+                                              <LucideIcon  
                                                 className="ph-fill ph-target text-sm shrink-0 animate-pulse mt-0.5" 
                                                 style={{ color: theme.frontStart }}
                                               />
@@ -608,7 +609,7 @@ export default function StorageExplorerTab({
                                                       className="flex items-center justify-between gap-2 p-2 bg-white hover:bg-gray-50 dark:bg-zinc-900/50 dark:hover:bg-zinc-900 border border-[#E5E5EA] dark:border-white/10 rounded-[8px] cursor-pointer transition-colors group/doc"
                                                     >
                                                       <div className="flex items-center gap-1.5 min-w-0">
-                                                        <i className="ph-bold ph-file-pdf text-[16px] text-[#FF3B30] group-hover/doc:scale-105 transition-transform"></i>
+                                                        <LucideIcon  className="ph-bold ph-file-pdf text-[16px] text-[#FF3B30] group-hover/doc:scale-105 transition-transform"></LucideIcon>
                                                         <span className="truncate font-bold text-[14px] text-[#1C1C1E] dark:text-zinc-300" title={doc.filename}>
                                                           {doc.docType}
                                                         </span>

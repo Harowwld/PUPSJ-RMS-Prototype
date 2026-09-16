@@ -1,5 +1,6 @@
 "use client"
 
+import LucideIcon from "@/components/shared/LucideIcon";
 import { useState } from "react"
 
 import {
@@ -57,7 +58,7 @@ export default function OCRPromptModal({
         <DialogHeader className="border-b border-gray-100 bg-gray-50 p-6 dark:border-white/10 dark:bg-white/5">
           <div className="flex items-start gap-4">
             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-amber-100/30 bg-amber-50 text-amber-600 shadow-sm dark:bg-amber-950/30 dark:text-amber-400 dark:shadow-none">
-              <i className="ph-duotone ph-scan text-xl"></i>
+              <LucideIcon  className="ph-duotone ph-scan text-xl"></LucideIcon>
             </div>
             <div className="min-w-0">
               <DialogTitle className="text-lg font-semibold tracking-tight text-gray-900 dark:text-zinc-50">

@@ -1,5 +1,5 @@
 "use client";
-
+import LucideIcon from "@/components/shared/LucideIcon";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
@@ -207,7 +207,7 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
             {/* Right: Search Input with Icon and Number Count */}
             <div className="w-full sm:w-[260px] lg:w-[300px] relative group shrink-0">
               <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                <i className="ph-bold ph-magnifying-glass text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm"></i>
+                <LucideIcon  className="ph-bold ph-magnifying-glass text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm"></LucideIcon>
               </div>
               <Input
                 value={query}
@@ -267,7 +267,7 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
                         <div className="relative mb-5">
                           <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
                           <EmptyMedia className="relative z-10 flex h-20 w-20 items-center justify-center rounded-2xl border border-gray-100 bg-white shadow-lg rotate-2 dark:border-white/10 dark:bg-card dark:shadow-none">
-                            <i className="ph-duotone ph-check-square text-xl text-gray-300 dark:text-zinc-600"></i>
+                            <LucideIcon  className="ph-duotone ph-check-square text-xl text-gray-300 dark:text-zinc-600"></LucideIcon>
                           </EmptyMedia>
                         </div>
                         <EmptyTitle className="text-base font-semibold text-gray-900 dark:text-zinc-50">
@@ -303,7 +303,7 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
                             )}
                           >
                             <div className="flex items-center gap-2">
-                              <i className={cn(
+                              <LucideIcon  className={cn(
                                 "ph-bold ph-file-text text-sm shrink-0",
                                 isCurrent
                                   ? "text-pup-maroon dark:text-red-400"
@@ -724,7 +724,7 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
                         <div className="relative mb-5">
                           <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
                           <EmptyMedia className="relative z-10 flex h-20 w-20 items-center justify-center rounded-2xl border border-gray-100 bg-white shadow-lg -rotate-2 dark:border-white/10 dark:bg-card dark:shadow-none">
-                            <i className="ph-duotone ph-file-text text-xl text-gray-300 dark:text-zinc-600"></i>
+                            <LucideIcon  className="ph-duotone ph-file-text text-xl text-gray-300 dark:text-zinc-600"></LucideIcon>
                           </EmptyMedia>
                         </div>
                         <EmptyTitle className="text-base font-semibold text-gray-900 dark:text-zinc-50">

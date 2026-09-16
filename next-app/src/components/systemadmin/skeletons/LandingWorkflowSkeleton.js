@@ -1,5 +1,6 @@
 "use client"
 
+import LucideIcon from "@/components/shared/LucideIcon";
 import { Skeleton } from "@/components/ui/skeleton"
 import { Card, CardContent } from "@/components/ui/card"
 import PageHeader from "@/components/shared/PageHeader"
@@ -89,7 +90,7 @@ export default function LandingWorkflowSkeleton() {
                     <Skeleton className="h-8 w-8 rounded-lg dark:bg-muted" />
                     <Skeleton className="h-8 w-8 rounded-lg dark:bg-muted" />
                     <div className="h-4 w-px bg-gray-200 dark:bg-white/10 mx-1" />
-                    <i className="ph-bold ph-caret-down text-gray-400 text-sm rotate-180" />
+                    <LucideIcon  className="ph-bold ph-caret-down text-gray-400 text-sm rotate-180" />
                   </div>
                 </div>
 
@@ -133,7 +134,7 @@ export default function LandingWorkflowSkeleton() {
                       <Skeleton className="h-8 w-8 rounded-lg dark:bg-muted" />
                       <Skeleton className="h-8 w-8 rounded-lg dark:bg-muted" />
                       <div className="h-4 w-px bg-gray-200 dark:bg-white/10 mx-1" />
-                      <i className="ph-bold ph-caret-down text-gray-400 text-sm" />
+                      <LucideIcon  className="ph-bold ph-caret-down text-gray-400 text-sm" />
                     </div>
                   </div>
                 </div>

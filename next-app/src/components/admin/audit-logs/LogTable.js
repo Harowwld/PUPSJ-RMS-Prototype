@@ -1,5 +1,6 @@
 "use client"
 
+import LucideIcon from "@/components/shared/LucideIcon";
 import React, { useState, useCallback } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -25,12 +26,12 @@ import AuditLogsTableSkeleton from "@/components/systemadmin/skeletons/AuditLogs
 
 function SortIndicator({ column, logSortBy, logSortOrder }) {
   if (logSortBy !== column) {
-    return <i className="ph-bold ph-caret-up-down ml-1 text-[12px] text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"></i>
+    return <LucideIcon  className="ph-bold ph-caret-up-down ml-1 text-[12px] text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"></LucideIcon>
   }
   return logSortOrder === "ASC" ? (
-    <i className="ph-bold ph-caret-up ml-1 text-[12px] text-gray-400"></i>
+    <LucideIcon  className="ph-bold ph-caret-up ml-1 text-[12px] text-gray-400"></LucideIcon>
   ) : (
-    <i className="ph-bold ph-caret-down ml-1 text-[12px] text-gray-400"></i>
+    <LucideIcon  className="ph-bold ph-caret-down ml-1 text-[12px] text-gray-400"></LucideIcon>
   )
 }
 
@@ -115,7 +116,7 @@ const LogRow = React.memo(function LogRow({
             className="mx-auto flex h-7 w-7 items-center justify-center bg-transparent border-none text-[#8E8E93] hover:text-[#111111] dark:hover:text-zinc-200 cursor-pointer transition-transform duration-200"
             style={{ transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}
           >
-            <i className="ph-bold ph-caret-down text-[14px]"></i>
+            <LucideIcon  className="ph-bold ph-caret-down text-[14px]"></LucideIcon>
           </button>
         </td>
         <td className="py-0 px-4 align-middle text-[13px] font-normal text-[#111111] dark:text-zinc-50">
@@ -168,7 +169,7 @@ const LogRow = React.memo(function LogRow({
                   aria-label="View Details"
                   className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
                 >
-                  <i className="ph-bold ph-eye text-[16px]"></i>
+                  <LucideIcon  className="ph-bold ph-eye text-[16px]"></LucideIcon>
                 </button>
               </TooltipTrigger>
               <TooltipContent>View Details</TooltipContent>
@@ -244,7 +245,7 @@ export default function LogTable({
         <Empty className="flex flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400">
           <EmptyHeader className="flex flex-col items-center gap-0">
             <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
-              <i className="ph-duotone ph-warning-circle text-xl text-pup-maroon dark:text-primary" />
+              <LucideIcon  className="ph-duotone ph-warning-circle text-xl text-pup-maroon dark:text-primary" />
             </EmptyMedia>
             <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">
               Load failed
@@ -359,7 +360,7 @@ export default function LogTable({
                         <div className="relative mb-6">
                           <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
                           <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
-                            <i className="ph-duotone ph-magnifying-glass text-xl text-gray-300 dark:text-zinc-600"></i>
+                            <LucideIcon  className="ph-duotone ph-magnifying-glass text-xl text-gray-300 dark:text-zinc-600"></LucideIcon>
                           </EmptyMedia>
                         </div>
                         <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">

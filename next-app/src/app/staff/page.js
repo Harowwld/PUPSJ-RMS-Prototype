@@ -1,5 +1,5 @@
 "use client";
-
+import LucideIcon from "@/components/shared/LucideIcon";
 import { useState, useEffect, useMemo, useRef, useCallback, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
@@ -1600,7 +1600,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
                   )}
                   style={active ? { backgroundColor: "color-mix(in srgb, var(--brand-accent) 12%, transparent)" } : undefined}
                 >
-                  <i className={cn(item.iconClass, "text-sm")}></i>
+                  <LucideIcon  className={cn(item.iconClass, "text-sm")}></LucideIcon>
                   {item.label}
                   {item.badge > 0 && (
                     <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[9px] font-semibold text-white bg-pup-maroon dark:bg-red-500/20 dark:text-red-400">

@@ -1,5 +1,6 @@
 "use client"
 
+import LucideIcon from "@/components/shared/LucideIcon";
 import { useState, useEffect } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -265,7 +266,7 @@ export default function AuditLogsTab({
                     className="flex h-10 items-center justify-center rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-5 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
                   >
                     {isExporting ? (
-                      <i className="ph-bold ph-spinner animate-spin text-[16px]"></i>
+                      <LucideIcon  className="ph-bold ph-spinner animate-spin text-[16px]"></LucideIcon>
                     ) : (
                       "Export"
                     )}
@@ -277,7 +278,7 @@ export default function AuditLogsTab({
                     className="flex h-10 items-center justify-center rounded-xl! btn-brand-red text-white font-semibold text-xs active:scale-95 disabled:opacity-50 transition-all cursor-pointer px-5 shadow-xs"
                   >
                     {isGeneratingPdf ? (
-                      <i className="ph-bold ph-spinner animate-spin text-[16px] flex items-center justify-center"></i>
+                      <LucideIcon  className="ph-bold ph-spinner animate-spin text-[16px] flex items-center justify-center"></LucideIcon>
                     ) : (
                       "Download"
                     )}

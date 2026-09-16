@@ -1,5 +1,6 @@
 "use client"
 
+import LucideIcon from "@/components/shared/LucideIcon";
 import { useState, useMemo, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -36,12 +37,12 @@ import { toast } from "sonner"
 
 function SortIndicator({ column, sortBy, sortOrder }) {
   if (sortBy !== column) {
-    return <i className="ph-bold ph-caret-up-down ml-1 text-[12px] text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"></i>
+    return <LucideIcon  className="ph-bold ph-caret-up-down ml-1 text-[12px] text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"></LucideIcon>
   }
   return sortOrder === "ASC" ? (
-    <i className="ph-bold ph-caret-up ml-1 text-[12px] text-gray-400"></i>
+    <LucideIcon  className="ph-bold ph-caret-up ml-1 text-[12px] text-gray-400"></LucideIcon>
   ) : (
-    <i className="ph-bold ph-caret-down ml-1 text-[12px] text-gray-400"></i>
+    <LucideIcon  className="ph-bold ph-caret-down ml-1 text-[12px] text-gray-400"></LucideIcon>
   )
 }
 
@@ -713,7 +714,7 @@ export default function DigitalRecordsReviewTab({
                     className="flex h-10 items-center justify-center rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
                   >
                     {isExporting ? (
-                      <i className="ph-bold ph-spinner animate-spin text-[16px]"></i>
+                      <LucideIcon  className="ph-bold ph-spinner animate-spin text-[16px]"></LucideIcon>
                     ) : (
                       "Export"
                     )}
@@ -751,7 +752,7 @@ export default function DigitalRecordsReviewTab({
                             Pending Review
                           </span>
                           <div className="flex items-center gap-1.5">
-                            <i className={cn("ph-bold ph-caret-down text-xs text-gray-400 transition-transform duration-300", selectedKpi === "pending" && "rotate-180")} />
+                            <LucideIcon  className={cn("ph-bold ph-caret-down text-xs text-gray-400 transition-transform duration-300", selectedKpi === "pending" && "rotate-180")} />
                           </div>
                         </div>
                         <div className="flex items-baseline gap-2">
@@ -832,7 +833,7 @@ export default function DigitalRecordsReviewTab({
                           <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
                             Approved Today
                           </span>
-                          <i className={cn("ph-bold ph-caret-down text-xs text-gray-400 transition-transform duration-300", selectedKpi === "approved" && "rotate-180")} />
+                          <LucideIcon  className={cn("ph-bold ph-caret-down text-xs text-gray-400 transition-transform duration-300", selectedKpi === "approved" && "rotate-180")} />
                         </div>
                         <div className="flex items-baseline gap-2">
                           <span className="text-2xl font-black text-gray-900 dark:text-zinc-50 tracking-tight">
@@ -905,7 +906,7 @@ export default function DigitalRecordsReviewTab({
                           <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
                             Returned Today
                           </span>
-                          <i className={cn("ph-bold ph-caret-down text-xs text-gray-400 transition-transform duration-300", selectedKpi === "declined" && "rotate-180")} />
+                          <LucideIcon  className={cn("ph-bold ph-caret-down text-xs text-gray-400 transition-transform duration-300", selectedKpi === "declined" && "rotate-180")} />
                         </div>
                         <div className="flex items-baseline gap-2">
                           <span className="text-2xl font-black text-gray-900 dark:text-zinc-50 tracking-tight">
@@ -1046,7 +1047,7 @@ export default function DigitalRecordsReviewTab({
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 flex-wrap">
             {/* Search */}
             <div className="relative flex-1 sm:w-64 min-w-[200px] group">
-              <i className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-xs pointer-events-none"></i>
+              <LucideIcon  className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-xs pointer-events-none"></LucideIcon>
               <Input
                 type="text"
                 placeholder="Search Student"
@@ -1249,7 +1250,7 @@ export default function DigitalRecordsReviewTab({
                 <div className="relative mb-6">
                   <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
                   <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
-                    <i className="ph-duotone ph-warning-circle text-3xl text-red-500 dark:text-red-400" />
+                    <LucideIcon  className="ph-duotone ph-warning-circle text-3xl text-red-500 dark:text-red-400" />
                   </EmptyMedia>
                 </div>
                 <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
@@ -1350,7 +1351,7 @@ export default function DigitalRecordsReviewTab({
                             <div className="relative mb-6">
                               <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
                               <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
-                                <i className="ph-duotone ph-magnifying-glass text-xl text-gray-300 dark:text-zinc-600"></i>
+                                <LucideIcon  className="ph-duotone ph-magnifying-glass text-xl text-gray-300 dark:text-zinc-600"></LucideIcon>
                               </EmptyMedia>
                             </div>
                             <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
@@ -1463,7 +1464,7 @@ export default function DigitalRecordsReviewTab({
                                     aria-label="Preview Document"
                                     className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 transition-colors flex items-center justify-center border-0 bg-transparent cursor-pointer active:scale-95"
                                   >
-                                    <i className="ph-bold ph-eye text-[16px]"></i>
+                                    <LucideIcon  className="ph-bold ph-eye text-[16px]"></LucideIcon>
                                   </button>
                                 </TooltipTrigger>
                                 <TooltipContent side="top">Preview</TooltipContent>
@@ -1478,7 +1479,7 @@ export default function DigitalRecordsReviewTab({
                                          aria-label="Approve Document"
                                          className="w-7 h-7 rounded-lg hover:bg-green-50 dark:hover:bg-green-950/30 text-gray-500 hover:text-green-600 dark:text-zinc-400 dark:hover:text-green-400 transition-colors flex items-center justify-center border-0 bg-transparent cursor-pointer active:scale-95"
                                        >
-                                         <i className="ph-bold ph-check text-[16px]"></i>
+                                         <LucideIcon  className="ph-bold ph-check text-[16px]"></LucideIcon>
                                        </button>
                                      </TooltipTrigger>
                                      <TooltipContent side="top">Approve</TooltipContent>
@@ -1499,7 +1500,7 @@ export default function DigitalRecordsReviewTab({
                                          aria-label="Decline Document"
                                          className="w-7 h-7 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/30 text-gray-500 hover:text-red-600 dark:text-zinc-400 dark:hover:text-red-400 transition-colors flex items-center justify-center border-0 bg-transparent cursor-pointer active:scale-95"
                                        >
-                                         <i className="ph-bold ph-x text-[16px]"></i>
+                                         <LucideIcon  className="ph-bold ph-x text-[16px]"></LucideIcon>
                                        </button>
                                      </TooltipTrigger>
                                      <TooltipContent side="top">Decline</TooltipContent>
@@ -1610,7 +1611,7 @@ export default function DigitalRecordsReviewTab({
               onCancel={() => setSelectedIds(new Set())}
               actions={
                 <span className="text-[12px] font-medium text-amber-700 bg-amber-50 px-3 py-1.5 rounded-lg border border-amber-200 dark:bg-amber-950/20 dark:text-amber-500/90 dark:border-amber-900/50 flex items-center">
-                  <i className="ph-fill ph-warning-circle mr-1.5"></i>
+                  <LucideIcon  className="ph-fill ph-warning-circle mr-1.5"></LucideIcon>
                   Contains reviewed records. Bulk actions disabled.
                 </span>
               }

@@ -1,5 +1,6 @@
 "use client"
 
+import LucideIcon from "@/components/shared/LucideIcon";
 import { useState, useEffect, useCallback, useMemo, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { Badge } from "@/components/ui/badge"
@@ -35,12 +36,12 @@ import { getCachedData, setCachedData, invalidateDataCache } from "@/lib/dataCac
 
 function SortIndicator({ column, sortBy, sortOrder }) {
   if (sortBy !== column) {
-    return <i className="ph-bold ph-caret-up-down ml-1 text-[12px] text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"></i>
+    return <LucideIcon  className="ph-bold ph-caret-up-down ml-1 text-[12px] text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"></LucideIcon>
   }
   return sortOrder === "ASC" ? (
-    <i className="ph-bold ph-caret-up ml-1 text-[12px] text-gray-400"></i>
+    <LucideIcon  className="ph-bold ph-caret-up ml-1 text-[12px] text-gray-400"></LucideIcon>
   ) : (
-    <i className="ph-bold ph-caret-down ml-1 text-[12px] text-gray-400"></i>
+    <LucideIcon  className="ph-bold ph-caret-down ml-1 text-[12px] text-gray-400"></LucideIcon>
   )
 }
 
@@ -710,7 +711,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                         <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
                           {stat.label}
                         </span>
-                        <i className={cn("ph-bold ph-caret-down text-xs text-gray-400 transition-transform duration-300", selectedKpi === stat.key && "rotate-180")} />
+                        <LucideIcon  className={cn("ph-bold ph-caret-down text-xs text-gray-400 transition-transform duration-300", selectedKpi === stat.key && "rotate-180")} />
                       </div>
                       <div className="flex items-baseline gap-2">
                         <span className="text-2xl font-black text-gray-900 dark:text-zinc-50 tracking-tight">
@@ -827,7 +828,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0">
             <div className="w-full sm:w-[260px] lg:w-[300px] relative group shrink-0">
               <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                <i className="ph-bold ph-magnifying-glass text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm"></i>
+                <LucideIcon  className="ph-bold ph-magnifying-glass text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm"></LucideIcon>
               </div>
               <Input
                 value={search}
@@ -949,10 +950,10 @@ export default function GlobalStaffTab({ authUser, showToast }) {
               <div className="relative mb-6">
                 <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
                 <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
-                  <i className={cn(
+                  <LucideIcon  className={cn(
                     hasActiveFilters ? "ph-magnifying-glass" : (statusFilter === "Inactive" ? "ph-archive" : "ph-users"),
                     "text-3xl text-gray-400 dark:text-zinc-500"
-                  )}></i>
+                  )}></LucideIcon>
                 </EmptyMedia>
               </div>
               <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
@@ -974,7 +975,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                   onClick={handleClearFilters}
                   className="mt-6 flex h-10 items-center gap-2 rounded-xl border border-gray-300 bg-white px-5 text-xs font-semibold text-gray-700 shadow-xs transition-colors hover:bg-gray-50 dark:bg-zinc-900 dark:border-white/10 dark:text-zinc-300 cursor-pointer"
                 >
-                  <i className="ph-bold ph-arrow-counter-clockwise"></i>
+                  <LucideIcon  className="ph-bold ph-arrow-counter-clockwise"></LucideIcon>
                   Clear
                 </Button>
               ) : statusFilter === "Active" ? (
@@ -1152,7 +1153,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                                 aria-label="My Account Settings"
                                 className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 dark:text-zinc-400 hover:text-blue-600 dark:hover:text-blue-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
                               >
-                                <i className="ph-bold ph-gear-six text-[16px]"></i>
+                                <LucideIcon  className="ph-bold ph-gear-six text-[16px]"></LucideIcon>
                               </button>
                             </TooltipTrigger>
                             <TooltipContent>My Account Settings</TooltipContent>
@@ -1167,7 +1168,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                                     aria-label="Edit Staff Member"
                                     className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 dark:text-zinc-400 hover:text-amber-600 dark:hover:text-amber-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
                                   >
-                                    <i className="ph-bold ph-pencil-simple text-[16px]"></i>
+                                    <LucideIcon  className="ph-bold ph-pencil-simple text-[16px]"></LucideIcon>
                                   </button>
                                 </TooltipTrigger>
                                 <TooltipContent>Edit Staff</TooltipContent>
@@ -1182,7 +1183,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                                     aria-label="Restore Staff Member"
                                     className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 dark:text-zinc-400 hover:text-emerald-600 dark:hover:text-emerald-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
                                   >
-                                    <i className="ph-bold ph-archive-restore text-[16px]"></i>
+                                    <LucideIcon  className="ph-bold ph-archive-restore text-[16px]"></LucideIcon>
                                   </button>
                                 </TooltipTrigger>
                                 <TooltipContent>Restore</TooltipContent>
@@ -1195,7 +1196,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                                     aria-label="Archive Staff Member"
                                     className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 dark:text-zinc-400 hover:text-red-600 dark:hover:text-red-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
                                   >
-                                    <i className="ph-bold ph-archive text-[16px]"></i>
+                                    <LucideIcon  className="ph-bold ph-archive text-[16px]"></LucideIcon>
                                   </button>
                                 </TooltipTrigger>
                                 <TooltipContent>Archive</TooltipContent>

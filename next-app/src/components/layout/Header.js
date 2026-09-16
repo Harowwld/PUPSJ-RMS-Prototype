@@ -1,5 +1,5 @@
 "use client";
-
+import LucideIcon from "@/components/shared/LucideIcon";
 import { useEffect, useState, useRef, useMemo } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -933,7 +933,7 @@ export default function Header({ authUser, onLogout, children }) {
               className={cn("group w-full max-w-sm h-9 pl-3 pr-2 flex items-center justify-between rounded-xl transition-all cursor-pointer shadow-2xs select-none", isStudent ? "bg-red-50/70 hover:bg-red-50 border border-red-100 hover:border-red-200" : "bg-gray-100/70 hover:bg-gray-100/90 dark:bg-zinc-900/60 dark:hover:bg-zinc-900/90 border border-gray-200/80 hover:border-gray-300 dark:border-white/10 dark:hover:border-white/20")}
             >
               <div className="flex items-center gap-2 text-gray-400 dark:text-zinc-500">
-                <i className="ph-bold ph-magnifying-glass text-xs transition-colors group-hover:text-pup-maroon dark:group-hover:text-red-400"></i>
+                <LucideIcon  className="ph-bold ph-magnifying-glass text-xs transition-colors group-hover:text-pup-maroon dark:group-hover:text-red-400"></LucideIcon>
                 <span className="text-xs font-normal">Search views, actions...</span>
               </div>
               <kbd className="hidden sm:inline-flex items-center justify-center px-1.5 h-5 min-w-[46px] text-[9px] font-bold tracking-wider text-gray-500 dark:text-zinc-400 bg-white dark:bg-zinc-800 border border-gray-200/90 dark:border-zinc-700/90 rounded-md shadow-2xs leading-none">
@@ -965,7 +965,7 @@ export default function Header({ authUser, onLogout, children }) {
                       />
                       {!imageLoaded && (
                         <div className="flex h-full w-full items-center justify-center bg-gray-100 dark:bg-zinc-800 animate-pulse">
-                          <i className="ph-bold ph-user text-[14px] text-gray-400 dark:text-zinc-550" />
+                          <LucideIcon  className="ph-bold ph-user text-[14px] text-gray-400 dark:text-zinc-550" />
                         </div>
                       )}
                     </>
@@ -983,7 +983,7 @@ export default function Header({ authUser, onLogout, children }) {
                   </span>
                 </div>
 
-                <i className="ph-bold ph-caret-down text-[10px] text-gray-400 dark:text-zinc-500 shrink-0 ml-0.5"></i>
+                <LucideIcon  className="ph-bold ph-caret-down text-[10px] text-gray-400 dark:text-zinc-500 shrink-0 ml-0.5"></LucideIcon>
               </div>
             </DropdownMenuTrigger>
             
@@ -1004,7 +1004,7 @@ export default function Header({ authUser, onLogout, children }) {
                        className="cursor-pointer rounded-[8px] flex items-center gap-3 font-normal text-[15px] py-2.5 px-3 text-pup-maroon hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/20 transition-colors outline-none"
                        onClick={handleMainDashboardClick}
                      >
-                       <i className="ti ti-layout-dashboard text-[19px] shrink-0 flex items-center justify-center h-[19px] w-[19px] leading-none" style={{ color: branding.color }}></i>
+                       <LucideIcon  className="ti ti-layout-dashboard text-[19px] shrink-0 flex items-center justify-center h-[19px] w-[19px] leading-none" style={{ color: branding.color }}></LucideIcon>
                        <span>Return to Dashboard</span>
                      </DropdownMenuItem>
                    )}
@@ -1018,7 +1018,7 @@ export default function Header({ authUser, onLogout, children }) {
                     )}
                     onClick={() => router.push("/account")}
                   >
-                    <i className="ti ti-settings text-[19px] shrink-0 flex items-center justify-center h-[19px] w-[19px] leading-none" style={{ color: branding.color }}></i>
+                    <LucideIcon  className="ti ti-settings text-[19px] shrink-0 flex items-center justify-center h-[19px] w-[19px] leading-none" style={{ color: branding.color }}></LucideIcon>
                     <span>Account Settings</span>
                   </DropdownMenuItem>
  
@@ -1031,7 +1031,7 @@ export default function Header({ authUser, onLogout, children }) {
                     )}
                     onClick={() => router.push("/account/activity")}
                   >
-                    <i className="ti ti-history text-[19px] shrink-0 flex items-center justify-center h-[19px] w-[19px] leading-none" style={{ color: branding.color }}></i>
+                    <LucideIcon  className="ti ti-history text-[19px] shrink-0 flex items-center justify-center h-[19px] w-[19px] leading-none" style={{ color: branding.color }}></LucideIcon>
                     <span>My Activity</span>
                   </DropdownMenuItem>
  
@@ -1041,12 +1041,12 @@ export default function Header({ authUser, onLogout, children }) {
                       onClick={() => handleViewSwitch(activeView === "admin" ? "staff" : "admin")}
                       className="cursor-pointer rounded-[8px] flex items-center gap-3 font-normal text-[15px] py-2.5 px-3 hover:bg-gray-50 dark:hover:bg-white/5 text-gray-900 dark:text-zinc-100 transition-colors outline-none"
                     >
-                      <i className={cn(
+                      <LucideIcon  className={cn(
                         "text-[19px] shrink-0 flex items-center justify-center h-[19px] w-[19px] leading-none",
                         activeView === "admin" ? "ti ti-users" : "ti ti-shield-check"
                       )}
                       style={{ color: activeView === "admin" ? ROLE_BRANDING.yellow.color : branding.color }}
-                      ></i>
+                      ></LucideIcon>
                       <span>{activeView === "admin" ? "Switch to Staff View" : "Switch to Admin View"}</span>
                     </DropdownMenuItem>
                   )}
@@ -1059,7 +1059,7 @@ export default function Header({ authUser, onLogout, children }) {
                    onClick={handleLogoutAction}
                    className="cursor-pointer rounded-[8px] flex items-center gap-3 font-normal text-[15px] py-2.5 px-3 text-[#FF3B30] dark:text-[#FF453A] hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors outline-none"
                  >
-                   <i className="ti ti-circle-x text-[19px] text-[#FF3B30] dark:text-[#FF453A] shrink-0 flex items-center justify-center h-[19px] w-[19px] leading-none"></i>
+                   <LucideIcon  className="ti ti-circle-x text-[19px] text-[#FF3B30] dark:text-[#FF453A] shrink-0 flex items-center justify-center h-[19px] w-[19px] leading-none"></LucideIcon>
                    <span>Sign Out</span>
                  </DropdownMenuItem>
                </DropdownMenuGroup>
@@ -1078,7 +1078,7 @@ export default function Header({ authUser, onLogout, children }) {
         >
           {/* Top Search Input Section */}
           <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-200/80 dark:border-white/10">
-            <i className="ph-bold ph-magnifying-glass text-lg text-pup-maroon dark:text-red-400 shrink-0"></i>
+            <LucideIcon  className="ph-bold ph-magnifying-glass text-lg text-pup-maroon dark:text-red-400 shrink-0"></LucideIcon>
             <input
               ref={commandInputRef}
               type="text"
@@ -1101,7 +1101,7 @@ export default function Header({ authUser, onLogout, children }) {
                 }}
                 className="text-gray-400 hover:text-gray-600 dark:hover:text-zinc-300 p-1 text-xs cursor-pointer"
               >
-                <i className="ph-bold ph-x-circle text-base"></i>
+                <LucideIcon  className="ph-bold ph-x-circle text-base"></LucideIcon>
               </button>
             )}
             <kbd className="hidden sm:inline-flex items-center justify-center px-1.5 py-0.5 text-[10px] font-bold text-gray-400 dark:text-zinc-500 bg-gray-100 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded select-none">
@@ -1169,7 +1169,7 @@ export default function Header({ authUser, onLogout, children }) {
                                     : "bg-gray-100 dark:bg-zinc-800 text-gray-500 dark:text-zinc-400"
                                 )}
                               >
-                                <i className={cn(item.icon, "text-[15px]")}></i>
+                                <LucideIcon  className={cn(item.icon, "text-[15px]")}></LucideIcon>
                               </div>
                               <div className="flex flex-col min-w-0 flex-1">
                                 <div className="flex items-center gap-2">
@@ -1213,7 +1213,7 @@ export default function Header({ authUser, onLogout, children }) {
               })()
             ) : (
               <div className="p-8 text-center flex flex-col items-center justify-center text-gray-400 dark:text-zinc-500">
-                <i className="ph-duotone ph-magnifying-glass text-3xl mb-2 opacity-50"></i>
+                <LucideIcon  className="ph-duotone ph-magnifying-glass text-3xl mb-2 opacity-50"></LucideIcon>
                 <div className="text-sm font-medium">No matching views or actions found</div>
                 <div className="text-xs text-gray-400 mt-1">Try searching for a sidebar section, view name, or control</div>
               </div>
@@ -1256,7 +1256,7 @@ export default function Header({ authUser, onLogout, children }) {
         <DialogContent className="max-w-md rounded-2xl border-gray-200 bg-white dark:bg-zinc-900 dark:border-white/10">
           <DialogHeader>
             <DialogTitle className="text-xl font-black text-gray-900 flex items-center gap-2 dark:text-zinc-50">
-              <i className="ph-fill ph-warning-circle text-amber-500"></i>
+              <LucideIcon  className="ph-fill ph-warning-circle text-amber-500"></LucideIcon>
               Session Expired
             </DialogTitle>
             <DialogDescription className="font-medium text-gray-500 pt-2 dark:text-zinc-400">

@@ -1,5 +1,6 @@
 "use client"
 
+import LucideIcon from "@/components/shared/LucideIcon";
 import { useEffect, useMemo, useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -397,7 +398,7 @@ export default function RecognitionTemplatesTab({ showToast }) {
               {sampleFile ? (
                 <div className="flex items-center justify-between gap-2 p-2.5 rounded-xl border border-gray-100 bg-gray-50 dark:border-white/5 dark:bg-zinc-800/50">
                   <div className="flex items-center gap-2 min-w-0">
-                    <i className="ph-bold ph-file-text text-sm text-pup-maroon dark:text-red-400 flex-shrink-0" />
+                    <LucideIcon  className="ph-bold ph-file-text text-sm text-pup-maroon dark:text-red-400 flex-shrink-0" />
                     <span className="truncate text-xs font-medium text-gray-700 dark:text-zinc-300">
                       {sampleFile.name}
                     </span>
@@ -469,7 +470,7 @@ export default function RecognitionTemplatesTab({ showToast }) {
                       </div>
                       {plotted ? (
                         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/40">
-                          <i className="ph-bold ph-check text-[10px]" /> Plotted
+                          <LucideIcon  className="ph-bold ph-check text-[10px]" /> Plotted
                         </span>
                       ) : (
                         <span className="px-2 py-0.5 rounded-full text-[11px] font-normal text-gray-400 dark:text-zinc-500 bg-gray-100 dark:bg-zinc-800">
@@ -545,7 +546,7 @@ export default function RecognitionTemplatesTab({ showToast }) {
           <div className="min-w-0 rounded-2xl border border-gray-200 bg-white p-5 dark:border-white/10 dark:bg-card shadow-xs flex flex-col justify-between min-h-[560px]">
             <div className="flex items-center justify-between pb-3 border-b border-gray-100 dark:border-white/10 text-xs text-gray-500 dark:text-zinc-400">
               <div className="flex items-center gap-2">
-                <i className="ph-bold ph-cursor-click text-sm text-pup-maroon dark:text-red-400" />
+                <LucideIcon  className="ph-bold ph-cursor-click text-sm text-pup-maroon dark:text-red-400" />
                 <span>Drag across the printed value area to calibrate field coordinates.</span>
               </div>
               <div className="flex items-center gap-2">
@@ -632,7 +633,7 @@ export default function RecognitionTemplatesTab({ showToast }) {
                   <div className="relative mb-5">
                     <div className="absolute inset-0 rounded-3xl bg-linear-to-tr from-pup-maroon/20 to-amber-500/20 blur-xl dark:from-pup-maroon/30 dark:to-amber-500/30" />
                     <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
-                      <i className="ph-duotone ph-file-arrow-up text-4xl text-pup-maroon dark:text-red-400" />
+                      <LucideIcon  className="ph-duotone ph-file-arrow-up text-4xl text-pup-maroon dark:text-red-400" />
                     </EmptyMedia>
                   </div>
                   <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">
@@ -736,7 +737,7 @@ export default function RecognitionTemplatesTab({ showToast }) {
               <Empty className="py-12 flex flex-col items-center justify-center text-center border-0 bg-transparent">
                 <EmptyHeader className="flex flex-col items-center gap-0">
                   <EmptyMedia className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl border border-gray-100 bg-gray-50 dark:border-white/10 dark:bg-zinc-800">
-                    <i className="ph-duotone ph-bounding-box text-2xl text-gray-400 dark:text-zinc-500" />
+                    <LucideIcon  className="ph-duotone ph-bounding-box text-2xl text-gray-400 dark:text-zinc-500" />
                   </EmptyMedia>
                   <EmptyTitle className="text-xs font-semibold text-gray-900 dark:text-zinc-50">
                     {templateFilter === "Archived" ? "No Archived Templates" : "No Templates Saved"}
@@ -776,7 +777,7 @@ export default function RecognitionTemplatesTab({ showToast }) {
                                 }}
                                 className="w-7 h-7 rounded-lg text-gray-400 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/30 transition-colors flex items-center justify-center cursor-pointer active:scale-95 border-0 bg-transparent"
                               >
-                                <i className="ph-bold ph-archive text-sm" />
+                                <LucideIcon  className="ph-bold ph-archive text-sm" />
                               </button>
                             </TooltipTrigger>
                             <TooltipContent>Archive template</TooltipContent>
@@ -793,7 +794,7 @@ export default function RecognitionTemplatesTab({ showToast }) {
                                 }}
                                 className="w-7 h-7 rounded-lg text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 transition-colors flex items-center justify-center cursor-pointer active:scale-95 border-0 bg-transparent"
                               >
-                                <i className="ph-bold ph-arrow-counter-clockwise text-sm" />
+                                <LucideIcon  className="ph-bold ph-arrow-counter-clockwise text-sm" />
                               </button>
                             </TooltipTrigger>
                             <TooltipContent>Restore template</TooltipContent>
@@ -811,7 +812,7 @@ export default function RecognitionTemplatesTab({ showToast }) {
                               }}
                               className="w-7 h-7 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors flex items-center justify-center cursor-pointer active:scale-95 border-0 bg-transparent"
                             >
-                              <i className="ph-bold ph-trash text-sm" />
+                              <LucideIcon  className="ph-bold ph-trash text-sm" />
                             </button>
                           </TooltipTrigger>
                           <TooltipContent>Delete permanently</TooltipContent>

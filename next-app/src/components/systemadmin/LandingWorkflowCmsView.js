@@ -1,5 +1,6 @@
 "use client"
 
+import LucideIcon from "@/components/shared/LucideIcon";
 import { useState, useEffect, useCallback, useRef } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -356,7 +357,7 @@ export default function LandingWorkflowCmsView({ showToast }) {
               >
                 {saving ? (
                   <>
-                    <i className="ph-bold ph-spinner animate-spin mr-1.5 text-[14px]" />
+                    <LucideIcon  className="ph-bold ph-spinner animate-spin mr-1.5 text-[14px]" />
                     Saving...
                   </>
                 ) : (
@@ -520,7 +521,7 @@ export default function LandingWorkflowCmsView({ showToast }) {
                             className="h-8 w-8 p-0 rounded-lg text-gray-500 hover:text-gray-900 dark:hover:text-white disabled:opacity-30 cursor-pointer"
                             title="Move Step Up"
                           >
-                            <i className="ph-bold ph-caret-up text-sm" />
+                            <LucideIcon  className="ph-bold ph-caret-up text-sm" />
                           </Button>
 
                           <Button
@@ -532,7 +533,7 @@ export default function LandingWorkflowCmsView({ showToast }) {
                             className="h-8 w-8 p-0 rounded-lg text-gray-500 hover:text-gray-900 dark:hover:text-white disabled:opacity-30 cursor-pointer"
                             title="Move Step Down"
                           >
-                            <i className="ph-bold ph-caret-down text-sm" />
+                            <LucideIcon  className="ph-bold ph-caret-down text-sm" />
                           </Button>
 
                           <Button
@@ -544,12 +545,12 @@ export default function LandingWorkflowCmsView({ showToast }) {
                             className="h-8 w-8 p-0 rounded-lg text-rose-500 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-950/30 disabled:opacity-30 cursor-pointer"
                             title={currentSteps.length <= MIN_STEPS ? `Minimum of ${MIN_STEPS} steps required` : "Delete Step"}
                           >
-                            <i className="ph-bold ph-trash text-sm" />
+                            <LucideIcon  className="ph-bold ph-trash text-sm" />
                           </Button>
 
                           <div className="h-4 w-px bg-gray-200 dark:bg-white/10 mx-1" />
 
-                          <i
+                          <LucideIcon 
                             className={cn(
                               "ph-bold text-gray-400 text-xs transition-transform duration-200",
                               isExpanded ? "ph-caret-up" : "ph-caret-down"
@@ -648,7 +649,7 @@ export default function LandingWorkflowCmsView({ showToast }) {
                                     onClick={() => removeTagFromStep(idx, tIdx)}
                                     className="text-gray-400 hover:text-rose-600 dark:hover:text-rose-400 cursor-pointer ml-0.5"
                                   >
-                                    <i className="ph-bold ph-x text-[10px]" />
+                                    <LucideIcon  className="ph-bold ph-x text-[10px]" />
                                   </button>
                                 </span>
                               ))}
@@ -673,12 +674,12 @@ export default function LandingWorkflowCmsView({ showToast }) {
                   onClick={addNewStep}
                   className="w-full py-4 rounded-xl border-2 border-dashed border-gray-200 dark:border-white/10 hover:border-pup-maroon/40 hover:bg-pup-maroon/5 dark:hover:bg-red-500/5 transition-all flex items-center justify-center gap-2 text-xs font-semibold text-gray-600 hover:text-pup-maroon dark:text-zinc-400 dark:hover:text-red-400 cursor-pointer select-none"
                 >
-                  <i className="ph-bold ph-plus text-sm" />
+                  <LucideIcon  className="ph-bold ph-plus text-sm" />
                   <span>Add Another Workflow Step ({currentSteps.length}/{MAX_STEPS})</span>
                 </button>
               ) : (
                 <div className="w-full py-3.5 px-4 rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/70 dark:bg-zinc-900/30 text-center text-xs text-gray-500 dark:text-zinc-400 flex items-center justify-center gap-2">
-                  <i className="ph-bold ph-info text-pup-maroon dark:text-red-400" />
+                  <LucideIcon  className="ph-bold ph-info text-pup-maroon dark:text-red-400" />
                   <span>Maximum limit reached ({MAX_STEPS} of {MAX_STEPS} steps). Process workflows are capped at {MAX_STEPS} steps for optimal student readability and mobile layout stability.</span>
                 </div>
               )}
@@ -911,7 +912,7 @@ export default function LandingWorkflowCmsView({ showToast }) {
                               {step.actionLabel && (
                                 <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-red-400 ml-1">
                                   <span>{step.actionLabel}</span>
-                                  <i className="ph-bold ph-arrow-right text-[9px]" />
+                                  <LucideIcon  className="ph-bold ph-arrow-right text-[9px]" />
                                 </span>
                               )}
                             </div>
@@ -1012,7 +1013,7 @@ function StepTagInput({ onAddTag }) {
         }}
         className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium text-gray-500 hover:text-pup-maroon dark:hover:text-red-400 border border-dashed border-gray-300 dark:border-white/20 hover:border-pup-maroon cursor-pointer transition-colors"
       >
-        <i className="ph-bold ph-plus text-[10px]" />
+        <LucideIcon  className="ph-bold ph-plus text-[10px]" />
         <span>Add Tag</span>
       </button>
     )

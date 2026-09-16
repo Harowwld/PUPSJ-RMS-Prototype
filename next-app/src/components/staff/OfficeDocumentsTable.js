@@ -1,5 +1,6 @@
 "use client"
 
+import LucideIcon from "@/components/shared/LucideIcon";
 import { useMemo, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -53,7 +54,7 @@ export default function OfficeDocumentsTable({
           </p>
         </div>
         <div className="relative w-full max-w-xs group">
-          <i className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 pointer-events-none" />
+          <LucideIcon  className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 pointer-events-none" />
           <Input
             value={query}
             onChange={(event) => { setQuery(event.target.value); setPage(1) }}
@@ -67,7 +68,7 @@ export default function OfficeDocumentsTable({
         <Empty className="flex min-h-[200px] flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400 rounded-b-2xl">
           <EmptyHeader className="flex flex-col items-center gap-0">
             <EmptyMedia className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-gray-100 bg-gray-50 dark:border-white/10 dark:bg-zinc-900">
-              <i className="ph-duotone ph-files text-3xl text-gray-400 dark:text-zinc-500" />
+              <LucideIcon  className="ph-duotone ph-files text-3xl text-gray-400 dark:text-zinc-500" />
             </EmptyMedia>
             <EmptyTitle className="text-base font-semibold text-gray-900 dark:text-zinc-50">No {officeLabel} documents</EmptyTitle>
             <EmptyDescription className="max-w-sm text-sm text-gray-500 dark:text-zinc-400">

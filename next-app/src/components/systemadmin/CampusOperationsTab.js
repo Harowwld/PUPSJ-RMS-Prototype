@@ -1,5 +1,6 @@
 "use client"
 
+import LucideIcon from "@/components/shared/LucideIcon";
 import React, { useState, useEffect, useCallback, useMemo, useRef } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -32,12 +33,12 @@ import { getCachedData, setCachedData, invalidateDataCache } from "@/lib/dataCac
 
 function SortIndicator({ column, sortBy, sortOrder }) {
   if (sortBy !== column) {
-    return <i className="ph-bold ph-caret-up-down ml-1 text-[11px] text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"></i>
+    return <LucideIcon  className="ph-bold ph-caret-up-down ml-1 text-[11px] text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"></LucideIcon>
   }
   return sortOrder === "ASC" ? (
-    <i className="ph-bold ph-caret-up ml-1 text-[11px] text-pup-maroon dark:text-primary animate-in fade-in zoom-in duration-normal"></i>
+    <LucideIcon  className="ph-bold ph-caret-up ml-1 text-[11px] text-pup-maroon dark:text-primary animate-in fade-in zoom-in duration-normal"></LucideIcon>
   ) : (
-    <i className="ph-bold ph-caret-down ml-1 text-[11px] text-pup-maroon dark:text-primary animate-in fade-in zoom-in duration-normal"></i>
+    <LucideIcon  className="ph-bold ph-caret-down ml-1 text-[11px] text-pup-maroon dark:text-primary animate-in fade-in zoom-in duration-normal"></LucideIcon>
   )
 }
 
@@ -304,7 +305,7 @@ export default function CampusOperationsTab({ showToast }) {
                         <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
                           {stat.label}
                         </span>
-                        <i className={cn("ph-bold ph-caret-down text-xs text-gray-400 transition-transform duration-300", selectedKpi === stat.key && "rotate-180")} />
+                        <LucideIcon  className={cn("ph-bold ph-caret-down text-xs text-gray-400 transition-transform duration-300", selectedKpi === stat.key && "rotate-180")} />
                       </div>
                       <div className="flex items-baseline gap-2">
                         <span className="text-2xl font-black text-gray-900 dark:text-zinc-50 tracking-tight">
@@ -430,7 +431,7 @@ export default function CampusOperationsTab({ showToast }) {
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0">
             <div className="w-full sm:w-[280px] relative group shrink-0">
               <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                <i className="ph-bold ph-magnifying-glass text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm"></i>
+                <LucideIcon  className="ph-bold ph-magnifying-glass text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm"></LucideIcon>
               </div>
               <Input
                 value={search}
@@ -470,7 +471,7 @@ export default function CampusOperationsTab({ showToast }) {
                     <div className="relative mb-6">
                       <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
                       <EmptyMedia className="relative z-10 flex h-20 w-20 items-center justify-center rounded-2xl border border-gray-100 bg-white shadow-md dark:border-white/10 dark:bg-card">
-                        <i className="ph-bold ph-tray text-3xl text-gray-400 dark:text-zinc-500"></i>
+                        <LucideIcon  className="ph-bold ph-tray text-3xl text-gray-400 dark:text-zinc-500"></LucideIcon>
                       </EmptyMedia>
                     </div>
                     <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">
@@ -491,7 +492,7 @@ export default function CampusOperationsTab({ showToast }) {
                         }}
                         className="mt-4 flex h-9 items-center gap-2 rounded-xl border border-gray-300 bg-white px-4 text-xs font-semibold text-gray-700 shadow-xs hover:bg-gray-50 dark:bg-zinc-900 dark:border-white/10 dark:text-zinc-300 cursor-pointer"
                       >
-                        <i className="ph-bold ph-arrow-counter-clockwise"></i>
+                        <LucideIcon  className="ph-bold ph-arrow-counter-clockwise"></LucideIcon>
                         Clear
                       </Button>
                     )}
@@ -590,12 +591,12 @@ export default function CampusOperationsTab({ showToast }) {
                           <td className="p-4 align-middle">
                             {isRegistrar ? (
                               <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-[#800000]/10 text-pup-maroon dark:bg-pup-maroon/20 dark:text-rose-300">
-                                <i className="ph-bold ph-certificate text-xs"></i>
+                                <LucideIcon  className="ph-bold ph-certificate text-xs"></LucideIcon>
                                 Registrar
                               </span>
                             ) : (
                               <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300">
-                                <i className="ph-bold ph-student text-xs"></i>
+                                <LucideIcon  className="ph-bold ph-student text-xs"></LucideIcon>
                                 OSAS
                               </span>
                             )}
@@ -618,7 +619,7 @@ export default function CampusOperationsTab({ showToast }) {
                             </div>
                             {tx.originalFilename && (
                               <div className="text-[11px] text-[#8E8E93] dark:text-zinc-500 flex items-center gap-1 mt-0.5">
-                                <i className="ph-bold ph-file-pdf text-red-500"></i>
+                                <LucideIcon  className="ph-bold ph-file-pdf text-red-500"></LucideIcon>
                                 <span className="truncate max-w-[200px]">{tx.originalFilename}</span>
                               </div>
                             )}
@@ -662,7 +663,7 @@ export default function CampusOperationsTab({ showToast }) {
                                     aria-label="View Details"
                                     className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
                                   >
-                                    <i className="ph-bold ph-eye text-[16px]"></i>
+                                    <LucideIcon  className="ph-bold ph-eye text-[16px]"></LucideIcon>
                                   </button>
                                 </TooltipTrigger>
                                 <TooltipContent>View Details</TooltipContent>
@@ -747,12 +748,12 @@ export default function CampusOperationsTab({ showToast }) {
                   <div className="flex items-center gap-2 mb-1.5 flex-wrap">
                     {selectedItem?.officeId === "registrar" ? (
                       <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-[#800000]/10 text-pup-maroon dark:bg-pup-maroon/20 dark:text-rose-300">
-                        <i className="ph-bold ph-certificate text-xs"></i>
+                        <LucideIcon  className="ph-bold ph-certificate text-xs"></LucideIcon>
                         Registrar Document Request
                       </span>
                     ) : (
                       <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300">
-                        <i className="ph-bold ph-student text-xs"></i>
+                        <LucideIcon  className="ph-bold ph-student text-xs"></LucideIcon>
                         OSAS Event Proposal
                       </span>
                     )}
@@ -832,7 +833,7 @@ export default function CampusOperationsTab({ showToast }) {
                 <div className="p-3 rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/70 dark:bg-zinc-800/40 flex items-center justify-between gap-3">
                   <div className="flex items-center gap-2.5 min-w-0">
                     <div className="w-8 h-8 rounded-lg bg-red-100 text-red-700 dark:bg-red-950/50 dark:text-red-400 flex items-center justify-center shrink-0">
-                      <i className="ph-bold ph-file-pdf text-base"></i>
+                      <LucideIcon  className="ph-bold ph-file-pdf text-base"></LucideIcon>
                     </div>
                     <div className="min-w-0">
                       <span className="font-semibold text-gray-900 dark:text-zinc-100 text-xs block truncate">
@@ -853,7 +854,7 @@ export default function CampusOperationsTab({ showToast }) {
                     onClick={() => handleOpenPdfPreview(selectedItem)}
                     className="text-xs font-semibold text-blue-600 dark:text-blue-400 bg-white dark:bg-zinc-800 border border-blue-200 dark:border-blue-900/40 hover:bg-blue-50 dark:hover:bg-blue-950/40 shrink-0 h-8 px-2.5 rounded-lg cursor-pointer shadow-xs active:scale-95 transition-all"
                   >
-                    <i className="ph-bold ph-eye text-sm mr-1"></i> Preview
+                    <LucideIcon  className="ph-bold ph-eye text-sm mr-1"></LucideIcon> Preview
                   </Button>
                 </div>
               )}
