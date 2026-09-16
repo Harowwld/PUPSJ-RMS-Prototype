@@ -33,8 +33,8 @@ export function getBackupFilePath(filename, baseDir = getBackupsDir()) {
     throw new Error("Invalid backup filename.");
   }
 
-  const root = path.resolve(baseDir);
-  const candidate = path.resolve(root, safeFilename);
+  const root = path.resolve(/*turbopackIgnore: true*/ baseDir);
+  const candidate = path.resolve(/*turbopackIgnore: true*/ root, safeFilename);
   const relative = path.relative(root, candidate);
   if (!relative || relative.startsWith("..") || path.isAbsolute(relative)) {
     throw new Error("Invalid backup path.");
@@ -734,8 +734,8 @@ export async function executeRestoreBackup(
     if (entryName === "db.sql" || entryName.endsWith("/db.sql")) continue;
 
     // Security check: ensure path traversal is not possible
-    const safeDestPath = path.resolve(localDir, entryName);
-    if (!safeDestPath.startsWith(path.resolve(localDir))) {
+    const safeDestPath = path.resolve(/*turbopackIgnore: true*/ localDir, entryName);
+    if (!safeDestPath.startsWith(path.resolve(/*turbopackIgnore: true*/ localDir))) {
       throw new Error(`Potentially malicious file path in backup archive: ${entryName}`);
     }
 

@@ -7,8 +7,8 @@ const FLAG_FILENAME = "external_drive_simulation.flag";
 
 function getFlagPath() {
   const localData = process.env.LOCAL_DATA_DIR
-    ? path.resolve(process.cwd(), process.env.LOCAL_DATA_DIR)
-    : path.resolve(process.cwd(), ".local");
+    ? path.resolve(/*turbopackIgnore: true*/ process.cwd(), process.env.LOCAL_DATA_DIR)
+    : path.resolve(/*turbopackIgnore: true*/ process.cwd(), ".local");
   return path.join(localData, FLAG_FILENAME);
 }
 
@@ -283,9 +283,9 @@ export function detectExternalDrive(options = {}) {
   // 1. If simulation mode is explicitly requested/enabled, use the simulated volume
   if (allowSimulation) {
     const localData = process.env.LOCAL_DATA_DIR
-      ? path.resolve(process.cwd(), process.env.LOCAL_DATA_DIR)
-      : path.resolve(process.cwd(), ".local");
-    const emulatedPath = path.resolve(localData, "external_media");
+      ? path.resolve(/*turbopackIgnore: true*/ process.cwd(), process.env.LOCAL_DATA_DIR)
+      : path.resolve(/*turbopackIgnore: true*/ process.cwd(), ".local");
+    const emulatedPath = path.resolve(/*turbopackIgnore: true*/ localData, "external_media");
     if (!fs.existsSync(emulatedPath)) {
       fs.mkdirSync(emulatedPath, { recursive: true });
     }
@@ -319,7 +319,7 @@ export function detectExternalDrive(options = {}) {
   // 2. Check if configured EXTERNAL_BACKUP_PATH exists on disk and is reachable
   if (configuredPath) {
     try {
-      const resolved = path.resolve(configuredPath);
+      const resolved = path.resolve(/*turbopackIgnore: true*/ configuredPath);
       const root = path.parse(resolved).root;
 
       // Verify root exists
