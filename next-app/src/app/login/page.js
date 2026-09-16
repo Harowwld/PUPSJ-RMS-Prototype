@@ -342,13 +342,6 @@ export default function Home() {
         localStorage.setItem("pup-session-recovered", Date.now().toString());
         localStorage.removeItem("pup-logout");
 
-        const meRes = await fetch("/api/auth/me");
-        const meJson = await meRes.json().catch(() => null);
-        if (meJson?.ok && !meJson.data?.avatar_filename) {
-          router.push("/onboarding");
-          return;
-        }
-
         if (isSystemAdminRole(role)) {
           router.push("/systemadmin");
           return;
@@ -414,7 +407,7 @@ export default function Home() {
       localStorage.removeItem("pup-logout");
       toast.success("Account Created", { description: "Welcome to eManage Student Portal!" });
       resetStudentSignupState();
-      router.push("/onboarding");
+      router.push("/student");
     } catch (err) {
       setStudentSignupError(err?.message || "Unable to create student account.");
     } finally {
@@ -453,13 +446,6 @@ export default function Home() {
       localStorage.removeItem("pup-logout");
 
       const role = String(json?.data?.role || "");
-
-      const meRes = await fetch("/api/auth/me");
-      const meJson = await meRes.json().catch(() => null);
-      if (meJson?.ok && !meJson.data?.avatar_filename) {
-        router.push("/onboarding");
-        return;
-      }
 
       if (isSystemAdminRole(role)) {
         router.push("/systemadmin");
