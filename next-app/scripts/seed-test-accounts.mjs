@@ -86,7 +86,7 @@ try {
       INSERT INTO students (student_no, name, course_code, year_level, section, status, updated_at)
       VALUES ($1, $2, $3, $4, $5, 'Active', NOW())
       ON CONFLICT (student_no) DO UPDATE SET name = EXCLUDED.name, course_code = EXCLUDED.course_code, year_level = EXCLUDED.year_level, section = EXCLUDED.section, status = 'Active', updated_at = NOW()
-    `, [sNo, sName, cCode, yLevel, sSection]);
+    `, [sNo, encryptPII(sName), cCode, yLevel, sSection]);
 
     await pool.query(`
       INSERT INTO student_office_memberships (student_no, office_id, status, updated_at)
@@ -98,7 +98,7 @@ try {
       INSERT INTO student_accounts (student_no, email, password_hash, status, updated_at)
       VALUES ($1, $2, $3, 'Active', NOW())
       ON CONFLICT (email) DO UPDATE SET student_no = EXCLUDED.student_no, password_hash = EXCLUDED.password_hash, status = 'Active', updated_at = NOW()
-    `, [sNo, sEmail, studentHash]);
+    `, [sNo, encryptPII(sEmail.toLowerCase()), studentHash]);
   }
 
   console.log("=== Demo Accounts Seeded Successfully ===");

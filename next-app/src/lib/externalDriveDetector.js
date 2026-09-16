@@ -9,7 +9,7 @@ function getFlagPath() {
   const localData = process.env.LOCAL_DATA_DIR
     ? path.resolve(/*turbopackIgnore: true*/ process.cwd(), process.env.LOCAL_DATA_DIR)
     : path.resolve(/*turbopackIgnore: true*/ process.cwd(), ".local");
-  return path.join(localData, FLAG_FILENAME);
+  return path.join(/*turbopackIgnore: true*/ localData, FLAG_FILENAME);
 }
 
 export function setSimulationMode(enabled) {
@@ -158,15 +158,15 @@ function detectLinuxDrives() {
       const userDirs = fs.readdirSync(base);
 
       for (const u of userDirs) {
-        const userPath = path.join(base, u);
+        const userPath = path.join(/*turbopackIgnore: true*/ base, u);
         try {
-          if (!fs.statSync(userPath).isDirectory()) continue;
+          if (!fs.statSync(/*turbopackIgnore: true*/ userPath).isDirectory()) continue;
           const mounts = fs.readdirSync(userPath);
 
           for (const m of mounts) {
-            const fullMount = path.join(userPath, m);
+            const fullMount = path.join(/*turbopackIgnore: true*/ userPath, m);
             try {
-              if (fs.statSync(fullMount).isDirectory()) {
+              if (fs.statSync(/*turbopackIgnore: true*/ fullMount).isDirectory()) {
                 const alreadyFound = drives.some((d) => d.mountPoint === fullMount);
                 if (!alreadyFound) {
                   const space = getDiskSpace(fullMount);
@@ -212,9 +212,9 @@ function detectMacDrives() {
       if (entry === "Macintosh HD" || entry === "Macintosh HD - Data" || entry.startsWith(".")) {
         continue;
       }
-      const fullPath = path.join(volumesDir, entry);
+      const fullPath = path.join(/*turbopackIgnore: true*/ volumesDir, entry);
       try {
-        if (fs.statSync(fullPath).isDirectory()) {
+        if (fs.statSync(/*turbopackIgnore: true*/ fullPath).isDirectory()) {
           const space = getDiskSpace(fullPath);
           const isWritable = isDirectoryWritable(fullPath);
           drives.push({
