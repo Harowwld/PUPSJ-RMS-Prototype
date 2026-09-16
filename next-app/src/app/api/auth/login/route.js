@@ -175,9 +175,10 @@ async function _POST(req) {
   }
 
   // 3. Create Session or Require 2FA
-  const touched = process.env.DATABASE_URL
+  let touched = process.env.DATABASE_URL
     ? await queryOne("UPDATE staff SET last_active = NOW(), updated_at = NOW() WHERE id = $1 RETURNING *", [staff.id])
     : await touchStaffLastActiveById(staff.id);
+  if (touched) touched = Object.assign({}, touched, { email: staff.email, fname: staff.fname, lname: staff.lname });
   if (!touched) {
     authDebug("login.last_active_update_failed", { staffId: staff.id });
     return addSecurityHeaders(NextResponse.json(

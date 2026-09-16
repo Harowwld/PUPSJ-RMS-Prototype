@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getStaffById, getStaffByUsername, hasAllSecurityAnswers } from "../../../../lib/staffRepo";
+import { encryptPII, decryptPII } from "../../../../lib/piiEncryption.js";
 import { getOfficeById } from "../../../../lib/officesRepo";
 import { getOfficeModules, listAllModules } from "../../../../lib/modulesRepo";
 import { query, queryOne } from "@/lib/postgres";
@@ -47,12 +48,17 @@ export async function GET(req) {
         FROM student_accounts sa
         LEFT JOIN students s ON s.student_no = sa.student_no
         WHERE (sa.id = $1 AND $1 IS NOT NULL)
-           OR (lower(sa.email) = lower($2) AND $2 IS NOT NULL)
+           OR (sa.email = $2 AND $2 IS NOT NULL)
            OR (sa.student_no IS NOT NULL AND upper(sa.student_no) = upper($3) AND $3 IS NOT NULL)
         LIMIT 1
-      `, [principal.accountId || (Number.isFinite(Number(userId)) ? Number(userId) : null), principal.email || null, principal.studentNo || null]);
+      `, [principal.accountId || (Number.isFinite(Number(userId)) ? Number(userId) : null), principal.email ? encryptPII(principal.email.toLowerCase()) : null, principal.studentNo || null]);
 
       if (!student) return addSecurityHeaders(NextResponse.json({ ok: false, error: "Student account not found" }, { status: 401 }));
+      if (student.email) student.email = decryptPII(student.email);
+      if (student.first_name) student.first_name = decryptPII(student.first_name);
+      if (student.middle_name) student.middle_name = decryptPII(student.middle_name);
+      if (student.last_name) student.last_name = decryptPII(student.last_name);
+      if (student.name) student.name = decryptPII(student.name);
 
       let fname = student.first_name || "";
       let lname = student.last_name || "";
