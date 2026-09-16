@@ -421,7 +421,7 @@ export async function seed({ force: forceOverride } = {}) {
 
     for (const [legacyId, studentNo, studentName, docType, filename] of osasDocuments) {
       const storageFilename = `sample-${legacyId}-${filename}`;
-      fs.writeFileSync(path.join(uploadsDir, storageFilename), minimalPdf);
+      fs.writeFileSync(path.join(osasUploadsDir, storageFilename), minimalPdf);
       await run(
         `INSERT INTO documents (office_id, student_no, student_name, doc_type, original_filename, storage_filename, mime_type, size_bytes, approval_status, legacy_id)
          VALUES ('osas',$1,$2,$3,$4,$5,'application/pdf',$6,'Pending',$7)
