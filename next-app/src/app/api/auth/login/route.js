@@ -5,6 +5,7 @@ import {
   touchStaffLastActiveById,
   getStaffDisplayName,
   hasAllSecurityAnswers,
+  verifyStaffPasswordById,
 } from "../../../../lib/staffRepo";
 import { getSessionCookieName, signSessionToken } from "../../../../lib/jwt";
 import { createSession } from "../../../../lib/sessionStore";
@@ -142,8 +143,8 @@ export async function POST(req) {
     return addSecurityHeaders(NextResponse.json({ ok: false, error: "Account has no password" }, { status: 401 }));
   }
 
-  const hashed = hashPasswordForStorage(password);
-  if (hashed !== stored) {
+  const isMatch = await verifyStaffPasswordById(staff.id, password);
+  if (!isMatch) {
     authDebug("login.password_rejected", { staffId: staff.id, status: staff.status });
     await audit(req, "Login Attempt", `authentication failure: invalid credentials provided for recognized account '${username}'`, "WARNING");
     return addSecurityHeaders(NextResponse.json({ ok: false, error: "Invalid credentials" }, { status: 401 }));
@@ -189,9 +190,8 @@ export async function POST(req) {
   }
 
   const defaultPassword = process.env.DEFAULT_STAFF_PASSWORD || "pupstaff";
-  const defaultHash = hashPasswordForStorage(defaultPassword);
   const hasSecurity = await hasAllSecurityAnswers(touched.id);
-  const mustChangePassword = (stored === defaultHash) && !hasSecurity;
+  const mustChangePassword = (password === defaultPassword) && !hasSecurity;
   authDebug("login.session_issued", {
     staffId: touched.id,
     role: touched.role || "Staff",
