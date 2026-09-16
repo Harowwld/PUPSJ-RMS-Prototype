@@ -1,11 +1,11 @@
-import { verifySessionToken } from "./jwt.js";
+import { verifySessionToken, getSessionCookieName } from "./jwt.js";
 import { cache } from "react";
 
 export const getRlsContext = cache(async () => {
   try {
     const { cookies } = await import("next/headers");
     const cookieStore = await cookies();
-    const token = cookieStore.get(process.env.COOKIE_NAME || "pup_auth_token")?.value;
+    const token = cookieStore.get(getSessionCookieName())?.value;
     if (token) {
       const payload = await verifySessionToken(token);
       return {
