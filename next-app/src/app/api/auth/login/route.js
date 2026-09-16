@@ -61,7 +61,16 @@ function rateLimitResponse(rateLimitResult) {
   ));
 }
 
+
 export async function POST(req) {
+  try {
+    return await _POST(req);
+  } catch (err) {
+    console.error("[Login POST Error]:", err);
+    return NextResponse.json({ ok: false, error: "Internal server error: " + (err.message || "Unknown error") }, { status: 500 });
+  }
+}
+async function _POST(req) {
   // 1. Check Rate Limit (Moved back to route handler from middleware)
   const forwardedFor = req.headers.get('x-forwarded-for');
   const realIP = req.headers.get('x-real-ip');
