@@ -21,9 +21,9 @@ export async function query(text, params = []) {
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
-    if (ctx.userId) await client.query("SET LOCAL app.current_user_id = $1", [ctx.userId]);
-    if (ctx.role) await client.query("SET LOCAL app.current_role = $1", [ctx.role]);
-    if (ctx.officeId) await client.query("SET LOCAL app.current_office_id = $1", [ctx.officeId]);
+    if (ctx.userId) await client.query("SELECT set_config('app.current_user_id', $1, true)", [String(ctx.userId)]);
+    if (ctx.role) await client.query("SELECT set_config('app.current_role', $1, true)", [String(ctx.role)]);
+    if (ctx.officeId) await client.query("SELECT set_config('app.current_office_id', $1, true)", [String(ctx.officeId)]);
     const result = await client.query(text, params);
     await client.query("COMMIT");
     return result.rows;
@@ -43,9 +43,15 @@ export async function queryOne(text, params = []) {
 
 /** Execute a callback in one PostgreSQL transaction. */
 export async function transaction(callback) {
+  const ctx = await getRlsContext();
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
+    if (ctx) {
+      if (ctx.userId) await client.query("SELECT set_config('app.current_user_id', $1, true)", [String(ctx.userId)]);
+      if (ctx.role) await client.query("SELECT set_config('app.current_role', $1, true)", [String(ctx.role)]);
+      if (ctx.officeId) await client.query("SELECT set_config('app.current_office_id', $1, true)", [String(ctx.officeId)]);
+    }
     const result = await callback({
       query: (text, params = []) => client.query(text, params),
       queryOne: async (text, params = []) => (await client.query(text, params)).rows[0] || null,
