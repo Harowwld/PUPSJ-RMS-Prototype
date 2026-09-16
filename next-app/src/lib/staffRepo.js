@@ -131,15 +131,37 @@ export async function listStaff({
   const where = filters.length ? `WHERE ${filters.join(" AND ")}` : "";
 
 
-  const rows = await dbAll(
+const rows = await dbAll(
     `
       SELECT *
       FROM staff
       ${where}
-      ORDER BY lname ASC, fname ASC
     `,
     [...params]
   );
+  
+  let decryptedRows = (rows || []).map(decryptStaffRow);
+  if (q) {
+    const search = q.toLowerCase();
+    decryptedRows = decryptedRows.filter(r => 
+      (r.id && r.id.toLowerCase().includes(search)) ||
+      (r.fname && r.fname.toLowerCase().includes(search)) ||
+      (r.lname && r.lname.toLowerCase().includes(search)) ||
+      (r.email && r.email.toLowerCase().includes(search))
+    );
+  }
+  const lim = Math.min(Math.max(parseInt(limit) || 200, 1), 500);
+  const off = Math.max(parseInt(offset) || 0, 0);
+  
+  decryptedRows.sort((a, b) => {
+    const lnameA = (a.lname || '').toLowerCase();
+    const lnameB = (b.lname || '').toLowerCase();
+    if (lnameA < lnameB) return -1;
+    if (lnameA > lnameB) return 1;
+    return 0;
+  });
+
+  return decryptedRows.slice(off, off + lim);
 }
 
 export async function getStaffById(id, { officeId } = {}) {

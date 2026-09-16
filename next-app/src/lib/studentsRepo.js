@@ -1,6 +1,6 @@
+import { dbAll, dbGet, dbRun } from "./postgresCompat.js";
 import { encryptPII, decryptPII } from "./piiEncryption.js";
 import { decryptStudentRow } from "./studentAuth.js";
-import { dbAll, dbGet, dbRun } from "./postgresCompat.js";
 import { canonicalizeCabinetId } from "./storageLayoutUtils.js";
 
 async function hasPhysicalStorage() {
@@ -107,7 +107,7 @@ export async function createStudent({
   const normalizedOfficeId = normalizeOfficeId(officeId);
   if (!normalizedOfficeId) throw new Error("Office scope is required");
   const normalizedCourseCode = String(courseCode || "").trim().toUpperCase();
-  const normalizedName = normalizeStudentName(name);
+  const normalizedName = encryptPII(normalizeStudentName(name));
   const normalizedSection = String(section || "").trim();
   await ensureCourseSectionMapping(normalizedCourseCode, normalizedSection, normalizedOfficeId);
 
@@ -249,17 +249,36 @@ export async function listStudents({
   }
 
   const where = filters.length ? `WHERE ${filters.join(" AND ")}` : "";
-
-
-  const rows = await dbAll(
+const rows = await dbAll(
     `
       SELECT ${STUDENT_SELECT}
       FROM students
       ${where}
-      ORDER BY name ASC
     `,
     [...params]
   );
+  
+  let decryptedRows = (rows || []).map(decryptStudentRow);
+  if (q) {
+    const search = q.toLowerCase();
+    decryptedRows = decryptedRows.filter(r => 
+      (r.student_no && r.student_no.toLowerCase().includes(search)) ||
+      (r.name && r.name.toLowerCase().includes(search)) ||
+      (r.email && r.email.toLowerCase().includes(search))
+    );
+  }
+  const lim = Math.min(Math.max(parseInt(limit) || 200, 1), 500);
+  const off = Math.max(parseInt(offset) || 0, 0);
+  
+  decryptedRows.sort((a, b) => {
+    const nameA = (a.name || '').toLowerCase();
+    const nameB = (b.name || '').toLowerCase();
+    if (nameA < nameB) return -1;
+    if (nameA > nameB) return 1;
+    return 0;
+  });
+
+  return decryptedRows.slice(off, off + lim);
 }
 
 export async function getStudentByStudentNo(studentNo, { officeId } = {}) {
@@ -271,7 +290,7 @@ export async function getStudentByStudentNo(studentNo, { officeId } = {}) {
     params.push(...officeScope.params);
   }
   const row = await dbGet(`SELECT ${STUDENT_SELECT} FROM students WHERE ${filters.join(" AND ")}`, params);
-  
+  return row || null;
 }
 
 export async function updateStudent(studentNo, patch) {
