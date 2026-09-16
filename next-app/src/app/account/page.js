@@ -37,6 +37,8 @@ import {
   getRoleLabel,
   getDefaultDashboardPath,
 } from "@/lib/roleUtils";
+import ProfileSetup, { avatars } from "@/components/kokonutui/avatar-picker";
+import { renderToStaticMarkup } from "react-dom/server";
 
 function AccountPageContent() {
   const router = useRouter();
@@ -47,6 +49,7 @@ function AccountPageContent() {
   // Avatar State
   const [avatarUrl, setAvatarUrl] = useState(null);
   const [avatarLoaded, setAvatarLoaded] = useState(false);
+  const [showAvatarPicker, setShowAvatarPicker] = useState(false);
   const fileInputRef = useRef(null);
 
   // Profile Form State
@@ -247,28 +250,21 @@ function AccountPageContent() {
   };
 
   const handleAvatarClick = () => {
-    if (fileInputRef.current) {
-      fileInputRef.current.click();
-    }
+    setShowAvatarPicker(true);
   };
 
-  const handleAvatarChange = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (!file.type.startsWith("image/")) {
-      toast.error("Only image files are allowed.");
-      return;
-    }
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("File size exceeds 5MB limit.");
-      return;
-    }
-
-    const formData = new FormData();
-    formData.append("avatar", file);
+  const handleAvatarSave = async (data) => {
+    const avatarId = data.avatarId;
+    const avatarObj = avatars.find((a) => a.id === avatarId);
+    if (!avatarObj) return;
 
     try {
+      const svgString = renderToStaticMarkup(avatarObj.svg);
+      const file = new File([svgString], "avatar.svg", { type: "image/svg+xml" });
+      
+      const formData = new FormData();
+      formData.append("avatar", file);
+
       const res = await fetch("/api/account/avatar", {
         method: "POST",
         body: formData,
@@ -278,13 +274,14 @@ function AccountPageContent() {
         throw new Error(json.error || "Upload failed");
       }
 
-      toast.success("Avatar Uploaded", {
+      toast.success("Avatar Updated", {
         description: "Your profile photo has been successfully updated."
       });
       
       setAvatarUrl(`/api/account/avatar?id=${authUser.id}&t=${Date.now()}`);
       setAuthUser(prev => ({ ...prev, avatar_filename: json.avatar_filename }));
       window.dispatchEvent(new Event("avatar-changed"));
+      setShowAvatarPicker(false);
     } catch (err) {
       toast.error("Upload Failed", {
         description: err.message || "Could not update your avatar."
@@ -777,13 +774,11 @@ function AccountPageContent() {
                           <i className="ph-bold ph-camera text-white text-base"></i>
                         </div>
                       </div>
-                      <input
-                        type="file"
-                        ref={fileInputRef}
-                        onChange={handleAvatarChange}
-                        accept="image/*"
-                        className="hidden"
-                      />
+                      <Dialog open={showAvatarPicker} onOpenChange={setShowAvatarPicker}>
+                        <DialogContent className="p-0 border-none bg-transparent shadow-none max-w-none w-auto sm:max-w-none flex justify-center items-center">
+                          <ProfileSetup mode="settings" onComplete={handleAvatarSave} />
+                        </DialogContent>
+                      </Dialog>
                       {avatarUrl && (
                         <button
                           type="button"

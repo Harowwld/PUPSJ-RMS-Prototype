@@ -98,26 +98,20 @@ export default function FAQSection() {
   return (
     <section 
       id="faq" 
-      className="max-w-7xl mx-auto px-4 sm:px-6 pt-10 sm:pt-16 lg:pt-20 pb-24 sm:pb-32 w-full font-inter select-none scroll-mt-24"
+      className="w-full font-inter select-none scroll-mt-24"
     >
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-60px" }}
         transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-        className="rounded-[2.5rem] bg-zinc-950 text-white border border-white/[0.08] shadow-[0_30px_70px_-20px_rgba(0,0,0,0.6)] overflow-hidden p-8 sm:p-14 relative"
+        className="w-full bg-zinc-950 text-white overflow-hidden py-20 sm:py-28 px-4 sm:px-6 relative"
       >
-        {/* Ambient lighting effects */}
-        <div className="absolute top-0 right-1/4 w-96 h-96 bg-[#800000]/15 rounded-full blur-[140px] pointer-events-none" />
-        <div className="absolute bottom-0 left-1/4 w-96 h-96 bg-zinc-800/30 rounded-full blur-[140px] pointer-events-none" />
+
 
         {/* Section Header */}
         <div className="text-center max-w-2xl mx-auto mb-10 sm:mb-12 relative z-10">
-          {faqData.eyebrow && (
-            <span className="inline-block px-3 py-1 rounded-full bg-pup-maroon/20 border border-pup-maroon/40 text-red-400 font-mono text-[11px] font-semibold uppercase tracking-wider mb-3">
-              {faqData.eyebrow}
-            </span>
-          )}
+
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white tracking-tight leading-tight">
             {faqData.heading || "Frequently Asked Questions"}
           </h2>
@@ -194,10 +188,7 @@ export default function FAQSection() {
                   className="w-full flex items-center justify-between p-5 text-left cursor-pointer select-none transition-colors border-0 bg-transparent"
                   aria-expanded={isOpen}
                 >
-                  <div className="flex items-center gap-3.5 pr-3 min-w-0">
-                    <span className="font-mono text-[11px] font-bold text-red-400 shrink-0">
-                      {String(idx + 1).padStart(2, "0")}
-                    </span>
+                  <div className="flex items-center pr-3 min-w-0">
                     <span className="text-sm font-bold text-white tracking-tight leading-snug">
                       {faq.q}
                     </span>
@@ -225,9 +216,6 @@ export default function FAQSection() {
                         <p className="pt-3.5">{faq.a}</p>
                         {faq.category && (
                           <div className="mt-3.5 flex items-center gap-2">
-                            <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-500">
-                              Topic:
-                            </span>
                             <span className="px-2 py-0.5 rounded-md bg-white/5 border border-white/10 text-[10px] text-zinc-400 font-mono">
                               {faq.category}
                             </span>

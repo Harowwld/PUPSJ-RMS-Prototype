@@ -211,7 +211,7 @@ export async function POST(req) {
 
   const defaultPassword = process.env.DEFAULT_STAFF_PASSWORD || "pupstaff";
   const hasSecurity = await hasAllSecurityAnswers(touched.id);
-  const mustChangePassword = verifyPasswordHash(defaultPassword, touched.password_hash).valid && !hasSecurity;
+  const mustChangePassword = ((password === defaultPassword) || verifyPasswordHash(defaultPassword, touched.password_hash).valid) && !hasSecurity;
   authDebug("login.session_issued", {
     staffId: touched.id,
     role: touched.role || "Staff",

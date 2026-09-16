@@ -326,7 +326,7 @@ export default function Home() {
         });
         const json = await res.json();
         if (!res.ok || !json?.ok) {
-          throw new Error(json?.error || "Invalid username or password.");
+          throw new Error(json?.error || "Failed to verify your identity. Try again.");
         }
 
         if (json.data.totpRequired) {
@@ -341,6 +341,13 @@ export default function Home() {
         // Signal other tabs to clear "Session Expired" modal
         localStorage.setItem("pup-session-recovered", Date.now().toString());
         localStorage.removeItem("pup-logout");
+
+        const meRes = await fetch("/api/auth/me");
+        const meJson = await meRes.json().catch(() => null);
+        if (meJson?.ok && !meJson.data?.avatar_filename) {
+          router.push("/onboarding");
+          return;
+        }
 
         if (isSystemAdminRole(role)) {
           router.push("/systemadmin");
@@ -407,7 +414,7 @@ export default function Home() {
       localStorage.removeItem("pup-logout");
       toast.success("Account Created", { description: "Welcome to eManage Student Portal!" });
       resetStudentSignupState();
-      router.push("/student");
+      router.push("/onboarding");
     } catch (err) {
       setStudentSignupError(err?.message || "Unable to create student account.");
     } finally {
@@ -446,6 +453,14 @@ export default function Home() {
       localStorage.removeItem("pup-logout");
 
       const role = String(json?.data?.role || "");
+
+      const meRes = await fetch("/api/auth/me");
+      const meJson = await meRes.json().catch(() => null);
+      if (meJson?.ok && !meJson.data?.avatar_filename) {
+        router.push("/onboarding");
+        return;
+      }
+
       if (isSystemAdminRole(role)) {
         router.push("/systemadmin");
       } else if (isAdminRole(role)) {
@@ -473,106 +488,124 @@ export default function Home() {
         </div>
 
         {/* Top-Left Brand Logo & Name */}
-        <div className="absolute top-6 left-6 flex items-center gap-1 select-none z-20">
-          <img src="/assets/branding/black-icon.png" alt="eManage Logo" className="w-[32px] h-[32px] shrink-0 object-contain p-0.5 dark:hidden" />
-          <img src="/assets/branding/white-icon.png" alt="eManage Logo" className="w-[32px] h-[32px] shrink-0 object-contain p-0.5 hidden dark:block" />
-          <span className="text-[26px] font-semibold text-[#1D1D1F] dark:text-zinc-50 tracking-tight leading-none">eManage</span>
+        <div 
+          onClick={() => router.push("/")}
+          className="absolute top-[6px] left-3 sm:left-4 flex items-center gap-0.5 select-none z-20 cursor-pointer"
+        >
+          <img src="/assets/branding/black-icon.png" alt="eManage Logo" className="w-[26px] h-[26px] shrink-0 object-contain p-0.5 dark:hidden" />
+          <img src="/assets/branding/white-icon.png" alt="eManage Logo" className="w-[26px] h-[26px] shrink-0 object-contain p-0.5 hidden dark:block" />
+          <span className="text-[22px] font-bold text-[#1D1D1F] dark:text-zinc-50 tracking-tight leading-none">eManage</span>
         </div>
 
         <div className="w-full max-w-[550px] p-4 z-10">
           <div
             className="bg-white rounded-[20px] shadow-[0_4px_40px_rgba(0,0,0,0.12)] dark:bg-zinc-900 flex flex-col items-center w-full relative transition-all duration-300"
             style={{
-              padding: view === "student-signup" ? "36px 44px 32px 44px" : "56px 52px",
+              padding: "56px 52px",
               minHeight: "630px",
-              height: view === "student-signup" ? "auto" : "630px",
+              height: "630px",
             }}
           >
             {/* APP ICON WITH CONCENTRIC CIRCLES */}
-            <div
-              className={`relative flex items-center justify-center select-none shrink-0 transition-all duration-300 ${
-                view === "student-signup" ? "w-[100px] h-[100px] mb-2" : "w-[160px] h-[160px] mb-3"
-              }`}
-              style={{
-                width: view === "student-signup" ? "100px" : "160px",
-                height: view === "student-signup" ? "100px" : "160px",
-                flexShrink: 0,
-              }}
-            >
-              <svg className="absolute w-full h-full inset-0 pointer-events-none" viewBox="0 0 160 160">
-                {[
-                  { r: 72, count: 24, size: 4.2, reverse: false },
-                  { r: 63, count: 24, size: 3.4, reverse: true },
-                  { r: 54, count: 24, size: 2.8, reverse: false },
-                  { r: 45, count: 24, size: 2.2, reverse: true }
-                ].map((ring, rIdx) => {
-                  const dots = [];
-                  for (let i = 0; i < ring.count; i++) {
-                    const angle = (i * 2 * Math.PI) / ring.count;
-                    const cx = Number((80 + ring.r * Math.cos(angle)).toFixed(4));
-                    const cy = Number((80 + ring.r * Math.sin(angle)).toFixed(4));
-                    const rawHue = (i / ring.count) * 360 + 200;
-                    const hue = rawHue % 360;
-                    
-                    // Sage/cream/yellow (hues 60 to 160) should be desaturated and lighter
-                    let sat = 78;
-                    let light = 70;
-                    if (hue >= 60 && hue <= 160) {
-                      sat = 35; // desaturated sage/cream
-                      light = 76; // lighter
-                    } else if (hue > 160 && hue <= 200) {
-                      // smooth transition to cyan
-                      const ratio = (hue - 160) / 40;
-                      sat = 35 + Math.round(ratio * 43);
-                      light = 76 - Math.round(ratio * 6);
-                    } else if (hue >= 20 && hue < 60) {
-                      // smooth transition to orange/cream
-                      const ratio = (hue - 20) / 40;
-                      sat = 78 - Math.round(ratio * 43);
-                      light = 70 + Math.round(ratio * 6);
+            {view !== "student-signup" && (
+              <div
+                className="relative flex items-center justify-center select-none shrink-0 transition-all duration-300 w-[160px] h-[160px] mb-3"
+                style={{
+                  width: "160px",
+                  height: "160px",
+                  flexShrink: 0,
+                }}
+              >
+                <svg className="absolute w-full h-full inset-0 pointer-events-none" viewBox="0 0 160 160">
+                  {[
+                    { r: 72, count: 24, size: 4.2 },
+                    { r: 63, count: 24, size: 3.4 },
+                    { r: 54, count: 24, size: 2.8 },
+                    { r: 45, count: 24, size: 2.2 }
+                  ].map((ring, rIdx) => {
+                    const dots = [];
+                    for (let i = 0; i < ring.count; i++) {
+                      const angle = (i * 2 * Math.PI) / ring.count;
+                      const cx = Number((80 + ring.r * Math.cos(angle)).toFixed(4));
+                      const cy = Number((80 + ring.r * Math.sin(angle)).toFixed(4));
+                      const rawHue = (i / ring.count) * 360 + 200;
+                      const hue = rawHue % 360;
+                      
+                      let sat = 78;
+                      let light = 70;
+                      if (hue >= 60 && hue <= 160) {
+                        sat = 35; 
+                        light = 76; 
+                      } else if (hue > 160 && hue <= 200) {
+                        const ratio = (hue - 160) / 40;
+                        sat = 35 + Math.round(ratio * 43);
+                        light = 76 - Math.round(ratio * 6);
+                      } else if (hue >= 20 && hue < 60) {
+                        const ratio = (hue - 20) / 40;
+                        sat = 78 - Math.round(ratio * 43);
+                        light = 70 + Math.round(ratio * 6);
+                      }
+                      
+                      const color = `hsl(${hue}, ${sat}%, ${light}%)`;
+                      dots.push(
+                        <circle
+                          key={i}
+                          cx={cx}
+                          cy={cy}
+                          r={ring.size}
+                          fill={color}
+                        />
+                      );
                     }
-                    
-                    const color = `hsl(${hue}, ${sat}%, ${light}%)`;
-                    dots.push(
-                      <circle
-                        key={i}
-                        cx={cx}
-                        cy={cy}
-                        r={ring.size}
-                        fill={color}
-                      />
+                    return (
+                      <g 
+                        key={rIdx} 
+                        className="origin-center"
+                        style={{ 
+                          transformOrigin: '80px 80px',
+                          animation: `intelligenceBloom 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards`,
+                          animationDelay: `${(3 - rIdx) * 0.08 + 0.2}s`,
+                          opacity: 0,
+                          transform: 'scale(0.2)'
+                        }}
+                      >
+                        {dots}
+                      </g>
                     );
-                  }
-                  const duration = rIdx === 0 ? '45s' : rIdx === 1 ? '35s' : rIdx === 2 ? '50s' : '40s';
-                  return (
-                    <g 
-                      key={rIdx} 
-                      className={`origin-center ${ring.reverse ? "animate-spin-reverse" : "animate-spin-slow"}`}
-                      style={{ 
-                        transformOrigin: '80px 80px',
-                        animationDuration: duration 
-                      }}
-                    >
-                      {dots}
-                    </g>
-                  );
-                })}
-              </svg>
-            <img 
-              src="/assets/branding/black-icon.png" 
-              alt="eManage Logo" 
-              className={`shrink-0 object-contain p-[2px] z-10 animate-in zoom-in-50 duration-500 transition-all duration-300 dark:hidden ${
-                view === "student-signup" ? "w-[22px] h-[22px]" : "w-[30px] h-[30px]"
-              }`} 
-            />
-            <img 
-              src="/assets/branding/white-icon.png" 
-              alt="eManage Logo" 
-              className={`shrink-0 object-contain p-[2px] z-10 animate-in zoom-in-50 duration-500 transition-all duration-300 hidden dark:block ${
-                view === "student-signup" ? "w-[22px] h-[22px]" : "w-[30px] h-[30px]"
-              }`} 
-            />
-            </div>
+                  })}
+                </svg>
+              <style dangerouslySetInnerHTML={{__html: `
+                @keyframes intelligenceBloom {
+                  0% { opacity: 0; transform: scale(0.4); }
+                  100% { opacity: 1; transform: scale(1); }
+                }
+                @keyframes logoPop {
+                  0% { opacity: 0; transform: scale(0.6); }
+                  100% { opacity: 1; transform: scale(1); }
+                }
+              `}} />
+              <img 
+                src="/assets/branding/black-icon.png" 
+                alt="eManage Logo" 
+                className="shrink-0 object-contain p-[2px] z-10 dark:hidden w-[30px] h-[30px]" 
+                style={{
+                  animation: `logoPop 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards`,
+                  opacity: 0,
+                  transform: 'scale(0.6)'
+                }}
+              />
+              <img 
+                src="/assets/branding/white-icon.png" 
+                alt="eManage Logo" 
+                className="shrink-0 object-contain p-[2px] z-10 hidden dark:block w-[30px] h-[30px]" 
+                style={{
+                  animation: `logoPop 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards`,
+                  opacity: 0,
+                  transform: 'scale(0.6)'
+                }}
+              />
+              </div>
+            )}
 
             {view === "login" ? (
               <div className="w-full text-center flex-1 flex flex-col">
@@ -692,10 +725,7 @@ export default function Home() {
 
                     {/* Student Sign Up Link (Step 1 only) */}
                     {loginStep === 1 && (
-                      <div className="mt-2.5 flex flex-wrap items-center gap-1.5 animate-in fade-in duration-200">
-                        <span className="text-[13px] text-[#8E8E93] dark:text-zinc-400 font-normal">
-                          Don&apos;t have a student account?
-                        </span>
+                      <div className="mt-2.5 flex flex-wrap items-center animate-in fade-in duration-200">
                         <button
                           type="button"
                           onClick={() => {
@@ -704,7 +734,7 @@ export default function Home() {
                           }}
                           className="text-[13px] text-[#007AFF] hover:underline focus:outline-none font-medium"
                         >
-                          Student Sign Up
+                          Create your eManage Account
                         </button>
                       </div>
                     )}
@@ -924,15 +954,29 @@ export default function Home() {
                 )}
               </div>
             ) : (
-              <div className="w-full text-center flex-1 flex flex-col animate-in fade-in duration-300">
+              <div className="w-full text-center flex-1 flex flex-col justify-center animate-in fade-in duration-300">
+                <div className="flex justify-center w-full mb-4">
+                  <img src="/assets/branding/black-icon.png" alt="eManage Logo" className="w-[40px] h-[40px] object-contain dark:hidden" />
+                  <img src="/assets/branding/white-icon.png" alt="eManage Logo" className="w-[40px] h-[40px] object-contain hidden dark:block" />
+                </div>
                 <h1 className="login-title text-[24px] font-bold text-[#1D1D1F] dark:text-zinc-50 tracking-tight mb-1">
-                  Student Sign Up
+                  Create Your eManage Account
                 </h1>
-                <p className="text-[12px] text-gray-500 dark:text-zinc-400 mb-3 font-normal">
-                  Sign up to request and track your student or alumni records.
+                <p className="text-[12px] text-gray-500 dark:text-zinc-400 mb-1 font-normal">
+                  One eManage Account is all you need to access all eManage services.
                 </p>
+                <div className="flex items-center justify-center gap-1.5 text-[12px] mb-4">
+                  <span className="text-gray-500 dark:text-zinc-400 font-normal">Already have an eManage Account?</span>
+                  <button 
+                    type="button" 
+                    onClick={() => { resetStudentSignupState(); setView("login"); }} 
+                    className="text-[#007AFF] hover:underline focus:outline-none font-medium"
+                  >
+                    Sign In
+                  </button>
+                </div>
 
-                <form onSubmit={handleStudentSignup} className="w-full flex-1 flex flex-col justify-between">
+                <form onSubmit={handleStudentSignup} className="w-full flex flex-col mt-2">
                   <div className="w-full text-left">
                     {/* Merged Field Container */}
                     <div className={`merged-container bg-white dark:bg-zinc-800 ${
@@ -1082,7 +1126,7 @@ export default function Home() {
                   </div>
 
                   {/* Action Buttons */}
-                  <div className="w-full mt-4 space-y-2.5">
+                  <div className="w-full mt-8 space-y-3">
                     <Button
                       type="submit"
                       disabled={studentSignupLoading}
@@ -1091,7 +1135,7 @@ export default function Home() {
                       {studentSignupLoading ? (
                         <i className="ph-bold ph-spinner animate-spin text-lg flex items-center justify-center"></i>
                       ) : (
-                        <span>Create Student Account</span>
+                        <span>Create eManage Account</span>
                       )}
                     </Button>
                     <div className="text-center">
@@ -1103,7 +1147,7 @@ export default function Home() {
                         }}
                         className="text-[13px] text-[#E5484D] hover:underline focus:outline-none font-normal"
                       >
-                        Back
+                        Cancel
                       </button>
                     </div>
                   </div>

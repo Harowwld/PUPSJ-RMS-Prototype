@@ -2,18 +2,15 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
-import BevelButton from "@/components/ui/bevel-button";
-
-gsap.registerPlugin(ScrollTrigger);
+import Image from "next/image";
+import { Button } from "@/components/ui/button";
 
 const DEFAULT_HERO_CONTENT = {
   headlineLine1: "Tanglaw ng Bayan,",
   headlineLine2: "Dambana ng Kagitingan.",
   description:
     "Official institutional records keeping, archive retrieval, and document verification system for Polytechnic University of the Philippines San Juan Campus.",
-  ctaText: "Request Document",
+  ctaText: "Request",
   ctaLink: "/login",
   campusAddress:
     "223 Ortega St. cor. A. Mabini St., Addition Hills, San Juan City",
@@ -79,123 +76,20 @@ export default function LandingHero() {
     return () => clearInterval(timer);
   }, [hero.autoRotateInterval, slides.length]);
 
-  // GSAP Orchestration & Entrance Animation (sequenced after navbar slides in)
-  useEffect(() => {
-    const ctx = gsap.context(() => {
-      const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
-
-      if (headlineRef.current) {
-        tl.fromTo(
-          headlineRef.current.children,
-          { 
-            y: 32, 
-            opacity: 0, 
-            filter: "blur(12px)",
-            scale: 0.97,
-          },
-          { 
-            y: 0, 
-            opacity: 1, 
-            filter: "blur(0px)", 
-            scale: 1, 
-            duration: 1.1, 
-            stagger: 0.18 
-          },
-          0.35
-        );
-      }
-
-      if (descRef.current) {
-        tl.fromTo(
-          descRef.current,
-          { 
-            y: 20, 
-            opacity: 0, 
-            filter: "blur(8px)" 
-          },
-          { 
-            y: 0, 
-            opacity: 1, 
-            filter: "blur(0px)", 
-            duration: 0.9 
-          },
-          0.65
-        );
-      }
-
-      if (ctaClusterRef.current) {
-        tl.fromTo(
-          ctaClusterRef.current.children,
-          { 
-            y: 16, 
-            opacity: 0, 
-            scale: 0.94,
-            filter: "blur(4px)" 
-          },
-          { 
-            y: 0, 
-            opacity: 1, 
-            scale: 1, 
-            filter: "blur(0px)", 
-            duration: 0.75, 
-            stagger: 0.1,
-            ease: "back.out(1.2)" 
-          },
-          0.85
-        );
-      }
-    }, heroContainerRef);
-
-    return () => ctx.revert();
-  }, []);
-
-  // Scroll-driven border-radius + inset animation (Apple TV+ style)
-  useEffect(() => {
-    const inner = heroInnerRef.current;
-    const container = heroContainerRef.current;
-    if (!inner || !container) return;
-
-    const ctx = gsap.context(() => {
-      // Container frame: shrink inward + gain border-radius
-      // Background naturally follows (child of inner), clipped by overflow:hidden + borderRadius
-      gsap.fromTo(
-        inner,
-        {
-          borderRadius: "0px",
-          scale: 1,
-        },
-        {
-          borderRadius: "24px",
-          scale: 0.95,
-          ease: "none",
-          scrollTrigger: {
-            trigger: container,
-            start: "top top",
-            end: "bottom top",
-            scrub: 0.6,
-            invalidateOnRefresh: true,
-          },
-        }
-      );
-    }, container);
-
-    return () => ctx.revert();
-  }, []);
 
   return (
     <section 
       ref={heroContainerRef} 
-      className="relative w-full mx-0 px-0 mt-0 mb-12 sm:mb-16 font-inter select-none bg-zinc-950"
+      className="relative w-full mx-0 px-0 mt-[69px] mb-0 font-inter select-none bg-[#ffffff]"
     >
-      {/* Scroll-animated inner container — starts full-bleed, gains border-radius on scroll */}
+      {/* Hero container with gap below navbar */}
       <div 
         ref={heroInnerRef}
-        className="relative w-full min-h-[92vh] sm:min-h-screen overflow-hidden flex flex-col justify-between pt-24 sm:pt-28 pb-8 px-6 sm:px-12 lg:px-16 border-none shadow-none bg-zinc-950"
-        style={{ borderRadius: 0, willChange: "border-radius, transform" }}
+        className="relative w-full h-[75vh] min-h-[550px] overflow-hidden flex flex-col justify-center px-6 sm:px-12 lg:px-16"
       >
         
         {/* BACKGROUND IMAGE CAROUSEL WITH CINEMATIC ATMOSPHERIC MASKS */}
-        <div className="absolute inset-0 w-full h-full z-0 select-none pointer-events-none overflow-hidden bg-zinc-950">
+        <div className="absolute inset-0 w-full h-full z-0 select-none pointer-events-none overflow-hidden bg-[#ffffff]">
           {slides.map((slide, idx) => (
             <div
               key={slide.src || idx}
@@ -203,31 +97,33 @@ export default function LandingHero() {
                 idx === currentSlide ? "opacity-100" : "opacity-0"
               }`}
             >
-              <img 
+              <Image 
                 src={slide.src} 
                 alt={slide.alt || "Campus Photo"} 
-                className={`w-full h-full object-cover object-center transform transition-transform duration-[7000ms] ease-out ${
-                  idx === currentSlide ? "scale-100" : "scale-108"
-                }`}
+                fill
+                priority={idx === 0}
+                sizes="100vw"
+                quality={85}
+                className="object-cover object-center"
               />
             </div>
           ))}
           {/* Gradient scrims — heavier left for text, lighter right to let image breathe */}
-          <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-zinc-950/95 via-zinc-950/70 to-zinc-950/30" />
-          <div className="absolute inset-0 w-full h-full bg-gradient-to-t from-zinc-950 via-zinc-950/30 to-transparent" />
-          <div className="absolute inset-0 w-full h-full bg-[#800000]/10 mix-blend-overlay" />
+          <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-black/95 via-black/70 to-black/30" />
+          <div className="absolute inset-0 w-full h-full bg-gradient-to-t from-black via-black/30 to-transparent" />
+          <div className="absolute inset-0 w-full h-full bg-[#800000]/30" />
         </div>
 
-        {/* MAIN HERO CONTENT — LEFT-ALIGNED ASYMMETRIC (text ~55%, image breathes right) */}
-        <div className="relative z-10 w-full max-w-7xl mx-auto my-auto py-8 sm:py-14 flex flex-col items-start text-left">
-          <div className="w-full max-w-[55%] max-lg:max-w-[70%] max-sm:max-w-full">
+        {/* MAIN HERO CONTENT — CENTERED */}
+        <div className="relative z-10 w-full max-w-7xl mx-auto my-auto py-8 sm:py-14 flex flex-col items-center text-center">
+          <div className="w-full max-w-4xl flex flex-col items-center">
             <h1 
               ref={headlineRef}
               style={{
                 fontSize: "clamp(2.25rem, 5vw, 4.5rem)",
                 lineHeight: 1.04,
               }}
-              className="tanglaw-heading font-extrabold text-white tracking-tight sm:tracking-tighter mb-5"
+              className="tanglaw-heading font-extrabold text-white tracking-tight sm:tracking-tighter mb-6"
             >
               <span className="block">{hero.headlineLine1 || "Tanglaw ng Bayan,"}</span>
               <span className="block">
@@ -237,77 +133,48 @@ export default function LandingHero() {
 
             <p 
               ref={descRef}
-              className="text-xs sm:text-sm md:text-base text-slate-200/85 leading-relaxed max-w-md mb-8 font-normal"
+              className="text-xs sm:text-sm md:text-base text-zinc-300 leading-relaxed max-w-xl mx-auto mb-10 font-normal"
             >
               {hero.description ||
                 "Official institutional records keeping, archive retrieval, and document verification system for Polytechnic University of the Philippines San Juan Campus."}
             </p>
 
-            {/* Action Cluster — left-aligned */}
+            {/* Action Cluster — centered */}
             <div 
               ref={ctaClusterRef}
-              className="flex flex-wrap items-center justify-start gap-4"
+              className="flex flex-wrap items-center justify-center gap-4"
             >
-              <BevelButton
+              <Button
                 onClick={() => router.push("/login")}
-                className="h-11 px-7 rounded-full text-xs font-bold tracking-wide cursor-pointer flex items-center gap-2 shadow-md hover:scale-[1.02] active:scale-[0.98] transition-transform"
+                className="h-11 px-8 rounded-full btn-brand-red text-[13px] font-medium text-white active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md"
               >
-                <span>Request Document</span>
-                <i className="ph-bold ph-arrow-right text-xs" />
-              </BevelButton>
+                <span>Request</span>
+              </Button>
             </div>
           </div>
         </div>
+      </div>
 
-        {/* BOTTOM ACCREDITATION BANNER & CAMPUS PHOTO CONTROLS */}
-        <div className="relative z-10 px-4 sm:px-6 py-3 rounded-2xl liquid-glass-dark-pill bg-zinc-950/40 grid grid-cols-1 md:grid-cols-3 items-center gap-3 text-xs text-white/75">
-          {/* Left: Campus address */}
-          <div className="flex items-center gap-2 justify-start">
-            <span className="truncate">
-              {hero.campusAddress || "223 Ortega St. cor. A. Mabini St., Addition Hills, San Juan City"}
-            </span>
-          </div>
-
-          {/* Center: Apple-styled Campus Photo Pagination */}
-          <div className="flex items-center justify-center">
-            <div className="flex items-center gap-2">
-              {slides.map((_, idx) => {
-                const isActive = idx === currentSlide;
-                return (
-                  <button
-                    key={idx}
-                    type="button"
-                    onClick={() => setCurrentSlide(idx)}
-                    aria-label={`View campus photo ${idx + 1}`}
-                    className={`relative h-2 rounded-full transition-all duration-300 cursor-pointer overflow-hidden ${
-                      isActive 
-                        ? "w-7 bg-white/40" 
-                        : "w-2 bg-white/30 hover:bg-white/60"
-                    }`}
-                  >
-                    {isActive && (
-                      <div 
-                        key={currentSlide}
-                        className="absolute inset-y-0 left-0 bg-white rounded-full"
-                        style={{
-                          animation: "carouselProgress 5.5s linear forwards",
-                        }}
-                      />
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Right: Registrar hours */}
-          <div className="hidden md:flex items-center justify-end gap-3 text-[11px] font-mono text-white/50">
-            <span>{hero.registrarHours || "REGISTRAR: 8:00 AM – 5:00 PM"}</span>
-            <span className="text-white/30">·</span>
-            <span>{hero.operatingDays || "MON – FRI"}</span>
-          </div>
+      {/* APPLE-STYLE PAGINATION OUTSIDE THE IMAGE PANEL */}
+      <div className="w-full flex justify-center py-5 bg-[#ffffff]">
+        <div className="flex items-center gap-2 px-3 py-1">
+          {slides.map((_, idx) => {
+            const isActive = idx === currentSlide;
+            return (
+              <button
+                key={idx}
+                type="button"
+                onClick={() => setCurrentSlide(idx)}
+                aria-label={`View campus photo ${idx + 1}`}
+                className={`h-1.5 rounded-full transition-all duration-500 ease-out cursor-pointer ${
+                  isActive 
+                    ? "w-6 bg-gray-800" 
+                    : "w-1.5 bg-gray-300 hover:bg-gray-400"
+                }`}
+              />
+            );
+          })}
         </div>
-
       </div>
     </section>
   );

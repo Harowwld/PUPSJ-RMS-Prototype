@@ -1516,9 +1516,19 @@ h1.login-title {
   border: 1px solid rgba(255,255,255,0.15) !important;
 }
 
-.merged-container.has-error:not(:focus-within) {
+.merged-container.has-error {
   border-color: #E5484D !important;
   box-shadow: 0 0 0 1px #E5484D !important;
+  background-color: rgba(229, 72, 77, 0.08) !important;
+}
+.dark .merged-container.has-error {
+  background-color: rgba(229, 72, 77, 0.15) !important;
+}
+.merged-container.has-error .field-wrapper label {
+  color: #E5484D !important;
+}
+.merged-container.has-error .field-wrapper input {
+  color: #E5484D !important;
 }
 
 /* Email bottom divider (Step 2 state) */

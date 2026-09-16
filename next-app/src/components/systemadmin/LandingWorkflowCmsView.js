@@ -862,7 +862,7 @@ export default function LandingWorkflowCmsView({ showToast }) {
                               className={cn(
                                 "w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center font-mono text-xs font-bold transition-all duration-300",
                                 isSelected
-                                  ? "bg-[#800000] text-white border-2 border-red-400/80 shadow-[0_0_20px_rgba(128,0,0,0.6)] scale-105"
+                                  ? "bg-[#800000] text-white border-2 border-red-400/80 scale-105"
                                   : "liquid-glass-dark text-zinc-400 group-hover:text-white"
                               )}
                             >

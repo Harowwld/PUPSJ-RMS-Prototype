@@ -12,6 +12,7 @@ export default function LandingNavbar() {
   const [sessionUser, setSessionUser] = useState(null);
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [activeSection, setActiveSection] = useState("");
 
   useEffect(() => {
     let isMounted = true;
@@ -29,6 +30,22 @@ export default function LandingNavbar() {
 
     const handleScroll = () => {
       setScrolled(window.scrollY > 45);
+      
+      const sections = ["about", "workflow", "catalog", "faq", "office"];
+      let current = "";
+      for (const section of sections) {
+        const element = document.getElementById(section);
+        if (element) {
+          const rect = element.getBoundingClientRect();
+          if (rect.top <= 150) {
+            current = section;
+          }
+        }
+      }
+      if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 50) {
+        current = "office";
+      }
+      setActiveSection(current);
     };
     handleScroll();
     const handleResize = () => {
@@ -64,6 +81,7 @@ export default function LandingNavbar() {
       window.history.pushState(null, "", window.location.pathname);
     }
     setMobileMenuOpen(false);
+    setActiveSection("");
   };
 
   // Smooth animated transition to specific section with focus pulse
@@ -72,6 +90,7 @@ export default function LandingNavbar() {
     const element = document.getElementById(targetId);
     if (!element) return;
 
+    setActiveSection(targetId);
     const navOffset = 76;
     const elementPosition = element.getBoundingClientRect().top;
     const offsetPosition = elementPosition + window.pageYOffset - navOffset;
@@ -96,122 +115,63 @@ export default function LandingNavbar() {
   return (
     <>
 
-      <motion.header 
-        initial={{ y: -30, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ 
-          type: "spring", 
-          stiffness: 220, 
-          damping: 26, 
-          mass: 0.8,
-          delay: 0.1,
-        }}
+      <header 
         className="fixed top-0 left-0 right-0 w-full z-50 select-none font-inter pointer-events-none"
       >
-        {/* Padding wrapper — controls the inset spacing smoothly */}
-        <div 
-          className={`w-full mx-auto pointer-events-none transition-all duration-700 ease-[cubic-bezier(0.4,0,0.2,1)] ${
-            scrolled || mobileMenuOpen
-              ? "max-w-5xl px-4 sm:px-6 pt-3 sm:pt-4"
-              : "max-w-full px-0 pt-0"
-          }`}
-        >
+        {/* Apple-style global navigation bar container */}
+        <div className="w-full pointer-events-none transition-all duration-700 ease-[cubic-bezier(0.4,0,0.2,1)] px-0 pt-0">
           <div 
-            className={`navbar-glass-shell w-full flex flex-col pointer-events-auto transition-all duration-700 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+            className={`navbar-glass-shell w-full flex flex-col pointer-events-auto transition-all duration-700 ease-[cubic-bezier(0.4,0,0.2,1)] rounded-none shadow-none ${
               scrolled || mobileMenuOpen
-                ? `px-5 sm:px-6 navbar-liquid-glass ${
-                    mobileMenuOpen ? "rounded-[28px]" : "rounded-full"
-                  }`
-                : "px-6 sm:px-10 lg:px-14 rounded-none bg-zinc-950/25 backdrop-blur-md border border-transparent shadow-none"
+                ? "bg-[#f5f5f8]/80 backdrop-blur-md border-b border-black/5"
+                : "bg-[#f5f5f8] border-b border-transparent"
             }`}
           >
-            {/* Top Bar Row */}
-            <div className={`w-full flex items-center justify-between transition-[height] duration-700 ease-[cubic-bezier(0.4,0,0.2,1)] ${
-              scrolled || mobileMenuOpen ? "h-[46px]" : "h-[50px]"
-            }`}>
-              {/* BRAND LOGO - Smoothly scrolls back to top */}
+            {/* Top Bar Row - Constrained width like Apple UI */}
+            <div className="w-full max-w-[980px] mx-auto px-4 sm:px-6 flex items-center justify-between h-[44px]">
+               {/* BRAND LOGO - Smoothly scrolls back to top */}
               <a 
                 href="#" 
                 onClick={scrollToTop}
                 className="flex items-center gap-2.5 cursor-pointer shrink-0"
                 aria-label="Back to top"
               >
-                <div className="w-8 h-8 relative flex items-center justify-center shrink-0">
-                  <img 
-                    src="/assets/branding/white-icon.png" 
-                    alt="eManage Logo" 
-                    className={`w-full h-full object-contain dark:hidden transition-opacity duration-700 ease-[cubic-bezier(0.4,0,0.2,1)] ${
-                      scrolled || mobileMenuOpen ? "opacity-0" : "opacity-100"
-                    }`}
-                  />
+                <div className="w-[18px] h-[18px] relative flex items-center justify-center shrink-0">
                   <img 
                     src="/assets/branding/black-icon.png" 
                     alt="eManage Logo" 
-                    className={`w-full h-full object-contain absolute inset-0 dark:hidden transition-opacity duration-700 ease-[cubic-bezier(0.4,0,0.2,1)] ${
-                      scrolled || mobileMenuOpen ? "opacity-100" : "opacity-0"
-                    }`}
-                  />
-                  <img 
-                    src="/assets/branding/white-icon.png" 
-                    alt="eManage Logo" 
-                    className="w-full h-full object-contain hidden dark:block"
+                    className="w-full h-full object-contain"
                   />
                 </div>
-                <span className={`font-bold text-[22px] tracking-tight leading-none transition-colors duration-700 ease-[cubic-bezier(0.4,0,0.2,1)] ${
-                  scrolled || mobileMenuOpen ? "text-gray-950 dark:text-white" : "text-white"
-                }`}>
-                  eManage
-                </span>
               </a>
 
               {/* NAVIGATION LINKS WITH SMOOTH ANIMATION (Desktop) */}
-              <nav className={`hidden md:flex items-center gap-1 text-[13px] font-medium transition-colors duration-700 ease-[cubic-bezier(0.4,0,0.2,1)] ${
-                scrolled ? "text-gray-600 dark:text-zinc-300" : "text-white/80"
-              }`}>
-                <button 
-                  type="button"
-                  onClick={(e) => scrollToSection(e, "catalog")}
-                  className={`px-3.5 py-1.5 rounded-full transition-colors cursor-pointer bg-transparent hover:bg-transparent ${
-                    scrolled 
-                      ? "hover:text-gray-950 dark:hover:text-white" 
-                      : "hover:text-white"
-                  }`}
-                >
-                  Services
-                </button>
-                <button 
-                  type="button"
-                  onClick={(e) => scrollToSection(e, "workflow")}
-                  className={`px-3.5 py-1.5 rounded-full transition-colors cursor-pointer bg-transparent hover:bg-transparent ${
-                    scrolled 
-                      ? "hover:text-gray-950 dark:hover:text-white" 
-                      : "hover:text-white"
-                  }`}
-                >
-                  How It Works
-                </button>
-                <button 
-                  type="button"
-                  onClick={(e) => scrollToSection(e, "office")}
-                  className={`px-3.5 py-1.5 rounded-full transition-colors cursor-pointer bg-transparent hover:bg-transparent ${
-                    scrolled 
-                      ? "hover:text-gray-950 dark:hover:text-white" 
-                      : "hover:text-white"
-                  }`}
-                >
-                  Office Hours
-                </button>
-                <button 
-                  type="button"
-                  onClick={(e) => scrollToSection(e, "faq")}
-                  className={`px-3.5 py-1.5 rounded-full transition-colors cursor-pointer bg-transparent hover:bg-transparent ${
-                    scrolled 
-                      ? "hover:text-gray-950 dark:hover:text-white" 
-                      : "hover:text-white"
-                  }`}
-                >
-                  FAQ
-                </button>
+              <nav className="hidden md:flex items-center gap-1 text-[13px] font-medium text-black">
+                {[
+                  { id: "about", label: "About" },
+                  { id: "workflow", label: "How It Works" },
+                  { id: "catalog", label: "Catalog" },
+                  { id: "faq", label: "FAQ" },
+                  { id: "office", label: "Office Hours" }
+                ].map((item) => (
+                  <button 
+                    key={item.id}
+                    type="button"
+                    onClick={(e) => scrollToSection(e, item.id)}
+                    className={`relative px-3.5 py-1.5 rounded-full cursor-pointer transition-colors ${activeSection === item.id ? "text-black font-semibold" : "bg-transparent text-black/90 hover:text-black/60"}`}
+                  >
+                    {item.label}
+                    {activeSection === item.id && (
+                      <motion.div
+                        layoutId="navUnderline"
+                        className="absolute bottom-[2px] left-3.5 right-3.5 h-[1.5px] bg-black"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ duration: 0.3 }}
+                      />
+                    )}
+                  </button>
+                ))}
               </nav>
 
               {/* RIGHT ACTION BUTTONS */}
@@ -219,7 +179,7 @@ export default function LandingNavbar() {
                 {sessionUser ? (
                   <Button
                     onClick={() => router.push(getDashboardPath())}
-                    className="h-9 px-4 rounded-full btn-brand-red text-xs font-semibold tracking-wide cursor-pointer text-white active:scale-95 transition-all"
+                    className="h-8 px-4 rounded-full btn-brand-red text-xs font-semibold tracking-wide cursor-pointer text-white active:scale-95 transition-all"
                   >
                     Dashboard ↗
                   </Button>
@@ -227,11 +187,7 @@ export default function LandingNavbar() {
                   <button
                     type="button"
                     onClick={() => router.push("/login")}
-                    className={`h-9 px-3 rounded-full text-[13px] font-medium transition-colors duration-700 ease-[cubic-bezier(0.4,0,0.2,1)] cursor-pointer bg-transparent hover:bg-transparent ${
-                      scrolled || mobileMenuOpen
-                        ? "text-gray-700 dark:text-zinc-200 hover:text-gray-950 dark:hover:text-white" 
-                        : "text-white/90 hover:text-white"
-                    }`}
+                    className="h-8 px-3 rounded-full text-[13px] font-medium cursor-pointer bg-transparent text-black"
                   >
                     Sign In
                   </button>
@@ -241,11 +197,7 @@ export default function LandingNavbar() {
                 <button
                   type="button"
                   onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                  className={`md:hidden w-9 h-9 rounded-full flex items-center justify-center transition-colors duration-700 ease-[cubic-bezier(0.4,0,0.2,1)] cursor-pointer ${
-                    scrolled || mobileMenuOpen
-                      ? "text-gray-700 dark:text-zinc-200 hover:bg-black/[0.04] dark:hover:bg-white/[0.06]" 
-                      : "text-white hover:bg-white/15"
-                  }`}
+                  className="md:hidden w-8 h-8 rounded-full flex items-center justify-center cursor-pointer text-black"
                   aria-label="Toggle navigation drawer"
                 >
                   <i className={`ph-bold ${mobileMenuOpen ? "ph-x" : "ph-list"} text-lg`} />
@@ -261,46 +213,54 @@ export default function LandingNavbar() {
                   animate={{ opacity: 1, height: "auto" }}
                   exit={{ opacity: 0, height: 0 }}
                   transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
-                  className="md:hidden w-full overflow-hidden border-t border-black/[0.06] dark:border-white/[0.08] pt-2 pb-3.5 flex flex-col gap-1"
+                  className="md:hidden w-full overflow-hidden border-t border-black/[0.06] [0.08] pt-2 pb-3.5 flex flex-col gap-1"
                 >
                   <button
                     type="button"
-                    onClick={(e) => scrollToSection(e, "catalog")}
-                    className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-left text-xs font-semibold text-gray-800 dark:text-zinc-100 hover:bg-black/[0.04] dark:hover:bg-white/[0.06] transition-all cursor-pointer"
+                    onClick={(e) => scrollToSection(e, "about")}
+                    className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-left text-xs font-semibold text-gray-800  hover:bg-black/[0.04] :bg-white/[0.06] transition-all cursor-pointer"
                   >
-                    <i className="ph-bold ph-files text-base text-[#800000] dark:text-red-400" />
-                    <span>Services</span>
+                    <i className="ph-bold ph-info text-base text-[#800000] " />
+                    <span>About</span>
                   </button>
                   <button
                     type="button"
                     onClick={(e) => scrollToSection(e, "workflow")}
-                    className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-left text-xs font-semibold text-gray-800 dark:text-zinc-100 hover:bg-black/[0.04] dark:hover:bg-white/[0.06] transition-all cursor-pointer"
+                    className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-left text-xs font-semibold text-gray-800  hover:bg-black/[0.04] :bg-white/[0.06] transition-all cursor-pointer"
                   >
-                    <i className="ph-bold ph-flow-arrow text-base text-[#800000] dark:text-red-400" />
+                    <i className="ph-bold ph-flow-arrow text-base text-[#800000] " />
                     <span>How It Works</span>
                   </button>
                   <button
                     type="button"
-                    onClick={(e) => scrollToSection(e, "office")}
-                    className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-left text-xs font-semibold text-gray-800 dark:text-zinc-100 hover:bg-black/[0.04] dark:hover:bg-white/[0.06] transition-all cursor-pointer"
+                    onClick={(e) => scrollToSection(e, "catalog")}
+                    className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-left text-xs font-semibold text-gray-800  hover:bg-black/[0.04] :bg-white/[0.06] transition-all cursor-pointer"
                   >
-                    <i className="ph-bold ph-clock text-base text-[#800000] dark:text-red-400" />
-                    <span>Office Hours</span>
+                    <i className="ph-bold ph-files text-base text-[#800000] " />
+                    <span>Catalog</span>
                   </button>
                   <button
                     type="button"
                     onClick={(e) => scrollToSection(e, "faq")}
-                    className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-left text-xs font-semibold text-gray-800 dark:text-zinc-100 hover:bg-black/[0.04] dark:hover:bg-white/[0.06] transition-all cursor-pointer"
+                    className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-left text-xs font-semibold text-gray-800  hover:bg-black/[0.04] :bg-white/[0.06] transition-all cursor-pointer"
                   >
-                    <i className="ph-bold ph-question text-base text-[#800000] dark:text-red-400" />
+                    <i className="ph-bold ph-question text-base text-[#800000] " />
                     <span>FAQ</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => scrollToSection(e, "office")}
+                    className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-left text-xs font-semibold text-gray-800  hover:bg-black/[0.04] :bg-white/[0.06] transition-all cursor-pointer"
+                  >
+                    <i className="ph-bold ph-clock text-base text-[#800000] " />
+                    <span>Office Hours</span>
                   </button>
                 </motion.div>
               )}
             </AnimatePresence>
           </div>
         </div>
-    </motion.header>
+    </header>
   </>
 );
 }

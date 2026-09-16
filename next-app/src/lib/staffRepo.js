@@ -33,7 +33,11 @@ export async function verifyStaffPasswordById(id, password) {
   const existing = await getStaffById(id);
   if (!existing) return false;
   if (!existing.password_hash) return false;
-  return verifyPasswordHashValue(password, existing.password_hash).valid;
+  const result = verifyPasswordHashValue(password, existing.password_hash);
+  if (result.valid && result.needsRehash) {
+    await setStaffPasswordById(id, password);
+  }
+  return result.valid;
 }
 
 export async function createStaff({

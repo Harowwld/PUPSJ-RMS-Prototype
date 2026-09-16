@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 
 const DEFAULT_BENTO_CONTENT = {
   eyebrow: "Student & Alumni Services",
@@ -85,42 +85,25 @@ const DEFAULT_BENTO_CONTENT = {
     tab3Label: "Tracking",
     charterItems: [
       { icon: "ph-shield-check", title: "No Unrecorded Delays", desc: "Timestamped upon receipt", bg: "bg-[#800000]" },
-      { icon: "ph-clock", title: "Clear Deadlines", desc: "Always on schedule", bg: "bg-zinc-800 dark:bg-zinc-700" },
+      { icon: "ph-clock", title: "Clear Deadlines", desc: "Always on schedule", bg: "bg-zinc-800 " },
     ],
     artaItems: [
       { icon: "ph-scales", title: "Zero Red Tape", desc: "Strict RA 11032 compliance", bg: "bg-[#800000]" },
-      { icon: "ph-file-text", title: "Citizen's Charter", desc: "Published university SLA standards", bg: "bg-zinc-800 dark:bg-zinc-700" },
+      { icon: "ph-file-text", title: "Citizen's Charter", desc: "Published university SLA standards", bg: "bg-zinc-800 " },
     ],
     auditItems: [
       { icon: "ph-fingerprint", title: "Tamper-Proof Audit Trail", desc: "Every personnel action logged", bg: "bg-[#800000]" },
-      { icon: "ph-check-circle", title: "Live Tracking Updates", desc: "Real-time ticket progression", bg: "bg-zinc-800 dark:bg-zinc-700" },
+      { icon: "ph-check-circle", title: "Live Tracking Updates", desc: "Real-time ticket progression", bg: "bg-zinc-800 " },
     ],
     footerNote: "Fair, transparent university service",
   },
 };
 
-const SLA_CHIP_STYLES = [
-  {
-    bgClass: "bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200/60 dark:border-emerald-800/40 text-emerald-700 dark:text-emerald-300",
-    activeRing: "ring-2 ring-emerald-500/50 shadow-sm shadow-emerald-500/10 scale-[1.04]",
-  },
-  {
-    bgClass: "bg-amber-50 dark:bg-amber-950/40 border-amber-200/60 dark:border-amber-800/40 text-amber-700 dark:text-amber-300",
-    activeRing: "ring-2 ring-amber-500/50 shadow-sm shadow-amber-500/10 scale-[1.04]",
-  },
-  {
-    bgClass: "bg-red-50 dark:bg-red-950/40 border-red-200/60 dark:border-red-800/40 text-red-700 dark:text-red-300",
-    activeRing: "ring-2 ring-red-500/50 shadow-sm shadow-red-500/10 scale-[1.04]",
-  },
-];
+
 
 export default function LandingBento() {
   const router = useRouter();
   const [bento, setBento] = useState(DEFAULT_BENTO_CONTENT);
-  const [activeTab, setActiveTab] = useState("charter");
-  const [docIndex, setDocIndex] = useState(0);
-  const [activeChip, setActiveChip] = useState(0);
-  const [isHoveredTab, setIsHoveredTab] = useState(false);
 
   // Fetch dynamic bento configuration
   useEffect(() => {
@@ -140,52 +123,13 @@ export default function LandingBento() {
     };
   }, []);
 
-  const currentDocs = bento.card1?.documents?.length ? bento.card1.documents : DEFAULT_BENTO_CONTENT.card1.documents;
-  const currentSlaChips = bento.card2?.slaChips?.length ? bento.card2.slaChips : DEFAULT_BENTO_CONTENT.card2.slaChips;
-
-  // Auto-cycle documents on Card 1 every 3.8 seconds
-  useEffect(() => {
-    if (!currentDocs.length) return;
-    const timer = setInterval(() => {
-      setDocIndex((prev) => (prev + 1) % currentDocs.length);
-    }, 3800);
-    return () => clearInterval(timer);
-  }, [currentDocs.length]);
-
-  // Auto-cycle turnaround chips on Card 2 every 2.5 seconds
-  useEffect(() => {
-    if (!currentSlaChips.length) return;
-    const timer = setInterval(() => {
-      setActiveChip((prev) => (prev + 1) % currentSlaChips.length);
-    }, 2500);
-    return () => clearInterval(timer);
-  }, [currentSlaChips.length]);
-
-  // Auto-cycle tabs on Card 5 every 3.6 seconds (paused on manual hover)
-  useEffect(() => {
-    if (isHoveredTab) return;
-    const tabs = ["charter", "arta", "audit"];
-    const timer = setInterval(() => {
-      setActiveTab((prev) => tabs[(tabs.indexOf(prev) + 1) % tabs.length]);
-    }, 3600);
-    return () => clearInterval(timer);
-  }, [isHoveredTab]);
-
-  const activeDoc = currentDocs[docIndex % currentDocs.length] || currentDocs[0];
-
-  const tabData = {
-    charter: bento.card5?.charterItems || DEFAULT_BENTO_CONTENT.card5.charterItems,
-    arta: bento.card5?.artaItems || DEFAULT_BENTO_CONTENT.card5.artaItems,
-    audit: bento.card5?.auditItems || DEFAULT_BENTO_CONTENT.card5.auditItems,
-  };
-
   return (
-    <section className="max-w-7xl mx-auto px-4 sm:px-6 pt-20 sm:pt-28 pb-20 w-full font-inter select-none">
+    <section id="about" className="scroll-mt-24 max-w-7xl mx-auto px-4 sm:px-6 pt-10 sm:pt-12 pb-20 w-full font-inter select-none">
       
       {/* =========================================================================
           ASYMMETRIC EDITORIAL HEADER (Slide from Left to Right Entrance)
           ========================================================================= */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-12 items-end mb-12 sm:mb-16 overflow-hidden">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-12 items-center mb-6 sm:mb-8 overflow-hidden">
         <motion.div 
           initial={{ opacity: 0, x: -70, filter: "blur(8px)" }}
           whileInView={{ opacity: 1, x: 0, filter: "blur(0px)" }}
@@ -193,12 +137,10 @@ export default function LandingBento() {
           transition={{ duration: 0.75, ease: [0.16, 1, 0.3, 1] }}
           className="lg:col-span-7"
         >
-          <span className="text-[11px] font-mono font-bold uppercase tracking-widest text-[#800000] dark:text-red-400 block mb-3">
-            {bento.eyebrow}
-          </span>
-          <h2 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-[#1d1d1f] dark:text-white tracking-tight leading-[1.06]">
+
+          <h2 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-[#1d1d1f]  tracking-tight leading-[1.06]">
             {bento.headingLine1}<br />
-            <span className="text-zinc-400 dark:text-zinc-500">{bento.headingLine2}</span>
+            <span className="text-zinc-400 ">{bento.headingLine2}</span>
           </h2>
         </motion.div>
 
@@ -209,26 +151,26 @@ export default function LandingBento() {
           transition={{ duration: 0.75, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
           className="lg:col-span-5"
         >
-          <p className="text-sm sm:text-base text-zinc-600 dark:text-zinc-400 leading-relaxed font-normal max-w-lg">
+          <p className="text-base sm:text-lg text-zinc-600  leading-relaxed font-normal max-w-lg">
             {bento.description}
           </p>
         </motion.div>
       </div>
 
       {/* =========================================================================
-          BENTO CONTAINER (Reduced Padding Frame)
+          BENTO CONTAINER
           Contains 2 Rows:
           - Row 1: 2 Equal Large Cards (50/50 Split)
           - Row 2: 3 Equal Medium Cards (3-Column Split)
           ========================================================================= */}
-      <div className="rounded-[2.25rem] bg-[#f4f5f7]/70 dark:bg-zinc-900/40 p-3 sm:p-4 lg:p-5 border border-black/[0.04] dark:border-white/[0.06]">
+      <div className="w-full flex flex-col gap-4 sm:gap-5 border border-[#f5f5f7] p-4 sm:p-6 bg-[#f5f5f7]">
         
         {/* -----------------------------------------------------------------------
             ROW 1: TWO LARGE CARDS
             Card 1: Request Online in Minutes
             Card 2: Know When It's Ready
             ----------------------------------------------------------------------- */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5 mb-4 sm:mb-5">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5">
           
           {/* CARD 1: Request Online in Minutes */}
           <motion.div 
@@ -237,81 +179,55 @@ export default function LandingBento() {
             viewport={{ once: true, margin: "-60px" }}
             transition={{ duration: 0.65, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
             whileHover={{ y: -3 }}
-            onClick={() => router.push("/login")}
-            className="rounded-[1.75rem] bg-white dark:bg-zinc-900 border border-black/[0.06] dark:border-white/[0.08] p-6 sm:p-8 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.03)] flex flex-col justify-between cursor-pointer group"
+
+            className="rounded-none bg-white border border-black/[0.04] shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] p-5 sm:p-8 lg:p-10 flex flex-col justify-between transition-all duration-300 group"
           >
             {/* Simulated UI Area */}
-            <div className="rounded-2xl bg-[#f8f9fa] dark:bg-zinc-800/40 p-5 border border-black/[0.03] dark:border-white/[0.04] min-h-[220px] flex flex-col justify-between">
-              <div>
-                <div className="flex items-center justify-between mb-3 text-[10px] font-mono uppercase tracking-wider text-zinc-400">
-                  <span>{bento.card1?.portalTag || "Online Request Portal"}</span>
-                  <span className="text-zinc-500">PUP San Juan</span>
+            <div className="rounded-none bg-[#f5f5f7] p-4 sm:p-6 border-none min-h-[220px] flex flex-col justify-center items-center relative overflow-hidden">
+              
+              {/* Full-Card Success Overlay */}
+              <div className="absolute inset-0 bg-emerald-500/85 backdrop-blur-[2px] z-20 flex flex-col items-center justify-center text-white opacity-0 pointer-events-none" style={{ animation: 'submitOverlay 6s infinite 0s' }}>
+                <div className="w-12 h-12 rounded-full bg-white/30 flex items-center justify-center mb-3">
+                  <i className="ph-bold ph-check text-2xl drop-shadow-sm" />
                 </div>
-
-                {/* Dropdown: Campus */}
-                <div className="p-2.5 px-3 rounded-xl bg-white dark:bg-zinc-800 border border-black/[0.05] dark:border-white/[0.06] flex items-center justify-between text-xs font-semibold text-[#1d1d1f] dark:text-zinc-200 mb-2 shadow-xs">
-                  <span>{bento.card1?.campusLabel || "PUP San Juan Campus"}</span>
-                  <i className="ph-bold ph-caret-down text-zinc-400 text-xs" />
-                </div>
-
-                {/* Expanded Accordion: Document & Purpose */}
-                <div className="p-3 rounded-xl bg-white dark:bg-zinc-800 border border-black/[0.05] dark:border-white/[0.06] shadow-xs">
-                  <div className="flex items-center justify-between text-xs font-bold text-[#800000] dark:text-red-400 mb-2">
-                    <span>{bento.card1?.accordionTitle || "Choose Document & Purpose"}</span>
-                    <i className="ph-bold ph-caret-up text-xs" />
-                  </div>
-
-                  {/* Clean Form Selection Lines with AnimatePresence crossfade */}
-                  <div className="h-[46px] relative overflow-hidden pt-0.5">
-                    <AnimatePresence mode="wait">
-                      <motion.div
-                        key={docIndex}
-                        initial={{ opacity: 0, y: 5 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -5 }}
-                        transition={{ duration: 0.35, ease: "easeOut" }}
-                        className="space-y-1"
-                      >
-                        <div className="flex items-center gap-2">
-                          <span className="relative flex h-2 w-2 shrink-0">
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
-                          </span>
-                          <span className="text-xs font-medium text-zinc-800 dark:text-zinc-200 truncate">
-                            {activeDoc?.name || "Official Document"}
-                          </span>
-                          <span className="text-[10px] font-mono text-zinc-400 ml-auto shrink-0">
-                            {activeDoc?.tag || "Selected"}
-                          </span>
-                        </div>
-                        <div className="text-[11px] text-zinc-500 dark:text-zinc-400 pl-4 truncate">
-                          Purpose: {activeDoc?.purpose || "General Evaluation"}
-                        </div>
-                      </motion.div>
-                    </AnimatePresence>
-                  </div>
-                </div>
+                <span className="font-bold text-sm tracking-wide drop-shadow-sm">Submitted!</span>
               </div>
 
-              {/* Status footer pill with live breathing dot */}
-              <div className="mt-3 flex items-center justify-between text-[11px] font-mono text-zinc-400 pt-2 border-t border-black/[0.03] dark:border-white/[0.04]">
-                <span>{bento.card1?.studentStub || "Student: 2022-04912-SJ-0"}</span>
-                <span className="inline-flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-semibold">
-                  <span className="relative flex h-1.5 w-1.5">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />
-                  </span>
-                  {bento.card1?.verifiedBadge || "Verified Student"}
-                </span>
+              <div className="relative z-10 w-full max-w-[180px] flex flex-col gap-5">
+                {/* Connecting line between Step 1 and Step 2 */}
+                <div className="absolute left-[17px] top-[18px] h-[56px] w-0.5 bg-zinc-200/60 z-[-1]">
+                  <div className="absolute top-0 left-0 w-full bg-emerald-500" style={{ animation: 'stepLineFill 6s infinite 0s', height: '0%' }}></div>
+                </div>
+                
+                <CursorOverlay animationName="cursorCard1" delay="0s" />
+                {/* Step 1 */}
+                <div className="flex items-center gap-4 group/step">
+                  <div className="w-9 h-9 rounded-full bg-white shadow-sm flex items-center justify-center text-zinc-400 group-hover/step:text-[#800000] transition-all border border-black/5 shrink-0" style={{ animation: 'objInteract1 6s infinite 0s, step1GreenCircle 6s infinite 0s' }}>
+                    <i className="ph-bold ph-file-text text-base" />
+                  </div>
+                  <span className="text-xs font-semibold text-zinc-600 transition-colors" style={{ animation: 'step1GreenText 6s infinite 0s' }}>Select Document</span>
+                </div>
+                {/* Step 2 */}
+                <div className="flex items-center gap-4 group/step">
+                  <div className="w-9 h-9 rounded-full bg-white shadow-sm flex items-center justify-center text-zinc-400 group-hover/step:text-[#800000] transition-all border border-black/5 shrink-0" style={{ animation: 'objInteract2 6s infinite 0s, step2GreenCircle 6s infinite 0s' }}>
+                    <i className="ph-bold ph-target text-base" />
+                  </div>
+                  <span className="text-xs font-semibold text-zinc-600 transition-colors" style={{ animation: 'step2GreenText 6s infinite 0s' }}>Specify Purpose</span>
+                </div>
+                {/* Step 3 */}
+                <button className="relative px-5 py-2.5 rounded-full text-xs font-bold flex items-center justify-center gap-2 w-[120px] transition-all mx-auto" style={{ animation: 'objInteract3 6s infinite 0s, submitButtonEnable 6s infinite 0s' }}>
+                  Submit
+                  <i className="ph-bold ph-paper-plane-right text-base" />
+                </button>
               </div>
             </div>
 
             {/* Typography Section */}
             <div className="mt-6">
-              <h3 className="text-lg sm:text-xl font-bold text-[#1d1d1f] dark:text-white tracking-tight group-hover:text-[#800000] dark:group-hover:text-red-400 transition-colors">
+              <h3 className="text-lg sm:text-xl font-bold text-[#1d1d1f]  tracking-tight group-hover:text-[#800000] :text-red-400 transition-colors">
                 {bento.card1?.title || "Request Online in Minutes"}
               </h3>
-              <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 mt-1.5 leading-relaxed font-normal">
+              <p className="text-xs sm:text-sm text-zinc-500  mt-1.5 leading-relaxed font-normal">
                 {bento.card1?.description || "Select the document you need, specify your purpose, and submit your request straight from your phone or computer."}
               </p>
             </div>
@@ -324,83 +240,55 @@ export default function LandingBento() {
             viewport={{ once: true, margin: "-60px" }}
             transition={{ duration: 0.65, delay: 0.24, ease: [0.16, 1, 0.3, 1] }}
             whileHover={{ y: -3 }}
-            onClick={() => router.push("/login")}
-            className="rounded-[1.75rem] bg-white dark:bg-zinc-900 border border-black/[0.06] dark:border-white/[0.08] p-6 sm:p-8 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.03)] flex flex-col justify-between cursor-pointer group"
+
+            className="rounded-none bg-white border border-black/[0.04] shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] p-5 sm:p-8 lg:p-10 flex flex-col justify-between transition-all duration-300 group"
           >
             {/* Simulated UI Area */}
-            <div className="rounded-2xl bg-[#f8f9fa] dark:bg-zinc-800/40 p-5 border border-black/[0.03] dark:border-white/[0.04] min-h-[220px] flex flex-col justify-between">
-              <div>
-                {/* Header Row with ticking icon */}
-                <div className="flex items-center gap-2.5 mb-3">
-                  <motion.div 
-                    animate={{ rotate: [0, 15, 0] }}
-                    transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
-                    className="w-6 h-6 rounded-lg bg-gradient-to-br from-[#800000] to-rose-700 text-white flex items-center justify-center text-xs font-bold shadow-xs shrink-0"
-                  >
-                    <i className="ph-bold ph-clock text-xs" />
-                  </motion.div>
-                  <span className="text-xs font-bold text-[#1d1d1f] dark:text-white">
-                    {bento.card2?.headerText || "Clear Pick-Up Schedule"}
-                  </span>
+            <div className="rounded-none bg-[#f5f5f7] p-4 sm:p-6 border-none min-h-[220px] flex flex-col justify-center items-center relative overflow-hidden">
+              <CursorOverlay animationName="cursorCard2" delay="1s" />
+              {/* Connecting line behind steps */}
+              <div className="absolute left-[calc(50%-78px)] top-10 bottom-10 w-0.5 bg-zinc-200/60 z-0"></div>
+              
+              <div className="relative z-10 w-full max-w-[190px] flex flex-col gap-4">
+                {/* Step 1 */}
+                <div className="flex items-center gap-4">
+                  <div className="w-9 h-9 rounded-full bg-white shadow-sm flex items-center justify-center text-[#800000] border border-black/5 shrink-0 transition-all" style={{ animation: 'objInteract1 6s infinite 1s' }}>
+                    <i className="ph-bold ph-calendar-check text-base" />
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-xs font-semibold text-zinc-900">Clear Schedule</span>
+                    <span className="text-[10px] text-zinc-500">Based on document type</span>
+                  </div>
                 </div>
-
-                {/* Subtitle hint */}
-                <div className="text-[11px] text-zinc-500 dark:text-zinc-400 flex items-center gap-1.5 mb-3 font-mono">
-                  <i className="ph-bold ph-caret-down text-[10px]" />
-                  <span>{bento.card2?.subtitleHint || "Counted in working days once cleared"}</span>
+                {/* Step 2 */}
+                <div className="flex items-center gap-4">
+                  <div className="w-9 h-9 rounded-full bg-white shadow-sm flex items-center justify-center text-[#800000] border border-black/5 shrink-0 transition-all" style={{ animation: 'objInteract2 6s infinite 1s' }}>
+                    <i className="ph-bold ph-bell-ringing text-base" />
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-xs font-semibold text-zinc-900">Live Notifications</span>
+                    <span className="text-[10px] text-zinc-500">Track progress instantly</span>
+                  </div>
                 </div>
-
-                <p className="text-xs text-zinc-600 dark:text-zinc-300 leading-snug mb-3">
-                  {bento.card2?.instructionsText || "Processing times depend on the type of document you requested:"}
-                </p>
-
-                {/* Simulated Input Search Box with live radar indicator */}
-                <div className="p-2.5 px-3 rounded-xl bg-white dark:bg-zinc-800 border border-black/[0.06] dark:border-white/[0.08] shadow-xs flex items-center gap-2 mb-2.5">
-                  <i className="ph-bold ph-magnifying-glass text-zinc-400 text-xs" />
-                  <span className="text-xs text-zinc-700 dark:text-zinc-200 font-mono flex items-center justify-between w-full">
-                    <span>{bento.card2?.trackingSample || "Tracking #2026-SJ · Clearance Verified"}</span>
-                    <span className="relative flex h-2 w-2 shrink-0">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
-                    </span>
-                  </span>
+                {/* Step 3 */}
+                <div className="flex items-center gap-4">
+                  <div className="w-9 h-9 rounded-full bg-[#800000] shadow-md flex items-center justify-center text-white shrink-0 transition-all" style={{ animation: 'objInteract3 6s infinite 1s' }}>
+                    <i className="ph-bold ph-handshake text-base" />
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-xs font-semibold text-[#800000]">Visit Counter</span>
+                    <span className="text-[10px] text-[#800000]/70">No waiting in lines</span>
+                  </div>
                 </div>
-
-                {/* 3 Simple Pick-Up Chips with sequential spotlight wave */}
-                <div className="grid grid-cols-3 gap-1.5 pt-1">
-                  {currentSlaChips.map((chip, idx) => {
-                    const isActive = activeChip === idx;
-                    const style = SLA_CHIP_STYLES[idx % SLA_CHIP_STYLES.length];
-                    return (
-                      <motion.div
-                        key={chip.days + idx}
-                        animate={{
-                          scale: isActive ? 1.05 : 1,
-                        }}
-                        transition={{ duration: 0.35, ease: "easeOut" }}
-                        className={`p-1.5 px-2 rounded-lg border text-center transition-all duration-300 ${
-                          style.bgClass
-                        } ${isActive ? style.activeRing : "opacity-80"}`}
-                      >
-                        <div className="text-[10px] font-mono font-bold">{chip.days}</div>
-                        <div className="text-[9px] opacity-80 truncate">{chip.label}</div>
-                      </motion.div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <div className="text-[10px] font-mono text-zinc-400 pt-2 border-t border-black/[0.03] dark:border-white/[0.04]">
-                {bento.card2?.sealFooter || "Stamped with the official university dry seal"}
               </div>
             </div>
 
             {/* Typography Section */}
             <div className="mt-6">
-              <h3 className="text-lg sm:text-xl font-bold text-[#1d1d1f] dark:text-white tracking-tight group-hover:text-[#800000] dark:group-hover:text-red-400 transition-colors">
+              <h3 className="text-lg sm:text-xl font-bold text-[#1d1d1f]  tracking-tight group-hover:text-[#800000] :text-red-400 transition-colors">
                 {bento.card2?.title || "Know Exactly When It's Ready"}
               </h3>
-              <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 mt-1.5 leading-relaxed font-normal">
+              <p className="text-xs sm:text-sm text-zinc-500  mt-1.5 leading-relaxed font-normal">
                 {bento.card2?.description || "Every document follows a clear schedule so you know exactly when to visit the Registrar counter."}
               </p>
             </div>
@@ -423,88 +311,55 @@ export default function LandingBento() {
             viewport={{ once: true, margin: "-60px" }}
             transition={{ duration: 0.65, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
             whileHover={{ y: -3 }}
-            onClick={() => router.push("/login")}
-            className="rounded-[1.75rem] bg-white dark:bg-zinc-900 border border-black/[0.06] dark:border-white/[0.08] p-6 sm:p-7 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.03)] flex flex-col justify-between cursor-pointer group"
+
+            className="rounded-none bg-white border border-black/[0.04] shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] p-5 sm:p-8 lg:p-10 flex flex-col justify-between transition-all duration-300 group"
           >
-            {/* Simulated UI Area: Archive Node Map with planetary orbit and pulse waves */}
-            <div className="rounded-2xl bg-[#f8f9fa] dark:bg-zinc-800/40 p-4 border border-black/[0.03] dark:border-white/[0.04] min-h-[180px] flex items-center justify-center relative overflow-hidden">
-              
-              {/* Concentric Signal Radar Pulses from Central Node */}
-              <motion.div
-                animate={{ scale: [0.9, 2.3], opacity: [0.55, 0] }}
-                transition={{ repeat: Infinity, duration: 2.8, ease: "easeOut" }}
-                className="absolute w-12 h-12 rounded-2xl bg-[#800000]/25 pointer-events-none"
-              />
-              <motion.div
-                animate={{ scale: [0.9, 2.8], opacity: [0.35, 0] }}
-                transition={{ repeat: Infinity, duration: 2.8, delay: 0.9, ease: "easeOut" }}
-                className="absolute w-12 h-12 rounded-2xl bg-[#800000]/15 pointer-events-none"
-              />
+            {/* Simulated UI Area: Flow Diagram */}
+            <div className="rounded-none bg-[#f5f5f7] p-4 border-none min-h-[180px] flex items-center justify-center relative overflow-hidden">
+              <div className="flex items-center gap-2 sm:gap-4 relative z-10">
+                 <CursorOverlay animationName="cursorCard3" delay="2s" />
+                 {/* Online Request */}
+                 <div className="flex flex-col items-center gap-2">
+                   <div className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center text-[#800000] border border-black/5 transition-all" style={{ animation: 'objInteract1 6s infinite 2s' }}>
+                     <i className="ph-bold ph-laptop text-lg" />
+                   </div>
+                   <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-wider">Request</span>
+                 </div>
+                 
+                 {/* Dashed line 1 */}
+                 <div className="w-6 sm:w-8 h-0 border-t-2 border-dashed border-zinc-300 relative -translate-y-[10px]">
+                   <div className="absolute top-[-2px] left-0 h-0 border-t-2 border-solid border-blue-500" style={{ animation: 'lineFill1 6s infinite 2s', width: '0%' }}></div>
+                 </div>
 
-              {/* Central Node */}
-              <div className="relative z-10 flex flex-col items-center">
-                <motion.div 
-                  animate={{ scale: [1, 1.05, 1] }}
-                  transition={{ repeat: Infinity, duration: 3.5, ease: "easeInOut" }}
-                  className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#800000] to-red-800 text-white flex items-center justify-center shadow-md border-2 border-white dark:border-zinc-800"
-                >
-                  <i className="ph-bold ph-archive text-xl" />
-                </motion.div>
-              </div>
+                 {/* Room 1 */}
+                 <div className="flex flex-col items-center gap-2">
+                   <div className="w-12 h-12 rounded-full bg-[#800000] shadow-md flex items-center justify-center text-white relative transition-all" style={{ animation: 'objInteract3 6s infinite 2s, room1CircleReveal 6s infinite 2s' }}>
+                     <i className="ph-bold ph-archive text-xl relative z-10" />
+                   </div>
+                   <span className="text-[9px] font-bold text-[#800000] uppercase tracking-wider" style={{ animation: 'room1TextReveal 6s infinite 2s' }}>Room 1</span>
+                 </div>
+                 
+                 {/* Dashed line 2 */}
+                 <div className="w-6 sm:w-8 h-0 border-t-2 border-dashed border-zinc-300 relative -translate-y-[10px]">
+                   <div className="absolute top-[-2px] right-0 h-0 border-t-2 border-solid border-blue-500" style={{ animation: 'lineFill2 6s infinite 2s', width: '0%' }}></div>
+                 </div>
 
-              {/* Orbiting Physical Archive Nodes */}
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                {/* Node Top: Room 1 (Gentle vertical float) */}
-                <motion.div 
-                  animate={{ y: [-3, 3, -3] }}
-                  transition={{ repeat: Infinity, duration: 3.6, ease: "easeInOut" }}
-                  className="absolute top-3 w-8 h-8 rounded-xl liquid-glass-light flex items-center justify-center text-zinc-600 dark:text-zinc-300 text-[10px] font-mono font-bold z-10"
-                >
-                  {bento.card3?.roomCode || "R1"}
-                </motion.div>
-
-                {/* Node Left: Cabinet A (Gentle horizontal float) */}
-                <motion.div 
-                  animate={{ x: [-3, 3, -3] }}
-                  transition={{ repeat: Infinity, duration: 4.2, delay: 0.3, ease: "easeInOut" }}
-                  className="absolute left-4 w-8 h-8 rounded-xl liquid-glass-light flex items-center justify-center text-zinc-600 dark:text-zinc-300 text-[10px] font-mono font-bold z-10"
-                >
-                  {bento.card3?.cabinetCode || "C-A"}
-                </motion.div>
-
-                {/* Node Right: Drawer 2 (Gentle horizontal float) */}
-                <motion.div 
-                  animate={{ x: [3, -3, 3] }}
-                  transition={{ repeat: Infinity, duration: 3.8, delay: 0.6, ease: "easeInOut" }}
-                  className="absolute right-4 w-8 h-8 rounded-xl liquid-glass-light flex items-center justify-center text-zinc-600 dark:text-zinc-300 text-[10px] font-mono font-bold z-10"
-                >
-                  {bento.card3?.drawerCode || "D-2"}
-                </motion.div>
-
-                {/* Node Bottom: Dry Seal (Gentle vertical float + stamp pulse) */}
-                <motion.div 
-                  animate={{ y: [3, -3, 3], scale: [1, 1.08, 1] }}
-                  transition={{ repeat: Infinity, duration: 4.0, delay: 0.9, ease: "easeInOut" }}
-                  className="absolute bottom-3 w-8 h-8 rounded-xl liquid-glass-light flex items-center justify-center text-emerald-600 dark:text-emerald-400 text-xs z-10"
-                >
-                  <i className="ph-bold ph-stamp" />
-                </motion.div>
-
-                {/* Circular subtle dashed orbit with infinite linear rotation */}
-                <motion.div 
-                  animate={{ rotate: 360 }}
-                  transition={{ repeat: Infinity, duration: 28, ease: "linear" }}
-                  className="w-36 h-36 rounded-full border border-dashed border-zinc-300 dark:border-zinc-700/60" 
-                />
+                 {/* Staff */}
+                 <div className="flex flex-col items-center gap-2">
+                   <div className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center text-[#800000] border border-black/5 transition-all" style={{ animation: 'objInteract2 6s infinite 2s' }}>
+                     <i className="ph-bold ph-users text-lg" />
+                   </div>
+                   <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-wider">Staff</span>
+                 </div>
               </div>
             </div>
 
             {/* Typography Section */}
             <div className="mt-5">
-              <h3 className="text-base sm:text-lg font-bold text-[#1d1d1f] dark:text-white tracking-tight group-hover:text-[#800000] dark:group-hover:text-red-400 transition-colors">
+              <h3 className="text-base sm:text-lg font-bold text-[#1d1d1f]  tracking-tight group-hover:text-[#800000] :text-red-400 transition-colors">
                 {bento.card3?.title || "Direct from Campus Archives"}
               </h3>
-              <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1.5 leading-relaxed font-normal">
+              <p className="text-xs text-zinc-500  mt-1.5 leading-relaxed font-normal">
                 {bento.card3?.description || "Your online request connects directly to Room 1 archive cabinets, so staff can retrieve your folder faster."}
               </p>
             </div>
@@ -517,63 +372,43 @@ export default function LandingBento() {
             viewport={{ once: true, margin: "-60px" }}
             transition={{ duration: 0.65, delay: 0.26, ease: [0.16, 1, 0.3, 1] }}
             whileHover={{ y: -3 }}
-            onClick={() => router.push("/login")}
-            className="rounded-[1.75rem] bg-white dark:bg-zinc-900 border border-black/[0.06] dark:border-white/[0.08] p-6 sm:p-7 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.03)] flex flex-col justify-between cursor-pointer group"
+
+            className="rounded-none bg-white border border-black/[0.04] shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] p-5 sm:p-8 lg:p-10 flex flex-col justify-between transition-all duration-300 group"
           >
-            {/* Simulated UI Area: Checklist Stack with layered paper float */}
-            <div className="rounded-2xl bg-[#f8f9fa] dark:bg-zinc-800/40 p-4 border border-black/[0.03] dark:border-white/[0.04] min-h-[180px] flex flex-col justify-between">
-              <div>
-                <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-400 block mb-2">
-                  {bento.card4?.checklistHeader || "Checklist"}
-                </span>
-
-                {/* Primary Checklist Item with floating depth */}
-                <motion.div 
-                  animate={{ y: [0, -3, 0] }}
-                  transition={{ repeat: Infinity, duration: 4.5, ease: "easeInOut" }}
-                  className="p-3 rounded-xl bg-white dark:bg-zinc-800 border border-black/[0.05] dark:border-white/[0.06] shadow-xs"
-                >
-                  <div className="flex items-center gap-2 mb-1.5">
-                    <motion.div 
-                      animate={{ scale: [1, 1.15, 1] }}
-                      transition={{ repeat: Infinity, duration: 3, repeatDelay: 2, ease: "backOut" }}
-                      className="w-5 h-5 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 flex items-center justify-center text-[10px]"
-                    >
-                      <i className="ph-bold ph-check" />
-                    </motion.div>
-                    <span className="text-xs font-bold text-[#1d1d1f] dark:text-white">
-                      {bento.card4?.primaryItemTitle || "Student Number & Email"}
-                    </span>
+            {/* Simulated UI Area: Flow Diagram */}
+            <div className="rounded-none bg-[#f5f5f7] p-6 border-none min-h-[180px] flex flex-col justify-center items-center relative overflow-hidden gap-5">
+              <CursorOverlay animationName="cursorCard4" delay="3s" />
+              <div className="w-full max-w-[190px] flex flex-col gap-4 relative z-10">
+                {/* Step 1 */}
+                <div className="flex items-center gap-4">
+                  <div className="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center text-emerald-600 border border-black/5 shrink-0 transition-all" style={{ animation: 'objInteract1 6s infinite 3s' }}>
+                    <i className="ph-bold ph-check text-[14px] opacity-0" style={{ animation: 'checkReveal1 6s infinite 3s' }} />
                   </div>
-                  <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-snug">
-                    {bento.card4?.primaryItemDesc || "Your official student number and an active email for notifications."}
-                  </p>
-                </motion.div>
-
-                {/* Secondary Layer with subtle offset float */}
-                <motion.div 
-                  animate={{ y: [0, 2, 0] }}
-                  transition={{ repeat: Infinity, duration: 4.5, delay: 0.4, ease: "easeInOut" }}
-                  className="mt-2 p-2 px-3 rounded-xl bg-white/60 dark:bg-zinc-800/60 border border-black/[0.03] dark:border-white/[0.04] flex items-center justify-between text-[11px] text-zinc-500 dark:text-zinc-400"
-                >
-                  <span>{bento.card4?.secondaryItemTitle || "Campus Clearance Stub"}</span>
-                  <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 font-semibold">
-                    {bento.card4?.secondaryItemBadge || "Required for TOR"}
-                  </span>
-                </motion.div>
-              </div>
-
-              <div className="text-[10px] font-mono text-zinc-400 pt-1">
-                {bento.card4?.footerNote || "Bring a valid ID when picking up"}
+                  <span className="text-xs font-semibold text-zinc-900">Student Number</span>
+                </div>
+                {/* Step 2 */}
+                <div className="flex items-center gap-4">
+                  <div className="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center text-emerald-600 border border-black/5 shrink-0 transition-all" style={{ animation: 'objInteract2 6s infinite 3s' }}>
+                    <i className="ph-bold ph-check text-[14px] opacity-0" style={{ animation: 'checkReveal2 6s infinite 3s' }} />
+                  </div>
+                  <span className="text-xs font-semibold text-zinc-900">Active Email</span>
+                </div>
+                {/* Step 3 */}
+                <div className="flex items-center gap-4">
+                  <div className="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center text-emerald-600 border border-black/5 shrink-0 transition-all" style={{ animation: 'objInteract3 6s infinite 3s' }}>
+                    <i className="ph-bold ph-check text-[14px] opacity-0" style={{ animation: 'checkReveal3 6s infinite 3s' }} />
+                  </div>
+                  <span className="text-xs font-semibold text-zinc-900">Campus Clearance</span>
+                </div>
               </div>
             </div>
 
             {/* Typography Section */}
             <div className="mt-5">
-              <h3 className="text-base sm:text-lg font-bold text-[#1d1d1f] dark:text-white tracking-tight group-hover:text-[#800000] dark:group-hover:text-red-400 transition-colors">
+              <h3 className="text-base sm:text-lg font-bold text-[#1d1d1f]  tracking-tight group-hover:text-[#800000] :text-red-400 transition-colors">
                 {bento.card4?.title || "What You Need to Prepare"}
               </h3>
-              <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1.5 leading-relaxed font-normal">
+              <p className="text-xs text-zinc-500  mt-1.5 leading-relaxed font-normal">
                 {bento.card4?.description || "Have your student number, email, and signed clearance ready so your request is evaluated right away."}
               </p>
             </div>
@@ -586,131 +421,45 @@ export default function LandingBento() {
             viewport={{ once: true, margin: "-60px" }}
             transition={{ duration: 0.65, delay: 0.42, ease: [0.16, 1, 0.3, 1] }}
             whileHover={{ y: -3 }}
-            onClick={() => router.push("/login")}
-            className="rounded-[1.75rem] bg-white dark:bg-zinc-900 border border-black/[0.06] dark:border-white/[0.08] p-6 sm:p-7 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.03)] flex flex-col justify-between cursor-pointer group"
+
+            className="rounded-none bg-white border border-black/[0.04] shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] p-5 sm:p-8 lg:p-10 flex flex-col justify-between transition-all duration-300 group"
           >
-            {/* Simulated UI Area: Tabs + Safeguard Cards with animated layoutId pill */}
-            <div 
-              onMouseEnter={() => setIsHoveredTab(true)}
-              onMouseLeave={() => setIsHoveredTab(false)}
-              className="rounded-2xl bg-[#f8f9fa] dark:bg-zinc-800/40 p-4 border border-black/[0.03] dark:border-white/[0.04] min-h-[180px] flex flex-col justify-between"
-            >
-              <div>
-                {/* Simple Segmented Tab Bar with layoutId animated pill */}
-                <div className="flex items-center gap-1 p-1 rounded-xl bg-white dark:bg-zinc-800 border border-black/[0.05] dark:border-white/[0.06] mb-3 shadow-2xs">
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setActiveTab("charter");
-                    }}
-                    className={`relative flex-1 py-1 rounded-lg text-[10px] font-semibold transition-colors duration-200 ${
-                      activeTab === "charter"
-                        ? "text-white"
-                        : "text-zinc-500 hover:text-zinc-900 dark:hover:text-white"
-                    }`}
-                  >
-                    {activeTab === "charter" && (
-                      <motion.div
-                        layoutId="bentoTabPill"
-                        className="absolute inset-0 bg-[#800000] rounded-lg shadow-xs"
-                        transition={{ type: "spring", stiffness: 380, damping: 30 }}
-                      />
-                    )}
-                    <span className="relative z-10">{bento.card5?.tab1Label || "Promise"}</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setActiveTab("arta");
-                    }}
-                    className={`relative flex-1 py-1 rounded-lg text-[10px] font-semibold transition-colors duration-200 flex items-center justify-center gap-1 ${
-                      activeTab === "arta"
-                        ? "text-white"
-                        : "text-zinc-500 hover:text-zinc-900 dark:hover:text-white"
-                    }`}
-                  >
-                    {activeTab === "arta" && (
-                      <motion.div
-                        layoutId="bentoTabPill"
-                        className="absolute inset-0 bg-[#800000] rounded-lg shadow-xs"
-                        transition={{ type: "spring", stiffness: 380, damping: 30 }}
-                      />
-                    )}
-                    <span className="relative z-10 flex items-center gap-1">
-                      <i className="ph-bold ph-scales text-[10px]" />
-                      <span>{bento.card5?.tab2Label || "RA 11032"}</span>
-                    </span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setActiveTab("audit");
-                    }}
-                    className={`relative flex-1 py-1 rounded-lg text-[10px] font-semibold transition-colors duration-200 ${
-                      activeTab === "audit"
-                        ? "text-white"
-                        : "text-zinc-500 hover:text-zinc-900 dark:hover:text-white"
-                    }`}
-                  >
-                    {activeTab === "audit" && (
-                      <motion.div
-                        layoutId="bentoTabPill"
-                        className="absolute inset-0 bg-[#800000] rounded-lg shadow-xs"
-                        transition={{ type: "spring", stiffness: 380, damping: 30 }}
-                      />
-                    )}
-                    <span className="relative z-10">{bento.card5?.tab3Label || "Tracking"}</span>
-                  </button>
-                </div>
-
-                {/* Dynamic Visual Status Cards with AnimatePresence */}
-                <div className="h-[96px] relative overflow-hidden">
-                  <AnimatePresence mode="wait">
-                    <motion.div
-                      key={activeTab}
-                      initial={{ opacity: 0, y: 5 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -5 }}
-                      transition={{ duration: 0.3, ease: "easeOut" }}
-                      className="space-y-2"
-                    >
-                      {tabData[activeTab]?.map((item, idx) => (
-                        <div
-                          key={idx}
-                          className="p-2.5 rounded-xl bg-white dark:bg-zinc-800 border border-black/[0.04] dark:border-white/[0.06] flex items-center gap-2.5 shadow-xs"
-                        >
-                          <div className={`w-8 h-8 rounded-lg ${item.bg || (idx % 2 === 0 ? "bg-[#800000]" : "bg-zinc-800 dark:bg-zinc-700")} text-white flex items-center justify-center text-xs shrink-0 font-bold`}>
-                            <i className={`ph-bold ${item.icon}`} />
-                          </div>
-                          <div className="overflow-hidden">
-                            <div className="text-xs font-bold text-[#1d1d1f] dark:text-white truncate">
-                              {item.title}
-                            </div>
-                            <div className="text-[10px] text-zinc-500 dark:text-zinc-400 truncate">
-                              {item.desc}
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </motion.div>
-                  </AnimatePresence>
-                </div>
+            {/* Simulated UI Area: Flow Diagram */}
+            <div className="rounded-none bg-[#f5f5f7] p-4 border-none min-h-[180px] flex items-center justify-center relative overflow-hidden gap-6">
+              <div className="w-16 h-16 rounded-2xl bg-white shadow-sm flex flex-col items-center justify-center text-[#800000] border border-black/5 shrink-0 relative">
+                 <i className="ph-bold ph-shield-check text-3xl" />
+                 <span className="absolute -bottom-2.5 bg-[#800000] text-white text-[8px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">RA 11032</span>
               </div>
-
-              <div className="text-[10px] font-mono text-zinc-400 pt-1">
-                {bento.card5?.footerNote || "Fair, transparent university service"}
+              
+              <div className="flex flex-col gap-4 relative">
+                 <CursorOverlay animationName="cursorCard5" delay="4s" />
+                 <div className="flex items-center gap-4">
+                   <div className="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center text-emerald-600 border border-black/5 shrink-0 transition-all" style={{ animation: 'objInteract1 6s infinite 4s' }}>
+                     <i className="ph-bold ph-check text-[14px] opacity-0" style={{ animation: 'checkReveal1 6s infinite 4s' }} />
+                   </div>
+                   <span className="text-xs font-semibold text-zinc-700">Zero Red Tape</span>
+                 </div>
+                 <div className="flex items-center gap-4">
+                   <div className="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center text-emerald-600 border border-black/5 shrink-0 transition-all" style={{ animation: 'objInteract2 6s infinite 4s' }}>
+                     <i className="ph-bold ph-check text-[14px] opacity-0" style={{ animation: 'checkReveal2 6s infinite 4s' }} />
+                   </div>
+                   <span className="text-xs font-semibold text-zinc-700">No Hidden Delays</span>
+                 </div>
+                 <div className="flex items-center gap-4">
+                   <div className="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center text-emerald-600 border border-black/5 shrink-0 transition-all" style={{ animation: 'objInteract3 6s infinite 4s' }}>
+                     <i className="ph-bold ph-check text-[14px] opacity-0" style={{ animation: 'checkReveal3 6s infinite 4s' }} />
+                   </div>
+                   <span className="text-xs font-semibold text-zinc-700">Transparent Tracking</span>
+                 </div>
               </div>
             </div>
 
             {/* Typography Section */}
             <div className="mt-5">
-              <h3 className="text-base sm:text-lg font-bold text-[#1d1d1f] dark:text-white tracking-tight group-hover:text-[#800000] dark:group-hover:text-red-400 transition-colors">
+              <h3 className="text-base sm:text-lg font-bold text-[#1d1d1f]  tracking-tight group-hover:text-[#800000] :text-red-400 transition-colors">
                 {bento.card5?.title || "Protected by Law (RA 11032)"}
               </h3>
-              <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1.5 leading-relaxed font-normal">
+              <p className="text-xs text-zinc-500  mt-1.5 leading-relaxed font-normal">
                 {bento.card5?.description || "Backed by the Ease of Doing Business Act. Transparent tracking with zero hidden delays."}
               </p>
             </div>
@@ -722,3 +471,161 @@ export default function LandingBento() {
     </section>
   );
 }
+
+const CursorOverlay = ({ animationName, delay = "0s" }) => (
+  <div 
+    className="absolute z-50 pointer-events-none"
+    style={{ animation: `${animationName} 6s infinite ${delay}`, left: '50%', top: '80%', opacity: 0 }}
+  >
+    <svg 
+      width="24" 
+      height="24" 
+      viewBox="0 0 24 24" 
+      fill="none" 
+      xmlns="http://www.w3.org/2000/svg"
+      className="drop-shadow-md text-black"
+      style={{ animation: `cursorClick 6s infinite ${delay}` }}
+    >
+      <path 
+        d="M5.5 3.21V20.8c0 .45.54.67.85.35l4.86-4.86a.5.5 0 0 1 .35-.15h6.42c.45 0 .67-.54.35-.85L6.35 3.35a.5.5 0 0 0-.85.35Z" 
+        fill="currentColor" 
+        stroke="white" 
+        strokeWidth="1.5"
+      />
+    </svg>
+    <div className="absolute top-0 left-0 w-6 h-6 rounded-full border-2 border-[#800000] opacity-0 -translate-x-1.5 -translate-y-1.5" style={{ animation: `cursorRipple 6s infinite ${delay}` }}></div>
+    <style dangerouslySetInnerHTML={{__html: `
+      @keyframes cursorCard1 {
+        0%, 100% { left: 18px; top: 180px; opacity: 0; }
+        10% { opacity: 1; }
+        15%, 25% { left: 18px; top: 18px; opacity: 1; }
+        40%, 50% { left: 18px; top: 74px; opacity: 1; }
+        65%, 75% { left: 60px; top: 130px; opacity: 1; }
+        90% { opacity: 0; }
+      }
+      @keyframes cursorCard2 {
+        0%, 100% { left: 50%; top: 80%; opacity: 0; }
+        10% { opacity: 1; }
+        15%, 25% { left: calc(50% - 78px); top: calc(50% - 52px); opacity: 1; }
+        40%, 50% { left: calc(50% - 78px); top: 50%; opacity: 1; }
+        65%, 75% { left: calc(50% - 78px); top: calc(50% + 52px); opacity: 1; }
+        90% { opacity: 0; }
+      }
+      @keyframes cursorCard3 {
+        0%, 100% { left: 50%; top: 150px; opacity: 0; }
+        10% { opacity: 1; }
+        15%, 25% { left: 20px; top: 24px; opacity: 1; }
+        40%, 50% { left: calc(100% - 20px); top: 24px; opacity: 1; }
+        65%, 75% { left: 50%; top: 24px; opacity: 1; }
+        90% { opacity: 0; }
+      }
+      @keyframes cursorCard4 {
+        0%, 100% { left: 50%; top: 80%; opacity: 0; }
+        10% { opacity: 1; }
+        15%, 25% { left: calc(50% - 79px); top: calc(50% - 48px); opacity: 1; }
+        40%, 50% { left: calc(50% - 79px); top: 50%; opacity: 1; }
+        65%, 75% { left: calc(50% - 79px); top: calc(50% + 48px); opacity: 1; }
+        90% { opacity: 0; }
+      }
+      @keyframes cursorCard5 {
+        0%, 100% { left: 16px; top: 160px; opacity: 0; }
+        10% { opacity: 1; }
+        15%, 25% { left: 16px; top: 16px; opacity: 1; }
+        40%, 50% { left: 16px; top: 64px; opacity: 1; }
+        65%, 75% { left: 16px; top: 112px; opacity: 1; }
+        90% { opacity: 0; }
+      }
+      @keyframes cursorClick {
+        0%, 18%, 24%, 43%, 49%, 68%, 74%, 100% { transform: scale(1); }
+        20%, 22%, 45%, 47%, 70%, 72% { transform: scale(0.85); }
+      }
+      @keyframes cursorRipple {
+        0%, 19%, 23%, 44%, 48%, 69%, 73%, 100% { transform: scale(0.5); opacity: 0; }
+        20%, 45%, 70% { transform: scale(2); opacity: 0.8; }
+        22%, 47%, 72% { transform: scale(2.5); opacity: 0; }
+      }
+      @keyframes objInteract1 {
+        0%, 18%, 24%, 100% { transform: scale(1); filter: brightness(1); box-shadow: 0 0 0 0px rgba(128,0,0,0); }
+        20%, 22% { transform: scale(0.9); filter: brightness(0.85); box-shadow: 0 0 0 4px rgba(128,0,0,0.15); }
+      }
+      @keyframes objInteract2 {
+        0%, 43%, 49%, 100% { transform: scale(1); filter: brightness(1); box-shadow: 0 0 0 0px rgba(128,0,0,0); }
+        45%, 47% { transform: scale(0.9); filter: brightness(0.85); box-shadow: 0 0 0 4px rgba(128,0,0,0.15); }
+      }
+      @keyframes objInteract3 {
+        0%, 68%, 74%, 100% { transform: scale(1); filter: brightness(1); box-shadow: 0 0 0 0px rgba(128,0,0,0); }
+        70%, 72% { transform: scale(0.9); filter: brightness(0.85); box-shadow: 0 0 0 4px rgba(128,0,0,0.15); }
+      }
+      @keyframes checkReveal1 {
+        0%, 21.99% { opacity: 0; transform: scale(0.5); }
+        22%, 95% { opacity: 1; transform: scale(1); }
+        96%, 100% { opacity: 0; transform: scale(0.5); }
+      }
+      @keyframes checkReveal2 {
+        0%, 46.99% { opacity: 0; transform: scale(0.5); }
+        47%, 95% { opacity: 1; transform: scale(1); }
+        96%, 100% { opacity: 0; transform: scale(0.5); }
+      }
+      @keyframes checkReveal3 {
+        0%, 71.99% { opacity: 0; transform: scale(0.5); }
+        72%, 95% { opacity: 1; transform: scale(1); }
+        96%, 100% { opacity: 0; transform: scale(0.5); }
+      }
+      @keyframes lineFill1 {
+        0%, 21.99% { width: 0%; }
+        30%, 95% { width: 100%; }
+        96%, 100% { width: 0%; }
+      }
+      @keyframes lineFill2 {
+        0%, 46.99% { width: 0%; }
+        55%, 95% { width: 100%; }
+        96%, 100% { width: 0%; }
+      }
+      @keyframes room1CircleReveal {
+        0%, 71.99% { background-color: #e4e4e7; color: #a1a1aa; }
+        72%, 95% { background-color: #800000; color: #ffffff; }
+        96%, 100% { background-color: #e4e4e7; color: #a1a1aa; }
+      }
+      @keyframes room1TextReveal {
+        0%, 71.99% { color: #a1a1aa; }
+        72%, 95% { color: #800000; }
+        96%, 100% { color: #a1a1aa; }
+      }
+      @keyframes submitOverlay {
+        0%, 71.99% { opacity: 0; transform: scale(0.95); }
+        76%, 92% { opacity: 1; transform: scale(1); }
+        96%, 100% { opacity: 0; transform: scale(1.05); }
+      }
+      @keyframes step1GreenCircle {
+        0%, 21.99% { background-color: white; color: #a1a1aa; border-color: rgba(0,0,0,0.05); }
+        22%, 95% { background-color: #10b981; color: white; border-color: transparent; }
+        96%, 100% { background-color: white; color: #a1a1aa; border-color: rgba(0,0,0,0.05); }
+      }
+      @keyframes step1GreenText {
+        0%, 21.99% { color: #52525b; }
+        22%, 95% { color: #10b981; }
+        96%, 100% { color: #52525b; }
+      }
+      @keyframes stepLineFill {
+        0%, 21.99% { height: 0%; }
+        35%, 95% { height: 100%; }
+        96%, 100% { height: 0%; }
+      }
+      @keyframes step2GreenCircle {
+        0%, 46.99% { background-color: white; color: #a1a1aa; border-color: rgba(0,0,0,0.05); }
+        47%, 95% { background-color: #10b981; color: white; border-color: transparent; }
+        96%, 100% { background-color: white; color: #a1a1aa; border-color: rgba(0,0,0,0.05); }
+      }
+      @keyframes step2GreenText {
+        0%, 46.99% { color: #52525b; }
+        47%, 95% { color: #10b981; }
+        96%, 100% { color: #52525b; }
+      }
+      @keyframes submitButtonEnable {
+        0%, 47% { background-color: #e4e4e7; color: #a1a1aa; box-shadow: none; }
+        51%, 95% { background-color: #800000; color: #ffffff; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); }
+        96%, 100% { background-color: #e4e4e7; color: #a1a1aa; box-shadow: none; }
+      }
+    `}} />
+  </div>
+);

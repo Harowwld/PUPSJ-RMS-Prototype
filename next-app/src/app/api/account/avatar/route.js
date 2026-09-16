@@ -72,6 +72,7 @@ export async function GET(req) {
     if (ext === ".jpg" || ext === ".jpeg") contentType = "image/jpeg";
     else if (ext === ".gif") contentType = "image/gif";
     else if (ext === ".webp") contentType = "image/webp";
+    else if (ext === ".svg") contentType = "image/svg+xml";
 
     return new NextResponse(bytes, {
       status: 200,
@@ -126,6 +127,7 @@ export async function POST(req) {
               : mime === "image/png" ? ".png"
               : mime === "image/webp" ? ".webp"
               : mime === "image/gif" ? ".gif"
+              : mime === "image/svg+xml" ? ".svg"
               : path.extname(file.name || "").toLowerCase() || ".png";
 
     // Delete old avatar if any exists
