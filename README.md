@@ -178,6 +178,7 @@ Comprehensive project documentation is organized in [`docs/`](docs/):
 - **[Modal System Specification](docs/MODAL_SPEC.md)** — Design standards for all dialogs and modals
 - **[Implementation Checklist](docs/IMPLEMENTATION_CHECKLIST.md)** — PostgreSQL migration and feature verification status
 - **[Backup & Recovery Specification](docs/BACKUP_SPEC.md)** — Backup lifecycle, encryption, and air-gap sync details
+- **[Feature Requirement Matrix](docs/FEATURE_REQUIREMENT_MATRIX.md)** — Comprehensive feature-to-requirements and module traceability matrix
 - **[System Updates Log](docs/SYSTEM_UPDATES.md)** — Feature milestones and security updates
 - **[Changelog](docs/CHANGELOG.md)** — Chronological release notes
 

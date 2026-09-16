@@ -61,6 +61,7 @@ function TooltipPortal({ tooltip }) {
       ref={tooltipRef}
       data-top={`${coords.top}px`}
       data-left={`${coords.left}px`}
+      style={{ top: coords.top, left: coords.left }}
       className={`rms-tooltip rms-tooltip-positioned px-2.5 py-1.5 rounded-[8px] text-[12px] font-medium tracking-tight text-white dark:text-zinc-100 bg-black/80 dark:bg-zinc-950/80 backdrop-blur-md shadow-[0_4px_12px_rgba(0,0,0,0.15)] border border-white/10 dark:border-white/5 select-none text-center max-w-[240px] whitespace-pre-line ${mounted ? "rms-tooltip-visible" : "rms-tooltip-hidden"}`}
     >
       {text}

@@ -60,6 +60,66 @@ export function validateCSRFToken(token, sessionId, maxAge = DEFAULT_CSRF_MAX_AG
 }
 
 /**
+ * Validates whether the incoming request's Origin matches the server's host or allowed origins.
+ * Supports LAN IP access, reverse proxies, and custom domains.
+ * @param {Request} req - The request object
+ * @returns {boolean} True if origin is valid or omitted, false if disallowed.
+ */
+export function isAllowedOrigin(req) {
+  const origin = req?.headers?.get?.("origin");
+  if (!origin) return true;
+  if (origin === "null") return false;
+
+  try {
+    const originUrl = new URL(origin);
+    const candidateOrigins = new Set();
+
+    // 1. Host and X-Forwarded-Host headers
+    const hostHeader = req?.headers?.get?.("x-forwarded-host") || req?.headers?.get?.("host");
+    if (hostHeader) {
+      const primaryHost = hostHeader.split(",")[0].trim();
+      const proto = req?.headers?.get?.("x-forwarded-proto") || (req?.url?.startsWith("https:") ? "https" : "http");
+      try {
+        candidateOrigins.add(new URL(`${proto}://${primaryHost}`).origin.toLowerCase());
+      } catch {
+        // ignore malformed host
+      }
+      if (process.env.NODE_ENV !== "production") {
+        try {
+          candidateOrigins.add(new URL(`http://${primaryHost}`).origin.toLowerCase());
+          candidateOrigins.add(new URL(`https://${primaryHost}`).origin.toLowerCase());
+        } catch {
+          // ignore
+        }
+      }
+    }
+
+    // 2. req.url (Next.js server URL)
+    if (req?.url) {
+      try {
+        candidateOrigins.add(new URL(req.url).origin.toLowerCase());
+      } catch {
+        // ignore
+      }
+    }
+
+    // 3. Configured application URLs
+    const configuredUrls = [process.env.NEXT_PUBLIC_APP_URL, process.env.APP_URL].filter(Boolean);
+    for (const configuredUrl of configuredUrls) {
+      try {
+        candidateOrigins.add(new URL(configuredUrl).origin.toLowerCase());
+      } catch {
+        // ignore
+      }
+    }
+
+    return candidateOrigins.has(originUrl.origin.toLowerCase());
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Middleware to check CSRF token for state-changing requests
  * @param {Request} req - The request object
  * @param {string} sessionId - The session identifier
@@ -82,14 +142,10 @@ export function checkCSRFProtection(req, sessionId) {
     return false;
   }
 
-  const origin = req?.headers?.get?.("origin");
-  if (origin) {
-    try {
-      if (new URL(origin).origin !== new URL(req.url).origin) return false;
-    } catch {
-      return false;
-    }
+  if (!isAllowedOrigin(req)) {
+    return false;
   }
+
   return validateCSRFToken(decodeURIComponent(token), sessionId);
 }
 

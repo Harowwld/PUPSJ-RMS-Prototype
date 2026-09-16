@@ -114,6 +114,7 @@ export default function HealthSidebar({
               <div 
                 className="rms-style-width bg-[#5856D6] h-full"
                 data-width={`${(diskUsed / diskTotal) * 100}%`}
+                style={{ width: `${(diskUsed / diskTotal) * 100}%` }}
               />
             </div>
           </div>
@@ -134,6 +135,7 @@ export default function HealthSidebar({
                 <span 
                   className="rms-style-background-color w-[6px] h-[6px] rounded-full ml-1.5"
                   data-background-color={ramPercent >= 80 ? "#E5484D" : "#30D158"}
+                  style={{ backgroundColor: ramPercent >= 80 ? "#E5484D" : "#30D158" }}
                 />
               </div>
             </div>
@@ -152,6 +154,7 @@ export default function HealthSidebar({
                 <span 
                   className="rms-style-background-color w-[6px] h-[6px] rounded-full ml-1.5"
                   data-background-color={cpuPercent >= 80 ? "#E5484D" : "#30D158"}
+                  style={{ backgroundColor: cpuPercent >= 80 ? "#E5484D" : "#30D158" }}
                 />
               </div>
             </div>

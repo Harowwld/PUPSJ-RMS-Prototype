@@ -229,6 +229,13 @@ export default function StudentDashboard() {
     fn(title, description ? { description } : undefined);
   }, []);
 
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      document.documentElement.style.setProperty("--brand-accent", "#800000");
+      document.documentElement.style.setProperty("--brand-foreground", "#FFFFFF");
+    }
+  }, []);
+
   // The shared Sidebar emits this event from its own collapse button. Keep
   // the student shell in sync just like the staff dashboard does.
   useEffect(() => {
@@ -432,7 +439,7 @@ export default function StudentDashboard() {
 
   async function handleLogout() {
     await fetch("/api/auth/logout", { method: "POST" }).catch(() => {});
-    router.push("/");
+    window.location.href = "/";
   }
 
   const StatusBadge = ({ status }) => {
