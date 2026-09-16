@@ -106,11 +106,7 @@ export async function GET(req) {
     }
 
     // Fetch fresh user data from database to get current role and status
-    const staff = userId
-      ? (process.env.DATABASE_URL
-        ? await queryOne("SELECT * FROM staff WHERE id = $1", [userId])
-        : await getStaffById(userId))
-      : null;
+    const staff = userId ? await getStaffById(userId) : null;
     const currentRole = staff?.role || principal.role || null;
     const currentStatus = staff?.status || "Inactive";
     // Account setup must use the same requirement for PostgreSQL and the old
