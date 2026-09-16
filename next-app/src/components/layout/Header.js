@@ -939,13 +939,13 @@ export default function Header({ authUser, onLogout, children }) {
                   ? "bg-gray-100 dark:bg-zinc-850 border-gray-200/80 dark:border-white/10 shadow-2xs" 
                   : "hover:bg-gray-100/70 dark:hover:bg-zinc-900"
               )}>
-                <div className="relative h-8 w-8 rounded-lg bg-white flex items-center justify-center text-xs font-bold border overflow-hidden shadow-2xs shrink-0 text-gray-700 dark:bg-zinc-850 dark:text-zinc-300 border-gray-200 dark:border-white/10">
+                <div className="relative h-8 w-8 rounded-full bg-white flex items-center justify-center text-xs font-bold border overflow-hidden shadow-2xs shrink-0 text-gray-700 dark:bg-zinc-850 dark:text-zinc-300 border-gray-200 dark:border-white/10">
                   {authUser?.avatar_filename && !imageError ? (
                     <>
                       <img 
                         src={`/api/account/avatar?id=${authUser.id}&t=${authUser.updated_at || authUser.avatar_filename || "avatar"}`}
                         alt=""
-                        className={cn("w-full h-full object-cover", imageLoaded ? "block" : "hidden")}
+                        className={cn("w-full h-full object-cover scale-[1.2]", imageLoaded ? "block" : "hidden")}
                         onLoad={() => setImageLoaded(true)}
                         onError={() => setImageError(true)}
                       />
