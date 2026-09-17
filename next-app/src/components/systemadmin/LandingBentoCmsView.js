@@ -1076,7 +1076,7 @@ export default function LandingBentoCmsView({ showToast }) {
                             {bentoData.card1.accordionTitle}
                           </div>
                           <div className="flex items-center gap-2 text-xs font-medium text-zinc-800 dark:text-zinc-200">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
+                            
                             <span className="truncate">{previewDoc?.name}</span>
                           </div>
                           <div className="text-[10px] text-zinc-500 pl-3.5 truncate">
@@ -1111,7 +1111,7 @@ export default function LandingBentoCmsView({ showToast }) {
                         </div>
                         <div className="p-2 px-2.5 rounded-lg bg-white dark:bg-zinc-800 border border-black/[0.05] text-xs font-mono text-zinc-600 dark:text-zinc-300 flex justify-between mb-2">
                           <span>{bentoData.card2.trackingSample}</span>
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                          
                         </div>
                         <div className="grid grid-cols-3 gap-1.5">
                           {currentSlaChips.map((chip, idx) => {

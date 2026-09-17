@@ -441,7 +441,7 @@ export default function DocumentCatalog() {
               return (
                 <div 
                   key={`${doc.id || doc.title}-${idx}`}
-                  className={`shrink-0 w-[85vw] sm:w-[60vw] md:w-[45vw] lg:w-[420px] flex flex-col bg-[#f5f5f7] rounded-none p-6 sm:p-8 text-left transition-all duration-500 ease-out group snap-center sm:snap-align-none ${
+                  className={`shrink-0 w-[85vw] sm:w-[60vw] md:w-[45vw] lg:w-[420px] flex flex-col bg-[#f5f5f7] rounded-3xl p-6 sm:p-8 text-left transition-all duration-500 ease-out group snap-center sm:snap-align-none ${
                     isDragging ? 'pointer-events-none' : 'hover:-translate-y-1'
                   } ${
                     isActive 

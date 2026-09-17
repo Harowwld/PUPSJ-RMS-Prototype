@@ -948,12 +948,12 @@ export default function Header({ authUser, onLogout, children }) {
           <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
             <DropdownMenuTrigger className="focus:outline-none select-none">
               <div className={cn(
-                "flex items-center gap-2 py-1 px-1.5 sm:pr-2.5 rounded-xl transition-all border border-transparent cursor-pointer",
+                "flex items-center gap-2 py-1.5 px-2 sm:pr-3 rounded-xl transition-all border border-transparent cursor-pointer",
                 menuOpen 
                   ? "bg-gray-100 dark:bg-zinc-850 border-gray-200/80 dark:border-white/10 shadow-2xs" 
                   : "hover:bg-gray-100/70 dark:hover:bg-zinc-900"
               )}>
-                <div className="relative h-8 w-8 rounded-full bg-white flex items-center justify-center text-xs font-bold border overflow-hidden shadow-2xs shrink-0 text-gray-700 dark:bg-zinc-850 dark:text-zinc-300 border-gray-200 dark:border-white/10">
+                <div className="relative h-9 w-9 rounded-full bg-white flex items-center justify-center text-[13px] font-bold border overflow-hidden shadow-2xs shrink-0 text-gray-700 dark:bg-zinc-850 dark:text-zinc-300 border-gray-200 dark:border-white/10">
                   {authUser?.avatar_filename && !imageError ? (
                     <>
                       <img 
@@ -975,25 +975,25 @@ export default function Header({ authUser, onLogout, children }) {
                 </div>
 
                 <div className="hidden sm:flex flex-col text-left leading-tight">
-                  <span className="text-[12px] font-semibold truncate max-w-[140px] text-gray-800 dark:text-zinc-100">
+                  <span className="text-[13px] font-bold truncate max-w-[140px] text-gray-800 dark:text-zinc-100">
                     {displayName}
                   </span>
-                  <span className="text-[10px] text-gray-400 dark:text-zinc-500">
+                  <span className="text-[11px] font-medium text-gray-400 dark:text-zinc-500">
                     {displayRole}
                   </span>
                 </div>
 
-                <LucideIcon  className="ph-bold ph-caret-down text-[10px] text-gray-400 dark:text-zinc-500 shrink-0 ml-0.5"></LucideIcon>
+                <LucideIcon  className="ph-bold ph-caret-down text-[11px] text-gray-400 dark:text-zinc-500 shrink-0 ml-0.5"></LucideIcon>
               </div>
             </DropdownMenuTrigger>
             
             {/* Popover content matching the user's preferred previous popover design */}
-            <DropdownMenuContent align="end" sideOffset={8} className="w-72 rounded-2xl border border-gray-200 shadow-2xl p-0 overflow-hidden bg-white dark:bg-zinc-900 dark:border-white/10 dark:shadow-none">
-               <div className="bg-gray-50 dark:bg-zinc-800/50 px-5 py-4 border-b border-gray-200 dark:border-white/5 flex flex-col text-left">
-                 <span className="font-bold text-[18px] text-gray-900 dark:text-zinc-50 leading-tight">
+            <DropdownMenuContent align="end" sideOffset={8} className="w-80 rounded-[20px] border border-gray-200 shadow-2xl p-0 overflow-hidden bg-white dark:bg-zinc-900 dark:border-white/10 dark:shadow-none">
+               <div className="bg-gray-50 dark:bg-zinc-800/50 px-6 py-5 border-b border-gray-200 dark:border-white/5 flex flex-col text-left">
+                 <span className="font-bold text-[20px] text-gray-900 dark:text-zinc-50 leading-tight">
                    {displayName}
                  </span>
-                 <span className="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-0.5 truncate">
+                 <span className="text-[14.5px] font-normal text-gray-500 dark:text-zinc-400 mt-0.5 truncate">
                    {authUser?.email || authUser?.username}
                  </span>
                </div>
@@ -1001,37 +1001,37 @@ export default function Header({ authUser, onLogout, children }) {
                <DropdownMenuGroup className="p-1.5 flex flex-col gap-[2px]">
                   {(isSettingsActive || isActivityActive) && (
                      <DropdownMenuItem
-                       className="cursor-pointer rounded-[8px] flex items-center gap-3 font-normal text-[15px] py-2.5 px-3 text-pup-maroon hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/20 transition-colors outline-none"
+                       className="cursor-pointer rounded-[8px] flex items-center gap-3 font-normal text-[16px] py-3 px-4 text-pup-maroon hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/20 transition-colors outline-none"
                        onClick={handleMainDashboardClick}
                      >
-                       <LucideIcon  className="ti ti-layout-dashboard text-[19px] shrink-0 flex items-center justify-center h-[19px] w-[19px] leading-none" style={{ color: branding.color }}></LucideIcon>
+                       <LucideIcon  className="ti ti-layout-dashboard text-[22px] shrink-0 flex items-center justify-center h-[22px] w-[22px] leading-none" style={{ color: branding.color }}></LucideIcon>
                        <span>Return to Dashboard</span>
                      </DropdownMenuItem>
                    )}
 
                   <DropdownMenuItem
                     className={cn(
-                      "cursor-pointer rounded-[8px] flex items-center gap-3 font-normal text-[15px] py-2.5 px-3 transition-colors outline-none",
+                      "cursor-pointer rounded-[8px] flex items-center gap-3 font-normal text-[16px] py-3 px-4 transition-colors outline-none",
                       isSettingsActive
                         ? "text-pup-maroon bg-gray-50 dark:bg-white/5 font-normal"
                         : "text-gray-900 hover:bg-gray-50 dark:text-zinc-100 dark:hover:bg-white/5"
                     )}
                     onClick={() => router.push("/account")}
                   >
-                    <LucideIcon  className="ti ti-settings text-[19px] shrink-0 flex items-center justify-center h-[19px] w-[19px] leading-none" style={{ color: branding.color }}></LucideIcon>
+                    <LucideIcon  className="ti ti-settings text-[22px] shrink-0 flex items-center justify-center h-[22px] w-[22px] leading-none" style={{ color: branding.color }}></LucideIcon>
                     <span>Account Settings</span>
                   </DropdownMenuItem>
  
                   <DropdownMenuItem
                     className={cn(
-                      "cursor-pointer rounded-[8px] flex items-center gap-3 font-normal text-[15px] py-2.5 px-3 transition-colors outline-none",
+                      "cursor-pointer rounded-[8px] flex items-center gap-3 font-normal text-[16px] py-3 px-4 transition-colors outline-none",
                       isActivityActive
                         ? "text-pup-maroon bg-gray-50 dark:bg-white/5 font-normal"
                         : "text-gray-900 hover:bg-gray-50 dark:text-zinc-100 dark:hover:bg-white/5"
                     )}
                     onClick={() => router.push("/account/activity")}
                   >
-                    <LucideIcon  className="ti ti-history text-[19px] shrink-0 flex items-center justify-center h-[19px] w-[19px] leading-none" style={{ color: branding.color }}></LucideIcon>
+                    <LucideIcon  className="ti ti-history text-[22px] shrink-0 flex items-center justify-center h-[22px] w-[22px] leading-none" style={{ color: branding.color }}></LucideIcon>
                     <span>My Activity</span>
                   </DropdownMenuItem>
  
@@ -1039,10 +1039,10 @@ export default function Header({ authUser, onLogout, children }) {
                   {!isSuperAdmin && hasAdminRights && (
                     <DropdownMenuItem
                       onClick={() => handleViewSwitch(activeView === "admin" ? "staff" : "admin")}
-                      className="cursor-pointer rounded-[8px] flex items-center gap-3 font-normal text-[15px] py-2.5 px-3 hover:bg-gray-50 dark:hover:bg-white/5 text-gray-900 dark:text-zinc-100 transition-colors outline-none"
+                      className="cursor-pointer rounded-[8px] flex items-center gap-3 font-normal text-[16px] py-3 px-4 hover:bg-gray-50 dark:hover:bg-white/5 text-gray-900 dark:text-zinc-100 transition-colors outline-none"
                     >
                       <LucideIcon  className={cn(
-                        "text-[19px] shrink-0 flex items-center justify-center h-[19px] w-[19px] leading-none",
+                        "text-[22px] shrink-0 flex items-center justify-center h-[22px] w-[22px] leading-none",
                         activeView === "admin" ? "ti ti-users" : "ti ti-shield-check"
                       )}
                       style={{ color: activeView === "admin" ? ROLE_BRANDING.yellow.color : branding.color }}
@@ -1057,9 +1057,9 @@ export default function Header({ authUser, onLogout, children }) {
                <DropdownMenuGroup className="p-1.5">
                  <DropdownMenuItem
                    onClick={handleLogoutAction}
-                   className="cursor-pointer rounded-[8px] flex items-center gap-3 font-normal text-[15px] py-2.5 px-3 text-[#FF3B30] dark:text-[#FF453A] hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors outline-none"
+                   className="cursor-pointer rounded-[8px] flex items-center gap-3 font-normal text-[16px] py-3 px-4 text-[#FF3B30] dark:text-[#FF453A] hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors outline-none"
                  >
-                   <LucideIcon  className="ti ti-circle-x text-[19px] text-[#FF3B30] dark:text-[#FF453A] shrink-0 flex items-center justify-center h-[19px] w-[19px] leading-none"></LucideIcon>
+                   <LucideIcon  className="ti ti-circle-x text-[22px] text-[#FF3B30] dark:text-[#FF453A] shrink-0 flex items-center justify-center h-[22px] w-[22px] leading-none"></LucideIcon>
                    <span>Sign Out</span>
                  </DropdownMenuItem>
                </DropdownMenuGroup>
@@ -1074,11 +1074,11 @@ export default function Header({ authUser, onLogout, children }) {
       <Dialog open={commandOpen} onOpenChange={setCommandOpen}>
         <DialogContent 
           hideClose={true}
-          className="sm:max-w-xl p-0 gap-0 overflow-hidden rounded-2xl border border-gray-200/90 dark:border-white/10 bg-white/95 dark:bg-zinc-900/95 shadow-2xl backdrop-blur-xl"
+          className="sm:max-w-2xl p-0 gap-0 overflow-hidden rounded-2xl border border-gray-200/90 dark:border-white/10 bg-white/95 dark:bg-zinc-900/95 shadow-2xl backdrop-blur-xl"
         >
           {/* Top Search Input Section */}
-          <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-200/80 dark:border-white/10">
-            <LucideIcon  className="ph-bold ph-magnifying-glass text-lg text-pup-maroon dark:text-red-400 shrink-0"></LucideIcon>
+          <div className="flex items-center gap-3 px-5 py-4 border-b border-gray-200/80 dark:border-white/10">
+            <LucideIcon  className="ph-bold ph-magnifying-glass text-xl text-pup-maroon dark:text-red-400 shrink-0"></LucideIcon>
             <input
               ref={commandInputRef}
               type="text"
@@ -1089,7 +1089,7 @@ export default function Header({ authUser, onLogout, children }) {
                 setFocusedIndex(0);
               }}
               onKeyDown={handleCommandKeyDown}
-              className="flex-1 bg-transparent border-0 outline-none text-[15px] font-normal text-gray-900 dark:text-zinc-50 placeholder:text-gray-400 dark:placeholder:text-zinc-500"
+              className="flex-1 bg-transparent border-0 outline-none text-[16px] font-normal text-gray-900 dark:text-zinc-50 placeholder:text-gray-400 dark:placeholder:text-zinc-500"
             />
             {searchQuery && (
               <button
@@ -1110,15 +1110,15 @@ export default function Header({ authUser, onLogout, children }) {
           </div>
 
           {/* Results List */}
-          <div className="max-h-[400px] overflow-y-auto p-2 [scrollbar-width:thin]">
+          <div className="max-h-[450px] overflow-y-auto p-2 [scrollbar-width:thin]">
             {filteredGroups.length > 0 ? (
               (() => {
                 let currentGlobalIndex = 0;
                 return filteredGroups.map((group) => (
                   <div key={group.id} className="mb-2.5 last:mb-0">
-                    <div className="px-3 pt-2 pb-1 text-[10.5px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider flex items-center justify-between select-none">
+                    <div className="px-3 pt-2 pb-1 text-[11.5px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider flex items-center justify-between select-none">
                       <span className="flex items-center gap-1.5">
-                        <span className="w-1 h-3 rounded-full bg-gray-300 dark:bg-zinc-700" />
+                        
                         <span>{group.title}</span>
                       </span>
                       {group.badge && (
@@ -1154,7 +1154,7 @@ export default function Header({ authUser, onLogout, children }) {
                             onClick={() => handleSelectSuggestion(item)}
                             onMouseEnter={() => setFocusedIndex(globalIdx)}
                             className={cn(
-                              "w-full text-left flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-all cursor-pointer border-0 outline-none select-none",
+                              "w-full text-left flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all cursor-pointer border-0 outline-none select-none",
                               isFocused
                                 ? "bg-pup-maroon/10 text-pup-maroon dark:bg-white/10 dark:text-zinc-50 shadow-2xs"
                                 : "text-gray-700 dark:text-zinc-300 hover:bg-gray-100/70 dark:hover:bg-white/5"
@@ -1163,28 +1163,28 @@ export default function Header({ authUser, onLogout, children }) {
                             <div className="flex items-center gap-3 min-w-0 flex-1 pr-2">
                               <div
                                 className={cn(
-                                  "w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-colors",
+                                  "w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors",
                                   isFocused
                                     ? "bg-pup-maroon text-white dark:bg-white dark:text-zinc-900"
                                     : "bg-gray-100 dark:bg-zinc-800 text-gray-500 dark:text-zinc-400"
                                 )}
                               >
-                                <LucideIcon  className={cn(item.icon, "text-[15px]")}></LucideIcon>
+                                <LucideIcon  className={cn(item.icon, "text-[16px]")}></LucideIcon>
                               </div>
                               <div className="flex flex-col min-w-0 flex-1">
                                 <div className="flex items-center gap-2">
-                                  <span className={cn("text-[13px] font-medium truncate", isFocused && "font-semibold")}>
+                                  <span className={cn("text-[14px] font-medium truncate", isFocused && "font-semibold")}>
                                     {item.label}
                                   </span>
                                   {isActiveTab && (
                                     <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/40">
-                                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                      
                                       Active
                                     </span>
                                   )}
                                 </div>
                                 {item.breadcrumb && (
-                                  <span className="text-[10.5px] text-gray-400 dark:text-zinc-500 font-normal truncate mt-0.5">
+                                  <span className="text-[11.5px] text-gray-400 dark:text-zinc-500 font-normal truncate mt-0.5">
                                     {item.breadcrumb}
                                   </span>
                                 )}
@@ -1244,7 +1244,7 @@ export default function Header({ authUser, onLogout, children }) {
               </span>
             </div>
             <div className="flex items-center gap-1.5 font-medium text-gray-400 dark:text-zinc-500 text-[10px]">
-              <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: currentViewColor }} />
+              
               <span>{isStudent ? "Student Portal" : (activeView === "systemadmin" ? "System Admin" : (activeView === "admin" ? "Office Admin" : "Staff"))}</span>
             </div>
           </div>

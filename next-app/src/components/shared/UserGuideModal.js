@@ -100,7 +100,7 @@ export default function UserGuideModal({ open, onClose }) {
                       {[
                         { title: "Security", icon: "ph-lock-key", desc: "All student records are encrypted and access is audited in real-time." },
                         { title: "Efficiency", icon: "ph-lightning", desc: "OCR technology extracts data automatically to reduce manual entry." },
-                        { title: "Organization", icon: "ph-layout", desc: "Digital records mirror physical storage for seamless retrieval." }
+                        { title: "Organization", icon: "ph-layout", desc: "Digital records mirror physical storage for direct retrieval." }
                       ].map((item, i) => (
                         <div key={i} className="p-4 rounded-brand border border-gray-200 bg-gray-50 dark:border-white/10 dark:bg-white/5">
                           <LucideIcon  className={`ph-bold ${item.icon} text-pup-maroon dark:text-primary text-xl mb-3 block`}></LucideIcon>

@@ -64,12 +64,23 @@ export default function LandingFooter() {
         }
       })
       .catch((err) => {
-        console.error("[LandingFooter] Fetch error:", err);
+        console.warn("[LandingFooter] Fetch error:", err);
       });
     return () => {
       isMounted = false;
     };
   }, []);
+
+
+  const getEmbedUrl = (mapsUrl) => {
+    try {
+      const url = new URL(mapsUrl || "https://maps.google.com/?q=Polytechnic+University+of+the+Philippines+San+Juan+Campus");
+      const q = url.searchParams.get("q") || "Polytechnic University of the Philippines San Juan Campus";
+      return `https://maps.google.com/maps?width=100%25&height=600&hl=en&q=${encodeURIComponent(q)}&t=&z=15&ie=UTF8&iwloc=B&output=embed`;
+    } catch (e) {
+      return `https://maps.google.com/maps?width=100%25&height=600&hl=en&q=${encodeURIComponent("Polytechnic University of the Philippines San Juan Campus")}&t=&z=15&ie=UTF8&iwloc=B&output=embed`;
+    }
+  };
 
   return (
     <footer
@@ -79,139 +90,114 @@ export default function LandingFooter() {
       {/* =====================================================================
           TOP SECTION: INSTITUTIONAL CREDENTIALS & DIRECTORY GRID (3-COLUMN)
           ===================================================================== */}
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-10 pb-8 sm:pb-10 border-b border-zinc-800/80">
-          {/* Column 1: Campus Identity & Physical Archive Location */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-2.5">
-              <div className="w-6 h-6 flex items-center justify-center shrink-0">
-                <Image
-                  src="/assets/branding/white-icon.png"
-                  alt="eManage Logo"
-                  width={24}
-                  height={24}
-                  className="w-full h-full object-contain"
-                />
+      
+      {/* =====================================================================
+          BENTO FOOTER: INSTITUTIONAL CREDENTIALS & DIRECTORY GRID (4-PANEL)
+          ===================================================================== */}
+      <div className="relative z-10 max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6 pb-12 sm:pb-16 z-10 relative">
+          
+          {/* Left Box */}
+          <div className="lg:col-span-5 bg-zinc-900/40 backdrop-blur-sm border border-white/5 rounded-[2.5rem] p-8 sm:p-12 flex flex-col justify-between shadow-xl">
+            <div>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-8 h-8 flex items-center justify-center shrink-0">
+                  <Image src="/assets/branding/white-icon.png" alt="eManage Logo" width={32} height={32} className="w-full h-full object-contain" />
+                </div>
+                <span className="font-bold text-2xl text-white tracking-tight">
+                  eManage
+                </span>
               </div>
-              <span className="font-bold text-xl text-white tracking-tight">
-                eManage
-              </span>
+              <p className="text-[13px] text-zinc-400 leading-relaxed font-normal mb-8 max-w-sm">
+                {footerData.brandSubtitle}
+              </p>
             </div>
-
-            <p className="text-xs text-zinc-400 leading-relaxed font-normal">
-              {footerData.brandSubtitle}
-            </p>
-
-            <div className="pt-2 text-xs space-y-1.5">
-              <div className="font-bold text-zinc-200 flex items-center gap-1.5">
-                <LucideIcon  className="ph-bold ph-map-pin text-red-400 text-sm" />
+            
+            <div className="pt-6 border-t border-white/5">
+              <div className="font-bold text-zinc-200 flex items-center gap-2 mb-2 text-sm">
+                <LucideIcon className="ph-bold ph-map-pin text-red-400" />
                 <span>{footerData.locationHall}</span>
               </div>
-              <p className="text-zinc-400 leading-relaxed text-[11px] pl-5">
+              <p className="text-zinc-500 leading-relaxed text-[12px] pl-6 mb-5">
                 {footerData.locationAddress}
               </p>
               {footerData.mapsEnabled && (
-                <div className="pl-5 pt-1">
-                  <a
-                    href={
-                      footerData.mapsUrl ||
-                      "https://maps.google.com/?q=Polytechnic+University+of+the+Philippines+San+Juan+Campus"
-                    }
+                <div className="mt-6 w-full h-[160px] sm:h-[200px] rounded-2xl overflow-hidden border border-white/10 bg-zinc-900/50 relative group">
+                  <iframe 
+                    width="100%" 
+                    height="100%" 
+                    style={{ border: 0 }} 
+                    loading="lazy" 
+                    allowFullScreen 
+                    referrerPolicy="no-referrer-when-downgrade" 
+                    src={getEmbedUrl(footerData.mapsUrl)}
+                  ></iframe>
+                  <div className="absolute inset-0 pointer-events-none ring-1 ring-inset ring-white/10 rounded-2xl"></div>
+                  <a 
+                    href={footerData.mapsUrl || "https://maps.google.com/?q=Polytechnic+University+of+the+Philippines+San+Juan+Campus"}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 text-[11px] font-semibold text-red-400 hover:text-red-300 hover:underline"
+                    className="absolute bottom-3 right-3 bg-white/90 backdrop-blur-md text-black p-2.5 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white shadow-xl flex items-center justify-center cursor-pointer"
+                    title="Open in Google Maps"
                   >
-                    <span>{footerData.mapsLabel || "Google Maps Directions"}</span>
-                    <LucideIcon  className="ph-bold ph-arrow-square-out text-[10px]" />
+                    <LucideIcon className="ph-bold ph-arrow-square-out text-[15px]" />
                   </a>
                 </div>
               )}
             </div>
           </div>
 
-          {/* Column 2: Registrar Window Hours */}
-          <div className="space-y-3">
-            <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-red-400 block">
-              {footerData.scheduleEyebrow || "Registrar Schedule"}
-            </span>
-            <div className="font-bold text-sm text-white">
-              {footerData.scheduleHeading || "Regular Office Hours"}
-            </div>
-
-            <div className="space-y-2.5 text-xs">
-              {(footerData.scheduleItems || []).map((item, idx) => (
-                <div
-                  key={idx}
-                  className="flex items-center justify-between pb-1.5 border-b border-zinc-800"
-                >
-                  <span className="text-zinc-400">{item.label}</span>
-                  <span
-                    className={cn(
-                      "font-mono",
-                      item.status === "closed"
-                        ? "font-medium text-rose-400"
-                        : item.status === "break"
-                        ? "text-zinc-400"
-                        : "font-bold text-white"
-                    )}
-                  >
-                    {item.value}
-                  </span>
+          {/* Middle Box */}
+          <div className="lg:col-span-7 flex flex-col gap-4 lg:gap-6">
+            <div className="bg-zinc-900/40 backdrop-blur-sm border border-white/5 rounded-[2.5rem] p-8 sm:p-10 flex-1 grid grid-cols-1 sm:grid-cols-2 gap-8 shadow-xl">
+              {/* Registrar Schedule */}
+              <div>
+                <h4 className="text-[11px] uppercase font-mono font-bold text-red-400 tracking-wider mb-4">
+                  {footerData.scheduleEyebrow || "Registrar Schedule"}
+                </h4>
+                <div className="space-y-2.5">
+                  {(footerData.scheduleItems || []).map((item, idx) => (
+                    <div key={idx} className="flex flex-col gap-1 pb-2.5 border-b border-white/5 last:border-0 last:pb-0">
+                      <span className="text-[11px] text-zinc-500 font-medium">{item.label}</span>
+                      <span className={cn("text-[13px] font-mono", item.status === "closed" ? "text-rose-400" : item.status === "break" ? "text-zinc-400" : "text-white font-medium")}>{item.value}</span>
+                    </div>
+                  ))}
                 </div>
-              ))}
+              </div>
+              
+              {/* Direct Contact Channels */}
+              <div>
+                <h4 className="text-[11px] uppercase font-mono font-bold text-red-400 tracking-wider mb-4">
+                  {footerData.contactsEyebrow || "Official Desk"}
+                </h4>
+                <div className="space-y-2.5">
+                  {(footerData.contactItems || []).map((contact, idx) => (
+                    <div key={idx} className="flex flex-col gap-1 pb-2.5 border-b border-white/5 last:border-0 last:pb-0">
+                      <span className="text-[11px] font-mono text-zinc-500 uppercase font-medium">{contact.label}</span>
+                      {contact.type === "email" ? (
+                        <a href={`mailto:${contact.value}`} className="text-[13px] font-medium text-zinc-200 hover:text-white transition-colors">{contact.value}</a>
+                      ) : (
+                        <span className="text-[13px] font-mono text-zinc-300">{contact.value}</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+            
+            {/* Sub-footer Links */}
+            <div className="bg-zinc-900/40 backdrop-blur-sm border border-white/5 rounded-[1.5rem] px-8 sm:px-10 py-5 flex flex-wrap items-center justify-between gap-4 shadow-xl">
+              <span className="text-[11px] font-mono text-zinc-500">{footerData.copyrightText}</span>
+              <button onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} className="text-[11px] font-mono font-medium text-zinc-400 hover:text-white flex items-center gap-1 transition-colors group">
+                Back to Top
+                <LucideIcon className="ph-bold ph-arrow-up text-[10px] group-hover:-translate-y-0.5 transition-transform" />
+              </button>
             </div>
           </div>
 
-          {/* Column 3: Direct Inquiries & Permanent Personnel Sign In */}
-          <div className="space-y-3">
-            <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-red-400 block">
-              {footerData.contactsEyebrow || "Official Desk"}
-            </span>
-            <div className="font-bold text-sm text-white">
-              {footerData.contactsHeading || "Direct Contact Channels"}
-            </div>
-
-            <div className="space-y-2.5 text-xs">
-              {(footerData.contactItems || []).map((contact, idx) => (
-                <div key={idx}>
-                  <span className="block text-[10px] font-mono text-zinc-500 uppercase">
-                    {contact.label}
-                  </span>
-                  {contact.type === "email" ? (
-                    <a
-                      href={`mailto:${contact.value}`}
-                      className="font-semibold text-red-400 hover:text-red-300 hover:underline break-all"
-                    >
-                      {contact.value}
-                    </a>
-                  ) : (
-                    <span className="font-mono text-zinc-300">
-                      {contact.value}
-                    </span>
-                  )}
-                </div>
-              ))}
-            </div>
-
-            {/* Permanent Personnel Sign In Link */}
-            <div className="pt-2">
-              <Link
-                href="/login"
-                className="inline-flex items-center gap-1.5 text-xs font-semibold text-zinc-300 hover:text-white transition-colors group"
-              >
-                <span>Personnel Sign In</span>
-                <LucideIcon  className="ph-bold ph-arrow-right text-[11px] text-zinc-400 group-hover:text-white group-hover:translate-x-0.5 transition-all" />
-              </Link>
-            </div>
-          </div>
         </div>
       </div>
 
-      {/* =====================================================================
-          GIANT BRAND WATERMARK: EMANAGE (OVERLAY BELOW THE TEXT)
-          Layered in background (z-0), clearly visible, showing top half of letters
-          rising from the bottom edge underneath the sub-footer overlay
-          ===================================================================== */}
       {footerData.watermarkEnabled && (
         <div className="absolute inset-x-0 bottom-0 pointer-events-none select-none overflow-hidden flex justify-center items-end z-0">
           <span
@@ -227,24 +213,6 @@ export default function LandingFooter() {
         </div>
       )}
 
-      {/* =====================================================================
-          BOTTOM SUB-FOOTER: COPYRIGHT & BACK TO TOP (RELATIVE Z-10)
-          Streamlined single-row layout with Back to Top button
-          ===================================================================== */}
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-2 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-zinc-400">
-        <div className="flex flex-wrap items-center gap-2 text-center sm:text-left text-zinc-400">
-          <span>{footerData.copyrightText}</span>
-        </div>
-
-        <button
-          type="button"
-          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-          className="hover:text-white transition-colors cursor-pointer flex items-center gap-1.5 text-zinc-400 select-none group"
-        >
-          <span>Back to Top</span>
-          <LucideIcon  className="ph-bold ph-arrow-up text-[10px] group-hover:-translate-y-0.5 transition-transform" />
-        </button>
-      </div>
-    </footer>
+      </footer>
   );
 }

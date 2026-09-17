@@ -1,11 +1,14 @@
 import LucideIcon from "@/components/shared/LucideIcon";
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef, useEffect, useMemo, useCallback } from "react"
+import { Reorder } from "framer-motion"
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
 import KpiStatCardsSkeleton from "@/components/systemadmin/skeletons/KpiStatCardsSkeleton"
 
 export default function StatCards({ isLoading, logStats }) {
-  const [selectedKpi, setSelectedKpi] = useState(null);
+const [kpiOrder, setKpiOrder] = useState(["total", "today", "auth"]);
+
+    const [selectedKpi, setSelectedKpi] = useState(null);
   const containerRef = useRef(null);
 
   useEffect(() => {
@@ -78,44 +81,56 @@ export default function StatCards({ isLoading, logStats }) {
   }
 
   return (
-    <div
+    <Reorder.Group as="div" axis="x" values={kpiOrder} onReorder={setKpiOrder}
       ref={containerRef}
       className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 items-start relative z-20"
     >
-      {stats.map((stat, i) => {
+      {kpiOrder.map((kpiKey) => {
+        const stat = stats.find(s => s.key === kpiKey);
+        if (!stat) return null;
         return (
-          <div
-            key={i}
+          <Reorder.Item
+            as="div"
+            value={stat.key}
+            key={stat.key}
             className={cn(
-              "relative group rounded-xl",
+              "relative group rounded-xl cursor-grab active:cursor-grabbing",
               selectedKpi === stat.key ? "z-30" : "z-10"
             )}
           >
             <div
-              onClick={() => setSelectedKpi(selectedKpi === stat.key ? null : stat.key)}
-              className={cn(
-                "relative overflow-hidden rounded-xl border p-4 cursor-pointer select-none transition-all",
-                "border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-zinc-900/30 hover:border-gray-200 dark:hover:border-white/10",
-                selectedKpi === stat.key && getRingColor(stat.color)
-              )}
-            >
-              <div className="relative z-10">
-                <div className="mb-1 flex items-center justify-between">
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
-                    {stat.label}
-                  </span>
-                  <LucideIcon  className={cn("ph-bold ph-caret-down text-xs text-gray-400 transition-transform duration-300", selectedKpi === stat.key && "rotate-180")} />
-                </div>
-                <div className="flex items-baseline gap-2">
-                  <span className="text-2xl font-black text-gray-900 dark:text-zinc-50 tracking-tight">
-                    {stat.value.toLocaleString()}
-                  </span>
-                  <span className={cn("text-xs font-medium", getSubColor(stat.color))}>
-                    {stat.sublabel}
-                  </span>
-                </div>
-              </div>
-            </div>
+                    onClick={() => setSelectedKpi(selectedKpi === stat.key ? null : stat.key)}
+                    className={cn(
+                      "relative overflow-hidden rounded-[18px] border cursor-pointer select-none transition-all shadow-[0_2px_10px_rgb(0,0,0,0.04)] hover:shadow-[0_4px_15px_rgb(0,0,0,0.06)] flex flex-col justify-between min-h-[110px] bg-gray-50 dark:bg-zinc-900",
+                      selectedKpi === stat.key
+                        ? (stat.color === "blue" ? "border-blue-500/50 ring-1 ring-blue-500/20" :
+                           stat.color === "emerald" ? "border-emerald-500/50 ring-1 ring-emerald-500/20" :
+                           "border-amber-500/50 ring-1 ring-amber-500/20")
+                        : "border-gray-100 dark:border-white/5"
+                    )}
+                  >
+                    <div className="flex justify-between items-start p-4 pb-0">
+                      <span className="text-[13px] font-medium text-gray-500 dark:text-zinc-400 capitalize">
+                        {stat.label}
+                      </span>
+                      <div className={cn(
+                        "w-8 h-8 rounded-[10px] flex items-center justify-center text-white shadow-sm shrink-0",
+                        stat.color === "blue" ? "bg-[#3b82f6]" :
+                        stat.color === "emerald" ? "bg-[#22c55e]" :
+                        stat.color === "amber" ? "bg-[#f59e0b]" :
+                        "bg-[#ef4444]"
+                      )}>
+                        <LucideIcon className={cn("ph-bold text-[15px]", stat.iconClass || "ph-activity")} />
+                      </div>
+                    </div>
+                    
+                    <div className="flex justify-between items-end p-4 pt-1">
+                      <span className="text-[28px] font-bold text-gray-900 dark:text-white leading-none tracking-tight">
+                        {stat.value.toLocaleString()}
+                      </span>
+                      <LucideIcon className="ph-bold ph-dots-six-vertical cursor-grab active:cursor-grabbing hover:text-gray-400 dark:hover:text-zinc-500 text-gray-300 dark:text-zinc-700 text-lg mb-0.5" />
+                    </div>
+                  </div>
 
             {/* Absolute details container */}
             <div className={cn(
@@ -181,9 +196,9 @@ export default function StatCards({ isLoading, logStats }) {
                 )}
               </div>
             </div>
-          </div>
+          </Reorder.Item>
         );
       })}
-    </div>
+    </Reorder.Group>
   )
 }

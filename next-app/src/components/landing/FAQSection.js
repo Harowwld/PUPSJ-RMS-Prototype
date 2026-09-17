@@ -1,7 +1,8 @@
 "use client";
-import LucideIcon from "@/components/shared/LucideIcon";
+
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import LucideIcon from "@/components/shared/LucideIcon";
 import { cn } from "@/lib/utils";
 
 const DEFAULT_FAQS = [
@@ -30,12 +31,6 @@ const DEFAULT_FAQS = [
     category: "Pickup",
   },
   {
-    id: "cutoff-time",
-    q: "What time does daily evaluation cut off?",
-    a: "Cut-off is 3:00 PM on weekdays (Monday to Friday). Requests submitted after 3:00 PM are evaluated the next working morning.",
-    category: "Processing",
-  },
-  {
     id: "claiming-deadline",
     q: "How long do I have to claim my document?",
     a: "Please claim your document within 90 days after notification. Unclaimed documents are safely disposed of after 90 days to protect your privacy.",
@@ -59,7 +54,6 @@ export default function FAQSection() {
     faqs: DEFAULT_FAQS,
   });
 
-  // Fetch dynamic FAQ content from API
   useEffect(() => {
     let isMounted = true;
     fetch("/api/landing/faq", { cache: "no-store" })
@@ -72,164 +66,91 @@ export default function FAQSection() {
       .catch((err) => {
         console.warn("[FAQSection] Failed to load dynamic FAQ data:", err);
       });
-
-    return () => {
-      isMounted = false;
-    };
+    return () => { isMounted = false; };
   }, []);
 
   const faqs = Array.isArray(faqData.faqs) && faqData.faqs.length > 0 ? faqData.faqs : DEFAULT_FAQS;
-
-  // Extract unique categories
-  const categories = Array.from(
-    new Set(faqs.map((f) => f.category || "General").filter(Boolean))
-  );
-
-  // Filtered FAQs
-  const filteredFaqs = faqs.filter((faq) => {
-    if (activeCategory === "all") return true;
-    return (faq.category || "General").toLowerCase() === activeCategory.toLowerCase();
-  });
-
-  const toggleFaq = (idx) => {
-    setOpenIndex((prev) => (prev === idx ? null : idx));
-  };
+  const categories = Array.from(new Set(faqs.map((f) => f.category || "General").filter(Boolean)));
+  const filteredFaqs = faqs.filter((faq) => activeCategory === "all" || (faq.category || "General").toLowerCase() === activeCategory.toLowerCase());
+  const toggleFaq = (idx) => setOpenIndex((prev) => (prev === idx ? null : idx));
 
   return (
-    <section 
-      id="faq" 
-      className="w-full font-jakarta select-none scroll-mt-24"
-    >
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: "-60px" }}
-        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-        className="w-full bg-zinc-950 text-white overflow-hidden py-20 sm:py-28 px-4 sm:px-6 relative"
-      >
-
-
-        {/* Section Header */}
-        <div className="text-center max-w-2xl mx-auto mb-10 sm:mb-12 relative z-10">
-
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white tracking-tight leading-tight">
+    <section id="faq" className="w-full bg-[#dadddf] py-16 px-4 sm:px-6 font-jakarta select-none scroll-mt-24">
+      <div className="max-w-[1100px] mx-auto bg-white rounded-[2.5rem] p-8 sm:p-12 lg:p-16 shadow-sm overflow-hidden">
+        
+        <div className="text-center mb-10">
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-medium text-black tracking-tight">
             {faqData.heading || "Frequently Asked Questions"}
           </h2>
-          <p className="text-xs sm:text-sm text-zinc-400 mt-3 leading-relaxed font-normal">
-            {faqData.description || "Quick answers on requesting, tracking, and claiming your official school records."}
-          </p>
-
-          {/* Interactive Category Filter Pills */}
-          {categories.length > 1 && (
-            <div className="flex items-center justify-center gap-1.5 flex-wrap mt-6 sm:mt-8">
-              <button
-                type="button"
-                onClick={() => {
-                  setActiveCategory("all");
-                  setOpenIndex(0);
-                }}
-                className={cn(
-                  "px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer border select-none",
-                  activeCategory === "all"
-                    ? "bg-white text-zinc-950 border-white shadow-sm"
-                    : "bg-white/5 text-zinc-400 border-white/10 hover:border-white/25 hover:text-white"
-                )}
-              >
-                All Questions
-              </button>
-              {categories.map((cat) => (
-                <button
-                  key={cat}
-                  type="button"
-                  onClick={() => {
-                    setActiveCategory(cat);
-                    setOpenIndex(0);
-                  }}
-                  className={cn(
-                    "px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer border select-none",
-                    activeCategory.toLowerCase() === cat.toLowerCase()
-                      ? "bg-white text-zinc-950 border-white shadow-sm"
-                      : "bg-white/5 text-zinc-400 border-white/10 hover:border-white/25 hover:text-white"
-                  )}
-                >
-                  {cat}
-                </button>
-              ))}
-            </div>
-          )}
         </div>
 
-        {/* Scroll-Triggered Accordion List */}
-        <div className="max-w-3xl mx-auto space-y-3.5 relative z-10">
-          {filteredFaqs.map((faq, idx) => {
-            const isOpen = openIndex === idx;
-
-            return (
-              <motion.div
-                key={faq.id || idx}
-                initial={{ opacity: 0, y: 24 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-30px" }}
-                transition={{
-                  duration: 0.5,
-                  delay: Math.min(idx * 0.05, 0.4),
-                  ease: [0.16, 1, 0.3, 1],
-                }}
+        {categories.length > 1 && (
+          <div className="flex justify-center mb-12">
+            <div className="flex items-center p-1.5 border border-gray-100 rounded-full bg-white shadow-sm overflow-x-auto gap-1">
+              <button
+                type="button"
+                onClick={() => { setActiveCategory("all"); setOpenIndex(0); }}
                 className={cn(
-                  "rounded-2xl transition-all duration-200 overflow-hidden relative border",
-                  isOpen
-                    ? "liquid-glass-dark border-white/20 shadow-md shadow-black/40"
-                    : "liquid-glass-dark-pill border-white/[0.08] hover:border-white/15"
+                  "flex items-center gap-2 px-4 py-2 rounded-full text-[13px] font-medium transition-all whitespace-nowrap cursor-pointer",
+                  activeCategory === "all" ? "bg-[#800000] text-white" : "bg-transparent text-gray-600 hover:bg-gray-50"
                 )}
               >
-                <button
-                  type="button"
-                  onClick={() => toggleFaq(idx)}
-                  className="w-full flex items-center justify-between p-5 text-left cursor-pointer select-none transition-colors border-0 bg-transparent"
-                  aria-expanded={isOpen}
-                >
-                  <div className="flex items-center pr-3 min-w-0">
-                    <span className="text-sm font-bold text-white tracking-tight leading-snug">
-                      {faq.q}
-                    </span>
-                  </div>
+                <LucideIcon className={cn("text-base ph-bold ph-squares-four", activeCategory === "all" ? "text-white" : "text-gray-400")} />
+                All Questions
+              </button>
+              {categories.map((cat) => {
+                const isActive = activeCategory.toLowerCase() === cat.toLowerCase();
+                let iconClass = "ph-bold ph-folder";
+                if (cat.toLowerCase().includes("request")) iconClass = "ph-bold ph-file-text";
+                if (cat.toLowerCase().includes("process")) iconClass = "ph-bold ph-gear";
+                if (cat.toLowerCase().includes("pickup")) iconClass = "ph-bold ph-hand-pointing";
 
-                  <div className={cn(
-                    "w-7 h-7 rounded-full flex items-center justify-center shrink-0 transition-transform duration-300",
-                    isOpen ? "bg-[#800000] text-white rotate-180" : "bg-white/10 text-zinc-400"
-                  )}>
-                    <LucideIcon  className="ph-bold ph-caret-down text-xs" />
-                  </div>
+                return (
+                  <button
+                    key={cat}
+                    type="button"
+                    onClick={() => { setActiveCategory(cat); setOpenIndex(0); }}
+                    className={cn(
+                      "flex items-center gap-2 px-4 py-2 rounded-full text-[13px] font-medium transition-all whitespace-nowrap cursor-pointer",
+                      isActive ? "bg-[#800000] text-white" : "bg-transparent text-gray-600 hover:bg-gray-50"
+                    )}
+                  >
+                    <LucideIcon className={cn("text-base", isActive ? "text-white" : "text-gray-400", iconClass)} />
+                    {cat}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        <div className="max-w-3xl mx-auto space-y-3 mb-16">
+          {filteredFaqs.map((faq, idx) => {
+            const isOpen = openIndex === idx;
+            return (
+              <div key={faq.id || idx} className={cn("rounded-2xl transition-all duration-300 overflow-hidden", isOpen ? "bg-[#09090b] text-white" : "bg-[#f4f4f5] text-black")}>
+                <button type="button" onClick={() => toggleFaq(idx)} className="w-full flex items-center justify-between p-5 sm:px-6 text-left cursor-pointer transition-colors border-0 bg-transparent" aria-expanded={isOpen}>
+                  <span className={cn("text-sm sm:text-base font-medium pr-4", isOpen ? "text-white" : "text-black")}>{faq.q}</span>
+                  <div className="shrink-0 ml-4">
+                    {isOpen ? <LucideIcon className="ph-bold ph-minus text-white text-lg" /> : <LucideIcon className="ph-bold ph-plus text-gray-500 text-lg" />}
+          </div>
                 </button>
-
-                <AnimatePresence initial={false}>
+                <AnimatePresence>
                   {isOpen && (
-                    <motion.div
-                      key="content"
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: "auto", opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-                      className="overflow-hidden"
-                    >
-                      <div className="px-5 pb-5 pt-1 text-xs sm:text-sm text-zinc-300 leading-relaxed border-t border-white/[0.08] font-normal">
-                        <p className="pt-3.5">{faq.a}</p>
-                        {faq.category && (
-                          <div className="mt-3.5 flex items-center gap-2">
-                            <span className="px-2 py-0.5 rounded-md bg-white/5 border border-white/10 text-[10px] text-zinc-400 font-mono">
-                              {faq.category}
-                            </span>
-                          </div>
-                        )}
-                      </div>
+                    <motion.div key="content" initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }} className="overflow-hidden">
+                      <div className="px-5 sm:px-6 pb-6 pt-0 text-[13px] sm:text-[14px] text-gray-300 leading-relaxed font-normal">
+                        <p>{faq.a}</p>
+              </div>
                     </motion.div>
                   )}
                 </AnimatePresence>
-              </motion.div>
+      </div>
             );
           })}
         </div>
-      </motion.div>
+
+
+              </div>
     </section>
   );
 }

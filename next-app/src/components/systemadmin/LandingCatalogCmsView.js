@@ -1045,7 +1045,7 @@ export default function LandingCatalogCmsView({ showToast }) {
                           {currentItems[previewActiveIdx]?.client}
                         </span>
                         <span className="px-2.5 py-1 rounded-full text-[11px] font-mono font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/60 dark:border-emerald-800/40 inline-flex items-center gap-1.5">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                          
                           {catalogData.badgeText || "Official Credential"}
                         </span>
                       </div>

@@ -382,7 +382,7 @@ export default function BackupTab({
                           ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300"
                           : "bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300"
                       )}>
-                        <span className={cn("w-1.5 h-1.5 rounded-full", externalDrive?.connected ? "bg-emerald-500" : "bg-amber-500 animate-pulse")} />
+                        <span className={cn("w-1.5 h-1.5 rounded-full", externalDrive?.connected ? "bg-emerald-500" : "bg-amber-500")} />
                         {externalDrive?.connected ? "Ready to Copy" : "Waiting for Drive"}
                       </span>
                       {externalDrive?.isEmulated && (

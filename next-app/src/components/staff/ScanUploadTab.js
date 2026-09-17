@@ -590,7 +590,7 @@ export default function ScanUploadTab({
           <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-2 bg-slate-50/70 dark:bg-zinc-900/60 border-t border-b border-gray-100 dark:border-white/5 text-xs">
             <div className="flex items-center gap-3 flex-wrap">
               <div className="flex items-center gap-1.5">
-                <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                
                 <span className="text-[10px] font-bold text-gray-500 dark:text-zinc-400 uppercase tracking-wider">
                   Workstation:
                 </span>
@@ -601,7 +601,6 @@ export default function ScanUploadTab({
             </div>
 
             <div className="flex items-center gap-2">
-              <LucideIcon  className="ph-bold ph-hard-drives text-pup-maroon dark:text-red-400 text-xs"></LucideIcon>
               <span className="text-[10px] font-bold text-gray-500 dark:text-zinc-400 uppercase tracking-wider">
                 Digitization Save Path:
               </span>
@@ -613,7 +612,6 @@ export default function ScanUploadTab({
               </span>
             </div>
             <div className="flex items-center gap-2">
-              <LucideIcon  className="ph-bold ph-folder-open text-pup-maroon dark:text-red-400 text-xs"></LucideIcon>
               <span className="text-[10px] font-bold text-gray-500 dark:text-zinc-400 uppercase tracking-wider">
                 Scanner Inbound:
               </span>
@@ -1861,7 +1859,6 @@ export default function ScanUploadTab({
                         <div className="rounded-xl border border-gray-200/80 bg-slate-50/60 p-3.5 dark:border-white/10 dark:bg-white/5 text-xs space-y-1.5">
                           <div className="flex items-center justify-between">
                             <span className="flex items-center gap-1.5 font-bold text-gray-800 dark:text-zinc-200 text-xs">
-                              <LucideIcon  className="ph-bold ph-hard-drives text-pup-maroon dark:text-red-400"></LucideIcon>
                               <span>Digitization Destination</span>
                             </span>
                             <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/60 dark:border-emerald-500/20 px-2 py-0.5 rounded-full">

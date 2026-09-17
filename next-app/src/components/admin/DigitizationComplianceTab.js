@@ -27,6 +27,7 @@ import {
   TooltipProvider,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+import { Reorder } from "framer-motion";
 import { formatPHDateTime } from "@/lib/timeFormat";
 import { generateDigitizationCompliancePdf } from "@/lib/pdfGenerator";
 import { generateExportFilename } from "@/lib/exportHelpers";
@@ -57,6 +58,8 @@ export default function DigitizationComplianceTab({
   const router = useRouter();
   const searchParams = useSearchParams();
 
+
+  const [kpiOrder, setKpiOrder] = useState(["completeness","students","complete"]);
   const [statusFilter, setStatusFilter] = useState(searchParams.get("status") || "Active");
   const [courseFilter, setCourseFilter] = useState(searchParams.get("course") || "");
   const [requireApproved, setRequireApproved] = useState(searchParams.get("approved") === "1");
@@ -449,56 +452,59 @@ export default function DigitizationComplianceTab({
               (loading && !manualLoading) ? "opacity-40 blur-[1px] grayscale-[0.1]" : "opacity-100"
             )}>
               {/* Stats Cards */}
-              <div ref={statCardsRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 relative z-20">
-                {/* Completeness Card */}
-                <div className={cn(
-                  "relative group rounded-xl",
-                  selectedKpi === "completeness" ? "z-30" : "z-10"
-                )}>
-                  <div 
+              <Reorder.Group as="div" axis="x" values={kpiOrder} onReorder={setKpiOrder} ref={statCardsRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 relative z-20">
+            {kpiOrder.map(key => {
+              if (key === "completeness") return (
+              <Reorder.Item as="div" value="completeness" key="completeness" className={cn(selectedKpi === "completeness" ? "z-30" : "z-10")}>
+
+                
+                <div className={cn("relative group rounded-xl cursor-grab active:cursor-grabbing", selectedKpi === "completeness" ? "z-30" : "z-10")}>
+                  <div
                     onClick={() => setSelectedKpi(selectedKpi === "completeness" ? null : "completeness")}
                     className={cn(
-                      "relative overflow-hidden rounded-xl border p-4 cursor-pointer select-none transition-all",
-                      "border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-zinc-900/30 hover:border-gray-200 dark:hover:border-white/10",
-                      selectedKpi === "completeness" && "border-red-500/40 dark:border-red-500/40 ring-1 ring-red-500/20"
+                      "relative overflow-hidden rounded-[18px] border cursor-pointer select-none transition-all shadow-[0_2px_10px_rgb(0,0,0,0.04)] hover:shadow-[0_4px_15px_rgb(0,0,0,0.06)] flex flex-col justify-between min-h-[110px] bg-gray-50 dark:bg-zinc-900",
+                      selectedKpi === "completeness"
+                        ? "border-red-500/50 ring-1 ring-red-500/20"
+                        : "border-gray-100 dark:border-white/5"
                     )}
                   >
-                    <div className="relative z-10">
-                      <div className="mb-1 flex items-center justify-between">
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
-                            Completeness
-                          </span>
-                          <TooltipProvider delayDuration={200}>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <LucideIcon  className="ph-bold ph-info cursor-help text-xs text-gray-400 hover:text-gray-600 dark:hover:text-zinc-300 transition-colors" />
-                              </TooltipTrigger>
-                              <TooltipContent 
-                                side="right" 
-                                className="max-w-[280px] bg-white dark:bg-zinc-900 text-gray-900 dark:text-zinc-100 p-3 rounded-xl shadow-xl border border-gray-200 dark:border-white/10 text-xs font-normal"
-                              >
-                                <p className="font-semibold text-pup-maroon dark:text-red-400 mb-1">Digitization Formula</p>
-                                <p className="leading-relaxed text-gray-600 dark:text-zinc-300 mb-2">
-                                  Percentage of expected mandatory documents uploaded across all active/selected students.
-                                </p>
-                                <div className="p-2 bg-gray-50 dark:bg-zinc-800/60 rounded-lg text-[11px] font-mono border border-gray-200/60 dark:border-white/5">
-                                  (Digitized Docs / Expected Docs) × 100
-                                </div>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        </div>
-                        <LucideIcon  className={cn("ph-bold ph-caret-down text-xs text-gray-400 transition-transform duration-300", selectedKpi === "completeness" && "rotate-180")} />
+                    <div className="flex justify-between items-start p-4 pb-0">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[13px] font-medium text-gray-500 dark:text-zinc-400 capitalize">
+                          Completeness
+                        </span>
+                        <TooltipProvider delayDuration={200}>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <LucideIcon  className="ph-bold ph-info cursor-help text-xs text-gray-400 hover:text-gray-600 dark:hover:text-zinc-300 transition-colors" />
+                            </TooltipTrigger>
+                            <TooltipContent 
+                              side="right" 
+                              className="max-w-[280px] bg-white dark:bg-zinc-900 text-gray-900 dark:text-zinc-100 p-3 rounded-xl shadow-xl border border-gray-200 dark:border-white/10 text-xs font-normal"
+                            >
+                              <p className="font-semibold text-pup-maroon dark:text-red-400 mb-1">Digitization Formula</p>
+                              <p className="leading-relaxed text-gray-600 dark:text-zinc-300 mb-2">
+                                Percentage of expected mandatory documents uploaded across all active/selected students.
+                              </p>
+                              <div className="p-2 bg-gray-50 dark:bg-zinc-800/60 rounded-lg text-[11px] font-mono border border-gray-200/60 dark:border-white/5">
+                                (Digitized Docs / Expected Docs) × 100
+                              </div>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
                       </div>
+                      <div className="w-8 h-8 rounded-[10px] flex items-center justify-center text-white shadow-sm shrink-0 bg-[#ef4444]">
+                        <LucideIcon className="ph-bold text-[15px] ph-pie-chart" />
+                      </div>
+                    </div>
+                    
+                    <div className="flex justify-between items-end p-4 pt-1">
                       <div className="flex items-baseline gap-2">
-                        <span className="text-2xl font-black text-gray-900 dark:text-zinc-50 tracking-tight">
+                        <span className="text-[28px] font-bold text-gray-900 dark:text-white leading-none tracking-tight">
                           {summary?.percentDigitized ?? 0}%
                         </span>
-                        <span className="text-xs font-medium text-red-600 dark:text-red-400">
-                          Digitized Documents
-                        </span>
                       </div>
+                      <LucideIcon className="ph-bold ph-dots-six-vertical cursor-grab active:cursor-grabbing hover:text-gray-400 dark:hover:text-zinc-500 text-gray-300 dark:text-zinc-700 text-lg mb-0.5" />
                     </div>
                   </div>
 
@@ -545,34 +551,35 @@ export default function DigitizationComplianceTab({
                   </div>
                 </div>
 
-                {/* Students Card */}
-                <div className={cn(
-                  "relative group rounded-xl",
-                  selectedKpi === "students" ? "z-30" : "z-10"
-                )}>
-                  <div 
+                              </Reorder.Item>
+              );
+              if (key === "students") return (
+              <Reorder.Item as="div" value="students" key="students" className={cn(selectedKpi === "students" ? "z-30" : "z-10")}>
+
+                <div className={cn("relative group rounded-xl cursor-grab active:cursor-grabbing", selectedKpi === "students" ? "z-30" : "z-10")}>
+                  <div
                     onClick={() => setSelectedKpi(selectedKpi === "students" ? null : "students")}
                     className={cn(
-                      "relative overflow-hidden rounded-xl border p-4 cursor-pointer select-none transition-all",
-                      "border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-zinc-900/30 hover:border-gray-200 dark:hover:border-white/10",
-                      selectedKpi === "students" && "border-blue-500/40 dark:border-blue-500/40 ring-1 ring-blue-500/20"
+                      "relative overflow-hidden rounded-[18px] border cursor-pointer select-none transition-all shadow-[0_2px_10px_rgb(0,0,0,0.04)] hover:shadow-[0_4px_15px_rgb(0,0,0,0.06)] flex flex-col justify-between min-h-[110px] bg-gray-50 dark:bg-zinc-900",
+                      selectedKpi === "students"
+                        ? "border-blue-500/50 ring-1 ring-blue-500/20"
+                        : "border-gray-100 dark:border-white/5"
                     )}
                   >
-                    <div className="relative z-10">
-                      <div className="mb-1 flex items-center justify-between">
-                        <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
-                          Students
-                        </span>
-                        <LucideIcon  className={cn("ph-bold ph-caret-down text-xs text-gray-400 transition-transform duration-300", selectedKpi === "students" && "rotate-180")} />
+                    <div className="flex justify-between items-start p-4 pb-0">
+                      <span className="text-[13px] font-medium text-gray-500 dark:text-zinc-400 capitalize">
+                        Students
+                      </span>
+                      <div className="w-8 h-8 rounded-[10px] flex items-center justify-center text-white shadow-sm shrink-0 bg-[#3b82f6]">
+                        <LucideIcon className="ph-bold text-[15px] ph-users" />
                       </div>
-                      <div className="flex items-baseline gap-2">
-                        <span className="text-2xl font-black text-gray-900 dark:text-zinc-50 tracking-tight">
-                          {summary?.totalStudents?.toLocaleString?.() ?? summary?.totalStudents ?? 0}
-                        </span>
-                        <span className="text-xs font-medium text-blue-600 dark:text-blue-400">
-                          Total Enrollment
-                        </span>
-                      </div>
+                    </div>
+                    
+                    <div className="flex justify-between items-end p-4 pt-1">
+                      <span className="text-[28px] font-bold text-gray-900 dark:text-white leading-none tracking-tight">
+                        {summary?.totalStudents?.toLocaleString?.() ?? summary?.totalStudents ?? 0}
+                      </span>
+                      <LucideIcon className="ph-bold ph-dots-six-vertical cursor-grab active:cursor-grabbing hover:text-gray-400 dark:hover:text-zinc-500 text-gray-300 dark:text-zinc-700 text-lg mb-0.5" />
                     </div>
                   </div>
 
@@ -605,34 +612,40 @@ export default function DigitizationComplianceTab({
                   </div>
                 </div>
 
-                {/* Complete Card */}
-                <div className={cn(
-                  "relative group rounded-xl",
-                  selectedKpi === "complete" ? "z-30" : "z-10"
-                )}>
-                  <div 
+                              </Reorder.Item>
+              );
+              if (key === "complete") return (
+              <Reorder.Item as="div" value="complete" key="complete" className={cn(selectedKpi === "complete" ? "z-30" : "z-10")}>
+
+                <div className={cn("relative group rounded-xl cursor-grab active:cursor-grabbing", selectedKpi === "complete" ? "z-30" : "z-10")}>
+                  <div
                     onClick={() => setSelectedKpi(selectedKpi === "complete" ? null : "complete")}
                     className={cn(
-                      "relative overflow-hidden rounded-xl border p-4 cursor-pointer select-none transition-all",
-                      "border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-zinc-900/30 hover:border-gray-200 dark:hover:border-white/10",
-                      selectedKpi === "complete" && "border-emerald-500/40 dark:border-emerald-500/40 ring-1 ring-emerald-500/20"
+                      "relative overflow-hidden rounded-[18px] border cursor-pointer select-none transition-all shadow-[0_2px_10px_rgb(0,0,0,0.04)] hover:shadow-[0_4px_15px_rgb(0,0,0,0.06)] flex flex-col justify-between min-h-[110px] bg-gray-50 dark:bg-zinc-900",
+                      selectedKpi === "complete"
+                        ? "border-emerald-500/50 ring-1 ring-emerald-500/20"
+                        : "border-gray-100 dark:border-white/5"
                     )}
                   >
-                    <div className="relative z-10">
-                      <div className="mb-1 flex items-center justify-between">
-                        <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
-                          Complete
-                        </span>
-                        <LucideIcon  className={cn("ph-bold ph-caret-down text-xs text-gray-400 transition-transform duration-300", selectedKpi === "complete" && "rotate-180")} />
+                    <div className="flex justify-between items-start p-4 pb-0">
+                      <span className="text-[13px] font-medium text-gray-500 dark:text-zinc-400 capitalize">
+                        Complete
+                      </span>
+                      <div className="w-8 h-8 rounded-[10px] flex items-center justify-center text-white shadow-sm shrink-0 bg-[#22c55e]">
+                        <LucideIcon className="ph-bold text-[15px] ph-check-circle" />
                       </div>
+                    </div>
+                    
+                    <div className="flex justify-between items-end p-4 pt-1">
                       <div className="flex items-baseline gap-2">
-                        <span className="text-2xl font-black text-gray-900 dark:text-zinc-50 tracking-tight">
+                        <span className="text-[28px] font-bold text-gray-900 dark:text-white leading-none tracking-tight">
                           {summary?.fullyDigitizedRate ?? 0}%
                         </span>
-                        <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">
-                          {(summary?.digitizedStudents ?? summary?.fullyDigitizedStudents ?? 0).toLocaleString()} Fully Digitized
+                        <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400 mb-1">
+                          {(summary?.digitizedStudents ?? summary?.fullyDigitizedStudents ?? 0).toLocaleString()} Done
                         </span>
                       </div>
+                      <LucideIcon className="ph-bold ph-dots-six-vertical cursor-grab active:cursor-grabbing hover:text-gray-400 dark:hover:text-zinc-500 text-gray-300 dark:text-zinc-700 text-lg mb-0.5" />
                     </div>
                   </div>
 
@@ -664,7 +677,12 @@ export default function DigitizationComplianceTab({
                     </div>
                   </div>
                 </div>
-              </div>
+                            </Reorder.Item>
+              );
+              return null;
+            })}
+            </Reorder.Group>
+
             </div>
           </div>
         ) : null}

@@ -470,13 +470,9 @@ export default function Home() {
 
   return (
     <TooltipProvider delay={200}>
-      <PageTransition className="min-h-screen w-full flex items-center justify-center relative bg-slate-50 dark:bg-zinc-950 font-sans p-8 overflow-y-auto">
+      <PageTransition className="min-h-screen w-full flex items-center justify-center relative bg-[#eef0f6] dark:bg-zinc-950 font-sans p-8 overflow-y-auto">
         {/* Dynamic Liquid Glass Background Blobs */}
-        <div className="liquid-container">
-          <div className="liquid-blob liquid-blob-1"></div>
-          <div className="liquid-blob liquid-blob-2"></div>
-          <div className="liquid-blob liquid-blob-3"></div>
-        </div>
+        
 
         {/* Top-Left Brand Logo & Name */}
         <div 
@@ -490,9 +486,9 @@ export default function Home() {
 
         <div className="w-full max-w-[550px] p-4 z-10">
           <div
-            className="bg-white rounded-[20px] shadow-[0_4px_40px_rgba(0,0,0,0.12)] dark:bg-zinc-900 flex flex-col items-center w-full relative transition-all duration-300"
+            className="bg-white rounded-[2.5rem] shadow-xl dark:bg-zinc-900 flex flex-col items-center w-full relative transition-all duration-300 border border-gray-100"
             style={{
-              padding: "56px 52px",
+              padding: "48px 48px",
               minHeight: "630px",
               height: "630px",
             }}
@@ -516,26 +512,16 @@ export default function Home() {
                   ].map((ring, rIdx) => {
                     const dots = [];
                     for (let i = 0; i < ring.count; i++) {
-                      const angle = (i * 2 * Math.PI) / ring.count;
+                      const angle = (i * 2 * Math.PI) / ring.count + (rIdx * 0.25);
                       const cx = Number((80 + ring.r * Math.cos(angle)).toFixed(4));
                       const cy = Number((80 + ring.r * Math.sin(angle)).toFixed(4));
-                      const rawHue = (i / ring.count) * 360 + 200;
-                      const hue = rawHue % 360;
+                      // Maroon Gradient Palette
+                      // Hues around 345 (deep ruby) to 5 (warm dark red)
+                      const hue = 355 + (Math.sin(angle - (rIdx * 0.5)) * 10);
                       
-                      let sat = 78;
-                      let light = 70;
-                      if (hue >= 60 && hue <= 160) {
-                        sat = 35; 
-                        light = 76; 
-                      } else if (hue > 160 && hue <= 200) {
-                        const ratio = (hue - 160) / 40;
-                        sat = 35 + Math.round(ratio * 43);
-                        light = 76 - Math.round(ratio * 6);
-                      } else if (hue >= 20 && hue < 60) {
-                        const ratio = (hue - 20) / 40;
-                        sat = 78 - Math.round(ratio * 43);
-                        light = 70 + Math.round(ratio * 6);
-                      }
+                      // Rich saturation, darker lightness for maroon
+                      const sat = 85 - (rIdx * 2);
+                      const light = 42 - (rIdx * 6) + (Math.cos(angle * 2) * 5);
                       
                       const color = `hsl(${hue}, ${sat}%, ${light}%)`;
                       dots.push(
@@ -600,7 +586,7 @@ export default function Home() {
 
             {view === "login" ? (
               <div className="w-full text-center flex-1 flex flex-col">
-                <h1 className="login-title text-[25px] font-bold text-[#1D1D1F] dark:text-zinc-50 tracking-tight mb-5">
+                <h1 className="login-title text-3xl font-bold text-[#111] dark:text-zinc-50 tracking-tight mb-8">
                   Sign in with eManage Account
                 </h1>
 
@@ -723,7 +709,7 @@ export default function Home() {
                             resetStudentSignupState();
                             setView("student-signup");
                           }}
-                          className="text-[13px] text-[#007AFF] hover:underline focus:outline-none font-medium"
+                          className="text-[14px] text-gray-800 hover:text-black hover:underline focus:outline-none font-semibold"
                         >
                           Create your eManage Account
                         </button>
@@ -734,7 +720,7 @@ export default function Home() {
                   {/* Disclaimer Text with Icon (Step 1 only) */}
                   {loginStep === 1 ? (
                     <div className="w-full mt-auto pt-9 mb-[124px] text-left flex flex-col items-start select-none animate-in fade-in duration-200">
-                      <LucideIcon  className="ph-fill ph-users text-[23px] text-[#007AFF] mb-1"></LucideIcon>
+                      <LucideIcon  className="ph-bold ph-users text-[23px] text-gray-800 mb-2"></LucideIcon>
                       <p className="w-full text-[11px] text-[#8E8E93] dark:text-zinc-400 leading-normal font-normal">
                         Your eManage account provides secure access to the digitization process and administrative tools. Account activity is logged for security and auditing purposes.
                       </p>
@@ -1182,7 +1168,7 @@ export default function Home() {
                   type="button"
                   className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/70 dark:bg-zinc-900/70 border border-black/[0.06] dark:border-white/[0.08] shadow-[0_2px_8px_rgba(0,0,0,0.04)] dark:shadow-none hover:bg-white dark:hover:bg-zinc-800 text-gray-500 dark:text-zinc-400 hover:text-gray-800 dark:hover:text-zinc-100 text-[11px] font-medium backdrop-blur-xl transition-all duration-200 active:scale-[0.97] cursor-pointer group"
                 >
-                  <LucideIcon  className="ph-bold ph-lightning text-amber-500 group-hover:scale-110 transition-transform"></LucideIcon>
+                  
                   <span>Demo Accounts</span>
                   <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-400 dark:text-zinc-400 group-hover:text-gray-700 dark:group-hover:text-zinc-200 transition-colors">
                     {DEMO_ACCOUNTS.length}
@@ -1200,9 +1186,7 @@ export default function Home() {
                 {/* Header */}
                 <div className="px-4 py-3 border-b border-gray-100 dark:border-zinc-800 flex items-center justify-between bg-gray-50/60 dark:bg-zinc-800/40">
                   <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-500">
-                      <LucideIcon  className="ph-bold ph-lightning text-xs"></LucideIcon>
-                    </div>
+                    
                     <div>
                       <h4 className="text-xs font-semibold text-gray-900 dark:text-zinc-100 tracking-tight leading-none">
                         Demo Personas
@@ -1235,9 +1219,7 @@ export default function Home() {
                       onClick={() => handleSelectDemoAccount(acc)}
                       className="w-full flex items-center gap-2.5 p-2 rounded-xl text-left hover:bg-gray-100/80 dark:hover:bg-zinc-800/80 transition-all duration-150 active:scale-[0.98] cursor-pointer group"
                     >
-                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 border ${acc.accent}`}>
-                        <LucideIcon  className={`ph-bold ${acc.icon} text-base`}></LucideIcon>
-                      </div>
+                      
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between gap-1.5">
                           <span className="text-xs font-semibold text-gray-800 dark:text-zinc-100 group-hover:text-[#800000] dark:group-hover:text-red-400 transition-colors truncate">

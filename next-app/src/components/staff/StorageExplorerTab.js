@@ -281,7 +281,7 @@ export default function StorageExplorerTab({
                             {/* Target pulsing glow */}
                             {isTarget && (
                               <div className="absolute top-4 right-4 flex items-center gap-1.5 bg-white/20 backdrop-blur-md px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wide text-white animate-pulse">
-                                <span className="h-1.5 w-1.5 rounded-full bg-white animate-ping" />
+                                
                                 Target Room
                               </div>
                             )}

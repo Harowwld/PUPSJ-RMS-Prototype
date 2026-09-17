@@ -1,7 +1,8 @@
 "use client"
 
 import LucideIcon from "@/components/shared/LucideIcon";
-import React, { useState, useEffect, useCallback, useMemo, useRef } from "react"
+import React, { useState, useRef, useEffect, useMemo, useCallback } from "react"
+import { Reorder } from "framer-motion"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -63,7 +64,8 @@ function statusBadgeClass(status) {
 }
 
 export default function CampusOperationsTab({ showToast }) {
-  const [health, setHealth] = useState(null)
+const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
+    const [health, setHealth] = useState(null)
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [activeTab, setActiveTab] = useState("all") // "all" | "registrar" | "osas"
@@ -280,12 +282,15 @@ export default function CampusOperationsTab({ showToast }) {
           </div>
         ) : (
           <div className="px-6 pb-6">
-            <div
+            <Reorder.Group as="div" axis="x" values={kpiOrder} onReorder={setKpiOrder}
               ref={statCardsRef}
               className="grid grid-cols-1 gap-4 md:grid-cols-2 items-start relative z-20 transition-all duration-500"
             >
-              {statCardsData.map((stat) => (
-                <div
+              {kpiOrder.map((kpiKey) => {
+                const stat = statCardsData.find(s => s.key === kpiKey);
+                if (!stat) return null;
+                return (
+                <Reorder.Item as="div" value={stat.key}
                   key={stat.key}
                   className={cn(
                     "relative group rounded-xl",
@@ -300,6 +305,10 @@ export default function CampusOperationsTab({ showToast }) {
                       selectedKpi === stat.key && (stat.color === "blue" ? "border-blue-500/40 ring-1 ring-blue-500/20" : "border-emerald-500/40 ring-1 ring-emerald-500/20")
                     )}
                   >
+                    
+                    <div className="absolute bottom-3 right-3 text-gray-300 dark:text-zinc-600 pointer-events-none opacity-50 group-hover:opacity-100 transition-opacity z-[1]">
+                      <LucideIcon className="ph-bold ph-dots-six-vertical text-lg" />
+                    </div>
                     <div className="relative z-10">
                       <div className="mb-1 flex items-center justify-between">
                         <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
@@ -380,9 +389,9 @@ export default function CampusOperationsTab({ showToast }) {
                       </div>
                     )}
                   </div>
-                </div>
-              ))}
-            </div>
+                </Reorder.Item>
+              );})}
+            </Reorder.Group>
           </div>
         )}
 

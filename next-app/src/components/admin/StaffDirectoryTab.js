@@ -153,9 +153,7 @@ const StaffTableRow = React.memo(({
         ) : (
           <div>
             <div className="flex items-center gap-1.5 text-[13px] font-medium text-[#111111] dark:text-zinc-100">
-              {active.relative === "Active Now" && (
-                <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse"></div>
-              )}
+              
               {active.relative || formatLastLoginDate(active.date)}
             </div>
             {active.relative && (

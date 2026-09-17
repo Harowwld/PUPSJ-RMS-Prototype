@@ -21,7 +21,7 @@ const DEFAULT_WORKFLOW_CONTENT = {
   secondaryButtonText: "Explore Services (8)",
   secondaryButtonTarget: "catalog",
   secondaryButtonEnabled: true,
-  autoCurve: true,
+  autoCurve: false,
   curveStyle: "gentle",
   steps: [
     {
@@ -179,14 +179,12 @@ export default function ProcessWorkflow() {
                 whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
                 viewport={{ once: true, margin: "-50px" }}
                 transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-                style={{
-                  fontSize: "clamp(2.25rem, 4.2vw, 3.75rem)",
-                  lineHeight: 1.05,
-                }}
-                className="font-extrabold text-white tracking-tight sm:tracking-tighter mb-6"
+                className="text-5xl sm:text-6xl lg:text-7xl font-semibold text-white tracking-tight mb-6 leading-[1.1] max-w-[300px]"
               >
-                {workflow.headingLine1 || "How to Request"}<br />
-                {workflow.headingLine2 || "Your Documents."}
+                How to<br />
+                Request<br />
+                Your<br />
+                Documents.
               </motion.h2>
 
               {/* Clear, approachable narrative description */}
@@ -246,10 +244,10 @@ export default function ProcessWorkflow() {
                             delay: idx * 0.08 + 0.04,
                             ease: [0.16, 1, 0.3, 1],
                           }}
-                          className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center font-mono text-xs sm:text-sm font-extrabold transition-all duration-300 ${
+                          className={`w-12 h-12 rounded-full flex items-center justify-center font-mono text-sm transition-all duration-300 ${
                             isSelected
-                              ? "bg-[#800000] text-white border-2 border-red-400/80 scale-105"
-                              : "liquid-glass-dark text-zinc-400 group-hover:border-white/25 group-hover:text-white"
+                              ? "bg-[#800000] text-white"
+                              : "bg-white/5 border border-white/10 text-zinc-400"
                           }`}
                         >
                           {step.num || String(idx + 1).padStart(2, "0")}
@@ -261,7 +259,7 @@ export default function ProcessWorkflow() {
                       <div className="pt-1">
 
                         {/* Main Title */}
-                        <h3 className="text-xl sm:text-2xl font-bold text-white tracking-tight mb-3 group-hover:text-red-100 transition-colors">
+                        <h3 className="text-xl sm:text-2xl font-medium text-white tracking-tight mb-2 transition-colors">
                           {step.title}
                         </h3>
 
@@ -278,7 +276,7 @@ export default function ProcessWorkflow() {
                             step.tags.map((tag, tIdx) => (
                               <span
                                 key={tIdx}
-                                className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-mono font-medium liquid-glass-dark-pill text-zinc-300 group-hover:border-white/15 transition-colors"
+                                className="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-medium bg-transparent border border-white/10 text-zinc-400 transition-colors"
                               >
                                 {tag}
                               </span>
@@ -288,7 +286,7 @@ export default function ProcessWorkflow() {
                             <button
                               type="button"
                               onClick={() => handleActionClick(step.actionTarget, step.actionType)}
-                              className="inline-flex items-center gap-1 text-[11px] font-semibold text-red-400 hover:text-red-300 ml-2 transition-colors cursor-pointer"
+                              className="inline-flex items-center gap-1 text-[10px] font-medium text-red-500 hover:text-red-400 ml-2 transition-colors cursor-pointer"
                             >
                               <span>{step.actionLabel}</span>
                               <LucideIcon  className={`ph-bold ${step.actionIcon || (step.actionType === "scroll" || step.actionTarget === "catalog" ? "ph-arrow-down" : "ph-arrow-right")} text-xs`} />

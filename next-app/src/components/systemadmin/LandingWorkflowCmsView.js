@@ -883,7 +883,7 @@ export default function LandingWorkflowCmsView({ showToast }) {
                               </span>
                               {step.summary && (
                                 <>
-                                  <span className="w-1 h-1 rounded-full bg-zinc-700" />
+                                  
                                   <span className="text-[10px] font-mono text-zinc-400">
                                     {step.summary}
                                   </span>

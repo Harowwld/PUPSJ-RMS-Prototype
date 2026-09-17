@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/empty";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
+import { Reorder } from "framer-motion";
 import RegisterStudentModal from "./RegisterStudentModal";
 import EditStudentModal from "./EditStudentModal";
 import StudentProfileSheet from "./StudentProfileSheet";

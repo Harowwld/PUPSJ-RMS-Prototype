@@ -170,7 +170,7 @@ export default function ContinuousScanningPanel({ onOpenReview, showToast = () =
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <div className="flex items-center gap-2 text-sm font-bold text-gray-900 dark:text-zinc-50">
-            <span className={`h-2.5 w-2.5 rounded-full ${active ? "animate-pulse bg-emerald-500" : "bg-gray-300 dark:bg-zinc-600"}`} />
+            
             Continuous Scanning
           </div>
           <p className="mt-1 text-xs text-gray-600 dark:text-zinc-400">Processes current and newly arriving inbound documents sequentially while this workspace is open.</p>

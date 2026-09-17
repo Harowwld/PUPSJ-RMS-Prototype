@@ -150,7 +150,7 @@ export default function DocumentCardPreview({ item, isActive = false }) {
                     : "bg-red-50/80  border-red-200/60  text-red-700 "
                 }`}
               >
-                <span className={`w-1.5 h-1.5 rounded-full ${isActive ? "bg-amber-300 animate-pulse" : "bg-red-600 animate-pulse"}`} />
+                
                 <span>REGISTRAR SEAL VERIFIED</span>
               </div>
               <span className={`text-[10px] font-mono font-bold ${isActive ? "text-red-100" : "text-zinc-500 "}`}>
@@ -177,7 +177,7 @@ export default function DocumentCardPreview({ item, isActive = false }) {
                 >
                   Semester Evaluation
                 </span>
-                <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                
               </div>
               <div className={`text-[12px] font-bold mt-1 ${isActive ? "text-white" : "text-zinc-900 "}`}>
                 First Semester, A.Y. 2024–2025
@@ -302,7 +302,7 @@ export default function DocumentCardPreview({ item, isActive = false }) {
                 isActive ? "text-amber-200" : "text-amber-800 "
               }`}
             >
-              <span className="w-2 h-2 rounded-full bg-amber-400" />
+              
               <span className="font-semibold">Gold Seal • Board of Regents Certified</span>
             </div>
           </div>
@@ -501,7 +501,7 @@ export default function DocumentCardPreview({ item, isActive = false }) {
                 >
                   {item.client || "Official Credential"}
                 </span>
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                
               </div>
               <div
                 className={`text-[12px] font-bold mt-1 tracking-tight line-clamp-1 ${
@@ -528,7 +528,7 @@ export default function DocumentCardPreview({ item, isActive = false }) {
                     : "bg-emerald-50/80  border-emerald-200/60  text-emerald-800 "
                 }`}
               >
-                <span className={`w-1.5 h-1.5 rounded-full ${isActive ? "bg-amber-300" : "bg-emerald-500"}`} />
+                
                 <span>{item.sealTag || "REGISTRAR SEAL VERIFIED"}</span>
               </div>
               <span className={`text-[9px] font-mono font-bold ${isActive ? "text-red-200" : "text-zinc-500 "}`}>
