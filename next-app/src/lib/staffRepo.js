@@ -175,8 +175,12 @@ export async function getStaffById(id, { officeId } = {}) {
 export async function getStaffByUsername(username) {
   const u = String(username || "").trim();
   if (!u) return null;
-  const row = await dbGet("SELECT * FROM staff WHERE email = ? OR lower(id) = lower(?)", [encryptPII(u.toLowerCase()), u]);
-  return row || null;
+  const normalized = u.toLowerCase();
+  const row = await dbGet(
+    "SELECT * FROM staff WHERE email = ? OR lower(email) = lower(?) OR lower(id) = lower(?)",
+    [encryptPII(normalized), u, u],
+  );
+  return decryptStaffRow(row) || null;
 }
 
 export async function updateStaff(originalId, patch, { officeId } = {}) {
