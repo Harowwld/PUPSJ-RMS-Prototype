@@ -21,6 +21,8 @@
     "db:seed:test": "node scripts/seed-test-accounts.mjs",
     "db:seed:sample": "node scripts/populate-sample-data.mjs",
     "test:recognition": "node --test test/recognition.test.mjs",
+    "test:ingest-events": "node --test test/ingest-events.test.mjs",
+    "test:hot-folder": "node --test test/hot-folder-stability.test.mjs",
     "populate-sample-data": "node scripts/populate-sample-data.mjs",
     "test:security": "node --experimental-test-module-mocks --test test/security/*.test.mjs",
     "hot-folder-watcher": "node scripts/hot-folder-watcher/watch.mjs"

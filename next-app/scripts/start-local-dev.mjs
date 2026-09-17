@@ -26,15 +26,18 @@ try {
   console.log("[dev] Starting Next.js and the hot-folder watcher...");
 
   const devCommands = ["\"next dev --webpack\""];
+  const processNames = ["next"];
+  const colors = ["cyan"];
   if (process.env.HOT_FOLDER_INGEST_TOKEN) {
     devCommands.push("\"wait-on tcp:3000 && node scripts/hot-folder-watcher/watch.mjs\"");
+    processNames.push("hot-folder");
+    colors.push("magenta");
   } else {
     console.warn("[dev] HOT_FOLDER_INGEST_TOKEN is not set; hot-folder watcher is disabled.");
   }
-
   const dev = spawn(
     pnpmCommand,
-    ["exec", "concurrently", "-n", devCommands.length === 2 ? "next,hot-folder" : "next", "-c", "cyan,magenta", ...devCommands],
+    ["exec", "concurrently", "-n", processNames.join(","), "-c", colors.join(","), ...devCommands],
     { stdio: "inherit", cwd: process.cwd(), shell: isWindows }
   );
 
