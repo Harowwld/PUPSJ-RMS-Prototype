@@ -481,9 +481,9 @@ export default function DocumentRequestsTab({
 
   return (
     <TooltipProvider delayDuration={200}>
-      <div className="font-inter w-full flex flex-1 flex-col h-auto min-h-0 gap-6 focus:outline-none animate-fade-up">
+      <div className="font-jakarta w-full flex flex-1 flex-col h-auto min-h-0 gap-6 focus:outline-none animate-fade-up">
         {/* ONE Single Card Container encapsulating Header, Toolbar, Active Filters, Table & Pagination */}
-        <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none isolate font-inter mb-4 min-h-0 flex-1">
+        <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none isolate font-jakarta mb-4 min-h-0 flex-1">
           {/* 1. Page Header */}
           <PageHeader
             icon="ph-tray"
@@ -1041,7 +1041,7 @@ export default function DocumentRequestsTab({
           }}
         >
           <SheetContent
-            className="font-inter flex flex-col border-l bg-white p-0 shadow-2xl data-[side=right]:w-full data-[side=right]:sm:max-w-[620px] data-[side=right]:md:max-w-[700px] sm:max-w-[620px]! md:max-w-[700px]! w-full dark:border-white/10 dark:bg-[#121214]"
+            className="font-jakarta flex flex-col border-l bg-white p-0 shadow-2xl data-[side=right]:w-full data-[side=right]:sm:max-w-[620px] data-[side=right]:md:max-w-[700px] sm:max-w-[620px]! md:max-w-[700px]! w-full dark:border-white/10 dark:bg-[#121214]"
             style={{ borderLeft: "0.5px solid rgba(0,0,0,0.08)" }}
           >
             {/* Sheet Header */}

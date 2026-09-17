@@ -131,6 +131,7 @@ const iconMapping = {
   "button": "RectangleHorizontal",
   "wave-sine": "Waves",
   "paper-plane-tilt": "Send",
+  "paper-plane-right": "Send",
   "file-arrow-up": "FileUp",
   "folder-notch-open": "FolderOpen",
   "path": "Route",
@@ -146,6 +147,32 @@ const iconMapping = {
   "users-three": "Users",
   "warning-circle": "AlertCircle",
   "warning": "AlertTriangle",
+
+  "seal-check": "BadgeCheck",
+  "trend-up": "TrendingUp",
+  "warehouse": "Warehouse",
+  "database-backup": "DatabaseBackup",
+  "tray-arrow-up": "FileUp",
+  "archive-box": "Archive",
+  "sidebar-simple": "PanelLeftClose",
+  "arrows-out-line-horizontal": "MoveHorizontal",
+  "history": "History",
+  "activity": "Activity",
+  "layout": "LayoutDashboard",
+  "image": "Image",
+  "git-merge": "GitMerge",
+  "clipboard-check": "ClipboardCheck",
+  "sign-out": "LogOut",
+  "database": "Database",
+
+  "info": "Info",
+  "text": "Type",
+  "map-pin": "MapPin",
+  "clock-afternoon": "Clock",
+  "fingerprint": "Fingerprint",
+  "arrow-down": "ArrowDown",
+
+
 };
 
 function toCamelCase(str) {
@@ -184,5 +211,5 @@ export default function LucideIcon({ className, ...props }) {
     return null;
   }
   
-  return <IconComponent className={cn(remainingClasses)} {...props} />;
+  return <IconComponent className={cn(remainingClasses)} size="1em" {...props} />;
 }

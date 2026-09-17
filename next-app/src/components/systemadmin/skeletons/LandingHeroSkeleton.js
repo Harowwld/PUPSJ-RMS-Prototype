@@ -7,9 +7,9 @@ import PageHeader from "@/components/shared/PageHeader"
 
 export default function LandingHeroSkeleton() {
   return (
-    <div className="flex flex-col gap-4 w-full animate-fade-up font-inter">
+    <div className="flex flex-col gap-4 w-full animate-fade-up font-jakarta">
       {/* Top Section Switcher Pill */}
-      <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-gray-100/90 dark:bg-zinc-900/80 border border-gray-200/80 dark:border-white/10 w-fit select-none overflow-x-auto max-w-full">
+      <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-gray-100/90 dark:bg-zinc-900/80 border border-gray-200/80 dark:border-white/10 w-fit select-none overflow-x-auto max-w-full scrollbar-hide">
         <div className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold bg-white dark:bg-zinc-800 text-pup-maroon dark:text-red-400 shadow-sm">
           <LucideIcon  className="ph-bold ph-image text-sm" />
           <span>Hero Section</span>
@@ -74,7 +74,7 @@ export default function LandingHeroSkeleton() {
           </div>
         </div>
 
-        <CardContent className="font-inter bg-white p-[24px] dark:bg-card/50 backdrop-blur-md flex flex-col gap-6">
+        <CardContent className="font-jakarta bg-white p-[24px] dark:bg-card/50 backdrop-blur-md flex flex-col gap-6">
           <div className="space-y-6">
             {/* Controls Bar */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/30 p-4">

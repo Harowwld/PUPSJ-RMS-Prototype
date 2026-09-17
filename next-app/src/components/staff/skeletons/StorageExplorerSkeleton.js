@@ -4,7 +4,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 
 export default function StorageExplorerSkeleton() {
   return (
-    <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-6 w-full animate-fade-up font-inter select-none px-8 pb-8">
+    <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-6 w-full animate-fade-up font-jakarta select-none px-8 pb-8">
       {Array.from({ length: 6 }).map((_, i) => (
         <div
           key={i}

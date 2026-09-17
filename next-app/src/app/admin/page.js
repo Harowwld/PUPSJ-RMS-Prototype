@@ -1752,7 +1752,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
 
   if (loading) {
     return (
-      <div className="font-inter flex min-h-screen flex-col gap-4 bg-gray-50 p-4 transition-colors duration-300 dark:bg-background">
+      <div className="font-jakarta flex min-h-screen flex-col gap-4 bg-gray-50 p-4 transition-colors duration-300 dark:bg-background">
         <Skeleton className="h-16 w-full shrink-0 rounded-2xl" />
         <div className="flex flex-1 gap-4">
           <Skeleton className="h-full w-[30%] rounded-2xl" />
@@ -1764,7 +1764,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
 
   return (
     <div
-      className="font-inter flex h-screen overflow-hidden flex-col bg-slate-50/30 dark:bg-zinc-950/30 relative transition-colors duration-300"
+      className="font-jakarta flex h-screen overflow-hidden flex-col bg-slate-50/30 dark:bg-zinc-950/30 relative transition-colors duration-300"
       style={{
         "--brand-accent": brandAccent,
         "--brand-foreground": brandForeground,
@@ -1831,7 +1831,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
         <main className="relative w-full min-w-0 min-h-0 flex-1 bg-white/25 dark:bg-zinc-950/25 overflow-y-auto backdrop-blur-xs">
           <div 
             className="flex-1 p-4 flex flex-col min-h-0 w-full"
-            style={{ zoom: [0.75, 0.83, 0.92, 1.0, 1.08, 1.17, 1.25][zoomNode] }}
+            style={{ transform: `scale(${[0.94, 1.04, 1.15, 1.25, 1.35, 1.46, 1.56][zoomNode]})`, transformOrigin: 'top left', width: `${100 / [0.94, 1.04, 1.15, 1.25, 1.35, 1.46, 1.56][zoomNode]}%`, height: `${100 / [0.94, 1.04, 1.15, 1.25, 1.35, 1.46, 1.56][zoomNode]}%` }}
           >          {view === "directory" && (
             <StaffDirectoryTab
               staffData={staffData}
@@ -2402,7 +2402,7 @@ export default function AdminPage() {
     <AdminGuard>
       <Suspense
         fallback={
-          <div className="min-h-screen bg-gray-50 dark:bg-background flex items-center justify-center font-inter p-4">
+          <div className="min-h-screen bg-gray-50 dark:bg-background flex items-center justify-center font-jakarta p-4">
             <div className="flex flex-col items-center gap-4">
               <div className="h-12 w-12 animate-spin rounded-full border-4 border-gray-200 border-t-pup-maroon dark:border-zinc-800 dark:border-t-primary"></div>
               <p className="text-xs font-semibold tracking-widest text-gray-400 dark:text-zinc-500 uppercase">Loading System...</p>

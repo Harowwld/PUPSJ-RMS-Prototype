@@ -461,7 +461,7 @@ export default function StudentDashboard() {
 
   return (
     <TooltipProvider delayDuration={200}>
-      <div className="relative flex h-screen min-h-0 flex-col overflow-hidden bg-slate-50/30 font-inter dark:bg-zinc-950/30">
+      <div className="relative flex h-screen min-h-0 flex-col overflow-hidden bg-slate-50/30 font-jakarta dark:bg-zinc-950/30">
         {/* Shared dashboard liquid-gradient background with subtle opacity */}
         <div className="liquid-container pointer-events-none opacity-20 dark:opacity-10">
           <div className="liquid-blob liquid-blob-1" />
@@ -485,7 +485,7 @@ export default function StudentDashboard() {
           <main className="relative w-full min-w-0 min-h-0 flex-1 overflow-y-auto bg-white/25 dark:bg-zinc-950/25 backdrop-blur-xs">
             <div
               className="flex min-h-0 w-full flex-1 flex-col p-4"
-              style={{ zoom: [0.75, 0.83, 0.92, 1.0, 1.08, 1.17, 1.25][zoomNode] }}
+              style={{ transform: `scale(${[0.94, 1.04, 1.15, 1.25, 1.35, 1.46, 1.56][zoomNode]})`, transformOrigin: 'top left', width: `${100 / [0.94, 1.04, 1.15, 1.25, 1.35, 1.46, 1.56][zoomNode]}%`, height: `${100 / [0.94, 1.04, 1.15, 1.25, 1.35, 1.46, 1.56][zoomNode]}%` }}
             >
               <div className="w-full flex-1 flex flex-col min-h-0">
 
@@ -558,7 +558,7 @@ export default function StudentDashboard() {
                 <div className="flex flex-col w-full flex-1 min-h-0">
                   {/* ONE Single Card Container encapsulating Header, Inline Request Form, Toolbar, Active Filters, Table & Pagination */}
                   <Card
-                    className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none isolate font-inter mb-4 min-h-0 flex-1 focus:outline-none"
+                    className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none isolate font-jakarta mb-4 min-h-0 flex-1 focus:outline-none"
                     onKeyDown={handleKeyDown}
                     tabIndex={0}
                   >
@@ -1104,7 +1104,7 @@ export default function StudentDashboard() {
                 </div>
               ) : (
                 <Card
-                  className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none isolate font-inter mb-4 min-h-0 flex-1 focus:outline-none"
+                  className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none isolate font-jakarta mb-4 min-h-0 flex-1 focus:outline-none"
                   tabIndex={0}
                 >
                   {/* 1. Page Header */}
@@ -1386,7 +1386,7 @@ export default function StudentDashboard() {
         open={Boolean(selectedRequestForDetail)}
         onOpenChange={(open) => !open && setSelectedRequestForDetail(null)}
       >
-        <SheetContent side="right" className="sm:max-w-md w-full flex flex-col font-inter dark:bg-[#1c1c1e]">
+        <SheetContent side="right" className="sm:max-w-md w-full flex flex-col font-jakarta dark:bg-[#1c1c1e]">
           <SheetHeader className="border-b border-gray-100 dark:border-white/10 p-5 pb-4 space-y-2">
             <div className="flex items-center justify-between pr-8">
               <span className="text-xs font-semibold text-pup-maroon bg-red-50 dark:bg-red-950/40 px-3 py-1 rounded-full border border-red-100 dark:border-red-900/30">
@@ -1472,7 +1472,7 @@ export default function StudentDashboard() {
         open={Boolean(selectedProposalForDetail)}
         onOpenChange={(open) => !open && setSelectedProposalForDetail(null)}
       >
-        <SheetContent side="right" className="sm:max-w-md w-full flex flex-col font-inter dark:bg-[#1c1c1e]">
+        <SheetContent side="right" className="sm:max-w-md w-full flex flex-col font-jakarta dark:bg-[#1c1c1e]">
           <SheetHeader className="border-b border-gray-100 dark:border-white/10 p-5 pb-4 space-y-2">
             <div className="flex items-center justify-between pr-8">
               <span className="text-xs font-semibold text-pup-maroon bg-red-50 dark:bg-red-950/40 px-3 py-1 rounded-full border border-red-100 dark:border-red-900/30">

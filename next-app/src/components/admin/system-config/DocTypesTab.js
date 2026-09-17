@@ -286,7 +286,7 @@ export default function DocTypesTab({
 
   return (
     <TooltipProvider delay={200}>
-      <div className="font-inter flex w-full flex-col gap-6 animate-fade-up px-[28px] pb-[28px]">
+      <div className="font-jakarta flex w-full flex-col gap-6 animate-fade-up px-[28px] pb-[28px]">
         <div className="mt-[20px]">
           <PageHeader
             icon="ph-files"
@@ -308,7 +308,7 @@ export default function DocTypesTab({
           />
         </div>
 
-        <div className="font-inter">
+        <div className="font-jakarta">
           <div className="flex select-none items-center justify-between gap-3 border-b border-gray-100 dark:border-white/10 pb-4">
             {/* Active / Archived Tabs */}
             <div className="flex items-center gap-6 select-none">

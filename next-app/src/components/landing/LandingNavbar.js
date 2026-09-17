@@ -128,7 +128,7 @@ export default function LandingNavbar() {
     <>
 
       <header 
-        className="fixed top-0 left-0 right-0 w-full z-50 select-none font-inter pointer-events-none"
+        className="fixed top-0 left-0 right-0 w-full z-50 select-none font-jakarta pointer-events-none"
       >
         {/* Apple-style global navigation bar container */}
         <div className="w-full pointer-events-none transition-all duration-700 ease-[cubic-bezier(0.4,0,0.2,1)] px-0 pt-0">
@@ -164,7 +164,7 @@ export default function LandingNavbar() {
                   { id: "workflow", label: "How It Works" },
                   { id: "catalog", label: "Catalog" },
                   { id: "faq", label: "FAQ" },
-                  { id: "office", label: "Office Hours" }
+                  { id: "office", label: "Contacts" }
                 ].map((item) => (
                   <button 
                     key={item.id}
@@ -265,7 +265,7 @@ export default function LandingNavbar() {
                     className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-left text-xs font-semibold text-gray-800  hover:bg-black/[0.04] :bg-white/[0.06] transition-all cursor-pointer"
                   >
                     <LucideIcon  className="ph-bold ph-clock text-base text-[#800000] " />
-                    <span>Office Hours</span>
+                    <span>Contacts</span>
                   </button>
                 </motion.div>
               )}

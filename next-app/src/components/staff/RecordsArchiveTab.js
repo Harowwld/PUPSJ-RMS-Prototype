@@ -244,11 +244,11 @@ export default function RecordsArchiveTab({
   return (
     <div
       id="view-search"
-      className="flex flex-col w-full h-auto min-h-0 flex-1 focus:outline-none animate-fade-up font-inter"
+      className="flex flex-col w-full h-auto min-h-0 flex-1 focus:outline-none animate-fade-up font-jakarta"
       tabIndex={0}
     >
       {/* ONE Single Card Container encapsulating Header, Toolbar, Breadcrumbs, Content, Pagination & Office Documents */}
-      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none isolate font-inter mb-4 min-h-0 flex-1">
+      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none isolate font-jakarta mb-4 min-h-0 flex-1">
         <PageHeader
           icon="ph-archive"
           title="Records & Archive"

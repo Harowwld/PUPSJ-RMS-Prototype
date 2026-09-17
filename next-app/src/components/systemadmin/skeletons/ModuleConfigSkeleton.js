@@ -6,7 +6,7 @@ import PageHeader from "@/components/shared/PageHeader"
 
 export default function ModuleConfigSkeleton({ viewMode = "office" }) {
   return (
-    <div className="flex flex-col gap-6 w-full animate-fade-up font-inter">
+    <div className="flex flex-col gap-6 w-full animate-fade-up font-jakarta">
       {/* Header Card matching real PageHeader layout */}
       <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
         <PageHeader
@@ -25,7 +25,7 @@ export default function ModuleConfigSkeleton({ viewMode = "office" }) {
         />
 
         {/* Toolbar Skeleton */}
-        <CardContent className="font-inter bg-white p-[24px] dark:bg-card/50 backdrop-blur-md flex flex-col gap-5 border-t border-gray-100 dark:border-white/10 rounded-b-2xl">
+        <CardContent className="font-jakarta bg-white p-[24px] dark:bg-card/50 backdrop-blur-md flex flex-col gap-5 border-t border-gray-100 dark:border-white/10 rounded-b-2xl">
           <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 w-full select-none">
             <div className="flex items-center gap-6 h-10">
               <Skeleton className="h-5 w-24 rounded dark:bg-muted" />

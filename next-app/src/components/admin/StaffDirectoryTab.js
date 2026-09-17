@@ -518,7 +518,7 @@ export default function StaffDirectoryTab({
   return (
     <TooltipProvider delayDuration={200}>
       <div
-        className="font-inter w-full flex flex-1 flex-col h-full min-h-0 gap-6 focus:outline-none animate-fade-up"
+        className="font-jakarta w-full flex flex-1 flex-col h-full min-h-0 gap-6 focus:outline-none animate-fade-up"
         onKeyDown={handleKeyDown}
         tabIndex={0}
       >

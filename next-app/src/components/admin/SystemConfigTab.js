@@ -971,7 +971,7 @@ export default function SystemConfigTab({
 
   if (activeError) {
     return (
-      <div className="animate-fade-up font-inter flex w-full flex-col gap-6">
+      <div className="animate-fade-up font-jakarta flex w-full flex-col gap-6">
         <Card className="flex flex-col overflow-hidden rounded-2xl border border-gray-300 bg-white shadow-sm dark:bg-card dark:shadow-none dark:border-white/10">
           <CardContent className="flex flex-col p-6">
             <Empty className="flex h-[400px] flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400">
@@ -995,7 +995,7 @@ export default function SystemConfigTab({
 
   return (
     <TooltipProvider delayDuration={200}>
-      <div className="animate-fade-up font-inter flex w-full flex-1 flex-col gap-4 min-h-0">
+      <div className="animate-fade-up font-jakarta flex w-full flex-1 flex-col gap-4 min-h-0">
         <Tabs
           defaultValue="document-types"
           value={activeSubTab}
@@ -1003,7 +1003,7 @@ export default function SystemConfigTab({
           className="flex flex-col gap-4 w-full flex-1 min-h-0"
         >
           {/* Top Section Switcher Pill */}
-          <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-gray-100/90 dark:bg-zinc-900/80 border border-gray-200/80 dark:border-white/10 w-fit select-none overflow-x-auto max-w-full">
+          <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-gray-100/90 dark:bg-zinc-900/80 border border-gray-200/80 dark:border-white/10 w-fit select-none overflow-x-auto max-w-full scrollbar-hide">
             <button
               type="button"
               onClick={() => setActiveSubTab("document-types")}

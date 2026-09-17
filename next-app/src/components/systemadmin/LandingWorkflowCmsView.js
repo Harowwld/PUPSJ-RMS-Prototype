@@ -313,7 +313,7 @@ export default function LandingWorkflowCmsView({ showToast }) {
   const currentSteps = workflowData.steps || []
 
   return (
-    <div className="flex flex-col gap-6 w-full animate-fade-up font-inter">
+    <div className="flex flex-col gap-6 w-full animate-fade-up font-jakarta">
       <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
         <PageHeader
           icon="ph-bold ph-git-merge"
@@ -411,7 +411,7 @@ export default function LandingWorkflowCmsView({ showToast }) {
         </div>
 
         {/* Content Body */}
-        <CardContent className="font-inter bg-white p-[24px] dark:bg-card/50 backdrop-blur-md flex flex-col gap-6">
+        <CardContent className="font-jakarta bg-white p-[24px] dark:bg-card/50 backdrop-blur-md flex flex-col gap-6">
           
           {/* TAB 1: WORKFLOW STEPS MANAGER */}
           {activeTab === "steps" && (

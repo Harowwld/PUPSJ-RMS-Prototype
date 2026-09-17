@@ -126,10 +126,10 @@ export default function StorageExplorerTab({
   return (
     <div
       id="view-storage"
-      className="animate-fade-up font-inter flex h-auto w-full flex-col gap-6"
+      className="animate-fade-up font-jakarta flex h-auto w-full flex-col gap-6"
     >
       {/* ONE Single Card Container encapsulating Header, Breadcrumbs & 2D Storage Explorer */}
-      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none isolate font-inter mb-4 min-h-0 flex-1">
+      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none isolate font-jakarta mb-4 min-h-0 flex-1">
         <PageHeader
           icon="ph-folder-open"
           title="Storage Explorer"
@@ -171,7 +171,7 @@ export default function StorageExplorerTab({
                           <BreadcrumbItem>
                             <BreadcrumbLink
                               className={cn(
-                                "cursor-pointer transition-colors hover:no-underline text-[14px] font-inter",
+                                "cursor-pointer transition-colors hover:no-underline text-[14px] font-jakarta",
                                 currentLocatorLevel === b.level
                                   ? "text-pup-maroon font-semibold dark:text-red-400"
                                   : "text-[#8E8E93] font-medium hover:text-[#1C1C1E] dark:text-zinc-400 dark:hover:text-zinc-200"
@@ -298,7 +298,7 @@ export default function StorageExplorerTab({
                               {/* Room Number */}
                               <div className="mb-3">
                                 <h5 className={cn(
-                                  "text-[18px] font-bold tracking-tight font-inter leading-none",
+                                  "text-[18px] font-bold tracking-tight font-jakarta leading-none",
                                   isTarget ? "text-white" : "text-gray-900 dark:text-[#f2f2f7]"
                                 )}>
                                   Room {r.room}

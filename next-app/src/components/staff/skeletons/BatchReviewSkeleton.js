@@ -4,7 +4,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 
 export default function BatchReviewSkeleton() {
   return (
-    <div className="grid min-h-[580px] flex-1 border-t border-gray-100 dark:border-white/10 lg:grid-cols-[minmax(280px,0.8fr)_minmax(460px,1.4fr)] animate-fade-up font-inter select-none">
+    <div className="grid min-h-[580px] flex-1 border-t border-gray-100 dark:border-white/10 lg:grid-cols-[minmax(280px,0.8fr)_minmax(460px,1.4fr)] animate-fade-up font-jakarta select-none">
       {/* Left: Review Queue Column */}
       <div className="flex min-h-0 flex-col border-b border-gray-100 dark:border-white/10 lg:border-b-0 lg:border-r">
         <div className="flex items-center justify-between border-b border-gray-100 px-5 py-3.5 dark:border-white/5 bg-gray-50/20 dark:bg-zinc-900/20">

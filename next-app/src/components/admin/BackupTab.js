@@ -298,7 +298,7 @@ export default function BackupTab({
 
   return (
     <TooltipProvider delayDuration={200}>
-      <div className="animate-fade-up font-inter flex w-full flex-col gap-6">
+      <div className="animate-fade-up font-jakarta flex w-full flex-col gap-6">
         <div className="relative flex min-h-[600px] w-full items-stretch gap-5">
           {/* MAIN CONTENT */}
           <div className="flex-1 flex flex-col">

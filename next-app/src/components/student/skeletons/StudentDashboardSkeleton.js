@@ -7,7 +7,7 @@ import StudentComplianceSkeleton from "./StudentComplianceSkeleton"
 
 export default function StudentDashboardSkeleton({ view = "odrs" }) {
   return (
-    <div className="relative flex h-screen min-h-0 flex-col overflow-hidden bg-slate-50/30 font-inter dark:bg-zinc-950/30 select-none">
+    <div className="relative flex h-screen min-h-0 flex-col overflow-hidden bg-slate-50/30 font-jakarta dark:bg-zinc-950/30 select-none">
       {/* Shared dashboard liquid-gradient background */}
       <div className="liquid-container pointer-events-none opacity-20 dark:opacity-10">
         <div className="liquid-blob liquid-blob-1" />

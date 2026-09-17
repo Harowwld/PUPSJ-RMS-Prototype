@@ -569,7 +569,7 @@ export default function DocumentsTab({
     <TooltipProvider delayDuration={200}>
       <div
         id="view-documents"
-        className="flex flex-col w-full h-auto min-h-0 flex-1 focus:outline-none animate-fade-up font-inter"
+        className="flex flex-col w-full h-auto min-h-0 flex-1 focus:outline-none animate-fade-up font-jakarta"
         tabIndex={0}
       >
         {/* ONE Single Card Container encapsulating Header, Toolbar, Filters, Table & Pagination */}

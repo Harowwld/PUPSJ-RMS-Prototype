@@ -316,7 +316,7 @@ export default function LandingPageCmsTab({ showToast }) {
   }
 
   return (
-    <div className="flex flex-col gap-4 w-full animate-fade-up font-inter">
+    <div className="flex flex-col gap-4 w-full animate-fade-up font-jakarta">
       {/* Top Section Switcher Pill */}
       <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-gray-100/90 dark:bg-zinc-900/80 border border-gray-200/80 dark:border-white/10 w-fit select-none">
         <button
@@ -509,7 +509,7 @@ export default function LandingPageCmsTab({ showToast }) {
         </div>
 
         {/* Content Body */}
-        <CardContent className="font-inter bg-white p-[24px] dark:bg-card/50 backdrop-blur-md flex flex-col gap-6 rounded-b-2xl">
+        <CardContent className="font-jakarta bg-white p-[24px] dark:bg-card/50 backdrop-blur-md flex flex-col gap-6 rounded-b-2xl">
           {/* TAB 1: Simplified Carousel Photos (Upload & Preview Centric) */}
           {activeTab === "slides" && (
             <div className="space-y-6">

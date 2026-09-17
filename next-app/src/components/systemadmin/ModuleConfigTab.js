@@ -447,7 +447,7 @@ export default function ModuleConfigTab({ showToast }) {
   // Empty State if No Offices exist in the system (Matches OfficeManagementTab design)
   if (!matrix?.offices || matrix.offices.length === 0) {
     return (
-      <div className="flex flex-col gap-6 w-full animate-fade-up font-inter">
+      <div className="flex flex-col gap-6 w-full animate-fade-up font-jakarta">
         <PageHeader
           icon="ph-bold ph-squares-four"
           title="Department Features & Permissions"
@@ -486,7 +486,7 @@ export default function ModuleConfigTab({ showToast }) {
   const { offices, modules } = matrix
 
   return (
-    <div className="flex flex-col gap-6 w-full animate-fade-up font-inter">
+    <div className="flex flex-col gap-6 w-full animate-fade-up font-jakarta">
       {/* Main Card with Header, Toolbar & Active Filter Chips */}
       <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
         <PageHeader

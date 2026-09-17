@@ -50,7 +50,7 @@ const BevelButton = React.forwardRef(
         )}
         style={{
           fontFamily:
-            'var(--font-geist), Geist, "Geist Fallback", var(--font-inter), Inter, Helvetica, sans-serif',
+            'var(--font-jakarta), var(--font-jakarta), Helvetica, sans-serif',
           background: `linear-gradient(${baseColor}, ${baseColorEnd}) padding-box, linear-gradient(var(--bevel-angle, 180deg), ${borderHighlight} 0%, rgba(255,255,255,0.12) 38%, rgba(0,0,0,0.85) 100%) border-box`,
           boxShadow:
             "inset 0px -2px 2.6px 0px rgba(0,0,0,0.57), inset 0px 1px 1.7px 0px rgba(255,255,255,0.35), 0 4px 14px -2px rgba(128,0,0,0.35)",

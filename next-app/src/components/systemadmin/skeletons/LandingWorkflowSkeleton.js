@@ -7,7 +7,7 @@ import PageHeader from "@/components/shared/PageHeader"
 
 export default function LandingWorkflowSkeleton() {
   return (
-    <div className="flex flex-col gap-6 w-full animate-fade-up font-inter">
+    <div className="flex flex-col gap-6 w-full animate-fade-up font-jakarta">
       <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
         <PageHeader
           icon="ph-bold ph-git-merge"
@@ -46,7 +46,7 @@ export default function LandingWorkflowSkeleton() {
         </div>
 
         {/* Content Body */}
-        <CardContent className="font-inter bg-white p-[24px] dark:bg-card/50 backdrop-blur-md flex flex-col gap-6">
+        <CardContent className="font-jakarta bg-white p-[24px] dark:bg-card/50 backdrop-blur-md flex flex-col gap-6">
           <div className="space-y-6">
             {/* Header Bar with Curve Style & Add Step Buttons */}
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/30 p-4">

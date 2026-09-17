@@ -1361,7 +1361,7 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
   )
 
   return (
-    <div className="animate-fade-up font-inter flex w-full flex-col gap-6">
+    <div className="animate-fade-up font-jakarta flex w-full flex-col gap-6">
       <ConflictResolutionModals 
         applyReportOpen={applyReportOpen}
         setApplyReportOpen={setApplyReportOpen}

@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card"
 
 export default function RegistrarODRSSkeleton() {
   return (
-    <div className="flex flex-col h-full gap-4 animate-fade-up font-inter select-none">
+    <div className="flex flex-col h-full gap-4 animate-fade-up font-jakarta select-none">
       {/* Top Header Card Skeleton */}
       <Card className="rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none overflow-hidden p-6 flex items-center justify-between">
         <div className="flex items-center gap-3">

@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils"
 
 export function StudentOsasProposalsListSkeleton({ count = 3 }) {
   return (
-    <div className="space-y-3 select-none font-inter animate-in fade-in duration-200">
+    <div className="space-y-3 select-none font-jakarta animate-in fade-in duration-200">
       {Array.from({ length: count }).map((_, i) => (
         <article
           key={i}
@@ -50,7 +50,7 @@ export function StudentOsasProposalsListSkeleton({ count = 3 }) {
 
 export default function StudentOsasProposalsSkeleton({ count = 3, showForm = true }) {
   return (
-    <div className="flex flex-col w-full flex-1 min-h-0 animate-in fade-in duration-200 select-none font-inter">
+    <div className="flex flex-col w-full flex-1 min-h-0 animate-in fade-in duration-200 select-none font-jakarta">
       {/* ONE Single Card Container encapsulating Header, Inline Proposal Form, Toolbar & Proposals List */}
       <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none isolate mb-4 min-h-0 flex-1">
         {/* 1. Page Header Skeleton */}

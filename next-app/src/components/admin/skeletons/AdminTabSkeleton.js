@@ -7,7 +7,7 @@ export default function AdminTabSkeleton({ showStats = true }) {
   return (
     <div className="flex flex-1 flex-col h-full min-h-0 w-full gap-6 animate-fade-up select-none">
       {/* Main Container Card */}
-      <div className="overflow-visible rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card flex flex-col flex-1 min-h-[500px] mb-4 isolate font-inter">
+      <div className="overflow-visible rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card flex flex-col flex-1 min-h-[500px] mb-4 isolate font-jakarta">
         {/* Header Skeleton */}
         <div className="flex items-center justify-between p-6">
           <div className="flex items-center gap-3">

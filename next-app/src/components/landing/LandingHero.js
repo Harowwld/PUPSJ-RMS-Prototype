@@ -80,7 +80,7 @@ export default function LandingHero() {
   return (
     <section 
       ref={heroContainerRef} 
-      className="relative w-full mx-0 px-0 mt-[69px] mb-0 font-inter select-none bg-[#ffffff]"
+      className="relative w-full mx-0 px-0 mt-[69px] mb-0 font-jakarta select-none bg-[#ffffff]"
     >
       {/* Hero container with gap below navbar */}
       <div 

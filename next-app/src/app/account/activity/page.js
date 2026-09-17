@@ -1291,14 +1291,14 @@ export default function AccountActivityPage() {
   }
 
   return (
-    <div className="h-screen overflow-hidden flex flex-col bg-gray-50 dark:bg-background font-inter">
+    <div className="h-screen overflow-hidden flex flex-col bg-gray-50 dark:bg-background font-jakarta">
       <Header authUser={authUser} onLogout={handleLogout} />
 
       <PageTransition className="flex-1 min-h-0 overflow-y-auto w-full">
         <div className="max-w-[1400px] mx-auto py-10 px-6">
           <TooltipProvider delayDuration={200}>
           {/* ONE Single Card Container encapsulating Header, Metrics, Toolbar, Table & Pagination */}
-          <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none isolate font-inter mb-4 min-h-0 flex-1">
+          <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none isolate font-jakarta mb-4 min-h-0 flex-1">
             <PageHeader
               icon="ph-clock-counter-clockwise"
               title="My Activity"

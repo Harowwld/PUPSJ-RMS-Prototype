@@ -41,12 +41,7 @@ export default function SecurityQuestionsTab({ showToast }) {
         setQuestions(list)
       }
 
-      if (isManual) {
-        showToast?.({
-          title: "Security Questions Refreshed",
-          description: "Loaded latest challenge configuration from repository.",
-        })
-      }
+      
     } catch (err) {
       showToast?.({
         title: "Load Failed",
@@ -175,8 +170,8 @@ export default function SecurityQuestionsTab({ showToast }) {
   const activeQuestionsCount = questions.filter((q) => q.trim().length > 0).length
 
   return (
-    <div className="animate-fade-up font-inter flex flex-1 flex-col h-full min-h-0 w-full gap-6">
-      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none isolate font-inter mb-4 min-h-0 flex-1">
+    <div className="animate-fade-up font-jakarta flex flex-1 flex-col h-full min-h-0 w-full gap-6">
+      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none isolate font-jakarta mb-4 min-h-0 flex-1">
         {/* Header */}
         <PageHeader
           icon="ph-bold ph-shield-check"

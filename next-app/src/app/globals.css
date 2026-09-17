@@ -1,6 +1,4 @@
 @import "tailwindcss";
-@import "../../public/assets/fonts/inter/inter.css";
-@import "../../public/assets/fonts/geist/geist.css";
 @plugin "tailwindcss-animate";
 
 /* Presentation helpers & role branding.
@@ -643,7 +641,7 @@
   padding: 0 !important;
   line-height: 1.3 !important;
   letter-spacing: -0.01em !important;
-  font-family: var(--font-inter), sans-serif !important;
+  font-family: var(--font-jakarta), sans-serif !important;
 }
 
 .dark [data-slot="empty-title"] {
@@ -659,7 +657,7 @@
   line-height: 1.5 !important;
   margin: 0 auto !important;
   padding: 0 !important;
-  font-family: var(--font-inter), sans-serif !important;
+  font-family: var(--font-jakarta), sans-serif !important;
 }
 
 [data-slot="empty"] button,
@@ -731,9 +729,10 @@
 @theme {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist), Geist, "Geist Fallback", var(--font-inter), Inter, Helvetica, sans-serif;
-  --font-heading: var(--font-geist), Geist, "Geist Fallback", var(--font-inter), Inter, Helvetica, sans-serif;
-  --font-inter: var(--font-geist), Geist, "Geist Fallback", var(--font-inter), Inter, Helvetica, sans-serif;
+  --font-sans: var(--font-jakarta), "Plus Jakarta Sans", Helvetica, sans-serif;
+  --font-heading: var(--font-jakarta), "Plus Jakarta Sans", Helvetica, sans-serif;
+  --font-jakarta: var(--font-jakarta), "Plus Jakarta Sans", Helvetica, sans-serif;
+  
   --radius-brand: var(--radius);
 
   --color-pup-maroon: var(--brand-accent, #800000);
@@ -933,7 +932,7 @@
   }
 
   code, kbd, samp, pre, .font-mono {
-    font-family: var(--font-geist), Geist, "Geist Fallback", var(--font-inter), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+    font-family: var(--font-jakarta), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
   }
 }
 
@@ -946,12 +945,12 @@
     @apply font-sans;
   }
 
-  /* Geist is the primary application typeface. Keep icon font faces on their
+  /* Plus Jakarta Sans is the primary application typeface. Keep icon font faces on their
      dedicated elements so Phosphor icons continue to render correctly. */
   *:not(i):not([class*="ph-"]),
   *:not(i):not([class*="ph-"])::before,
   *:not(i):not([class*="ph-"])::after {
-    font-family: var(--font-geist), Geist, "Geist Fallback", var(--font-inter), Inter, Helvetica, sans-serif !important;
+    font-family: var(--font-jakarta), "Plus Jakarta Sans", Helvetica, sans-serif !important;
   }
 
 
@@ -2121,4 +2120,12 @@ html {
   100% {
     width: 100%;
   }
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+    display: none;
+}
+.scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
 }

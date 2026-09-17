@@ -99,7 +99,7 @@ export default function OfficeDirectory() {
   return (
     <section 
       id="office" 
-      className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 sm:pt-24 lg:pt-32 pb-24 sm:pb-32 lg:pb-36 font-inter select-none scroll-mt-24"
+      className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 sm:pt-24 lg:pt-32 pb-24 sm:pb-32 lg:pb-36 font-jakarta select-none scroll-mt-24"
     >
       {/* Subtle ambient divider & glow between DocumentCatalog and OfficeDirectory */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 sm:w-64 h-px bg-gradient-to-r from-transparent via-gray-300  to-transparent pointer-events-none" />

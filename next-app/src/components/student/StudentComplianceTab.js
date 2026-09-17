@@ -373,7 +373,7 @@ export default function StudentComplianceTab({ authUser }) {
     <div className="flex flex-col w-full flex-1 min-h-0 space-y-4">
       {/* 1. Main Unified Container Card */}
       <Card
-        className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none isolate font-inter mb-4 min-h-0 flex-1 focus:outline-none"
+        className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none isolate font-jakarta mb-4 min-h-0 flex-1 focus:outline-none"
         tabIndex={0}
       >
         {/* A. Header */}
@@ -845,7 +845,7 @@ export default function StudentComplianceTab({ authUser }) {
 
       {/* 2. Official Compliance Slip Print Modal */}
       <Dialog open={printModalOpen} onOpenChange={setPrintModalOpen}>
-        <DialogContent className="w-full max-w-4xl sm:max-w-4xl max-h-[90vh] flex flex-col p-0 overflow-hidden rounded-2xl bg-white dark:bg-card border border-gray-200 dark:border-white/10 shadow-2xl font-inter print:border-0 print:shadow-none print:max-h-none print:overflow-visible print:w-full print:max-w-none print:bg-white">
+        <DialogContent className="w-full max-w-4xl sm:max-w-4xl max-h-[90vh] flex flex-col p-0 overflow-hidden rounded-2xl bg-white dark:bg-card border border-gray-200 dark:border-white/10 shadow-2xl font-jakarta print:border-0 print:shadow-none print:max-h-none print:overflow-visible print:w-full print:max-w-none print:bg-white">
           <DialogHeader className="p-6 pb-4 border-b border-gray-100 dark:border-white/10 shrink-0 print:hidden">
             <DialogTitle className="text-base font-bold text-gray-900 dark:text-zinc-50">
               Student Document Compliance Slip

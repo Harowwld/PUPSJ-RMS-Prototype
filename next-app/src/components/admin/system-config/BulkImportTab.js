@@ -117,7 +117,7 @@ export default function BulkImportTab({
   }
 
   return (
-    <div className="flex w-full flex-1 flex-col gap-6 font-inter animate-fade-up min-h-0 px-[28px] pb-[28px]">
+    <div className="flex w-full flex-1 flex-col gap-6 font-jakarta animate-fade-up min-h-0 px-[28px] pb-[28px]">
       {importStatus === "idle" ? (
         <div className="flex flex-col flex-1 gap-6 w-full min-h-0 animate-fade-up">
           <div className="mt-[20px]">

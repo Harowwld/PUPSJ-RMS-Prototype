@@ -163,7 +163,7 @@ export default function ProcessWorkflow() {
       {/* Dark canvas card — full-bleed */}
       <div 
         ref={cardRef}
-        className="relative w-full bg-zinc-950 text-white font-inter select-none py-20 sm:py-28 lg:py-32 overflow-hidden"
+        className="relative w-full bg-zinc-950 text-white font-jakarta select-none py-20 sm:py-28 lg:py-32 overflow-hidden"
       >
 
         <div className="max-w-7xl mx-auto px-6 sm:px-10 lg:px-16 relative z-10">

@@ -513,9 +513,9 @@ export default function OfficeManagementTab({ showToast }) {
   }, [availableModules, form.selectedModules])
 
   return (
-    <div className="animate-fade-up font-inter flex flex-1 flex-col h-full min-h-0 w-full gap-6">
+    <div className="animate-fade-up font-jakarta flex flex-1 flex-col h-full min-h-0 w-full gap-6">
       {/* ONE Single Card Container encapsulating Header, Metrics, Toolbar, Table & Pagination */}
-      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none isolate font-inter mb-4 min-h-0 flex-1">
+      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none isolate font-jakarta mb-4 min-h-0 flex-1">
         <PageHeader
           icon="ph-bold ph-buildings"
           title={
@@ -935,8 +935,7 @@ export default function OfficeManagementTab({ showToast }) {
                   {/* Workstation & Scanner Setup */}
                   <div className="space-y-1.5 mt-2 pt-3 border-t border-gray-100 dark:border-zinc-800 text-[11px] text-gray-600 dark:text-zinc-400">
                     <div className="flex items-center justify-between">
-                      <span className="flex items-center gap-1.5 text-gray-500 dark:text-zinc-400">
-                        <LucideIcon  className="ph-bold ph-desktop text-pup-maroon dark:text-red-400"></LucideIcon>
+                      <span className="text-gray-500 dark:text-zinc-400">
                         <span>Scanning Computer:</span>
                       </span>
                       <span className="font-semibold text-gray-900 dark:text-zinc-100">
@@ -945,8 +944,7 @@ export default function OfficeManagementTab({ showToast }) {
                     </div>
 
                     <div className="flex items-center justify-between">
-                      <span className="flex items-center gap-1.5 text-gray-500 dark:text-zinc-400">
-                        <LucideIcon  className="ph-bold ph-hard-drives text-pup-maroon dark:text-red-400"></LucideIcon>
+                      <span className="text-gray-500 dark:text-zinc-400">
                         <span>Storage Folder:</span>
                       </span>
                       <span className="font-medium text-gray-700 dark:text-zinc-300 truncate max-w-[150px]" title={office.storage_path}>
@@ -963,9 +961,9 @@ export default function OfficeManagementTab({ showToast }) {
                       title={`View assigned personnel in Global Directory`}
                       className="group/staff flex items-center gap-1.5 font-medium hover:text-pup-maroon dark:hover:text-red-400 transition-colors cursor-pointer border-0 bg-transparent p-0"
                     >
-                      <LucideIcon  className="ph-bold ph-users text-gray-400 group-hover/staff:text-pup-maroon dark:group-hover/staff:text-red-400 transition-colors"></LucideIcon>
+                      
                       <span>Staff: <strong className="text-gray-900 dark:text-zinc-100 group-hover/staff:text-pup-maroon dark:group-hover/staff:text-red-400 font-bold underline decoration-dotted underline-offset-2">{office.staff_count || 0}</strong></span>
-                      <LucideIcon  className="ph-bold ph-arrow-right text-[10px] opacity-0 group-hover/staff:opacity-100 transition-opacity"></LucideIcon>
+                      
                     </button>
                     <button
                       type="button"
@@ -973,9 +971,9 @@ export default function OfficeManagementTab({ showToast }) {
                       title={`Configure workspace modules for ${office.short_name}`}
                       className="group/mod flex items-center gap-1.5 font-medium hover:text-pup-maroon dark:hover:text-red-400 transition-colors cursor-pointer border-0 bg-transparent p-0"
                     >
-                      <LucideIcon  className="ph-bold ph-squares-four text-gray-400 group-hover/mod:text-pup-maroon dark:group-hover/mod:text-red-400 transition-colors"></LucideIcon>
+                      
                       <span>Modules: <strong className="text-gray-900 dark:text-zinc-100 group-hover/mod:text-pup-maroon dark:group-hover/mod:text-red-400 font-bold underline decoration-dotted underline-offset-2">{office.module_count || 0}</strong></span>
-                      <LucideIcon  className="ph-bold ph-arrow-right text-[10px] opacity-0 group-hover/mod:opacity-100 transition-opacity"></LucideIcon>
+                      
                     </button>
                   </div>
 

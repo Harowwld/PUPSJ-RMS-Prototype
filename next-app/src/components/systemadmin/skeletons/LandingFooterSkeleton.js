@@ -6,7 +6,7 @@ import PageHeader from "@/components/shared/PageHeader"
 
 export default function LandingFooterSkeleton() {
   return (
-    <div className="flex flex-col gap-6 w-full animate-fade-up font-inter">
+    <div className="flex flex-col gap-6 w-full animate-fade-up font-jakarta">
       <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
         <PageHeader
           icon="ph-bold ph-panel-bottom"
@@ -44,7 +44,7 @@ export default function LandingFooterSkeleton() {
           </div>
         </div>
 
-        <CardContent className="font-inter bg-white p-[24px] dark:bg-card/50 backdrop-blur-md flex flex-col gap-6">
+        <CardContent className="font-jakarta bg-white p-[24px] dark:bg-card/50 backdrop-blur-md flex flex-col gap-6">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
             {/* Left Column (lg:col-span-7) */}
             <div className="lg:col-span-7 space-y-5">

@@ -76,7 +76,7 @@ export default function UserGuideModal({ open, onClose }) {
               </div>
             </DialogHeader>
  
-            <div className="flex-1 overflow-y-auto bg-white font-inter dark:bg-card">
+            <div className="flex-1 overflow-y-auto bg-white font-jakarta dark:bg-card">
               <TabsContent value="general" className="p-8 m-0 border-0 focus-visible:ring-0">
                 <div className="animate-fade-in space-y-8">
                   <div className="bg-blue-50 border border-blue-100 rounded-brand p-4 flex gap-4 dark:bg-blue-950/30">

@@ -74,7 +74,7 @@ export default function LandingFooter() {
   return (
     <footer
       id="office"
-      className="bg-zinc-950 text-zinc-400 border-t border-zinc-800/80 pt-10 sm:pt-12 pb-6 text-xs mt-auto font-inter select-none scroll-mt-20 w-full overflow-hidden relative"
+      className="bg-zinc-950 text-zinc-400 border-t border-zinc-800/80 pt-10 sm:pt-12 pb-6 text-xs mt-auto font-jakarta select-none scroll-mt-20 w-full overflow-hidden relative"
     >
       {/* =====================================================================
           TOP SECTION: INSTITUTIONAL CREDENTIALS & DIRECTORY GRID (3-COLUMN)

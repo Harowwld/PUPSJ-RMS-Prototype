@@ -283,7 +283,7 @@ export default function LandingFooterCmsView({ showToast }) {
   }
 
   return (
-    <div className="flex flex-col gap-6 w-full animate-fade-up font-inter">
+    <div className="flex flex-col gap-6 w-full animate-fade-up font-jakarta">
       {/* Main Card */}
       <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
         <PageHeader
@@ -382,7 +382,7 @@ export default function LandingFooterCmsView({ showToast }) {
         </div>
 
         {/* Content Body */}
-        <CardContent className="font-inter bg-white p-[24px] dark:bg-card/50 backdrop-blur-md flex flex-col gap-6">
+        <CardContent className="font-jakarta bg-white p-[24px] dark:bg-card/50 backdrop-blur-md flex flex-col gap-6">
           {/* TAB 1: Campus Identity, Watermark & Sub-Footer */}
           {activeTab === "identity" && (
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
@@ -989,7 +989,7 @@ export default function LandingFooterCmsView({ showToast }) {
               </div>
 
               {/* Simulated Footer Window */}
-              <div className="w-full rounded-2xl overflow-hidden border border-zinc-800 bg-zinc-950 text-zinc-400 p-6 sm:p-8 select-none relative font-inter text-xs">
+              <div className="w-full rounded-2xl overflow-hidden border border-zinc-800 bg-zinc-950 text-zinc-400 p-6 sm:p-8 select-none relative font-jakarta text-xs">
                 {/* 3-Column Grid */}
                 <div className="relative z-10 grid grid-cols-1 md:grid-cols-3 gap-8 pb-8 border-b border-zinc-800/80">
                   {/* Col 1 */}

@@ -401,7 +401,7 @@ export default function DocumentCatalog() {
     <section
       id="catalog"
       ref={sectionRef}
-      className="relative w-full py-16 sm:py-20 lg:py-24 overflow-hidden bg-white select-none font-inter min-h-0 flex items-center"
+      className="relative w-full py-16 sm:py-20 lg:py-24 overflow-hidden bg-white select-none font-jakarta min-h-0 flex items-center"
     >
 
 

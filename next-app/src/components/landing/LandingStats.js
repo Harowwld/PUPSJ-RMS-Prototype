@@ -2,7 +2,7 @@
 import LucideIcon from "@/components/shared/LucideIcon";
 export default function LandingStats() {
   return (
-    <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-16 w-full font-inter">
+    <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-16 w-full font-jakarta">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         
         {/* Blue Stat Card */}

@@ -4,7 +4,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 
 export default function ScanUploadSkeleton() {
   return (
-    <div className="flex flex-col gap-6 h-auto lg:flex-row lg:items-stretch animate-fade-up font-inter select-none">
+    <div className="flex flex-col gap-6 h-auto lg:flex-row lg:items-stretch animate-fade-up font-jakarta select-none">
       {/* Left Column: Dropzone & Document Canvas Preview */}
       <section className="w-full lg:w-[48%] flex min-h-[580px] flex-col rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-card">
         <div className="flex items-center justify-between pb-4 border-b border-gray-100 dark:border-white/5 mb-6">

@@ -157,9 +157,9 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
 
   return (
     <TooltipProvider delayDuration={200}>
-      <div className="font-inter w-full flex flex-1 flex-col h-full min-h-0 focus:outline-none animate-fade-up overflow-auto">
+      <div className="font-jakarta w-full flex flex-1 flex-col h-full min-h-0 focus:outline-none animate-fade-up overflow-auto">
         {/* ONE Single Card Container */}
-        <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none isolate font-inter mb-4 min-h-0 flex-1">
+        <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none isolate font-jakarta mb-4 min-h-0 flex-1">
           <PageHeader
             icon="ph-check-square"
             title="Batch Review"

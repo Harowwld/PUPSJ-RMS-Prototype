@@ -124,7 +124,7 @@ export default function LandingBento() {
   }, []);
 
   return (
-    <section id="about" className="scroll-mt-24 max-w-7xl mx-auto px-4 sm:px-6 pt-10 sm:pt-12 pb-20 w-full font-inter select-none">
+    <section id="about" className="scroll-mt-24 max-w-7xl mx-auto px-4 sm:px-6 pt-10 sm:pt-12 pb-20 w-full font-jakarta select-none">
       
       {/* =========================================================================
           ASYMMETRIC EDITORIAL HEADER (Slide from Left to Right Entrance)

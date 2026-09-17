@@ -656,7 +656,7 @@ function AccountPageContent() {
 
   if (loading) {
     return (
-      <div className="h-screen overflow-hidden flex flex-col bg-gray-50 dark:bg-background font-inter">
+      <div className="h-screen overflow-hidden flex flex-col bg-gray-50 dark:bg-background font-jakarta">
         <Header authUser={authUser} onLogout={handleLogout} />
         <main className="flex-1 min-h-0 overflow-y-auto w-full">
           <div className="max-w-[1280px] mx-auto py-10 px-6">
@@ -704,13 +704,13 @@ function AccountPageContent() {
 
 
   return (
-    <div className="h-screen overflow-hidden flex flex-col bg-gray-50 dark:bg-background font-inter selection:bg-pup-maroon selection:text-white">
+    <div className="h-screen overflow-hidden flex flex-col bg-gray-50 dark:bg-background font-jakarta selection:bg-pup-maroon selection:text-white">
       <Header authUser={authUser} onLogout={handleLogout} />
 
       <PageTransition className="flex-1 min-h-0 overflow-y-auto w-full">
         <div className="max-w-[1280px] mx-auto py-10 px-6">
           {/* ONE Single Card Container encapsulating Header, Sidebar & Tab Content */}
-          <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none isolate font-inter mb-4 min-h-0 flex-1">
+          <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none isolate font-jakarta mb-4 min-h-0 flex-1">
             <PageHeader
               icon="ph-user-gear"
               title="Account Settings"
@@ -1272,11 +1272,11 @@ function AccountPageContent() {
                             <div className="space-y-2 mt-4">
                                <div className="bg-white px-4 py-3 rounded-xl border border-gray-200 flex flex-col gap-1.5 shadow-xs dark:bg-card dark:border-white/10">
                                   <span className="text-[9px] font-semibold text-gray-400 tracking-widest dark:text-zinc-500">Secret key</span>
-                                  <span className="text-sm font-semibold text-pup-maroon dark:text-primary tracking-wider break-all font-inter">{totpSetupData.secret}</span>
+                                  <span className="text-sm font-semibold text-pup-maroon dark:text-primary tracking-wider break-all font-jakarta">{totpSetupData.secret}</span>
                                 </div>
                                <div className="bg-white px-4 py-3 rounded-xl border border-gray-200 flex flex-col gap-1.5 shadow-xs dark:bg-card dark:border-white/10">
                                   <span className="text-[9px] font-semibold text-gray-400 tracking-widest dark:text-zinc-500">Serial key (Backup)</span>
-                                  <span className="text-sm font-semibold text-gray-900 tracking-wider break-all dark:text-zinc-50 font-inter">{totpSetupData.serialKey}</span>
+                                  <span className="text-sm font-semibold text-gray-900 tracking-wider break-all dark:text-zinc-50 font-jakarta">{totpSetupData.serialKey}</span>
                                 </div>
                             </div>
                           </div>
@@ -1535,11 +1535,11 @@ function AccountPageContent() {
             <div className="flex flex-col gap-5">
               <div className="grid grid-cols-2 gap-x-6 gap-y-4">
                 {recoveryCodes.map((code, idx) => (
-                  <div key={idx} className="font-inter text-[14.5px] font-semibold text-[#1C1C1E] dark:text-zinc-200 flex items-center gap-3 bg-[#F5F5F7] p-3 rounded-[10px] border border-[#E5E5EA] dark:bg-white/5 dark:border-zinc-850">
+                  <div key={idx} className="font-jakarta text-[14.5px] font-semibold text-[#1C1C1E] dark:text-zinc-200 flex items-center gap-3 bg-[#F5F5F7] p-3 rounded-[10px] border border-[#E5E5EA] dark:bg-white/5 dark:border-zinc-850">
                     <span className="text-[11px] text-[#636366] dark:text-zinc-400 font-bold bg-[#E5E5EA] dark:bg-zinc-800 w-5 h-5 flex items-center justify-center rounded-full shrink-0">
                       {idx + 1}
                     </span>
-                    <span className="tracking-widest font-inter">{code}</span>
+                    <span className="tracking-widest font-jakarta">{code}</span>
                   </div>
                 ))}
               </div>

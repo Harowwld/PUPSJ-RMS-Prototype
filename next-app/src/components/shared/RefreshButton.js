@@ -1,9 +1,10 @@
 "use client"
 
-import React from "react"
+import React, { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip"
+import { toast } from "sonner"
 
 /**
  * A standardized refresh button component.
@@ -19,6 +20,46 @@ export function RefreshButton({
   className,
   title = "Refresh",
 }) {
+  const [clickState, setClickState] = useState("idle") // idle, pending, loading, finished
+
+  const handleClick = (e) => {
+    setClickState("pending")
+    if (onRefresh) onRefresh(e)
+  }
+
+  useEffect(() => {
+    let timer
+    if (clickState === "pending") {
+      if (isLoading) {
+        setClickState("loading")
+      } else {
+        // Fallback: If it doesn't enter loading state within 150ms, assume it finished
+        timer = setTimeout(() => {
+          if (clickState === "pending") {
+            setClickState("finished")
+          }
+        }, 150)
+      }
+    } else if (clickState === "loading") {
+      if (!isLoading) {
+        setClickState("finished")
+      }
+    } else if (clickState === "finished") {
+      const toastTitle = title.startsWith("Refresh ") 
+        ? title.replace("Refresh ", "") + " Refreshed" 
+        : title + " Refreshed"
+        
+      toast.success(toastTitle, {
+        description: "Loaded latest data from repository.",
+      })
+      setClickState("idle")
+    }
+    
+    return () => {
+      if (timer) clearTimeout(timer)
+    }
+  }, [isLoading, clickState, title])
+
   return (
     <Tooltip>
       <TooltipTrigger asChild>
@@ -26,19 +67,14 @@ export function RefreshButton({
           type="button"
           variant="outline"
           size="sm"
-          onClick={onRefresh}
-          disabled={isLoading}
+          onClick={handleClick}
+          disabled={isLoading || clickState === "pending" || clickState === "loading"}
           className={cn(
-            "flex h-10 w-10 items-center justify-center rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs active:scale-95 transition-all cursor-pointer p-0 disabled:opacity-50",
+            "flex h-10 px-4 items-center justify-center rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs active:scale-95 transition-all cursor-pointer disabled:opacity-50 font-semibold text-xs gap-2",
             className
           )}
         >
-          <i
-            className={cn(
-              "ph-bold ph-arrows-clockwise text-[16px] text-gray-600 dark:text-zinc-300 flex items-center justify-center leading-none",
-              isLoading && "animate-spin"
-            )}
-          />
+          {isLoading || clickState === "pending" || clickState === "loading" ? "Refreshing..." : "Refresh"}
         </Button>
       </TooltipTrigger>
       <TooltipContent className="bg-zinc-900 text-white border-zinc-800">

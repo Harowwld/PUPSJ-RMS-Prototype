@@ -512,10 +512,10 @@ export default function StudentDirectoryTab({
     <TooltipProvider delayDuration={200}>
       <div
         id="view-student-directory"
-        className="animate-fade-up font-inter flex h-auto w-full flex-col gap-6"
+        className="animate-fade-up font-jakarta flex h-auto w-full flex-col gap-6"
       >
         {/* ONE Single Card Container encapsulating Header, Metrics, Filters, Table & Pagination */}
-        <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none isolate font-inter mb-4 min-h-0 flex-1">
+        <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none isolate font-jakarta mb-4 min-h-0 flex-1">
           {/* 1. Page Header */}
           <PageHeader
             icon="ph-users"

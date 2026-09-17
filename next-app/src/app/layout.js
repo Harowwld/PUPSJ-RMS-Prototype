@@ -3,23 +3,11 @@ import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/shared/ThemeProvider";
 import DynamicFavicon from "@/components/shared/DynamicFavicon";
-import localFont from "next/font/local";
+import { Plus_Jakarta_Sans } from "next/font/google";
 
-const inter = localFont({
-  src: [
-    { path: "../../public/assets/fonts/inter/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuOKfMZg.ttf", weight: "300" },
-    { path: "../../public/assets/fonts/inter/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuLyfMZg.ttf", weight: "400" },
-    { path: "../../public/assets/fonts/inter/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuI6fMZg.ttf", weight: "500" },
-    { path: "../../public/assets/fonts/inter/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuGKYMZg.ttf", weight: "600" },
-    { path: "../../public/assets/fonts/inter/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuFuYMZg.ttf", weight: "700" },
-  ],
-  variable: "--font-inter",
-  display: "swap",
-});
-
-const geist = localFont({
-  src: "../../public/assets/fonts/geist/Geist-Variable.woff2",
-  variable: "--font-geist",
+const jakarta = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  variable: "--font-jakarta",
   display: "swap",
 });
 
@@ -36,7 +24,7 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" className={`${inter.variable} ${geist.variable}`} suppressHydrationWarning>
+    <html lang="en" className={`${jakarta.variable}`} suppressHydrationWarning data-scroll-behavior="smooth">
       <head>
         <link rel="icon" href="/assets/branding/black-icon.png" media="(prefers-color-scheme: light)" />
         <link rel="icon" href="/assets/branding/white-icon.png" media="(prefers-color-scheme: dark)" />

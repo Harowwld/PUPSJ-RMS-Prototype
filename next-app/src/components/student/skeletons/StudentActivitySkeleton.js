@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils"
 
 export function StudentActivityListSkeleton({ count = 5 }) {
   return (
-    <div className="mt-5 space-y-3 select-none font-inter animate-fade-up">
+    <div className="mt-5 space-y-3 select-none font-jakarta animate-fade-up">
       {Array.from({ length: count }).map((_, i) => (
         <article
           key={i}
@@ -34,7 +34,7 @@ export function StudentActivityListSkeleton({ count = 5 }) {
 
 export default function StudentActivitySkeleton({ count = 5 }) {
   return (
-    <section className="rounded-brand border border-gray-200 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-card select-none font-inter animate-fade-up">
+    <section className="rounded-brand border border-gray-200 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-card select-none font-jakarta animate-fade-up">
       <div className="space-y-1">
         <Skeleton className="h-5 w-32 rounded dark:bg-muted" />
         <Skeleton className="h-3.5 w-64 rounded dark:bg-muted" />

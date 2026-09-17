@@ -74,7 +74,7 @@ export default function RegistrarODRSTab({ showToast }) {
 
   return (
     <TooltipProvider delayDuration={200}>
-      <div className="flex flex-col h-full gap-4 animate-fade-up font-inter">
+      <div className="flex flex-col h-full gap-4 animate-fade-up font-jakarta">
         {/* Card Header aligned with other pages */}
         <Card className="rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none overflow-hidden">
           <PageHeader

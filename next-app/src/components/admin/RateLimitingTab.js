@@ -383,7 +383,7 @@ export default function RateLimitingTab() {
 
   return (
     <TooltipProvider delayDuration={200}>
-      <div className="space-y-6 animate-fade-up font-inter">
+      <div className="space-y-6 animate-fade-up font-jakarta">
         {/* Tab Header with Title & Refresh */}
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div>

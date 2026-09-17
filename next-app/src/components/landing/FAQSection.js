@@ -98,7 +98,7 @@ export default function FAQSection() {
   return (
     <section 
       id="faq" 
-      className="w-full font-inter select-none scroll-mt-24"
+      className="w-full font-jakarta select-none scroll-mt-24"
     >
       <motion.div 
         initial={{ opacity: 0, y: 20 }}

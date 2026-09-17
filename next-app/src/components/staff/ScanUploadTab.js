@@ -561,9 +561,9 @@ export default function ScanUploadTab({
     <TooltipProvider delayDuration={200}>
       <div
         id="view-upload"
-        className="font-inter w-full flex flex-1 flex-col h-auto min-h-0 focus:outline-none animate-fade-up"
+        className="font-jakarta w-full flex flex-1 flex-col h-auto min-h-0 focus:outline-none animate-fade-up"
       >
-        <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none isolate font-inter mb-4 min-h-0 flex-1">
+        <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none isolate font-jakarta mb-4 min-h-0 flex-1">
           <PageHeader
             icon="ph-scan"
             title="Scan & Upload"
@@ -1447,7 +1447,7 @@ export default function ScanUploadTab({
 
                 <section
                   className={cn(
-                    "font-inter flex h-fit flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition-all duration-normal dark:border-white/10 dark:bg-card dark:shadow-none",
+                    "font-jakarta flex h-fit flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition-all duration-normal dark:border-white/10 dark:bg-card dark:shadow-none",
                     uploadMode === "csv" ? "w-full lg:w-[32%]" : "lg:w-[52%]"
                   )}
                 >

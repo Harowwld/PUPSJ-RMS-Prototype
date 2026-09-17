@@ -7,7 +7,7 @@ export default function NotificationsTableSkeleton({ rowCount = 6, embedded = fa
   return (
     <div
       className={cn(
-        "flex-1 flex flex-col animate-fade-up font-inter select-none",
+        "flex-1 flex flex-col animate-fade-up font-jakarta select-none",
         !embedded && "border border-gray-200 rounded-2xl overflow-hidden dark:border-white/10 bg-white dark:bg-card shadow-sm"
       )}
     >

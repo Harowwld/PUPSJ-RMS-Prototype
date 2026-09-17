@@ -68,7 +68,7 @@ export default function PublicTracker() {
   ];
 
   return (
-    <section id="tracker" className="max-w-7xl mx-auto px-4 sm:px-6 pb-20 w-full font-inter select-none">
+    <section id="tracker" className="max-w-7xl mx-auto px-4 sm:px-6 pb-20 w-full font-jakarta select-none">
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}

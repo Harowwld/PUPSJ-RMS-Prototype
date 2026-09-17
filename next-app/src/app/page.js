@@ -22,7 +22,7 @@ export default function LandingPage() {
   }, []);
 
   return (
-    <div className="relative min-h-[100dvh] w-full max-w-full flex flex-col bg-[#ffffff] text-[#1D1D1F] selection:bg-red-100 selection:text-red-900 font-inter overflow-x-hidden">
+    <div className="relative min-h-[100dvh] w-full max-w-full flex flex-col bg-[#ffffff] text-[#1D1D1F] selection:bg-red-100 selection:text-red-900 font-jakarta overflow-x-hidden">
       
       {/* Subdued ambient liquid background */}
       <div className="liquid-container opacity-30">
