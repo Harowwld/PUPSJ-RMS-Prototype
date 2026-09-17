@@ -67,6 +67,7 @@ export default function SlaKpiCards({ total, completionRate, completed, sla }) {
             <div className="mt-2.5 h-1.5 w-full overflow-hidden rounded-full bg-gray-200/70 dark:bg-zinc-800">
               <div
                 data-width={`${charterComplianceRate}%`}
+                style={{ width: `${charterComplianceRate}%` }}
                 className="rms-style-width h-full bg-pup-maroon dark:bg-red-500 rounded-full"
               />
             </div>

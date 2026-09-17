@@ -1049,7 +1049,7 @@ export default function AccountActivityPage() {
       await fetch("/api/auth/logout", { method: "POST" });
     } catch { /* ignore */ }
     localStorage.setItem("pup-logout", Date.now());
-    router.push("/");
+    window.location.href = "/";
   };
 
   // 1. Fetch user session

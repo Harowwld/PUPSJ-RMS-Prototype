@@ -1,12 +1,19 @@
 import { NextResponse } from "next/server";
 import { registerStudent, createStudentSession, setStudentSessionCookie } from "@/lib/studentAuth";
 import { writeGlobalAuditLog } from "@/lib/auditLogRequest";
+import { verifyTurnstileToken } from "@/lib/turnstile";
 
 export const runtime = "nodejs";
 
 export async function POST(req) {
   try {
     const body = await req.json();
+
+    const isTurnstileValid = await verifyTurnstileToken(body?.cfTurnstileResponse);
+    if (!isTurnstileValid) {
+      return NextResponse.json({ ok: false, error: "Bot verification failed. Please refresh the page and try again." }, { status: 403 });
+    }
+
     const student = await registerStudent(body || {});
     await writeGlobalAuditLog(req, "Student account registered", { actor: student.student_no, role: "Student", details: "Created Student ODRS account", entity_type: "student_account", entity_id: student.student_no });
     const token = await createStudentSession(student);

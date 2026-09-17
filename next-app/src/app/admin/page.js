@@ -266,6 +266,17 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
 
   const [authUser, setAuthUser] = useState(initialAuthUser)
 
+  const roleBranding = getRoleBranding(authUser)
+  const brandAccent = authUser?.accent_color || roleBranding.color || "#EA580C"
+  const brandForeground = roleBranding.foreground || "#FFFFFF"
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && brandAccent) {
+      document.documentElement.style.setProperty("--brand-accent", brandAccent)
+      document.documentElement.style.setProperty("--brand-foreground", brandForeground)
+    }
+  }, [brandAccent, brandForeground])
+
   const sidebarItems = useMemo(() => {
     if (!authUser?.enabled_modules) return []
     const enabled = new Set(authUser.enabled_modules)
@@ -1138,7 +1149,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
       /* ignore */
     }
     localStorage.setItem("pup-logout", Date.now())
-    router.push("/")
+    window.location.href = "/"
   }
 
   const handleCreate = async (e, totpToken = null) => {
@@ -1749,10 +1760,6 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
       </div>
     )
   }
-
-  const roleBranding = getRoleBranding(authUser);
-  const brandAccent = authUser?.accent_color || roleBranding.color || "#EA580C";
-  const brandForeground = roleBranding.foreground || "#FFFFFF";
 
   return (
     <div

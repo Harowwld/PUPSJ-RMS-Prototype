@@ -95,13 +95,11 @@ export default function Header({ authUser, onLogout, children }) {
   const branding = getRoleBranding(authUser);
 
   useEffect(() => {
-    document.documentElement.style.setProperty("--brand-accent", branding.color);
-    document.documentElement.style.setProperty("--brand-foreground", branding.foreground);
-    return () => {
-      document.documentElement.style.removeProperty("--brand-accent");
-      document.documentElement.style.removeProperty("--brand-foreground");
-    };
-  }, [branding.color, branding.foreground]);
+    if (branding?.color) {
+      document.documentElement.style.setProperty("--brand-accent", branding.color);
+      document.documentElement.style.setProperty("--brand-foreground", branding.foreground || "#ffffff");
+    }
+  }, [branding?.color, branding?.foreground]);
 
   useEffect(() => {
     if (isSuperAdmin) {
@@ -197,9 +195,25 @@ export default function Header({ authUser, onLogout, children }) {
     if (isSuperAdmin) router.prefetch("/systemadmin");
   }, [router, isSuperAdmin]);
 
+  const handleLogoutAction = () => {
+    if (typeof window !== "undefined") {
+      document.documentElement.style.setProperty("--brand-accent", "#800000");
+      document.documentElement.style.setProperty("--brand-foreground", "#ffffff");
+      document.documentElement.removeAttribute("data-brand-accent");
+      document.documentElement.removeAttribute("data-brand-foreground");
+    }
+    if (onLogout) {
+      onLogout();
+      return;
+    }
+    fetch("/api/auth/logout", { method: "POST" }).catch(() => {});
+    localStorage.setItem("pup-logout", Date.now().toString());
+    window.location.href = "/";
+  };
+
   const handleSessionExpiredRedirect = () => {
     setShowSessionExpired(false);
-    router.push("/");
+    window.location.href = "/";
   };
 
   const isSettingsActive = pathname === "/account";
@@ -815,7 +829,7 @@ export default function Header({ authUser, onLogout, children }) {
     }
 
     if (item.action === "logout") {
-      if (onLogout) onLogout();
+      handleLogoutAction();
       return;
     }
 
@@ -939,13 +953,13 @@ export default function Header({ authUser, onLogout, children }) {
                   ? "bg-gray-100 dark:bg-zinc-850 border-gray-200/80 dark:border-white/10 shadow-2xs" 
                   : "hover:bg-gray-100/70 dark:hover:bg-zinc-900"
               )}>
-                <div className="relative h-8 w-8 rounded-lg bg-white flex items-center justify-center text-xs font-bold border overflow-hidden shadow-2xs shrink-0 text-gray-700 dark:bg-zinc-850 dark:text-zinc-300 border-gray-200 dark:border-white/10">
+                <div className="relative h-8 w-8 rounded-full bg-white flex items-center justify-center text-xs font-bold border overflow-hidden shadow-2xs shrink-0 text-gray-700 dark:bg-zinc-850 dark:text-zinc-300 border-gray-200 dark:border-white/10">
                   {authUser?.avatar_filename && !imageError ? (
                     <>
                       <img 
                         src={`/api/account/avatar?id=${authUser.id}&t=${authUser.updated_at || authUser.avatar_filename || "avatar"}`}
                         alt=""
-                        className={cn("w-full h-full object-cover", imageLoaded ? "block" : "hidden")}
+                        className={cn("w-full h-full object-cover scale-[1.2]", imageLoaded ? "block" : "hidden")}
                         onLoad={() => setImageLoaded(true)}
                         onError={() => setImageError(true)}
                       />
@@ -1042,7 +1056,7 @@ export default function Header({ authUser, onLogout, children }) {
 
                <DropdownMenuGroup className="p-1.5">
                  <DropdownMenuItem
-                   onClick={onLogout}
+                   onClick={handleLogoutAction}
                    className="cursor-pointer rounded-[8px] flex items-center gap-3 font-normal text-[15px] py-2.5 px-3 text-[#FF3B30] dark:text-[#FF453A] hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors outline-none"
                  >
                    <i className="ti ti-circle-x text-[19px] text-[#FF3B30] dark:text-[#FF453A] shrink-0 flex items-center justify-center h-[19px] w-[19px] leading-none"></i>

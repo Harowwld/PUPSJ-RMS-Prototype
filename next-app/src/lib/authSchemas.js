@@ -3,10 +3,12 @@ import { z } from "zod";
 export const LoginSchema = z.object({
   username: z.string().min(1, "Username is required").trim(),
   password: z.string().min(1, "Password is required"),
+  cfTurnstileResponse: z.string().optional(),
 });
 
 export const ForgotPasswordIdentifySchema = z.object({
   identifier: z.string().min(1, "Email or Staff ID is required").trim(),
+  cfTurnstileResponse: z.string().optional(),
 });
 
 export const ForgotPasswordResetSchema = z.object({

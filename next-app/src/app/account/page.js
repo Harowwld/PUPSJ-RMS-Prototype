@@ -246,7 +246,7 @@ function AccountPageContent() {
       /* ignore */
     }
     localStorage.setItem("pup-logout", Date.now());
-    router.push("/");
+    window.location.href = "/";
   };
 
   const handleAvatarClick = () => {

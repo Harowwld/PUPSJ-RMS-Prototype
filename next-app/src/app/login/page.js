@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { Turnstile } from '@marsidev/react-turnstile';
 import { useState, useEffect, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -94,6 +95,7 @@ function formatRegistrarStudentName({ firstName, middleName, lastName }) {
 
 export default function Home() {
   const router = useRouter();
+  const [turnstileToken, setTurnstileToken] = useState("");
   const [view, setView] = useState("login"); // "login" or "forgot"
   const [loginStep, setLoginStep] = useState(1); // 1 = email, 2 = password
   const [username, setUsername] = useState("");
@@ -217,7 +219,7 @@ export default function Home() {
       const res = await fetch("/api/auth/forgot-password/identify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ identifier: forgotIdentifier.trim() })
+        body: JSON.stringify({ identifier: forgotIdentifier.trim(), cfTurnstileResponse: turnstileToken })
       });
       const json = await res.json();
       if (!res.ok || !json.ok) {
@@ -322,7 +324,7 @@ export default function Home() {
         const res = await fetch("/api/auth/login", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ username: usernameInput, password: passwordInput }),
+          body: JSON.stringify({ username: usernameInput, password: passwordInput, cfTurnstileResponse: turnstileToken }),
         });
         const json = await res.json();
         if (!res.ok || !json?.ok) {
@@ -341,13 +343,6 @@ export default function Home() {
         // Signal other tabs to clear "Session Expired" modal
         localStorage.setItem("pup-session-recovered", Date.now().toString());
         localStorage.removeItem("pup-logout");
-
-        const meRes = await fetch("/api/auth/me");
-        const meJson = await meRes.json().catch(() => null);
-        if (meJson?.ok && !meJson.data?.avatar_filename) {
-          router.push("/onboarding");
-          return;
-        }
 
         if (isSystemAdminRole(role)) {
           router.push("/systemadmin");
@@ -401,8 +396,11 @@ export default function Home() {
           firstName: studentSignup.firstName.trim(),
           middleName: studentSignup.middleName.trim(),
           lastName: studentSignup.lastName.trim(),
-          email: studentSignup.email.trim(),
+          suffix: studentSignup.suffix.trim(),
+          studentNo: studentSignup.studentNo.trim(),
+          courseCode: studentSignup.courseCode.trim(),
           password: studentSignup.password,
+          cfTurnstileResponse: turnstileToken,
         }),
       });
       const json = await res.json();
@@ -414,7 +412,7 @@ export default function Home() {
       localStorage.removeItem("pup-logout");
       toast.success("Account Created", { description: "Welcome to eManage Student Portal!" });
       resetStudentSignupState();
-      router.push("/onboarding");
+      router.push("/student");
     } catch (err) {
       setStudentSignupError(err?.message || "Unable to create student account.");
     } finally {
@@ -453,13 +451,6 @@ export default function Home() {
       localStorage.removeItem("pup-logout");
 
       const role = String(json?.data?.role || "");
-
-      const meRes = await fetch("/api/auth/me");
-      const meJson = await meRes.json().catch(() => null);
-      if (meJson?.ok && !meJson.data?.avatar_filename) {
-        router.push("/onboarding");
-        return;
-      }
 
       if (isSystemAdminRole(role)) {
         router.push("/systemadmin");
@@ -752,6 +743,15 @@ export default function Home() {
                     <div className="mt-auto" />
                   )}
 
+                  {/* Turnstile Widget */}
+                  <div className="w-full flex justify-center mt-4">
+                    <Turnstile
+                      siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || "1x00000000000000000000AA"}
+                      onSuccess={(token) => setTurnstileToken(token)}
+                      options={{ size: "invisible" }}
+                    />
+                  </div>
+
                   {/* Continue Button (Always visible at the bottom) */}
                   <div className="absolute bottom-[64px] left-[52px] right-[52px]">
                     <Button
@@ -808,6 +808,15 @@ export default function Home() {
                           </p>
                         </div>
                       )}
+                    </div>
+
+                    {/* Turnstile Widget */}
+                    <div className="w-full flex justify-center mt-4">
+                      <Turnstile
+                        siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || "1x00000000000000000000AA"}
+                        onSuccess={(token) => setTurnstileToken(token)}
+                        options={{ size: "invisible" }}
+                      />
                     </div>
 
                     {/* Locate Account Button (Always visible at the bottom) */}
@@ -1123,6 +1132,15 @@ export default function Home() {
                         </p>
                       </div>
                     )}
+                  </div>
+
+                  {/* Turnstile Widget */}
+                  <div className="w-full flex justify-center mt-4">
+                    <Turnstile
+                      siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || "1x00000000000000000000AA"}
+                      onSuccess={(token) => setTurnstileToken(token)}
+                      options={{ size: "invisible" }}
+                    />
                   </div>
 
                   {/* Action Buttons */}

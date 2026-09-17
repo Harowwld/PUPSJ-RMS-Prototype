@@ -3,8 +3,9 @@
 @import "../../public/assets/fonts/geist/geist.css";
 @plugin "tailwindcss-animate";
 
-/* CSP-safe presentation helpers. Dynamic values are carried as data attributes
- * and consumed by typed attr() declarations instead of React style props. */
+/* Presentation helpers & role branding.
+ * Dynamic brand colors are injected into :root via CSSOM (style.setProperty),
+ * with solid default maroon fallbacks for universal browser compatibility. */
 :root {
   --brand-accent: #800000;
   --brand-foreground: #ffffff;
@@ -15,20 +16,14 @@
   --brand-foreground: #ffffff;
 }
 
-.rms-brand-scope[data-brand-accent] {
-  --brand-accent: attr(data-brand-accent type(<color>), #ad2f2f);
-}
+@supports (color: attr(x type(<color>))) {
+  .rms-brand-scope[data-brand-accent] {
+    --brand-accent: attr(data-brand-accent type(<color>), #ad2f2f);
+  }
 
-.rms-brand-scope[data-brand-foreground] {
-  --brand-foreground: attr(data-brand-foreground type(<color>), #ffffff);
-}
-
-:root[data-brand-accent] {
-  --brand-accent: attr(data-brand-accent type(<color>), #800000);
-}
-
-:root[data-brand-foreground] {
-  --brand-foreground: attr(data-brand-foreground type(<color>), #ffffff);
+  .rms-brand-scope[data-brand-foreground] {
+    --brand-foreground: attr(data-brand-foreground type(<color>), #ffffff);
+  }
 }
 
 .rms-login-card,
@@ -52,59 +47,61 @@
   clip-path: polygon(0% 100%, 100% 100%, 0% 25%);
 }
 
-.rms-style-width {
-  --rms-width: attr(data-width type(<percentage>), 0%);
-  width: var(--rms-width, 0%);
-}
+@supports (color: attr(x type(<color>))) {
+  .rms-style-width {
+    --rms-width: attr(data-width type(<percentage>), 0%);
+    width: var(--rms-width, 0%);
+  }
 
-.rms-style-width[data-width] {
-  --rms-width: attr(data-width type(<percentage>), 0%);
-  width: var(--rms-width, 0%);
-}
+  .rms-style-width[data-width] {
+    --rms-width: attr(data-width type(<percentage>), 0%);
+    width: var(--rms-width, 0%);
+  }
 
-.rms-style-height {
-  --rms-height: attr(data-height type(<percentage>), 0%);
-  height: var(--rms-height, 0%);
-}
+  .rms-style-height {
+    --rms-height: attr(data-height type(<percentage>), 0%);
+    height: var(--rms-height, 0%);
+  }
 
-.rms-style-left {
-  --rms-left: attr(data-left type(<percentage>), 0%);
-  left: var(--rms-left, 0%);
-}
+  .rms-style-left {
+    --rms-left: attr(data-left type(<percentage>), 0%);
+    left: var(--rms-left, 0%);
+  }
 
-.rms-style-top {
-  --rms-top: attr(data-top type(<percentage>), 0%);
-  top: var(--rms-top, 0%);
-}
+  .rms-style-top {
+    --rms-top: attr(data-top type(<percentage>), 0%);
+    top: var(--rms-top, 0%);
+  }
 
-.rms-style-color {
-  --rms-color: attr(data-color type(<color>), currentColor);
-  color: var(--rms-color, currentColor);
-}
+  .rms-style-color {
+    --rms-color: attr(data-color type(<color>), currentColor);
+    color: var(--rms-color, currentColor);
+  }
 
-.rms-style-color[data-text-color] {
-  --rms-text-color: attr(data-text-color type(<color>), currentColor);
-  color: var(--rms-text-color, currentColor);
-}
+  .rms-style-color[data-text-color] {
+    --rms-text-color: attr(data-text-color type(<color>), currentColor);
+    color: var(--rms-text-color, currentColor);
+  }
 
-.rms-style-background-color {
-  --rms-bg-color: attr(data-color type(<color>), transparent);
-  background-color: var(--rms-bg-color, transparent);
-}
+  .rms-style-background-color {
+    --rms-bg-color: attr(data-color type(<color>), transparent);
+    background-color: var(--rms-bg-color, transparent);
+  }
 
-.rms-style-background-color[data-background-color] {
-  --rms-bg-color: attr(data-background-color type(<color>), transparent);
-  background-color: var(--rms-bg-color, transparent);
-}
+  .rms-style-background-color[data-background-color] {
+    --rms-bg-color: attr(data-background-color type(<color>), transparent);
+    background-color: var(--rms-bg-color, transparent);
+  }
 
-.rms-style-border-color {
-  --rms-border-color: attr(data-color type(<color>), currentColor);
-  border-color: var(--rms-border-color, currentColor);
-}
+  .rms-style-border-color {
+    --rms-border-color: attr(data-color type(<color>), currentColor);
+    border-color: var(--rms-border-color, currentColor);
+  }
 
-.rms-style-border-color[data-border-color] {
-  --rms-border-color: attr(data-border-color type(<color>), currentColor);
-  border-color: var(--rms-border-color, currentColor);
+  .rms-style-border-color[data-border-color] {
+    --rms-border-color: attr(data-border-color type(<color>), currentColor);
+    border-color: var(--rms-border-color, currentColor);
+  }
 }
 
 .rms-style-border-box {
@@ -184,125 +181,127 @@
   background-size: 2.5% 4%, 2.5% 4%;
 }
 
-.rms-wayfinder-node {
-  --rms-left: attr(data-left type(<percentage>), 0%);
-  --rms-top: attr(data-top type(<percentage>), 0%);
-  left: var(--rms-left, 0%);
-  top: var(--rms-top, 0%);
-  transform: translate(-50%, -50%);
-}
+@supports (color: attr(x type(<color>))) {
+  .rms-wayfinder-node {
+    --rms-left: attr(data-left type(<percentage>), 0%);
+    --rms-top: attr(data-top type(<percentage>), 0%);
+    left: var(--rms-left, 0%);
+    top: var(--rms-top, 0%);
+    transform: translate(-50%, -50%);
+  }
 
-.rms-wayfinder-dot {
-  --rms-dot-bg: attr(data-background-color type(<color>), currentColor);
-  background-color: var(--rms-dot-bg, currentColor);
-}
+  .rms-wayfinder-dot {
+    --rms-dot-bg: attr(data-background-color type(<color>), currentColor);
+    background-color: var(--rms-dot-bg, currentColor);
+  }
 
-.rms-door-position {
-  --rms-door-left: attr(data-left type(<percentage>), 0%);
-  --rms-door-top: attr(data-top type(<percentage>), 0%);
-  --rms-door-width: attr(data-width type(<percentage>), 0%);
-  --rms-door-height: attr(data-height type(<percentage>), 0%);
-  left: var(--rms-door-left, 0%);
-  top: var(--rms-door-top, 0%);
-  width: var(--rms-door-width, 0%);
-  height: var(--rms-door-height, 0%);
-}
+  .rms-door-position {
+    --rms-door-left: attr(data-left type(<percentage>), 0%);
+    --rms-door-top: attr(data-top type(<percentage>), 0%);
+    --rms-door-width: attr(data-width type(<percentage>), 0%);
+    --rms-door-height: attr(data-height type(<percentage>), 0%);
+    left: var(--rms-door-left, 0%);
+    top: var(--rms-door-top, 0%);
+    width: var(--rms-door-width, 0%);
+    height: var(--rms-door-height, 0%);
+  }
 
-.rms-cabinet-position {
-  --rms-cab-left: attr(data-left type(<percentage>), 0%);
-  --rms-cab-top: attr(data-top type(<percentage>), 0%);
-  --rms-cab-width: attr(data-width type(<length-percentage>), 0%);
-  --rms-cab-height: attr(data-height type(<length-percentage>), 0%);
-  left: var(--rms-cab-left, 0%);
-  top: var(--rms-cab-top, 0%);
-  width: var(--rms-cab-width, 0%);
-  height: var(--rms-cab-height, 0%);
-}
+  .rms-cabinet-position {
+    --rms-cab-left: attr(data-left type(<percentage>), 0%);
+    --rms-cab-top: attr(data-top type(<percentage>), 0%);
+    --rms-cab-width: attr(data-width type(<length-percentage>), 0%);
+    --rms-cab-height: attr(data-height type(<length-percentage>), 0%);
+    left: var(--rms-cab-left, 0%);
+    top: var(--rms-cab-top, 0%);
+    width: var(--rms-cab-width, 0%);
+    height: var(--rms-cab-height, 0%);
+  }
 
-.rms-folder-back[data-start-color][data-end-color] {
-  --rms-start-color: attr(data-start-color type(<color>), transparent);
-  --rms-end-color: attr(data-end-color type(<color>), transparent);
-  background: linear-gradient(180deg, var(--rms-start-color) 0%, var(--rms-end-color) 100%);
-}
+  .rms-folder-back[data-start-color][data-end-color] {
+    --rms-start-color: attr(data-start-color type(<color>), transparent);
+    --rms-end-color: attr(data-end-color type(<color>), transparent);
+    background: linear-gradient(180deg, var(--rms-start-color) 0%, var(--rms-end-color) 100%);
+  }
 
-.rms-folder-tab[data-start-color] {
-  --rms-tab-start: attr(data-start-color type(<color>), transparent);
-  background-color: var(--rms-tab-start, transparent);
-}
+  .rms-folder-tab[data-start-color] {
+    --rms-tab-start: attr(data-start-color type(<color>), transparent);
+    background-color: var(--rms-tab-start, transparent);
+  }
 
-.rms-folder-front[data-start-color][data-end-color] {
-  --rms-front-start: attr(data-start-color type(<color>), transparent);
-  --rms-front-end: attr(data-end-color type(<color>), transparent);
-  background: linear-gradient(180deg, var(--rms-front-start) 0%, var(--rms-front-end) 100%);
-}
+  .rms-folder-front[data-start-color][data-end-color] {
+    --rms-front-start: attr(data-start-color type(<color>), transparent);
+    --rms-front-end: attr(data-end-color type(<color>), transparent);
+    background: linear-gradient(180deg, var(--rms-front-start) 0%, var(--rms-front-end) 100%);
+  }
 
-.rms-folder-card[data-start-color][data-end-color] {
-  --rms-card-start: attr(data-start-color type(<color>), transparent);
-  --rms-card-end: attr(data-end-color type(<color>), transparent);
-  background: linear-gradient(135deg, var(--rms-card-start) 0%, var(--rms-card-end) 100%);
+  .rms-folder-card[data-start-color][data-end-color] {
+    --rms-card-start: attr(data-start-color type(<color>), transparent);
+    --rms-card-end: attr(data-end-color type(<color>), transparent);
+    background: linear-gradient(135deg, var(--rms-card-start) 0%, var(--rms-card-end) 100%);
+  }
+
+  .rms-office-accent[data-color] {
+    --rms-office-color: attr(data-color type(<color>), currentColor);
+    color: var(--rms-office-color, currentColor);
+    background-color: color-mix(in srgb, var(--rms-office-color, #800000) 8%, transparent);
+    border-color: color-mix(in srgb, var(--rms-office-color, #800000) 20%, transparent);
+  }
+
+  .rms-style-rotate {
+    --rms-rotation: attr(data-rotation type(<angle>), 0deg);
+    transform: rotate(var(--rms-rotation, 0deg));
+  }
+
+  .rms-progress-transform {
+    --rms-progress: attr(data-progress type(<percentage>), 0%);
+    transform: translateX(calc(var(--rms-progress, 0%) - 100%));
+  }
+
+  .rms-style-zoom {
+    --rms-zoom: attr(data-zoom type(<number>), 1);
+    zoom: var(--rms-zoom, 1);
+  }
+
+  .rms-style-transition-delay {
+    --rms-transition-delay: attr(data-transition-delay type(<time>), 0ms);
+    transition-delay: var(--rms-transition-delay, 0ms);
+  }
+
+  .rms-style-animation-delay {
+    --rms-animation-delay: attr(data-animation-delay type(<time>), 0ms);
+    animation-delay: var(--rms-animation-delay, 0ms);
+  }
+
+  .rms-style-aspect-ratio {
+    --rms-aspect-ratio: attr(data-aspect-ratio type(<number>), 1);
+    aspect-ratio: var(--rms-aspect-ratio, 1);
+  }
+
+  .rms-style-positioned-box {
+    --rms-box-left: attr(data-left type(<percentage>), 0%);
+    --rms-box-top: attr(data-top type(<percentage>), 0%);
+    --rms-box-width: attr(data-width type(<percentage>), 0%);
+    --rms-box-height: attr(data-height type(<percentage>), 0%);
+    left: var(--rms-box-left, 0%);
+    top: var(--rms-box-top, 0%);
+    width: var(--rms-box-width, 0%);
+    height: var(--rms-box-height, 0%);
+  }
+
+  .rms-style-preview-image {
+    --rms-prev-left: attr(data-left type(<percentage>), 0%);
+    --rms-prev-top: attr(data-top type(<percentage>), 0%);
+    --rms-prev-width: attr(data-width type(<percentage>), 100%);
+    --rms-prev-height: attr(data-height type(<percentage>), 100%);
+    left: var(--rms-prev-left, 0%);
+    top: var(--rms-prev-top, 0%);
+    width: var(--rms-prev-width, 100%);
+    height: var(--rms-prev-height, 100%);
+  }
 }
 
 .rms-folder-perspective {
   perspective: 1000px;
-}
-
-.rms-office-accent[data-color] {
-  --rms-office-color: attr(data-color type(<color>), currentColor);
-  color: var(--rms-office-color, currentColor);
-  background-color: color-mix(in srgb, var(--rms-office-color, #800000) 8%, transparent);
-  border-color: color-mix(in srgb, var(--rms-office-color, #800000) 20%, transparent);
-}
-
-.rms-style-rotate {
-  --rms-rotation: attr(data-rotation type(<angle>), 0deg);
-  transform: rotate(var(--rms-rotation, 0deg));
-}
-
-.rms-progress-transform {
-  --rms-progress: attr(data-progress type(<percentage>), 0%);
-  transform: translateX(calc(var(--rms-progress, 0%) - 100%));
-}
-
-.rms-style-zoom {
-  --rms-zoom: attr(data-zoom type(<number>), 1);
-  zoom: var(--rms-zoom, 1);
-}
-
-.rms-style-transition-delay {
-  --rms-transition-delay: attr(data-transition-delay type(<time>), 0ms);
-  transition-delay: var(--rms-transition-delay, 0ms);
-}
-
-.rms-style-animation-delay {
-  --rms-animation-delay: attr(data-animation-delay type(<time>), 0ms);
-  animation-delay: var(--rms-animation-delay, 0ms);
-}
-
-.rms-style-aspect-ratio {
-  --rms-aspect-ratio: attr(data-aspect-ratio type(<number>), 1);
-  aspect-ratio: var(--rms-aspect-ratio, 1);
-}
-
-.rms-style-positioned-box {
-  --rms-box-left: attr(data-left type(<percentage>), 0%);
-  --rms-box-top: attr(data-top type(<percentage>), 0%);
-  --rms-box-width: attr(data-width type(<percentage>), 0%);
-  --rms-box-height: attr(data-height type(<percentage>), 0%);
-  left: var(--rms-box-left, 0%);
-  top: var(--rms-box-top, 0%);
-  width: var(--rms-box-width, 0%);
-  height: var(--rms-box-height, 0%);
-}
-
-.rms-style-preview-image {
-  --rms-prev-left: attr(data-left type(<percentage>), 0%);
-  --rms-prev-top: attr(data-top type(<percentage>), 0%);
-  --rms-prev-width: attr(data-width type(<percentage>), 100%);
-  --rms-prev-height: attr(data-height type(<percentage>), 100%);
-  left: var(--rms-prev-left, 0%);
-  top: var(--rms-prev-top, 0%);
-  width: var(--rms-prev-width, 100%);
-  height: var(--rms-prev-height, 100%);
 }
 
 .rms-toast-viewport {
@@ -430,11 +429,38 @@
   transition: opacity 140ms cubic-bezier(0.25, 1, 0.5, 1), transform 140ms cubic-bezier(0.25, 1, 0.5, 1);
 }
 
-.rms-tooltip-positioned {
-  --rms-tooltip-top: attr(data-top type(<length>), 0px);
-  --rms-tooltip-left: attr(data-left type(<length>), 0px);
-  top: var(--rms-tooltip-top, 0px);
-  left: var(--rms-tooltip-left, 0px);
+@supports (color: attr(x type(<color>))) {
+  .rms-tooltip-positioned {
+    --rms-tooltip-top: attr(data-top type(<length>), 0px);
+    --rms-tooltip-left: attr(data-left type(<length>), 0px);
+    top: var(--rms-tooltip-top, 0px);
+    left: var(--rms-tooltip-left, 0px);
+  }
+
+  .rms-select-portal[data-top] {
+    --rms-portal-top: attr(data-top type(<length>), 0px);
+    --rms-portal-left: attr(data-left type(<length>), 0px);
+    --rms-portal-width: attr(data-width type(<length>), auto);
+    top: var(--rms-portal-top, 0px);
+    left: var(--rms-portal-left, 0px);
+    width: var(--rms-portal-width, auto);
+  }
+
+  .rms-liquid-glass-button[data-height] {
+    --rms-btn-height: attr(data-height type(<length>), 40px);
+    height: var(--rms-btn-height, 40px);
+  }
+
+  .rms-liquid-glass-button[data-radius] {
+    --rms-btn-radius: attr(data-radius type(<length>), 20px);
+    border-radius: var(--rms-btn-radius, 20px);
+  }
+
+  .rms-liquid-glass-button[data-theme-color="false"] {
+    --rms-btn-glass: attr(data-glass-color type(<color>), rgba(128, 0, 0, 0.15));
+    background: linear-gradient(135deg, var(--rms-btn-glass, rgba(128, 0, 0, 0.15)), rgba(255, 255, 255, 0.05));
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
 }
 
 .rms-tooltip-visible {
@@ -452,40 +478,15 @@
   z-index: 9999;
 }
 
-.rms-select-portal[data-top] {
-  --rms-portal-top: attr(data-top type(<length>), 0px);
-  --rms-portal-left: attr(data-left type(<length>), 0px);
-  --rms-portal-width: attr(data-width type(<length>), auto);
-  top: var(--rms-portal-top, 0px);
-  left: var(--rms-portal-left, 0px);
-  width: var(--rms-portal-width, auto);
-}
-
 .rms-liquid-glass-button {
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
 }
 
-.rms-liquid-glass-button[data-height] {
-  --rms-btn-height: attr(data-height type(<length>), 40px);
-  height: var(--rms-btn-height, 40px);
-}
-
-.rms-liquid-glass-button[data-radius] {
-  --rms-btn-radius: attr(data-radius type(<length>), 20px);
-  border-radius: var(--rms-btn-radius, 20px);
-}
-
 .rms-liquid-glass-button[data-theme-color="true"] {
-  background: var(--brand-accent, #ad2f2f);
-  border: 1px solid color-mix(in srgb, var(--brand-accent, #ad2f2f) 75%, black);
+  background: var(--brand-accent, #800000);
+  border: 1px solid color-mix(in srgb, var(--brand-accent, #800000) 75%, black);
   color: var(--brand-foreground, #ffffff);
-}
-
-.rms-liquid-glass-button[data-theme-color="false"] {
-  --rms-btn-glass: attr(data-glass-color type(<color>), rgba(128, 0, 0, 0.15));
-  background: linear-gradient(135deg, var(--rms-btn-glass, rgba(128, 0, 0, 0.15)), rgba(255, 255, 255, 0.05));
-  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .rms-zoom-75 { zoom: 0.75; }
@@ -735,8 +736,8 @@
   --font-inter: var(--font-geist), Geist, "Geist Fallback", var(--font-inter), Inter, Helvetica, sans-serif;
   --radius-brand: var(--radius);
 
-  --color-pup-maroon: var(--brand-accent, #ad2f2f);
-  --color-pup-darkMaroon: var(--brand-accent, #912727);
+  --color-pup-maroon: var(--brand-accent, #800000);
+  --color-pup-darkMaroon: color-mix(in srgb, var(--brand-accent, #800000) 85%, black);
   --color-pup-gray: #f5f5f5;
   --color-pup-text: #1f1f1f;
   --color-pup-border: #d1d5db;
@@ -1163,7 +1164,7 @@ th {
 
 /* Brand Buttons - Solid Maroon Style */
 .btn-brand-red {
-  background-color: var(--brand-accent, var(--color-pup-maroon)) !important;
+  background-color: var(--brand-accent, #800000) !important;
   background-image: none !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
@@ -1177,12 +1178,12 @@ th {
 }
 
 .dark .btn-brand-red {
-  background-color: var(--brand-accent, var(--color-pup-maroon)) !important;
+  background-color: var(--brand-accent, #800000) !important;
   box-shadow: none !important;
 }
 
 .btn-brand-red:hover {
-  background-color: color-mix(in srgb, var(--brand-accent, var(--color-pup-maroon)) 85%, black) !important;
+  background-color: color-mix(in srgb, var(--brand-accent, #800000) 85%, black) !important;
   background-image: none !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
@@ -1191,12 +1192,12 @@ th {
 }
 
 .dark .btn-brand-red:hover {
-  background-color: color-mix(in srgb, var(--brand-accent, var(--color-pup-maroon)) 85%, black) !important;
+  background-color: color-mix(in srgb, var(--brand-accent, #800000) 85%, black) !important;
   box-shadow: none !important;
 }
 
 .btn-brand-red:active {
-  background-color: color-mix(in srgb, var(--brand-accent, var(--color-pup-maroon)) 75%, black) !important;
+  background-color: color-mix(in srgb, var(--brand-accent, #800000) 75%, black) !important;
   background-image: none !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;

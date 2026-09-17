@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { verifyTurnstileToken } from "@/lib/turnstile";
 import {
   getStaffByUsername,
   setStaffPasswordById,
@@ -60,7 +61,16 @@ function rateLimitResponse(rateLimitResult) {
   ));
 }
 
+
 export async function POST(req) {
+  try {
+    return await _POST(req);
+  } catch (err) {
+    console.error("[Login POST Error]:", err);
+    return NextResponse.json({ ok: false, error: "Internal server error: " + (err.message || "Unknown error") }, { status: 500 });
+  }
+}
+async function _POST(req) {
   // 1. Check Rate Limit (Moved back to route handler from middleware)
   const forwardedFor = req.headers.get('x-forwarded-for');
   const realIP = req.headers.get('x-real-ip');
@@ -86,7 +96,17 @@ export async function POST(req) {
     ));
   }
 
-  const { username, password } = validation.data;
+  const { username, password, cfTurnstileResponse } = validation.data;
+
+  // 3. Verify Turnstile Token
+  const isTurnstileValid = await verifyTurnstileToken(cfTurnstileResponse);
+  if (!isTurnstileValid) {
+    authDebug("login.bot_detected", { reason: "Turnstile verification failed" });
+    return addSecurityHeaders(NextResponse.json(
+      { ok: false, error: "Bot verification failed. Please refresh the page and try again." },
+      { status: 403 }
+    ));
+  }
 
   // 2. Authenticate
   const cleanUsername = String(username || "").trim();
@@ -98,20 +118,10 @@ export async function POST(req) {
   const isSuperAdminAlias = lowerUser === "admin.default@pup.local" || lowerUser === "pupregistrar-001";
   const searchIdentifier = isSuperAdminAlias ? "superadmin@pup.local" : cleanUsername;
 
-  let staff = process.env.DATABASE_URL
-    ? await queryOne(
-        "SELECT * FROM staff WHERE lower(email) = lower($1) OR lower(id) = lower($1)",
-        [searchIdentifier]
-      )
-    : await getStaffByUsername(searchIdentifier);
+  let staff = await getStaffByUsername(searchIdentifier);
 
   if (!staff && isSuperAdminAlias) {
-    staff = process.env.DATABASE_URL
-      ? await queryOne(
-          "SELECT * FROM staff WHERE lower(email) = lower($1) OR lower(id) = lower($1)",
-          [cleanUsername]
-        )
-      : await getStaffByUsername(cleanUsername);
+    staff = await getStaffByUsername(cleanUsername);
   }
 
   if (!staff) {
@@ -165,9 +175,10 @@ export async function POST(req) {
   }
 
   // 3. Create Session or Require 2FA
-  const touched = process.env.DATABASE_URL
+  let touched = process.env.DATABASE_URL
     ? await queryOne("UPDATE staff SET last_active = NOW(), updated_at = NOW() WHERE id = $1 RETURNING *", [staff.id])
     : await touchStaffLastActiveById(staff.id);
+  if (touched) touched = Object.assign({}, touched, { email: staff.email, fname: staff.fname, lname: staff.lname });
   if (!touched) {
     authDebug("login.last_active_update_failed", { staffId: staff.id });
     return addSecurityHeaders(NextResponse.json(

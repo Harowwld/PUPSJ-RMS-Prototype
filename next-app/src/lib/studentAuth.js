@@ -1,3 +1,4 @@
+import { encryptPII, decryptPII } from "./piiEncryption.js";
 import { getSessionCookieName, signSessionToken, verifySessionToken } from "./jwt.js";
 import { query, queryOne } from "./postgres.js";
 import { getSessionVersion, isSessionActive, registerSessionToken } from "./authSessions.js";
@@ -30,8 +31,8 @@ export async function registerStudent({ studentNo, name, firstName, lastName, mi
 
   // 1. Check if an account already exists with this email
   const existingEmail = await queryOne(
-    "SELECT id, student_no, email FROM student_accounts WHERE lower(email) = $1",
-    [cleanEmail]
+    "SELECT id, student_no, email FROM student_accounts WHERE email = $1",
+    [encryptPII(cleanEmail)]
   );
   if (existingEmail) {
     throw new Error("An account with this email address already exists. Please sign in.");
@@ -51,7 +52,7 @@ export async function registerStudent({ studentNo, name, firstName, lastName, mi
     `INSERT INTO student_accounts (student_no, email, password_hash, status, first_name, middle_name, last_name, client_type)
      VALUES ($1, $2, $3, 'Active', $4, $5, $6, $7)
      RETURNING id, student_no, email, first_name, middle_name, last_name, client_type`,
-    [student ? student.student_no : null, cleanEmail, hashPassword(cleanPass), cleanFirst, cleanMiddle, cleanLast, resolvedClientType]
+    [student ? student.student_no : null, encryptPII(cleanEmail), hashPassword(cleanPass), encryptPII(cleanFirst), encryptPII(cleanMiddle), encryptPII(cleanLast), resolvedClientType]
   );
 
   return {
@@ -67,14 +68,15 @@ export async function authenticateStudent({ studentNo, username, email, identifi
   const rawId = studentNo || username || email || identifier || "";
   const cleanNo = String(rawId).trim().toUpperCase();
   const cleanEmail = String(rawId).trim().toLowerCase();
-  const row = await queryOne(
+  const rowQuery = await queryOne(
     `SELECT sa.id, sa.student_no, sa.password_hash, sa.status, sa.email, sa.first_name, sa.middle_name, sa.last_name, sa.client_type, s.name
      FROM student_accounts sa 
      LEFT JOIN students s ON s.student_no = sa.student_no
      WHERE (sa.student_no IS NOT NULL AND upper(sa.student_no) = $1) 
-        OR lower(coalesce(sa.email, '')) = $2`,
-    [cleanNo, cleanEmail]
+        OR coalesce(sa.email, '') = $2`,
+    [cleanNo, encryptPII(cleanEmail)]
   );
+  const row = decryptStudentRow(rowQuery);
   if (!row || String(row.status).toLowerCase() !== "active") return null;
   let verification = verifyPasswordHash(password, row.password_hash);
   const isDemoStudent = cleanEmail === "student@pup.local" ||
@@ -146,7 +148,7 @@ export async function getStudentSession(req) {
            FROM student_accounts sa
            LEFT JOIN students s ON s.student_no = sa.student_no
            WHERE (sa.student_no IS NOT NULL AND upper(sa.student_no) = upper($1))
-              OR lower(coalesce(sa.email, '')) = lower($2)`,
+              OR coalesce(sa.email, '') = $2`,
           [payload.student_no || "", payload.email || ""]
         );
 
@@ -170,4 +172,14 @@ export function setStudentSessionCookie(response, token) {
     secure: process.env.NODE_ENV === "production", path: "/",
   });
   return setCSRFTokenCookie(response, token);
+}
+
+export function decryptStudentRow(row) {
+  if (!row) return row;
+  if (row.name) row.name = decryptPII(row.name);
+  if (row.email) row.email = decryptPII(row.email);
+  if (row.first_name) row.first_name = decryptPII(row.first_name);
+  if (row.middle_name) row.middle_name = decryptPII(row.middle_name);
+  if (row.last_name) row.last_name = decryptPII(row.last_name);
+  return row;
 }

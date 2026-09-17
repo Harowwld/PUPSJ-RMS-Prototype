@@ -1,6 +1,7 @@
 import crypto from "node:crypto";
 import { query, queryOne } from "./postgres.js";
 import { dbAll, dbGet, dbRun } from "./postgresCompat.js";
+import { encryptPII, decryptPII } from "./piiEncryption.js";
 import { hashPassword, verifyPasswordHash as verifyPasswordHashValue } from "./passwordHash.js";
 
 function buildStaffScope(officeId) {
@@ -15,6 +16,15 @@ export function hashPasswordForStorage(password) {
 
 export function verifyPasswordHash(password, stored) {
   return verifyPasswordHashValue(password, stored);
+}
+
+
+function decryptStaffRow(row) {
+  if (!row) return row;
+  if (row.fname) row.fname = decryptPII(row.fname);
+  if (row.lname) row.lname = decryptPII(row.lname);
+  if (row.email) row.email = decryptPII(row.email);
+  return row;
 }
 
 export async function setStaffPasswordById(id, newPassword) {
@@ -116,38 +126,56 @@ export async function listStaff({
     params.push(status);
   }
 
-  if (q) {
-    filters.push("(id LIKE ? OR fname LIKE ? OR lname LIKE ? OR email LIKE ?)");
-    const like = `%${q}%`;
-    params.push(like, like, like, like);
-  }
+
 
   const where = filters.length ? `WHERE ${filters.join(" AND ")}` : "";
   const lim = Math.min(Math.max(parseInt(limit) || 200, 1), 500);
   const off = Math.max(parseInt(offset) || 0, 0);
 
-  return await dbAll(
-    `
-      SELECT *
-      FROM staff
-      ${where}
-      ORDER BY lname ASC, fname ASC
-      LIMIT ? OFFSET ?
-    `,
-    [...params, lim, off]
-  );
+  let rows;
+  if (!q) {
+    rows = await dbAll(
+      `SELECT * FROM staff ${where} ORDER BY updated_at DESC LIMIT ? OFFSET ?`,
+      [...params, lim, off]
+    );
+  } else {
+    rows = await dbAll(`SELECT * FROM staff ${where}`, [...params]);
+  }
+
+  let decryptedRows = (rows || []).map(decryptStaffRow);
+  
+  if (q) {
+    const search = q.toLowerCase();
+    decryptedRows = decryptedRows.filter(r => {
+      if (r.id && r.id.toLowerCase().includes(search)) return true;
+      if (r.fname && r.fname.toLowerCase().includes(search)) return true;
+      if (r.lname && r.lname.toLowerCase().includes(search)) return true;
+      if (r.email && r.email.toLowerCase().includes(search)) return true;
+      return false;
+    });
+    
+    decryptedRows.sort((a, b) => {
+      const nameA = (a.lname || '').toLowerCase();
+      const nameB = (b.lname || '').toLowerCase();
+      return nameA < nameB ? -1 : (nameA > nameB ? 1 : 0);
+    });
+
+    return decryptedRows.slice(off, off + lim);
+  }
+  
+  return decryptedRows;
 }
 
 export async function getStaffById(id, { officeId } = {}) {
   const scope = buildStaffScope(officeId);
   const row = await dbGet(`SELECT * FROM staff WHERE id = ?${scope.clause}`, [id, ...scope.params]);
-  return row || null;
+  return decryptStaffRow(row) || null;
 }
 
 export async function getStaffByUsername(username) {
   const u = String(username || "").trim();
   if (!u) return null;
-  const row = await dbGet("SELECT * FROM staff WHERE lower(email) = lower(?) OR lower(id) = lower(?)", [u, u]);
+  const row = await dbGet("SELECT * FROM staff WHERE email = ? OR lower(id) = lower(?)", [encryptPII(u.toLowerCase()), u]);
   return row || null;
 }
 

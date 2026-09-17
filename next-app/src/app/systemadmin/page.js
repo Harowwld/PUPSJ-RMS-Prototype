@@ -106,6 +106,13 @@ function SystemAdminPageContent({ authUser: propAuthUser }) {
   const [zoomNode, setZoomNode] = useState(3) // Apple Photos style zoom
 
   useEffect(() => {
+    if (typeof window !== "undefined") {
+      document.documentElement.style.setProperty("--brand-accent", "#000000")
+      document.documentElement.style.setProperty("--brand-foreground", "#FFFFFF")
+    }
+  }, [])
+
+  useEffect(() => {
     const handleToggle = () => setSidebarOpen((prev) => !prev)
     window.addEventListener("toggle-sidebar", handleToggle)
     return () => window.removeEventListener("toggle-sidebar", handleToggle)
@@ -204,8 +211,8 @@ function SystemAdminPageContent({ authUser: propAuthUser }) {
       /* ignore network errors */
     }
     localStorage.setItem("pup-logout", Date.now().toString())
-    router.push("/")
-  }, [router])
+    window.location.href = "/"
+  }, [])
 
   useEffect(() => {
     const tab = String(searchParams?.get("view") || "").trim()

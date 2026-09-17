@@ -7,6 +7,7 @@ import { isUniqueViolation } from "../../../lib/dbErrors";
 import { canManageStaffRole, canAccessOffice, isSystemAdminRole, normalizeRole } from "../../../lib/roleUtils";
 import { validatePasswordPolicy } from "@/lib/passwordPolicy";
 import { canAccessResource } from "@/lib/resourceAuthorization";
+import { sanitizeUser } from "@/lib/dataSanitizer";
 
 export const runtime = "nodejs";
 
@@ -53,7 +54,8 @@ export async function GET(req) {
     offset,
   });
 
-  return NextResponse.json({ ok: true, data: rows.filter((row) => canAccessResource(user, "staff", row)) });
+  const accessibleRows = rows.filter((row) => canAccessResource(user, "staff", row));
+  return NextResponse.json({ ok: true, data: sanitizeUser(accessibleRows) });
 }
 
 export async function POST(req) {
