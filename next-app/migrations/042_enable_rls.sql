@@ -12,14 +12,14 @@ ALTER TABLE documents FORCE ROW LEVEL SECURITY;
 CREATE POLICY system_admin_override_students ON students
     FOR ALL
     USING (
-        current_setting('app.current_role', true) = 'SystemAdmin' 
+        current_setting('app.current_role', true) = 'SystemAdmin'
         OR current_setting('app.current_role', true) IS NULL
     );
 
 CREATE POLICY system_admin_override_documents ON documents
     FOR ALL
     USING (
-        current_setting('app.current_role', true) = 'SystemAdmin' 
+        current_setting('app.current_role', true) = 'SystemAdmin'
         OR current_setting('app.current_role', true) IS NULL
     );
 

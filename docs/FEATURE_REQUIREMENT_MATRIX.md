@@ -1,9 +1,9 @@
 # PUPSJ Records Management System (PUPSJ-RMS)
 ## Feature Requirement Matrix (FRM) & Technical Specification
 
-> **Document Version:** 1.0.0  
-> **Last Updated:** September 2026  
-> **Target System:** PUPSJ-RMS Prototype (PostgreSQL 16 + Next.js 16 App Router)  
+> **Document Version:** 1.0.0
+> **Last Updated:** September 2026
+> **Target System:** PUPSJ-RMS Prototype (PostgreSQL 16 + Next.js 16 App Router)
 > **Primary Source Verification:** Derived directly from active codebase routes, database migrations (`migrations/001_initial.sql` to `migrations/041_student_security_answers.sql`), repository implementations (`src/lib/*Repo.js`), and React UI components (`src/components/*`).
 
 ---

@@ -1,6 +1,6 @@
 export async function verifyTurnstileToken(token) {
   const secret = process.env.TURNSTILE_SECRET_KEY;
-  
+
   if (!secret) {
     // If no secret is configured, bypass the check in development
     // (Ensure a secret is set in production!)

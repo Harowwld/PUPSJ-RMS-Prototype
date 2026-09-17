@@ -21,4 +21,3 @@ grep -rnw --exclude-dir=node_modules --exclude-dir=.git "SELECT \*" . | wc -l
 
 echo "=== 18. Security headers ==="
 grep -rnw --exclude-dir=node_modules --exclude-dir=.git "addSecurityHeaders\|helmet" . | head -n 5
-

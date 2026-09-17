@@ -10,11 +10,11 @@ export function sanitizeUser(user) {
   }
 
   // Destructure sensitive fields out, keep the rest
-  const { 
-    password_hash, 
-    totp_secret, 
-    recovery_codes, 
-    ...safeData 
+  const {
+    password_hash,
+    totp_secret,
+    recovery_codes,
+    ...safeData
   } = user;
 
   return safeData;

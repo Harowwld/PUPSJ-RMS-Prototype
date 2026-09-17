@@ -259,7 +259,7 @@ export async function listStudents({
   }
 
   let decryptedRows = (rows || []).map(decryptStudentRow);
-  
+
   if (q) {
     const search = q.toLowerCase();
     decryptedRows = decryptedRows.filter(r => {
@@ -268,7 +268,7 @@ export async function listStudents({
       if (r.email && r.email.toLowerCase().includes(search)) return true;
       return false;
     });
-    
+
     decryptedRows.sort((a, b) => {
       const nameA = (a.name || '').toLowerCase();
       const nameB = (b.name || '').toLowerCase();
@@ -277,7 +277,7 @@ export async function listStudents({
 
     return decryptedRows.slice(off, off + lim);
   }
-  
+
   return decryptedRows;
 }
 

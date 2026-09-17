@@ -24,7 +24,7 @@ export function encryptPII(text) {
     const key = getEncryptionKey();
     // Deterministic IV based on the text itself (HMAC)
     const iv = crypto.createHmac('md5', key).update(text).digest();
-    
+
     const cipher = crypto.createCipheriv(ALGO, key, iv);
     let encrypted = cipher.update(text, 'utf8', 'hex');
     encrypted += cipher.final('hex');
@@ -44,7 +44,7 @@ export function decryptPII(ciphertext) {
     const iv = Buffer.from(parts[2], 'hex');
     const encryptedText = parts[3];
     const key = getEncryptionKey();
-    
+
     const decipher = crypto.createDecipheriv(ALGO, key, iv);
     let decrypted = decipher.update(encryptedText, 'hex', 'utf8');
     decrypted += decipher.final('utf8');
