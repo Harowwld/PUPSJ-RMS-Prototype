@@ -1,5 +1,6 @@
 "use client"
 
+import LucideIcon from "@/components/shared/LucideIcon";
 import { useState, useEffect, useCallback } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Card, CardContent } from "@/components/ui/card"
@@ -349,7 +350,7 @@ export default function LandingFaqCmsView({ showToast }) {
               >
                 {saving ? (
                   <>
-                    <i className="ph-bold ph-spinner animate-spin mr-1.5 text-[14px]" />
+                    <LucideIcon  className="ph-bold ph-spinner animate-spin mr-1.5 text-[14px]" />
                     Saving...
                   </>
                 ) : (
@@ -517,7 +518,7 @@ export default function LandingFaqCmsView({ showToast }) {
                             title="Move Earlier"
                             className="h-7 w-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200/60 dark:hover:bg-zinc-800 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer border-0 bg-transparent p-0"
                           >
-                            <i className="ph-bold ph-caret-up text-xs" />
+                            <LucideIcon  className="ph-bold ph-caret-up text-xs" />
                           </button>
 
                           <button
@@ -527,7 +528,7 @@ export default function LandingFaqCmsView({ showToast }) {
                             title="Move Later"
                             className="h-7 w-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200/60 dark:hover:bg-zinc-800 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer border-0 bg-transparent p-0"
                           >
-                            <i className="ph-bold ph-caret-down text-xs" />
+                            <LucideIcon  className="ph-bold ph-caret-down text-xs" />
                           </button>
 
                           <button
@@ -536,7 +537,7 @@ export default function LandingFaqCmsView({ showToast }) {
                             title="Duplicate Question"
                             className="h-7 w-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200/60 dark:hover:bg-zinc-800 transition-colors cursor-pointer border-0 bg-transparent p-0"
                           >
-                            <i className="ph-bold ph-copy text-xs" />
+                            <LucideIcon  className="ph-bold ph-copy text-xs" />
                           </button>
 
                           <button
@@ -545,12 +546,12 @@ export default function LandingFaqCmsView({ showToast }) {
                             title="Delete Question"
                             className="h-7 w-7 rounded-lg flex items-center justify-center text-rose-500 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors cursor-pointer border-0 bg-transparent p-0 ml-0.5"
                           >
-                            <i className="ph-bold ph-trash text-xs" />
+                            <LucideIcon  className="ph-bold ph-trash text-xs" />
                           </button>
 
                           <div className="w-[1px] h-4 bg-gray-200 dark:bg-white/10 mx-1" />
 
-                          <i
+                          <LucideIcon 
                             className={cn(
                               "ph-bold ph-caret-down text-xs text-gray-400 transition-transform duration-200",
                               isExpanded && "rotate-180 text-gray-700 dark:text-zinc-200"
@@ -695,12 +696,12 @@ export default function LandingFaqCmsView({ showToast }) {
                   onClick={addNewFaq}
                   className="w-full py-3.5 rounded-xl border-2 border-dashed border-gray-200 dark:border-white/10 hover:border-pup-maroon/40 hover:bg-pup-maroon/5 dark:hover:bg-red-500/5 transition-all flex items-center justify-center gap-2 text-xs font-semibold text-gray-600 hover:text-pup-maroon dark:text-zinc-400 dark:hover:text-red-400 cursor-pointer select-none"
                 >
-                  <i className="ph-bold ph-plus text-sm" />
+                  <LucideIcon  className="ph-bold ph-plus text-sm" />
                   <span>Add Another Question ({faqData.faqs.length}/{MAX_FAQ_ITEMS})</span>
                 </button>
               ) : (
                 <div className="w-full py-3 px-3.5 rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/70 dark:bg-zinc-900/30 text-center text-xs text-gray-500 dark:text-zinc-400 flex items-center justify-center gap-2">
-                  <i className="ph-bold ph-info text-pup-maroon dark:text-red-400" />
+                  <LucideIcon  className="ph-bold ph-info text-pup-maroon dark:text-red-400" />
                   <span>Maximum limit reached ({MAX_FAQ_ITEMS} of {MAX_FAQ_ITEMS} questions). FAQ section is capped at {MAX_FAQ_ITEMS} questions for layout stability and concise reading.</span>
                 </div>
               )}
@@ -907,7 +908,7 @@ export default function LandingFaqCmsView({ showToast }) {
                                   : "bg-white/10 text-zinc-400"
                               )}
                             >
-                              <i className="ph-bold ph-caret-down text-xs" />
+                              <LucideIcon  className="ph-bold ph-caret-down text-xs" />
                             </div>
                           </button>
 

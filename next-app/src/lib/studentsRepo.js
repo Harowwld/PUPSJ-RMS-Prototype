@@ -244,35 +244,44 @@ export async function listStudents({
 
 
 
-  const where = filters.length ? `WHERE ${filters.join(" AND ")}` : "";
   const lim = Math.min(Math.max(parseInt(limit) || 200, 1), 500);
   const off = Math.max(parseInt(offset) || 0, 0);
 
+  const cleanQ = String(q || "").trim();
+  const isStudentNoOnly = Boolean(cleanQ && /^[\d-]+$/.test(cleanQ));
+
+  if (isStudentNoOnly) {
+    filters.push("student_no LIKE ?");
+    params.push(`%${cleanQ}%`);
+  }
+
+  const where = filters.length ? `WHERE ${filters.join(" AND ")}` : "";
+
   let rows;
-  if (!q) {
+  if (!cleanQ || isStudentNoOnly) {
+    const orderClause = isStudentNoOnly ? "ORDER BY student_no ASC" : "ORDER BY updated_at DESC";
     rows = await dbAll(
-      `SELECT ${STUDENT_SELECT} FROM students ${where} ORDER BY updated_at DESC LIMIT ? OFFSET ?`,
+      `SELECT ${STUDENT_SELECT} FROM students ${where} ${orderClause} LIMIT ? OFFSET ?`,
       [...params, lim, off]
     );
+    return (rows || []).map(decryptStudentRow);
   } else {
     rows = await dbAll(`SELECT ${STUDENT_SELECT} FROM students ${where}`, [...params]);
   }
 
   let decryptedRows = (rows || []).map(decryptStudentRow);
-
-  if (q) {
-    const search = q.toLowerCase();
+  if (cleanQ) {
+    const search = cleanQ.toLowerCase();
     decryptedRows = decryptedRows.filter(r => {
       if (r.student_no && r.student_no.toLowerCase().includes(search)) return true;
       if (r.name && r.name.toLowerCase().includes(search)) return true;
-      if (r.email && r.email.toLowerCase().includes(search)) return true;
       return false;
     });
 
     decryptedRows.sort((a, b) => {
       const nameA = (a.name || '').toLowerCase();
       const nameB = (b.name || '').toLowerCase();
-      return nameA < nameB ? -1 : (nameA > nameB ? 1 : 0);
+      return nameA.localeCompare(nameB);
     });
 
     return decryptedRows.slice(off, off + lim);
@@ -290,7 +299,7 @@ export async function getStudentByStudentNo(studentNo, { officeId } = {}) {
     params.push(...officeScope.params);
   }
   const row = await dbGet(`SELECT ${STUDENT_SELECT} FROM students WHERE ${filters.join(" AND ")}`, params);
-  return row || null;
+  return decryptStudentRow(row) || null;
 }
 
 export async function updateStudent(studentNo, patch) {

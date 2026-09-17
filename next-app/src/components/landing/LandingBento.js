@@ -1,5 +1,5 @@
 "use client";
-
+import LucideIcon from "@/components/shared/LucideIcon";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
@@ -188,7 +188,7 @@ export default function LandingBento() {
               {/* Full-Card Success Overlay */}
               <div className="absolute inset-0 bg-emerald-500/85 backdrop-blur-[2px] z-20 flex flex-col items-center justify-center text-white opacity-0 pointer-events-none" style={{ animation: 'submitOverlay 6s infinite 0s' }}>
                 <div className="w-12 h-12 rounded-full bg-white/30 flex items-center justify-center mb-3">
-                  <i className="ph-bold ph-check text-2xl drop-shadow-sm" />
+                  <LucideIcon  className="ph-bold ph-check text-2xl drop-shadow-sm" />
                 </div>
                 <span className="font-bold text-sm tracking-wide drop-shadow-sm">Submitted!</span>
               </div>
@@ -203,21 +203,21 @@ export default function LandingBento() {
                 {/* Step 1 */}
                 <div className="flex items-center gap-4 group/step">
                   <div className="w-9 h-9 rounded-full bg-white shadow-sm flex items-center justify-center text-zinc-400 group-hover/step:text-[#800000] transition-all border border-black/5 shrink-0" style={{ animation: 'objInteract1 6s infinite 0s, step1GreenCircle 6s infinite 0s' }}>
-                    <i className="ph-bold ph-file-text text-base" />
+                    <LucideIcon  className="ph-bold ph-file-text text-base" />
                   </div>
                   <span className="text-xs font-semibold text-zinc-600 transition-colors" style={{ animation: 'step1GreenText 6s infinite 0s' }}>Select Document</span>
                 </div>
                 {/* Step 2 */}
                 <div className="flex items-center gap-4 group/step">
                   <div className="w-9 h-9 rounded-full bg-white shadow-sm flex items-center justify-center text-zinc-400 group-hover/step:text-[#800000] transition-all border border-black/5 shrink-0" style={{ animation: 'objInteract2 6s infinite 0s, step2GreenCircle 6s infinite 0s' }}>
-                    <i className="ph-bold ph-target text-base" />
+                    <LucideIcon  className="ph-bold ph-target text-base" />
                   </div>
                   <span className="text-xs font-semibold text-zinc-600 transition-colors" style={{ animation: 'step2GreenText 6s infinite 0s' }}>Specify Purpose</span>
                 </div>
                 {/* Step 3 */}
                 <button className="relative px-5 py-2.5 rounded-full text-xs font-bold flex items-center justify-center gap-2 w-[120px] transition-all mx-auto" style={{ animation: 'objInteract3 6s infinite 0s, submitButtonEnable 6s infinite 0s' }}>
                   Submit
-                  <i className="ph-bold ph-paper-plane-right text-base" />
+                  <LucideIcon  className="ph-bold ph-paper-plane-right text-base" />
                 </button>
               </div>
             </div>
@@ -253,7 +253,7 @@ export default function LandingBento() {
                 {/* Step 1 */}
                 <div className="flex items-center gap-4">
                   <div className="w-9 h-9 rounded-full bg-white shadow-sm flex items-center justify-center text-[#800000] border border-black/5 shrink-0 transition-all" style={{ animation: 'objInteract1 6s infinite 1s' }}>
-                    <i className="ph-bold ph-calendar-check text-base" />
+                    <LucideIcon  className="ph-bold ph-calendar-check text-base" />
                   </div>
                   <div className="flex flex-col">
                     <span className="text-xs font-semibold text-zinc-900">Clear Schedule</span>
@@ -263,7 +263,7 @@ export default function LandingBento() {
                 {/* Step 2 */}
                 <div className="flex items-center gap-4">
                   <div className="w-9 h-9 rounded-full bg-white shadow-sm flex items-center justify-center text-[#800000] border border-black/5 shrink-0 transition-all" style={{ animation: 'objInteract2 6s infinite 1s' }}>
-                    <i className="ph-bold ph-bell-ringing text-base" />
+                    <LucideIcon  className="ph-bold ph-bell-ringing text-base" />
                   </div>
                   <div className="flex flex-col">
                     <span className="text-xs font-semibold text-zinc-900">Live Notifications</span>
@@ -273,7 +273,7 @@ export default function LandingBento() {
                 {/* Step 3 */}
                 <div className="flex items-center gap-4">
                   <div className="w-9 h-9 rounded-full bg-[#800000] shadow-md flex items-center justify-center text-white shrink-0 transition-all" style={{ animation: 'objInteract3 6s infinite 1s' }}>
-                    <i className="ph-bold ph-handshake text-base" />
+                    <LucideIcon  className="ph-bold ph-handshake text-base" />
                   </div>
                   <div className="flex flex-col">
                     <span className="text-xs font-semibold text-[#800000]">Visit Counter</span>
@@ -321,7 +321,7 @@ export default function LandingBento() {
                  {/* Online Request */}
                  <div className="flex flex-col items-center gap-2">
                    <div className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center text-[#800000] border border-black/5 transition-all" style={{ animation: 'objInteract1 6s infinite 2s' }}>
-                     <i className="ph-bold ph-laptop text-lg" />
+                     <LucideIcon  className="ph-bold ph-laptop text-lg" />
                    </div>
                    <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-wider">Request</span>
                  </div>
@@ -334,7 +334,7 @@ export default function LandingBento() {
                  {/* Room 1 */}
                  <div className="flex flex-col items-center gap-2">
                    <div className="w-12 h-12 rounded-full bg-[#800000] shadow-md flex items-center justify-center text-white relative transition-all" style={{ animation: 'objInteract3 6s infinite 2s, room1CircleReveal 6s infinite 2s' }}>
-                     <i className="ph-bold ph-archive text-xl relative z-10" />
+                     <LucideIcon  className="ph-bold ph-archive text-xl relative z-10" />
                    </div>
                    <span className="text-[9px] font-bold text-[#800000] uppercase tracking-wider" style={{ animation: 'room1TextReveal 6s infinite 2s' }}>Room 1</span>
                  </div>
@@ -347,7 +347,7 @@ export default function LandingBento() {
                  {/* Staff */}
                  <div className="flex flex-col items-center gap-2">
                    <div className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center text-[#800000] border border-black/5 transition-all" style={{ animation: 'objInteract2 6s infinite 2s' }}>
-                     <i className="ph-bold ph-users text-lg" />
+                     <LucideIcon  className="ph-bold ph-users text-lg" />
                    </div>
                    <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-wider">Staff</span>
                  </div>
@@ -382,21 +382,21 @@ export default function LandingBento() {
                 {/* Step 1 */}
                 <div className="flex items-center gap-4">
                   <div className="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center text-emerald-600 border border-black/5 shrink-0 transition-all" style={{ animation: 'objInteract1 6s infinite 3s' }}>
-                    <i className="ph-bold ph-check text-[14px] opacity-0" style={{ animation: 'checkReveal1 6s infinite 3s' }} />
+                    <LucideIcon  className="ph-bold ph-check text-[14px] opacity-0" style={{ animation: 'checkReveal1 6s infinite 3s' }} />
                   </div>
                   <span className="text-xs font-semibold text-zinc-900">Student Number</span>
                 </div>
                 {/* Step 2 */}
                 <div className="flex items-center gap-4">
                   <div className="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center text-emerald-600 border border-black/5 shrink-0 transition-all" style={{ animation: 'objInteract2 6s infinite 3s' }}>
-                    <i className="ph-bold ph-check text-[14px] opacity-0" style={{ animation: 'checkReveal2 6s infinite 3s' }} />
+                    <LucideIcon  className="ph-bold ph-check text-[14px] opacity-0" style={{ animation: 'checkReveal2 6s infinite 3s' }} />
                   </div>
                   <span className="text-xs font-semibold text-zinc-900">Active Email</span>
                 </div>
                 {/* Step 3 */}
                 <div className="flex items-center gap-4">
                   <div className="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center text-emerald-600 border border-black/5 shrink-0 transition-all" style={{ animation: 'objInteract3 6s infinite 3s' }}>
-                    <i className="ph-bold ph-check text-[14px] opacity-0" style={{ animation: 'checkReveal3 6s infinite 3s' }} />
+                    <LucideIcon  className="ph-bold ph-check text-[14px] opacity-0" style={{ animation: 'checkReveal3 6s infinite 3s' }} />
                   </div>
                   <span className="text-xs font-semibold text-zinc-900">Campus Clearance</span>
                 </div>
@@ -427,7 +427,7 @@ export default function LandingBento() {
             {/* Simulated UI Area: Flow Diagram */}
             <div className="rounded-none bg-[#f5f5f7] p-4 border-none min-h-[180px] flex items-center justify-center relative overflow-hidden gap-6">
               <div className="w-16 h-16 rounded-2xl bg-white shadow-sm flex flex-col items-center justify-center text-[#800000] border border-black/5 shrink-0 relative">
-                 <i className="ph-bold ph-shield-check text-3xl" />
+                 <LucideIcon  className="ph-bold ph-shield-check text-3xl" />
                  <span className="absolute -bottom-2.5 bg-[#800000] text-white text-[8px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">RA 11032</span>
               </div>
               
@@ -435,19 +435,19 @@ export default function LandingBento() {
                  <CursorOverlay animationName="cursorCard5" delay="4s" />
                  <div className="flex items-center gap-4">
                    <div className="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center text-emerald-600 border border-black/5 shrink-0 transition-all" style={{ animation: 'objInteract1 6s infinite 4s' }}>
-                     <i className="ph-bold ph-check text-[14px] opacity-0" style={{ animation: 'checkReveal1 6s infinite 4s' }} />
+                     <LucideIcon  className="ph-bold ph-check text-[14px] opacity-0" style={{ animation: 'checkReveal1 6s infinite 4s' }} />
                    </div>
                    <span className="text-xs font-semibold text-zinc-700">Zero Red Tape</span>
                  </div>
                  <div className="flex items-center gap-4">
                    <div className="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center text-emerald-600 border border-black/5 shrink-0 transition-all" style={{ animation: 'objInteract2 6s infinite 4s' }}>
-                     <i className="ph-bold ph-check text-[14px] opacity-0" style={{ animation: 'checkReveal2 6s infinite 4s' }} />
+                     <LucideIcon  className="ph-bold ph-check text-[14px] opacity-0" style={{ animation: 'checkReveal2 6s infinite 4s' }} />
                    </div>
                    <span className="text-xs font-semibold text-zinc-700">No Hidden Delays</span>
                  </div>
                  <div className="flex items-center gap-4">
                    <div className="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center text-emerald-600 border border-black/5 shrink-0 transition-all" style={{ animation: 'objInteract3 6s infinite 4s' }}>
-                     <i className="ph-bold ph-check text-[14px] opacity-0" style={{ animation: 'checkReveal3 6s infinite 4s' }} />
+                     <LucideIcon  className="ph-bold ph-check text-[14px] opacity-0" style={{ animation: 'checkReveal3 6s infinite 4s' }} />
                    </div>
                    <span className="text-xs font-semibold text-zinc-700">Transparent Tracking</span>
                  </div>

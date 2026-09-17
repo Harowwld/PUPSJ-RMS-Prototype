@@ -1,5 +1,6 @@
 "use client"
 
+import LucideIcon from "@/components/shared/LucideIcon";
 import React, { useState } from "react"
 import {
   Tooltip as ChartTooltip,
@@ -246,7 +247,7 @@ const SlaCharts = React.memo(function SlaCharts({ data, pieData, onSwitchView })
                 <div className="relative mb-6">
                   <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-36 h-36 rounded-full bg-gray-100/50 dark:bg-zinc-800/30"></div>
                   <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
-                    <i className="ph-duotone ph-chart-line text-xl text-gray-300 dark:text-zinc-600"></i>
+                    <LucideIcon  className="ph-duotone ph-chart-line text-xl text-gray-300 dark:text-zinc-600"></LucideIcon>
                   </EmptyMedia>
                 </div>
                 <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
@@ -332,7 +333,7 @@ const SlaCharts = React.memo(function SlaCharts({ data, pieData, onSwitchView })
                 <div className="relative mb-6">
                   <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-36 h-36 rounded-full bg-gray-100/50 dark:bg-zinc-800/30"></div>
                   <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
-                    <i className="ph-duotone ph-chart-bar text-xl text-gray-300 dark:text-zinc-600"></i>
+                    <LucideIcon  className="ph-duotone ph-chart-bar text-xl text-gray-300 dark:text-zinc-600"></LucideIcon>
                   </EmptyMedia>
                 </div>
                 <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
@@ -400,7 +401,7 @@ const SlaCharts = React.memo(function SlaCharts({ data, pieData, onSwitchView })
                   <div className="relative mb-3 mx-auto w-12 h-12">
                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 rounded-full bg-gray-100/50 dark:bg-zinc-800/30"></div>
                     <EmptyMedia className="relative z-10 flex h-12 w-12 items-center justify-center rounded-2xl border border-gray-100 bg-white shadow-md rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
-                      <i className="ph-duotone ph-chart-pie text-xl text-gray-300 dark:text-zinc-600"></i>
+                      <LucideIcon  className="ph-duotone ph-chart-pie text-xl text-gray-300 dark:text-zinc-600"></LucideIcon>
                     </EmptyMedia>
                   </div>
                   <EmptyTitle className="text-sm font-semibold text-gray-900 dark:text-zinc-50">
@@ -500,7 +501,7 @@ const SlaCharts = React.memo(function SlaCharts({ data, pieData, onSwitchView })
                   <div className="relative mb-3 mx-auto w-12 h-12">
                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 rounded-full bg-gray-100/50 dark:bg-zinc-800/30"></div>
                     <EmptyMedia className="relative z-10 flex h-12 w-12 items-center justify-center rounded-2xl border border-gray-100 bg-white shadow-md rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
-                      <i className="ph-duotone ph-file-text text-xl text-gray-300 dark:text-zinc-600"></i>
+                      <LucideIcon  className="ph-duotone ph-file-text text-xl text-gray-300 dark:text-zinc-600"></LucideIcon>
                     </EmptyMedia>
                   </div>
                   <EmptyTitle className="text-sm font-semibold text-gray-900 dark:text-zinc-50">

@@ -1,5 +1,6 @@
 "use client"
 
+import LucideIcon from "@/components/shared/LucideIcon";
 import { useState, useEffect, useCallback, useRef } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -328,7 +329,7 @@ export default function LandingPageCmsTab({ showToast }) {
               : "text-gray-500 hover:text-gray-900 dark:hover:text-white bg-transparent"
           )}
         >
-          <i className="ph-bold ph-image text-sm" />
+          <LucideIcon  className="ph-bold ph-image text-sm" />
           <span>Hero Section</span>
         </button>
 
@@ -342,7 +343,7 @@ export default function LandingPageCmsTab({ showToast }) {
               : "text-gray-500 hover:text-gray-900 dark:hover:text-white bg-transparent"
           )}
         >
-          <i className="ph-bold ph-squares-four text-sm" />
+          <LucideIcon  className="ph-bold ph-squares-four text-sm" />
           <span>Features Bento Grid</span>
         </button>
 
@@ -356,7 +357,7 @@ export default function LandingPageCmsTab({ showToast }) {
               : "text-gray-500 hover:text-gray-900 dark:hover:text-white bg-transparent"
           )}
         >
-          <i className="ph-bold ph-git-merge text-sm" />
+          <LucideIcon  className="ph-bold ph-git-merge text-sm" />
           <span>Workflow &amp; Steps</span>
         </button>
 
@@ -370,7 +371,7 @@ export default function LandingPageCmsTab({ showToast }) {
               : "text-gray-500 hover:text-gray-900 dark:hover:text-white bg-transparent"
           )}
         >
-          <i className="ph-bold ph-books text-sm" />
+          <LucideIcon  className="ph-bold ph-books text-sm" />
           <span>Academic Catalog</span>
         </button>
 
@@ -384,7 +385,7 @@ export default function LandingPageCmsTab({ showToast }) {
               : "text-gray-500 hover:text-gray-900 dark:hover:text-white bg-transparent"
           )}
         >
-          <i className="ph-bold ph-question text-sm" />
+          <LucideIcon  className="ph-bold ph-question text-sm" />
           <span>FAQ Section</span>
         </button>
 
@@ -398,7 +399,7 @@ export default function LandingPageCmsTab({ showToast }) {
               : "text-gray-500 hover:text-gray-900 dark:hover:text-white bg-transparent"
           )}
         >
-          <i className="ph-bold ph-panel-bottom text-sm" />
+          <LucideIcon  className="ph-bold ph-panel-bottom text-sm" />
           <span>Footer Section</span>
         </button>
       </div>
@@ -454,7 +455,7 @@ export default function LandingPageCmsTab({ showToast }) {
               >
                 {saving ? (
                   <>
-                    <i className="ph-bold ph-spinner animate-spin mr-1.5 text-[14px]" />
+                    <LucideIcon  className="ph-bold ph-spinner animate-spin mr-1.5 text-[14px]" />
                     Saving...
                   </>
                 ) : (
@@ -526,7 +527,7 @@ export default function LandingPageCmsTab({ showToast }) {
                 <div className="flex items-center gap-3 flex-wrap">
                   {/* Rotation pace selector */}
                   <div className="flex items-center gap-2 text-xs font-medium text-gray-600 dark:text-zinc-300">
-                    <i className="ph-bold ph-timer text-gray-400" />
+                    <LucideIcon  className="ph-bold ph-timer text-gray-400" />
                     <span>Slide Pace:</span>
                     <div className="w-[145px]">
                       <Select
@@ -571,7 +572,7 @@ export default function LandingPageCmsTab({ showToast }) {
                   >
                     {isAddingPhoto ? (
                       <>
-                        <i className="ph-bold ph-spinner animate-spin mr-1.5 text-[13px]" />
+                        <LucideIcon  className="ph-bold ph-spinner animate-spin mr-1.5 text-[13px]" />
                         Uploading...
                       </>
                     ) : (
@@ -649,7 +650,7 @@ export default function LandingPageCmsTab({ showToast }) {
                   className="rounded-xl border-2 border-dashed border-gray-200 dark:border-white/10 hover:border-pup-maroon/40 hover:bg-pup-maroon/5 dark:hover:bg-red-500/5 transition-all p-8 flex flex-col items-center justify-center gap-3 text-gray-500 hover:text-pup-maroon dark:hover:text-red-400 min-h-[300px] cursor-pointer group select-none"
                 >
                   <div className="w-12 h-12 rounded-full bg-gray-100 dark:bg-zinc-800 flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
-                    <i className="ph-bold ph-plus text-gray-500 group-hover:text-pup-maroon dark:group-hover:text-red-400" />
+                    <LucideIcon  className="ph-bold ph-plus text-gray-500 group-hover:text-pup-maroon dark:group-hover:text-red-400" />
                   </div>
                   <div className="text-center">
                     <span className="block text-xs font-semibold text-gray-800 dark:text-zinc-200">
@@ -768,7 +769,7 @@ export default function LandingPageCmsTab({ showToast }) {
                       Campus Address
                     </label>
                     <div className="relative">
-                      <i className="ph-bold ph-map-pin absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
+                      <LucideIcon  className="ph-bold ph-map-pin absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
                       <Input
                         value={heroData.campusAddress}
                         onChange={(e) =>
@@ -788,7 +789,7 @@ export default function LandingPageCmsTab({ showToast }) {
                       Office Working Hours
                     </label>
                     <div className="relative">
-                      <i className="ph-bold ph-clock absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
+                      <LucideIcon  className="ph-bold ph-clock absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
                       <Input
                         value={heroData.registrarHours}
                         onChange={(e) =>
@@ -808,7 +809,7 @@ export default function LandingPageCmsTab({ showToast }) {
                       Operating Days
                     </label>
                     <div className="relative">
-                      <i className="ph-bold ph-calendar absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
+                      <LucideIcon  className="ph-bold ph-calendar absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
                       <Input
                         value={heroData.operatingDays}
                         onChange={(e) =>
@@ -857,7 +858,7 @@ export default function LandingPageCmsTab({ showToast }) {
                       }
                       className="h-8 w-8 p-0 rounded-xl!"
                     >
-                      <i className="ph-bold ph-caret-left text-xs" />
+                      <LucideIcon  className="ph-bold ph-caret-left text-xs" />
                     </Button>
                     <Button
                       type="button"
@@ -870,7 +871,7 @@ export default function LandingPageCmsTab({ showToast }) {
                       }
                       className="h-8 w-8 p-0 rounded-xl!"
                     >
-                      <i className="ph-bold ph-caret-right text-xs" />
+                      <LucideIcon  className="ph-bold ph-caret-right text-xs" />
                     </Button>
                   </div>
                 </div>
@@ -922,7 +923,7 @@ export default function LandingPageCmsTab({ showToast }) {
                       className="h-10 px-6 rounded-full text-xs font-bold tracking-wide flex items-center gap-2 cursor-pointer shadow-md pointer-events-none"
                     >
                       <span>Request Document</span>
-                      <i className="ph-bold ph-arrow-right text-xs" />
+                      <LucideIcon  className="ph-bold ph-arrow-right text-xs" />
                     </BevelButton>
                   </div>
                 </div>
@@ -930,7 +931,7 @@ export default function LandingPageCmsTab({ showToast }) {
                 {/* Simulated Bottom Accreditation Pill */}
                 <div className="relative z-10 px-4 py-2.5 rounded-xl bg-zinc-950/60 backdrop-blur-md border border-white/10 flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] text-white/80">
                   <div className="flex items-center gap-2 truncate">
-                    <i className="ph-bold ph-map-pin text-white/50 text-xs" />
+                    <LucideIcon  className="ph-bold ph-map-pin text-white/50 text-xs" />
                     <span className="truncate">
                       {heroData.campusAddress || "223 Ortega St. cor. A. Mabini St., Addition Hills, San Juan City"}
                     </span>
@@ -1103,7 +1104,7 @@ function SlideCard({
       {/* Drop Target Position Notice */}
       {isDragTarget && (
         <div className="bg-pup-maroon text-white text-[11px] font-semibold py-1.5 px-3 text-center flex items-center justify-center gap-1.5 animate-pulse shadow-inner">
-          <i className="ph-bold ph-arrows-left-right text-xs" />
+          <LucideIcon  className="ph-bold ph-arrows-left-right text-xs" />
           <span>Drop to move photo to Position #{index + 1}</span>
         </div>
       )}
@@ -1114,7 +1115,7 @@ function SlideCard({
           className="flex items-center gap-2 cursor-grab active:cursor-grabbing group/drag"
           title="Drag card to reorder photos"
         >
-          <i className="ph-bold ph-dots-six-vertical text-gray-400 group-hover/drag:text-pup-maroon dark:text-zinc-500 dark:group-hover/drag:text-red-400 text-sm transition-colors" />
+          <LucideIcon  className="ph-bold ph-dots-six-vertical text-gray-400 group-hover/drag:text-pup-maroon dark:text-zinc-500 dark:group-hover/drag:text-red-400 text-sm transition-colors" />
           <span className="w-5 h-5 rounded-full bg-pup-maroon text-white text-[10px] font-bold flex items-center justify-center shadow-2xs">
             {index + 1}
           </span>
@@ -1133,7 +1134,7 @@ function SlideCard({
             title="Move earlier"
             className="h-7 w-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200/60 dark:hover:bg-zinc-800 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer border-0 bg-transparent p-0"
           >
-            <i className="ph-bold ph-caret-left text-xs" />
+            <LucideIcon  className="ph-bold ph-caret-left text-xs" />
           </button>
 
           <button
@@ -1144,7 +1145,7 @@ function SlideCard({
             title="Move later"
             className="h-7 w-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200/60 dark:hover:bg-zinc-800 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer border-0 bg-transparent p-0"
           >
-            <i className="ph-bold ph-caret-right text-xs" />
+            <LucideIcon  className="ph-bold ph-caret-right text-xs" />
           </button>
 
           <button
@@ -1154,7 +1155,7 @@ function SlideCard({
             title="Remove photo"
             className="h-7 w-7 rounded-lg flex items-center justify-center text-rose-500 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors cursor-pointer border-0 bg-transparent p-0 ml-1"
           >
-            <i className="ph-bold ph-trash text-xs" />
+            <LucideIcon  className="ph-bold ph-trash text-xs" />
           </button>
         </div>
       </div>
@@ -1200,12 +1201,12 @@ function SlideCard({
       >
         {isUploading ? (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-zinc-900/90 text-white gap-2 z-20">
-            <i className="ph-bold ph-spinner animate-spin text-2xl text-pup-maroon" />
+            <LucideIcon  className="ph-bold ph-spinner animate-spin text-2xl text-pup-maroon" />
             <span className="text-xs font-semibold">Uploading photo...</span>
           </div>
         ) : imageError ? (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-zinc-900 text-rose-400 p-4 text-center z-10">
-            <i className="ph-bold ph-warning-circle text-2xl mb-1" />
+            <LucideIcon  className="ph-bold ph-warning-circle text-2xl mb-1" />
             <span className="text-xs font-semibold">Photo unavailable</span>
           </div>
         ) : (
@@ -1242,7 +1243,7 @@ function SlideCard({
         {/* Hover overlay hint */}
         <div className="absolute inset-0 bg-zinc-950/60 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center gap-2 z-10 pointer-events-none select-none">
           <span className="h-8 px-3 rounded-lg bg-white text-gray-900 text-xs font-semibold flex items-center gap-1.5 shadow-sm">
-            <i className="ph-bold ph-camera text-xs" />
+            <LucideIcon  className="ph-bold ph-camera text-xs" />
             Click to Change Photo
           </span>
         </div>

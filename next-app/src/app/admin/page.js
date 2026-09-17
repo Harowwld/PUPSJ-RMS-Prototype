@@ -1,5 +1,6 @@
 "use client"
 
+import LucideIcon from "@/components/shared/LucideIcon";
 import {
   useEffect,
   useMemo,
@@ -1799,7 +1800,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
                     : "text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-zinc-400 dark:hover:bg-white/5 dark:hover:text-zinc-50"
                 )}
               >
-                <i className={cn(item.iconClass, "text-sm")}></i>
+                <LucideIcon  className={cn(item.iconClass, "text-sm")}></LucideIcon>
                 {item.label}
                 {item.badge > 0 && (
                   <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[9px] font-semibold text-white bg-pup-maroon dark:bg-red-500/20 dark:text-red-400">

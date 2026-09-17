@@ -1,5 +1,6 @@
 "use client"
 
+import LucideIcon from "@/components/shared/LucideIcon";
 import { useState, useEffect, useCallback } from "react"
 import Image from "next/image"
 import { Card, CardContent } from "@/components/ui/card"
@@ -327,7 +328,7 @@ export default function LandingFooterCmsView({ showToast }) {
               >
                 {saving ? (
                   <>
-                    <i className="ph-bold ph-spinner animate-spin mr-1.5 text-[14px]" />
+                    <LucideIcon  className="ph-bold ph-spinner animate-spin mr-1.5 text-[14px]" />
                     Saving...
                   </>
                 ) : (
@@ -433,7 +434,7 @@ export default function LandingFooterCmsView({ showToast }) {
                         </span>
                       </div>
                       <div className="relative">
-                        <i className="ph-bold ph-map-pin absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
+                        <LucideIcon  className="ph-bold ph-map-pin absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
                         <Input
                           value={footerData.locationHall}
                           onChange={(e) =>
@@ -526,7 +527,7 @@ export default function LandingFooterCmsView({ showToast }) {
                         Google Maps Destination URL
                       </label>
                       <div className="relative">
-                        <i className="ph-bold ph-link absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
+                        <LucideIcon  className="ph-bold ph-link absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
                         <Input
                           value={footerData.mapsUrl}
                           disabled={!footerData.mapsEnabled}
@@ -722,7 +723,7 @@ export default function LandingFooterCmsView({ showToast }) {
                               title="Move up"
                               className="h-7 w-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-zinc-800 disabled:opacity-30 disabled:pointer-events-none cursor-pointer border-0 bg-transparent p-0"
                             >
-                              <i className="ph-bold ph-arrow-up text-xs" />
+                              <LucideIcon  className="ph-bold ph-arrow-up text-xs" />
                             </button>
                             <button
                               type="button"
@@ -731,7 +732,7 @@ export default function LandingFooterCmsView({ showToast }) {
                               title="Move down"
                               className="h-7 w-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-zinc-800 disabled:opacity-30 disabled:pointer-events-none cursor-pointer border-0 bg-transparent p-0"
                             >
-                              <i className="ph-bold ph-arrow-down text-xs" />
+                              <LucideIcon  className="ph-bold ph-arrow-down text-xs" />
                             </button>
                             <button
                               type="button"
@@ -739,7 +740,7 @@ export default function LandingFooterCmsView({ showToast }) {
                               title="Remove row"
                               className="h-7 w-7 rounded-lg flex items-center justify-center text-rose-500 hover:text-rose-700 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 cursor-pointer border-0 bg-transparent p-0 ml-1"
                             >
-                              <i className="ph-bold ph-trash text-xs" />
+                              <LucideIcon  className="ph-bold ph-trash text-xs" />
                             </button>
                           </div>
                         </div>
@@ -884,7 +885,7 @@ export default function LandingFooterCmsView({ showToast }) {
                               title="Move up"
                               className="h-7 w-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-zinc-800 disabled:opacity-30 disabled:pointer-events-none cursor-pointer border-0 bg-transparent p-0"
                             >
-                              <i className="ph-bold ph-arrow-up text-xs" />
+                              <LucideIcon  className="ph-bold ph-arrow-up text-xs" />
                             </button>
                             <button
                               type="button"
@@ -893,7 +894,7 @@ export default function LandingFooterCmsView({ showToast }) {
                               title="Move down"
                               className="h-7 w-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-zinc-800 disabled:opacity-30 disabled:pointer-events-none cursor-pointer border-0 bg-transparent p-0"
                             >
-                              <i className="ph-bold ph-arrow-down text-xs" />
+                              <LucideIcon  className="ph-bold ph-arrow-down text-xs" />
                             </button>
                             <button
                               type="button"
@@ -901,7 +902,7 @@ export default function LandingFooterCmsView({ showToast }) {
                               title="Remove channel"
                               className="h-7 w-7 rounded-lg flex items-center justify-center text-rose-500 hover:text-rose-700 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 cursor-pointer border-0 bg-transparent p-0 ml-1"
                             >
-                              <i className="ph-bold ph-trash text-xs" />
+                              <LucideIcon  className="ph-bold ph-trash text-xs" />
                             </button>
                           </div>
                         </div>
@@ -1012,7 +1013,7 @@ export default function LandingFooterCmsView({ showToast }) {
                     </p>
                     <div className="pt-2 text-xs space-y-1">
                       <div className="font-bold text-zinc-200 flex items-center gap-1.5">
-                        <i className="ph-bold ph-map-pin text-red-400 text-sm" />
+                        <LucideIcon  className="ph-bold ph-map-pin text-red-400 text-sm" />
                         <span>{footerData.locationHall}</span>
                       </div>
                       <p className="text-zinc-400 text-[11px] pl-5">
@@ -1021,7 +1022,7 @@ export default function LandingFooterCmsView({ showToast }) {
                       {footerData.mapsEnabled && (
                         <div className="pl-5 pt-1 text-[11px] font-semibold text-red-400 flex items-center gap-1">
                           <span>{footerData.mapsLabel}</span>
-                          <i className="ph-bold ph-arrow-square-out text-[10px]" />
+                          <LucideIcon  className="ph-bold ph-arrow-square-out text-[10px]" />
                         </div>
                       )}
                     </div>
@@ -1079,7 +1080,7 @@ export default function LandingFooterCmsView({ showToast }) {
                     <div className="pt-2">
                       <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-zinc-300">
                         <span>Personnel Sign In</span>
-                        <i className="ph-bold ph-arrow-right text-[10px] text-zinc-400" />
+                        <LucideIcon  className="ph-bold ph-arrow-right text-[10px] text-zinc-400" />
                       </span>
                     </div>
                   </div>
@@ -1108,7 +1109,7 @@ export default function LandingFooterCmsView({ showToast }) {
                   </div>
                   <div className="flex items-center gap-1.5 text-zinc-400 select-none">
                     <span>Back to Top</span>
-                    <i className="ph-bold ph-arrow-up text-[10px]" />
+                    <LucideIcon  className="ph-bold ph-arrow-up text-[10px]" />
                   </div>
                 </div>
               </div>

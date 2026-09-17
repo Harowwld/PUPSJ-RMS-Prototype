@@ -1,5 +1,5 @@
 "use client";
-
+import LucideIcon from "@/components/shared/LucideIcon";
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
@@ -104,7 +104,7 @@ export default function LandingFooter() {
 
             <div className="pt-2 text-xs space-y-1.5">
               <div className="font-bold text-zinc-200 flex items-center gap-1.5">
-                <i className="ph-bold ph-map-pin text-red-400 text-sm" />
+                <LucideIcon  className="ph-bold ph-map-pin text-red-400 text-sm" />
                 <span>{footerData.locationHall}</span>
               </div>
               <p className="text-zinc-400 leading-relaxed text-[11px] pl-5">
@@ -122,7 +122,7 @@ export default function LandingFooter() {
                     className="inline-flex items-center gap-1 text-[11px] font-semibold text-red-400 hover:text-red-300 hover:underline"
                   >
                     <span>{footerData.mapsLabel || "Google Maps Directions"}</span>
-                    <i className="ph-bold ph-arrow-square-out text-[10px]" />
+                    <LucideIcon  className="ph-bold ph-arrow-square-out text-[10px]" />
                   </a>
                 </div>
               )}
@@ -200,7 +200,7 @@ export default function LandingFooter() {
                 className="inline-flex items-center gap-1.5 text-xs font-semibold text-zinc-300 hover:text-white transition-colors group"
               >
                 <span>Personnel Sign In</span>
-                <i className="ph-bold ph-arrow-right text-[11px] text-zinc-400 group-hover:text-white group-hover:translate-x-0.5 transition-all" />
+                <LucideIcon  className="ph-bold ph-arrow-right text-[11px] text-zinc-400 group-hover:text-white group-hover:translate-x-0.5 transition-all" />
               </Link>
             </div>
           </div>
@@ -242,7 +242,7 @@ export default function LandingFooter() {
           className="hover:text-white transition-colors cursor-pointer flex items-center gap-1.5 text-zinc-400 select-none group"
         >
           <span>Back to Top</span>
-          <i className="ph-bold ph-arrow-up text-[10px] group-hover:-translate-y-0.5 transition-transform" />
+          <LucideIcon  className="ph-bold ph-arrow-up text-[10px] group-hover:-translate-y-0.5 transition-transform" />
         </button>
       </div>
     </footer>

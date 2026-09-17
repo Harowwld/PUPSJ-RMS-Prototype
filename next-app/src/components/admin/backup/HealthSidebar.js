@@ -1,5 +1,6 @@
 "use client"
 
+import LucideIcon from "@/components/shared/LucideIcon";
 import {
   Card,
 } from "@/components/ui/card"
@@ -125,7 +126,7 @@ export default function HealthSidebar({
             <div className="flex items-center justify-between h-[44px] border-b border-black/5 dark:border-white/5">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-xl flex items-center justify-center bg-[#E0F2FE] text-[#0369A1] shrink-0">
-                  <i className="ph-bold ph-cpu text-[16px]"></i>
+                  <LucideIcon  className="ph-bold ph-cpu text-[16px]"></LucideIcon>
                 </div>
                 <span className="text-[13px] font-medium text-[#111111] dark:text-zinc-50">RAM</span>
                 <span className="text-[13px] font-normal text-[#8E8E93]">{ramPercent}% usage</span>
@@ -144,7 +145,7 @@ export default function HealthSidebar({
             <div className="flex items-center justify-between h-[44px] border-b border-black/5 dark:border-white/5">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-xl flex items-center justify-center bg-[#DCFCE7] text-[#166534] shrink-0">
-                  <i className="ph-bold ph-activity text-[16px]"></i>
+                  <LucideIcon  className="ph-bold ph-activity text-[16px]"></LucideIcon>
                 </div>
                 <span className="text-[13px] font-medium text-[#111111] dark:text-zinc-50">CPU</span>
                 <span className="text-[13px] font-normal text-[#8E8E93]">{cpuPercent}% usage</span>
@@ -163,7 +164,7 @@ export default function HealthSidebar({
             <div className="flex items-center justify-between h-[44px] border-b border-black/5 dark:border-white/5">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-xl flex items-center justify-center bg-[#CCFBF1] text-[#0F766E] shrink-0">
-                  <i className="ph-bold ph-shield-check text-[16px]"></i>
+                  <LucideIcon  className="ph-bold ph-shield-check text-[16px]"></LucideIcon>
                 </div>
                 <span className="text-[13px] font-medium text-[#111111] dark:text-zinc-50">Data Protection</span>
                 <span className="text-[13px] font-normal text-[#8E8E93]">Protected</span>
@@ -182,7 +183,7 @@ export default function HealthSidebar({
                     "w-8 h-8 rounded-xl flex items-center justify-center shrink-0",
                     externalDrive.connected ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400" : "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400"
                   )}>
-                    <i className="ph-bold ph-hard-drives text-[16px]"></i>
+                    <LucideIcon  className="ph-bold ph-hard-drives text-[16px]"></LucideIcon>
                   </div>
                   <div className="flex flex-col">
                     <span className="text-[13px] font-medium text-[#111111] dark:text-zinc-50">External Drive</span>
@@ -223,7 +224,7 @@ export default function HealthSidebar({
         {scopeInfo && (
           <div className="border-t border-gray-100 dark:border-white/10 p-5 bg-gray-50/50 dark:bg-zinc-900/40">
             <div className="flex items-center gap-2 mb-2.5">
-              <i className="ph-fill ph-shield-check text-[15px] text-indigo-600 dark:text-indigo-400" />
+              <LucideIcon  className="ph-fill ph-shield-check text-[15px] text-indigo-600 dark:text-indigo-400" />
               <span className="text-[12px] font-semibold text-gray-900 dark:text-zinc-100">
                 {scopeInfo.title || "Platform Governance Scope"}
               </span>

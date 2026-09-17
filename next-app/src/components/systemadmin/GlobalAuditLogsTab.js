@@ -1,5 +1,6 @@
 "use client"
 
+import LucideIcon from "@/components/shared/LucideIcon";
 import React, { useState, useEffect, useCallback, useRef } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -39,12 +40,12 @@ import PdfPreviewDialog from "../admin/audit-logs/PdfPreviewDialog"
 
 function SortIndicator({ column, sortBy, sortOrder }) {
   if (sortBy !== column) {
-    return <i className="ph-bold ph-caret-up-down ml-1 text-[12px] text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"></i>
+    return <LucideIcon  className="ph-bold ph-caret-up-down ml-1 text-[12px] text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"></LucideIcon>
   }
   return sortOrder === "ASC" ? (
-    <i className="ph-bold ph-caret-up ml-1 text-[12px] text-gray-400"></i>
+    <LucideIcon  className="ph-bold ph-caret-up ml-1 text-[12px] text-gray-400"></LucideIcon>
   ) : (
-    <i className="ph-bold ph-caret-down ml-1 text-[12px] text-gray-400"></i>
+    <LucideIcon  className="ph-bold ph-caret-down ml-1 text-[12px] text-gray-400"></LucideIcon>
   )
 }
 
@@ -561,7 +562,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
                     className="flex h-10 items-center justify-center rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
                   >
                     {isExporting ? (
-                      <i className="ph-bold ph-spinner animate-spin text-[16px]"></i>
+                      <LucideIcon  className="ph-bold ph-spinner animate-spin text-[16px]"></LucideIcon>
                     ) : (
                       "Export"
                     )}
@@ -574,7 +575,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
                     className="flex h-10 items-center justify-center rounded-xl! btn-brand-red text-white font-semibold text-xs active:scale-95 disabled:opacity-50 transition-all cursor-pointer px-5 shadow-xs"
                   >
                     {isGeneratingPdf ? (
-                      <i className="ph-bold ph-spinner animate-spin text-[16px] flex items-center justify-center"></i>
+                      <LucideIcon  className="ph-bold ph-spinner animate-spin text-[16px] flex items-center justify-center"></LucideIcon>
                     ) : (
                       "Download"
                     )}
@@ -662,7 +663,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 flex-wrap">
               {/* Search */}
               <div className="relative flex-1 sm:w-64 min-w-[200px] group">
-                <i className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-xs pointer-events-none"></i>
+                <LucideIcon  className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-xs pointer-events-none"></LucideIcon>
                 <Input
                   type="text"
                   placeholder="Search logs by actor, action..."
@@ -865,7 +866,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
                   <div className="relative mb-6">
                     <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
                     <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
-                      <i className="ph-duotone ph-warning-circle text-3xl text-red-500 dark:text-red-400" />
+                      <LucideIcon  className="ph-duotone ph-warning-circle text-3xl text-red-500 dark:text-red-400" />
                     </EmptyMedia>
                   </div>
                   <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
@@ -884,7 +885,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
                   <div className="relative mb-6">
                     <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
                     <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
-                      <i className="ph-duotone ph-magnifying-glass text-3xl text-gray-400 dark:text-zinc-500"></i>
+                      <LucideIcon  className="ph-duotone ph-magnifying-glass text-3xl text-gray-400 dark:text-zinc-500"></LucideIcon>
                     </EmptyMedia>
                   </div>
                   <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
@@ -900,7 +901,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
                       onClick={handleClearFilters}
                       className="mt-6 flex h-10 items-center gap-2 rounded-xl border border-gray-300 bg-white px-5 text-xs font-semibold text-gray-700 shadow-xs transition-colors hover:bg-gray-50 dark:bg-zinc-900 dark:border-white/10 dark:text-zinc-300 cursor-pointer"
                     >
-                      <i className="ph-bold ph-arrow-counter-clockwise"></i>
+                      <LucideIcon  className="ph-bold ph-arrow-counter-clockwise"></LucideIcon>
                       Clear
                     </Button>
                   )}
@@ -1024,7 +1025,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
                               title={isExpanded ? "Collapse Details" : "Expand Details"}
                               className={cn("mx-auto flex h-7 w-7 items-center justify-center bg-transparent border-none text-[#8E8E93] hover:text-[#111111] dark:hover:text-zinc-200 cursor-pointer transition-transform duration-200", isExpanded ? "rotate-180" : "rotate-0")}
                             >
-                              <i className="ti ti-chevron-down text-[14px]"></i>
+                              <LucideIcon  className="ti ti-chevron-down text-[14px]"></LucideIcon>
                             </button>
                           </td>
 
@@ -1102,7 +1103,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
                                     aria-label="View Details"
                                     className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
                                   >
-                                    <i className="ph-bold ph-eye text-[16px]"></i>
+                                    <LucideIcon  className="ph-bold ph-eye text-[16px]"></LucideIcon>
                                   </button>
                                 </TooltipTrigger>
                                 <TooltipContent>View Details</TooltipContent>

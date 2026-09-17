@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import dotenv from "dotenv";
 import chokidar from "chokidar";
 import { Pool } from "pg";
+import { waitForStableFile } from "./fileStability.mjs";
 
 const nextAppRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 dotenv.config({ path: path.join(nextAppRoot, ".env") });
@@ -70,44 +71,6 @@ function shouldIgnore(filePath) {
 const inFlight = new Set();
 const pending = new Map();
 
-function sleep(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-/**
- * Wait until a file's size stops growing.
- *
- * macOS Image Capture writes files in two ways:
- *   a) Normal write — file grows incrementally.
- *   b) Atomic rename — file appears fully-formed in one event.
- *
- * For case (b), size will be stable on the first check, so we immediately
- * return true. For case (a), we poll until size is stable.
- */
-async function waitForStableFile(filePath, maxWaitMs = 30000) {
-  const start = Date.now();
-  let prevSize = -1;
-  let stableCount = 0; // require two consecutive stable readings for safety
-  while (Date.now() - start < maxWaitMs) {
-    let stat;
-    try {
-      stat = fs.statSync(filePath);
-    } catch {
-      // File disappeared — was it moved/renamed away? Stop waiting.
-      return false;
-    }
-    if (stat.size > 0 && stat.size === prevSize) {
-      stableCount++;
-      if (stableCount >= 2) return true;
-    } else {
-      stableCount = 0;
-    }
-    prevSize = stat.size;
-    await sleep(500);
-  }
-  return false;
-}
-
 async function sendToIngest(absPath, originalName) {
   const bytes = fs.readFileSync(absPath);
   const file = new File([bytes], originalName);
@@ -165,11 +128,12 @@ function scheduleProcess(filePath) {
   if (shouldIgnore(filePath)) return;
   const key = path.resolve(filePath);
   clearTimeout(pending.get(key));
-  // 600ms debounce — catches rapid change events from streaming writes
+  // Short debounce coalesces scanner event bursts. The stability gate below
+  // remains the source of truth for determining when a file is complete.
   const timer = setTimeout(() => {
     pending.delete(key);
     processOne(key);
-  }, 600);
+  }, 250);
   pending.set(key, timer);
 }
 
@@ -206,12 +170,8 @@ function attachWatcher() {
     ignoreInitial: true,
     // Polling is reliable for scanner apps and Finder atomic renames.
     usePolling: true,
-    interval: 500,
-    binaryInterval: 500,
-    awaitWriteFinish: {
-      stabilityThreshold: 3000,
-      pollInterval: 200,
-    },
+    interval: 200,
+    binaryInterval: 200,
     ignored: (filePath) => {
       const basename = path.basename(filePath);
       return basename.startsWith(".") || basename.endsWith("~") || basename.startsWith("#");

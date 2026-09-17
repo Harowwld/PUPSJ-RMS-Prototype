@@ -2,7 +2,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/shared/ThemeProvider";
-import LucideIconTranslator from "@/components/shared/LucideIconTranslator";
 import DynamicFavicon from "@/components/shared/DynamicFavicon";
 import localFont from "next/font/local";
 
@@ -52,7 +51,6 @@ export default function RootLayout({ children }) {
           <DynamicFavicon />
           <TooltipProvider>{children}</TooltipProvider>
           <Toaster position="top-center" />
-          <LucideIconTranslator />
         </ThemeProvider>
       </body>
     </html>

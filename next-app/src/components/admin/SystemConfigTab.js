@@ -1,5 +1,6 @@
 "use client"
 
+import LucideIcon from "@/components/shared/LucideIcon";
 import { useState, useEffect } from "react"
 
 import { Input } from "@/components/ui/input"
@@ -329,12 +330,12 @@ export default function SystemConfigTab({
   const SortIndicator = ({ currentSort, columnKey }) => {
     if (currentSort.key !== columnKey)
       return (
-        <i className="ph-bold ph-caret-up-down ml-1 opacity-20 transition-opacity group-hover:opacity-100"></i>
+        <LucideIcon  className="ph-bold ph-caret-up-down ml-1 opacity-20 transition-opacity group-hover:opacity-100"></LucideIcon>
       )
     return (
-      <i
+      <LucideIcon 
         className={`ph-bold ml-1 text-pup-maroon dark:text-primary ${currentSort.direction === "asc" ? "ph-caret-up" : "ph-caret-down"} dark:text-primary`}
-      ></i>
+      ></LucideIcon>
     )
   }
 
@@ -976,7 +977,7 @@ export default function SystemConfigTab({
             <Empty className="flex h-[400px] flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400">
               <EmptyHeader className="flex flex-col items-center gap-0">
                 <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
-                  <i className="ph-duotone ph-warning-circle text-xl text-pup-maroon dark:text-primary" />
+                  <LucideIcon  className="ph-duotone ph-warning-circle text-xl text-pup-maroon dark:text-primary" />
                 </EmptyMedia>
                 <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">
                   Could not load configuration
@@ -1013,7 +1014,7 @@ export default function SystemConfigTab({
                   : "text-gray-500 hover:text-gray-900 dark:hover:text-white bg-transparent"
               )}
             >
-              <i className="ph-bold ph-files text-sm" />
+              <LucideIcon  className="ph-bold ph-files text-sm" />
               <span>Document Types</span>
             </button>
 
@@ -1027,7 +1028,7 @@ export default function SystemConfigTab({
                   : "text-gray-500 hover:text-gray-900 dark:hover:text-white bg-transparent"
               )}
             >
-              <i className="ph-bold ph-graduation-cap text-sm" />
+              <LucideIcon  className="ph-bold ph-graduation-cap text-sm" />
               <span>Degree Programs</span>
             </button>
 
@@ -1041,7 +1042,7 @@ export default function SystemConfigTab({
                   : "text-gray-500 hover:text-gray-900 dark:hover:text-white bg-transparent"
               )}
             >
-              <i className="ph-bold ph-users-three text-sm" />
+              <LucideIcon  className="ph-bold ph-users-three text-sm" />
               <span>Course Blocks</span>
             </button>
 
@@ -1057,7 +1058,7 @@ export default function SystemConfigTab({
                   : "text-gray-500 hover:text-gray-900 dark:hover:text-white bg-transparent"
               )}
             >
-              <i className="ph-bold ph-file-arrow-up text-sm" />
+              <LucideIcon  className="ph-bold ph-file-arrow-up text-sm" />
               <span>Imports</span>
             </button>
 
@@ -1071,7 +1072,7 @@ export default function SystemConfigTab({
                   : "text-gray-500 hover:text-gray-900 dark:hover:text-white bg-transparent"
               )}
             >
-              <i className="ph-bold ph-scan text-sm" />
+              <LucideIcon  className="ph-bold ph-scan text-sm" />
               <span>OCR Configuration</span>
             </button>
           </div>

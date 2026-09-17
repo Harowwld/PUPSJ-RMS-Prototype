@@ -1,5 +1,6 @@
 "use client"
 
+import LucideIcon from "@/components/shared/LucideIcon";
 import { useState, useEffect, useCallback } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Card, CardContent } from "@/components/ui/card"
@@ -278,7 +279,7 @@ export default function LandingBentoCmsView({ showToast }) {
               >
                 {saving ? (
                   <>
-                    <i className="ph-bold ph-spinner animate-spin mr-1.5 text-[14px]" />
+                    <LucideIcon  className="ph-bold ph-spinner animate-spin mr-1.5 text-[14px]" />
                     Saving...
                   </>
                 ) : (
@@ -350,7 +351,7 @@ export default function LandingBentoCmsView({ showToast }) {
                         ? "bg-pup-maroon text-white"
                         : "bg-gray-200/80 dark:bg-zinc-800 text-gray-500 dark:text-zinc-400"
                     )}>
-                      <i className="ph-bold ph-cursor-click text-sm" />
+                      <LucideIcon  className="ph-bold ph-cursor-click text-sm" />
                     </div>
                     <div className="min-w-0">
                       <h3 className="text-[13px] font-semibold text-gray-900 dark:text-zinc-50 truncate">
@@ -361,7 +362,7 @@ export default function LandingBentoCmsView({ showToast }) {
                       </p>
                     </div>
                   </div>
-                  <i className={cn(
+                  <LucideIcon  className={cn(
                     "ph-bold ph-caret-down text-gray-400 text-sm shrink-0 transition-transform duration-200",
                     activeCardTab === 1 && "rotate-180"
                   )} />
@@ -483,7 +484,7 @@ export default function LandingBentoCmsView({ showToast }) {
                         ? "bg-pup-maroon text-white"
                         : "bg-gray-200/80 dark:bg-zinc-800 text-gray-500 dark:text-zinc-400"
                     )}>
-                      <i className="ph-bold ph-clock text-sm" />
+                      <LucideIcon  className="ph-bold ph-clock text-sm" />
                     </div>
                     <div className="min-w-0">
                       <h3 className="text-[13px] font-semibold text-gray-900 dark:text-zinc-50 truncate">
@@ -494,7 +495,7 @@ export default function LandingBentoCmsView({ showToast }) {
                       </p>
                     </div>
                   </div>
-                  <i className={cn(
+                  <LucideIcon  className={cn(
                     "ph-bold ph-caret-down text-gray-400 text-sm shrink-0 transition-transform duration-200",
                     activeCardTab === 2 && "rotate-180"
                   )} />
@@ -636,7 +637,7 @@ export default function LandingBentoCmsView({ showToast }) {
                         ? "bg-pup-maroon text-white"
                         : "bg-gray-200/80 dark:bg-zinc-800 text-gray-500 dark:text-zinc-400"
                     )}>
-                      <i className="ph-bold ph-archive text-sm" />
+                      <LucideIcon  className="ph-bold ph-archive text-sm" />
                     </div>
                     <div className="min-w-0">
                       <h3 className="text-[13px] font-semibold text-gray-900 dark:text-zinc-50 truncate">
@@ -647,7 +648,7 @@ export default function LandingBentoCmsView({ showToast }) {
                       </p>
                     </div>
                   </div>
-                  <i className={cn(
+                  <LucideIcon  className={cn(
                     "ph-bold ph-caret-down text-gray-400 text-sm shrink-0 transition-transform duration-200",
                     activeCardTab === 3 && "rotate-180"
                   )} />
@@ -704,7 +705,7 @@ export default function LandingBentoCmsView({ showToast }) {
                         ? "bg-pup-maroon text-white"
                         : "bg-gray-200/80 dark:bg-zinc-800 text-gray-500 dark:text-zinc-400"
                     )}>
-                      <i className="ph-bold ph-check-square text-sm" />
+                      <LucideIcon  className="ph-bold ph-check-square text-sm" />
                     </div>
                     <div className="min-w-0">
                       <h3 className="text-[13px] font-semibold text-gray-900 dark:text-zinc-50 truncate">
@@ -715,7 +716,7 @@ export default function LandingBentoCmsView({ showToast }) {
                       </p>
                     </div>
                   </div>
-                  <i className={cn(
+                  <LucideIcon  className={cn(
                     "ph-bold ph-caret-down text-gray-400 text-sm shrink-0 transition-transform duration-200",
                     activeCardTab === 4 && "rotate-180"
                   )} />
@@ -846,7 +847,7 @@ export default function LandingBentoCmsView({ showToast }) {
                         ? "bg-pup-maroon text-white"
                         : "bg-gray-200/80 dark:bg-zinc-800 text-gray-500 dark:text-zinc-400"
                     )}>
-                      <i className="ph-bold ph-scales text-sm" />
+                      <LucideIcon  className="ph-bold ph-scales text-sm" />
                     </div>
                     <div className="min-w-0">
                       <h3 className="text-[13px] font-semibold text-gray-900 dark:text-zinc-50 truncate">
@@ -857,7 +858,7 @@ export default function LandingBentoCmsView({ showToast }) {
                       </p>
                     </div>
                   </div>
-                  <i className={cn(
+                  <LucideIcon  className={cn(
                     "ph-bold ph-caret-down text-gray-400 text-sm shrink-0 transition-transform duration-200",
                     activeCardTab === 5 && "rotate-180"
                   )} />
@@ -1068,7 +1069,7 @@ export default function LandingBentoCmsView({ showToast }) {
                         </div>
                         <div className="p-2 px-2.5 rounded-lg bg-white dark:bg-zinc-800 border border-black/[0.05] text-xs font-semibold mb-2 flex justify-between">
                           <span>{bentoData.card1.campusLabel}</span>
-                          <i className="ph-bold ph-caret-down text-zinc-400 text-xs" />
+                          <LucideIcon  className="ph-bold ph-caret-down text-zinc-400 text-xs" />
                         </div>
                         <div className="p-2.5 rounded-lg bg-white dark:bg-zinc-800 border border-black/[0.05]">
                           <div className="text-[11px] font-bold text-pup-maroon mb-1">
@@ -1102,7 +1103,7 @@ export default function LandingBentoCmsView({ showToast }) {
                       <div className="rounded-xl bg-[#f8f9fa] dark:bg-zinc-800/40 p-4 border border-black/[0.03] dark:border-white/[0.04]">
                         <div className="flex items-center gap-2 mb-2">
                           <div className="w-5 h-5 rounded-md bg-pup-maroon text-white flex items-center justify-center text-xs">
-                            <i className="ph-bold ph-clock text-[10px]" />
+                            <LucideIcon  className="ph-bold ph-clock text-[10px]" />
                           </div>
                           <span className="text-xs font-bold text-gray-900 dark:text-white">
                             {bentoData.card2.headerText}
@@ -1152,7 +1153,7 @@ export default function LandingBentoCmsView({ showToast }) {
                     <div className="rounded-2xl bg-white dark:bg-zinc-900 border border-black/[0.06] dark:border-white/[0.08] p-4 shadow-xs flex flex-col justify-between">
                       <div className="rounded-xl bg-[#f8f9fa] dark:bg-zinc-800/40 p-4 border border-black/[0.03] min-h-[140px] flex items-center justify-center relative overflow-hidden">
                         <div className="w-10 h-10 rounded-xl bg-pup-maroon text-white flex items-center justify-center shadow-md">
-                          <i className="ph-bold ph-archive text-base" />
+                          <LucideIcon  className="ph-bold ph-archive text-base" />
                         </div>
                         <span className="absolute top-2 left-3 text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-white shadow-2xs">
                           {bentoData.card3.roomCode}
@@ -1183,7 +1184,7 @@ export default function LandingBentoCmsView({ showToast }) {
                           </span>
                           <div className="p-2 rounded-lg bg-white dark:bg-zinc-800 border border-black/[0.04]">
                             <div className="text-[11px] font-bold text-gray-900 dark:text-white flex items-center gap-1">
-                              <i className="ph-bold ph-check text-emerald-600 text-[10px]" />
+                              <LucideIcon  className="ph-bold ph-check text-emerald-600 text-[10px]" />
                               {bentoData.card4.primaryItemTitle}
                             </div>
                             <div className="text-[10px] text-zinc-500 truncate">
@@ -1248,7 +1249,7 @@ export default function LandingBentoCmsView({ showToast }) {
                                 className="p-1.5 rounded-lg bg-white dark:bg-zinc-800 border border-black/[0.03] flex items-center gap-2"
                               >
                                 <div className="w-5 h-5 rounded bg-pup-maroon text-white flex items-center justify-center text-[10px] shrink-0 font-bold">
-                                  <i className={cn("ph-bold", item.icon)} />
+                                  <LucideIcon  className={cn("ph-bold", item.icon)} />
                                 </div>
                                 <div className="overflow-hidden">
                                   <div className="text-[10px] font-bold text-gray-900 dark:text-white truncate">

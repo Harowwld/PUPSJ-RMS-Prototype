@@ -1,5 +1,5 @@
 "use client";
-
+import LucideIcon from "@/components/shared/LucideIcon";
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 
@@ -728,7 +728,7 @@ function AccountPageContent() {
                   }}
                   className="flex h-10 items-center justify-center gap-2 rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
                 >
-                  <i className="ph-bold ph-arrow-left text-sm"></i>
+                  <LucideIcon  className="ph-bold ph-arrow-left text-sm"></LucideIcon>
                   Dashboard
                 </Button>
               }
@@ -762,7 +762,7 @@ function AccountPageContent() {
                             />
                             {!avatarLoaded && (
                               <div className="flex h-full w-full items-center justify-center bg-gray-200 dark:bg-zinc-800 animate-pulse">
-                                <i className="ph-bold ph-user text-[24px] text-gray-400 dark:text-zinc-500" />
+                                <LucideIcon  className="ph-bold ph-user text-[24px] text-gray-400 dark:text-zinc-500" />
                               </div>
                             )}
                           </>
@@ -771,7 +771,7 @@ function AccountPageContent() {
                         )}
                         {/* Hover overlay */}
                         <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-fast">
-                          <i className="ph-bold ph-camera text-white text-base"></i>
+                          <LucideIcon  className="ph-bold ph-camera text-white text-base"></LucideIcon>
                         </div>
                       </div>
                       <Dialog open={showAvatarPicker} onOpenChange={setShowAvatarPicker}>
@@ -823,14 +823,14 @@ function AccountPageContent() {
                         value={tab.id}
                         className="group flex items-center justify-start gap-3 w-full px-3.5 py-2.5 rounded-xl text-xs font-semibold tracking-[-0.01em] whitespace-nowrap transition-all outline-none cursor-pointer data-[state=active]:bg-white dark:data-[state=active]:bg-zinc-800 data-[state=active]:text-gray-900 dark:data-[state=active]:text-zinc-50 data-[state=active]:shadow-xs text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 hover:bg-gray-100/60 dark:hover:bg-zinc-800/40 border border-transparent data-[state=active]:border-gray-200/60 dark:data-[state=active]:border-white/5"
                       >
-                        <i className={cn(
+                        <LucideIcon  className={cn(
                           "ph-bold text-base shrink-0 transition-colors",
                           "text-gray-400 group-data-[state=active]:text-pup-maroon dark:text-zinc-500 dark:group-data-[state=active]:text-red-400",
                           tab.icon
-                        )}></i>
+                        )}></LucideIcon>
                         <span className="truncate text-left">{tab.label}</span>
                         <div className="shrink-0 ml-auto w-4 h-4 flex items-center justify-center opacity-0 group-data-[state=active]:opacity-100 transition-opacity">
-                          <i className="ph-bold ph-caret-right text-xs text-gray-400 dark:text-zinc-400"></i>
+                          <LucideIcon  className="ph-bold ph-caret-right text-xs text-gray-400 dark:text-zinc-400"></LucideIcon>
                         </div>
                       </TabsTrigger>
                     ))}
@@ -855,7 +855,7 @@ function AccountPageContent() {
                   <form onSubmit={submitProfile} className="space-y-6">
                     {profileError && (
                       <div className="p-4 bg-red-50 border border-red-100 text-red-700 text-xs font-semibold rounded-lg flex items-center gap-3 animate-in shake-1 dark:bg-red-500/10 dark:border-red-500/20">
-                        <i className="ph-fill ph-warning-circle text-lg"></i>
+                        <LucideIcon  className="ph-fill ph-warning-circle text-lg"></LucideIcon>
                         {profileError}
                       </div>
                     )}
@@ -1020,7 +1020,7 @@ function AccountPageContent() {
                         className="flex h-10 items-center justify-center gap-2 rounded-xl! text-xs font-semibold text-white btn-brand-red active:scale-95 disabled:opacity-50 transition-all cursor-pointer px-5 shadow-xs border-0"
                       >
                         {profileLoading && (
-                          <i className="ph-bold ph-spinner animate-spin text-sm"></i>
+                          <LucideIcon  className="ph-bold ph-spinner animate-spin text-sm"></LucideIcon>
                         )}
                         {profileLoading ? "Saving..." : "Save"}
                       </Button>
@@ -1052,7 +1052,7 @@ function AccountPageContent() {
                     <form onSubmit={submitPassword} className="space-y-6">
                       {pwError && (
                         <div className="p-4 bg-red-50 border border-red-100 text-red-700 text-xs font-semibold rounded-lg flex items-center gap-3 animate-in shake-1 dark:bg-red-500/10 dark:border-red-500/20">
-                          <i className="ph-fill ph-warning-circle text-lg"></i>
+                          <LucideIcon  className="ph-fill ph-warning-circle text-lg"></LucideIcon>
                           {pwError}
                         </div>
                       )}
@@ -1076,7 +1076,7 @@ function AccountPageContent() {
                               onClick={() => setShowPw(prev => ({ ...prev, current: !prev.current }))}
                               className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-650 transition-colors dark:text-zinc-500 dark:hover:text-zinc-350 cursor-pointer"
                             >
-                              <i className={cn("ph-bold", showPw.current ? "ph-eye-slash" : "ph-eye")}></i>
+                              <LucideIcon  className={cn("ph-bold", showPw.current ? "ph-eye-slash" : "ph-eye")}></LucideIcon>
                             </button>
                           </div>
                         </div>
@@ -1100,7 +1100,7 @@ function AccountPageContent() {
                                 onClick={() => setShowPw(prev => ({ ...prev, next: !prev.next }))}
                                 className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-650 transition-colors dark:text-zinc-500 dark:hover:text-zinc-350 cursor-pointer"
                               >
-                                <i className={cn("ph-bold", showPw.next ? "ph-eye-slash" : "ph-eye")}></i>
+                                <LucideIcon  className={cn("ph-bold", showPw.next ? "ph-eye-slash" : "ph-eye")}></LucideIcon>
                               </button>
                             </div>
                             <p className="text-[10px] text-gray-400 px-1 dark:text-zinc-500">
@@ -1125,7 +1125,7 @@ function AccountPageContent() {
                                 onClick={() => setShowPw(prev => ({ ...prev, confirm: !prev.confirm }))}
                                 className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-650 transition-colors dark:text-zinc-500 dark:hover:text-zinc-350 cursor-pointer"
                               >
-                                <i className={cn("ph-bold", showPw.confirm ? "ph-eye-slash" : "ph-eye")}></i>
+                                <LucideIcon  className={cn("ph-bold", showPw.confirm ? "ph-eye-slash" : "ph-eye")}></LucideIcon>
                               </button>
                             </div>
                           </div>
@@ -1139,7 +1139,7 @@ function AccountPageContent() {
                           className="flex h-10 items-center justify-center gap-2 rounded-xl! text-xs font-semibold text-white btn-brand-red active:scale-95 disabled:opacity-50 transition-all cursor-pointer px-5 shadow-xs border-0"
                         >
                           {pwLoading && (
-                            <i className="ph-bold ph-spinner animate-spin text-sm"></i>
+                            <LucideIcon  className="ph-bold ph-spinner animate-spin text-sm"></LucideIcon>
                           )}
                           {pwLoading ? "Updating..." : "Update"}
                         </Button>
@@ -1168,7 +1168,7 @@ function AccountPageContent() {
                     <form onSubmit={submitSecurity} className="space-y-6">
                       {secError && (
                         <div className="p-4 bg-red-50 border border-red-100 text-red-700 text-xs font-semibold rounded-lg flex items-center gap-3 animate-in shake-1 dark:bg-red-500/10 dark:border-red-500/20">
-                          <i className="ph-fill ph-warning-circle text-lg"></i>
+                          <LucideIcon  className="ph-fill ph-warning-circle text-lg"></LucideIcon>
                           {secError}
                         </div>
                       )}
@@ -1176,7 +1176,7 @@ function AccountPageContent() {
                       <div className="space-y-6">
                         {globalQuestions.length === 0 ? (
                           <div className="p-8 text-center bg-gray-50/50 rounded-2xl border border-dashed border-gray-200 text-gray-400 font-medium text-xs dark:bg-card dark:border-white/10 dark:text-zinc-500">
-                            <i className="ph-duotone ph-mask-sad text-xl mb-3 block opacity-40"></i>
+                            <LucideIcon  className="ph-duotone ph-mask-sad text-xl mb-3 block opacity-40"></LucideIcon>
                             No recovery questions configured.
                           </div>
                         ) : (
@@ -1239,7 +1239,7 @@ function AccountPageContent() {
                           className="flex h-10 items-center justify-center gap-2 rounded-xl! text-xs font-semibold text-white btn-brand-red active:scale-95 disabled:opacity-50 transition-all cursor-pointer px-5 shadow-xs border-0"
                         >
                           {secLoading && (
-                            <i className="ph-bold ph-spinner animate-spin text-sm"></i>
+                            <LucideIcon  className="ph-bold ph-spinner animate-spin text-sm"></LucideIcon>
                           )}
                           {secLoading ? "Saving..." : "Save"}
                         </Button>
@@ -1308,7 +1308,7 @@ function AccountPageContent() {
 
                         {totpError && (
                           <div className="p-5 bg-red-50 border-2 border-red-100 text-red-700 text-sm font-semibold rounded-xl flex items-center gap-4 animate-in shake-1 dark:data-[state=active]:bg-red-500/10">
-                            <i className="ph-fill ph-warning-circle text-xl"></i>
+                            <LucideIcon  className="ph-fill ph-warning-circle text-xl"></LucideIcon>
                             {totpError}
                           </div>
                         )}
@@ -1330,7 +1330,7 @@ function AccountPageContent() {
                             className="flex h-10 items-center justify-center gap-2 rounded-xl! text-xs font-semibold text-white btn-brand-red active:scale-95 disabled:opacity-50 transition-all cursor-pointer px-5 shadow-xs border-0"
                           >
                             {totpLoading && (
-                              <i className="ph-bold ph-spinner animate-spin text-sm"></i>
+                              <LucideIcon  className="ph-bold ph-spinner animate-spin text-sm"></LucideIcon>
                             )}
                             Activate 2FA
                           </Button>
@@ -1342,7 +1342,7 @@ function AccountPageContent() {
                         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 py-6">
                           <div className="flex gap-3 items-start">
                             <div className="w-8 h-8 flex items-center justify-center text-gray-400 dark:text-zinc-500 shrink-0">
-                              <i className="ph-bold ph-device-mobile text-[16px]"></i>
+                              <LucideIcon  className="ph-bold ph-device-mobile text-[16px]"></LucideIcon>
                             </div>
                             <div>
                               <h4 className="text-[14px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50 flex items-center gap-2 leading-tight">
@@ -1376,7 +1376,7 @@ function AccountPageContent() {
                                  className="flex h-10 items-center justify-center gap-2 rounded-xl! text-xs font-semibold text-white btn-brand-red active:scale-95 disabled:opacity-50 transition-all cursor-pointer px-5 shadow-xs border-0"
                                >
                                  {totpSetupLoading && (
-                                   <i className="ph-bold ph-spinner animate-spin text-sm"></i>
+                                   <LucideIcon  className="ph-bold ph-spinner animate-spin text-sm"></LucideIcon>
                                  )}
                                  Set Up
                                </Button>
@@ -1404,7 +1404,7 @@ function AccountPageContent() {
 
                              {totpError && (
                                <div className="p-5 bg-red-50 border-2 border-red-100 text-red-700 text-sm font-semibold rounded-xl flex items-center gap-4 animate-in shake-1 dark:bg-red-500/10">
-                                 <i className="ph-fill ph-warning-circle text-xl"></i>
+                                 <LucideIcon  className="ph-fill ph-warning-circle text-xl"></LucideIcon>
                                  {totpError}
                                </div>
                              )}
@@ -1428,7 +1428,7 @@ function AccountPageContent() {
                                   className="flex h-10 items-center justify-center gap-2 rounded-xl! text-xs font-semibold text-white btn-brand-red active:scale-95 disabled:opacity-50 transition-all cursor-pointer px-5 shadow-xs border-0"
                                 >
                                   {totpLoading && (
-                                    <i className="ph-bold ph-spinner animate-spin text-sm"></i>
+                                    <LucideIcon  className="ph-bold ph-spinner animate-spin text-sm"></LucideIcon>
                                   )}
                                   Confirm Disable
                                 </Button>
@@ -1440,7 +1440,7 @@ function AccountPageContent() {
                         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 py-6">
                           <div className="flex gap-3 items-start">
                             <div className="w-8 h-8 flex items-center justify-center text-gray-400 dark:text-zinc-500 shrink-0">
-                              <i className="ph-bold ph-shield-check text-[16px]"></i>
+                              <LucideIcon  className="ph-bold ph-shield-check text-[16px]"></LucideIcon>
                             </div>
                             <div>
                               <h4 className="text-[14px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50 flex items-center gap-2 leading-tight">
@@ -1501,7 +1501,7 @@ function AccountPageContent() {
                               className="flex h-10 items-center justify-center gap-2 rounded-xl! text-xs font-semibold text-white btn-brand-red active:scale-95 disabled:opacity-50 transition-all cursor-pointer px-5 shadow-xs border-0"
                             >
                               {recoveryCodesLoading && (
-                                <i className="ph-bold ph-spinner animate-spin text-sm"></i>
+                                <LucideIcon  className="ph-bold ph-spinner animate-spin text-sm"></LucideIcon>
                               )}
                               {recoveryCodesCount > 0 ? "Regenerate" : "Generate"}
                             </Button>
@@ -1523,7 +1523,7 @@ function AccountPageContent() {
             <div className="relative pb-4">
                <DialogClose asChild>
                  <button className="absolute top-0 right-0 w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-zinc-800 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors focus:outline-none cursor-pointer">
-                   <i className="ph-bold ph-x text-sm"></i>
+                   <LucideIcon  className="ph-bold ph-x text-sm"></LucideIcon>
                  </button>
                </DialogClose>
                <DialogTitle className="text-[20px] font-bold text-[#1C1C1E] dark:text-zinc-100 tracking-tight">Recovery Codes</DialogTitle>
@@ -1558,7 +1558,7 @@ function AccountPageContent() {
                     variant="outline" 
                     className="flex-1 flex h-10 items-center justify-center gap-2 rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
                   >
-                    <i className="ph-bold ph-copy text-sm"></i> Copy
+                    <LucideIcon  className="ph-bold ph-copy text-sm"></LucideIcon> Copy
                   </Button>
                   <Button 
                     type="button"
@@ -1566,7 +1566,7 @@ function AccountPageContent() {
                     variant="outline" 
                     className="flex-1 flex h-10 items-center justify-center gap-2 rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
                   >
-                    <i className="ph-bold ph-download-simple text-sm"></i> Save
+                    <LucideIcon  className="ph-bold ph-download-simple text-sm"></LucideIcon> Save
                   </Button>
                 </div>
                 <Button 

@@ -1,5 +1,6 @@
 "use client"
 
+import LucideIcon from "@/components/shared/LucideIcon";
 import React, { useState, useEffect, useCallback } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -201,7 +202,7 @@ export default function SecurityQuestionsTab({ showToast }) {
                 className="flex h-10 items-center justify-center rounded-xl! btn-brand-red text-white font-semibold text-xs active:scale-95 transition-all cursor-pointer px-5 shadow-xs border-0"
               >
                 {saving ? (
-                  <i className="ph-bold ph-spinner animate-spin text-[16px]"></i>
+                  <LucideIcon  className="ph-bold ph-spinner animate-spin text-[16px]"></LucideIcon>
                 ) : (
                   "Save"
                 )}
@@ -295,7 +296,7 @@ export default function SecurityQuestionsTab({ showToast }) {
                               <Tooltip>
                                 <TooltipTrigger asChild>
                                   <span className="inline-flex items-center gap-1 text-[11px] font-medium text-amber-600 dark:text-amber-400 cursor-help">
-                                    <i className="ph-bold ph-warning text-xs" />
+                                    <LucideIcon  className="ph-bold ph-warning text-xs" />
                                     Weak Challenge
                                   </span>
                                 </TooltipTrigger>
@@ -305,7 +306,7 @@ export default function SecurityQuestionsTab({ showToast }) {
                               </Tooltip>
                             ) : (
                               <span className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-600 dark:text-emerald-400">
-                                <i className="ph-bold ph-check text-xs" />
+                                <LucideIcon  className="ph-bold ph-check text-xs" />
                                 Strong
                               </span>
                             )}

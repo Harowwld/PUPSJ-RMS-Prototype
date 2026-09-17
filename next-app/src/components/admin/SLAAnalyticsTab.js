@@ -1,5 +1,6 @@
 "use client"
 
+import LucideIcon from "@/components/shared/LucideIcon";
 import React, { useEffect, useState, useMemo } from "react"
 import {
   Card,
@@ -205,7 +206,7 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
                   className="flex h-10 items-center justify-center rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
                 >
                   {isExportingCsv ? (
-                    <i className="ph-bold ph-spinner animate-spin text-[16px]"></i>
+                    <LucideIcon  className="ph-bold ph-spinner animate-spin text-[16px]"></LucideIcon>
                   ) : (
                     "Export"
                   )}
@@ -217,7 +218,7 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
                   className="flex h-10 items-center justify-center rounded-xl! btn-brand-red text-white font-semibold text-xs active:scale-95 disabled:opacity-50 transition-all cursor-pointer px-5 shadow-xs"
                 >
                   {isGeneratingPdf ? (
-                    <i className="ph-bold ph-spinner animate-spin text-[16px] flex items-center justify-center"></i>
+                    <LucideIcon  className="ph-bold ph-spinner animate-spin text-[16px] flex items-center justify-center"></LucideIcon>
                   ) : (
                     "Download"
                   )}
@@ -303,7 +304,7 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
             <Empty className="flex h-[400px] flex-col items-center justify-center rounded-2xl border border-gray-200 bg-white text-center text-gray-500 shadow-sm dark:border-white/10 dark:bg-card dark:text-zinc-400 dark:shadow-none">
               <EmptyHeader className="flex flex-col items-center gap-0">
                 <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
-                  <i className="ph-duotone ph-warning-circle text-xl text-pup-maroon dark:text-primary" />
+                  <LucideIcon  className="ph-duotone ph-warning-circle text-xl text-pup-maroon dark:text-primary" />
                 </EmptyMedia>
                 <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">
                   Data Unavailable
@@ -370,7 +371,7 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
                   cursor: 'pointer'
                 }}
               >
-                <i className="ti ti-x" style={{ fontSize: '16px' }}></i>
+                <LucideIcon  className="ti ti-x" style={{ fontSize: '16px' }}></LucideIcon>
               </button>
             </DialogClose>
           </DialogHeader>
@@ -386,7 +387,7 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
                       onClick={() => setIsFullscreenPreview(false)}
                       className="h-10 w-10 rounded-full bg-black/50 text-white hover:bg-black/70 backdrop-blur-md border-0"
                     >
-                      <i className="ph-bold ph-x text-lg"></i>
+                      <LucideIcon  className="ph-bold ph-x text-lg"></LucideIcon>
                     </Button>
                   </div>
                 )}
@@ -409,7 +410,7 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
             ) : (
               <div className="flex h-full w-full flex-col items-center justify-center bg-white p-10 dark:bg-card">
                 <div className="flex flex-col items-center gap-4">
-                  <i className="ph-bold ph-spinner animate-spin text-xl text-pup-maroon dark:text-primary" />
+                  <LucideIcon  className="ph-bold ph-spinner animate-spin text-xl text-pup-maroon dark:text-primary" />
                   <p className="text-sm font-semibold text-gray-500 tracking-widest dark:text-zinc-400">
                     Generating Report Preview...
                   </p>
@@ -425,7 +426,7 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
               onClick={() => setIsFullscreenPreview(!isFullscreenPreview)}
               className="text-[#8E8E93] hover:text-[#111] dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/10 transition-colors rounded-xl shadow-none border-0 p-0 h-10 w-10 cursor-pointer"
             >
-              <i className="ti ti-arrows-vertical text-[16px]"></i>
+              <LucideIcon  className="ti ti-arrows-vertical text-[16px]"></LucideIcon>
             </Button>
 
             <div className="flex items-center gap-2.5 ml-auto">

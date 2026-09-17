@@ -1,5 +1,6 @@
 "use client"
 
+import LucideIcon from "@/components/shared/LucideIcon";
 import { useState, useEffect } from "react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -213,12 +214,12 @@ export default function SectionsTab({
 
   const SortIndicator = ({ column }) => {
     if (sortSection.key !== column) {
-      return <i className="ph-bold ph-caret-up-down ml-1 text-[12px] text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"></i>
+      return <LucideIcon  className="ph-bold ph-caret-up-down ml-1 text-[12px] text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"></LucideIcon>
     }
     return sortSection.direction === "asc" ? (
-      <i className="ph-bold ph-caret-up ml-1 text-[12px] text-gray-400"></i>
+      <LucideIcon  className="ph-bold ph-caret-up ml-1 text-[12px] text-gray-400"></LucideIcon>
     ) : (
-      <i className="ph-bold ph-caret-down ml-1 text-[12px] text-gray-400"></i>
+      <LucideIcon  className="ph-bold ph-caret-down ml-1 text-[12px] text-gray-400"></LucideIcon>
     )
   }
 
@@ -373,7 +374,7 @@ export default function SectionsTab({
 
             <div className="flex-1 max-w-md relative group">
               <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                <i className="ph-bold ph-magnifying-glass text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm"></i>
+                <LucideIcon  className="ph-bold ph-magnifying-glass text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm"></LucideIcon>
               </div>
               <Input
                 type="text"
@@ -394,7 +395,7 @@ export default function SectionsTab({
                     className="text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none text-xs"
                     title="Clear search"
                   >
-                    <i className="ph-bold ph-x" />
+                    <LucideIcon  className="ph-bold ph-x" />
                   </button>
                 )}
                 <span className="text-[12px] font-normal text-gray-400 dark:text-zinc-500 pointer-events-none">
@@ -412,7 +413,7 @@ export default function SectionsTab({
               className="flex h-10 items-center justify-center rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
             >
               {isExporting ? (
-                <i className="ph-bold ph-spinner animate-spin text-sm"></i>
+                <LucideIcon  className="ph-bold ph-spinner animate-spin text-sm"></LucideIcon>
               ) : (
                 "Export"
               )}
@@ -532,10 +533,10 @@ export default function SectionsTab({
                             "flex h-5 w-5 mx-auto items-center justify-center rounded-full border-2 border-dashed transition-colors",
                             (secCourseCode || newSectionName.trim()) ? "border-orange-400 dark:border-orange-500/50" : "border-gray-300 dark:border-white/10"
                           )}>
-                            <i className={cn(
+                            <LucideIcon  className={cn(
                               "ph-bold text-[10px]",
                               (secCourseCode || newSectionName.trim()) ? "ph-pencil-simple text-orange-600 animate-bounce dark:text-orange-400" : "ph-plus text-gray-400 dark:text-zinc-500"
-                            )}></i>
+                            )}></LucideIcon>
                           </div>
                         </td>
                         <td className="py-0 px-6 align-middle">
@@ -580,9 +581,9 @@ export default function SectionsTab({
                               className="h-9 w-9 p-0 flex items-center justify-center rounded-xl text-sm font-semibold text-white shadow-xs active:scale-95 disabled:opacity-50 transition-all btn-brand-orange shrink-0 cursor-pointer"
                             >
                             {isQuickAddLoading ? (
-                              <i className="ph-bold ph-spinner animate-spin"></i>
+                              <LucideIcon  className="ph-bold ph-spinner animate-spin"></LucideIcon>
                             ) : (
-                              <i className="ph-bold ph-plus"></i>
+                              <LucideIcon  className="ph-bold ph-plus"></LucideIcon>
                             )}
                             </Button>
                           </div>
@@ -681,7 +682,7 @@ export default function SectionsTab({
                                       }}
                                       className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 transition-colors flex items-center justify-center border-0 bg-transparent cursor-pointer active:scale-95"
                                     >
-                                      <i className="ph-bold ph-pencil-simple text-sm"></i>
+                                      <LucideIcon  className="ph-bold ph-pencil-simple text-sm"></LucideIcon>
                                     </button>
                                   </TooltipTrigger>
                                   <TooltipContent side="top">Edit Course Block</TooltipContent>
@@ -713,7 +714,7 @@ export default function SectionsTab({
                                     }}
                                     className="w-7 h-7 rounded-lg hover:bg-emerald-50 dark:hover:bg-emerald-950/30 text-gray-500 hover:text-emerald-600 dark:text-zinc-400 dark:hover:text-emerald-400 transition-colors flex items-center justify-center border-0 bg-transparent cursor-pointer active:scale-95"
                                   >
-                                    <i className="ph-bold ph-archive-restore text-sm"></i>
+                                    <LucideIcon  className="ph-bold ph-archive-restore text-sm"></LucideIcon>
                                   </button>
                                 </TooltipTrigger>
                                 <TooltipContent side="top">Restore</TooltipContent>
@@ -743,7 +744,7 @@ export default function SectionsTab({
                                     }}
                                     className="w-7 h-7 rounded-lg hover:bg-amber-50 dark:hover:bg-amber-950/30 text-gray-500 hover:text-amber-600 dark:text-zinc-400 dark:hover:text-amber-400 transition-colors flex items-center justify-center border-0 bg-transparent cursor-pointer active:scale-95"
                                   >
-                                    <i className="ph-bold ph-archive text-sm"></i>
+                                    <LucideIcon  className="ph-bold ph-archive text-sm"></LucideIcon>
                                   </button>
                                 </TooltipTrigger>
                                 <TooltipContent side="top">Archive Course Block</TooltipContent>
@@ -761,7 +762,7 @@ export default function SectionsTab({
                                 <div className="relative mb-6">
                                   <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
                                   <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
-                                    <i className={showArchived && totalInView === 0 ? "ph-archive" : "ph-magnifying-glass"}></i>
+                                    <LucideIcon  className={showArchived && totalInView === 0 ? "ph-archive" : "ph-magnifying-glass"}></LucideIcon>
                                   </EmptyMedia>
                                 </div>
                                 <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">

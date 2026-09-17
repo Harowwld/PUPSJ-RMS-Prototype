@@ -1,5 +1,6 @@
 "use client"
 
+import LucideIcon from "@/components/shared/LucideIcon";
 import { memo } from "react"
 import { Button } from "@/components/ui/button"
 import {
@@ -111,7 +112,7 @@ const ConflictResolutionModals = memo(({
                       <td className="py-3.5 px-4 align-top">
                         <div className="flex items-center gap-2.5">
                           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-100 text-gray-600 dark:bg-zinc-800 dark:text-zinc-300 shrink-0">
-                            <i className="ph-bold ph-archive text-sm" />
+                            <LucideIcon  className="ph-bold ph-archive text-sm" />
                           </div>
                           <div>
                             <div className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
@@ -130,7 +131,7 @@ const ConflictResolutionModals = memo(({
                             className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-gray-50/80 px-2.5 py-1 text-[11px] font-semibold text-gray-600 dark:border-white/10 dark:bg-zinc-800/80 dark:text-zinc-300 cursor-grab active:cursor-grabbing hover:bg-gray-100 dark:hover:bg-zinc-700/60 transition-all select-none shadow-2xs"
                             title="Drag to any destination option on the right"
                           >
-                            <i className="ph-bold ph-dots-six-vertical text-gray-400 dark:text-zinc-500" />
+                            <LucideIcon  className="ph-bold ph-dots-six-vertical text-gray-400 dark:text-zinc-500" />
                             <span>Drag Handle</span>
                           </div>
                         )}
@@ -204,7 +205,7 @@ const ConflictResolutionModals = memo(({
                               >
                                 <span className="truncate">{opt.label}</span>
                                 {selected && (
-                                  <i className="ph-bold ph-check text-xs text-pup-maroon dark:text-red-400 ml-1.5 shrink-0" />
+                                  <LucideIcon  className="ph-bold ph-check text-xs text-pup-maroon dark:text-red-400 ml-1.5 shrink-0" />
                                 )}
                               </button>
                             )
@@ -268,7 +269,7 @@ const ConflictResolutionModals = memo(({
                       </td>
                       <td className="py-3 px-4 text-xs font-semibold text-gray-900 dark:text-zinc-100">
                         <div className="flex items-center gap-2">
-                          <i className="ph-bold ph-arrow-right text-gray-400 dark:text-zinc-600 text-xs shrink-0" />
+                          <LucideIcon  className="ph-bold ph-arrow-right text-gray-400 dark:text-zinc-600 text-xs shrink-0" />
                           <span>{r.toLabel}</span>
                         </div>
                       </td>
@@ -345,7 +346,7 @@ const ConflictResolutionModals = memo(({
                         </td>
                         <td className="py-3 px-4 text-xs font-semibold text-gray-900 dark:text-zinc-100">
                           <div className="flex items-center gap-2">
-                            <i className="ph-bold ph-arrow-right text-gray-400 dark:text-zinc-600 text-xs shrink-0" />
+                            <LucideIcon  className="ph-bold ph-arrow-right text-gray-400 dark:text-zinc-600 text-xs shrink-0" />
                             <span>Room {r?.to?.room} · Cabinet {r?.to?.cabinet} · Drawer {r?.to?.drawer}</span>
                           </div>
                         </td>

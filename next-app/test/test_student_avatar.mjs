@@ -23,12 +23,11 @@ async function main() {
     throw new Error("Student login failed: " + JSON.stringify(loginJson));
   }
 
-  const setCookie = loginRes.headers.get("set-cookie") || "";
-  const cookieMatch = setCookie.match(/pup_session=([^;]+)/);
-  if (!cookieMatch) {
+  const rawCookies = loginRes.headers.getSetCookie ? loginRes.headers.getSetCookie() : [loginRes.headers.get("set-cookie") || ""];
+  const sessionCookie = rawCookies.map(c => c.split(';')[0]).join('; ');
+  if (!sessionCookie.includes("pup_session=")) {
     throw new Error("No pup_session cookie returned in student login");
   }
-  const sessionCookie = `pup_session=${cookieMatch[1]}`;
   console.log("Got session cookie successfully.");
 
   // 2. Check /api/auth/me

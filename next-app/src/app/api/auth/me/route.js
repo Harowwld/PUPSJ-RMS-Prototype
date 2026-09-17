@@ -49,9 +49,15 @@ export async function GET(req) {
         LEFT JOIN students s ON s.student_no = sa.student_no
         WHERE (sa.id = $1 AND $1 IS NOT NULL)
            OR (sa.email = $2 AND $2 IS NOT NULL)
-           OR (sa.student_no IS NOT NULL AND upper(sa.student_no) = upper($3) AND $3 IS NOT NULL)
+           OR (lower(sa.email) = lower($3) AND $3 IS NOT NULL)
+           OR (sa.student_no IS NOT NULL AND upper(sa.student_no) = upper($4) AND $4 IS NOT NULL)
         LIMIT 1
-      `, [principal.accountId || (Number.isFinite(Number(userId)) ? Number(userId) : null), principal.email ? encryptPII(principal.email.toLowerCase()) : null, principal.studentNo || null]);
+      `, [
+        principal.accountId || (Number.isFinite(Number(userId)) ? Number(userId) : null),
+        principal.email ? encryptPII(principal.email.toLowerCase()) : null,
+        principal.email ? principal.email.toLowerCase() : null,
+        principal.studentNo || null
+      ]);
 
       if (!student) return addSecurityHeaders(NextResponse.json({ ok: false, error: "Student account not found" }, { status: 401 }));
       if (student.email) student.email = decryptPII(student.email);

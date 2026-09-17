@@ -1,5 +1,5 @@
 "use client";
-
+import LucideIcon from "@/components/shared/LucideIcon";
 import { useState } from "react";
 import {
   Dialog,
@@ -49,7 +49,7 @@ export default function UserGuideModal({ open, onClose }) {
                   value={tab.id}
                   className={`flex items-center gap-3 px-4 py-3 rounded-brand text-sm font-semibold transition-all whitespace-nowrap lg:whitespace-normal data-active:bg-pup-maroon data-active:text-white data-active:shadow-md data-active:shadow-red-900/20 text-gray-600 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 border-0 justify-start w-full dark:text-zinc-300 dark:bg-red-950/30`}
                 >
-                  <i className={`${tab.icon} text-lg`}></i>
+                  <LucideIcon  className={`${tab.icon} text-lg`}></LucideIcon>
                   {tab.label}
                 </TabsTrigger>
               ))}
@@ -71,7 +71,7 @@ export default function UserGuideModal({ open, onClose }) {
                   </DialogDescription>
                 </div>
                 <div className="w-12 h-12 rounded-xl border border-red-100 bg-red-50 text-pup-maroon dark:text-primary flex items-center justify-center shrink-0 dark:bg-red-950/30">
-                  <i className={`${TABS.find(t => t.id === activeTab)?.icon.replace('ph-bold', 'ph-duotone')} text-xl`}></i>
+                  <LucideIcon  className={`${TABS.find(t => t.id === activeTab)?.icon.replace('ph-bold', 'ph-duotone')} text-xl`}></LucideIcon>
                 </div>
               </div>
             </DialogHeader>
@@ -80,7 +80,7 @@ export default function UserGuideModal({ open, onClose }) {
               <TabsContent value="general" className="p-8 m-0 border-0 focus-visible:ring-0">
                 <div className="animate-fade-in space-y-8">
                   <div className="bg-blue-50 border border-blue-100 rounded-brand p-4 flex gap-4 dark:bg-blue-950/30">
-                    <i className="ph-fill ph-info text-blue-500 text-xl shrink-0"></i>
+                    <LucideIcon  className="ph-fill ph-info text-blue-500 text-xl shrink-0"></LucideIcon>
                     <div>
                       <h4 className="font-semibold text-blue-900 text-sm tracking-wide">Notice</h4>
                       <p className="text-sm text-blue-800 font-medium mt-1">
@@ -92,7 +92,7 @@ export default function UserGuideModal({ open, onClose }) {
                   <section>
                     <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2 dark:text-zinc-50">
                       <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-gray-600 dark:bg-muted dark:text-zinc-300">
-                        <i className="ph-bold ph-stack"></i>
+                        <LucideIcon  className="ph-bold ph-stack"></LucideIcon>
                       </div>
                       Core Principles
                     </h3>
@@ -103,7 +103,7 @@ export default function UserGuideModal({ open, onClose }) {
                         { title: "Organization", icon: "ph-layout", desc: "Digital records mirror physical storage for seamless retrieval." }
                       ].map((item, i) => (
                         <div key={i} className="p-4 rounded-brand border border-gray-200 bg-gray-50 dark:border-white/10 dark:bg-white/5">
-                          <i className={`ph-bold ${item.icon} text-pup-maroon dark:text-primary text-xl mb-3 block`}></i>
+                          <LucideIcon  className={`ph-bold ${item.icon} text-pup-maroon dark:text-primary text-xl mb-3 block`}></LucideIcon>
                           <h5 className="font-semibold text-gray-900 text-sm dark:text-zinc-50">{item.title}</h5>
                           <p className="text-xs text-gray-600 mt-2 font-medium dark:text-zinc-300">{item.desc}</p>
                         </div>
@@ -117,7 +117,7 @@ export default function UserGuideModal({ open, onClose }) {
                 <div className="animate-fade-in space-y-8">
                   <section className="space-y-4">
                     <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2 border-b border-gray-100 pb-2 dark:text-zinc-50 dark:border-white/10">
-                      <i className="ph-bold ph-magnifying-glass text-pup-maroon dark:text-primary"></i>
+                      <LucideIcon  className="ph-bold ph-magnifying-glass text-pup-maroon dark:text-primary"></LucideIcon>
                       Document Retrieval
                     </h3>
                     <div className="bg-white rounded-brand border border-gray-200 overflow-hidden shadow-sm dark:bg-card dark:border-white/10">
@@ -152,19 +152,19 @@ export default function UserGuideModal({ open, onClose }) {
 
                   <section className="space-y-4">
                     <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2 border-b border-gray-100 pb-2 dark:text-zinc-50 dark:border-white/10">
-                      <i className="ph-bold ph-scan text-pup-maroon dark:text-primary"></i>
+                      <LucideIcon  className="ph-bold ph-scan text-pup-maroon dark:text-primary"></LucideIcon>
                       Scanning & Digitization
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="p-4 rounded-brand border border-gray-200 bg-white flex gap-4 dark:border-white/10 dark:bg-card">
-                        <i className="ph-bold ph-file-pdf text-xl text-red-500 shrink-0"></i>
+                        <LucideIcon  className="ph-bold ph-file-pdf text-xl text-red-500 shrink-0"></LucideIcon>
                         <div>
                           <h5 className="font-semibold text-gray-900 text-sm dark:text-zinc-50">Batch Scanning</h5>
                           <p className="text-xs text-gray-600 mt-1 font-medium dark:text-zinc-300">Use the <strong>Scan/Upload</strong> tab to upload documents. OCR will automatically attempt to read the Student Number.</p>
                         </div>
                       </div>
                       <div className="p-4 rounded-brand border border-gray-200 bg-white flex gap-4 dark:border-white/10 dark:bg-card">
-                        <i className="ph-bold ph-shield-check text-xl text-green-500 shrink-0"></i>
+                        <LucideIcon  className="ph-bold ph-shield-check text-xl text-green-500 shrink-0"></LucideIcon>
                         <div>
                           <h5 className="font-semibold text-gray-900 text-sm dark:text-zinc-50">Verification</h5>
                           <p className="text-xs text-gray-600 mt-1 font-medium dark:text-zinc-300">Always verify the OCR output. Incorrect student numbers will cause the document to be unsearchable.</p>
@@ -179,14 +179,14 @@ export default function UserGuideModal({ open, onClose }) {
                 <div className="animate-fade-in space-y-8">
                   <section className="space-y-4">
                     <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2 border-b border-gray-100 pb-2 dark:text-zinc-50 dark:border-white/10">
-                      <i className="ph-bold ph-layout text-pup-maroon dark:text-primary"></i>
+                      <LucideIcon  className="ph-bold ph-layout text-pup-maroon dark:text-primary"></LucideIcon>
                       Storage Configuration
                     </h3>
                     <p className="text-sm text-gray-600 font-medium dark:text-zinc-300">
                       Administrators manage the 2D visual map of the archive rooms. When physical cabinets are moved, the digital layout must be updated in the <strong>Storage Layout Editor</strong>.
                     </p>
                     <div className="bg-amber-50 border border-amber-200 rounded-brand p-4 flex gap-3 dark:bg-amber-950/30">
-                      <i className="ph-fill ph-warning text-amber-500 text-xl shrink-0 mt-0.5"></i>
+                      <LucideIcon  className="ph-fill ph-warning text-amber-500 text-xl shrink-0 mt-0.5"></LucideIcon>
                       <p className="text-xs text-amber-900 m-0 font-semibold">
                         DANGER: Removing a room or cabinet that currently contains student records is restricted. You must reassign all student locations before deleting storage entities.
                       </p>
@@ -195,19 +195,19 @@ export default function UserGuideModal({ open, onClose }) {
 
                   <section className="space-y-4">
                     <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2 border-b border-gray-100 pb-2 dark:text-zinc-50 dark:border-white/10">
-                      <i className="ph-bold ph-activity text-pup-maroon dark:text-primary"></i>
+                      <LucideIcon  className="ph-bold ph-activity text-pup-maroon dark:text-primary"></LucideIcon>
                       Accountability & Security
                     </h3>
                     <div className="space-y-3">
                       <div className="flex items-start gap-4 p-4 rounded-brand border border-gray-200 bg-white dark:border-white/10 dark:bg-card">
-                        <i className="ph-bold ph-list-magnifying-glass text-xl text-gray-600 shrink-0 dark:text-zinc-300"></i>
+                        <LucideIcon  className="ph-bold ph-list-magnifying-glass text-xl text-gray-600 shrink-0 dark:text-zinc-300"></LucideIcon>
                         <div>
                           <h5 className="font-semibold text-gray-900 text-sm dark:text-zinc-50">Audit Logs</h5>
                           <p className="text-xs text-gray-600 mt-1 font-medium dark:text-zinc-300">Every action (login, upload, delete) is tracked by IP address and timestamp. Use the export feature for compliance reporting.</p>
                         </div>
                       </div>
                       <div className="flex items-start gap-4 p-4 rounded-brand border border-gray-200 bg-white dark:border-white/10 dark:bg-card">
-                        <i className="ph-bold ph-database text-xl text-gray-600 shrink-0 dark:text-zinc-300"></i>
+                        <LucideIcon  className="ph-bold ph-database text-xl text-gray-600 shrink-0 dark:text-zinc-300"></LucideIcon>
                         <div>
                           <h5 className="font-semibold text-gray-900 text-sm dark:text-zinc-50">Backups</h5>
                           <p className="text-xs text-gray-600 mt-1 font-medium dark:text-zinc-300">Regularly perform backups from the Maintenance tab. Backups include all database records and can be encrypted for off-site storage.</p>

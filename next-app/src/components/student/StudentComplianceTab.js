@@ -1,5 +1,5 @@
 "use client";
-
+import LucideIcon from "@/components/shared/LucideIcon";
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -388,12 +388,12 @@ export default function StudentComplianceTab({ authUser }) {
           actions={
             <div className="flex items-center gap-2.5 sm:gap-3">
               <span className="hidden md:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-700 border border-gray-200 dark:bg-zinc-800 dark:border-white/10 dark:text-zinc-300">
-                <i className="ph-bold ph-eye text-[12px]"></i>
+                <LucideIcon  className="ph-bold ph-eye text-[12px]"></LucideIcon>
                 Viewer Only
               </span>
               {student.studentNo && (
                 <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-red-50 text-pup-maroon border border-red-100 dark:bg-red-950/30 dark:border-red-900/30">
-                  <i className="ph-fill ph-student text-[13px]"></i>
+                  <LucideIcon  className="ph-fill ph-student text-[13px]"></LucideIcon>
                   {student.studentNo}
                 </span>
               )}
@@ -535,7 +535,7 @@ export default function StudentComplianceTab({ authUser }) {
           <div className="flex flex-wrap items-center gap-2.5 flex-1 lg:justify-end">
             {/* Search Input */}
             <div className="relative w-full sm:w-60 lg:w-64 group">
-              <i className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-xs pointer-events-none" />
+              <LucideIcon  className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-xs pointer-events-none" />
               <Input
                 type="text"
                 placeholder="Search requirements..."
@@ -609,7 +609,7 @@ export default function StudentComplianceTab({ authUser }) {
                     : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
                 )}
               >
-                <i className="ph-bold ph-table text-sm block" />
+                <LucideIcon  className="ph-bold ph-table text-sm block" />
               </button>
               <button
                 type="button"
@@ -622,7 +622,7 @@ export default function StudentComplianceTab({ authUser }) {
                     : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
                 )}
               >
-                <i className="ph-bold ph-squares-four text-sm block" />
+                <LucideIcon  className="ph-bold ph-squares-four text-sm block" />
               </button>
             </div>
           </div>
@@ -643,7 +643,7 @@ export default function StudentComplianceTab({ authUser }) {
                     onClick={() => setStatusFilter("all")}
                     className="hover:text-red-500 cursor-pointer"
                   >
-                    <i className="ph-bold ph-x text-[10px]" />
+                    <LucideIcon  className="ph-bold ph-x text-[10px]" />
                   </button>
                 </div>
               )}
@@ -655,7 +655,7 @@ export default function StudentComplianceTab({ authUser }) {
                     onClick={() => setCategoryFilter("all")}
                     className="hover:text-red-500 cursor-pointer"
                   >
-                    <i className="ph-bold ph-x text-[10px]" />
+                    <LucideIcon  className="ph-bold ph-x text-[10px]" />
                   </button>
                 </div>
               )}
@@ -667,7 +667,7 @@ export default function StudentComplianceTab({ authUser }) {
                     onClick={() => setSearchQuery("")}
                     className="hover:text-red-500 cursor-pointer"
                   >
-                    <i className="ph-bold ph-x text-[10px]" />
+                    <LucideIcon  className="ph-bold ph-x text-[10px]" />
                   </button>
                 </div>
               )}
@@ -693,7 +693,7 @@ export default function StudentComplianceTab({ authUser }) {
               <Empty>
                 <EmptyMedia>
                   <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gray-100 text-gray-400 dark:bg-zinc-800 dark:text-zinc-500 mx-auto">
-                    <i className="ph-duotone ph-files text-3xl" />
+                    <LucideIcon  className="ph-duotone ph-files text-3xl" />
                   </div>
                 </EmptyMedia>
                 <EmptyHeader>
@@ -742,11 +742,11 @@ export default function StudentComplianceTab({ authUser }) {
                         <td className="p-4 whitespace-nowrap">
                           {isSubmitted ? (
                             <span className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold bg-emerald-50 text-emerald-800 border-emerald-200/80 dark:bg-emerald-950/30 dark:text-emerald-300">
-                              <i className="ph-bold ph-check text-xs" /> Submitted
+                              <LucideIcon  className="ph-bold ph-check text-xs" /> Submitted
                             </span>
                           ) : (
                             <span className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold bg-amber-50 text-amber-800 border-amber-200/80 dark:bg-amber-950/30 dark:text-amber-300">
-                              <i className="ph-bold ph-x text-xs" /> Not Submitted
+                              <LucideIcon  className="ph-bold ph-x text-xs" /> Not Submitted
                             </span>
                           )}
                         </td>
@@ -784,7 +784,7 @@ export default function StudentComplianceTab({ authUser }) {
                                 : "bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300"
                             )}
                           >
-                            <i
+                            <LucideIcon 
                               className={cn(
                                 "text-xl",
                                 isSubmitted ? "ph-bold ph-seal-check" : "ph-bold ph-warning"
@@ -810,7 +810,7 @@ export default function StudentComplianceTab({ authUser }) {
                               : "bg-amber-50 text-amber-800 border-amber-200/80 dark:bg-amber-950/30 dark:text-amber-300"
                           )}
                         >
-                          <i className={cn("text-xs ph-bold", isSubmitted ? "ph-check" : "ph-x")} />
+                          <LucideIcon  className={cn("text-xs ph-bold", isSubmitted ? "ph-check" : "ph-x")} />
                           {isSubmitted ? "Submitted" : "Not Submitted"}
                         </span>
                       </div>
@@ -826,11 +826,11 @@ export default function StudentComplianceTab({ authUser }) {
                       <div className="text-[11px]">
                         {isSubmitted ? (
                           <span className="text-emerald-700 dark:text-emerald-400 font-medium flex items-center gap-1">
-                            <i className="ph-bold ph-check-circle" /> Archived in university records
+                            <LucideIcon  className="ph-bold ph-check-circle" /> Archived in university records
                           </span>
                         ) : (
                           <span className="text-amber-700 dark:text-amber-400 font-medium flex items-center gap-1">
-                            <i className="ph-bold ph-clock" /> Pending face-to-face submission
+                            <LucideIcon  className="ph-bold ph-clock" /> Pending face-to-face submission
                           </span>
                         )}
                       </div>

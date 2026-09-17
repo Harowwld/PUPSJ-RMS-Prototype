@@ -1,6 +1,7 @@
 import dotenv from "dotenv";
 import { Pool } from "pg";
 import { hashPassword } from "../src/lib/passwordHash.js";
+import { encryptPII } from "../src/lib/piiEncryption.js";
 
 dotenv.config({ path: ".env.local" });
 dotenv.config();
@@ -35,7 +36,7 @@ try {
         password_hash = $8,
         password_last_changed = NOW(),
         updated_at = NOW()
-    `, [id, office, fname, lname, role, section, email, staffHash]);
+    `, [id, office, encryptPII(fname), encryptPII(lname), role, section, encryptPII(email.toLowerCase()), staffHash]);
   }
 
   // 2. Map legacy sample records and purge legacy accounts
@@ -85,7 +86,7 @@ try {
       INSERT INTO students (student_no, name, course_code, year_level, section, status, updated_at)
       VALUES ($1, $2, $3, $4, $5, 'Active', NOW())
       ON CONFLICT (student_no) DO UPDATE SET name = EXCLUDED.name, course_code = EXCLUDED.course_code, year_level = EXCLUDED.year_level, section = EXCLUDED.section, status = 'Active', updated_at = NOW()
-    `, [sNo, sName, cCode, yLevel, sSection]);
+    `, [sNo, encryptPII(sName), cCode, yLevel, sSection]);
 
     await pool.query(`
       INSERT INTO student_office_memberships (student_no, office_id, status, updated_at)
@@ -97,7 +98,7 @@ try {
       INSERT INTO student_accounts (student_no, email, password_hash, status, updated_at)
       VALUES ($1, $2, $3, 'Active', NOW())
       ON CONFLICT (email) DO UPDATE SET student_no = EXCLUDED.student_no, password_hash = EXCLUDED.password_hash, status = 'Active', updated_at = NOW()
-    `, [sNo, sEmail, studentHash]);
+    `, [sNo, encryptPII(sEmail.toLowerCase()), studentHash]);
   }
 
   console.log("=== Demo Accounts Seeded Successfully ===");

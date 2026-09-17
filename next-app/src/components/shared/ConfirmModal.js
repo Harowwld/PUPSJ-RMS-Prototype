@@ -1,5 +1,5 @@
 "use client";
-
+import LucideIcon from "@/components/shared/LucideIcon";
 import {
   Dialog,
   DialogContent,
@@ -210,7 +210,7 @@ export default function ConfirmModal({
           <div className="flex items-start gap-4 w-full">
             {!isAppleStyled && (
               <div className={`w-12 h-12 rounded-xl border flex items-center justify-center shrink-0 ${v.iconWrap}`}>
-                <i className={`${displayIcon} text-xl`}></i>
+                <LucideIcon  className={`${displayIcon} text-xl`}></LucideIcon>
               </div>
             )}
             <div className="min-w-0 flex-1">
@@ -235,7 +235,7 @@ export default function ConfirmModal({
                   </div>
                 ) : (
                   <div className="mt-3 flex items-center gap-2 px-3 py-2 bg-amber-50 border border-amber-200 rounded-lg dark:bg-amber-950/30">
-                    <i className="ph-bold ph-info text-amber-600 shrink-0" />
+                    <LucideIcon  className="ph-bold ph-info text-amber-600 shrink-0" />
                     <p className="text-[11px] font-semibold text-amber-700">
                       {note}
                     </p>

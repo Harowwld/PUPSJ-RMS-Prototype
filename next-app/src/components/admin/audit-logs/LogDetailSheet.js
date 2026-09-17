@@ -1,5 +1,6 @@
 "use client"
 
+import LucideIcon from "@/components/shared/LucideIcon";
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import {
@@ -149,7 +150,7 @@ export default function LogDetailSheet({
             {!hideActor && (
               <div className="flex flex-col">
                 <div className="flex items-center gap-[6px] mb-[12px]">
-                  <i className="ph-bold ph-user text-[15px] text-[#8E8E93]"></i>
+                  <LucideIcon  className="ph-bold ph-user text-[15px] text-[#8E8E93]"></LucideIcon>
                   <h4 className="text-[11px] font-semibold uppercase tracking-[0.05em] text-[#8E8E93]">
                     Actor
                   </h4>
@@ -171,7 +172,7 @@ export default function LogDetailSheet({
             {/* Event Details */}
             <div className="flex flex-col">
               <div className="flex items-center gap-[6px] mb-[12px]">
-                <i className="ph-bold ph-file-text text-[15px] text-[#8E8E93]"></i>
+                <LucideIcon  className="ph-bold ph-file-text text-[15px] text-[#8E8E93]"></LucideIcon>
                 <h4 className="text-[11px] font-semibold uppercase tracking-[0.05em] text-[#8E8E93]">
                   Details
                 </h4>
@@ -196,7 +197,7 @@ export default function LogDetailSheet({
                       aria-label="Copy Description"
                       className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-400 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
                     >
-                      <i className="ph-bold ph-copy text-[14px]"></i>
+                      <LucideIcon  className="ph-bold ph-copy text-[14px]"></LucideIcon>
                     </button>
                   </div>
                   <p className="text-[13px] font-normal text-[#111111] dark:text-zinc-50 leading-[1.5]">
@@ -225,7 +226,7 @@ export default function LogDetailSheet({
                             aria-label="Copy Reference ID"
                             className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-400 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
                           >
-                            <i className="ph-bold ph-copy text-[14px]"></i>
+                            <LucideIcon  className="ph-bold ph-copy text-[14px]"></LucideIcon>
                           </button>
                         )}
                       </div>
@@ -251,7 +252,7 @@ export default function LogDetailSheet({
             {/* Network Data */}
             <div className="flex flex-col">
               <div className="flex items-center gap-[6px] mb-[12px]">
-                <i className="ph-bold ph-wifi-high text-[15px] text-[#8E8E93]"></i>
+                <LucideIcon  className="ph-bold ph-wifi-high text-[15px] text-[#8E8E93]"></LucideIcon>
                 <h4 className="text-[11px] font-semibold uppercase tracking-[0.05em] text-[#8E8E93]">
                   Network
                 </h4>
@@ -268,14 +269,14 @@ export default function LogDetailSheet({
                         aria-label="Search Similar IP"
                         className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-400 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
                       >
-                        <i className="ph-bold ph-magnifying-glass text-[14px]"></i>
+                        <LucideIcon  className="ph-bold ph-magnifying-glass text-[14px]"></LucideIcon>
                       </button>
                       <button
                         onClick={() => handleCopy(selectedLog.ip, "IP Address")}
                         aria-label="Copy IP Address"
                         className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-400 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
                       >
-                        <i className="ph-bold ph-copy text-[14px]"></i>
+                        <LucideIcon  className="ph-bold ph-copy text-[14px]"></LucideIcon>
                       </button>
                     </div>
                   </div>

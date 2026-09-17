@@ -1,5 +1,5 @@
 "use client";
-
+import LucideIcon from "@/components/shared/LucideIcon";
 import { useCallback, useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -44,12 +44,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 function SortIndicator({ column, sortBy, sortOrder }) {
   if (sortBy !== column) {
-    return <i className="ph-bold ph-caret-up-down ml-1 text-[12px] text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"></i>;
+    return <LucideIcon  className="ph-bold ph-caret-up-down ml-1 text-[12px] text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"></LucideIcon>;
   }
   return sortOrder === "ASC" ? (
-    <i className="ph-bold ph-caret-up ml-1 text-[12px] text-gray-400"></i>
+    <LucideIcon  className="ph-bold ph-caret-up ml-1 text-[12px] text-gray-400"></LucideIcon>
   ) : (
-    <i className="ph-bold ph-caret-down ml-1 text-[12px] text-gray-400"></i>
+    <LucideIcon  className="ph-bold ph-caret-down ml-1 text-[12px] text-gray-400"></LucideIcon>
   );
 }
 
@@ -503,7 +503,7 @@ export default function StudentDashboard() {
                       <div className="flex items-center gap-3">
                         {me?.student_no && (
                           <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-red-50 text-pup-maroon border border-red-100 dark:bg-red-950/30 dark:border-red-900/30">
-                            <i className="ph-fill ph-student text-[13px]"></i>
+                            <LucideIcon  className="ph-fill ph-student text-[13px]"></LucideIcon>
                             {me.student_no}
                           </span>
                         )}
@@ -575,7 +575,7 @@ export default function StudentDashboard() {
                         <div className="flex items-center gap-3 sm:gap-4">
                           {me?.student_no && (
                             <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-red-50 text-pup-maroon border border-red-100 dark:bg-red-950/30 dark:border-red-900/30">
-                              <i className="ph-fill ph-student text-[13px]"></i>
+                              <LucideIcon  className="ph-fill ph-student text-[13px]"></LucideIcon>
                               {me.student_no}
                             </span>
                           )}
@@ -616,7 +616,7 @@ export default function StudentDashboard() {
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-gray-100 dark:border-white/10">
                           <div className="flex items-center gap-3">
                             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-50 text-pup-maroon dark:bg-red-950/40 dark:text-red-400">
-                              <i className="ph-bold ph-plus-circle text-xl" />
+                              <LucideIcon  className="ph-bold ph-plus-circle text-xl" />
                             </div>
                             <div>
                               <h2 className="text-[15px] font-semibold text-gray-900 dark:text-zinc-50">New Document Request</h2>
@@ -626,7 +626,7 @@ export default function StudentDashboard() {
 
                           {/* Duplicate ticket reminder notice banner */}
                           <div className="flex items-center gap-2.5 rounded-xl border border-amber-200 bg-amber-50/80 px-3.5 py-2 text-xs text-amber-900 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-300">
-                            <i className="ph-bold ph-info text-[15px] shrink-0 text-amber-600 dark:text-amber-400"></i>
+                            <LucideIcon  className="ph-bold ph-info text-[15px] shrink-0 text-amber-600 dark:text-amber-400"></LucideIcon>
                             <span className="font-medium text-[11px] leading-relaxed">
                               Please avoid creating duplicate tickets for the same concern to help us process your request promptly.
                             </span>
@@ -756,7 +756,7 @@ export default function StudentDashboard() {
                               >
                                 {requestSubmitting ? (
                                   <>
-                                    <i className="ph-bold ph-spinner animate-spin text-sm text-white!"></i>
+                                    <LucideIcon  className="ph-bold ph-spinner animate-spin text-sm text-white!"></LucideIcon>
                                     Submitting...
                                   </>
                                 ) : (
@@ -789,7 +789,7 @@ export default function StudentDashboard() {
                       {/* Right: Search & Filter Group */}
                       <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
                         <div className="relative flex-1 sm:w-64 lg:w-72 min-w-[200px] group">
-                          <i className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-xs pointer-events-none" />
+                          <LucideIcon  className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-xs pointer-events-none" />
                           <Input
                             type="text"
                             placeholder="Search ticket, document, notes..."
@@ -958,7 +958,7 @@ export default function StudentDashboard() {
                                     <div className="relative mb-6">
                                       <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
                                       <EmptyMedia className="relative z-10 flex h-20 w-20 items-center justify-center rounded-2xl border border-gray-100 bg-white shadow-md dark:border-white/10 dark:bg-card dark:shadow-none">
-                                        <i className={hasActiveFilters ? "ph-magnifying-glass text-2xl text-pup-maroon" : "ph-tray text-2xl text-pup-maroon"}></i>
+                                        <LucideIcon  className={hasActiveFilters ? "ph-magnifying-glass text-2xl text-pup-maroon" : "ph-tray text-2xl text-pup-maroon"}></LucideIcon>
                                       </EmptyMedia>
                                     </div>
                                     <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">
@@ -980,7 +980,7 @@ export default function StudentDashboard() {
                                         }}
                                         className="mt-5 flex h-9 items-center gap-2 rounded-xl border border-gray-300 bg-white px-4 text-xs font-semibold text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:bg-card dark:text-zinc-300 cursor-pointer"
                                       >
-                                        <i className="ph-bold ph-arrow-counter-clockwise"></i>
+                                        <LucideIcon  className="ph-bold ph-arrow-counter-clockwise"></LucideIcon>
                                         Clear
                                       </Button>
                                     ) : (
@@ -1031,7 +1031,7 @@ export default function StudentDashboard() {
                                     title="View Request Updates Timeline"
                                     className="inline-flex h-7 w-7 items-center justify-center rounded-[6px] text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10 hover:text-pup-maroon dark:hover:text-red-400 transition-colors cursor-pointer"
                                   >
-                                    <i className="ph-bold ph-clock-counter-clockwise text-[16px]"></i>
+                                    <LucideIcon  className="ph-bold ph-clock-counter-clockwise text-[16px]"></LucideIcon>
                                   </button>
                                 </td>
                               </tr>
@@ -1120,7 +1120,7 @@ export default function StudentDashboard() {
                       <div className="flex items-center gap-3 sm:gap-4">
                         {me?.student_no && (
                           <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-red-50 text-pup-maroon border border-red-100 dark:bg-red-950/30 dark:border-red-900/30">
-                            <i className="ph-fill ph-student text-[13px]"></i>
+                            <LucideIcon  className="ph-fill ph-student text-[13px]"></LucideIcon>
                             {me.student_no}
                           </span>
                         )}
@@ -1161,7 +1161,7 @@ export default function StudentDashboard() {
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-gray-100 dark:border-white/10">
                         <div className="flex items-center gap-3">
                           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-50 text-pup-maroon dark:bg-red-950/40 dark:text-red-400">
-                            <i className="ph-bold ph-plus-circle text-xl" />
+                            <LucideIcon  className="ph-bold ph-plus-circle text-xl" />
                           </div>
                           <div>
                             <h2 className="text-[15px] font-semibold text-gray-900 dark:text-zinc-50">New Event Proposal</h2>
@@ -1257,7 +1257,7 @@ export default function StudentDashboard() {
                             >
                               {proposalSubmitting ? (
                                 <>
-                                  <i className="ph-bold ph-spinner animate-spin text-sm text-white!"></i>
+                                  <LucideIcon  className="ph-bold ph-spinner animate-spin text-sm text-white!"></LucideIcon>
                                   Submitting...
                                 </>
                               ) : (
@@ -1300,7 +1300,7 @@ export default function StudentDashboard() {
                             <div className="relative mb-6">
                               <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
                               <EmptyMedia className="relative z-10 flex h-20 w-20 items-center justify-center rounded-2xl border border-gray-100 bg-white shadow-md dark:border-white/10 dark:bg-card dark:shadow-none">
-                                <i className="ph-file-text text-2xl text-pup-maroon"></i>
+                                <LucideIcon  className="ph-file-text text-2xl text-pup-maroon"></LucideIcon>
                               </EmptyMedia>
                             </div>
                             <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">
@@ -1343,7 +1343,7 @@ export default function StudentDashboard() {
                                   title="View Proposal Document"
                                   className="inline-flex h-7 w-7 items-center justify-center rounded-[6px] text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10 hover:text-pup-maroon dark:hover:text-red-400 transition-colors cursor-pointer"
                                 >
-                                  <i className="ph-bold ph-file-pdf text-[16px]"></i>
+                                  <LucideIcon  className="ph-bold ph-file-pdf text-[16px]"></LucideIcon>
                                 </button>
                                 <button
                                   type="button"
@@ -1354,7 +1354,7 @@ export default function StudentDashboard() {
                                   title="View Proposal Details & Timeline"
                                   className="inline-flex h-7 w-7 items-center justify-center rounded-[6px] text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10 hover:text-pup-maroon dark:hover:text-red-400 transition-colors cursor-pointer"
                                 >
-                                  <i className="ph-bold ph-clock-counter-clockwise text-[16px]"></i>
+                                  <LucideIcon  className="ph-bold ph-clock-counter-clockwise text-[16px]"></LucideIcon>
                                 </button>
                               </div>
                             </div>
@@ -1516,7 +1516,7 @@ export default function StudentDashboard() {
               >
                 <div className="flex items-center gap-2.5 min-w-0">
                   <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-red-50 text-pup-maroon dark:bg-red-950/40 dark:text-red-400 group-hover:bg-pup-maroon group-hover:text-white transition-colors">
-                    <i className="ph-bold ph-file-pdf text-base" />
+                    <LucideIcon  className="ph-bold ph-file-pdf text-base" />
                   </div>
                   <div className="min-w-0">
                     <p className="text-xs font-medium text-gray-800 dark:text-zinc-200 truncate group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors">
@@ -1539,7 +1539,7 @@ export default function StudentDashboard() {
                   }}
                   className="shrink-0 inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-xs font-semibold text-pup-maroon hover:text-pup-darkMaroon dark:text-red-400 border border-pup-maroon/20 hover:border-pup-maroon/40 bg-red-50/50 hover:bg-red-50 dark:bg-red-950/20 dark:hover:bg-red-950/40 cursor-pointer shadow-xs active:scale-95 transition-all"
                 >
-                  <i className="ph-bold ph-eye text-sm" />
+                  <LucideIcon  className="ph-bold ph-eye text-sm" />
                   <span>View</span>
                 </Button>
               </div>

@@ -1,5 +1,6 @@
 "use client"
 
+import LucideIcon from "@/components/shared/LucideIcon";
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -56,7 +57,7 @@ export function TOTPChallengeModal({
         <DialogHeader className="border-b border-gray-100 bg-transparent p-6 text-left dark:border-white/10 dark:bg-transparent">
           <div className="flex items-start gap-4">
             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-red-100 bg-red-50 text-pup-maroon dark:text-primary shadow-sm dark:bg-red-950/30">
-              <i className="ph-duotone ph-shield-check text-xl"></i>
+              <LucideIcon  className="ph-duotone ph-shield-check text-xl"></LucideIcon>
             </div>
             <div className="min-w-0">
               <DialogTitle className="text-lg font-semibold tracking-tight text-gray-900 dark:text-zinc-50">
@@ -73,7 +74,7 @@ export function TOTPChallengeModal({
           <div className="space-y-4 p-6">
             {error && (
               <div className="animate-in fade-in slide-in-from-top-1 flex items-center gap-2 rounded-brand border border-red-100 bg-red-50 p-3 text-sm font-semibold text-red-700 dark:bg-red-950/30">
-                <i className="ph-bold ph-warning-circle text-lg"></i>
+                <LucideIcon  className="ph-bold ph-warning-circle text-lg"></LucideIcon>
                 {error}
               </div>
             )}
@@ -116,7 +117,7 @@ export function TOTPChallengeModal({
             >
               {isLoading ? (
                 <>
-                  <i className="ph-bold ph-spinner animate-spin text-sm mr-1.5"></i>
+                  <LucideIcon  className="ph-bold ph-spinner animate-spin text-sm mr-1.5"></LucideIcon>
                   Verifying...
                 </>
               ) : (

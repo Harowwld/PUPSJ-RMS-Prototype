@@ -1,5 +1,5 @@
 "use client";
-
+import LucideIcon from "@/components/shared/LucideIcon";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
@@ -112,12 +112,12 @@ export default function DigitizationComplianceTab({
   const SortIndicator = ({ column }) => {
     if (sortBy !== column)
       return (
-        <i className="ph-bold ph-caret-up-down ml-1 text-[12px] text-gray-400 dark:text-zinc-500 opacity-0 group-hover:opacity-100 transition-opacity"></i>
+        <LucideIcon  className="ph-bold ph-caret-up-down ml-1 text-[12px] text-gray-400 dark:text-zinc-500 opacity-0 group-hover:opacity-100 transition-opacity"></LucideIcon>
       );
     return sortOrder === "asc" ? (
-      <i className="ph-bold ph-caret-up ml-1 text-[12px] text-pup-maroon dark:text-primary"></i>
+      <LucideIcon  className="ph-bold ph-caret-up ml-1 text-[12px] text-pup-maroon dark:text-primary"></LucideIcon>
     ) : (
-      <i className="ph-bold ph-caret-down ml-1 text-[12px] text-pup-maroon dark:text-primary"></i>
+      <LucideIcon  className="ph-bold ph-caret-down ml-1 text-[12px] text-pup-maroon dark:text-primary"></LucideIcon>
     );
   };
 
@@ -414,7 +414,7 @@ export default function DigitizationComplianceTab({
                   className="flex h-10 items-center justify-center rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
                 >
                   {isExportingCsv ? (
-                    <i className="ph-bold ph-spinner animate-spin text-[16px]"></i>
+                    <LucideIcon  className="ph-bold ph-spinner animate-spin text-[16px]"></LucideIcon>
                   ) : (
                     "Export"
                   )}
@@ -427,7 +427,7 @@ export default function DigitizationComplianceTab({
                   className="flex h-10 items-center justify-center rounded-xl! btn-brand-red text-white font-semibold text-xs active:scale-95 disabled:opacity-50 transition-all cursor-pointer px-5 shadow-xs"
                 >
                   {isGeneratingPdf ? (
-                    <i className="ph-bold ph-spinner animate-spin text-[16px] flex items-center justify-center"></i>
+                    <LucideIcon  className="ph-bold ph-spinner animate-spin text-[16px] flex items-center justify-center"></LucideIcon>
                   ) : (
                     "Download"
                   )}
@@ -472,7 +472,7 @@ export default function DigitizationComplianceTab({
                           <TooltipProvider delayDuration={200}>
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                <i className="ph-bold ph-info cursor-help text-xs text-gray-400 hover:text-gray-600 dark:hover:text-zinc-300 transition-colors" />
+                                <LucideIcon  className="ph-bold ph-info cursor-help text-xs text-gray-400 hover:text-gray-600 dark:hover:text-zinc-300 transition-colors" />
                               </TooltipTrigger>
                               <TooltipContent 
                                 side="right" 
@@ -489,7 +489,7 @@ export default function DigitizationComplianceTab({
                             </Tooltip>
                           </TooltipProvider>
                         </div>
-                        <i className={cn("ph-bold ph-caret-down text-xs text-gray-400 transition-transform duration-300", selectedKpi === "completeness" && "rotate-180")} />
+                        <LucideIcon  className={cn("ph-bold ph-caret-down text-xs text-gray-400 transition-transform duration-300", selectedKpi === "completeness" && "rotate-180")} />
                       </div>
                       <div className="flex items-baseline gap-2">
                         <span className="text-2xl font-black text-gray-900 dark:text-zinc-50 tracking-tight">
@@ -563,7 +563,7 @@ export default function DigitizationComplianceTab({
                         <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
                           Students
                         </span>
-                        <i className={cn("ph-bold ph-caret-down text-xs text-gray-400 transition-transform duration-300", selectedKpi === "students" && "rotate-180")} />
+                        <LucideIcon  className={cn("ph-bold ph-caret-down text-xs text-gray-400 transition-transform duration-300", selectedKpi === "students" && "rotate-180")} />
                       </div>
                       <div className="flex items-baseline gap-2">
                         <span className="text-2xl font-black text-gray-900 dark:text-zinc-50 tracking-tight">
@@ -623,7 +623,7 @@ export default function DigitizationComplianceTab({
                         <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
                           Complete
                         </span>
-                        <i className={cn("ph-bold ph-caret-down text-xs text-gray-400 transition-transform duration-300", selectedKpi === "complete" && "rotate-180")} />
+                        <LucideIcon  className={cn("ph-bold ph-caret-down text-xs text-gray-400 transition-transform duration-300", selectedKpi === "complete" && "rotate-180")} />
                       </div>
                       <div className="flex items-baseline gap-2">
                         <span className="text-2xl font-black text-gray-900 dark:text-zinc-50 tracking-tight">
@@ -715,7 +715,7 @@ export default function DigitizationComplianceTab({
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 flex-wrap">
             {/* Search */}
             <div className="relative flex-1 sm:w-64 min-w-[200px] group">
-              <i className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-xs pointer-events-none"></i>
+              <LucideIcon  className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-xs pointer-events-none"></LucideIcon>
               <Input
                 type="text"
                 placeholder="Search Program"
@@ -856,7 +856,7 @@ export default function DigitizationComplianceTab({
                   {/* Context & Formula */}
                   <div className="flex-1">
                     <div className="flex items-start gap-3">
-                      <i className="ph-bold ph-target text-[16px] text-gray-400 dark:text-zinc-500 shrink-0 mt-1" />
+                      <LucideIcon  className="ph-bold ph-target text-[16px] text-gray-400 dark:text-zinc-500 shrink-0 mt-1" />
                       <div>
                         <h3 className="text-[14px] font-semibold text-gray-900 tracking-[-0.01em] dark:text-zinc-50 m-0">
                           Digitization Target
@@ -918,7 +918,7 @@ export default function DigitizationComplianceTab({
                 <div className="relative mb-6">
                   <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
                   <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
-                    <i className="ph-duotone ph-warning-circle text-3xl text-pup-maroon dark:text-primary" />
+                    <LucideIcon  className="ph-duotone ph-warning-circle text-3xl text-pup-maroon dark:text-primary" />
                   </EmptyMedia>
                 </div>
                 <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">Data Unavailable</EmptyTitle>
@@ -1035,7 +1035,7 @@ export default function DigitizationComplianceTab({
                     <div className="relative mb-6">
                       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-36 h-36 rounded-full bg-gray-100/50 dark:bg-zinc-800/30"></div>
                       <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
-                        <i className="ph-duotone ph-magnifying-glass text-xl text-gray-300 dark:text-zinc-600"></i>
+                        <LucideIcon  className="ph-duotone ph-magnifying-glass text-xl text-gray-300 dark:text-zinc-600"></LucideIcon>
                       </EmptyMedia>
                     </div>
                     <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">No data found</EmptyTitle>
@@ -1051,7 +1051,7 @@ export default function DigitizationComplianceTab({
                         onClick={handleClearAll}
                         className="mt-6 flex h-10 items-center gap-3 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-6 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-colors hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 tracking-wide cursor-pointer"
                       >
-                        <i className="ph-bold ph-arrow-counter-clockwise"></i>
+                        <LucideIcon  className="ph-bold ph-arrow-counter-clockwise"></LucideIcon>
                         Clear
                       </Button>
                     )}
@@ -1112,7 +1112,7 @@ export default function DigitizationComplianceTab({
                   cursor: 'pointer'
                 }}
               >
-                <i className="ti ti-x" style={{ fontSize: '16px' }}></i>
+                <LucideIcon  className="ti ti-x" style={{ fontSize: '16px' }}></LucideIcon>
               </button>
             </DialogClose>
           </DialogHeader>
@@ -1128,7 +1128,7 @@ export default function DigitizationComplianceTab({
                       onClick={() => setIsFullscreenPreview(false)}
                       className="h-10 w-10 rounded-full bg-black/50 text-white hover:bg-black/70 backdrop-blur-md border-0"
                     >
-                      <i className="ph-bold ph-x text-lg"></i>
+                      <LucideIcon  className="ph-bold ph-x text-lg"></LucideIcon>
                     </Button>
                   </div>
                 )}
@@ -1152,7 +1152,7 @@ export default function DigitizationComplianceTab({
               <div className="flex flex-1 items-center justify-center bg-white p-6 dark:bg-card">
                 <div className="max-w-lg text-center">
                   <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-gray-50 dark:border-white/10 dark:bg-card">
-                    <i className="ph-bold ph-circle-notch animate-spin text-xl text-pup-maroon dark:text-primary"></i>
+                    <LucideIcon  className="ph-bold ph-circle-notch animate-spin text-xl text-pup-maroon dark:text-primary"></LucideIcon>
                   </div>
                   <p className="text-sm font-semibold text-gray-600 dark:text-zinc-300">
                     Generating...
@@ -1169,7 +1169,7 @@ export default function DigitizationComplianceTab({
               onClick={() => setIsFullscreenPreview(!isFullscreenPreview)}
               className="text-[#8E8E93] hover:text-[#111] dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/10 transition-colors rounded-xl shadow-none border-0 p-0 h-10 w-10 cursor-pointer"
             >
-              <i className="ti ti-arrows-vertical text-[16px]"></i>
+              <LucideIcon  className="ti ti-arrows-vertical text-[16px]"></LucideIcon>
             </Button>
 
             <div className="flex items-center gap-2.5 ml-auto">

@@ -7,6 +7,7 @@ import { checkAuthForgotPasswordRateLimit, resetAuthForgotPasswordRateLimit } fr
 import { writeGlobalAuditLog } from "@/lib/auditLogRequest";
 import { bumpSessionVersion } from "@/lib/authSessions";
 import { validatePasswordPolicy } from "@/lib/passwordPolicy";
+import { decryptPII } from "@/lib/piiEncryption";
 
 export const runtime = "nodejs";
 

@@ -1,5 +1,6 @@
 "use client"
 
+import LucideIcon from "@/components/shared/LucideIcon";
 import { useState, useEffect, useCallback, useMemo, useRef } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -94,12 +95,12 @@ const PRESET_COLORS = [
 
 function SortIndicator({ column, sortBy, sortOrder }) {
   if (sortBy !== column) {
-    return <i className="ph-bold ph-caret-up-down ml-1 text-[12px] text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"></i>
+    return <LucideIcon  className="ph-bold ph-caret-up-down ml-1 text-[12px] text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"></LucideIcon>
   }
   return sortOrder === "ASC" ? (
-    <i className="ph-bold ph-caret-up ml-1 text-[12px] text-gray-400"></i>
+    <LucideIcon  className="ph-bold ph-caret-up ml-1 text-[12px] text-gray-400"></LucideIcon>
   ) : (
-    <i className="ph-bold ph-caret-down ml-1 text-[12px] text-gray-400"></i>
+    <LucideIcon  className="ph-bold ph-caret-down ml-1 text-[12px] text-gray-400"></LucideIcon>
   )
 }
 
@@ -588,7 +589,7 @@ export default function OfficeManagementTab({ showToast }) {
                         <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
                           {stat.label}
                         </span>
-                        <i className={cn("ph-bold ph-caret-down text-xs text-gray-400 transition-transform duration-300", selectedKpi === stat.key && "rotate-180")} />
+                        <LucideIcon  className={cn("ph-bold ph-caret-down text-xs text-gray-400 transition-transform duration-300", selectedKpi === stat.key && "rotate-180")} />
                       </div>
                       <div className="flex items-baseline gap-2">
                         <span className="text-2xl font-black text-gray-900 dark:text-zinc-50 tracking-tight">
@@ -728,7 +729,7 @@ export default function OfficeManagementTab({ showToast }) {
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0">
             <div className="w-full sm:w-[320px] lg:w-[380px] relative group shrink-0">
               <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                <i className="ph-bold ph-magnifying-glass text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm"></i>
+                <LucideIcon  className="ph-bold ph-magnifying-glass text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm"></LucideIcon>
               </div>
               <Input
                 value={searchQuery}
@@ -754,7 +755,7 @@ export default function OfficeManagementTab({ showToast }) {
                     : "text-gray-500 hover:text-gray-800 dark:text-zinc-400 dark:hover:text-zinc-200 bg-transparent"
                 )}
               >
-                <i className="ph-bold ph-squares-four text-sm"></i>
+                <LucideIcon  className="ph-bold ph-squares-four text-sm"></LucideIcon>
                 <span className="hidden sm:inline">Grid</span>
               </button>
               <button
@@ -768,7 +769,7 @@ export default function OfficeManagementTab({ showToast }) {
                     : "text-gray-500 hover:text-gray-800 dark:text-zinc-400 dark:hover:text-zinc-200 bg-transparent"
                 )}
               >
-                <i className="ph-bold ph-list-dashes text-sm"></i>
+                <LucideIcon  className="ph-bold ph-list-dashes text-sm"></LucideIcon>
                 <span className="hidden sm:inline">Table</span>
               </button>
             </div>
@@ -816,10 +817,10 @@ export default function OfficeManagementTab({ showToast }) {
               <div className="relative mb-6">
                 <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
                 <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
-                  <i className={cn(
+                  <LucideIcon  className={cn(
                     searchQuery ? "ph-magnifying-glass" : (statusFilter === "Inactive" ? "ph-archive" : "ph-buildings"),
                     "text-3xl text-gray-400 dark:text-zinc-500"
-                  )}></i>
+                  )}></LucideIcon>
                 </EmptyMedia>
               </div>
               <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
@@ -875,7 +876,7 @@ export default function OfficeManagementTab({ showToast }) {
                     {!isActive && (
                       <div className="mb-3 px-2.5 py-1.5 rounded-lg bg-gray-100 dark:bg-zinc-800/80 text-[11px] font-medium text-gray-600 dark:text-zinc-300 flex items-center justify-between border border-gray-200/60 dark:border-white/5">
                         <span className="flex items-center gap-1.5">
-                          <i className="ph-bold ph-archive text-gray-400"></i>
+                          <LucideIcon  className="ph-bold ph-archive text-gray-400"></LucideIcon>
                           <span>Archived Department</span>
                         </span>
                         <span className="text-[10px] uppercase tracking-wider text-gray-400 font-medium">Archived</span>
@@ -898,7 +899,7 @@ export default function OfficeManagementTab({ showToast }) {
                             borderColor: `color-mix(in srgb, ${accent} 25%, transparent)`,
                           } : undefined}
                         >
-                          <i className={office.icon || "ti ti-building"}></i>
+                          <LucideIcon  className={office.icon || "ti ti-building"}></LucideIcon>
                         </div>
                         <div>
                           <h3 className="font-bold text-gray-900 dark:text-zinc-50 leading-tight">
@@ -935,7 +936,7 @@ export default function OfficeManagementTab({ showToast }) {
                   <div className="space-y-1.5 mt-2 pt-3 border-t border-gray-100 dark:border-zinc-800 text-[11px] text-gray-600 dark:text-zinc-400">
                     <div className="flex items-center justify-between">
                       <span className="flex items-center gap-1.5 text-gray-500 dark:text-zinc-400">
-                        <i className="ph-bold ph-desktop text-pup-maroon dark:text-red-400"></i>
+                        <LucideIcon  className="ph-bold ph-desktop text-pup-maroon dark:text-red-400"></LucideIcon>
                         <span>Scanning Computer:</span>
                       </span>
                       <span className="font-semibold text-gray-900 dark:text-zinc-100">
@@ -945,7 +946,7 @@ export default function OfficeManagementTab({ showToast }) {
 
                     <div className="flex items-center justify-between">
                       <span className="flex items-center gap-1.5 text-gray-500 dark:text-zinc-400">
-                        <i className="ph-bold ph-hard-drives text-pup-maroon dark:text-red-400"></i>
+                        <LucideIcon  className="ph-bold ph-hard-drives text-pup-maroon dark:text-red-400"></LucideIcon>
                         <span>Storage Folder:</span>
                       </span>
                       <span className="font-medium text-gray-700 dark:text-zinc-300 truncate max-w-[150px]" title={office.storage_path}>
@@ -962,9 +963,9 @@ export default function OfficeManagementTab({ showToast }) {
                       title={`View assigned personnel in Global Directory`}
                       className="group/staff flex items-center gap-1.5 font-medium hover:text-pup-maroon dark:hover:text-red-400 transition-colors cursor-pointer border-0 bg-transparent p-0"
                     >
-                      <i className="ph-bold ph-users text-gray-400 group-hover/staff:text-pup-maroon dark:group-hover/staff:text-red-400 transition-colors"></i>
+                      <LucideIcon  className="ph-bold ph-users text-gray-400 group-hover/staff:text-pup-maroon dark:group-hover/staff:text-red-400 transition-colors"></LucideIcon>
                       <span>Staff: <strong className="text-gray-900 dark:text-zinc-100 group-hover/staff:text-pup-maroon dark:group-hover/staff:text-red-400 font-bold underline decoration-dotted underline-offset-2">{office.staff_count || 0}</strong></span>
-                      <i className="ph-bold ph-arrow-right text-[10px] opacity-0 group-hover/staff:opacity-100 transition-opacity"></i>
+                      <LucideIcon  className="ph-bold ph-arrow-right text-[10px] opacity-0 group-hover/staff:opacity-100 transition-opacity"></LucideIcon>
                     </button>
                     <button
                       type="button"
@@ -972,9 +973,9 @@ export default function OfficeManagementTab({ showToast }) {
                       title={`Configure workspace modules for ${office.short_name}`}
                       className="group/mod flex items-center gap-1.5 font-medium hover:text-pup-maroon dark:hover:text-red-400 transition-colors cursor-pointer border-0 bg-transparent p-0"
                     >
-                      <i className="ph-bold ph-squares-four text-gray-400 group-hover/mod:text-pup-maroon dark:group-hover/mod:text-red-400 transition-colors"></i>
+                      <LucideIcon  className="ph-bold ph-squares-four text-gray-400 group-hover/mod:text-pup-maroon dark:group-hover/mod:text-red-400 transition-colors"></LucideIcon>
                       <span>Modules: <strong className="text-gray-900 dark:text-zinc-100 group-hover/mod:text-pup-maroon dark:group-hover/mod:text-red-400 font-bold underline decoration-dotted underline-offset-2">{office.module_count || 0}</strong></span>
-                      <i className="ph-bold ph-arrow-right text-[10px] opacity-0 group-hover/mod:opacity-100 transition-opacity"></i>
+                      <LucideIcon  className="ph-bold ph-arrow-right text-[10px] opacity-0 group-hover/mod:opacity-100 transition-opacity"></LucideIcon>
                     </button>
                   </div>
 
@@ -1125,7 +1126,7 @@ export default function OfficeManagementTab({ showToast }) {
                               borderColor: `color-mix(in srgb, ${accent} 25%, transparent)`,
                             } : undefined}
                           >
-                            <i className={office.icon || "ti ti-building"}></i>
+                            <LucideIcon  className={office.icon || "ti ti-building"}></LucideIcon>
                           </div>
                           <div>
                             <span className="font-bold text-gray-900 dark:text-zinc-50 block text-xs leading-tight">
@@ -1152,7 +1153,7 @@ export default function OfficeManagementTab({ showToast }) {
                       <td className="px-5 py-3.5 whitespace-nowrap">
                         <div className="text-[11px] space-y-0.5">
                           <div className="flex items-center gap-1.5 text-gray-800 dark:text-zinc-200 font-medium">
-                            <i className="ph-bold ph-desktop text-pup-maroon dark:text-red-400 text-xs"></i>
+                            <LucideIcon  className="ph-bold ph-desktop text-pup-maroon dark:text-red-400 text-xs"></LucideIcon>
                             <span>{office.station_name || "Unassigned"}</span>
                           </div>
                           <div className="text-[10px] text-gray-400 dark:text-zinc-500 truncate max-w-[150px]" title={office.storage_path}>
@@ -1168,7 +1169,7 @@ export default function OfficeManagementTab({ showToast }) {
                           title="View assigned personnel in Global Directory"
                           className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-gray-700 dark:text-zinc-300 transition-colors font-semibold text-xs cursor-pointer border-0"
                         >
-                          <i className="ph-bold ph-users text-xs text-gray-500"></i>
+                          <LucideIcon  className="ph-bold ph-users text-xs text-gray-500"></LucideIcon>
                           <span>{office.staff_count || 0}</span>
                         </button>
                       </td>
@@ -1180,7 +1181,7 @@ export default function OfficeManagementTab({ showToast }) {
                           title={`Configure workspace modules for ${office.short_name}`}
                           className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-gray-700 dark:text-zinc-300 transition-colors font-semibold text-xs cursor-pointer border-0"
                         >
-                          <i className="ph-bold ph-squares-four text-xs text-gray-500"></i>
+                          <LucideIcon  className="ph-bold ph-squares-four text-xs text-gray-500"></LucideIcon>
                           <span>{office.module_count || 0}</span>
                         </button>
                       </td>
@@ -1213,7 +1214,7 @@ export default function OfficeManagementTab({ showToast }) {
                                     aria-label="Configure Department"
                                     className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-amber-600 dark:text-zinc-400 dark:hover:text-amber-400 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer active:scale-95 border-0 bg-transparent"
                                   >
-                                    <i className="ph-bold ph-gear-six text-[16px]"></i>
+                                    <LucideIcon  className="ph-bold ph-gear-six text-[16px]"></LucideIcon>
                                   </button>
                                 </TooltipTrigger>
                                 <TooltipContent>Configure</TooltipContent>
@@ -1229,7 +1230,7 @@ export default function OfficeManagementTab({ showToast }) {
                                     aria-label="Archive Department"
                                     className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-red-600 dark:text-zinc-400 dark:hover:text-red-400 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer active:scale-95 border-0 bg-transparent"
                                   >
-                                    <i className="ph-bold ph-archive text-[16px]"></i>
+                                    <LucideIcon  className="ph-bold ph-archive text-[16px]"></LucideIcon>
                                   </button>
                                 </TooltipTrigger>
                                 <TooltipContent>Archive</TooltipContent>
@@ -1247,7 +1248,7 @@ export default function OfficeManagementTab({ showToast }) {
                                   aria-label="Restore Department"
                                   className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-emerald-600 dark:text-zinc-400 dark:hover:text-emerald-400 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer active:scale-95 border-0 bg-transparent"
                                 >
-                                  <i className="ph-bold ph-arrow-counter-clockwise text-[16px]"></i>
+                                  <LucideIcon  className="ph-bold ph-arrow-counter-clockwise text-[16px]"></LucideIcon>
                                 </button>
                               </TooltipTrigger>
                               <TooltipContent>Restore</TooltipContent>
@@ -1431,7 +1432,7 @@ export default function OfficeManagementTab({ showToast }) {
                 <div className="flex items-center justify-between pb-2.5 border-b border-gray-100 dark:border-white/5">
                   <div className="flex items-center gap-2.5">
                     <div className="h-7 w-7 rounded-lg bg-pup-maroon/10 text-pup-maroon dark:bg-white/10 dark:text-zinc-100 flex items-center justify-center text-sm">
-                      <i className="ph-bold ph-desktop"></i>
+                      <LucideIcon  className="ph-bold ph-desktop"></LucideIcon>
                     </div>
                     <div>
                       <h5 className="text-xs font-bold text-gray-900 dark:text-zinc-50">
@@ -1448,7 +1449,7 @@ export default function OfficeManagementTab({ showToast }) {
                     className="text-[11px] font-semibold text-gray-400 hover:text-gray-700 dark:hover:text-zinc-200 flex items-center gap-1 cursor-pointer transition-colors"
                   >
                     <span>{showAdvancedStorage ? "Hide Storage Paths" : "Advanced Storage Paths"}</span>
-                    <i className={cn("text-[10px] ph-bold", showAdvancedStorage ? "ph-caret-up" : "ph-caret-down")}></i>
+                    <LucideIcon  className={cn("text-[10px] ph-bold", showAdvancedStorage ? "ph-caret-up" : "ph-caret-down")}></LucideIcon>
                   </button>
                 </div>
 
@@ -1513,7 +1514,7 @@ export default function OfficeManagementTab({ showToast }) {
                     >
                       <div className="flex items-center gap-3">
                         <div className="h-8 w-8 rounded-lg bg-pup-maroon/10 text-pup-maroon dark:bg-white/10 dark:text-zinc-100 flex items-center justify-center shrink-0">
-                          <i className="ti ti-layout-grid text-base"></i>
+                          <LucideIcon  className="ti ti-layout-grid text-base"></LucideIcon>
                         </div>
                         <div>
                           <div className="flex items-center gap-2">
@@ -1534,10 +1535,10 @@ export default function OfficeManagementTab({ showToast }) {
                         <span className="text-[11px] font-medium text-gray-400 dark:text-zinc-500">
                           {modulesAccordionOpen ? "Collapse" : "Expand"}
                         </span>
-                        <i className={cn(
+                        <LucideIcon  className={cn(
                           "ti ti-chevron-down text-gray-400 text-sm transition-transform duration-200",
                           modulesAccordionOpen && "rotate-180 text-pup-maroon dark:text-red-400"
-                        )}></i>
+                        )}></LucideIcon>
                       </div>
                     </button>
 
@@ -1619,7 +1620,7 @@ export default function OfficeManagementTab({ showToast }) {
                   <div className="p-4 rounded-2xl border border-gray-200/80 dark:border-white/10 bg-gray-50/80 dark:bg-zinc-950/40 text-xs text-gray-600 dark:text-zinc-400 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div className="flex items-center gap-3">
                       <div className="h-8 w-8 rounded-lg bg-pup-maroon/10 text-pup-maroon dark:bg-white/10 dark:text-zinc-100 flex items-center justify-center shrink-0">
-                        <i className="ti ti-layout-grid text-base"></i>
+                        <LucideIcon  className="ti ti-layout-grid text-base"></LucideIcon>
                       </div>
                       <div>
                         <span className="font-semibold text-gray-900 dark:text-zinc-100 block leading-tight">
@@ -1637,7 +1638,7 @@ export default function OfficeManagementTab({ showToast }) {
                       className="h-8 px-3.5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-2xs cursor-pointer active:scale-95 transition-all flex items-center gap-1.5 shrink-0 self-start sm:self-auto"
                     >
                       <span>Open Matrix</span>
-                      <i className="ph-bold ph-arrow-square-out text-xs text-gray-400 dark:text-zinc-400"></i>
+                      <LucideIcon  className="ph-bold ph-arrow-square-out text-xs text-gray-400 dark:text-zinc-400"></LucideIcon>
                     </Button>
                   </div>
                 )}
@@ -1676,7 +1677,7 @@ export default function OfficeManagementTab({ showToast }) {
                                 : "border-gray-200/90 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-100 dark:border-white/10 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800"
                             )}
                           >
-                            <i className={opt.value}></i>
+                            <LucideIcon  className={opt.value}></LucideIcon>
                           </button>
                         )
                       })}
@@ -1692,7 +1693,7 @@ export default function OfficeManagementTab({ showToast }) {
                 )}
                 <div className="flex items-center justify-between text-[10px] text-gray-400 dark:text-zinc-500 pt-0.5">
                   <span className="flex items-center gap-1.5">
-                    Selected icon: <i className={form.icon}></i> <code className="text-gray-600 dark:text-zinc-400 font-medium">{form.icon}</code>
+                    Selected icon: <LucideIcon  className={form.icon}></LucideIcon> <code className="text-gray-600 dark:text-zinc-400 font-medium">{form.icon}</code>
                   </span>
                   <span>{PRESET_ICONS.length} icons available</span>
                 </div>
@@ -1732,7 +1733,7 @@ export default function OfficeManagementTab({ showToast }) {
                           )}
                         >
                           {isSelected && (
-                            <i className="ti ti-check text-white text-xs drop-shadow-sm font-bold"></i>
+                            <LucideIcon  className="ti ti-check text-white text-xs drop-shadow-sm font-bold"></LucideIcon>
                           )}
                         </button>
                       )
@@ -1772,7 +1773,7 @@ export default function OfficeManagementTab({ showToast }) {
                           borderColor: `color-mix(in srgb, ${form.accent_color || "#800000"} 25%, transparent)`,
                         }}
                       >
-                        <i className={cn(form.icon || "ti ti-building", "text-sm")}></i>
+                        <LucideIcon  className={cn(form.icon || "ti ti-building", "text-sm")}></LucideIcon>
                         <span>{form.short_name || "Office"}</span>
                       </div>
                     </div>

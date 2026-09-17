@@ -1,5 +1,5 @@
 "use client";
-
+import LucideIcon from "@/components/shared/LucideIcon";
 import React, { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,13 +32,13 @@ import StudentProfileSheet from "./StudentProfileSheet";
 function SortIndicator({ column, sortBy, sortOrder }) {
   if (sortBy !== column) {
     return (
-      <i className="ph-bold ph-caret-up-down ml-1 text-[11px] opacity-40 transition-opacity group-hover:opacity-70 dark:opacity-30"></i>
+      <LucideIcon  className="ph-bold ph-caret-up-down ml-1 text-[11px] opacity-40 transition-opacity group-hover:opacity-70 dark:opacity-30"></LucideIcon>
     );
   }
   return sortOrder === "ASC" ? (
-    <i className="ph-bold ph-caret-up ml-1 text-[11px] text-pup-maroon dark:text-red-400"></i>
+    <LucideIcon  className="ph-bold ph-caret-up ml-1 text-[11px] text-pup-maroon dark:text-red-400"></LucideIcon>
   ) : (
-    <i className="ph-bold ph-caret-down ml-1 text-[11px] text-pup-maroon dark:text-red-400"></i>
+    <LucideIcon  className="ph-bold ph-caret-down ml-1 text-[11px] text-pup-maroon dark:text-red-400"></LucideIcon>
   );
 }
 
@@ -582,7 +582,7 @@ export default function StudentDirectoryTab({
                         Active Students
                       </span>
                       <div className="flex items-center gap-1.5">
-                        <i
+                        <LucideIcon 
                           className={cn(
                             "ph-bold ph-caret-down text-xs text-gray-400 transition-transform duration-300",
                             selectedKpi === "students" && "rotate-180"
@@ -684,7 +684,7 @@ export default function StudentDirectoryTab({
                         Academic Programs
                       </span>
                       <div className="flex items-center gap-1.5">
-                        <i
+                        <LucideIcon 
                           className={cn(
                             "ph-bold ph-caret-down text-xs text-gray-400 transition-transform duration-300",
                             selectedKpi === "programs" && "rotate-180"
@@ -793,7 +793,7 @@ export default function StudentDirectoryTab({
                         Digitized Files
                       </span>
                       <div className="flex items-center gap-1.5">
-                        <i
+                        <LucideIcon 
                           className={cn(
                             "ph-bold ph-caret-down text-xs text-gray-400 transition-transform duration-300",
                             selectedKpi === "documents" && "rotate-180"
@@ -931,7 +931,7 @@ export default function StudentDirectoryTab({
             <div className="flex flex-wrap items-center gap-2.5 flex-1 lg:justify-end">
               {/* Search Bar */}
               <div className="relative w-full sm:w-64">
-                <i className="ph-bold ph-magnifying-glass absolute top-1/2 -translate-y-1/2 left-3 text-gray-400 dark:text-zinc-500 text-sm pointer-events-none"></i>
+                <LucideIcon  className="ph-bold ph-magnifying-glass absolute top-1/2 -translate-y-1/2 left-3 text-gray-400 dark:text-zinc-500 text-sm pointer-events-none"></LucideIcon>
                 <Input
                   type="text"
                   placeholder="Search student no. or name"
@@ -948,7 +948,7 @@ export default function StudentDirectoryTab({
                     onClick={() => setSearchQuery("")}
                     className="absolute top-1/2 right-2.5 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-zinc-200"
                   >
-                    <i className="ph-bold ph-x-circle text-[14px]"></i>
+                    <LucideIcon  className="ph-bold ph-x-circle text-[14px]"></LucideIcon>
                   </button>
                 )}
               </div>
@@ -1013,7 +1013,7 @@ export default function StudentDirectoryTab({
                   onClick={handleResetFilters}
                   className="h-9 px-2.5 text-xs text-pup-maroon dark:text-red-400 hover:bg-pup-maroon/10 rounded-xl cursor-pointer"
                 >
-                  <i className="ph-bold ph-arrow-counter-clockwise mr-1 text-xs"></i>
+                  <LucideIcon  className="ph-bold ph-arrow-counter-clockwise mr-1 text-xs"></LucideIcon>
                   Reset
                 </Button>
               )}
@@ -1035,7 +1035,7 @@ export default function StudentDirectoryTab({
                     <div className="relative mb-6">
                       <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
                       <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
-                        <i className="ph-duotone ph-student text-2xl text-gray-300 dark:text-zinc-600"></i>
+                        <LucideIcon  className="ph-duotone ph-student text-2xl text-gray-300 dark:text-zinc-600"></LucideIcon>
                       </EmptyMedia>
                     </div>
                     <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">
@@ -1191,7 +1191,7 @@ export default function StudentDirectoryTab({
 
                           <td className="p-4">
                             <div className="inline-flex items-center gap-1 text-xs text-gray-700 dark:text-zinc-300">
-                              <i className="ph-bold ph-map-pin text-gray-400 text-xs"></i>
+                              <LucideIcon  className="ph-bold ph-map-pin text-gray-400 text-xs"></LucideIcon>
                               <span>
                                 Room {s.room} • Cab {s.cabinet} • Drw {s.drawer}
                               </span>
@@ -1239,7 +1239,7 @@ export default function StudentDirectoryTab({
                                     }}
                                     className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-100 flex items-center justify-center transition-colors"
                                   >
-                                    <i className="ph-bold ph-eye text-[14px]"></i>
+                                    <LucideIcon  className="ph-bold ph-eye text-[14px]"></LucideIcon>
                                   </button>
                                 </TooltipTrigger>
                                 <TooltipContent>View Dossier</TooltipContent>
@@ -1256,7 +1256,7 @@ export default function StudentDirectoryTab({
                                     }}
                                     className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-100 flex items-center justify-center transition-colors"
                                   >
-                                    <i className="ph-bold ph-pencil-simple text-[14px]"></i>
+                                    <LucideIcon  className="ph-bold ph-pencil-simple text-[14px]"></LucideIcon>
                                   </button>
                                 </TooltipTrigger>
                                 <TooltipContent>Edit Student</TooltipContent>
@@ -1270,7 +1270,7 @@ export default function StudentDirectoryTab({
                                     onClick={() => onLocateStudent?.(s)}
                                     className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 dark:text-zinc-400 hover:text-pup-maroon dark:hover:text-red-400 flex items-center justify-center transition-colors"
                                   >
-                                    <i className="ph-bold ph-compass text-[14px]"></i>
+                                    <LucideIcon  className="ph-bold ph-compass text-[14px]"></LucideIcon>
                                   </button>
                                 </TooltipTrigger>
                                 <TooltipContent>Locate in Archive Map</TooltipContent>
@@ -1288,7 +1288,7 @@ export default function StudentDirectoryTab({
                                       }}
                                       className="w-7 h-7 rounded-lg hover:bg-emerald-50 dark:hover:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center transition-colors"
                                     >
-                                      <i className="ph-bold ph-archive-restore text-[14px]"></i>
+                                      <LucideIcon  className="ph-bold ph-archive-restore text-[14px]"></LucideIcon>
                                     </button>
                                   </TooltipTrigger>
                                   <TooltipContent>Restore Student</TooltipContent>
@@ -1304,7 +1304,7 @@ export default function StudentDirectoryTab({
                                       }}
                                       className="w-7 h-7 rounded-lg hover:bg-amber-50 dark:hover:bg-amber-500/10 text-gray-400 hover:text-amber-600 dark:hover:text-amber-400 flex items-center justify-center transition-colors"
                                     >
-                                      <i className="ph-bold ph-archive text-[14px]"></i>
+                                      <LucideIcon  className="ph-bold ph-archive text-[14px]"></LucideIcon>
                                     </button>
                                   </TooltipTrigger>
                                   <TooltipContent>Archive Student</TooltipContent>

@@ -1,5 +1,6 @@
 "use client"
 
+import LucideIcon from "@/components/shared/LucideIcon";
 import {
   Dialog,
   DialogContent,
@@ -111,7 +112,7 @@ export default function PDFPreviewModal({ open, onClose, preview }) {
                 className="p-0 border-0 bg-transparent text-gray-400 hover:text-gray-900 dark:text-zinc-500 dark:hover:text-zinc-100 focus:outline-none cursor-pointer transition-colors flex items-center justify-center w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800"
                 title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
               >
-                <i className={cn("text-[16px]", isFullscreen ? "ph-bold ph-corners-in" : "ph-bold ph-corners-out")}></i>
+                <LucideIcon  className={cn("text-[16px]", isFullscreen ? "ph-bold ph-corners-in" : "ph-bold ph-corners-out")}></LucideIcon>
               </button>
               <button
                 type="button"
@@ -119,7 +120,7 @@ export default function PDFPreviewModal({ open, onClose, preview }) {
                 className="p-0 border-0 bg-transparent text-gray-400 hover:text-gray-900 dark:text-zinc-500 dark:hover:text-zinc-100 focus:outline-none cursor-pointer transition-colors flex items-center justify-center w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800"
                 title="Close"
               >
-                <i className="ph-bold ph-x text-[16px]"></i>
+                <LucideIcon  className="ph-bold ph-x text-[16px]"></LucideIcon>
               </button>
             </div>
           </div>
@@ -136,7 +137,7 @@ export default function PDFPreviewModal({ open, onClose, preview }) {
                     onClick={() => setIsFullscreen(false)}
                     className="h-10 w-10 rounded-full bg-black/50 text-white hover:bg-black/70 backdrop-blur-md border-0"
                   >
-                    <i className="ph-bold ph-x text-lg"></i>
+                    <LucideIcon  className="ph-bold ph-x text-lg"></LucideIcon>
                   </Button>
                 </div>
               )}
@@ -146,7 +147,7 @@ export default function PDFPreviewModal({ open, onClose, preview }) {
             <div className="flex flex-1 items-center justify-center bg-white p-6 dark:bg-card">
               <div className="max-w-lg text-center">
                 <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-gray-50 dark:border-white/10 dark:bg-card">
-                  <i className="ph-bold ph-file-x text-xl text-gray-300 dark:text-zinc-600"></i>
+                  <LucideIcon  className="ph-bold ph-file-x text-xl text-gray-300 dark:text-zinc-600"></LucideIcon>
                 </div>
                 <p className="text-sm font-semibold text-gray-600 dark:text-zinc-300">
                   No digital file attached
@@ -180,7 +181,7 @@ export default function PDFPreviewModal({ open, onClose, preview }) {
               className="inline-flex items-center gap-1.5 h-10 px-4 text-xs font-semibold rounded-xl text-pup-maroon dark:text-red-400 hover:bg-red-50/60 dark:hover:bg-red-950/30 transition-colors"
             >
               <span className="hover:underline">Open</span>
-              <i className="ph-bold ph-arrow-square-out text-sm"></i>
+              <LucideIcon  className="ph-bold ph-arrow-square-out text-sm"></LucideIcon>
             </a>
           ) : null}
         </div>
