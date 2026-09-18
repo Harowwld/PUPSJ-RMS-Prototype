@@ -6,6 +6,7 @@ import { format } from "date-fns";
 import { toast } from "sonner";
 
 import Header from "@/components/layout/Header";
+import { getClientSession } from "@/lib/clientAuth";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -1027,15 +1028,14 @@ export default function AccountActivityPage() {
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch("/api/auth/me");
-        const json = await res.json().catch(() => null);
-        if (!res.ok || !json?.ok) {
-          if (res.status === 401) {
+        const session = await getClientSession();
+        if (!session.ok || !session.data) {
+          if (session.status === 401) {
             router.push("/");
           }
           return;
         }
-        setAuthUser(json.data);
+        setAuthUser(session.data);
       } finally {
         setLoadingUser(false);
       }

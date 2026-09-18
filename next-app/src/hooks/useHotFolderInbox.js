@@ -3,8 +3,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { scanFileForSuggestion } from "@/lib/ocrClient";
 
-const POLL_MS = 3000;
-
 export function useHotFolderInbox({
   enabled,
   students,
@@ -129,10 +127,33 @@ export function useHotFolderInbox({
 
   useEffect(() => {
     if (!enabled) return;
-    const t = setInterval(() => {
-      loadList({ showLoading: false });
-    }, POLL_MS);
-    return () => clearInterval(t);
+    let disposed = false;
+    let source = null;
+    let retryTimer = null;
+    let retryDelay = 1000;
+
+    const connect = () => {
+      if (disposed) return;
+      source = new EventSource("/api/ingest/events");
+      source.addEventListener("ready", () => {
+        retryDelay = 1000;
+        loadList({ showLoading: false });
+      });
+      source.addEventListener("ingest", () => loadList({ showLoading: false }));
+      source.onerror = () => {
+        source?.close();
+        if (disposed) return;
+        retryTimer = setTimeout(connect, retryDelay);
+        retryDelay = Math.min(retryDelay * 2, 10000);
+      };
+    };
+
+    connect();
+    return () => {
+      disposed = true;
+      clearTimeout(retryTimer);
+      source?.close();
+    };
   }, [enabled, loadList]);
 
   useEffect(() => {

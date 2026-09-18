@@ -1,8 +1,8 @@
 # Comprehensive Codebase Audit: Thesis Table 5 (Requirements – Features Matrix) vs. PUPSJ-RMS Prototype
 
-> **Audit Date:** September 2026  
-> **Target Object:** Table 5. Requirements – Features Matrix (Manuscript / Thesis Specification)  
-> **System Analyzed:** PUPSJ Records Management System (PUPSJ-RMS Prototype)  
+> **Audit Date:** September 2026
+> **Target Object:** Table 5. Requirements – Features Matrix (Manuscript / Thesis Specification)
+> **System Analyzed:** PUPSJ Records Management System (PUPSJ-RMS Prototype)
 > **Primary Source Verification:** Validated directly against PostgreSQL migrations (`001_initial.sql` to `041_student_security_answers.sql`), Next.js 16 App Router API endpoints (`src/app/api/**`), backend data repositories (`src/lib/*Repo.js`), and React 19 UI components (`src/components/**`).
 
 ---
@@ -135,7 +135,7 @@ The 8-feature by 5-requirement matrix presented in **Table 5** contains **four v
 | **F7: Manage Digital Records** | **✓** | — | — | **✓** **[ADDED]** | — | **Expanded.** Records review (R1) intrinsically requires query/retrieval (R4). |
 | **F8: Search/Retrieve Records** | — | **✓** | — | **✓** | — | **Aligned.** Searches database (R4) and highlights 2D physical cabinet/drawer (R2). |
 
-> **Mandatory Footnote for Defense:**  
+> **Mandatory Footnote for Defense:**
 > *"Note: Features F1 (Login) and F2 (Manage User accounts) represent cross-cutting security infrastructure (Role-Based Access Control and Session Management). They do not map to domain modules R1–R5 directly, but enforce authorization across all five operational modules."*
 
 ---
@@ -158,11 +158,11 @@ The 8-feature by 5-requirement matrix presented in **Table 5** contains **four v
 
 ## 4. Key Defense Talking Points for Examiners
 
-1. **If asked: "Why was OCR checked for Document Backup in Table 5?"**  
+1. **If asked: "Why was OCR checked for Document Backup in Table 5?"**
    *Response:* "That was an artifact of an earlier table draft. In the finalized architecture, optical character recognition is strictly decoupled into the document upload and batch ingestion pipelines (`ocrClient.js`). The backup module (`backupsRepo.js`) is deliberately isolated from OCR to produce deterministic, tamper-proof AES-256-GCM snapshots of the database and raw assets without overhead."
 
-2. **If asked: "Why were Login and User Management empty in your original matrix?"**  
+2. **If asked: "Why were Login and User Management empty in your original matrix?"**
    *Response:* "Table 5 originally categorized only the core domain-specific records management requirements (R1–R5). Login and User Management are cross-cutting foundational security requirements that gate access to the entire application. We have revised the matrix to include R6 (User Authentication & RBAC) so that every functional capability has 100% formal traceability."
 
-3. **If asked: "What does Dashboard Analytics actually do if it had no checkmarks?"**  
+3. **If asked: "What does Dashboard Analytics actually do if it had no checkmarks?"
    *Response:* "The core dashboard in PUPSJ-RMS is the **Digitization Compliance Analytics** tab (`DigitizationComplianceTab.js`). It evaluates whether students have satisfied mandatory admission credentials (PSA Birth Certificate, Form 137, Good Moral), tracking compliance rates across degree programs and year levels. It directly measures and validates **R1: Record Digitization Module**."

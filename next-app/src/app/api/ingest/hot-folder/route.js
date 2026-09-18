@@ -16,6 +16,8 @@ import {
 } from "@/lib/ingestFileTypes";
 import { requireStaff, createAuthErrorResponse, getPrincipalOfficeId } from "../../../../lib/authHelpers";
 import { canAccessResource } from "@/lib/resourceAuthorization";
+import { publishIngestEvent } from "@/lib/ingestEvents";
+import { triggerIngestProcessing } from "@/lib/ingestEventProcessor";
 
 export const runtime = "nodejs";
 
@@ -86,6 +88,9 @@ export async function POST(req) {
     sourceStation: sourceStation || null,
     contentSha256,
   });
+
+  await publishIngestEvent({ type: "ingest_created", officeId: approvedOfficeId, id: row.id });
+  await triggerIngestProcessing(approvedOfficeId, `ingest #${row.id}`);
 
   await writeAuditLog(req, `Hot-folder ingest received #${row.id}`, {
     actor: sourceStation ? `Hot folder (${sourceStation})` : "Hot folder",

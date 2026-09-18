@@ -32,6 +32,7 @@ import {
 import { cn } from "@/lib/utils"
 import { Reorder } from "framer-motion";
 import { getCachedData, setCachedData, invalidateDataCache } from "@/lib/dataCache"
+import { fetchJsonOnce } from "@/lib/clientRequest"
 
 // Expanded predefined icon palette so SuperAdmins have rich choices for campus offices
 const PRESET_ICONS = [
@@ -192,13 +193,12 @@ export default function OfficeManagementTab({ showToast }) {
         setLoading(false)
       }
 
-      const res = await fetch("/api/offices?stats=true")
-      const json = await res.json()
-      if (res.ok && json.ok && Array.isArray(json.data)) {
-        setOffices(json.data)
-        setCachedData("systemadmin_offices_stats", json.data, 60000)
+      const result = await fetchJsonOnce("/api/offices?stats=true")
+      if (result.ok && Array.isArray(result.data)) {
+        setOffices(result.data)
+        setCachedData("systemadmin_offices_stats", result.data, 60000)
       } else if (!cached) {
-        showToast(json.error || "Failed to fetch offices", true)
+        showToast(result.error || "Failed to fetch offices", true)
       }
     } catch (err) {
       if (!getCachedData("systemadmin_offices_stats")) {
@@ -216,11 +216,10 @@ export default function OfficeManagementTab({ showToast }) {
         setAvailableModules(cached)
       }
 
-      const res = await fetch("/api/modules")
-      const json = await res.json()
-      if (res.ok && json.ok && Array.isArray(json.data)) {
-        setAvailableModules(json.data)
-        setCachedData("systemadmin_modules", json.data, 120000)
+      const result = await fetchJsonOnce("/api/modules")
+      if (result.ok && Array.isArray(result.data)) {
+        setAvailableModules(result.data)
+        setCachedData("systemadmin_modules", result.data, 120000)
       }
     } catch (err) {
       console.error("Failed to fetch available modules", err)

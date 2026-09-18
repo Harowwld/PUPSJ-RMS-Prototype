@@ -150,7 +150,11 @@ export async function processNextBatchItem(batchId, officeId) {
     const resolvedProposed = hasMultipleMatches ? null : proposed;
     const fallbackSingleMatch = templateApplied && !templateMatches.length && !hasMultipleMatches && Boolean(resolvedProposed);
     const scored = calculateOcrConfidence({
-      extractedName: templateName || fallbackName || ocrName,
+      // Full-page OCR often starts with a document label or a QR/parser
+      // artefact. When the text matcher has already found a unique student,
+      // score that match against the student's matched name instead of the
+      // unrelated first line. Keep `ocrName` above unchanged for review.
+      extractedName: templateName || (textMatches.length === 1 ? textMatches[0].name : fallbackName) || ocrName,
       candidate: resolvedProposed,
       candidates: reviewCandidates,
       studentNumberMatched: Boolean(exactStudent),

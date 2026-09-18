@@ -7,6 +7,7 @@ import Header from "@/components/layout/Header";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AuthGuard } from "@/components/shared/AuthGuard";
+import { getClientSession } from "@/lib/clientAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -106,18 +107,17 @@ function AccountPageContent() {
     (async () => {
       try {
         const [resAuth, resUserSecurity] = await Promise.all([
-          fetch("/api/auth/me"),
+          getClientSession(),
           fetch("/api/staff/security")
         ]);
 
-        const json = await resAuth.json().catch(() => null);
-        if (!resAuth.ok || !json?.ok) {
+        if (!resAuth.ok || !resAuth.data) {
           if (resAuth.status === 401) {
             router.push("/");
           }
           return;
         }
-        const user = json.data;
+        const user = resAuth.data;
         setAuthUser(user);
         if (user.avatar_filename) {
           setAvatarUrl(`/api/account/avatar?id=${user.id}&t=${Date.now()}`);

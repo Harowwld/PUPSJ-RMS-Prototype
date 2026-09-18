@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { Skeleton } from "@/components/ui/skeleton"
 import { isAdminRole, isStaffRole, isSuperAdminRole, isSystemAdminRole } from "@/lib/roleUtils"
 import { getRoleBranding } from "@/lib/roleBranding"
+import { getClientSession } from "@/lib/clientAuth"
 
 export const AuthUserContext = createContext(null)
 export const useAuthUser = () => useContext(AuthUserContext)
@@ -39,18 +40,11 @@ export function AuthGuard({ allowedRoles = NO_REQUIRED_ROLES, children, redirect
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const res = await fetch("/api/auth/me", {
-          cache: "no-store",
-          headers: {
-            "Cache-Control": "no-cache, no-store, must-revalidate",
-            Pragma: "no-cache",
-            Expires: "0",
-          },
-        })
-        console.info("[auth-debug] route_guard.session_response", { path: window.location.pathname, status: res.status })
+        const session = await getClientSession()
+        console.info("[auth-debug] route_guard.session_response", { path: window.location.pathname, status: session.status })
 
-        if (!res.ok) {
-          if (res.status === 401) {
+        if (!session.ok) {
+          if (session.status === 401) {
             console.info("[auth-debug] route_guard.redirect_missing_session", { path: window.location.pathname, redirectTo })
             console.log(
               "[AuthGuard] Unauthorized access attempt, redirecting to:",
@@ -64,14 +58,13 @@ export function AuthGuard({ allowedRoles = NO_REQUIRED_ROLES, children, redirect
           return
         }
 
-        const json = await res.json()
-        if (!json?.ok || !json?.data) {
+        if (!session.data) {
           setIsAuthorized(false)
           setIsLoading(false)
           return
         }
 
-        const user = json.data
+        const user = session.data
         setCurrentUser(user)
 
         // Setup role branding CSS variables at root level
@@ -161,11 +154,10 @@ export function AuthGuard({ allowedRoles = NO_REQUIRED_ROLES, children, redirect
   useEffect(() => {
     const handleStorageChange = () => {
       // Re-read storage/preferences and apply
-      fetch("/api/auth/me")
-        .then(res => res.json())
-        .then(json => {
-          if (json?.ok && json?.data) {
-            const user = json.data;
+      getClientSession()
+        .then(session => {
+          if (session.ok && session.data) {
+            const user = session.data;
             const hcKey = `pup_high_contrast_${user.id}`;
             
             const highContrast = localStorage.getItem(hcKey) === "true";
@@ -241,14 +233,11 @@ export function useAuth() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const res = await fetch("/api/auth/me", { cache: "no-store" })
+        const session = await getClientSession()
 
-        if (res.ok) {
-          const json = await res.json()
-          if (json?.ok && json?.data) {
-            setUser(json.data)
-            setIsAuthenticated(json.data.status === "Active")
-          }
+        if (session.ok && session.data) {
+          setUser(session.data)
+          setIsAuthenticated(session.data.status === "Active")
         }
       } catch (err) {
         console.error("[useAuth] Auth check failed:", err)

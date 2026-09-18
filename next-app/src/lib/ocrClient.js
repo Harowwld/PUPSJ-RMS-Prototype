@@ -1132,6 +1132,7 @@ export function findStudentsByOcrName(ocrName, students) {
 export function findStudentsInText(rawText, students, focusName = "") {
   if (!rawText || !Array.isArray(students)) return [];
   const hay = up(rawText).replace(/\s+/g, " ");
+  const genericNameTokens = new Set(["STUDENT"]);
 
   // Tokenize the whole OCR raw text into clean uppercase alphanumeric words
   const ocrTokens = up(rawText)
@@ -1168,15 +1169,15 @@ export function findStudentsInText(rawText, students, focusName = "") {
     const dbTokens = name
       .replace(/[^A-Z0-9\s]/g, " ")
       .split(/\s+/)
-      .filter((t) => t.length > 1);
+      .filter((t) => t.length > 1 && !genericNameTokens.has(t));
 
     if (dbTokens.length >= 2) {
       const matchedTokensCount = dbTokens.filter((dt) =>
-        ocrTokens.some((ot) => ot === dt || levenshteinSimilarity(dt, ot) >= 0.75)
+        ocrTokens.some((ot) => !genericNameTokens.has(ot) && (ot === dt || levenshteinSimilarity(dt, ot) >= 0.75))
       ).length;
 
       const matchRatio = matchedTokensCount / dbTokens.length;
-      if (matchRatio >= 0.75) {
+      if (matchedTokensCount >= 2 && matchRatio >= 0.75) {
         matches.push(s);
       }
     }
@@ -1189,7 +1190,7 @@ export function findStudentsInText(rawText, students, focusName = "") {
   // When OCR has already produced a plausible name, ignore unrelated names
   // elsewhere in the document (parents, informants, registrars, etc.).
   if (focusTokens.length >= 2) {
-    return matches.filter((student) => {
+    const focusedMatches = matches.filter((student) => {
       const studentTokens = up(student?.name || student?.Name || "")
         .replace(/[^A-Z0-9\s]/g, " ")
         .split(/\s+/)
@@ -1199,6 +1200,10 @@ export function findStudentsInText(rawText, students, focusName = "") {
       ).length;
       return matchedTokens >= Math.min(2, studentTokens.length);
     });
+    // Name detection can select a plausible-looking label or sentence from
+    // a resume/form instead of the person's name. Do not erase a valid
+    // full-document match when the focus filter finds nothing.
+    return focusedMatches.length ? focusedMatches : matches;
   }
 
   return matches;
