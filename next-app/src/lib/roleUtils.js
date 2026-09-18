@@ -162,3 +162,38 @@ export function getDefaultDashboardPath(role) {
   if (String(role || "").toLowerCase() === "student") return "/student";
   return "/staff";
 }
+
+/**
+ * Return whether a principal may enter a page route.
+ *
+ * This is intentionally pure so middleware and client-side code can share the
+ * route policy without importing database or Node-only authorization code.
+ * Resource ownership and office scope remain server-side concerns.
+ */
+export function canAccessPage(pathname, role, { authenticated = true } = {}) {
+  const path = String(pathname || "");
+  const normalizedRole = normalizeRole(role);
+
+  if (path === "/student" || path.startsWith("/student/")) {
+    return !authenticated || normalizedRole === "Student";
+  }
+
+  if (path === "/systemadmin" || path.startsWith("/systemadmin/") ||
+      path === "/superadmin" || path.startsWith("/superadmin/")) {
+    return normalizedRole === "SystemAdmin" || normalizedRole === "SuperAdmin";
+  }
+
+  if (path === "/admin" || path.startsWith("/admin/")) {
+    return normalizedRole === "Admin";
+  }
+
+  if (path === "/staff" || path.startsWith("/staff/")) {
+    return normalizedRole === "Staff" || normalizedRole === "Admin";
+  }
+
+  if (path === "/account" || path.startsWith("/account/")) {
+    return Boolean(authenticated && normalizedRole);
+  }
+
+  return true;
+}
