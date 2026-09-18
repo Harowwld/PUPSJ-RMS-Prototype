@@ -10,7 +10,7 @@ async function migrate() {
   const accRes = await pool.query("SELECT id, first_name, middle_name, last_name FROM student_accounts");
   for (const row of accRes.rows) {
     if (row.first_name && row.first_name.startsWith("enc:v1:")) continue;
-    
+
     await pool.query(
       "UPDATE student_accounts SET first_name = $1, middle_name = $2, last_name = $3 WHERE id = $4",
       [

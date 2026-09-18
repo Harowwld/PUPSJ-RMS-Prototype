@@ -29,15 +29,18 @@ try {
     "\"next dev\"",
     "\"wait-on tcp:3000 && node scripts/warm-local-routes.mjs\"",
   ];
+  const processNames = ["next", "warmup"];
+  const colors = ["cyan", "yellow"];
   if (process.env.HOT_FOLDER_INGEST_TOKEN) {
     devCommands.push("\"wait-on tcp:3000 && node scripts/hot-folder-watcher/watch.mjs\"");
+    processNames.push("hot-folder");
+    colors.push("magenta");
   } else {
     console.warn("[dev] HOT_FOLDER_INGEST_TOKEN is not set; hot-folder watcher is disabled.");
   }
-
   const dev = spawn(
     pnpmCommand,
-    ["exec", "concurrently", "-n", process.env.HOT_FOLDER_INGEST_TOKEN ? "next,warmup,hot-folder" : "next,warmup", "-c", "cyan,yellow,magenta", ...devCommands],
+    ["exec", "concurrently", "-n", processNames.join(","), "-c", colors.join(","), ...devCommands],
     { stdio: "inherit", cwd: process.cwd(), shell: isWindows }
   );
 

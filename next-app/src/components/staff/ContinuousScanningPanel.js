@@ -1,14 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 const EMPTY_STATS = { total: 0, remaining: 0, succeeded: 0, confirmed: 0, review: 0, failed: 0 };
 
 export default function ContinuousScanningPanel({ onOpenReview, showToast = () => {} }) {
-  const [active, setActive] = useState(false);
-  const [busy, setBusy] = useState(false);
+  const [workerConnected, setWorkerConnected] = useState(false);
   const [batch, setBatch] = useState(null);
   const [stats, setStats] = useState(EMPTY_STATS);
   const [recentSuccesses, setRecentSuccesses] = useState([]);
@@ -18,29 +17,17 @@ export default function ContinuousScanningPanel({ onOpenReview, showToast = () =
   const [completedPage, setCompletedPage] = useState(0);
   const [completedQuery, setCompletedQuery] = useState("");
   const [completedStatus, setCompletedStatus] = useState("");
-  const activeRef = useRef(false);
-  const activeBatchRef = useRef(null);
-  const cycleRef = useRef(null);
-  const timerRef = useRef(null);
-
-  const readInboundTotal = useCallback(async () => {
-    const response = await fetch("/api/ingest/hot-folder?limit=1&includeFailed=1&includeRejected=0&onlyUnprocessed=1", { cache: "no-store" });
+  const loadMonitor = useCallback(async () => {
+    const response = await fetch("/api/ingest/review?limit=100", { cache: "no-store" });
     const json = await response.json().catch(() => null);
-    return response.ok && json?.ok ? Number(json.data?.total || 0) : 0;
-  }, []);
-
-  const updateBatch = useCallback(async (batchId) => {
-    const response = await fetch(`/api/ingest/batches/${encodeURIComponent(batchId)}`, { cache: "no-store" });
-    const json = await response.json().catch(() => null);
-    if (!response.ok || !json?.ok) throw new Error(json?.error || "Unable to read batch progress");
-    const data = json.data;
-    const rows = Array.isArray(data.rows) ? data.rows : [];
+    if (!response.ok || !json?.ok) throw new Error(json?.error || "Unable to read OCR queue");
+    const rows = Array.isArray(json.data?.rows) ? json.data.rows : [];
     const successfulRows = rows.filter((row) => row.ocr_status === "completed");
     const processingRows = rows.filter((row) => !["completed", "failed"].includes(String(row.ocr_status || "").toLowerCase()));
     const confirmedRows = rows.filter((row) => row.review_status === "Confirmed");
     const reviewRows = rows.filter((row) => ["Needs Review", "Conflict", "Duplicate"].includes(row.review_status));
     const failedRows = rows.filter((row) => row.ocr_status === "failed" || row.review_status === "Failed");
-    setBatch(data);
+    setBatch({ total: rows.length, rows });
     if (successfulRows.length) {
       setCompletedScans((current) => {
         const merged = [...successfulRows, ...current].filter((row, index, all) => (
@@ -56,7 +43,7 @@ export default function ContinuousScanningPanel({ onOpenReview, showToast = () =
       });
     }
     setCurrentFile(rows.find((row) => row.review_status === "Processing")?.original_filename || "");
-    setStats(data.total > 0 ? {
+    setStats(rows.length > 0 ? {
       total: rows.length,
       remaining: processingRows.length,
       succeeded: successfulRows.length,
@@ -64,90 +51,45 @@ export default function ContinuousScanningPanel({ onOpenReview, showToast = () =
       review: reviewRows.length,
       failed: failedRows.length,
     } : EMPTY_STATS);
-    return data;
+    return rows;
   }, []);
 
-  const cycle = useCallback(async () => {
-    if (!activeRef.current) return;
-    setBusy(true);
-    try {
-      let batchId = activeBatchRef.current;
-      if (!batchId) {
-        const createResponse = await fetch("/api/ingest/batches", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ sourceStation: "Continuous Scanning" }) });
-        const createJson = await createResponse.json().catch(() => null);
-        if (!createResponse.ok || !createJson?.ok) throw new Error(createJson?.error || "Unable to create scanning batch");
-        const nextBatch = createJson.data;
-        setBatch(nextBatch);
-        if (nextBatch.claimed > 0) {
-          batchId = nextBatch.batchId;
-          activeBatchRef.current = batchId;
-          setCurrentFile(nextBatch.rows?.[0]?.original_filename || "");
-        } else {
-          const inboundTotal = await readInboundTotal();
-          setStats({ ...EMPTY_STATS, total: inboundTotal, remaining: inboundTotal });
-        }
-      }
-
-      if (batchId) {
-        const processResponse = await fetch(`/api/ingest/batches/${encodeURIComponent(batchId)}/process`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ limit: 1 }) });
-        const processJson = await processResponse.json().catch(() => null);
-        if (!processResponse.ok || !processJson?.ok) throw new Error(processJson?.error || "Batch OCR failed");
-        for (const item of processJson.data?.items || []) {
-          const filename = item.original_filename || `Document #${item.id}`;
-          if (item.review_status === "Failed") {
-            showToast({ title: "Document scan failed", description: `${filename}: ${item.last_error || "OCR processing failed."}` }, true);
-          } else if (item.review_status === "Confirmed" && item.auto_promoted) {
-            showToast({ title: "Document uploaded to student folder", description: `${filename} was matched to ${item.student_name || item.proposed_student_no || "the unique student match"}.` });
-          } else {
-            showToast({ title: "Document scanned successfully", description: `${filename} is ready in Batch Review.` });
-          }
-        }
-        await updateBatch(batchId);
-        if (Number(processJson.data?.processed || 0) === 0) activeBatchRef.current = null;
-      } else {
-        setCurrentFile("");
-      }
-    } catch (error) {
-      showToast({ title: "Continuous Scanning Warning", description: error.message || "Scanner cycle failed." }, true);
-    } finally {
-      setBusy(false);
-      if (activeRef.current) timerRef.current = window.setTimeout(cycle, 1200);
-    }
-  }, [readInboundTotal, showToast, updateBatch]);
-
-  cycleRef.current = cycle;
-
-  const start = () => {
-    activeRef.current = true;
-    activeBatchRef.current = null;
-    setActive(true);
-    cycle();
-  };
-
-  const stop = () => {
-    activeRef.current = false;
-    activeBatchRef.current = null;
-    setActive(false);
-    if (timerRef.current) window.clearTimeout(timerRef.current);
-    timerRef.current = null;
-    setBusy(false);
-  };
-
-  useEffect(() => () => {
-    activeRef.current = false;
-    activeBatchRef.current = null;
-    if (timerRef.current) window.clearTimeout(timerRef.current);
-  }, []);
-
-  // Keep OCR processing alive whenever the scanning workspace is open. The
-  // file watcher can ingest files independently, so opening this workspace
-  // must also resume any queued work without requiring a second button click.
   useEffect(() => {
-    activeRef.current = true;
-    setActive(true);
-    const initialTimer = window.setTimeout(() => cycleRef.current?.(), 0);
-    return () => window.clearTimeout(initialTimer);
-  }, []);
+    let disposed = false;
+    let source = null;
+    let retryTimer = null;
+    let retryDelay = 1000;
+
+    const refresh = () => loadMonitor().catch((error) => {
+      showToast({ title: "OCR Monitor Warning", description: error.message || "Unable to refresh OCR queue." }, true);
+    });
+    const connect = () => {
+      if (disposed) return;
+      source = new EventSource("/api/ingest/events");
+      source.addEventListener("ready", () => {
+        setWorkerConnected(true);
+        retryDelay = 1000;
+        refresh();
+      });
+      source.addEventListener("ingest", refresh);
+      source.addEventListener("heartbeat", () => setWorkerConnected(true));
+      source.onerror = () => {
+        setWorkerConnected(false);
+        source?.close();
+        if (disposed) return;
+        retryTimer = setTimeout(connect, retryDelay);
+        retryDelay = Math.min(retryDelay * 2, 10000);
+      };
+    };
+
+    refresh();
+    connect();
+    return () => {
+      disposed = true;
+      clearTimeout(retryTimer);
+      source?.close();
+    };
+  }, [loadMonitor, showToast]);
 
   const percent = stats.total ? Math.min(100, Math.round(((stats.succeeded + stats.failed) / stats.total) * 100)) : 0;
   // Keep this separate from `batch`: continuous scanning rolls over to a new
@@ -170,33 +112,13 @@ export default function ContinuousScanningPanel({ onOpenReview, showToast = () =
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <div className="flex items-center gap-2 text-sm font-bold text-gray-900 dark:text-zinc-50">
-            
+            <span className={`h-2.5 w-2.5 rounded-full ${workerConnected ? "bg-emerald-500" : "bg-amber-500"}`} />
             Continuous Scanning
           </div>
-          <p className="mt-1 text-xs text-gray-600 dark:text-zinc-400">Processes current and newly arriving inbound documents sequentially while this workspace is open.</p>
+          <p className="mt-1 text-xs text-gray-600 dark:text-zinc-400">OCR starts automatically when a stable inbound file is received.</p>
         </div>
         <div className="flex items-center gap-2">
-          {active ? (
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={stop}
-              disabled={busy && !active}
-              className="h-9 px-4 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
-            >
-              Stop
-            </Button>
-          ) : (
-            <Button
-              size="sm"
-              onClick={start}
-              disabled={busy}
-              className="h-9 px-4 text-xs font-semibold rounded-xl! btn-brand-red text-white! active:scale-95 transition-all cursor-pointer shadow-xs"
-              style={{ color: "#ffffff" }}
-            >
-              Scan
-            </Button>
-          )}
+          <span className="text-xs font-medium text-gray-500 dark:text-zinc-400">{workerConnected ? "Event stream connected" : "Reconnecting"}</span>
           <Button
             size="sm"
             variant="outline"

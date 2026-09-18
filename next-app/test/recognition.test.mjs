@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { extractNameFromCoordinates, normalizeExtractedName } from "../src/lib/ocrClient.js";
+import { extractNameFromCoordinates, findStudentsInText, normalizeExtractedName } from "../src/lib/ocrClient.js";
 import { calculateOcrConfidence } from "../src/lib/ocrConfidence.js";
 
 test("extracts PSA name fields from normalized coordinate regions", () => {
@@ -72,4 +72,30 @@ test("keeps a strong unique match usable despite a non-primary document name con
   });
   assert.equal(result.matchBand, "Conflict");
   assert.ok(result.matchConfidence >= 0.85);
+});
+
+test("does not turn generic OCR wording into a second student match", () => {
+  const students = [
+    { student_no: "2025-10001-SJ-0", name: "DELA PEÑA, HAROLD PRINCE E." },
+    { student_no: "2023-00001-IT-1", name: "TEST STUDENT" },
+  ];
+  const matches = findStudentsInText(
+    "Profile BSIT student with a strong academic record. Harold Prince E. dela Peña.",
+    students,
+  );
+
+  assert.deepEqual(matches.map((student) => student.student_no), ["2025-10001-SJ-0"]);
+});
+
+test("keeps full-document matches when the detected focus is unrelated OCR text", () => {
+  const students = [
+    { student_no: "2025-10001-SJ-0", name: "DELA PEÑA, HAROLD PRINCE E." },
+  ];
+  const matches = findStudentsInText(
+    "BSIT student with a strong academic record. Harold Prince E. dela Peña.",
+    students,
+    "BSIT student with a strong",
+  );
+
+  assert.deepEqual(matches.map((student) => student.student_no), ["2025-10001-SJ-0"]);
 });

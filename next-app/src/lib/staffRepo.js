@@ -154,7 +154,6 @@ export async function listStaff({
   }
 
   let decryptedRows = (rows || []).map(decryptStaffRow);
-  
   if (cleanQ) {
     const search = cleanQ.toLowerCase();
     decryptedRows = decryptedRows.filter(r => {
@@ -164,7 +163,7 @@ export async function listStaff({
       if (r.email && r.email.toLowerCase().includes(search)) return true;
       return false;
     });
-    
+
     decryptedRows.sort((a, b) => {
       const lnameA = (a.lname || '').toLowerCase();
       const lnameB = (b.lname || '').toLowerCase();
@@ -177,7 +176,7 @@ export async function listStaff({
 
     return decryptedRows.slice(off, off + lim);
   }
-  
+
   return decryptedRows;
 }
 
@@ -190,9 +189,10 @@ export async function getStaffById(id, { officeId } = {}) {
 export async function getStaffByUsername(username) {
   const u = String(username || "").trim();
   if (!u) return null;
+  const normalized = u.toLowerCase();
   const row = await dbGet(
     "SELECT * FROM staff WHERE email = ? OR lower(email) = lower(?) OR lower(id) = lower(?)",
-    [encryptPII(u.toLowerCase()), u, u]
+    [encryptPII(normalized), u, u],
   );
   return decryptStaffRow(row) || null;
 }
