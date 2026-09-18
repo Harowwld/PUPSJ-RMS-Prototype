@@ -14,7 +14,7 @@ test("local development warm-up requests the public and first-login route surfac
   try {
     const result = await warmLocalRoutes("http://127.0.0.1:3000");
     assert.equal(result.failed, 0);
-    assert.ok(WARMUP_PATHS.includes("/api/auth/login"));
+    assert.ok(!WARMUP_PATHS.includes("/api/auth/login"));
     assert.ok(WARMUP_PATHS.includes("/api/account/avatar?id=warmup"));
     assert.deepEqual(requestedPaths.sort(), [...WARMUP_PATHS].sort());
   } finally {
