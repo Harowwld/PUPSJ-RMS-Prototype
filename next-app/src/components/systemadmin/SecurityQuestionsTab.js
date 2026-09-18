@@ -23,6 +23,7 @@ export default function SecurityQuestionsTab({ showToast }) {
   const [saving, setSaving] = useState(false)
   const [totpModalOpen, setTotpModalOpen] = useState(false)
   const [totpLoading, setTotpLoading] = useState(false)
+  const [kpiOrder, setKpiOrder] = useState(["total", "enforced"])
 
   const loadQuestions = useCallback(async (isManual = false) => {
     if (isManual) setLoading(true)
@@ -55,7 +56,7 @@ export default function SecurityQuestionsTab({ showToast }) {
   }, [showToast])
 
   useEffect(() => {
-    loadQuestions()
+    queueMicrotask(loadQuestions)
   }, [loadQuestions])
 
   const handleAddQuestion = () => {

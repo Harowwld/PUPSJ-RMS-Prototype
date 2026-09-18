@@ -16,6 +16,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { Select } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { getClientSession } from "@/lib/clientAuth";
+import { canAccessPage } from "@/lib/roleUtils";
 import {
   Empty,
   EmptyHeader,
@@ -288,12 +289,12 @@ export default function StudentDashboard() {
     try {
       setLoading(true);
       const session = await getClientSession();
-      if (!session.ok || session.data?.role !== "Student") {
-        if (session.status !== 401) {
-          const error = "Unable to load your student session.";
-          setMessage(error);
-          showToast("Student session unavailable", error, true);
-        }
+      const authenticated = Boolean(session.ok && session.data);
+      if (!canAccessPage("/student", session.data?.role, { authenticated })) {
+        router.replace("/");
+        return;
+      }
+      if (!authenticated) {
         return;
       }
       setMe(session.data);
@@ -319,14 +320,20 @@ export default function StudentDashboard() {
     } finally {
       setLoading(false);
     }
-  }, [showToast]);
+  }, [router, showToast]);
 
   useEffect(() => { const timer = setTimeout(() => { load().catch((error) => { const message = error.message || "Unable to load student records."; setMessage(message); showToast("Records failed to load", message, true); }); }, 0); return () => clearTimeout(timer); }, [load, showToast]);
 
   useEffect(() => {
     if (me === null) {
       getClientSession()
-        .then((session) => { if (session.status === 401) router.replace("/"); })
+        .then((session) => {
+          if (session.status === 401) return;
+          const authenticated = Boolean(session.ok && session.data);
+          if (!canAccessPage("/student", session.data?.role, { authenticated })) {
+            router.replace("/");
+          }
+        })
         .catch(() => router.replace("/"));
     }
   }, [me, router]);
