@@ -1,6 +1,6 @@
 "use client"
 
-import LucideIcon from "@/components/shared/LucideIcon";
+import HugeIcon from "@/components/shared/HugeIcon";
 import { useState, useEffect, useCallback, useMemo, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { Badge } from "@/components/ui/badge"
@@ -32,16 +32,17 @@ import {
   EmptyDescription,
 } from "@/components/ui/empty"
 import { cn } from "@/lib/utils"
+import { Reorder } from "framer-motion";
 import { getCachedData, setCachedData, invalidateDataCache } from "@/lib/dataCache"
 
 function SortIndicator({ column, sortBy, sortOrder }) {
   if (sortBy !== column) {
-    return <LucideIcon  className="ph-bold ph-caret-up-down ml-1 text-[12px] text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"></LucideIcon>
+    return <HugeIcon  className="ph-bold ph-caret-up-down ml-1 text-[12px] text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"></HugeIcon>
   }
   return sortOrder === "ASC" ? (
-    <LucideIcon  className="ph-bold ph-caret-up ml-1 text-[12px] text-gray-400"></LucideIcon>
+    <HugeIcon  className="ph-bold ph-caret-up ml-1 text-[12px] text-gray-400"></HugeIcon>
   ) : (
-    <LucideIcon  className="ph-bold ph-caret-down ml-1 text-[12px] text-gray-400"></LucideIcon>
+    <HugeIcon  className="ph-bold ph-caret-down ml-1 text-[12px] text-gray-400"></HugeIcon>
   )
 }
 
@@ -564,7 +565,8 @@ export default function GlobalStaffTab({ authUser, showToast }) {
     }
   }
 
-  const [selectedKpi, setSelectedKpi] = useState(null)
+  const [selectedKpi, setSelectedKpi] = useState(null);
+  const [kpiOrder, setKpiOrder] = useState(["total", "active", "staff"]);
   const statCardsRef = useRef(null)
 
   useEffect(() => {
@@ -682,49 +684,42 @@ export default function GlobalStaffTab({ authUser, showToast }) {
           </div>
         ) : (
           <div className="px-6 pb-6">
-            <div
-              ref={statCardsRef}
-              className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 items-start relative z-20 transition-all duration-500"
-            >
-              {statCardsData.map((stat) => (
-                <div
-                  key={stat.key}
-                  className={cn(
-                    "relative group rounded-xl",
-                    selectedKpi === stat.key ? "z-30" : "z-10"
-                  )}
-                >
+            <Reorder.Group as="div" axis="x" values={kpiOrder} onReorder={setKpiOrder} ref={statCardsRef} className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 items-start relative z-20 transition-all duration-500">
+              {kpiOrder.map((kpiKey) => {
+                const stat = statCardsData.find(s => s.key === kpiKey);
+                if (!stat) return null;
+                return (
+                <Reorder.Item as="div" value={stat.key} key={stat.key} className={cn("relative group rounded-xl", selectedKpi === stat.key ? "z-30" : "z-10")}>
                   <div
                     onClick={() => setSelectedKpi(selectedKpi === stat.key ? null : stat.key)}
                     className={cn(
-                      "relative overflow-hidden rounded-xl border p-4 cursor-pointer select-none transition-all",
-                      "border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-zinc-900/30 hover:border-gray-200 dark:hover:border-white/10",
-                      selectedKpi === stat.key && (
-                        stat.color === "blue" ? "border-blue-500/40 ring-1 ring-blue-500/20" :
-                        stat.color === "emerald" ? "border-emerald-500/40 ring-1 ring-emerald-500/20" :
-                        "border-amber-500/40 ring-1 ring-amber-500/20"
-                      )
+                      "relative overflow-hidden rounded-[18px] border cursor-pointer select-none transition-all shadow-[0_2px_10px_rgb(0,0,0,0.04)] hover:shadow-[0_4px_15px_rgb(0,0,0,0.06)] flex flex-col justify-between min-h-[110px] bg-gray-50 dark:bg-zinc-900",
+                      selectedKpi === stat.key
+                        ? `border-${stat.color}-500/50 ring-1 ring-${stat.color}-500/20`
+                        : "border-gray-100 dark:border-white/5"
                     )}
                   >
-                    <div className="relative z-10">
-                      <div className="mb-1 flex items-center justify-between">
-                        <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
+                    <div className="flex justify-between items-start p-4 pb-0">
+                      <div className="flex flex-col gap-1">
+                        <span className="text-[13px] font-medium text-gray-500 dark:text-zinc-400 capitalize">
                           {stat.label}
                         </span>
-                        <LucideIcon  className={cn("ph-bold ph-caret-down text-xs text-gray-400 transition-transform duration-300", selectedKpi === stat.key && "rotate-180")} />
                       </div>
+                      <div className={cn("w-8 h-8 rounded-[10px] flex items-center justify-center text-white shadow-sm shrink-0", stat.color === "blue" ? "bg-[#3b82f6]" : stat.color === "emerald" ? "bg-[#10b981]" : "bg-[#f59e0b]")}>
+                        <HugeIcon className={cn("ph-bold text-[15px]", stat.color === "blue" ? "ph-users-three" : stat.color === "emerald" ? "ph-user-focus" : "ph-building")} />
+                      </div>
+                    </div>
+                    
+                    <div className="flex justify-between items-end p-4 pt-1">
                       <div className="flex items-baseline gap-2">
-                        <span className="text-2xl font-black text-gray-900 dark:text-zinc-50 tracking-tight">
+                        <span className="text-[28px] font-bold text-gray-900 dark:text-white leading-none tracking-tight">
                           {stat.value.toLocaleString()}
                         </span>
-                        <span className={cn("text-xs font-medium", 
-                          stat.color === "blue" ? "text-blue-600 dark:text-blue-400" :
-                          stat.color === "emerald" ? "text-emerald-600 dark:text-emerald-400" :
-                          "text-amber-600 dark:text-amber-400"
-                        )}>
+                        <span className={cn("text-xs font-medium mb-1", `text-${stat.color}-600 dark:text-${stat.color}-400`)}>
                           {stat.sublabel}
                         </span>
                       </div>
+                      <HugeIcon className="ph-bold ph-dots-six-vertical cursor-grab active:cursor-grabbing hover:text-gray-400 dark:hover:text-zinc-500 text-gray-300 dark:text-zinc-700 text-lg mb-0.5" />
                     </div>
                   </div>
 
@@ -788,9 +783,9 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                       </div>
                     )}
                   </div>
-                </div>
-              ))}
-            </div>
+                </Reorder.Item>
+              );})}
+            </Reorder.Group>
           </div>
         )}
 
@@ -828,7 +823,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0">
             <div className="w-full sm:w-[260px] lg:w-[300px] relative group shrink-0">
               <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                <LucideIcon  className="ph-bold ph-magnifying-glass text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm"></LucideIcon>
+                <HugeIcon  className="ph-bold ph-magnifying-glass text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm"></HugeIcon>
               </div>
               <Input
                 value={search}
@@ -950,10 +945,10 @@ export default function GlobalStaffTab({ authUser, showToast }) {
               <div className="relative mb-6">
                 <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
                 <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
-                  <LucideIcon  className={cn(
+                  <HugeIcon  className={cn(
                     hasActiveFilters ? "ph-magnifying-glass" : (statusFilter === "Inactive" ? "ph-archive" : "ph-users"),
                     "text-3xl text-gray-400 dark:text-zinc-500"
-                  )}></LucideIcon>
+                  )}></HugeIcon>
                 </EmptyMedia>
               </div>
               <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
@@ -975,7 +970,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                   onClick={handleClearFilters}
                   className="mt-6 flex h-10 items-center gap-2 rounded-xl border border-gray-300 bg-white px-5 text-xs font-semibold text-gray-700 shadow-xs transition-colors hover:bg-gray-50 dark:bg-zinc-900 dark:border-white/10 dark:text-zinc-300 cursor-pointer"
                 >
-                  <LucideIcon  className="ph-bold ph-arrow-counter-clockwise"></LucideIcon>
+                  <HugeIcon  className="ph-bold ph-arrow-counter-clockwise"></HugeIcon>
                   Clear
                 </Button>
               ) : statusFilter === "Active" ? (
@@ -1153,7 +1148,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                                 aria-label="My Account Settings"
                                 className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 dark:text-zinc-400 hover:text-blue-600 dark:hover:text-blue-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
                               >
-                                <LucideIcon  className="ph-bold ph-gear-six text-[16px]"></LucideIcon>
+                                <HugeIcon  className="ph-bold ph-gear-six text-[16px]"></HugeIcon>
                               </button>
                             </TooltipTrigger>
                             <TooltipContent>My Account Settings</TooltipContent>
@@ -1168,7 +1163,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                                     aria-label="Edit Staff Member"
                                     className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 dark:text-zinc-400 hover:text-amber-600 dark:hover:text-amber-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
                                   >
-                                    <LucideIcon  className="ph-bold ph-pencil-simple text-[16px]"></LucideIcon>
+                                    <HugeIcon  className="ph-bold ph-pencil-simple text-[16px]"></HugeIcon>
                                   </button>
                                 </TooltipTrigger>
                                 <TooltipContent>Edit Staff</TooltipContent>
@@ -1183,7 +1178,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                                     aria-label="Restore Staff Member"
                                     className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 dark:text-zinc-400 hover:text-emerald-600 dark:hover:text-emerald-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
                                   >
-                                    <LucideIcon  className="ph-bold ph-archive-restore text-[16px]"></LucideIcon>
+                                    <HugeIcon  className="ph-bold ph-archive-restore text-[16px]"></HugeIcon>
                                   </button>
                                 </TooltipTrigger>
                                 <TooltipContent>Restore</TooltipContent>
@@ -1196,7 +1191,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                                     aria-label="Archive Staff Member"
                                     className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 dark:text-zinc-400 hover:text-red-600 dark:hover:text-red-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
                                   >
-                                    <LucideIcon  className="ph-bold ph-archive text-[16px]"></LucideIcon>
+                                    <HugeIcon  className="ph-bold ph-archive text-[16px]"></HugeIcon>
                                   </button>
                                 </TooltipTrigger>
                                 <TooltipContent>Archive</TooltipContent>

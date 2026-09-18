@@ -1,5 +1,5 @@
 "use client";
-import LucideIcon from "@/components/shared/LucideIcon";
+import HugeIcon from "@/components/shared/HugeIcon";
 import { useEffect, useMemo, useState, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
@@ -33,6 +33,7 @@ import {
 import PageHeader from "@/components/shared/PageHeader";
 import { RefreshButton } from "@/components/shared/RefreshButton";
 import { cn } from "@/lib/utils";
+import { Reorder } from "framer-motion";
 import { generateAuditLogsPdf } from "@/lib/pdfGenerator";
 import { generateExportFilename } from "@/lib/exportHelpers";
 import PdfPreviewDialog from "@/components/admin/audit-logs/PdfPreviewDialog";
@@ -108,6 +109,7 @@ function getSeverityConfig(sev) {
 // 2. CHILD COMPONENTS
 function StatCards({ isLoading, stats }) {
   const [selectedKpi, setSelectedKpi] = useState(null);
+  const [kpiOrder, setKpiOrder] = useState(["total", "today", "auth"]);
   const containerRef = useRef(null);
 
   useEffect(() => {
@@ -184,10 +186,13 @@ function StatCards({ isLoading, stats }) {
 
   return (
     <div ref={containerRef}>
-      <StaggerContainer className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 items-start relative z-20 transition-all duration-500">
-      {cards.map((stat, i) => (
-        <StaggerItem
-          key={i}
+      <Reorder.Group as="div" axis="x" values={kpiOrder} onReorder={setKpiOrder} className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 items-start relative z-20 transition-all duration-500">
+      {kpiOrder.map((kpiKey) => {
+        const stat = cards.find(s => s.key === kpiKey);
+        if(!stat) return null;
+        return (
+        <Reorder.Item as="div" value={stat.key}
+          key={stat.key}
           className={cn(
             "relative group rounded-xl",
             selectedKpi === stat.key ? "z-30" : "z-10"
@@ -196,26 +201,33 @@ function StatCards({ isLoading, stats }) {
           <div 
             onClick={() => setSelectedKpi(selectedKpi === stat.key ? null : stat.key)}
             className={cn(
-              "relative overflow-hidden rounded-xl border p-4 cursor-pointer select-none transition-all",
-              "border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-zinc-900/30 hover:border-gray-200 dark:hover:border-white/10",
-              selectedKpi === stat.key && getRingColor(stat.color)
+              "relative overflow-hidden rounded-[18px] border cursor-pointer select-none transition-all shadow-[0_2px_10px_rgb(0,0,0,0.04)] hover:shadow-[0_4px_15px_rgb(0,0,0,0.06)] flex flex-col justify-between min-h-[110px] bg-gray-50 dark:bg-zinc-900",
+              selectedKpi === stat.key
+                ? getRingColor(stat.color)
+                : "border-gray-100 dark:border-white/5"
             )}
           >
-            <div className="relative z-10">
-              <div className="mb-1 flex items-center justify-between">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
+            <div className="flex justify-between items-start p-4 pb-0">
+              <div className="flex flex-col gap-1">
+                <span className="text-[13px] font-medium text-gray-500 dark:text-zinc-400 capitalize">
                   {stat.label}
                 </span>
-                <LucideIcon  className={cn("ph-bold ph-caret-down text-xs text-gray-400 transition-transform duration-300", selectedKpi === stat.key && "rotate-180")} />
               </div>
-              <div className="flex items-baseline gap-2">
-                <span className="text-2xl font-black text-gray-900 dark:text-zinc-50 tracking-tight">
+              <div className={cn("w-8 h-8 rounded-[10px] flex items-center justify-center text-white shadow-sm shrink-0", stat.color === "blue" ? "bg-[#3b82f6]" : stat.color === "emerald" ? "bg-[#10b981]" : stat.color === "red" ? "bg-[#ef4444]" : stat.color === "indigo" ? "bg-[#6366f1]" : "bg-[#f59e0b]")}>
+                <HugeIcon className={cn("ph-bold text-[15px]", stat.iconClass)} />
+              </div>
+            </div>
+            
+            <div className="flex justify-between items-end p-4 pt-1">
+              <div className="flex flex-col gap-1">
+                <span className="text-[28px] font-bold text-gray-900 dark:text-white leading-none tracking-tight">
                   {stat.value.toLocaleString()}
                 </span>
-                <span className={cn("text-xs font-medium", getSubColor(stat.color))}>
+                <span className={cn("text-[11px] font-medium mb-1", getSubColor(stat.color))}>
                   {stat.sublabel}
                 </span>
               </div>
+              <HugeIcon className="ph-bold ph-dots-six-vertical cursor-grab active:cursor-grabbing hover:text-gray-400 dark:hover:text-zinc-500 text-gray-300 dark:text-zinc-700 text-lg mb-0.5" />
             </div>
           </div>
 
@@ -226,66 +238,25 @@ function StatCards({ isLoading, stats }) {
           )} onClick={(e) => e.stopPropagation()}>
             <div className="space-y-3">
               {stat.key === "total" && (
-                <>
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-gray-100 dark:border-white/5">
-                      <span className="block text-[9px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">Total Logs</span>
-                      <span className="text-lg font-black text-gray-900 dark:text-zinc-50">{(stats.totalLogs || 0).toLocaleString()}</span>
-                    </div>
-                    <div className="bg-blue-50 dark:bg-blue-950/30 p-2.5 rounded-lg border border-blue-100 dark:border-blue-900/30">
-                      <span className="block text-[9px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider">Session Scope</span>
-                      <span className="text-lg font-black text-blue-700 dark:text-blue-400">Active</span>
-                    </div>
-                  </div>
-
-                  <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-gray-100 dark:border-white/5 text-xs text-gray-600 dark:text-zinc-300 leading-relaxed">
-                    Cumulative count of actions logged by your account across databases.
-                  </div>
-                </>
+                <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-gray-100 dark:border-white/5 text-xs text-gray-600 dark:text-zinc-300 leading-relaxed">
+                  Cumulative history of all account actions recorded securely for audit purposes.
+                </div>
               )}
-
               {stat.key === "today" && (
-                <>
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-gray-100 dark:border-white/5">
-                      <span className="block text-[9px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">Today&apos;s Logs</span>
-                      <span className="text-lg font-black text-gray-900 dark:text-zinc-50">{(stats.logsToday || 0).toLocaleString()}</span>
-                    </div>
-                    <div className="bg-emerald-50 dark:bg-emerald-950/30 p-2.5 rounded-lg border border-emerald-100 dark:border-emerald-900/30">
-                      <span className="block text-[9px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Hourly Peak</span>
-                      <span className="text-lg font-black text-emerald-700 dark:text-emerald-400">{Math.round((stats.logsToday || 0) / 8).toLocaleString()}</span>
-                    </div>
-                  </div>
-
-                  <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-gray-100 dark:border-white/5 text-xs text-gray-600 dark:text-zinc-300 leading-relaxed">
-                    Total audited actions performed by your user account today.
-                  </div>
-                </>
+                <div className="bg-emerald-50 dark:bg-emerald-950/30 p-2.5 rounded-lg border border-emerald-100 dark:border-emerald-900/30 text-xs text-emerald-800 dark:text-emerald-300 leading-relaxed">
+                  Activity burst over the last 24 hours. Includes all data read and write operations.
+                </div>
               )}
-
               {stat.key === "auth" && (
-                <>
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-gray-100 dark:border-white/5">
-                      <span className="block text-[9px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">Auth Events</span>
-                      <span className="text-lg font-black text-gray-900 dark:text-zinc-50">{(stats.authEvents || 0).toLocaleString()}</span>
-                    </div>
-                    <div className="bg-amber-50 dark:bg-amber-950/30 p-2.5 rounded-lg border border-amber-100 dark:border-amber-900/30">
-                      <span className="block text-[9px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider">Failures</span>
-                      <span className="text-lg font-black text-amber-700 dark:text-amber-400">0</span>
-                    </div>
-                  </div>
-
-                  <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-gray-100 dark:border-white/5 text-xs text-gray-600 dark:text-zinc-300 leading-relaxed">
-                    Logins and session verifications generated for this user account.
-                  </div>
-                </>
+                <div className="bg-amber-50 dark:bg-amber-950/30 p-2.5 rounded-lg border border-amber-100 dark:border-amber-900/30 text-xs text-amber-800 dark:text-amber-300 leading-relaxed">
+                  Login sessions, password changes, and sensitive access requests authenticated.
+                </div>
               )}
             </div>
           </div>
-        </StaggerItem>
-      ))}
-      </StaggerContainer>
+        </Reorder.Item>
+      );})}
+      </Reorder.Group>
     </div>
   );
 }
@@ -402,7 +373,7 @@ function LogFilters({
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 flex-wrap">
         {/* Search */}
         <div className="relative flex-1 sm:w-64 min-w-[200px] group">
-          <LucideIcon  className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-xs pointer-events-none" />
+          <HugeIcon  className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-xs pointer-events-none" />
           <Input
             type="text"
             placeholder="Search action, details, IP..."
@@ -529,7 +500,7 @@ function LogExpandedRow({ log, handleCopy }) {
         <div className="flex flex-col gap-4">
           <div className="flex items-center gap-2.5">
             <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-pup-maroon/10 text-pup-maroon dark:text-primary shadow-sm ring-1 ring-pup-maroon/20 dark:bg-red-500/10 dark:ring-red-500/20 dark:shadow-none">
-              <LucideIcon  className="ph-duotone ph-newspaper-clipping text-lg"></LucideIcon>
+              <HugeIcon  className="ph-duotone ph-newspaper-clipping text-lg"></HugeIcon>
             </div>
             <h5 className="text-[10px] font-semibold tracking-widest text-gray-400 dark:text-zinc-300">
               Rich Description
@@ -546,7 +517,7 @@ function LogExpandedRow({ log, handleCopy }) {
         <div className="flex flex-col gap-4">
           <div className="flex items-center gap-2.5">
             <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-50 text-blue-600 shadow-sm ring-1 ring-blue-100 dark:bg-blue-500/10 dark:text-blue-400 dark:ring-blue-500/20 dark:shadow-none">
-              <LucideIcon  className="ph-duotone ph-broadcast text-lg"></LucideIcon>
+              <HugeIcon  className="ph-duotone ph-broadcast text-lg"></HugeIcon>
             </div>
             <h5 className="text-[10px] font-semibold tracking-widest text-gray-400 dark:text-zinc-300">
               Network & Device
@@ -563,7 +534,7 @@ function LogExpandedRow({ log, handleCopy }) {
                   onClick={() => handleCopy(log.ip, "IP Address")}
                   className="h-8 w-8 rounded-xl border border-gray-100 bg-gray-50 text-gray-400 hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 shadow-xs transition-all dark:bg-card dark:hover:border-zinc-800 dark:border-white/10 dark:hover:bg-white/5 dark:text-zinc-500"
                 >
-                  <LucideIcon  className="ph-bold ph-copy text-xs"></LucideIcon>
+                  <HugeIcon  className="ph-bold ph-copy text-xs"></HugeIcon>
                 </Button>
               </div>
             </div>
@@ -580,7 +551,7 @@ function LogExpandedRow({ log, handleCopy }) {
         <div className="flex flex-col gap-4">
           <div className="flex items-center gap-2.5">
             <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 shadow-sm ring-1 ring-emerald-100 dark:bg-emerald-500/10 dark:text-emerald-400 dark:ring-emerald-500/20 dark:shadow-none">
-              <LucideIcon  className="ph-duotone ph-cube text-lg"></LucideIcon>
+              <HugeIcon  className="ph-duotone ph-cube text-lg"></HugeIcon>
             </div>
             <h5 className="text-[10px] font-semibold tracking-widest text-gray-400 dark:text-zinc-300">
               Entity Context
@@ -604,7 +575,7 @@ function LogExpandedRow({ log, handleCopy }) {
                     onClick={() => handleCopy(log.entityId || log.entity_id, "Reference ID")}
                     className="h-8 w-8 rounded-xl border border-gray-100 bg-gray-50 text-gray-400 hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 shadow-xs transition-all dark:bg-card dark:hover:border-zinc-800 dark:border-white/10 dark:hover:bg-white/5 dark:text-zinc-500"
                   >
-                    <LucideIcon  className="ph-bold ph-copy text-xs"></LucideIcon>
+                    <HugeIcon  className="ph-bold ph-copy text-xs"></HugeIcon>
                   </Button>
                 )}
               </div>
@@ -673,7 +644,7 @@ const LogRow = ({ log, isSelected, isExpanded, toggleRow, setSelectedLog, handle
             onClick={() => toggleRow(log.id)}
             className={cn("mx-auto flex h-7 w-7 items-center justify-center bg-transparent border-none text-[#8E8E93] hover:text-[#111111] dark:hover:text-zinc-200 cursor-pointer transition-transform duration-fast", isExpanded ? "rotate-180" : "rotate-0")}
           >
-            <LucideIcon  className="ti ti-chevron-down text-[14px]"></LucideIcon>
+            <HugeIcon  className="ti ti-chevron-down text-[14px]"></HugeIcon>
           </button>
         </td>
         <td className="py-0 px-4 align-middle text-[13px] font-normal text-[#111111] dark:text-zinc-50">
@@ -713,7 +684,7 @@ const LogRow = ({ log, isSelected, isExpanded, toggleRow, setSelectedLog, handle
               onClick={() => setSelectedLog(log)}
               className="w-7 h-7 rounded-[6px] hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/10 text-[#C7C7CC] hover:text-[#E5484D] dark:hover:text-red-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors"
             >
-              <LucideIcon  className="ti ti-eye text-[16px]"></LucideIcon>
+              <HugeIcon  className="ti ti-eye text-[16px]"></HugeIcon>
             </button>
           </div>
         </td>
@@ -731,12 +702,12 @@ const LogRow = ({ log, isSelected, isExpanded, toggleRow, setSelectedLog, handle
 
 function SortIndicator({ column, logSortBy, logSortOrder }) {
   if (logSortBy !== column) {
-    return <LucideIcon  className="ph-bold ph-caret-up-down ml-1 text-[12px] text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"></LucideIcon>
+    return <HugeIcon  className="ph-bold ph-caret-up-down ml-1 text-[12px] text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"></HugeIcon>
   }
   return logSortOrder === "ASC" ? (
-    <LucideIcon  className="ph-bold ph-caret-up ml-1 text-[12px] text-gray-400"></LucideIcon>
+    <HugeIcon  className="ph-bold ph-caret-up ml-1 text-[12px] text-gray-400"></HugeIcon>
   ) : (
-    <LucideIcon  className="ph-bold ph-caret-down ml-1 text-[12px] text-gray-400"></LucideIcon>
+    <HugeIcon  className="ph-bold ph-caret-down ml-1 text-[12px] text-gray-400"></HugeIcon>
   )
 }
 
@@ -845,7 +816,7 @@ function LogTable({
             <div className="relative mb-4">
               <div className="absolute inset-0 animate-ping rounded-full bg-red-100 opacity-20"></div>
               <EmptyMedia className="relative z-10 flex h-20 w-20 items-center justify-center rounded-full border border-red-100 bg-white shadow-xl dark:bg-card dark:shadow-none">
-                <LucideIcon  className="ph-duotone ph-warning-circle text-xl text-red-600" />
+                <HugeIcon  className="ph-duotone ph-warning-circle text-xl text-red-600" />
               </EmptyMedia>
             </div>
             <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
@@ -859,7 +830,7 @@ function LogTable({
               onClick={() => window.location.reload()}
               className="mt-6 h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
             >
-              <LucideIcon  className="ph-bold ph-arrows-clockwise mr-2 animate-spin"></LucideIcon>
+              <HugeIcon  className="ph-bold ph-arrows-clockwise mr-2 animate-spin"></HugeIcon>
               Retry
             </Button>
           </EmptyHeader>
@@ -939,7 +910,7 @@ function LogTable({
                         <div className="relative mb-6">
                           <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
                           <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
-                            <LucideIcon  className="ph-bold ph-magnifying-glass text-xl text-gray-300 dark:text-zinc-650"></LucideIcon>
+                            <HugeIcon  className="ph-bold ph-magnifying-glass text-xl text-gray-300 dark:text-zinc-650"></HugeIcon>
                           </EmptyMedia>
                         </div>
                         <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
@@ -1325,7 +1296,7 @@ export default function AccountActivityPage() {
                       className="flex h-10 items-center justify-center rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-5 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
                     >
                       {isExporting ? (
-                        <LucideIcon  className="ph-bold ph-spinner animate-spin text-sm"></LucideIcon>
+                        <HugeIcon  className="ph-bold ph-spinner animate-spin text-sm"></HugeIcon>
                       ) : (
                         "Export"
                       )}
@@ -1337,7 +1308,7 @@ export default function AccountActivityPage() {
                       className="flex h-10 items-center justify-center gap-2 rounded-xl! btn-brand-red text-white font-semibold text-xs active:scale-95 disabled:opacity-50 transition-all cursor-pointer px-5 shadow-xs border-0"
                     >
                       {isGeneratingPdf ? (
-                        <LucideIcon  className="ph-bold ph-spinner animate-spin text-sm"></LucideIcon>
+                        <HugeIcon  className="ph-bold ph-spinner animate-spin text-sm"></HugeIcon>
                       ) : (
                         "Get Report"
                       )}
@@ -1355,7 +1326,7 @@ export default function AccountActivityPage() {
                       }}
                       className="flex h-10 items-center justify-center gap-2 rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
                     >
-                      <LucideIcon  className="ph-bold ph-arrow-left text-sm"></LucideIcon>
+                      <HugeIcon  className="ph-bold ph-arrow-left text-sm"></HugeIcon>
                       Dashboard
                     </Button>
                   </div>

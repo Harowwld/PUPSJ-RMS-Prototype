@@ -1,7 +1,8 @@
 "use client"
 
-import LucideIcon from "@/components/shared/LucideIcon";
+import HugeIcon from "@/components/shared/HugeIcon";
 import { useState, useMemo, useEffect, useRef } from "react"
+import { Reorder } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
@@ -37,12 +38,12 @@ import { toast } from "sonner"
 
 function SortIndicator({ column, sortBy, sortOrder }) {
   if (sortBy !== column) {
-    return <LucideIcon  className="ph-bold ph-caret-up-down ml-1 text-[12px] text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"></LucideIcon>
+    return <HugeIcon  className="ph-bold ph-caret-up-down ml-1 text-[12px] text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"></HugeIcon>
   }
   return sortOrder === "ASC" ? (
-    <LucideIcon  className="ph-bold ph-caret-up ml-1 text-[12px] text-gray-400"></LucideIcon>
+    <HugeIcon  className="ph-bold ph-caret-up ml-1 text-[12px] text-gray-400"></HugeIcon>
   ) : (
-    <LucideIcon  className="ph-bold ph-caret-down ml-1 text-[12px] text-gray-400"></LucideIcon>
+    <HugeIcon  className="ph-bold ph-caret-down ml-1 text-[12px] text-gray-400"></HugeIcon>
   )
 }
 
@@ -118,6 +119,8 @@ export default function DigitalRecordsReviewTab({
   const [lastSelectedId, setLastSelectedId] = useState(null)
   const [selectedKpi, setSelectedKpi] = useState(null)
   const statCardsRef = useRef(null)
+  const [kpiOrder, setKpiOrder] = useState(["pending", "approved", "declined"])
+
 
   useEffect(() => {
     if (!selectedKpi) return
@@ -714,7 +717,7 @@ export default function DigitalRecordsReviewTab({
                     className="flex h-10 items-center justify-center rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
                   >
                     {isExporting ? (
-                      <LucideIcon  className="ph-bold ph-spinner animate-spin text-[16px]"></LucideIcon>
+                      <HugeIcon  className="ph-bold ph-spinner animate-spin text-[16px]"></HugeIcon>
                     ) : (
                       "Export"
                     )}
@@ -731,9 +734,10 @@ export default function DigitalRecordsReviewTab({
             </div>
           ) : !error ? (
             <div className="px-6 pb-6">
-              <div ref={statCardsRef} className="grid grid-cols-1 gap-4 md:grid-cols-3 items-start relative z-20">
-                {/* Stat Card 1: Pending Review */}
-                <div className={cn(
+              <Reorder.Group as="div" axis="x" values={kpiOrder} onReorder={setKpiOrder} ref={statCardsRef} className="grid grid-cols-1 gap-4 md:grid-cols-3 items-start relative z-20">
+                {kpiOrder.map(key => {
+                  if (key === "pending") return (
+                <Reorder.Item as="div" value="pending" key="pending" className={cn("cursor-grab active:cursor-grabbing", 
                   "relative group rounded-xl",
                   selectedKpi === "pending" ? "z-30" : "z-10"
                 )}>
@@ -751,7 +755,7 @@ export default function DigitalRecordsReviewTab({
                         Pending Review
                       </span>
                       <div className="w-8 h-8 rounded-[10px] flex items-center justify-center text-white shadow-sm shrink-0 bg-[#f59e0b]">
-                        <LucideIcon className="ph-bold text-[15px] ph-clock" />
+                        <HugeIcon className="ph-bold text-[15px] ph-clock" />
                       </div>
                     </div>
                     
@@ -759,7 +763,8 @@ export default function DigitalRecordsReviewTab({
                       <span className="text-[28px] font-bold text-gray-900 dark:text-white leading-none tracking-tight">
                         {stats.pending.toLocaleString()}
                       </span>
-                      <LucideIcon className="ph-bold ph-dots-six-vertical cursor-grab active:cursor-grabbing hover:text-gray-400 dark:hover:text-zinc-500 text-gray-300 dark:text-zinc-700 text-lg mb-0.5" />
+                      <HugeIcon className="ph-bold ph-dots-six-vertical cursor-grab active:cursor-grabbing hover:text-gray-400 dark:hover:text-zinc-500 text-gray-300 dark:text-zinc-700 text-lg mb-0.5" />
+
                     </div>
                   </div>
 
@@ -808,10 +813,10 @@ export default function DigitalRecordsReviewTab({
                       )}
                     </div>
                   </div>
-                </div>
-
-                {/* Stat Card 2: Approved Today */}
-                <div className={cn(
+                </Reorder.Item>
+                  )
+                  if (key === "approved") return (
+                <Reorder.Item as="div" value="approved" key="approved" className={cn("cursor-grab active:cursor-grabbing", 
                   "relative group rounded-xl",
                   selectedKpi === "approved" ? "z-30" : "z-10"
                 )}>
@@ -829,7 +834,7 @@ export default function DigitalRecordsReviewTab({
                         Approved
                       </span>
                       <div className="w-8 h-8 rounded-[10px] flex items-center justify-center text-white shadow-sm shrink-0 bg-[#22c55e]">
-                        <LucideIcon className="ph-bold text-[15px] ph-check-circle" />
+                        <HugeIcon className="ph-bold text-[15px] ph-check-circle" />
                       </div>
                     </div>
                     
@@ -837,7 +842,8 @@ export default function DigitalRecordsReviewTab({
                       <span className="text-[28px] font-bold text-gray-900 dark:text-white leading-none tracking-tight">
                         {stats.totalApproved.toLocaleString()}
                       </span>
-                      <LucideIcon className="ph-bold ph-dots-six-vertical cursor-grab active:cursor-grabbing hover:text-gray-400 dark:hover:text-zinc-500 text-gray-300 dark:text-zinc-700 text-lg mb-0.5" />
+                      <HugeIcon className="ph-bold ph-dots-six-vertical cursor-grab active:cursor-grabbing hover:text-gray-400 dark:hover:text-zinc-500 text-gray-300 dark:text-zinc-700 text-lg mb-0.5" />
+
                     </div>
                   </div>
 
@@ -879,10 +885,10 @@ export default function DigitalRecordsReviewTab({
                       )}
                     </div>
                   </div>
-                </div>
-
-                {/* Stat Card 3: Returned Today */}
-                <div className={cn(
+                </Reorder.Item>
+                  )
+                  if (key === "declined") return (
+                <Reorder.Item as="div" value="declined" key="declined" className={cn("cursor-grab active:cursor-grabbing", 
                   "relative group rounded-xl",
                   selectedKpi === "declined" ? "z-30" : "z-10"
                 )}>
@@ -900,7 +906,7 @@ export default function DigitalRecordsReviewTab({
                         Declined
                       </span>
                       <div className="w-8 h-8 rounded-[10px] flex items-center justify-center text-white shadow-sm shrink-0 bg-[#ef4444]">
-                        <LucideIcon className="ph-bold text-[15px] ph-x-circle" />
+                        <HugeIcon className="ph-bold text-[15px] ph-x-circle" />
                       </div>
                     </div>
                     
@@ -908,7 +914,8 @@ export default function DigitalRecordsReviewTab({
                       <span className="text-[28px] font-bold text-gray-900 dark:text-white leading-none tracking-tight">
                         {stats.totalDeclined.toLocaleString()}
                       </span>
-                      <LucideIcon className="ph-bold ph-dots-six-vertical cursor-grab active:cursor-grabbing hover:text-gray-400 dark:hover:text-zinc-500 text-gray-300 dark:text-zinc-700 text-lg mb-0.5" />
+                      <HugeIcon className="ph-bold ph-dots-six-vertical cursor-grab active:cursor-grabbing hover:text-gray-400 dark:hover:text-zinc-500 text-gray-300 dark:text-zinc-700 text-lg mb-0.5" />
+
                     </div>
                   </div>
 
@@ -964,8 +971,11 @@ export default function DigitalRecordsReviewTab({
                       )}
                     </div>
                   </div>
-                </div>
-              </div>
+                </Reorder.Item>
+                  )
+                  return null
+                })}
+              </Reorder.Group>
             </div>
           ) : null}
 
@@ -1039,7 +1049,7 @@ export default function DigitalRecordsReviewTab({
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 flex-wrap">
             {/* Search */}
             <div className="relative flex-1 sm:w-64 min-w-[200px] group">
-              <LucideIcon  className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-xs pointer-events-none"></LucideIcon>
+              <HugeIcon  className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-xs pointer-events-none"></HugeIcon>
               <Input
                 type="text"
                 placeholder="Search Student"
@@ -1242,7 +1252,7 @@ export default function DigitalRecordsReviewTab({
                 <div className="relative mb-6">
                   <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
                   <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
-                    <LucideIcon  className="ph-duotone ph-warning-circle text-3xl text-red-500 dark:text-red-400" />
+                    <HugeIcon  className="ph-duotone ph-warning-circle text-3xl text-red-500 dark:text-red-400" />
                   </EmptyMedia>
                 </div>
                 <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
@@ -1343,7 +1353,7 @@ export default function DigitalRecordsReviewTab({
                             <div className="relative mb-6">
                               <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
                               <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
-                                <LucideIcon  className="ph-duotone ph-magnifying-glass text-xl text-gray-300 dark:text-zinc-600"></LucideIcon>
+                                <HugeIcon  className="ph-duotone ph-magnifying-glass text-xl text-gray-300 dark:text-zinc-600"></HugeIcon>
                               </EmptyMedia>
                             </div>
                             <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
@@ -1456,7 +1466,7 @@ export default function DigitalRecordsReviewTab({
                                     aria-label="Preview Document"
                                     className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 transition-colors flex items-center justify-center border-0 bg-transparent cursor-pointer active:scale-95"
                                   >
-                                    <LucideIcon  className="ph-bold ph-eye text-[16px]"></LucideIcon>
+                                    <HugeIcon  className="ph-bold ph-eye text-[16px]"></HugeIcon>
                                   </button>
                                 </TooltipTrigger>
                                 <TooltipContent side="top">Preview</TooltipContent>
@@ -1471,7 +1481,7 @@ export default function DigitalRecordsReviewTab({
                                          aria-label="Approve Document"
                                          className="w-7 h-7 rounded-lg hover:bg-green-50 dark:hover:bg-green-950/30 text-gray-500 hover:text-green-600 dark:text-zinc-400 dark:hover:text-green-400 transition-colors flex items-center justify-center border-0 bg-transparent cursor-pointer active:scale-95"
                                        >
-                                         <LucideIcon  className="ph-bold ph-check text-[16px]"></LucideIcon>
+                                         <HugeIcon  className="ph-bold ph-check text-[16px]"></HugeIcon>
                                        </button>
                                      </TooltipTrigger>
                                      <TooltipContent side="top">Approve</TooltipContent>
@@ -1492,7 +1502,7 @@ export default function DigitalRecordsReviewTab({
                                          aria-label="Decline Document"
                                          className="w-7 h-7 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/30 text-gray-500 hover:text-red-600 dark:text-zinc-400 dark:hover:text-red-400 transition-colors flex items-center justify-center border-0 bg-transparent cursor-pointer active:scale-95"
                                        >
-                                         <LucideIcon  className="ph-bold ph-x text-[16px]"></LucideIcon>
+                                         <HugeIcon  className="ph-bold ph-x text-[16px]"></HugeIcon>
                                        </button>
                                      </TooltipTrigger>
                                      <TooltipContent side="top">Decline</TooltipContent>
@@ -1603,7 +1613,7 @@ export default function DigitalRecordsReviewTab({
               onCancel={() => setSelectedIds(new Set())}
               actions={
                 <span className="text-[12px] font-medium text-amber-700 bg-amber-50 px-3 py-1.5 rounded-lg border border-amber-200 dark:bg-amber-950/20 dark:text-amber-500/90 dark:border-amber-900/50 flex items-center">
-                  <LucideIcon  className="ph-fill ph-warning-circle mr-1.5"></LucideIcon>
+                  <HugeIcon  className="ph-fill ph-warning-circle mr-1.5"></HugeIcon>
                   Contains reviewed records. Bulk actions disabled.
                 </span>
               }

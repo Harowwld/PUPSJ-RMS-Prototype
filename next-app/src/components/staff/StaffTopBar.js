@@ -1,5 +1,5 @@
 "use client";
-import LucideIcon from "@/components/shared/LucideIcon";
+import HugeIcon from "@/components/shared/HugeIcon";
 import { usePathname } from "next/navigation";
 
 export default function StaffTopBar({ items, activeKey, onSelect }) {
@@ -31,11 +31,11 @@ export default function StaffTopBar({ items, activeKey, onSelect }) {
  : "text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-zinc-400 dark:hover:bg-white/5 dark:hover:text-zinc-50"
  }`}
             >
-              <LucideIcon  className={`${item.iconClass} text-base transition-transform duration-normal group-hover:scale-110 ${
+              <HugeIcon  className={`${item.iconClass} text-base transition-transform duration-normal group-hover:scale-110 ${
  isActive 
  ? "text-pup-maroon dark:text-primary" 
  : "text-gray-400 group-hover:text-gray-900 dark:text-zinc-500 dark:group-hover:text-zinc-100"
- }`}></LucideIcon>
+ }`}></HugeIcon>
               <span>{item.label}</span>
               
               {item.badge > 0 ? (

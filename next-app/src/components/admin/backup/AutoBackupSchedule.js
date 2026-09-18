@@ -1,6 +1,6 @@
 "use client"
 
-import LucideIcon from "@/components/shared/LucideIcon";
+import HugeIcon from "@/components/shared/HugeIcon";
 import { useState, useEffect, useCallback } from "react"
 import { cn } from "@/lib/utils"
 import { Select } from "@/components/ui/select"
@@ -235,7 +235,7 @@ export default function AutoBackupSchedule({ showToast, scope = "system", embedd
                 : "bg-gray-100 dark:bg-zinc-800 text-gray-400 dark:text-zinc-500 border border-gray-200/60 dark:border-white/5"
             )}
           >
-            <LucideIcon  className="ph-bold ph-arrows-clockwise text-[18px]" />
+            <HugeIcon  className="ph-bold ph-arrows-clockwise text-[18px]" />
           </div>
 
           <div>
@@ -410,13 +410,13 @@ export default function AutoBackupSchedule({ showToast, scope = "system", embedd
 
               {schedule.lastRunStatus === "success" && (
                 <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/60 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/40">
-                  <LucideIcon  className="ph-bold ph-check text-[9px]" />
+                  <HugeIcon  className="ph-bold ph-check text-[9px]" />
                   Successful
                 </span>
               )}
               {schedule.lastRunStatus === "failed" && (
                 <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold bg-rose-50 text-rose-700 border border-rose-200/60 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800/40">
-                  <LucideIcon  className="ph-bold ph-x text-[9px]" />
+                  <HugeIcon  className="ph-bold ph-x text-[9px]" />
                   Failed
                 </span>
               )}
@@ -425,7 +425,7 @@ export default function AutoBackupSchedule({ showToast, scope = "system", embedd
             {/* Right: Next Scheduled Run */}
             {nextRunFormatted ? (
               <div className="flex items-center gap-1.5 text-gray-500 dark:text-zinc-400">
-                <LucideIcon  className="ph-bold ph-calendar-blank text-[13px] text-gray-400 dark:text-zinc-500" />
+                <HugeIcon  className="ph-bold ph-calendar-blank text-[13px] text-gray-400 dark:text-zinc-500" />
                 <span>Next Run:</span>
                 <span className="font-semibold text-gray-900 dark:text-zinc-200 font-mono text-[11px]">
                   {nextRunFormatted}

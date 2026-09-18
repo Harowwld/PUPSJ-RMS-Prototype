@@ -1,5 +1,5 @@
 "use client";
-import LucideIcon from "@/components/shared/LucideIcon";
+import HugeIcon from "@/components/shared/HugeIcon";
 import { useState, useEffect } from "react";
 import {
   Dialog,
@@ -168,7 +168,7 @@ export default function EditStudentModal({
           <div className="p-6 pt-2 space-y-5">
             {formError && (
             <div className="rounded-xl border border-red-200 bg-red-50 p-3.5 text-xs font-medium text-red-700 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-400">
-              <LucideIcon  className="ph-bold ph-warning-circle mr-1.5 text-sm inline-block align-sub"></LucideIcon>
+              <HugeIcon  className="ph-bold ph-warning-circle mr-1.5 text-sm inline-block align-sub"></HugeIcon>
               {formError}
             </div>
           )}
@@ -350,7 +350,7 @@ export default function EditStudentModal({
             >
               {isSubmitting ? (
                 <span className="flex items-center gap-2">
-                  <LucideIcon  className="ph-bold ph-spinner animate-spin text-sm"></LucideIcon>
+                  <HugeIcon  className="ph-bold ph-spinner animate-spin text-sm"></HugeIcon>
                   Saving...
                 </span>
               ) : (

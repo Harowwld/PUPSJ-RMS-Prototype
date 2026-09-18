@@ -1,6 +1,6 @@
 "use client"
 
-import LucideIcon from "@/components/shared/LucideIcon";
+import HugeIcon from "@/components/shared/HugeIcon";
 import { useState, useEffect } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -237,9 +237,9 @@ export default function AuditLogsTab({
 
   return (
     <TooltipProvider delay={200}>
-      <div className="animate-fade-up font-jakarta flex flex-1 flex-col h-full min-h-0 w-full gap-6">
+      <div className="animate-fade-up font-jakarta flex flex-1 flex-col min-h-full w-full gap-6">
         {/* ONE Single Card Container encapsulating Header, Metrics, Toolbar, Table & Pagination */}
-        <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none isolate font-jakarta mb-4 min-h-0 flex-1">
+        <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none isolate font-jakarta mb-4 flex-1">
           <PageHeader
             icon="ph-shield-check"
             title="Audit Logs"
@@ -266,7 +266,7 @@ export default function AuditLogsTab({
                     className="flex h-10 items-center justify-center rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-5 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
                   >
                     {isExporting ? (
-                      <LucideIcon  className="ph-bold ph-spinner animate-spin text-[16px]"></LucideIcon>
+                      <HugeIcon  className="ph-bold ph-spinner animate-spin text-[16px]"></HugeIcon>
                     ) : (
                       "Export"
                     )}
@@ -278,7 +278,7 @@ export default function AuditLogsTab({
                     className="flex h-10 items-center justify-center rounded-xl! btn-brand-red text-white font-semibold text-xs active:scale-95 disabled:opacity-50 transition-all cursor-pointer px-5 shadow-xs"
                   >
                     {isGeneratingPdf ? (
-                      <LucideIcon  className="ph-bold ph-spinner animate-spin text-[16px] flex items-center justify-center"></LucideIcon>
+                      <HugeIcon  className="ph-bold ph-spinner animate-spin text-[16px] flex items-center justify-center"></HugeIcon>
                     ) : (
                       "Download"
                     )}

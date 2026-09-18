@@ -1,5 +1,5 @@
 "use client";
-import LucideIcon from "@/components/shared/LucideIcon";
+import HugeIcon from "@/components/shared/HugeIcon";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -212,7 +212,7 @@ export default function LandingNavbar() {
                   className="md:hidden w-8 h-8 rounded-full flex items-center justify-center cursor-pointer text-black"
                   aria-label="Toggle navigation drawer"
                 >
-                  <LucideIcon  className={`ph-bold ${mobileMenuOpen ? "ph-x" : "ph-list"} text-lg`} />
+                  <HugeIcon  className={`ph-bold ${mobileMenuOpen ? "ph-x" : "ph-list"} text-lg`} />
                 </button>
               </div>
             </div>
@@ -232,7 +232,7 @@ export default function LandingNavbar() {
                     onClick={(e) => scrollToSection(e, "about")}
                     className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-left text-xs font-semibold text-gray-800  hover:bg-black/[0.04] :bg-white/[0.06] transition-all cursor-pointer"
                   >
-                    <LucideIcon  className="ph-bold ph-info text-base text-[#800000] " />
+                    <HugeIcon  className="ph-bold ph-info text-base text-[#800000] " />
                     <span>About</span>
                   </button>
                   <button
@@ -240,7 +240,7 @@ export default function LandingNavbar() {
                     onClick={(e) => scrollToSection(e, "workflow")}
                     className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-left text-xs font-semibold text-gray-800  hover:bg-black/[0.04] :bg-white/[0.06] transition-all cursor-pointer"
                   >
-                    <LucideIcon  className="ph-bold ph-flow-arrow text-base text-[#800000] " />
+                    <HugeIcon  className="ph-bold ph-flow-arrow text-base text-[#800000] " />
                     <span>How It Works</span>
                   </button>
                   <button
@@ -248,7 +248,7 @@ export default function LandingNavbar() {
                     onClick={(e) => scrollToSection(e, "catalog")}
                     className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-left text-xs font-semibold text-gray-800  hover:bg-black/[0.04] :bg-white/[0.06] transition-all cursor-pointer"
                   >
-                    <LucideIcon  className="ph-bold ph-files text-base text-[#800000] " />
+                    <HugeIcon  className="ph-bold ph-files text-base text-[#800000] " />
                     <span>Catalog</span>
                   </button>
                   <button
@@ -256,7 +256,7 @@ export default function LandingNavbar() {
                     onClick={(e) => scrollToSection(e, "faq")}
                     className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-left text-xs font-semibold text-gray-800  hover:bg-black/[0.04] :bg-white/[0.06] transition-all cursor-pointer"
                   >
-                    <LucideIcon  className="ph-bold ph-question text-base text-[#800000] " />
+                    <HugeIcon  className="ph-bold ph-question text-base text-[#800000] " />
                     <span>FAQ</span>
                   </button>
                   <button
@@ -264,7 +264,7 @@ export default function LandingNavbar() {
                     onClick={(e) => scrollToSection(e, "office")}
                     className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-left text-xs font-semibold text-gray-800  hover:bg-black/[0.04] :bg-white/[0.06] transition-all cursor-pointer"
                   >
-                    <LucideIcon  className="ph-bold ph-clock text-base text-[#800000] " />
+                    <HugeIcon  className="ph-bold ph-clock text-base text-[#800000] " />
                     <span>Contacts</span>
                   </button>
                 </motion.div>

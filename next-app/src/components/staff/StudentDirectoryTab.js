@@ -1,5 +1,5 @@
 "use client";
-import LucideIcon from "@/components/shared/LucideIcon";
+import HugeIcon from "@/components/shared/HugeIcon";
 import React, { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,13 +33,13 @@ import StudentProfileSheet from "./StudentProfileSheet";
 function SortIndicator({ column, sortBy, sortOrder }) {
   if (sortBy !== column) {
     return (
-      <LucideIcon  className="ph-bold ph-caret-up-down ml-1 text-[11px] opacity-40 transition-opacity group-hover:opacity-70 dark:opacity-30"></LucideIcon>
+      <HugeIcon  className="ph-bold ph-caret-up-down ml-1 text-[11px] opacity-40 transition-opacity group-hover:opacity-70 dark:opacity-30"></HugeIcon>
     );
   }
   return sortOrder === "ASC" ? (
-    <LucideIcon  className="ph-bold ph-caret-up ml-1 text-[11px] text-pup-maroon dark:text-red-400"></LucideIcon>
+    <HugeIcon  className="ph-bold ph-caret-up ml-1 text-[11px] text-pup-maroon dark:text-red-400"></HugeIcon>
   ) : (
-    <LucideIcon  className="ph-bold ph-caret-down ml-1 text-[11px] text-pup-maroon dark:text-red-400"></LucideIcon>
+    <HugeIcon  className="ph-bold ph-caret-down ml-1 text-[11px] text-pup-maroon dark:text-red-400"></HugeIcon>
   );
 }
 
@@ -65,6 +65,7 @@ export default function StudentDirectoryTab({
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [selectedKpi, setSelectedKpi] = useState(null);
+  const [kpiOrder, setKpiOrder] = useState(["students", "programs", "documents"]);;
   const statCardsRef = useRef(null);
 
   // Close expandable KPI card when clicking outside
@@ -560,46 +561,41 @@ export default function StudentDirectoryTab({
           />
 
           {/* 2. Top Summary Metrics Banner */}
-          <div ref={statCardsRef} className="grid grid-cols-1 md:grid-cols-3 gap-4 px-6 pb-6 items-start relative z-20">
-            {/* Stat Card 1: Active Students */}
-            <div
-              className={cn(
-                "relative group rounded-xl",
-                selectedKpi === "students" ? "z-30" : "z-10"
-              )}
-            >
+          <Reorder.Group as="div" axis="x" values={kpiOrder} onReorder={setKpiOrder} ref={statCardsRef} className="grid grid-cols-1 md:grid-cols-3 gap-4 px-6 pb-6 items-start relative z-20">
+            {kpiOrder.map(key => {
+              if (key === "students") return (
+            
+            <Reorder.Item as="div" value="students" key="students" className={cn("relative group rounded-xl", selectedKpi === "students" ? "z-30" : "z-10")}>
               <div
                 onClick={() => setSelectedKpi(selectedKpi === "students" ? null : "students")}
                 className={cn(
-                  "relative overflow-hidden rounded-xl border p-4 cursor-pointer select-none transition-all",
-                  "border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-zinc-900/30 hover:border-gray-200 dark:hover:border-white/10",
-                  selectedKpi === "students" && "border-emerald-500/40 dark:border-emerald-500/40 ring-1 ring-emerald-500/20"
+                  "relative overflow-hidden rounded-[18px] border cursor-pointer select-none transition-all shadow-[0_2px_10px_rgb(0,0,0,0.04)] hover:shadow-[0_4px_15px_rgb(0,0,0,0.06)] flex flex-col justify-between min-h-[110px] bg-gray-50 dark:bg-zinc-900",
+                  selectedKpi === "students"
+                    ? "border-emerald-500/50 ring-1 ring-emerald-500/20"
+                    : "border-gray-100 dark:border-white/5"
                 )}
               >
-                <div className="relative z-10 flex flex-col justify-between h-full">
-                  <div>
-                    <div className="mb-1 flex items-center justify-between">
-                      <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
-                        Active Students
-                      </span>
-                      <div className="flex items-center gap-1.5">
-                        <LucideIcon 
-                          className={cn(
-                            "ph-bold ph-caret-down text-xs text-gray-400 transition-transform duration-300",
-                            selectedKpi === "students" && "rotate-180"
-                          )}
-                        />
-                      </div>
-                    </div>
-                    <div className="flex items-baseline gap-2">
-                      <span className="text-2xl font-black text-gray-900 dark:text-zinc-50 tracking-tight">
-                        {kpiStats.activeCount.toLocaleString()}
-                      </span>
-                      <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">
-                        Enrolled
-                      </span>
-                    </div>
+                <div className="flex justify-between items-start p-4 pb-0">
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[13px] font-medium text-gray-500 dark:text-zinc-400 capitalize">
+                      Active Students
+                    </span>
                   </div>
+                  <div className="w-8 h-8 rounded-[10px] flex items-center justify-center text-white shadow-sm shrink-0 bg-[#10b981]">
+                    <HugeIcon className="ph-bold text-[15px] ph-users" />
+                  </div>
+                </div>
+                
+                <div className="flex justify-between items-end p-4 pt-1">
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-[28px] font-bold text-gray-900 dark:text-white leading-none tracking-tight">
+                      {kpiStats.activeCount.toLocaleString()}
+                    </span>
+                    <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400 mb-1">
+                      Enrolled
+                    </span>
+                  </div>
+                  <HugeIcon className="ph-bold ph-dots-six-vertical cursor-grab active:cursor-grabbing hover:text-gray-400 dark:hover:text-zinc-500 text-gray-300 dark:text-zinc-700 text-lg mb-0.5" />
                 </div>
               </div>
 
@@ -661,47 +657,42 @@ export default function StudentDirectoryTab({
                   </div>
                 </div>
               </div>
-            </div>
+            </Reorder.Item>
 
-            {/* Stat Card 2: Academic Programs */}
-            <div
-              className={cn(
-                "relative group rounded-xl",
-                selectedKpi === "programs" ? "z-30" : "z-10"
-              )}
-            >
+                          );
+              if (key === "programs") return (
+            
+            <Reorder.Item as="div" value="programs" key="programs" className={cn("relative group rounded-xl", selectedKpi === "programs" ? "z-30" : "z-10")}>
               <div
                 onClick={() => setSelectedKpi(selectedKpi === "programs" ? null : "programs")}
                 className={cn(
-                  "relative overflow-hidden rounded-xl border p-4 cursor-pointer select-none transition-all",
-                  "border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-zinc-900/30 hover:border-gray-200 dark:hover:border-white/10",
-                  selectedKpi === "programs" && "border-blue-500/40 dark:border-blue-500/40 ring-1 ring-blue-500/20"
+                  "relative overflow-hidden rounded-[18px] border cursor-pointer select-none transition-all shadow-[0_2px_10px_rgb(0,0,0,0.04)] hover:shadow-[0_4px_15px_rgb(0,0,0,0.06)] flex flex-col justify-between min-h-[110px] bg-gray-50 dark:bg-zinc-900",
+                  selectedKpi === "programs"
+                    ? "border-blue-500/50 ring-1 ring-blue-500/20"
+                    : "border-gray-100 dark:border-white/5"
                 )}
               >
-                <div className="relative z-10 flex flex-col justify-between h-full">
-                  <div>
-                    <div className="mb-1 flex items-center justify-between">
-                      <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
-                        Academic Programs
-                      </span>
-                      <div className="flex items-center gap-1.5">
-                        <LucideIcon 
-                          className={cn(
-                            "ph-bold ph-caret-down text-xs text-gray-400 transition-transform duration-300",
-                            selectedKpi === "programs" && "rotate-180"
-                          )}
-                        />
-                      </div>
-                    </div>
-                    <div className="flex items-baseline gap-2">
-                      <span className="text-2xl font-black text-gray-900 dark:text-zinc-50 tracking-tight">
-                        {kpiStats.totalPrograms}
-                      </span>
-                      <span className="text-xs font-medium text-blue-600 dark:text-blue-400">
-                        Degree Tracks
-                      </span>
-                    </div>
+                <div className="flex justify-between items-start p-4 pb-0">
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[13px] font-medium text-gray-500 dark:text-zinc-400 capitalize">
+                      Academic Programs
+                    </span>
                   </div>
+                  <div className="w-8 h-8 rounded-[10px] flex items-center justify-center text-white shadow-sm shrink-0 bg-[#3b82f6]">
+                    <HugeIcon className="ph-bold text-[15px] ph-books" />
+                  </div>
+                </div>
+                
+                <div className="flex justify-between items-end p-4 pt-1">
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-[28px] font-bold text-gray-900 dark:text-white leading-none tracking-tight">
+                      {kpiStats.totalPrograms.toLocaleString()}
+                    </span>
+                    <span className="text-xs font-medium text-blue-600 dark:text-blue-400 mb-1">
+                      Degree Tracks
+                    </span>
+                  </div>
+                  <HugeIcon className="ph-bold ph-dots-six-vertical cursor-grab active:cursor-grabbing hover:text-gray-400 dark:hover:text-zinc-500 text-gray-300 dark:text-zinc-700 text-lg mb-0.5" />
                 </div>
               </div>
 
@@ -770,47 +761,42 @@ export default function StudentDirectoryTab({
                   </div>
                 </div>
               </div>
-            </div>
+            </Reorder.Item>
 
-            {/* Stat Card 3: Digitized Files */}
-            <div
-              className={cn(
-                "relative group rounded-xl",
-                selectedKpi === "documents" ? "z-30" : "z-10"
-              )}
-            >
+                          );
+              if (key === "documents") return (
+            
+            <Reorder.Item as="div" value="documents" key="documents" className={cn("relative group rounded-xl", selectedKpi === "documents" ? "z-30" : "z-10")}>
               <div
                 onClick={() => setSelectedKpi(selectedKpi === "documents" ? null : "documents")}
                 className={cn(
-                  "relative overflow-hidden rounded-xl border p-4 cursor-pointer select-none transition-all",
-                  "border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-zinc-900/30 hover:border-gray-200 dark:hover:border-white/10",
-                  selectedKpi === "documents" && "border-red-500/40 dark:border-red-500/40 ring-1 ring-red-500/20"
+                  "relative overflow-hidden rounded-[18px] border cursor-pointer select-none transition-all shadow-[0_2px_10px_rgb(0,0,0,0.04)] hover:shadow-[0_4px_15px_rgb(0,0,0,0.06)] flex flex-col justify-between min-h-[110px] bg-gray-50 dark:bg-zinc-900",
+                  selectedKpi === "documents"
+                    ? "border-red-500/50 ring-1 ring-red-500/20"
+                    : "border-gray-100 dark:border-white/5"
                 )}
               >
-                <div className="relative z-10 flex flex-col justify-between h-full">
-                  <div>
-                    <div className="mb-1 flex items-center justify-between">
-                      <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
-                        Digitized Files
-                      </span>
-                      <div className="flex items-center gap-1.5">
-                        <LucideIcon 
-                          className={cn(
-                            "ph-bold ph-caret-down text-xs text-gray-400 transition-transform duration-300",
-                            selectedKpi === "documents" && "rotate-180"
-                          )}
-                        />
-                      </div>
-                    </div>
-                    <div className="flex items-baseline gap-2">
-                      <span className="text-2xl font-black text-gray-900 dark:text-zinc-50 tracking-tight">
-                        {kpiStats.totalDocs.toLocaleString()}
-                      </span>
-                      <span className="text-xs font-medium text-pup-maroon dark:text-red-400">
-                        Repository
-                      </span>
-                    </div>
+                <div className="flex justify-between items-start p-4 pb-0">
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[13px] font-medium text-gray-500 dark:text-zinc-400 capitalize">
+                      Digitized Files
+                    </span>
                   </div>
+                  <div className="w-8 h-8 rounded-[10px] flex items-center justify-center text-white shadow-sm shrink-0 bg-[#ef4444]">
+                    <HugeIcon className="ph-bold text-[15px] ph-file-pdf" />
+                  </div>
+                </div>
+                
+                <div className="flex justify-between items-end p-4 pt-1">
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-[28px] font-bold text-gray-900 dark:text-white leading-none tracking-tight">
+                      {kpiStats.totalDocs.toLocaleString()}
+                    </span>
+                    <span className="text-xs font-medium text-red-600 dark:text-red-400 mb-1">
+                      Repository
+                    </span>
+                  </div>
+                  <HugeIcon className="ph-bold ph-dots-six-vertical cursor-grab active:cursor-grabbing hover:text-gray-400 dark:hover:text-zinc-500 text-gray-300 dark:text-zinc-700 text-lg mb-0.5" />
                 </div>
               </div>
 
@@ -872,8 +858,11 @@ export default function StudentDirectoryTab({
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
+            </Reorder.Item>
+              );
+              return null;
+            })}
+          </Reorder.Group>
 
           {/* 3. Navigation & Filters Toolbar */}
           <div className="border-t border-gray-100 dark:border-white/10 p-5 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30 select-none">
@@ -932,7 +921,7 @@ export default function StudentDirectoryTab({
             <div className="flex flex-wrap items-center gap-2.5 flex-1 lg:justify-end">
               {/* Search Bar */}
               <div className="relative w-full sm:w-64">
-                <LucideIcon  className="ph-bold ph-magnifying-glass absolute top-1/2 -translate-y-1/2 left-3 text-gray-400 dark:text-zinc-500 text-sm pointer-events-none"></LucideIcon>
+                <HugeIcon  className="ph-bold ph-magnifying-glass absolute top-1/2 -translate-y-1/2 left-3 text-gray-400 dark:text-zinc-500 text-sm pointer-events-none"></HugeIcon>
                 <Input
                   type="text"
                   placeholder="Search student no. or name"
@@ -949,7 +938,7 @@ export default function StudentDirectoryTab({
                     onClick={() => setSearchQuery("")}
                     className="absolute top-1/2 right-2.5 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-zinc-200"
                   >
-                    <LucideIcon  className="ph-bold ph-x-circle text-[14px]"></LucideIcon>
+                    <HugeIcon  className="ph-bold ph-x-circle text-[14px]"></HugeIcon>
                   </button>
                 )}
               </div>
@@ -1014,7 +1003,7 @@ export default function StudentDirectoryTab({
                   onClick={handleResetFilters}
                   className="h-9 px-2.5 text-xs text-pup-maroon dark:text-red-400 hover:bg-pup-maroon/10 rounded-xl cursor-pointer"
                 >
-                  <LucideIcon  className="ph-bold ph-arrow-counter-clockwise mr-1 text-xs"></LucideIcon>
+                  <HugeIcon  className="ph-bold ph-arrow-counter-clockwise mr-1 text-xs"></HugeIcon>
                   Reset
                 </Button>
               )}
@@ -1036,7 +1025,7 @@ export default function StudentDirectoryTab({
                     <div className="relative mb-6">
                       <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
                       <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
-                        <LucideIcon  className="ph-duotone ph-student text-2xl text-gray-300 dark:text-zinc-600"></LucideIcon>
+                        <HugeIcon  className="ph-duotone ph-student text-2xl text-gray-300 dark:text-zinc-600"></HugeIcon>
                       </EmptyMedia>
                     </div>
                     <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">
@@ -1192,7 +1181,7 @@ export default function StudentDirectoryTab({
 
                           <td className="p-4">
                             <div className="inline-flex items-center gap-1 text-xs text-gray-700 dark:text-zinc-300">
-                              <LucideIcon  className="ph-bold ph-map-pin text-gray-400 text-xs"></LucideIcon>
+                              <HugeIcon  className="ph-bold ph-map-pin text-gray-400 text-xs"></HugeIcon>
                               <span>
                                 Room {s.room} • Cab {s.cabinet} • Drw {s.drawer}
                               </span>
@@ -1240,7 +1229,7 @@ export default function StudentDirectoryTab({
                                     }}
                                     className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-100 flex items-center justify-center transition-colors"
                                   >
-                                    <LucideIcon  className="ph-bold ph-eye text-[14px]"></LucideIcon>
+                                    <HugeIcon  className="ph-bold ph-eye text-[14px]"></HugeIcon>
                                   </button>
                                 </TooltipTrigger>
                                 <TooltipContent>View Dossier</TooltipContent>
@@ -1257,7 +1246,7 @@ export default function StudentDirectoryTab({
                                     }}
                                     className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-100 flex items-center justify-center transition-colors"
                                   >
-                                    <LucideIcon  className="ph-bold ph-pencil-simple text-[14px]"></LucideIcon>
+                                    <HugeIcon  className="ph-bold ph-pencil-simple text-[14px]"></HugeIcon>
                                   </button>
                                 </TooltipTrigger>
                                 <TooltipContent>Edit Student</TooltipContent>
@@ -1271,7 +1260,7 @@ export default function StudentDirectoryTab({
                                     onClick={() => onLocateStudent?.(s)}
                                     className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 dark:text-zinc-400 hover:text-pup-maroon dark:hover:text-red-400 flex items-center justify-center transition-colors"
                                   >
-                                    <LucideIcon  className="ph-bold ph-compass text-[14px]"></LucideIcon>
+                                    <HugeIcon  className="ph-bold ph-compass text-[14px]"></HugeIcon>
                                   </button>
                                 </TooltipTrigger>
                                 <TooltipContent>Locate in Archive Map</TooltipContent>
@@ -1289,7 +1278,7 @@ export default function StudentDirectoryTab({
                                       }}
                                       className="w-7 h-7 rounded-lg hover:bg-emerald-50 dark:hover:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center transition-colors"
                                     >
-                                      <LucideIcon  className="ph-bold ph-archive-restore text-[14px]"></LucideIcon>
+                                      <HugeIcon  className="ph-bold ph-archive-restore text-[14px]"></HugeIcon>
                                     </button>
                                   </TooltipTrigger>
                                   <TooltipContent>Restore Student</TooltipContent>
@@ -1305,7 +1294,7 @@ export default function StudentDirectoryTab({
                                       }}
                                       className="w-7 h-7 rounded-lg hover:bg-amber-50 dark:hover:bg-amber-500/10 text-gray-400 hover:text-amber-600 dark:hover:text-amber-400 flex items-center justify-center transition-colors"
                                     >
-                                      <LucideIcon  className="ph-bold ph-archive text-[14px]"></LucideIcon>
+                                      <HugeIcon  className="ph-bold ph-archive text-[14px]"></HugeIcon>
                                     </button>
                                   </TooltipTrigger>
                                   <TooltipContent>Archive Student</TooltipContent>

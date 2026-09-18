@@ -1,6 +1,6 @@
 "use client"
 
-import LucideIcon from "@/components/shared/LucideIcon";
+import HugeIcon from "@/components/shared/HugeIcon";
 import { Button } from "@/components/ui/button"
 import {
   Empty,
@@ -21,12 +21,12 @@ import { cn } from "@/lib/utils"
 
 function SortIndicator({ column, sortBy, sortOrder }) {
   if (sortBy !== column) {
-    return <LucideIcon  className="ph-bold ph-caret-up-down ml-1 text-[12px] text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"></LucideIcon>
+    return <HugeIcon  className="ph-bold ph-caret-up-down ml-1 text-[12px] text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"></HugeIcon>
   }
   return sortOrder === "ASC" ? (
-    <LucideIcon  className="ph-bold ph-caret-up ml-1 text-[12px] text-gray-400"></LucideIcon>
+    <HugeIcon  className="ph-bold ph-caret-up ml-1 text-[12px] text-gray-400"></HugeIcon>
   ) : (
-    <LucideIcon  className="ph-bold ph-caret-down ml-1 text-[12px] text-gray-400"></LucideIcon>
+    <HugeIcon  className="ph-bold ph-caret-down ml-1 text-[12px] text-gray-400"></HugeIcon>
   )
 }
 
@@ -139,7 +139,7 @@ export default function BackupTable({
                     <span>Backup Copies</span>
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <LucideIcon  className="ph-bold ph-info text-[13px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 cursor-help" />
+                        <HugeIcon  className="ph-bold ph-info text-[13px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 cursor-help" />
                       </TooltipTrigger>
                       <TooltipContent className="max-w-xs text-xs font-normal">
                         Shows where this backup is safely stored: on Internal Storage and an External Drive.
@@ -166,7 +166,7 @@ export default function BackupTable({
                       <div className="relative mb-6">
                         <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
                         <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
-                          <LucideIcon  className={cn("ph-duotone text-xl text-gray-300 dark:text-zinc-650", isFilterActive ? "ph-magnifying-glass" : "ph-database")}></LucideIcon>
+                          <HugeIcon  className={cn("ph-duotone text-xl text-gray-300 dark:text-zinc-650", isFilterActive ? "ph-magnifying-glass" : "ph-database")}></HugeIcon>
                         </EmptyMedia>
                       </div>
                       <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
@@ -259,7 +259,7 @@ export default function BackupTable({
                                     : "bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-zinc-400"
                                 )}
                               >
-                                <LucideIcon  className="ph-bold ph-hard-drive text-[11px]" />
+                                <HugeIcon  className="ph-bold ph-hard-drive text-[11px]" />
                                 <span>Internal Storage</span>
                               </div>
                             </TooltipTrigger>
@@ -278,7 +278,7 @@ export default function BackupTable({
                             <Tooltip>
                               <TooltipTrigger asChild>
                                 <div className="inline-flex items-center gap-1 rounded-full px-[10px] py-[2.5px] text-[11px] font-medium tracking-[0.04em] select-none bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-200/50 dark:border-blue-900/40">
-                                  <LucideIcon  className="ph-bold ph-check-circle text-[11px]" />
+                                  <HugeIcon  className="ph-bold ph-check-circle text-[11px]" />
                                   <span>External Drive</span>
                                 </div>
                               </TooltipTrigger>
@@ -293,7 +293,7 @@ export default function BackupTable({
                             <Tooltip>
                               <TooltipTrigger asChild>
                                 <div className="inline-flex items-center gap-1 rounded-full px-[10px] py-[2.5px] text-[11px] font-medium tracking-[0.04em] select-none bg-gray-100 text-gray-500 dark:bg-zinc-800 dark:text-zinc-500 border border-gray-200 dark:border-white/10 cursor-not-allowed">
-                                  <LucideIcon  className="ph-bold ph-plugs text-[11px]" />
+                                  <HugeIcon  className="ph-bold ph-plugs text-[11px]" />
                                   <span>Drive Offline</span>
                                 </div>
                               </TooltipTrigger>
@@ -323,7 +323,7 @@ export default function BackupTable({
                                 >
                                   {localLoading?.syncingId === b.id ? (
                                     <>
-                                      <LucideIcon  className="ph-bold ph-arrows-clockwise animate-spin text-[11px]" />
+                                      <HugeIcon  className="ph-bold ph-arrows-clockwise animate-spin text-[11px]" />
                                       <span>Copying...</span>
                                     </>
                                   ) : (
@@ -357,7 +357,7 @@ export default function BackupTable({
                               aria-label="Download Backup"
                               className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 border-0 bg-transparent text-gray-500 hover:text-blue-600 dark:text-zinc-400 dark:hover:text-blue-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors"
                             >
-                              <LucideIcon  className="ph-bold ph-download-simple text-[16px]"></LucideIcon>
+                              <HugeIcon  className="ph-bold ph-download-simple text-[16px]"></HugeIcon>
                             </button>
                           </TooltipTrigger>
                           <TooltipContent>
@@ -371,7 +371,7 @@ export default function BackupTable({
                               aria-label="Delete Backup"
                               className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 border-0 bg-transparent text-gray-500 hover:text-red-600 dark:text-zinc-400 dark:hover:text-red-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors"
                             >
-                              <LucideIcon  className="ph-bold ph-trash text-[16px]"></LucideIcon>
+                              <HugeIcon  className="ph-bold ph-trash text-[16px]"></HugeIcon>
                             </button>
                           </TooltipTrigger>
                           <TooltipContent>

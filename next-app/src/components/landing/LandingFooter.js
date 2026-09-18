@@ -1,5 +1,5 @@
 "use client";
-import LucideIcon from "@/components/shared/LucideIcon";
+import HugeIcon from "@/components/shared/HugeIcon";
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
@@ -115,7 +115,7 @@ export default function LandingFooter() {
             
             <div className="pt-6 border-t border-white/5">
               <div className="font-bold text-zinc-200 flex items-center gap-2 mb-2 text-sm">
-                <LucideIcon className="ph-bold ph-map-pin text-red-400" />
+                <HugeIcon className="ph-bold ph-map-pin text-red-400" />
                 <span>{footerData.locationHall}</span>
               </div>
               <p className="text-zinc-500 leading-relaxed text-[12px] pl-6 mb-5">
@@ -140,7 +140,7 @@ export default function LandingFooter() {
                     className="absolute bottom-3 right-3 bg-white/90 backdrop-blur-md text-black p-2.5 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white shadow-xl flex items-center justify-center cursor-pointer"
                     title="Open in Google Maps"
                   >
-                    <LucideIcon className="ph-bold ph-arrow-square-out text-[15px]" />
+                    <HugeIcon className="ph-bold ph-arrow-square-out text-[15px]" />
                   </a>
                 </div>
               )}
@@ -190,7 +190,7 @@ export default function LandingFooter() {
               <span className="text-[11px] font-mono text-zinc-500">{footerData.copyrightText}</span>
               <button onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} className="text-[11px] font-mono font-medium text-zinc-400 hover:text-white flex items-center gap-1 transition-colors group">
                 Back to Top
-                <LucideIcon className="ph-bold ph-arrow-up text-[10px] group-hover:-translate-y-0.5 transition-transform" />
+                <HugeIcon className="ph-bold ph-arrow-up text-[10px] group-hover:-translate-y-0.5 transition-transform" />
               </button>
             </div>
           </div>

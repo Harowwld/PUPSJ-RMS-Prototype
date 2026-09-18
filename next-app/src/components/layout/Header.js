@@ -1,5 +1,5 @@
 "use client";
-import LucideIcon from "@/components/shared/LucideIcon";
+import HugeIcon from "@/components/shared/HugeIcon";
 import { useEffect, useState, useRef, useMemo } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -933,7 +933,7 @@ export default function Header({ authUser, onLogout, children }) {
               className={cn("group w-full max-w-sm h-9 pl-3 pr-2 flex items-center justify-between rounded-xl transition-all cursor-pointer shadow-2xs select-none", isStudent ? "bg-red-50/70 hover:bg-red-50 border border-red-100 hover:border-red-200" : "bg-gray-100/70 hover:bg-gray-100/90 dark:bg-zinc-900/60 dark:hover:bg-zinc-900/90 border border-gray-200/80 hover:border-gray-300 dark:border-white/10 dark:hover:border-white/20")}
             >
               <div className="flex items-center gap-2 text-gray-400 dark:text-zinc-500">
-                <LucideIcon  className="ph-bold ph-magnifying-glass text-xs transition-colors group-hover:text-pup-maroon dark:group-hover:text-red-400"></LucideIcon>
+                <HugeIcon  className="ph-bold ph-magnifying-glass text-xs transition-colors group-hover:text-pup-maroon dark:group-hover:text-red-400"></HugeIcon>
                 <span className="text-xs font-normal">Search views, actions...</span>
               </div>
               <kbd className="hidden sm:inline-flex items-center justify-center px-1.5 h-5 min-w-[46px] text-[9px] font-bold tracking-wider text-gray-500 dark:text-zinc-400 bg-white dark:bg-zinc-800 border border-gray-200/90 dark:border-zinc-700/90 rounded-md shadow-2xs leading-none">
@@ -965,7 +965,7 @@ export default function Header({ authUser, onLogout, children }) {
                       />
                       {!imageLoaded && (
                         <div className="flex h-full w-full items-center justify-center bg-gray-100 dark:bg-zinc-800 animate-pulse">
-                          <LucideIcon  className="ph-bold ph-user text-[14px] text-gray-400 dark:text-zinc-550" />
+                          <HugeIcon  className="ph-bold ph-user text-[14px] text-gray-400 dark:text-zinc-550" />
                         </div>
                       )}
                     </>
@@ -983,7 +983,7 @@ export default function Header({ authUser, onLogout, children }) {
                   </span>
                 </div>
 
-                <LucideIcon  className="ph-bold ph-caret-down text-[11px] text-gray-400 dark:text-zinc-500 shrink-0 ml-0.5"></LucideIcon>
+                <HugeIcon  className="ph-bold ph-caret-down text-[11px] text-gray-400 dark:text-zinc-500 shrink-0 ml-0.5"></HugeIcon>
               </div>
             </DropdownMenuTrigger>
             
@@ -1001,10 +1001,10 @@ export default function Header({ authUser, onLogout, children }) {
                <DropdownMenuGroup className="p-1.5 flex flex-col gap-[2px]">
                   {(isSettingsActive || isActivityActive) && (
                      <DropdownMenuItem
-                       className="cursor-pointer rounded-[8px] flex items-center gap-3 font-normal text-[16px] py-3 px-4 text-pup-maroon hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/20 transition-colors outline-none"
+                       className="cursor-pointer rounded-[8px] flex items-center gap-3 font-normal text-[16px] py-3 px-4 text-gray-900 hover:bg-gray-50 dark:text-zinc-100 dark:hover:bg-white/5 transition-colors outline-none"
                        onClick={handleMainDashboardClick}
                      >
-                       <LucideIcon  className="ti ti-layout-dashboard text-[22px] shrink-0 flex items-center justify-center h-[22px] w-[22px] leading-none" style={{ color: branding.color }}></LucideIcon>
+                       <HugeIcon  className="ti ti-layout-dashboard text-[22px] shrink-0 flex items-center justify-center h-[22px] w-[22px] leading-none text-black dark:text-white"></HugeIcon>
                        <span>Return to Dashboard</span>
                      </DropdownMenuItem>
                    )}
@@ -1013,12 +1013,12 @@ export default function Header({ authUser, onLogout, children }) {
                     className={cn(
                       "cursor-pointer rounded-[8px] flex items-center gap-3 font-normal text-[16px] py-3 px-4 transition-colors outline-none",
                       isSettingsActive
-                        ? "text-pup-maroon bg-gray-50 dark:bg-white/5 font-normal"
+                        ? "text-gray-900 bg-gray-50 dark:text-zinc-100 dark:bg-white/5 font-normal"
                         : "text-gray-900 hover:bg-gray-50 dark:text-zinc-100 dark:hover:bg-white/5"
                     )}
                     onClick={() => router.push("/account")}
                   >
-                    <LucideIcon  className="ti ti-settings text-[22px] shrink-0 flex items-center justify-center h-[22px] w-[22px] leading-none" style={{ color: branding.color }}></LucideIcon>
+                    <HugeIcon  className="ti ti-settings text-[22px] shrink-0 flex items-center justify-center h-[22px] w-[22px] leading-none text-black dark:text-white"></HugeIcon>
                     <span>Account Settings</span>
                   </DropdownMenuItem>
  
@@ -1026,12 +1026,12 @@ export default function Header({ authUser, onLogout, children }) {
                     className={cn(
                       "cursor-pointer rounded-[8px] flex items-center gap-3 font-normal text-[16px] py-3 px-4 transition-colors outline-none",
                       isActivityActive
-                        ? "text-pup-maroon bg-gray-50 dark:bg-white/5 font-normal"
+                        ? "text-gray-900 bg-gray-50 dark:text-zinc-100 dark:bg-white/5 font-normal"
                         : "text-gray-900 hover:bg-gray-50 dark:text-zinc-100 dark:hover:bg-white/5"
                     )}
                     onClick={() => router.push("/account/activity")}
                   >
-                    <LucideIcon  className="ti ti-history text-[22px] shrink-0 flex items-center justify-center h-[22px] w-[22px] leading-none" style={{ color: branding.color }}></LucideIcon>
+                    <HugeIcon  className="ti ti-history text-[22px] shrink-0 flex items-center justify-center h-[22px] w-[22px] leading-none text-black dark:text-white"></HugeIcon>
                     <span>My Activity</span>
                   </DropdownMenuItem>
  
@@ -1041,12 +1041,11 @@ export default function Header({ authUser, onLogout, children }) {
                       onClick={() => handleViewSwitch(activeView === "admin" ? "staff" : "admin")}
                       className="cursor-pointer rounded-[8px] flex items-center gap-3 font-normal text-[16px] py-3 px-4 hover:bg-gray-50 dark:hover:bg-white/5 text-gray-900 dark:text-zinc-100 transition-colors outline-none"
                     >
-                      <LucideIcon  className={cn(
-                        "text-[22px] shrink-0 flex items-center justify-center h-[22px] w-[22px] leading-none",
+                      <HugeIcon  className={cn(
+                        "text-[22px] shrink-0 flex items-center justify-center h-[22px] w-[22px] leading-none text-black dark:text-white",
                         activeView === "admin" ? "ti ti-users" : "ti ti-shield-check"
                       )}
-                      style={{ color: activeView === "admin" ? ROLE_BRANDING.yellow.color : branding.color }}
-                      ></LucideIcon>
+                      ></HugeIcon>
                       <span>{activeView === "admin" ? "Switch to Staff View" : "Switch to Admin View"}</span>
                     </DropdownMenuItem>
                   )}
@@ -1059,7 +1058,7 @@ export default function Header({ authUser, onLogout, children }) {
                    onClick={handleLogoutAction}
                    className="cursor-pointer rounded-[8px] flex items-center gap-3 font-normal text-[16px] py-3 px-4 text-[#FF3B30] dark:text-[#FF453A] hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors outline-none"
                  >
-                   <LucideIcon  className="ti ti-circle-x text-[22px] text-[#FF3B30] dark:text-[#FF453A] shrink-0 flex items-center justify-center h-[22px] w-[22px] leading-none"></LucideIcon>
+                   <HugeIcon  className="ti ti-circle-x text-[22px] text-[#FF3B30] dark:text-[#FF453A] shrink-0 flex items-center justify-center h-[22px] w-[22px] leading-none"></HugeIcon>
                    <span>Sign Out</span>
                  </DropdownMenuItem>
                </DropdownMenuGroup>
@@ -1078,7 +1077,7 @@ export default function Header({ authUser, onLogout, children }) {
         >
           {/* Top Search Input Section */}
           <div className="flex items-center gap-3 px-5 py-4 border-b border-gray-200/80 dark:border-white/10">
-            <LucideIcon  className="ph-bold ph-magnifying-glass text-xl text-pup-maroon dark:text-red-400 shrink-0"></LucideIcon>
+            <HugeIcon  className="ph-bold ph-magnifying-glass text-xl text-pup-maroon dark:text-red-400 shrink-0"></HugeIcon>
             <input
               ref={commandInputRef}
               type="text"
@@ -1101,7 +1100,7 @@ export default function Header({ authUser, onLogout, children }) {
                 }}
                 className="text-gray-400 hover:text-gray-600 dark:hover:text-zinc-300 p-1 text-xs cursor-pointer"
               >
-                <LucideIcon  className="ph-bold ph-x-circle text-base"></LucideIcon>
+                <HugeIcon  className="ph-bold ph-x-circle text-base"></HugeIcon>
               </button>
             )}
             <kbd className="hidden sm:inline-flex items-center justify-center px-1.5 py-0.5 text-[10px] font-bold text-gray-400 dark:text-zinc-500 bg-gray-100 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded select-none">
@@ -1169,7 +1168,7 @@ export default function Header({ authUser, onLogout, children }) {
                                     : "bg-gray-100 dark:bg-zinc-800 text-gray-500 dark:text-zinc-400"
                                 )}
                               >
-                                <LucideIcon  className={cn(item.icon, "text-[16px]")}></LucideIcon>
+                                <HugeIcon  className={cn(item.icon, "text-[16px]")}></HugeIcon>
                               </div>
                               <div className="flex flex-col min-w-0 flex-1">
                                 <div className="flex items-center gap-2">
@@ -1213,7 +1212,7 @@ export default function Header({ authUser, onLogout, children }) {
               })()
             ) : (
               <div className="p-8 text-center flex flex-col items-center justify-center text-gray-400 dark:text-zinc-500">
-                <LucideIcon  className="ph-duotone ph-magnifying-glass text-3xl mb-2 opacity-50"></LucideIcon>
+                <HugeIcon  className="ph-duotone ph-magnifying-glass text-3xl mb-2 opacity-50"></HugeIcon>
                 <div className="text-sm font-medium">No matching views or actions found</div>
                 <div className="text-xs text-gray-400 mt-1">Try searching for a sidebar section, view name, or control</div>
               </div>
@@ -1256,7 +1255,7 @@ export default function Header({ authUser, onLogout, children }) {
         <DialogContent className="max-w-md rounded-2xl border-gray-200 bg-white dark:bg-zinc-900 dark:border-white/10">
           <DialogHeader>
             <DialogTitle className="text-xl font-black text-gray-900 flex items-center gap-2 dark:text-zinc-50">
-              <LucideIcon  className="ph-fill ph-warning-circle text-amber-500"></LucideIcon>
+              <HugeIcon  className="ph-fill ph-warning-circle text-amber-500"></HugeIcon>
               Session Expired
             </DialogTitle>
             <DialogDescription className="font-medium text-gray-500 pt-2 dark:text-zinc-400">

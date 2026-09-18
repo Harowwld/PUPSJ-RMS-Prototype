@@ -1,5 +1,5 @@
 "use client";
-import LucideIcon from "@/components/shared/LucideIcon";
+import HugeIcon from "@/components/shared/HugeIcon";
 import { useState, useEffect, useMemo, useRef, useCallback, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
@@ -1600,7 +1600,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
                   )}
                   style={active ? { backgroundColor: "color-mix(in srgb, var(--brand-accent) 12%, transparent)" } : undefined}
                 >
-                  <LucideIcon  className={cn(item.iconClass, "text-sm")}></LucideIcon>
+                  <HugeIcon  className={cn(item.iconClass, "text-sm")}></HugeIcon>
                   {item.label}
                   {item.badge > 0 && (
                     <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[9px] font-semibold text-white bg-pup-maroon dark:bg-red-500/20 dark:text-red-400">
@@ -1629,7 +1629,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
         <main className="flex-1 relative w-full min-w-0 min-h-0 bg-white/25 dark:bg-zinc-950/25 overflow-y-auto backdrop-blur-xs">
           <div 
             className="flex-1 p-4 flex flex-col min-h-0 w-full"
-            style={{ transform: `scale(${[0.94, 1.04, 1.15, 1.25, 1.35, 1.46, 1.56][zoomNode]})`, transformOrigin: 'top left', width: `${100 / [0.94, 1.04, 1.15, 1.25, 1.35, 1.46, 1.56][zoomNode]}%`, height: `${100 / [0.94, 1.04, 1.15, 1.25, 1.35, 1.46, 1.56][zoomNode]}%` }}
+            style={{ transform: `scale(${[0.94, 1.04, 1.15, 1.25, 1.35, 1.46, 1.56][zoomNode]})`, transformOrigin: 'top left', width: `${100 / [0.94, 1.04, 1.15, 1.25, 1.35, 1.46, 1.56][zoomNode]}%`, minHeight: `${100 / [0.94, 1.04, 1.15, 1.25, 1.35, 1.46, 1.56][zoomNode]}%` }}
           >
             <TabsContent value="students" className="h-full m-0 border-0 focus-visible:ring-0">
             <StudentDirectoryTab

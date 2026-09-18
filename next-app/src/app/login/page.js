@@ -1,5 +1,5 @@
 "use client";
-import LucideIcon from "@/components/shared/LucideIcon";
+import HugeIcon from "@/components/shared/HugeIcon";
 import { useRouter } from "next/navigation";
 import { Turnstile } from '@marsidev/react-turnstile';
 import { useState, useEffect, useRef } from "react";
@@ -650,7 +650,7 @@ export default function Home() {
                               onClick={() => setShowPassword(!showPassword)}
                               className="w-7 h-7 flex items-center justify-center text-[#8E8E93] hover:text-[#1D1D1F] focus:outline-none dark:text-zinc-400 dark:hover:text-zinc-200"
                             >
-                              <LucideIcon  className={`ph-bold ${showPassword ? "ph-eye-slash" : "ph-eye"} text-[16px]`}></LucideIcon>
+                              <HugeIcon  className={`ph-bold ${showPassword ? "ph-eye-slash" : "ph-eye"} text-[16px]`}></HugeIcon>
                             </button>
                           </div>
                         </div>
@@ -660,7 +660,7 @@ export default function Home() {
                     {/* Validation Errors displayed below the merged container (Step 1 only) */}
                     {loginStep === 1 && (emailError || passwordError || error) && (
                       <div className="h-5 mt-1.5 text-left flex items-center gap-1.5 text-[#E5484D]">
-                        <LucideIcon  className="ph-bold ph-warning-circle text-[14px] shrink-0 mt-[1px]"></LucideIcon>
+                        <HugeIcon  className="ph-bold ph-warning-circle text-[14px] shrink-0 mt-[1px]"></HugeIcon>
                         <p className="text-[12px] font-normal leading-none">
                           {emailError || passwordError || error}
                         </p>
@@ -672,7 +672,7 @@ export default function Home() {
                       <div className="flex items-center justify-between w-full mt-2.5 select-none animate-in fade-in duration-200">
                         {emailError || passwordError || error ? (
                           <div className="flex items-center gap-1.5 text-[#E5484D] animate-in fade-in duration-200 text-left pr-2">
-                            <LucideIcon  className="ph-bold ph-warning-circle text-[14px] shrink-0 mt-[1px]"></LucideIcon>
+                            <HugeIcon  className="ph-bold ph-warning-circle text-[14px] shrink-0 mt-[1px]"></HugeIcon>
                             <p className="text-[12px] font-normal leading-none">
                               {emailError || passwordError || error}
                             </p>
@@ -681,7 +681,7 @@ export default function Home() {
                           <label className="flex items-center gap-2 cursor-pointer">
                             <input
                               type="checkbox"
-                              className="w-4 h-4 rounded border-gray-300 text-[#E5484D] focus:ring-[#E5484D] accent-[#E5484D]"
+                              className="w-4 h-4 rounded-full border-gray-300 text-blue-600 focus:ring-blue-600 accent-blue-600"
                             />
                             <span className="text-[13px] text-[#1D1D1F] dark:text-zinc-300">Keep me signed in</span>
                           </label>
@@ -720,7 +720,7 @@ export default function Home() {
                   {/* Disclaimer Text with Icon (Step 1 only) */}
                   {loginStep === 1 ? (
                     <div className="w-full mt-auto pt-9 mb-[124px] text-left flex flex-col items-start select-none animate-in fade-in duration-200">
-                      <LucideIcon  className="ph-bold ph-users text-[23px] text-gray-800 mb-2"></LucideIcon>
+                      <HugeIcon  className="ph-bold ph-users text-[23px] text-gray-800 mb-2"></HugeIcon>
                       <p className="w-full text-[11px] text-[#8E8E93] dark:text-zinc-400 leading-normal font-normal">
                         Your eManage account provides secure access to the digitization process and administrative tools. Account activity is logged for security and auditing purposes.
                       </p>
@@ -743,10 +743,10 @@ export default function Home() {
                     <Button
                       type="submit"
                       disabled={isLoading || isStep1Loading || (loginStep === 1 && !username.trim())}
-                      className="w-full h-11 rounded-[8px] btn-brand-red text-[13px] font-medium text-white active:scale-95 disabled:opacity-50 transition-all flex items-center justify-center"
+                      className="w-full h-11 rounded-full bg-gray-900 hover:bg-black dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100 text-[13px] font-medium text-white active:scale-95 disabled:opacity-50 transition-all flex items-center justify-center"
                     >
                       {isLoading || isStep1Loading ? (
-                        <LucideIcon  className="ph-bold ph-spinner animate-spin text-lg flex items-center justify-center"></LucideIcon>
+                        <HugeIcon  className="ph-bold ph-spinner animate-spin text-lg flex items-center justify-center"></HugeIcon>
                       ) : (
                         <span>{loginStep === 1 ? "Continue" : "Sign In"}</span>
                       )}
@@ -788,7 +788,7 @@ export default function Home() {
 
                       {forgotError && (
                         <div className="h-5 mt-1.5 text-left flex items-center gap-1.5 text-[#E5484D] animate-in fade-in duration-200">
-                          <LucideIcon  className="ph-bold ph-warning-circle text-[14px] shrink-0 mt-[1px]"></LucideIcon>
+                          <HugeIcon  className="ph-bold ph-warning-circle text-[14px] shrink-0 mt-[1px]"></HugeIcon>
                           <p className="text-[12px] font-normal leading-none">
                             {forgotError}
                           </p>
@@ -810,10 +810,10 @@ export default function Home() {
                       <Button
                         type="submit"
                         disabled={forgotLoading || !forgotIdentifier.trim()}
-                        className="w-full h-11 rounded-[8px] btn-brand-red text-[13px] font-medium text-white active:scale-95 disabled:opacity-50 transition-all flex items-center justify-center"
+                        className="w-full h-11 rounded-full bg-gray-900 hover:bg-black dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100 text-[13px] font-medium text-white active:scale-95 disabled:opacity-50 transition-all flex items-center justify-center"
                       >
                         {forgotLoading ? (
-                          <LucideIcon  className="ph-bold ph-spinner animate-spin text-lg flex items-center justify-center"></LucideIcon>
+                          <HugeIcon  className="ph-bold ph-spinner animate-spin text-lg flex items-center justify-center"></HugeIcon>
                         ) : (
                           <span>Locate Account</span>
                         )}
@@ -912,7 +912,7 @@ export default function Home() {
 
                       {forgotError && (
                         <div className="h-5 mt-1.5 text-left flex items-center gap-1.5 text-[#E5484D] animate-in fade-in duration-200">
-                          <LucideIcon  className="ph-bold ph-warning-circle text-[14px] shrink-0 mt-[1px]"></LucideIcon>
+                          <HugeIcon  className="ph-bold ph-warning-circle text-[14px] shrink-0 mt-[1px]"></HugeIcon>
                           <p className="text-[12px] font-normal leading-none">
                             {forgotError}
                           </p>
@@ -925,10 +925,10 @@ export default function Home() {
                       <Button
                         type="submit"
                         disabled={forgotLoading || !forgotAnswer.trim() || !forgotNewPassword || !forgotConfirmPassword}
-                        className="w-full h-11 rounded-[8px] btn-brand-red text-[13px] font-medium text-white active:scale-95 disabled:opacity-50 transition-all flex items-center justify-center"
+                        className="w-full h-11 rounded-full bg-gray-900 hover:bg-black dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100 text-[13px] font-medium text-white active:scale-95 disabled:opacity-50 transition-all flex items-center justify-center"
                       >
                         {forgotLoading ? (
-                          <LucideIcon  className="ph-bold ph-spinner animate-spin text-lg flex items-center justify-center"></LucideIcon>
+                          <HugeIcon  className="ph-bold ph-spinner animate-spin text-lg flex items-center justify-center"></HugeIcon>
                         ) : (
                           <span>Reset Password</span>
                         )}
@@ -1076,7 +1076,7 @@ export default function Home() {
                                 onClick={() => setShowSignupPassword(!showSignupPassword)}
                                 className="w-6 h-6 flex items-center justify-center text-[#8E8E93] hover:text-[#1D1D1F] focus:outline-none dark:text-zinc-400 dark:hover:text-zinc-200"
                               >
-                                <LucideIcon  className={`ph-bold ${showSignupPassword ? "ph-eye-slash" : "ph-eye"} text-[14px]`}></LucideIcon>
+                                <HugeIcon  className={`ph-bold ${showSignupPassword ? "ph-eye-slash" : "ph-eye"} text-[14px]`}></HugeIcon>
                               </button>
                             </div>
                           </div>
@@ -1112,7 +1112,7 @@ export default function Home() {
                     {/* Error message */}
                     {studentSignupError && (
                       <div className="h-5 mt-1.5 text-left flex items-center gap-1.5 text-[#E5484D] animate-in fade-in duration-200">
-                        <LucideIcon  className="ph-bold ph-warning-circle text-[14px] shrink-0 mt-[1px]"></LucideIcon>
+                        <HugeIcon  className="ph-bold ph-warning-circle text-[14px] shrink-0 mt-[1px]"></HugeIcon>
                         <p className="text-[12px] font-normal leading-none">
                           {studentSignupError}
                         </p>
@@ -1134,10 +1134,10 @@ export default function Home() {
                     <Button
                       type="submit"
                       disabled={studentSignupLoading}
-                      className="w-full h-11 rounded-[8px] btn-brand-red text-[13px] font-medium text-white active:scale-95 disabled:opacity-50 transition-all flex items-center justify-center"
+                      className="w-full h-11 rounded-full bg-gray-900 hover:bg-black dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100 text-[13px] font-medium text-white active:scale-95 disabled:opacity-50 transition-all flex items-center justify-center"
                     >
                       {studentSignupLoading ? (
-                        <LucideIcon  className="ph-bold ph-spinner animate-spin text-lg flex items-center justify-center"></LucideIcon>
+                        <HugeIcon  className="ph-bold ph-spinner animate-spin text-lg flex items-center justify-center"></HugeIcon>
                       ) : (
                         <span>Create eManage Account</span>
                       )}
@@ -1173,7 +1173,7 @@ export default function Home() {
                   <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-400 dark:text-zinc-400 group-hover:text-gray-700 dark:group-hover:text-zinc-200 transition-colors">
                     {DEMO_ACCOUNTS.length}
                   </span>
-                  <LucideIcon  className={`ph-bold ph-caret-up text-[10px] text-gray-400 group-hover:text-gray-600 dark:group-hover:text-zinc-300 transition-transform duration-200 ${demoOpen ? "rotate-180" : ""}`}></LucideIcon>
+                  <HugeIcon  className={`ph-bold ph-caret-up text-[10px] text-gray-400 group-hover:text-gray-600 dark:group-hover:text-zinc-300 transition-transform duration-200 ${demoOpen ? "rotate-180" : ""}`}></HugeIcon>
                 </button>
               </PopoverTrigger>
 
@@ -1205,7 +1205,7 @@ export default function Home() {
                     className="flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 rounded-md bg-gray-200/60 dark:bg-zinc-700/60 hover:bg-gray-200 text-gray-600 dark:text-zinc-300 transition-colors cursor-pointer"
                     title="Click to copy password"
                   >
-                    <LucideIcon  className="ph-bold ph-key text-[10px]"></LucideIcon>
+                    <HugeIcon  className="ph-bold ph-key text-[10px]"></HugeIcon>
                     <span>pupstaff</span>
                   </button>
                 </div>
@@ -1236,7 +1236,7 @@ export default function Home() {
                           {acc.email}
                         </p>
                       </div>
-                      <LucideIcon  className="ph-bold ph-arrow-right text-xs text-gray-300 dark:text-zinc-600 group-hover:text-gray-700 dark:group-hover:text-zinc-200 group-hover:translate-x-0.5 transition-all"></LucideIcon>
+                      <HugeIcon  className="ph-bold ph-arrow-right text-xs text-gray-300 dark:text-zinc-600 group-hover:text-gray-700 dark:group-hover:text-zinc-200 group-hover:translate-x-0.5 transition-all"></HugeIcon>
                     </button>
                   ))}
                 </div>
@@ -1244,7 +1244,7 @@ export default function Home() {
                 {/* Footer info tip */}
                 <div className="px-3.5 py-2 bg-gray-50/70 dark:bg-zinc-800/40 border-t border-gray-100 dark:border-zinc-800/60 flex items-center justify-between text-[10px] text-gray-400 dark:text-zinc-400">
                   <span className="flex items-center gap-1">
-                    <LucideIcon  className="ph-bold ph-info text-xs"></LucideIcon>
+                    <HugeIcon  className="ph-bold ph-info text-xs"></HugeIcon>
                     1-click instant fill & sign in
                   </span>
                   <span className="font-mono text-[9px] text-gray-400">
@@ -1270,7 +1270,7 @@ export default function Home() {
           <DialogContent className="max-w-md rounded-[20px] border-gray-100 bg-white dark:border-zinc-800 dark:bg-zinc-900">
             <DialogHeader>
               <DialogTitle className="text-xl font-semibold text-gray-900 flex items-center gap-2 dark:text-zinc-50">
-                <LucideIcon  className="ph-fill ph-shield-check text-[#E5484D]"></LucideIcon>
+                <HugeIcon  className="ph-fill ph-shield-check text-[#E5484D]"></HugeIcon>
                 Two-Factor Authentication
               </DialogTitle>
               <DialogDescription className="font-medium text-gray-500 dark:text-zinc-400">
@@ -1304,16 +1304,16 @@ export default function Home() {
                 <Button
                   type="submit"
                   disabled={twoFactorLoading}
-                  className="w-full h-11 bg-[#E5484D] hover:bg-[#c93b40] text-white font-semibold text-sm shadow-sm active:scale-95 transition-all disabled:opacity-50 group rounded-xl"
+                  className="w-full h-11 rounded-full bg-gray-900 hover:bg-black dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100 text-white dark:text-gray-900 font-semibold text-sm shadow-sm active:scale-95 transition-all disabled:opacity-50 group rounded-xl"
                 >
                   {twoFactorLoading ? (
                     <>
-                      <LucideIcon  className="ph-bold ph-spinner animate-spin"></LucideIcon>
+                      <HugeIcon  className="ph-bold ph-spinner animate-spin"></HugeIcon>
                       Verifying...
                     </>
                   ) : (
                     <>
-                      <LucideIcon  className="ph-bold ph-lock-key"></LucideIcon>
+                      <HugeIcon  className="ph-bold ph-lock-key"></HugeIcon>
                       Verify & Log In
                     </>
                   )}

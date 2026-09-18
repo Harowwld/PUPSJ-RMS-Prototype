@@ -1,5 +1,5 @@
 "use client";
-import LucideIcon from "@/components/shared/LucideIcon";
+import HugeIcon from "@/components/shared/HugeIcon";
 import { useState, useEffect, useMemo } from "react";
 import {
   Sheet,
@@ -171,7 +171,7 @@ export default function StudentProfileSheet({
                 color: authUser?.accent_color || branding.color || "#800000",
               }}
             >
-              <LucideIcon  className="ph-bold ph-student text-2xl"></LucideIcon>
+              <HugeIcon  className="ph-bold ph-student text-2xl"></HugeIcon>
             </div>
             <div className="min-w-0 flex-1">
               <SheetTitle className="text-[19px] font-bold tracking-tight text-gray-900 dark:text-zinc-50 truncate leading-snug">
@@ -208,7 +208,7 @@ export default function StudentProfileSheet({
               }}
               className="h-8 px-3 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
             >
-              <LucideIcon  className="ph-bold ph-pencil-simple mr-1.5 text-xs"></LucideIcon>
+              <HugeIcon  className="ph-bold ph-pencil-simple mr-1.5 text-xs"></HugeIcon>
               Edit Profile
             </Button>
 
@@ -221,7 +221,7 @@ export default function StudentProfileSheet({
               }}
               className="h-8 px-3 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
             >
-              <LucideIcon  className="ph-bold ph-compass mr-1.5 text-xs text-pup-maroon dark:text-red-400"></LucideIcon>
+              <HugeIcon  className="ph-bold ph-compass mr-1.5 text-xs text-pup-maroon dark:text-red-400"></HugeIcon>
               Locate in Storage Map
             </Button>
           </div>
@@ -288,7 +288,7 @@ export default function StudentProfileSheet({
                       color: branding.foreground || "#ffffff",
                     }}
                   >
-                    <LucideIcon  className="ph-bold ph-warehouse text-lg"></LucideIcon>
+                    <HugeIcon  className="ph-bold ph-warehouse text-lg"></HugeIcon>
                   </div>
                   <div>
                     <span className="text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-400 block">
@@ -318,7 +318,7 @@ export default function StudentProfileSheet({
                   }}
                   className="flex h-9 px-4 text-xs font-semibold rounded-xl! btn-brand-red text-white! active:scale-95 disabled:opacity-50 transition-all cursor-pointer shadow-xs whitespace-nowrap self-start sm:self-auto"
                 >
-                  <LucideIcon  className="ph-bold ph-compass mr-1.5 text-sm"></LucideIcon>
+                  <HugeIcon  className="ph-bold ph-compass mr-1.5 text-sm"></HugeIcon>
                   View in Map
                 </Button>
               </div>
@@ -393,7 +393,7 @@ export default function StudentProfileSheet({
                               : "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300"
                           )}
                         >
-                          <LucideIcon 
+                          <HugeIcon 
                             className={
                               isApproved
                                 ? "ph-bold ph-seal-check"
@@ -456,7 +456,7 @@ export default function StudentProfileSheet({
               </div>
             ) : studentDocs.length === 0 ? (
               <div className="p-8 text-center rounded-xl border border-dashed border-gray-200 dark:border-white/10 text-xs text-gray-400 dark:text-zinc-500">
-                <LucideIcon  className="ph-duotone ph-files text-3xl mb-1.5 block opacity-50"></LucideIcon>
+                <HugeIcon  className="ph-duotone ph-files text-3xl mb-1.5 block opacity-50"></HugeIcon>
                 No digitized records uploaded for this student yet.
               </div>
             ) : (
@@ -468,7 +468,7 @@ export default function StudentProfileSheet({
                   >
                     <div className="flex items-center gap-3 min-w-0">
                       <div className="w-8 h-8 rounded-lg bg-gray-100 dark:bg-zinc-800 flex items-center justify-center text-gray-500 dark:text-zinc-400 shrink-0">
-                        <LucideIcon  className="ph-bold ph-file-pdf text-base text-pup-maroon dark:text-red-400"></LucideIcon>
+                        <HugeIcon  className="ph-bold ph-file-pdf text-base text-pup-maroon dark:text-red-400"></HugeIcon>
                       </div>
                       <div className="min-w-0">
                         <div className="text-xs font-semibold text-gray-900 dark:text-zinc-100 truncate">
@@ -508,7 +508,7 @@ export default function StudentProfileSheet({
                         }}
                         className="h-8 px-2.5 text-xs font-semibold rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                       >
-                        <LucideIcon  className="ph-bold ph-eye mr-1 text-xs"></LucideIcon>
+                        <HugeIcon  className="ph-bold ph-eye mr-1 text-xs"></HugeIcon>
                         Preview
                       </Button>
                     </div>
@@ -565,7 +565,7 @@ export default function StudentProfileSheet({
                 }}
                 className="h-9 px-4 text-xs font-semibold rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-400 shadow-xs cursor-pointer active:scale-95 transition-all"
               >
-                <LucideIcon  className="ph-bold ph-archive-restore mr-1.5 text-sm"></LucideIcon>
+                <HugeIcon  className="ph-bold ph-archive-restore mr-1.5 text-sm"></HugeIcon>
                 Restore
               </Button>
             ) : (
@@ -578,7 +578,7 @@ export default function StudentProfileSheet({
                 }}
                 className="h-9 px-4 text-xs font-semibold rounded-xl border border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-400 shadow-xs cursor-pointer active:scale-95 transition-all"
               >
-                <LucideIcon  className="ph-bold ph-archive mr-1.5 text-sm"></LucideIcon>
+                <HugeIcon  className="ph-bold ph-archive mr-1.5 text-sm"></HugeIcon>
                 Archive
               </Button>
             )}

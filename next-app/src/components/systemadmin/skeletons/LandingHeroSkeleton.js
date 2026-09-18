@@ -1,6 +1,6 @@
 "use client"
 
-import LucideIcon from "@/components/shared/LucideIcon";
+import HugeIcon from "@/components/shared/HugeIcon";
 import { Skeleton } from "@/components/ui/skeleton"
 import { Card, CardContent } from "@/components/ui/card"
 import PageHeader from "@/components/shared/PageHeader"
@@ -11,27 +11,27 @@ export default function LandingHeroSkeleton() {
       {/* Top Section Switcher Pill */}
       <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-gray-100/90 dark:bg-zinc-900/80 border border-gray-200/80 dark:border-white/10 w-fit select-none overflow-x-auto max-w-full scrollbar-hide">
         <div className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold bg-white dark:bg-zinc-800 text-pup-maroon dark:text-red-400 shadow-sm">
-          <LucideIcon  className="ph-bold ph-image text-sm" />
+          <HugeIcon  className="ph-bold ph-image text-sm" />
           <span>Hero Section</span>
         </div>
         <div className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold text-gray-500">
-          <LucideIcon  className="ph-bold ph-squares-four text-sm" />
+          <HugeIcon  className="ph-bold ph-squares-four text-sm" />
           <span>Features Bento Grid</span>
         </div>
         <div className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold text-gray-500">
-          <LucideIcon  className="ph-bold ph-git-merge text-sm" />
+          <HugeIcon  className="ph-bold ph-git-merge text-sm" />
           <span>Workflow &amp; Steps</span>
         </div>
         <div className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold text-gray-500">
-          <LucideIcon  className="ph-bold ph-books text-sm" />
+          <HugeIcon  className="ph-bold ph-books text-sm" />
           <span>Academic Catalog</span>
         </div>
         <div className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold text-gray-500">
-          <LucideIcon  className="ph-bold ph-question text-sm" />
+          <HugeIcon  className="ph-bold ph-question text-sm" />
           <span>FAQ Section</span>
         </div>
         <div className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold text-gray-500">
-          <LucideIcon  className="ph-bold ph-panel-bottom text-sm" />
+          <HugeIcon  className="ph-bold ph-panel-bottom text-sm" />
           <span>Footer Section</span>
         </div>
       </div>

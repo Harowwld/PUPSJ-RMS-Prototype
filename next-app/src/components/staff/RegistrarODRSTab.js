@@ -1,5 +1,5 @@
 "use client";
-import LucideIcon from "@/components/shared/LucideIcon";
+import HugeIcon from "@/components/shared/HugeIcon";
 import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -112,7 +112,7 @@ export default function RegistrarODRSTab({ showToast }) {
             <div className="space-y-2">
               {rows.length === 0 ? (
                 <div className="rounded-brand border border-dashed border-gray-200 bg-gray-50 px-4 py-12 text-center dark:border-zinc-800 dark:bg-zinc-900/50">
-                  <LucideIcon  className="ph-duotone ph-tray text-3xl text-gray-400 dark:text-zinc-500 mb-2 block"></LucideIcon>
+                  <HugeIcon  className="ph-duotone ph-tray text-3xl text-gray-400 dark:text-zinc-500 mb-2 block"></HugeIcon>
                   <p className="text-sm font-semibold text-gray-700 dark:text-zinc-300">No document requests yet.</p>
                   <p className="mt-1 text-xs text-gray-500 dark:text-zinc-400">New student requests will appear here automatically.</p>
                 </div>
@@ -189,7 +189,7 @@ export default function RegistrarODRSTab({ showToast }) {
                     {Boolean(selected?.status && TERMINAL_REQUEST_STATUSES.includes(selected.status)) ? (
                       <div className="h-10 px-3 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-zinc-800/80 flex items-center justify-between text-sm font-semibold text-gray-800 dark:text-zinc-200">
                         <span className="flex items-center gap-1.5 truncate">
-                          <LucideIcon  className="ph-bold ph-lock-simple text-gray-400 text-xs"></LucideIcon>
+                          <HugeIcon  className="ph-bold ph-lock-simple text-gray-400 text-xs"></HugeIcon>
                           <span>{selected.status}</span>
                         </span>
                         <span className="text-[10px] font-medium text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
@@ -228,7 +228,7 @@ export default function RegistrarODRSTab({ showToast }) {
               </div>
             ) : (
               <div className="h-full flex flex-col items-center justify-center text-center p-6 text-gray-400 dark:text-zinc-500">
-                <LucideIcon  className="ph-duotone ph-cursor-click text-3xl mb-2"></LucideIcon>
+                <HugeIcon  className="ph-duotone ph-cursor-click text-3xl mb-2"></HugeIcon>
                 <p className="text-sm font-medium text-gray-600 dark:text-zinc-400">Select a request from the queue to view details and post updates.</p>
               </div>
             )}

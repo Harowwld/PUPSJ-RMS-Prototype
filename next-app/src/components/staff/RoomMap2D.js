@@ -1,6 +1,6 @@
 "use client"
 
-import LucideIcon from "@/components/shared/LucideIcon";
+import HugeIcon from "@/components/shared/HugeIcon";
 import { useEffect, useRef, useState, useMemo } from "react"
 import { cn } from "@/lib/utils"
 import { FOLDER_COLORS } from "@/lib/constants"
@@ -352,7 +352,7 @@ export default function RoomMap2D({
             roomDoor?.rotation === 90 && "-rotate-90", 
             roomDoor?.rotation === 270 && "rotate-90"  
           )}>
-            <LucideIcon  className="ph-fill ph-door text-xs" />
+            <HugeIcon  className="ph-fill ph-door text-xs" />
             ENTRANCE
           </span>
         </div>

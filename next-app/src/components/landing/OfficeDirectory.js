@@ -1,5 +1,5 @@
 "use client";
-import LucideIcon from "@/components/shared/LucideIcon";
+import HugeIcon from "@/components/shared/HugeIcon";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
@@ -189,14 +189,14 @@ export default function OfficeDirectory() {
         >
           {/* Subtle decorative watermark icon */}
           <div className="absolute top-6 right-6 pointer-events-none opacity-[0.03] [0.05] text-9xl">
-            <LucideIcon  className="ph-bold ph-buildings" />
+            <HugeIcon  className="ph-bold ph-buildings" />
           </div>
 
           <div>
             {/* Location Eyebrow & Badges */}
             <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-50  border border-red-100  text-[11px] font-mono font-semibold text-[#800000] ">
-                <LucideIcon  className="ph-bold ph-map-pin text-xs" />
+                <HugeIcon  className="ph-bold ph-map-pin text-xs" />
                 <span>Physical Campus Archive</span>
               </div>
               <span className="text-[10px] font-mono text-zinc-400 uppercase tracking-wider">
@@ -232,7 +232,7 @@ export default function OfficeDirectory() {
                   className="px-3.5 py-2 rounded-xl text-xs font-semibold text-gray-700  bg-white  border border-gray-200  hover:bg-gray-50 :bg-zinc-800 transition-colors flex items-center gap-1.5 active:scale-[0.98] cursor-pointer shadow-2xs"
                   title="Copy physical address"
                 >
-                  <LucideIcon 
+                  <HugeIcon 
                     className={`ph-bold ${
                       copiedKey === "address" ? "ph-check text-emerald-600" : "ph-copy text-zinc-400"
                     } text-xs`}
@@ -247,7 +247,7 @@ export default function OfficeDirectory() {
                   className="px-3.5 py-2 rounded-xl text-xs font-semibold text-[#800000]  bg-red-50/80  border border-red-200/60  hover:bg-red-100/70 :bg-red-900/40 transition-colors flex items-center gap-1.5 active:scale-[0.98] cursor-pointer"
                 >
                   <span>Directions</span>
-                  <LucideIcon  className="ph-bold ph-arrow-square-out text-xs" />
+                  <HugeIcon  className="ph-bold ph-arrow-square-out text-xs" />
                 </a>
               </div>
             </div>
@@ -255,7 +255,7 @@ export default function OfficeDirectory() {
             {/* Service Counter Windows Showcase */}
             <div className="mt-6">
               <div className="flex items-center gap-2 mb-3">
-                <LucideIcon  className="ph-bold ph-users-three text-[#800000]  text-sm" />
+                <HugeIcon  className="ph-bold ph-users-three text-[#800000]  text-sm" />
                 <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-gray-900 ">
                   Designated Service Windows
                 </span>
@@ -315,7 +315,7 @@ export default function OfficeDirectory() {
 
           {/* Transit & Access Advisory Footnote */}
           <div className="mt-6 pt-4 border-t border-gray-100  flex items-center gap-2 text-[11px] text-zinc-500  font-normal">
-            <LucideIcon  className="ph-bold ph-info text-[#800000]  shrink-0 text-sm" />
+            <HugeIcon  className="ph-bold ph-info text-[#800000]  shrink-0 text-sm" />
             <span>Accessible via San Juan City Hall jeepney routes. Present valid ID at the university security gatehouse upon campus entry.</span>
           </div>
         </motion.div>
@@ -373,7 +373,7 @@ export default function OfficeDirectory() {
 
             {/* Cut-off Notification Box */}
             <div className="mt-5 p-3.5 rounded-2xl bg-amber-50/70  border border-amber-200/60  text-xs text-amber-900  leading-relaxed font-normal flex items-start gap-2.5">
-              <LucideIcon  className="ph-bold ph-clock text-amber-700  text-sm mt-0.5 shrink-0" />
+              <HugeIcon  className="ph-bold ph-clock text-amber-700  text-sm mt-0.5 shrink-0" />
               <span>
                 <strong>3:00 PM Evaluation Cut-off:</strong> Same-day verification filing closes at 3:00 PM. Applications filed thereafter are logged for next working day evaluation.
               </span>
@@ -427,7 +427,7 @@ export default function OfficeDirectory() {
                     className="p-2 rounded-xl text-xs text-zinc-500  hover:bg-white :bg-zinc-700 transition-colors shrink-0 cursor-pointer"
                     title="Copy Registrar email"
                   >
-                    <LucideIcon  className={`ph-bold ${copiedKey === "reg-email" ? "ph-check text-emerald-600" : "ph-copy"}`} />
+                    <HugeIcon  className={`ph-bold ${copiedKey === "reg-email" ? "ph-check text-emerald-600" : "ph-copy"}`} />
                   </button>
                 </div>
 
@@ -450,7 +450,7 @@ export default function OfficeDirectory() {
                     className="p-2 rounded-xl text-xs text-zinc-500  hover:bg-white :bg-zinc-700 transition-colors shrink-0 cursor-pointer"
                     title="Copy OSAS email"
                   >
-                    <LucideIcon  className={`ph-bold ${copiedKey === "osas-email" ? "ph-check text-emerald-600" : "ph-copy"}`} />
+                    <HugeIcon  className={`ph-bold ${copiedKey === "osas-email" ? "ph-check text-emerald-600" : "ph-copy"}`} />
                   </button>
                 </div>
 
@@ -470,7 +470,7 @@ export default function OfficeDirectory() {
                     className="p-2 rounded-xl text-xs text-zinc-500  hover:bg-white :bg-zinc-700 transition-colors shrink-0 cursor-pointer"
                     title="Copy trunkline phone"
                   >
-                    <LucideIcon  className={`ph-bold ${copiedKey === "trunkline" ? "ph-check text-emerald-600" : "ph-copy"}`} />
+                    <HugeIcon  className={`ph-bold ${copiedKey === "trunkline" ? "ph-check text-emerald-600" : "ph-copy"}`} />
                   </button>
                 </div>
               </div>

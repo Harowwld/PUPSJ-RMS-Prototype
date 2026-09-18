@@ -1,5 +1,5 @@
 "use client";
-import LucideIcon from "@/components/shared/LucideIcon";
+import HugeIcon from "@/components/shared/HugeIcon";
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -149,7 +149,7 @@ function FirstPagePreview({ proposalId, title, onOpenPreview }) {
           aria-label={`Preview fallback for ${title}`}
         >
           <div className="w-10 h-10 rounded-xl bg-red-50 dark:bg-red-950/40 text-pup-maroon dark:text-red-400 flex items-center justify-center text-xl mb-2">
-            <LucideIcon  className="ph-duotone ph-file-pdf"></LucideIcon>
+            <HugeIcon  className="ph-duotone ph-file-pdf"></HugeIcon>
           </div>
           <p className="text-xs font-semibold text-gray-800 dark:text-zinc-200">Official Document On File</p>
           <p className="text-[11px] text-gray-400 dark:text-zinc-500 max-w-xs mt-0.5 mb-3">
@@ -163,7 +163,7 @@ function FirstPagePreview({ proposalId, title, onOpenPreview }) {
             className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-white dark:bg-zinc-800 border border-gray-200 dark:border-white/10 text-pup-maroon dark:text-red-400 hover:bg-gray-50 shadow-2xs cursor-pointer active:scale-95 transition-all"
           >
             <span>Preview PDF Document</span>
-            <LucideIcon  className="ph-bold ph-eye text-xs"></LucideIcon>
+            <HugeIcon  className="ph-bold ph-eye text-xs"></HugeIcon>
           </Button>
         </div>
       </div>
@@ -183,14 +183,14 @@ function FirstPagePreview({ proposalId, title, onOpenPreview }) {
       >
         {loading && (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-50/80 dark:bg-zinc-900/80 text-gray-400 dark:text-zinc-500">
-            <LucideIcon  className="ph-bold ph-spinner animate-spin text-2xl mb-1.5 text-pup-maroon"></LucideIcon>
+            <HugeIcon  className="ph-bold ph-spinner animate-spin text-2xl mb-1.5 text-pup-maroon"></HugeIcon>
             <span className="text-xs font-medium">Rendering document preview...</span>
           </div>
         )}
         <canvas ref={canvasRef} className="rounded shadow-xs max-h-[360px] object-contain group-hover:opacity-95 transition-opacity" />
         {onOpenPreview && !loading && (
           <div className="absolute bottom-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity bg-black/60 text-white text-[11px] font-medium px-2.5 py-1 rounded-lg backdrop-blur-xs flex items-center gap-1 shadow-sm">
-            <LucideIcon  className="ph-bold ph-magnifying-glass-plus"></LucideIcon>
+            <HugeIcon  className="ph-bold ph-magnifying-glass-plus"></HugeIcon>
             <span>Click to Preview</span>
           </div>
         )}
@@ -203,7 +203,7 @@ function FirstPagePreview({ proposalId, title, onOpenPreview }) {
           className="inline-flex items-center gap-1 text-xs font-semibold text-pup-maroon hover:underline dark:text-red-400 cursor-pointer"
         >
           <span>Preview Full PDF</span>
-          <LucideIcon  className="ph-bold ph-eye text-xs"></LucideIcon>
+          <HugeIcon  className="ph-bold ph-eye text-xs"></HugeIcon>
         </button>
       </div>
     </div>
@@ -490,7 +490,7 @@ export default function OsasMonitoringTab({ showToast }) {
                   )}
                   title="Table List View"
                 >
-                  <LucideIcon  className="ph-bold ph-list-dashes text-sm"></LucideIcon>
+                  <HugeIcon  className="ph-bold ph-list-dashes text-sm"></HugeIcon>
                   <span>List</span>
                 </button>
                 <button
@@ -504,7 +504,7 @@ export default function OsasMonitoringTab({ showToast }) {
                   )}
                   title="Kanban Pipeline Board"
                 >
-                  <LucideIcon  className="ph-bold ph-kanban text-sm"></LucideIcon>
+                  <HugeIcon  className="ph-bold ph-kanban text-sm"></HugeIcon>
                   <span>Kanban</span>
                 </button>
               </div>
@@ -556,7 +556,7 @@ export default function OsasMonitoringTab({ showToast }) {
           ) : (
             <div className="text-xs text-gray-500 dark:text-zinc-400 flex items-center gap-2">
               <span className="inline-flex items-center gap-1.5 font-medium">
-                <LucideIcon  className="ph-bold ph-kanban text-sm text-pup-maroon dark:text-red-400"></LucideIcon>
+                <HugeIcon  className="ph-bold ph-kanban text-sm text-pup-maroon dark:text-red-400"></HugeIcon>
                 <span>Pipeline: <strong className="text-gray-900 dark:text-zinc-100">{rows.length}</strong> total proposals across stages</span>
               </span>
             </div>
@@ -564,7 +564,7 @@ export default function OsasMonitoringTab({ showToast }) {
 
           {/* Right: Search Input */}
           <div className="relative w-full md:w-80 shrink-0 group">
-            <LucideIcon  className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-500 text-xs pointer-events-none transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400"></LucideIcon>
+            <HugeIcon  className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-500 text-xs pointer-events-none transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400"></HugeIcon>
             <Input
               type="text"
               placeholder="Search proposals, students, orgs..."
@@ -585,7 +585,7 @@ export default function OsasMonitoringTab({ showToast }) {
                 className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-pup-maroon dark:hover:text-red-400 cursor-pointer border-0 bg-transparent p-0 leading-none"
                 aria-label="Clear search"
               >
-                <LucideIcon  className="ph-bold ph-x text-xs"></LucideIcon>
+                <HugeIcon  className="ph-bold ph-x text-xs"></HugeIcon>
               </button>
             )}
           </div>
@@ -719,7 +719,7 @@ export default function OsasMonitoringTab({ showToast }) {
                       <td colSpan={5} className="py-16 px-6 text-center">
                         <div className="flex flex-col items-center justify-center">
                           <div className="w-16 h-16 rounded-full bg-gray-50 dark:bg-zinc-800/60 border border-gray-200 dark:border-white/10 flex items-center justify-center mb-3">
-                            <LucideIcon  className="ph-duotone ph-tray text-2xl text-gray-400 dark:text-zinc-500"></LucideIcon>
+                            <HugeIcon  className="ph-duotone ph-tray text-2xl text-gray-400 dark:text-zinc-500"></HugeIcon>
                           </div>
                           <p className="text-base font-semibold text-gray-900 dark:text-zinc-100">
                             {searchQuery ? "No event proposals match your search." : "No event proposals in this view."}
@@ -829,7 +829,7 @@ export default function OsasMonitoringTab({ showToast }) {
                             <span className="text-[10px] font-bold uppercase tracking-wider text-pup-maroon dark:text-red-400 bg-red-50 dark:bg-red-950/30 px-2 py-0.5 rounded border border-pup-maroon/15 truncate max-w-[190px]">
                               {item.organization_name}
                             </span>
-                            <LucideIcon 
+                            <HugeIcon 
                               className="ph-bold ph-dots-six-vertical text-gray-300 dark:text-zinc-600 group-hover:text-gray-500 dark:group-hover:text-zinc-400 text-sm transition-colors shrink-0"
                               title="Drag to change stage"
                             />
@@ -842,7 +842,7 @@ export default function OsasMonitoringTab({ showToast }) {
 
                           {/* Proponent info */}
                           <div className="flex items-center gap-1.5 text-[11px] text-gray-500 dark:text-zinc-400">
-                            <LucideIcon  className="ph-bold ph-user text-gray-400 text-xs shrink-0"></LucideIcon>
+                            <HugeIcon  className="ph-bold ph-user text-gray-400 text-xs shrink-0"></HugeIcon>
                             <span className="truncate font-medium text-gray-700 dark:text-zinc-300">{item.student_name}</span>
                             <span className="text-gray-300 dark:text-zinc-600">·</span>
                             <span className="font-mono text-[10px] shrink-0">{item.student_no}</span>
@@ -851,7 +851,7 @@ export default function OsasMonitoringTab({ showToast }) {
                           {/* Card Footer: Submitted Date & Review */}
                           <div className="pt-2 border-t border-gray-100 dark:border-white/5 flex items-center justify-between text-[11px] text-gray-500 dark:text-zinc-400">
                             <span className="inline-flex items-center gap-1.5 text-[11px] text-gray-400 dark:text-zinc-500 font-normal">
-                              <LucideIcon  className="ph ph-clock text-xs text-gray-400 dark:text-zinc-500"></LucideIcon>
+                              <HugeIcon  className="ph ph-clock text-xs text-gray-400 dark:text-zinc-500"></HugeIcon>
                               {item.created_at
                                 ? new Date(item.created_at).toLocaleDateString(undefined, {
                                     month: "short",
@@ -970,7 +970,7 @@ export default function OsasMonitoringTab({ showToast }) {
               <SheetHeader className="shrink-0 p-6 pb-4 pr-14 border-b border-gray-100 dark:border-white/10 bg-gradient-to-r from-gray-50/90 via-white to-gray-50/50 dark:from-zinc-900/90 dark:via-card dark:to-zinc-900/50">
                 <div className="flex items-start gap-3.5">
                   <div className="w-11 h-11 rounded-xl bg-pup-maroon/10 text-pup-maroon dark:bg-red-950/40 dark:text-red-400 flex items-center justify-center text-xl shrink-0 shadow-xs">
-                    <LucideIcon  className="ph-bold ph-file-text"></LucideIcon>
+                    <HugeIcon  className="ph-bold ph-file-text"></HugeIcon>
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 flex-wrap mb-1">
@@ -1067,7 +1067,7 @@ export default function OsasMonitoringTab({ showToast }) {
                   >
                     {isSaving ? (
                       <>
-                        <LucideIcon  className="ph-bold ph-spinner animate-spin mr-2"></LucideIcon>
+                        <HugeIcon  className="ph-bold ph-spinner animate-spin mr-2"></HugeIcon>
                         Publishing...
                       </>
                     ) : (

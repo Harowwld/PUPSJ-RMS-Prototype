@@ -1,6 +1,6 @@
 "use client"
 
-import LucideIcon from "@/components/shared/LucideIcon";
+import HugeIcon from "@/components/shared/HugeIcon";
 import React, { useState, useCallback } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -26,12 +26,12 @@ import AuditLogsTableSkeleton from "@/components/systemadmin/skeletons/AuditLogs
 
 function SortIndicator({ column, logSortBy, logSortOrder }) {
   if (logSortBy !== column) {
-    return <LucideIcon  className="ph-bold ph-caret-up-down ml-1 text-[12px] text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"></LucideIcon>
+    return <HugeIcon  className="ph-bold ph-caret-up-down ml-1 text-[12px] text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"></HugeIcon>
   }
   return logSortOrder === "ASC" ? (
-    <LucideIcon  className="ph-bold ph-caret-up ml-1 text-[12px] text-gray-400"></LucideIcon>
+    <HugeIcon  className="ph-bold ph-caret-up ml-1 text-[12px] text-gray-400"></HugeIcon>
   ) : (
-    <LucideIcon  className="ph-bold ph-caret-down ml-1 text-[12px] text-gray-400"></LucideIcon>
+    <HugeIcon  className="ph-bold ph-caret-down ml-1 text-[12px] text-gray-400"></HugeIcon>
   )
 }
 
@@ -113,13 +113,12 @@ const LogRow = React.memo(function LogRow({
           <button
             onClick={() => toggleRow(log.id)}
             title={isExpanded ? "Collapse Details" : "Expand Details"}
-            className="mx-auto flex h-7 w-7 items-center justify-center bg-transparent border-none text-[#8E8E93] hover:text-[#111111] dark:hover:text-zinc-200 cursor-pointer transition-transform duration-200"
-            style={{ transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}
+            className="mx-auto flex h-7 w-7 items-center justify-center bg-transparent border-none text-[#8E8E93] hover:text-[#111111] dark:hover:text-zinc-200 cursor-pointer transition-colors duration-200"
           >
-            <LucideIcon  className="ph-bold ph-caret-down text-[14px]"></LucideIcon>
+            <HugeIcon className={cn("ph-bold text-[14px]", isExpanded ? "ph-minus" : "ph-plus")}></HugeIcon>
           </button>
         </td>
-        <td className="py-0 px-4 align-middle text-[13px] font-normal text-[#111111] dark:text-zinc-50">
+        <td className="py-0 px-4 align-middle whitespace-nowrap text-[13px] font-normal text-[#111111] dark:text-zinc-50">
           {formattedTimestamp}
         </td>
         <td className="py-0 px-4 align-middle">
@@ -142,7 +141,7 @@ const LogRow = React.memo(function LogRow({
             </span>
           </div>
         </td>
-        <td className="py-0 px-4 align-middle text-[13px] font-medium text-[#111111] dark:text-zinc-50">
+        <td className="py-0 px-4 align-middle whitespace-nowrap text-[13px] font-medium text-[#111111] dark:text-zinc-50">
           {formatActionLabel(log.action)}
         </td>
         <td className="py-0 px-4 align-middle">
@@ -169,7 +168,7 @@ const LogRow = React.memo(function LogRow({
                   aria-label="View Details"
                   className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
                 >
-                  <LucideIcon  className="ph-bold ph-eye text-[16px]"></LucideIcon>
+                  <HugeIcon  className="ph-bold ph-eye text-[16px]"></HugeIcon>
                 </button>
               </TooltipTrigger>
               <TooltipContent>View Details</TooltipContent>
@@ -245,7 +244,7 @@ export default function LogTable({
         <Empty className="flex flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400">
           <EmptyHeader className="flex flex-col items-center gap-0">
             <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
-              <LucideIcon  className="ph-duotone ph-warning-circle text-xl text-pup-maroon dark:text-primary" />
+              <HugeIcon  className="ph-duotone ph-warning-circle text-xl text-pup-maroon dark:text-primary" />
             </EmptyMedia>
             <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">
               Load failed
@@ -263,14 +262,14 @@ export default function LogTable({
   const displayPage = Math.min(logPage, totalPages)
 
   return (
-    <div className={cn("flex flex-1 flex-col min-h-0", !embedded && "gap-6")}>
+    <div className={cn("flex flex-col", !embedded && "gap-6")}>
       <div className={cn(
-        "flex-1 min-h-0 flex flex-col overflow-hidden isolate",
+        "flex flex-col isolate",
         embedded
           ? "border-t border-gray-100 dark:border-white/10 rounded-b-2xl"
           : "rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card"
       )}>
-        <div className="flex-1 overflow-hidden overflow-x-auto select-none">
+        <div className="w-full overflow-x-auto select-none">
           <table className={cn("min-w-full text-sm", displayLogs.length === 0 && "h-full")}>
             <thead className="sticky top-0 z-10 border-b border-gray-200 bg-white dark:bg-card dark:border-white/10">
               <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">
@@ -360,7 +359,7 @@ export default function LogTable({
                         <div className="relative mb-6">
                           <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
                           <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
-                            <LucideIcon  className="ph-duotone ph-magnifying-glass text-xl text-gray-300 dark:text-zinc-600"></LucideIcon>
+                            <HugeIcon  className="ph-duotone ph-magnifying-glass text-xl text-gray-300 dark:text-zinc-600"></HugeIcon>
                           </EmptyMedia>
                         </div>
                         <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">

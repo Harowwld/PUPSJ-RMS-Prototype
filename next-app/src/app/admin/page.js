@@ -1,6 +1,6 @@
 "use client"
 
-import LucideIcon from "@/components/shared/LucideIcon";
+import HugeIcon from "@/components/shared/HugeIcon";
 import {
   useEffect,
   useMemo,
@@ -1800,7 +1800,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
                     : "text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-zinc-400 dark:hover:bg-white/5 dark:hover:text-zinc-50"
                 )}
               >
-                <LucideIcon  className={cn(item.iconClass, "text-sm")}></LucideIcon>
+                <HugeIcon  className={cn(item.iconClass, "text-sm")}></HugeIcon>
                 {item.label}
                 {item.badge > 0 && (
                   <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[9px] font-semibold text-white bg-pup-maroon dark:bg-red-500/20 dark:text-red-400">
@@ -1831,7 +1831,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
         <main className="relative w-full min-w-0 min-h-0 flex-1 bg-white/25 dark:bg-zinc-950/25 overflow-y-auto backdrop-blur-xs">
           <div 
             className="flex-1 p-4 flex flex-col min-h-0 w-full"
-            style={{ transform: `scale(${[0.94, 1.04, 1.15, 1.25, 1.35, 1.46, 1.56][zoomNode]})`, transformOrigin: 'top left', width: `${100 / [0.94, 1.04, 1.15, 1.25, 1.35, 1.46, 1.56][zoomNode]}%`, height: `${100 / [0.94, 1.04, 1.15, 1.25, 1.35, 1.46, 1.56][zoomNode]}%` }}
+            style={{ transform: `scale(${[0.94, 1.04, 1.15, 1.25, 1.35, 1.46, 1.56][zoomNode]})`, transformOrigin: 'top left', width: `${100 / [0.94, 1.04, 1.15, 1.25, 1.35, 1.46, 1.56][zoomNode]}%`, minHeight: `${100 / [0.94, 1.04, 1.15, 1.25, 1.35, 1.46, 1.56][zoomNode]}%` }}
           >          {view === "directory" && (
             <StaffDirectoryTab
               staffData={staffData}

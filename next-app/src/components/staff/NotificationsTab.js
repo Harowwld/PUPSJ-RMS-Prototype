@@ -1,6 +1,6 @@
 "use client"
 
-import LucideIcon from "@/components/shared/LucideIcon";
+import HugeIcon from "@/components/shared/HugeIcon";
 import { useCallback, useEffect, useMemo, useState, useRef } from "react"
 import { cn } from "@/lib/utils"
 import { Card } from "@/components/ui/card"
@@ -35,12 +35,12 @@ import {
 
 function SortIndicator({ column, sortBy, sortOrder }) {
   if (sortBy !== column) {
-    return <LucideIcon  className="ph-bold ph-caret-up-down ml-1 text-[12px] text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"></LucideIcon>
+    return <HugeIcon  className="ph-bold ph-caret-up-down ml-1 text-[12px] text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"></HugeIcon>
   }
   return sortOrder === "ASC" ? (
-    <LucideIcon  className="ph-bold ph-caret-up ml-1 text-[12px] text-gray-400"></LucideIcon>
+    <HugeIcon  className="ph-bold ph-caret-up ml-1 text-[12px] text-gray-400"></HugeIcon>
   ) : (
-    <LucideIcon  className="ph-bold ph-caret-down ml-1 text-[12px] text-gray-400"></LucideIcon>
+    <HugeIcon  className="ph-bold ph-caret-down ml-1 text-[12px] text-gray-400"></HugeIcon>
   )
 }
 
@@ -350,7 +350,7 @@ export default function NotificationsTab({
                     onClick={markAllRead}
                     className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-40"
                   >
-                    <LucideIcon  className="ph-bold ph-checks mr-1.5"></LucideIcon>
+                    <HugeIcon  className="ph-bold ph-checks mr-1.5"></HugeIcon>
                     Read
                   </Button>
                   <Button
@@ -360,7 +360,7 @@ export default function NotificationsTab({
                     onClick={markAllUnread}
                     className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-40"
                   >
-                    <LucideIcon  className="ph-bold ph-envelopes mr-1.5"></LucideIcon>
+                    <HugeIcon  className="ph-bold ph-envelopes mr-1.5"></HugeIcon>
                     Unread
                   </Button>
                 </div>
@@ -403,7 +403,7 @@ export default function NotificationsTab({
               {/* Search Input */}
               <div className="w-full sm:w-60 md:w-64 relative group min-w-0">
                 <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                  <LucideIcon  className="ph-bold ph-magnifying-glass text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm"></LucideIcon>
+                  <HugeIcon  className="ph-bold ph-magnifying-glass text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm"></HugeIcon>
                 </div>
                 <Input
                   value={searchQuery}
@@ -515,7 +515,7 @@ export default function NotificationsTab({
             <Empty className="flex h-[360px] flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400">
               <EmptyHeader className="flex flex-col items-center gap-0">
                 <EmptyMedia className="mb-4 flex h-16 w-16 rotate-3 items-center justify-center rounded-2xl border border-gray-200/80 bg-white shadow-sm dark:border-white/10 dark:bg-zinc-800">
-                  <LucideIcon  className="ph-duotone ph-warning-circle text-3xl text-pup-maroon dark:text-primary" />
+                  <HugeIcon  className="ph-duotone ph-warning-circle text-3xl text-pup-maroon dark:text-primary" />
                 </EmptyMedia>
                 <EmptyTitle className="text-base font-semibold text-gray-900 dark:text-zinc-50">
                   Could not load notifications
@@ -660,7 +660,7 @@ export default function NotificationsTab({
                           <EmptyHeader className="flex flex-col items-center gap-0">
                             <div className="relative mb-4">
                               <EmptyMedia className="flex h-16 w-16 rotate-3 items-center justify-center rounded-2xl border border-gray-200/80 bg-white shadow-sm dark:border-white/10 dark:bg-zinc-800">
-                                <LucideIcon 
+                                <HugeIcon 
                                   className={cn(
                                     "ph-duotone text-3xl text-gray-400 dark:text-zinc-500",
                                     hasActiveFilters
@@ -721,7 +721,7 @@ export default function NotificationsTab({
                                   ui.badge
                                 )}
                               >
-                                <LucideIcon  className={cn("ph-fill text-[11px]", ui.icon)}></LucideIcon>
+                                <HugeIcon  className={cn("ph-fill text-[11px]", ui.icon)}></HugeIcon>
                                 {ui.label}
                               </div>
                               {isUnread ? (
@@ -741,7 +741,7 @@ export default function NotificationsTab({
                             <div
                               className="inline-flex w-fit items-center justify-center gap-1 rounded-full px-2.5 py-1 border border-pup-maroon/20 bg-pup-maroon/10 text-[11px] font-medium tracking-[0.02em] text-pup-maroon whitespace-nowrap dark:border-red-400/20 dark:bg-red-400/10 dark:text-red-400"
                             >
-                              <LucideIcon  className="ph-bold ph-file text-[11px]"></LucideIcon>
+                              <HugeIcon  className="ph-bold ph-file text-[11px]"></HugeIcon>
                               {n.doc_type}
                             </div>
                           </td>
@@ -761,12 +761,12 @@ export default function NotificationsTab({
                               {n.reviewed_by && (
                                 n.is_previewed === 1 ? (
                                   <span className="inline-flex w-fit items-center gap-1 rounded-full bg-green-50 px-2 py-0.5 text-[10px] font-medium tracking-[0.02em] text-green-700 border border-green-200 dark:bg-emerald-950/20 dark:text-emerald-500/90 dark:border-emerald-900/50">
-                                    <LucideIcon  className="ph-bold ph-check-circle text-[10px]"></LucideIcon>
+                                    <HugeIcon  className="ph-bold ph-check-circle text-[10px]"></HugeIcon>
                                     Verified Preview
                                   </span>
                                 ) : (
                                   <span className="inline-flex w-fit items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-medium tracking-[0.02em] text-amber-700 border border-amber-200 dark:bg-amber-950/20 dark:text-amber-500/90 dark:border-amber-900/50">
-                                    <LucideIcon  className="ph-bold ph-info text-[10px]"></LucideIcon>
+                                    <HugeIcon  className="ph-bold ph-info text-[10px]"></HugeIcon>
                                     Quick Approved
                                   </span>
                                 )
@@ -790,7 +790,7 @@ export default function NotificationsTab({
                                     onClick={() => handleViewDetails(n)}
                                     className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-400 hover:text-blue-500 dark:hover:text-blue-400 transition-colors focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
                                   >
-                                    <LucideIcon  className="ph-bold ph-eye text-[16px]"></LucideIcon>
+                                    <HugeIcon  className="ph-bold ph-eye text-[16px]"></HugeIcon>
                                   </button>
                                 </TooltipTrigger>
                                 <TooltipContent className="bg-zinc-900 text-white border-zinc-800">
@@ -807,7 +807,7 @@ export default function NotificationsTab({
                                       onClick={() => handleAction(n.id, isUnread ? "markRead" : "markUnread")}
                                       className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
                                     >
-                                      <LucideIcon  className={cn("ph-bold text-[16px]", isUnread ? "ph-checks" : "ph-envelope")}></LucideIcon>
+                                      <HugeIcon  className={cn("ph-bold text-[16px]", isUnread ? "ph-checks" : "ph-envelope")}></HugeIcon>
                                     </button>
                                   </TooltipTrigger>
                                   <TooltipContent className="bg-zinc-900 text-white border-zinc-800">
@@ -824,7 +824,7 @@ export default function NotificationsTab({
                                     onClick={() => handleAction(n.id, activeTab === "inbox" ? "archive" : "unarchive")}
                                     className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-400 hover:text-amber-500 dark:hover:text-amber-400 transition-colors focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
                                   >
-                                    <LucideIcon  className={cn("ph-bold text-[16px]", activeTab === "inbox" ? "ph-archive" : "ph-archive-restore")}></LucideIcon>
+                                    <HugeIcon  className={cn("ph-bold text-[16px]", activeTab === "inbox" ? "ph-archive" : "ph-archive-restore")}></HugeIcon>
                                   </button>
                                 </TooltipTrigger>
                                 <TooltipContent className="bg-zinc-900 text-white border-zinc-800">
@@ -977,7 +977,7 @@ export default function NotificationsTab({
                       onClick={() => setIsFullscreen(false)}
                       className="h-10 w-10 rounded-full bg-black/50 text-white hover:bg-black/70 backdrop-blur-md border-0 active:scale-95 transition-all"
                     >
-                      <LucideIcon  className="ph-bold ph-x text-lg"></LucideIcon>
+                      <HugeIcon  className="ph-bold ph-x text-lg"></HugeIcon>
                     </Button>
                   </div>
                   <iframe
@@ -1023,7 +1023,7 @@ export default function NotificationsTab({
                           variant="outline"
                           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-pup-maroon/20 bg-pup-maroon/10 text-[10px] font-semibold tracking-wider text-pup-maroon dark:border-red-400/20 dark:bg-red-400/10 dark:text-red-400 shadow-none"
                         >
-                          <LucideIcon  className="ph-bold ph-file text-[11px]"></LucideIcon>
+                          <HugeIcon  className="ph-bold ph-file text-[11px]"></HugeIcon>
                           {selectedNotif?.doc_type}
                         </Badge>
                       </div>
@@ -1044,7 +1044,7 @@ export default function NotificationsTab({
                               variant="outline"
                               className={cn("flex w-fit items-center gap-1.5 rounded-full border px-3 py-1.5 text-[10px] font-semibold tracking-wider shadow-none", ui.badge)}
                             >
-                              <LucideIcon  className={cn("ph-fill text-[11px]", ui.icon)}></LucideIcon>
+                              <HugeIcon  className={cn("ph-fill text-[11px]", ui.icon)}></HugeIcon>
                               {ui.label}
                             </Badge>
                           )
@@ -1102,7 +1102,7 @@ export default function NotificationsTab({
                         isFullscreen && "bg-pup-maroon dark:bg-red-600 text-white hover:bg-pup-darkMaroon border-pup-darkMaroon"
                       )}
                     >
-                      <LucideIcon  className={cn("ph-bold text-lg", isFullscreen ? "ph-corners-in" : "ph-corners-out")}></LucideIcon>
+                      <HugeIcon  className={cn("ph-bold text-lg", isFullscreen ? "ph-corners-in" : "ph-corners-out")}></HugeIcon>
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent className="bg-zinc-900 text-white border-zinc-800">
@@ -1121,7 +1121,7 @@ export default function NotificationsTab({
                       }}
                       className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-amber-50 hover:text-amber-600 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                     >
-                      <LucideIcon  className="ph-bold ph-envelope mr-2"></LucideIcon>
+                      <HugeIcon  className="ph-bold ph-envelope mr-2"></HugeIcon>
                       Unread
                     </Button>
                   ) : (
@@ -1133,7 +1133,7 @@ export default function NotificationsTab({
                       }}
                       className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-emerald-50 hover:text-emerald-600 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                     >
-                      <LucideIcon  className="ph-bold ph-checks mr-2"></LucideIcon>
+                      <HugeIcon  className="ph-bold ph-checks mr-2"></HugeIcon>
                       Read
                     </Button>
                   )
@@ -1168,7 +1168,7 @@ export default function NotificationsTab({
                     className="inline-flex h-10 items-center rounded-xl btn-brand-red px-6 text-xs font-semibold text-white! shadow-xs transition-all active:scale-95 cursor-pointer"
                     style={{ color: "#ffffff" }}
                   >
-                    <LucideIcon  className="ph-bold ph-arrow-square-out mr-2 text-base"></LucideIcon>
+                    <HugeIcon  className="ph-bold ph-arrow-square-out mr-2 text-base"></HugeIcon>
                     Open
                   </a>
                 )}

@@ -1,5 +1,5 @@
 "use client";
-import LucideIcon from "@/components/shared/LucideIcon";
+import HugeIcon from "@/components/shared/HugeIcon";
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
@@ -289,7 +289,7 @@ export default function ProcessWorkflow() {
                               className="inline-flex items-center gap-1 text-[10px] font-medium text-red-500 hover:text-red-400 ml-2 transition-colors cursor-pointer"
                             >
                               <span>{step.actionLabel}</span>
-                              <LucideIcon  className={`ph-bold ${step.actionIcon || (step.actionType === "scroll" || step.actionTarget === "catalog" ? "ph-arrow-down" : "ph-arrow-right")} text-xs`} />
+                              <HugeIcon  className={`ph-bold ${step.actionIcon || (step.actionType === "scroll" || step.actionTarget === "catalog" ? "ph-arrow-down" : "ph-arrow-right")} text-xs`} />
                             </button>
                           )}
                         </div>

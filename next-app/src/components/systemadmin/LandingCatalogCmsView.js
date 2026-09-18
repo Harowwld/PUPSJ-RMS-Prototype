@@ -1,6 +1,6 @@
 "use client"
 
-import LucideIcon from "@/components/shared/LucideIcon";
+import HugeIcon from "@/components/shared/HugeIcon";
 import { useState, useEffect, useCallback } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -468,7 +468,7 @@ export default function LandingCatalogCmsView({ showToast }) {
               >
                 {saving ? (
                   <>
-                    <LucideIcon  className="ph-bold ph-spinner animate-spin mr-1.5 text-[14px]" />
+                    <HugeIcon  className="ph-bold ph-spinner animate-spin mr-1.5 text-[14px]" />
                     Saving...
                   </>
                 ) : (
@@ -607,7 +607,7 @@ export default function LandingCatalogCmsView({ showToast }) {
                             onClick={() => moveCard(idx, -1)}
                             className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-800 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-zinc-800 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer border-0 bg-transparent transition-colors"
                           >
-                            <LucideIcon  className="ph-bold ph-caret-up text-xs" />
+                            <HugeIcon  className="ph-bold ph-caret-up text-xs" />
                           </button>
                           <button
                             type="button"
@@ -616,7 +616,7 @@ export default function LandingCatalogCmsView({ showToast }) {
                             onClick={() => moveCard(idx, 1)}
                             className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-800 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-zinc-800 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer border-0 bg-transparent transition-colors"
                           >
-                            <LucideIcon  className="ph-bold ph-caret-down text-xs" />
+                            <HugeIcon  className="ph-bold ph-caret-down text-xs" />
                           </button>
                           <button
                             type="button"
@@ -625,7 +625,7 @@ export default function LandingCatalogCmsView({ showToast }) {
                             onClick={() => duplicateCard(idx)}
                             className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:text-pup-maroon dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer border-0 bg-transparent transition-colors"
                           >
-                            <LucideIcon  className="ph-bold ph-copy text-xs" />
+                            <HugeIcon  className="ph-bold ph-copy text-xs" />
                           </button>
                           <button
                             type="button"
@@ -634,7 +634,7 @@ export default function LandingCatalogCmsView({ showToast }) {
                             onClick={() => setDeleteCardIdx(idx)}
                             className="w-7 h-7 rounded-lg flex items-center justify-center text-rose-500 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-950/30 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer border-0 bg-transparent transition-colors"
                           >
-                            <LucideIcon  className="ph-bold ph-trash text-xs" />
+                            <HugeIcon  className="ph-bold ph-trash text-xs" />
                           </button>
                         </div>
                       </div>
@@ -649,12 +649,12 @@ export default function LandingCatalogCmsView({ showToast }) {
                     onClick={addNewCard}
                     className="w-full py-3.5 rounded-xl border-2 border-dashed border-gray-200 dark:border-white/10 hover:border-pup-maroon/40 hover:bg-pup-maroon/5 dark:hover:bg-red-500/5 transition-all flex items-center justify-center gap-2 text-xs font-semibold text-gray-600 hover:text-pup-maroon dark:text-zinc-400 dark:hover:text-red-400 cursor-pointer select-none"
                   >
-                    <LucideIcon  className="ph-bold ph-plus text-sm" />
+                    <HugeIcon  className="ph-bold ph-plus text-sm" />
                     <span>Add Another Credential Card ({currentItems.length}/{MAX_CATALOG_ITEMS})</span>
                   </button>
                 ) : (
                   <div className="w-full py-3 px-3.5 rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/70 dark:bg-zinc-900/30 text-center text-xs text-gray-500 dark:text-zinc-400 flex items-center justify-center gap-2">
-                    <LucideIcon  className="ph-bold ph-info text-pup-maroon dark:text-red-400" />
+                    <HugeIcon  className="ph-bold ph-info text-pup-maroon dark:text-red-400" />
                     <span>Maximum limit reached ({MAX_CATALOG_ITEMS} of {MAX_CATALOG_ITEMS} credentials). Document catalog is capped at {MAX_CATALOG_ITEMS} cards for layout stability.</span>
                   </div>
                 )}
@@ -795,7 +795,7 @@ export default function LandingCatalogCmsView({ showToast }) {
                       {currentCard.requirements?.map((req, rIdx) => (
                         <div key={rIdx} className="flex items-center gap-2 group">
                           <div className="w-5 h-5 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 flex items-center justify-center flex-shrink-0 text-[10px] font-bold">
-                            <LucideIcon  className="ph-bold ph-check" />
+                            <HugeIcon  className="ph-bold ph-check" />
                           </div>
                           <Input
                             value={req}
@@ -808,7 +808,7 @@ export default function LandingCatalogCmsView({ showToast }) {
                             onClick={() => removeRequirement(rIdx)}
                             className="w-7 h-7 rounded-lg text-gray-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 flex items-center justify-center cursor-pointer border-0 bg-transparent transition-colors"
                           >
-                            <LucideIcon  className="ph-bold ph-x text-xs" />
+                            <HugeIcon  className="ph-bold ph-x text-xs" />
                           </button>
                         </div>
                       ))}
@@ -1001,7 +1001,7 @@ export default function LandingCatalogCmsView({ showToast }) {
                     onClick={() => setPreviewDarkTheme(!previewDarkTheme)}
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white dark:bg-zinc-800 text-xs font-semibold text-gray-700 dark:text-zinc-200 border border-gray-200 dark:border-white/10 cursor-pointer shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700 transition-colors"
                   >
-                    <LucideIcon  className={cn("ph-bold", previewDarkTheme ? "ph-sun text-amber-500" : "ph-moon text-zinc-700")} />
+                    <HugeIcon  className={cn("ph-bold", previewDarkTheme ? "ph-sun text-amber-500" : "ph-moon text-zinc-700")} />
                     <span>{previewDarkTheme ? "Switch to Light View" : "Switch to Dark View"}</span>
                   </button>
                 </div>
@@ -1061,14 +1061,14 @@ export default function LandingCatalogCmsView({ showToast }) {
 
                       <div className="p-4 rounded-2xl liquid-glass-light border border-black/[0.06] dark:border-white/[0.1] bg-black/[0.02] dark:bg-white/[0.03]">
                         <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider mb-2.5 font-mono">
-                          <LucideIcon  className="ph-bold ph-shield-check text-[#800000] dark:text-red-400 text-base" />
+                          <HugeIcon  className="ph-bold ph-shield-check text-[#800000] dark:text-red-400 text-base" />
                           Mandatory Filing Requirements
                         </div>
                         <ul className="space-y-2 text-xs text-gray-600 dark:text-zinc-300">
                           {currentItems[previewActiveIdx]?.requirements?.map((req, idx) => (
                             <li key={idx} className="flex items-start gap-2.5 leading-relaxed">
                               <span className="mt-0.5 flex-shrink-0 w-4 h-4 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 flex items-center justify-center text-[10px] font-bold">
-                                <LucideIcon  className="ph-bold ph-check text-[10px]" />
+                                <HugeIcon  className="ph-bold ph-check text-[10px]" />
                               </span>
                               <span>{req}</span>
                             </li>
@@ -1082,7 +1082,7 @@ export default function LandingCatalogCmsView({ showToast }) {
                       {catalogData.primaryButtonEnabled !== false && (
                         <BevelButton className="h-10 px-6 rounded-full text-xs font-bold">
                           <span>{catalogData.primaryButtonText}</span>
-                          <LucideIcon  className="ph-bold ph-arrow-right text-xs ml-1" />
+                          <HugeIcon  className="ph-bold ph-arrow-right text-xs ml-1" />
                         </BevelButton>
                       )}
 
@@ -1126,7 +1126,7 @@ export default function LandingCatalogCmsView({ showToast }) {
                         }
                         className="w-9 h-9 rounded-full bg-white dark:bg-zinc-800 border border-gray-200 dark:border-white/10 flex items-center justify-center text-xs font-bold shadow-xs hover:scale-105 active:scale-95 cursor-pointer transition-all"
                       >
-                        <LucideIcon  className="ph-bold ph-arrow-left text-xs" />
+                        <HugeIcon  className="ph-bold ph-arrow-left text-xs" />
                       </button>
                       <span className="text-xs font-mono font-bold">
                         {previewActiveIdx + 1} / {currentItems.length}
@@ -1138,7 +1138,7 @@ export default function LandingCatalogCmsView({ showToast }) {
                         }
                         className="w-9 h-9 rounded-full bg-white dark:bg-zinc-800 border border-gray-200 dark:border-white/10 flex items-center justify-center text-xs font-bold shadow-xs hover:scale-105 active:scale-95 cursor-pointer transition-all"
                       >
-                        <LucideIcon  className="ph-bold ph-arrow-right text-xs" />
+                        <HugeIcon  className="ph-bold ph-arrow-right text-xs" />
                       </button>
                     </div>
                   </div>
@@ -1147,7 +1147,7 @@ export default function LandingCatalogCmsView({ showToast }) {
                 {/* Drag hint floating pill */}
                 {catalogData.dragHint && (
                   <div className="absolute bottom-4 right-6 hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md border border-black/10 dark:border-white/10 text-[11px] font-mono text-gray-500 dark:text-zinc-400 shadow-md">
-                    <LucideIcon  className="ph-bold ph-hand-pointing text-xs text-[#800000] dark:text-red-400" />
+                    <HugeIcon  className="ph-bold ph-hand-pointing text-xs text-[#800000] dark:text-red-400" />
                     <span>{catalogData.dragHint}</span>
                   </div>
                 )}

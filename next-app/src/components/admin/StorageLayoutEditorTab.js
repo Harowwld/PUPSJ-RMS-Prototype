@@ -1,6 +1,6 @@
 "use client"
 
-import LucideIcon from "@/components/shared/LucideIcon";
+import HugeIcon from "@/components/shared/HugeIcon";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
 import { Button } from "@/components/ui/button"
@@ -1226,7 +1226,7 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
           className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-emerald-600 dark:text-zinc-400 dark:hover:text-emerald-400 transition-colors cursor-pointer focus:outline-none flex items-center justify-center border-0 bg-transparent active:scale-95"
           title="Add"
         >
-          <LucideIcon  className="ph-bold ph-plus text-sm" />
+          <HugeIcon  className="ph-bold ph-plus text-sm" />
         </button>
 
         <button
@@ -1236,7 +1236,7 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
           className="w-7 h-7 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/30 text-gray-500 hover:text-red-600 dark:text-zinc-400 dark:hover:text-red-400 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer focus:outline-none flex items-center justify-center border-0 bg-transparent active:scale-95"
           title="Delete"
         >
-          <LucideIcon  className="ph-bold ph-trash text-sm" />
+          <HugeIcon  className="ph-bold ph-trash text-sm" />
         </button>
       </div>
 
@@ -1287,19 +1287,19 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
               type="button"
               className="p-0 border-0 bg-transparent text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer focus:outline-none flex items-center justify-center w-7 h-9"
             >
-              <LucideIcon  className="ph-bold ph-dots-three-vertical text-[18px]" />
+              <HugeIcon  className="ph-bold ph-dots-three-vertical text-[18px]" />
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48 rounded-xl border border-gray-200 bg-white shadow-md dark:bg-zinc-900 dark:border-white/10">
             <DropdownMenuItem onClick={() => setSaveTemplateOpen(true)} className="cursor-pointer" disabled={!activeRoom || activeRoom.cabinets?.length === 0}>
-              <LucideIcon  className="ph-bold ph-floppy-disk mr-2" /> Save as Template
+              <HugeIcon  className="ph-bold ph-floppy-disk mr-2" /> Save as Template
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setDeleteTemplateConfirmOpen(true)} className="cursor-pointer text-red-600 focus:text-red-600 dark:text-red-400 dark:focus:text-red-400" disabled={!selectedTemplateId}>
-              <LucideIcon  className="ph-bold ph-trash mr-2" /> Delete Template
+              <HugeIcon  className="ph-bold ph-trash mr-2" /> Delete Template
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => setRestoreTemplatesConfirmOpen(true)} className="cursor-pointer text-amber-600 focus:text-amber-600 dark:text-amber-400 dark:focus:text-amber-400">
-              <LucideIcon  className="ph-bold ph-arrow-counter-clockwise mr-2" /> Restore Defaults
+              <HugeIcon  className="ph-bold ph-arrow-counter-clockwise mr-2" /> Restore Defaults
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -1310,7 +1310,7 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
           className="flex h-9 w-[84px] items-center justify-center rounded-xl! btn-brand-red text-white font-semibold text-xs active:scale-95 disabled:opacity-30 disabled:grayscale transition-all dark:shadow-none cursor-pointer border-0 shadow-xs"
         >
           {saving ? (
-            <LucideIcon  className="ph-bold ph-spinner animate-spin text-sm"></LucideIcon>
+            <HugeIcon  className="ph-bold ph-spinner animate-spin text-sm"></HugeIcon>
           ) : (
             "Save"
           )}

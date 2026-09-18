@@ -9,7 +9,7 @@
  * @github: https://github.com/kokonut-labs/kokonutui
  */
 
-import { Check, ChevronRight, User2 } from "lucide-react";
+import { Tick01Icon as Check, ArrowRight01Icon as ChevronRight, UserIcon as User2 } from 'hugeicons-react';
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";

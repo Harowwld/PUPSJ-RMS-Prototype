@@ -1,6 +1,6 @@
 "use client"
 
-import LucideIcon from "@/components/shared/LucideIcon";
+import HugeIcon from "@/components/shared/HugeIcon";
 import { toast as hotToast, useToaster } from "react-hot-toast";
 import { toast as sonnerToast } from "sonner";
 import React, { useEffect } from "react";
@@ -178,13 +178,13 @@ const triggerCustomToast = (message, options = {}, type = "default") => {
               "bg-[#16a34a]"
             }`}>
               {type === "error" || type === "warning" ? (
-                <LucideIcon  className="ph-bold ph-warning text-[14px] text-white" />
+                <HugeIcon  className="ph-bold ph-warning text-[14px] text-white" />
               ) : type === "info" ? (
-                <LucideIcon  className="ph-bold ph-info text-[14px] text-white" />
+                <HugeIcon  className="ph-bold ph-info text-[14px] text-white" />
               ) : type === "loading" ? (
-                <LucideIcon  className="ph-bold ph-spinner animate-spin text-[14px] text-white" />
+                <HugeIcon  className="ph-bold ph-spinner animate-spin text-[14px] text-white" />
               ) : (
-                <LucideIcon  className="ph-bold ph-check text-[14px] text-white" />
+                <HugeIcon  className="ph-bold ph-check text-[14px] text-white" />
               )}
             </div>
           )}
@@ -219,7 +219,7 @@ const triggerCustomToast = (message, options = {}, type = "default") => {
               }}
               className="relative z-10 h-7 w-7 rounded-full bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 flex items-center justify-center cursor-pointer shrink-0 ml-auto border-none outline-none transition-colors"
             >
-              <LucideIcon  className="ph-bold ph-x text-gray-500 dark:text-zinc-400 text-xs" />
+              <HugeIcon  className="ph-bold ph-x text-gray-500 dark:text-zinc-400 text-xs" />
             </button>
           )}
           

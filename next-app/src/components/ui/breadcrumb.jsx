@@ -3,7 +3,7 @@ import { mergeProps } from "@base-ui/react/merge-props"
 import { useRender } from "@base-ui/react/use-render"
 
 import { cn } from "@/lib/utils"
-import { ChevronRightIcon, MoreHorizontalIcon } from "lucide-react"
+import { ArrowRight01Icon as ChevronRightIcon, Menu01Icon as MoreHorizontalIcon } from 'hugeicons-react'
 
 function Breadcrumb({
   className,

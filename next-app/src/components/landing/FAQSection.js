@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import LucideIcon from "@/components/shared/LucideIcon";
+import HugeIcon from "@/components/shared/HugeIcon";
 import { cn } from "@/lib/utils";
 
 const DEFAULT_FAQS = [
@@ -95,7 +95,7 @@ export default function FAQSection() {
                   activeCategory === "all" ? "bg-[#800000] text-white" : "bg-transparent text-gray-600 hover:bg-gray-50"
                 )}
               >
-                <LucideIcon className={cn("text-base ph-bold ph-squares-four", activeCategory === "all" ? "text-white" : "text-gray-400")} />
+                <HugeIcon className={cn("text-base ph-bold ph-squares-four", activeCategory === "all" ? "text-white" : "text-gray-400")} />
                 All Questions
               </button>
               {categories.map((cat) => {
@@ -115,7 +115,7 @@ export default function FAQSection() {
                       isActive ? "bg-[#800000] text-white" : "bg-transparent text-gray-600 hover:bg-gray-50"
                     )}
                   >
-                    <LucideIcon className={cn("text-base", isActive ? "text-white" : "text-gray-400", iconClass)} />
+                    <HugeIcon className={cn("text-base", isActive ? "text-white" : "text-gray-400", iconClass)} />
                     {cat}
                   </button>
                 );
@@ -132,7 +132,7 @@ export default function FAQSection() {
                 <button type="button" onClick={() => toggleFaq(idx)} className="w-full flex items-center justify-between p-5 sm:px-6 text-left cursor-pointer transition-colors border-0 bg-transparent" aria-expanded={isOpen}>
                   <span className={cn("text-sm sm:text-base font-medium pr-4", isOpen ? "text-white" : "text-black")}>{faq.q}</span>
                   <div className="shrink-0 ml-4">
-                    {isOpen ? <LucideIcon className="ph-bold ph-minus text-white text-lg" /> : <LucideIcon className="ph-bold ph-plus text-gray-500 text-lg" />}
+                    {isOpen ? <HugeIcon className="ph-bold ph-minus text-white text-lg" /> : <HugeIcon className="ph-bold ph-plus text-gray-500 text-lg" />}
           </div>
                 </button>
                 <AnimatePresence>

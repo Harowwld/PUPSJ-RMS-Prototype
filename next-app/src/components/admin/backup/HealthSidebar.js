@@ -1,6 +1,6 @@
 "use client"
 
-import LucideIcon from "@/components/shared/LucideIcon";
+import HugeIcon from "@/components/shared/HugeIcon";
 import {
   Card,
 } from "@/components/ui/card"
@@ -131,11 +131,6 @@ export default function HealthSidebar({
               </div>
               <div className="flex items-center">
                 <span className="text-[13px] font-normal text-[#111111] dark:text-zinc-50">{ramPercent}%</span>
-                <span 
-                  className="rms-style-background-color w-[6px] h-[6px] rounded-full ml-1.5"
-                  data-background-color={ramPercent >= 80 ? "#E5484D" : "#30D158"}
-                  style={{ backgroundColor: ramPercent >= 80 ? "#E5484D" : "#30D158" }}
-                />
               </div>
             </div>
 
@@ -148,11 +143,6 @@ export default function HealthSidebar({
               </div>
               <div className="flex items-center">
                 <span className="text-[13px] font-normal text-[#111111] dark:text-zinc-50">{cpuPercent}%</span>
-                <span 
-                  className="rms-style-background-color w-[6px] h-[6px] rounded-full ml-1.5"
-                  data-background-color={cpuPercent >= 80 ? "#E5484D" : "#30D158"}
-                  style={{ backgroundColor: cpuPercent >= 80 ? "#E5484D" : "#30D158" }}
-                />
               </div>
             </div>
 
@@ -185,9 +175,6 @@ export default function HealthSidebar({
                   <span className="text-[12px] font-medium text-[#111111] dark:text-zinc-50">
                     {externalDrive.connected ? "Connected" : "Disconnected"}
                   </span>
-                  <span 
-                    className={cn("w-[6px] h-[6px] rounded-full ml-1.5", externalDrive.connected ? "bg-[#30D158]" : "bg-[#FF9F0A]")}
-                  />
                 </div>
               </div>
             )}
@@ -213,7 +200,7 @@ export default function HealthSidebar({
         {scopeInfo && (
           <div className="border-t border-gray-100 dark:border-white/10 p-5 bg-gray-50/50 dark:bg-zinc-900/40">
             <div className="flex items-center gap-2 mb-2.5">
-              <LucideIcon  className="ph-fill ph-shield-check text-[15px] text-indigo-600 dark:text-indigo-400" />
+              <HugeIcon  className="ph-fill ph-shield-check text-[15px] text-indigo-600 dark:text-indigo-400" />
               <span className="text-[12px] font-semibold text-gray-900 dark:text-zinc-100">
                 {scopeInfo.title || "Platform Governance Scope"}
               </span>

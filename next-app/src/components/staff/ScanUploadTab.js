@@ -1,6 +1,6 @@
 "use client"
 
-import LucideIcon from "@/components/shared/LucideIcon";
+import HugeIcon from "@/components/shared/HugeIcon";
 import Image from "next/image"
 import { useMemo, useState, useEffect } from "react"
 import { useHotFolderInbox } from "@/hooks/useHotFolderInbox"
@@ -662,7 +662,7 @@ export default function ScanUploadTab({
               <Empty className="flex h-[320px] flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400">
                 <EmptyHeader className="flex flex-col items-center gap-0">
                   <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
-                    <LucideIcon  className="ph-duotone ph-warning-circle text-xl text-pup-maroon dark:text-primary" />
+                    <HugeIcon  className="ph-duotone ph-warning-circle text-xl text-pup-maroon dark:text-primary" />
                   </EmptyMedia>
                   <EmptyTitle className="text-lg font-semibold text-[#1C1C1E] dark:text-zinc-50">
                     Could not load tab
@@ -741,7 +741,7 @@ export default function ScanUploadTab({
                           <div className="flex shrink-0 items-center gap-3">
                             <div className="relative group w-48 sm:w-64">
                               <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                                <LucideIcon  className="ph-bold ph-magnifying-glass text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm"></LucideIcon>
+                                <HugeIcon  className="ph-bold ph-magnifying-glass text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm"></HugeIcon>
                               </div>
                               <Input
                                 type="text"
@@ -798,7 +798,7 @@ export default function ScanUploadTab({
                             >
                               <div className="flex flex-col items-center justify-center p-6 bg-white rounded-2xl border border-[#E5E5EA] shadow-2xl max-w-xs text-center pointer-events-none dark:bg-card/95 dark:border-white/10 animate-scale-up">
                                 <div className="w-14 h-14 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center mb-3 dark:bg-blue-950/30">
-                                  <LucideIcon  className="ph-duotone ph-file-csv text-xl text-[#0A84FF] dark:text-primary animate-bounce"></LucideIcon>
+                                  <HugeIcon  className="ph-duotone ph-file-csv text-xl text-[#0A84FF] dark:text-primary animate-bounce"></HugeIcon>
                                 </div>
                                 <p className="text-sm font-semibold text-[#1C1C1E] dark:text-zinc-50">
                                   Drop CSV here to replace data
@@ -952,17 +952,17 @@ export default function ScanUploadTab({
                                       <td className="py-0 px-4 align-middle text-right">
                                         <div className="inline-flex items-center justify-end">
                                           {r.error ? (
-                                            <LucideIcon 
+                                            <HugeIcon 
                                               className="ph-bold ph-x-circle text-red-500 dark:text-red-400 text-[18px]"
                                               title={`Error: ${r.error}`}
                                             />
                                           ) : !isValid ? (
-                                            <LucideIcon 
+                                            <HugeIcon 
                                               className="ph-bold ph-warning-circle text-amber-500 dark:text-amber-400 text-[18px]"
                                               title="Invalid: This location does not exist in the physical system."
                                             />
                                           ) : (
-                                            <LucideIcon 
+                                            <HugeIcon 
                                               className="ph-bold ph-check-circle text-emerald-500 dark:text-emerald-400 text-[18px]"
                                               title="Valid location"
                                             />
@@ -977,7 +977,7 @@ export default function ScanUploadTab({
                           ) : (
                             <Empty className="py-12">
                               <EmptyMedia>
-                                <LucideIcon  className="ph-magnifying-glass" />
+                                <HugeIcon  className="ph-magnifying-glass" />
                               </EmptyMedia>
                               <EmptyTitle>No Matches Found</EmptyTitle>
                               <EmptyDescription>
@@ -1094,7 +1094,7 @@ export default function ScanUploadTab({
                           }}
                         />
                         <div className="pointer-events-none flex flex-col items-center justify-center text-center w-full h-full">
-                          <LucideIcon  className={cn("ph-bold ph-file-csv text-[32px] transition-colors duration-fast", csvDropActive ? "text-pup-maroon" : "text-gray-400 dark:text-zinc-500")}></LucideIcon>
+                          <HugeIcon  className={cn("ph-bold ph-file-csv text-[32px] transition-colors duration-fast", csvDropActive ? "text-pup-maroon" : "text-gray-400 dark:text-zinc-500")}></HugeIcon>
                           <p className="text-sm font-semibold text-gray-900 dark:text-zinc-100 mt-3 m-0">
                             Drop CSV File Here
                           </p>
@@ -1147,7 +1147,7 @@ export default function ScanUploadTab({
                           <div className="flex shrink-0 items-center gap-2">
                             {(hf.ocrLoading || ocrLoading) && (
                               <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-amber-50 border border-amber-100 text-amber-700 font-semibold text-[10px] tracking-wider animate-pulse dark:bg-amber-950/20 dark:border-amber-900/30">
-                                <LucideIcon  className="ph-bold ph-spinner animate-spin" />
+                                <HugeIcon  className="ph-bold ph-spinner animate-spin" />
                                 OCR Active
                               </div>
                             )}
@@ -1168,7 +1168,7 @@ export default function ScanUploadTab({
                               onClick={() => setRotation((r) => r - 90)}
                               title="Rotate Left"
                             >
-                              <LucideIcon  className="ph-bold ph-arrow-counter-clockwise text-xs" />
+                              <HugeIcon  className="ph-bold ph-arrow-counter-clockwise text-xs" />
                             </button>
                             <button
                               type="button"
@@ -1176,7 +1176,7 @@ export default function ScanUploadTab({
                               onClick={() => setRotation((r) => r + 90)}
                               title="Rotate Right"
                             >
-                              <LucideIcon  className="ph-bold ph-arrow-clockwise text-xs" />
+                              <HugeIcon  className="ph-bold ph-arrow-clockwise text-xs" />
                             </button>
                             <Button
                               type="button"
@@ -1190,7 +1190,7 @@ export default function ScanUploadTab({
                                 handleClearPdf()
                               }}
                             >
-                              <LucideIcon  className="ph-bold ph-x text-xs mr-1" />
+                              <HugeIcon  className="ph-bold ph-x text-xs mr-1" />
                               Close
                             </Button>
                           </div>
@@ -1238,7 +1238,7 @@ export default function ScanUploadTab({
                                             className="p-0.5 text-gray-400 hover:text-gray-900 disabled:opacity-30 dark:hover:text-zinc-200 cursor-pointer"
                                             title="Move Up"
                                           >
-                                            <LucideIcon  className="ph-bold ph-caret-up text-xs" />
+                                            <HugeIcon  className="ph-bold ph-caret-up text-xs" />
                                           </button>
                                           <button
                                             type="button"
@@ -1250,7 +1250,7 @@ export default function ScanUploadTab({
                                             className="p-0.5 text-gray-400 hover:text-gray-900 disabled:opacity-30 dark:hover:text-zinc-200 cursor-pointer"
                                             title="Move Down"
                                           >
-                                            <LucideIcon  className="ph-bold ph-caret-down text-xs" />
+                                            <HugeIcon  className="ph-bold ph-caret-down text-xs" />
                                           </button>
                                           <button
                                             type="button"
@@ -1261,7 +1261,7 @@ export default function ScanUploadTab({
                                             className="p-0.5 text-red-500 hover:text-red-700 cursor-pointer"
                                             title="Remove Page"
                                           >
-                                            <LucideIcon  className="ph-bold ph-trash text-xs" />
+                                            <HugeIcon  className="ph-bold ph-trash text-xs" />
                                           </button>
                                         </div>
                                       </div>
@@ -1277,7 +1277,7 @@ export default function ScanUploadTab({
                                 onClick={() => fileInputRef.current?.click()}
                                 className="mt-auto flex h-9 items-center justify-center gap-1.5 rounded-xl border border-gray-200 bg-white text-xs font-semibold text-gray-700 shadow-xs transition-all hover:bg-gray-50 dark:bg-card dark:border-white/10 dark:text-zinc-300 cursor-pointer active:scale-95"
                               >
-                                <LucideIcon  className="ph-bold ph-plus text-xs" /> Add Page
+                                <HugeIcon  className="ph-bold ph-plus text-xs" /> Add Page
                               </button>
                             </div>
                           )}
@@ -1361,7 +1361,7 @@ export default function ScanUploadTab({
                             >
                               <div className="flex flex-col items-center justify-center p-6 bg-white rounded-2xl border border-gray-200 shadow-xl max-w-xs text-center pointer-events-none animate-scale-up dark:bg-card dark:border-white/10">
                                 <div className="w-14 h-14 rounded-full bg-gray-50 border border-gray-100 flex items-center justify-center mb-3 dark:bg-muted">
-                                  <LucideIcon  className="ph-bold ph-upload-simple text-xl text-gray-400 animate-bounce"></LucideIcon>
+                                  <HugeIcon  className="ph-bold ph-upload-simple text-xl text-gray-400 animate-bounce"></HugeIcon>
                                 </div>
                                 <p className="text-sm font-semibold text-gray-900 dark:text-zinc-100">
                                   Drop file here to replace preview
@@ -1386,7 +1386,7 @@ export default function ScanUploadTab({
                               onChange={(e) => handlePdfFileSelect(e.target.files)}
                             />
                             <div className="pointer-events-none flex flex-col items-center justify-center text-center w-full h-full">
-                              <LucideIcon  className={cn("ph-bold ph-upload-simple text-[32px] transition-colors duration-fast", dropActive ? "text-pup-maroon" : "text-gray-400 dark:text-zinc-500")}></LucideIcon>
+                              <HugeIcon  className={cn("ph-bold ph-upload-simple text-[32px] transition-colors duration-fast", dropActive ? "text-pup-maroon" : "text-gray-400 dark:text-zinc-500")}></HugeIcon>
                               <p className="text-sm font-semibold text-gray-900 dark:text-zinc-100 mt-3 m-0">
                                 Drop Document Or Image Here
                               </p>
@@ -1409,7 +1409,7 @@ export default function ScanUploadTab({
                                 onClick={handlePasteButtonClick}
                                 className="flex items-center gap-2 h-9 px-4 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95"
                               >
-                                <LucideIcon  className="ph-bold ph-clipboard-text text-sm"></LucideIcon>
+                                <HugeIcon  className="ph-bold ph-clipboard-text text-sm"></HugeIcon>
                                 Paste
                               </Button>
                               <span className="text-[10px] text-gray-400 font-medium dark:text-zinc-500">
@@ -1475,7 +1475,7 @@ export default function ScanUploadTab({
                         {uploadStudentIsExisting && (
                           <div className="flex flex-col gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3.5 py-3 dark:border-emerald-500/20 dark:bg-emerald-950/20">
                              <span className="inline-flex items-start gap-2 text-[11px] font-medium tracking-[0.04em] text-emerald-900 dark:text-emerald-400">
-                              <LucideIcon 
+                              <HugeIcon 
                                 className="ph-bold ph-check-circle mt-0.5 shrink-0"
                                 aria-hidden
                               />
@@ -1869,7 +1869,7 @@ export default function ScanUploadTab({
                             Scanned document will be saved directly into this station&apos;s isolated directory:
                           </p>
                           <div className="flex items-center gap-2 bg-white dark:bg-zinc-900 border border-gray-200 dark:border-white/10 rounded-lg px-2.5 py-1.5 text-[11px] text-gray-700 dark:text-zinc-300 break-all">
-                            <LucideIcon  className="ph-bold ph-folder-notch-open text-amber-600 dark:text-amber-400 shrink-0"></LucideIcon>
+                            <HugeIcon  className="ph-bold ph-folder-notch-open text-amber-600 dark:text-amber-400 shrink-0"></HugeIcon>
                             <span>{authUser?.storage_path || `.local/storage/${authUser?.office_id || "registrar"}/uploads`}</span>
                           </div>
                         </div>
@@ -1917,7 +1917,7 @@ export default function ScanUploadTab({
                                 }
                               />
                               <div className="flex h-10 items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 transition-all hover:bg-gray-50 dark:bg-card dark:border-white/10">
-                                <LucideIcon  className="ph-bold ph-file-csv text-gray-400 dark:text-zinc-500"></LucideIcon>
+                                <HugeIcon  className="ph-bold ph-file-csv text-gray-400 dark:text-zinc-500"></HugeIcon>
                                 <span className="truncate text-xs font-semibold text-gray-900 dark:text-zinc-300">
                                   {csvFile ? csvFile.name : "Select CSV..."}
                                 </span>
@@ -1930,7 +1930,7 @@ export default function ScanUploadTab({
                                 className="group flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-500 transition-all hover:bg-gray-50 dark:bg-card dark:text-zinc-400 dark:border-white/10 cursor-pointer active:scale-95"
                                 title="Clear File"
                               >
-                                <LucideIcon  className="ph-bold ph-trash text-base transition-colors group-hover:text-red-500" />
+                                <HugeIcon  className="ph-bold ph-trash text-base transition-colors group-hover:text-red-500" />
                               </button>
                             )}
                           </div>
@@ -2090,7 +2090,7 @@ export default function ScanUploadTab({
                               >
                                 {csvLoading ? (
                                   <span className="flex items-center justify-center gap-2">
-                                    <LucideIcon  className="ph-bold ph-spinner animate-spin text-sm" />
+                                    <HugeIcon  className="ph-bold ph-spinner animate-spin text-sm" />
                                     <span>Importing...</span>
                                   </span>
                                 ) : (
@@ -2100,7 +2100,7 @@ export default function ScanUploadTab({
 
                               {hasInvalidSelected && (
                                 <div className="mt-3 flex items-start gap-2 rounded-xl border border-orange-200 bg-orange-50 p-3 text-[11px] font-semibold text-orange-800 animate-in fade-in slide-in-from-top-2 dark:bg-orange-950/20 dark:border-orange-900/30">
-                                  <LucideIcon  className="ph-fill ph-warning-circle text-sm shrink-0" />
+                                  <HugeIcon  className="ph-fill ph-warning-circle text-sm shrink-0" />
                                   <p>
                                     Cannot import: One or more selected rows have storage locations that do not exist in the system.
                                     Use the dropdowns or Bulk edit to assign valid physical rooms, cabinets, and drawers.
@@ -2119,7 +2119,7 @@ export default function ScanUploadTab({
                             <div className="space-y-1.5">
                               <div className="flex items-center justify-between text-xs font-semibold text-gray-700 dark:text-zinc-200">
                                 <span className="flex items-center gap-1.5">
-                                  <LucideIcon  className="ph-fill ph-check-circle text-emerald-500" />{" "}
+                                  <HugeIcon  className="ph-fill ph-check-circle text-emerald-500" />{" "}
                                   Created:
                                 </span>
                                 <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-400">
@@ -2128,7 +2128,7 @@ export default function ScanUploadTab({
                               </div>
                               <div className="flex items-center justify-between text-xs font-semibold text-gray-700 dark:text-zinc-200">
                                 <span className="flex items-center gap-1.5">
-                                  <LucideIcon  className="ph-fill ph-x-circle text-red-500" />{" "}
+                                  <HugeIcon  className="ph-fill ph-x-circle text-red-500" />{" "}
                                   Failed:
                                 </span>
                                 <span className="rounded-full bg-red-50 px-2 py-0.5 text-red-600 dark:bg-red-950/30">

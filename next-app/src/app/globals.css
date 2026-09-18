@@ -546,8 +546,7 @@
 }
 
 [data-slot="empty"][data-compact="true"] [data-slot="empty-icon"] i,
-[data-slot="empty"][data-compact="true"] [data-slot="empty-icon"] svg,
-[data-slot="empty"][data-compact="true"] [data-slot="empty-icon"] .lucide-svg {
+[data-slot="empty"][data-compact="true"] [data-slot="empty-icon"] svg {
   font-size: 32px !important;
   width: 32px !important;
   height: 32px !important;
@@ -619,8 +618,7 @@
 }
 
 [data-slot="empty-icon"] i,
-[data-slot="empty-icon"] svg,
-[data-slot="empty-icon"] .lucide-svg {
+[data-slot="empty-icon"] svg {
   font-size: 48px !important;
   width: 48px !important;
   height: 48px !important;
@@ -1321,14 +1319,34 @@ button.bg-yellow-400:hover,
 
 /* Global Checkbox Visibility Style */
 input[type="checkbox"] {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  width: 16px; /* default size */
+  height: 16px; /* default size */
+  border-radius: 50% !important;
   border-width: 1.5px !important;
+  border-style: solid !important;
   border-color: #9ca3af !important; /* gray-400 */
-  accent-color: #E5484D !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  cursor: pointer;
+  margin: 0;
+  transform: translateY(1.5px); /* fine-tune optical alignment */
+}
+
+input[type="checkbox"]:checked {
+  background-color: #2563eb !important; /* solid blue */
+  border-color: #2563eb !important;
+  background-image: none !important;
 }
 
 .dark input[type="checkbox"] {
   border-color: #71717a !important; /* zinc-500 */
-  accent-color: #E5484D !important;
+}
+
+.dark input[type="checkbox"]:checked {
+  background-color: #3b82f6 !important; /* solid blue */
+  border-color: #3b82f6 !important;
 }
 
 /* Global button text transform reset to enforce sentence casing */
@@ -1611,12 +1629,6 @@ h1.login-title {
   }
 }
 
-/* Hide Phosphor/Tabler webfont pseudo-element glyphs when translated to Lucide SVGs */
-i[data-lucide-translated="true"]::before,
-i[data-lucide-translated="true"]::after {
-  content: none !important;
-  display: none !important;
-}
 
 /* --- High-Performance Liquid Glass Styling --- */
 @keyframes liquid-drift-1 {

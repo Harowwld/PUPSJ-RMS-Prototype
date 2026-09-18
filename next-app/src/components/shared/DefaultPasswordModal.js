@@ -1,6 +1,6 @@
 "use client"
 
-import LucideIcon from "@/components/shared/LucideIcon";
+import HugeIcon from "@/components/shared/HugeIcon";
 import { useState } from "react"
 import {
   Dialog,
@@ -36,7 +36,7 @@ export default function DefaultPasswordModal({
         <DialogHeader className="bg-white p-6 pb-0 dark:bg-card border-none">
           <div className="flex items-start gap-4">
             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-red-100 bg-red-50 text-pup-maroon dark:text-primary shadow-sm dark:bg-red-950/30">
-              <LucideIcon  className="ph-duotone ph-key text-xl"></LucideIcon>
+              <HugeIcon  className="ph-duotone ph-key text-xl"></HugeIcon>
             </div>
             <div className="min-w-0">
               <DialogTitle className="text-[16px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
@@ -54,7 +54,7 @@ export default function DefaultPasswordModal({
           {/* User info */}
           <div className="flex items-center gap-3 rounded-brand border border-gray-200 bg-transparent p-3 dark:border-white/10 dark:bg-transparent">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-pup-maroon/10">
-              <LucideIcon  className="ph-bold ph-user text-lg text-pup-maroon dark:text-primary"></LucideIcon>
+              <HugeIcon  className="ph-bold ph-user text-lg text-pup-maroon dark:text-primary"></HugeIcon>
             </div>
             <div className="min-w-0">
               <p className="text-xs font-semibold tracking-wider text-gray-500 dark:text-zinc-400">
@@ -82,14 +82,14 @@ export default function DefaultPasswordModal({
                 onClick={handleCopy}
                 className={`absolute top-1/2 right-3 flex -translate-y-1/2 items-center gap-1.5 rounded-brand px-3 py-1.5 text-xs font-semibold transition-all ${ copied ? "border-2 border-green-200 bg-green-100 text-green-700" : "border-red-200 bg-white text-pup-maroon dark:text-primary shadow-sm hover:bg-red-50" } dark:bg-card`}
               >
-                <LucideIcon 
+                <HugeIcon 
                   className={`ph-bold ${copied ? "ph-check" : "ph-copy"} text-sm`}
-                ></LucideIcon>
+                ></HugeIcon>
                 {copied ? "Copied" : "Copy"}
               </button>
             </div>
             <p className="text-xs font-medium text-amber-700">
-              <LucideIcon  className="ph-bold ph-warning-circle mr-1"></LucideIcon>
+              <HugeIcon  className="ph-bold ph-warning-circle mr-1"></HugeIcon>
               User must change this password on first login.
             </p>
           </div>

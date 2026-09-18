@@ -1,6 +1,7 @@
 "use client"
+import { Reorder } from "framer-motion";
 
-import LucideIcon from "@/components/shared/LucideIcon";
+import HugeIcon from "@/components/shared/HugeIcon";
 import React, { useState, useEffect, useCallback } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -197,7 +198,7 @@ export default function SecurityQuestionsTab({ showToast }) {
                 className="flex h-10 items-center justify-center rounded-xl! btn-brand-red text-white font-semibold text-xs active:scale-95 transition-all cursor-pointer px-5 shadow-xs border-0"
               >
                 {saving ? (
-                  <LucideIcon  className="ph-bold ph-spinner animate-spin text-[16px]"></LucideIcon>
+                  <HugeIcon  className="ph-bold ph-spinner animate-spin text-[16px]"></HugeIcon>
                 ) : (
                   "Save"
                 )}
@@ -208,41 +209,73 @@ export default function SecurityQuestionsTab({ showToast }) {
 
         {/* Top Summary Stat Cards */}
         <div className="px-6 pb-6">
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 items-start">
-            <div className="rounded-xl border border-gray-100 bg-gray-50/50 p-4 dark:border-white/5 dark:bg-zinc-900/30">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-medium text-gray-500 dark:text-zinc-400">
-                  Configured Challenges
-                </span>
-                <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 border border-emerald-200/60 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800/30">
-                  2 Required
-                </span>
+          <Reorder.Group as="div" axis="x" values={kpiOrder} onReorder={setKpiOrder} className="grid grid-cols-1 gap-4 md:grid-cols-2 items-start relative z-20">
+            {kpiOrder.map(key => {
+              if (key === "total") return (
+            <Reorder.Item as="div" value="total" key="total" className="relative group rounded-xl">
+              <div className="relative overflow-hidden rounded-[18px] border border-gray-100 dark:border-white/5 cursor-pointer select-none transition-all shadow-[0_2px_10px_rgb(0,0,0,0.04)] hover:shadow-[0_4px_15px_rgb(0,0,0,0.06)] flex flex-col justify-between min-h-[110px] bg-gray-50 dark:bg-zinc-900">
+                <div className="flex justify-between items-start p-4 pb-0">
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[13px] font-medium text-gray-500 dark:text-zinc-400 capitalize">
+                      Configured Challenges
+                    </span>
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 w-fit">
+                      2 Required
+                    </span>
+                  </div>
+                  <div className="w-8 h-8 rounded-[10px] flex items-center justify-center text-white shadow-sm shrink-0 bg-[#10b981]">
+                    <HugeIcon className="ph-bold text-[15px] ph-shield-check" />
+                  </div>
+                </div>
+                
+                <div className="flex justify-between items-end p-4 pt-1">
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[28px] font-bold text-gray-900 dark:text-white leading-none tracking-tight">
+                      {loading ? "..." : activeQuestionsCount}
+                    </span>
+                    <span className="text-xs font-medium text-gray-400 dark:text-zinc-500 mb-0.5">
+                      Staff must configure and answer these challenges upon onboarding.
+                    </span>
+                  </div>
+                  <HugeIcon className="ph-bold ph-dots-six-vertical cursor-grab active:cursor-grabbing hover:text-gray-400 dark:hover:text-zinc-500 text-gray-300 dark:text-zinc-700 text-lg mb-0.5" />
+                </div>
               </div>
-              <p className="mt-2 text-2xl font-bold text-gray-900 dark:text-zinc-50 font-mono">
-                {loading ? "..." : activeQuestionsCount}
-              </p>
-              <p className="mt-1 text-[11px] text-gray-500 dark:text-zinc-400">
-                Staff must configure and answer these challenges upon onboarding.
-              </p>
-            </div>
-
-            <div className="rounded-xl border border-gray-100 bg-gray-50/50 p-4 dark:border-white/5 dark:bg-zinc-900/30">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-medium text-gray-500 dark:text-zinc-400">
-                  Entropy & Policy Standard
-                </span>
-                <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-semibold text-blue-700 border border-blue-200/60 dark:bg-blue-950/40 dark:text-blue-400 dark:border-blue-800/30">
-                  Enforced
-                </span>
+            </Reorder.Item>
+              );
+              if (key === "enforced") return (
+            <Reorder.Item as="div" value="enforced" key="enforced" className="relative group rounded-xl">
+              <div className="relative overflow-hidden rounded-[18px] border border-gray-100 dark:border-white/5 cursor-pointer select-none transition-all shadow-[0_2px_10px_rgb(0,0,0,0.04)] hover:shadow-[0_4px_15px_rgb(0,0,0,0.06)] flex flex-col justify-between min-h-[110px] bg-gray-50 dark:bg-zinc-900">
+                <div className="flex justify-between items-start p-4 pb-0">
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[13px] font-medium text-gray-500 dark:text-zinc-400 capitalize">
+                      Entropy & Policy Standard
+                    </span>
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400 w-fit">
+                      Enforced
+                    </span>
+                  </div>
+                  <div className="w-8 h-8 rounded-[10px] flex items-center justify-center text-white shadow-sm shrink-0 bg-[#3b82f6]">
+                    <HugeIcon className="ph-bold text-[15px] ph-lock-key" />
+                  </div>
+                </div>
+                
+                <div className="flex justify-between items-end p-4 pt-1">
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[28px] font-bold text-gray-900 dark:text-white leading-none tracking-tight">
+                      10+ Chars
+                    </span>
+                    <span className="text-xs font-medium text-gray-400 dark:text-zinc-500 mb-0.5">
+                      Guarantees high-entropy challenges resisting brute-force attacks.
+                    </span>
+                  </div>
+                  <HugeIcon className="ph-bold ph-dots-six-vertical cursor-grab active:cursor-grabbing hover:text-gray-400 dark:hover:text-zinc-500 text-gray-300 dark:text-zinc-700 text-lg mb-0.5" />
+                </div>
               </div>
-              <p className="mt-2 text-2xl font-bold text-gray-900 dark:text-zinc-50 font-mono">
-                10+ Chars
-              </p>
-              <p className="mt-1 text-[11px] text-gray-500 dark:text-zinc-400">
-                Guarantees high-entropy challenges resisting brute-force recovery attacks.
-              </p>
-            </div>
-          </div>
+            </Reorder.Item>
+              );
+              return null;
+            })}
+          </Reorder.Group>
         </div>
 
         {/* Divider */}
@@ -291,7 +324,7 @@ export default function SecurityQuestionsTab({ showToast }) {
                               <Tooltip>
                                 <TooltipTrigger asChild>
                                   <span className="inline-flex items-center gap-1 text-[11px] font-medium text-amber-600 dark:text-amber-400 cursor-help">
-                                    <LucideIcon  className="ph-bold ph-warning text-xs" />
+                                    <HugeIcon  className="ph-bold ph-warning text-xs" />
                                     Weak Challenge
                                   </span>
                                 </TooltipTrigger>
@@ -301,7 +334,7 @@ export default function SecurityQuestionsTab({ showToast }) {
                               </Tooltip>
                             ) : (
                               <span className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-600 dark:text-emerald-400">
-                                <LucideIcon  className="ph-bold ph-check text-xs" />
+                                <HugeIcon  className="ph-bold ph-check text-xs" />
                                 Strong
                               </span>
                             )}

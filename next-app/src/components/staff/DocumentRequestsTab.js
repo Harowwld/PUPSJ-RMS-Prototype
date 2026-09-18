@@ -1,5 +1,5 @@
 "use client";
-import LucideIcon from "@/components/shared/LucideIcon";
+import HugeIcon from "@/components/shared/HugeIcon";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -58,12 +58,12 @@ const STATUS_OPTIONS = [
 
 function SortIndicator({ column, sortBy, sortOrder }) {
   if (sortBy !== column) {
-    return <LucideIcon  className="ph-bold ph-caret-up-down ml-1 text-[11px] opacity-40 transition-opacity group-hover:opacity-70 dark:opacity-30 dark:group-hover:opacity-60"></LucideIcon>;
+    return <HugeIcon  className="ph-bold ph-caret-up-down ml-1 text-[11px] opacity-40 transition-opacity group-hover:opacity-70 dark:opacity-30 dark:group-hover:opacity-60"></HugeIcon>;
   }
   return sortOrder === "ASC" ? (
-    <LucideIcon  className="ph-bold ph-caret-up ml-1 text-[11px] text-pup-maroon animate-in fade-in zoom-in duration-normal dark:text-primary"></LucideIcon>
+    <HugeIcon  className="ph-bold ph-caret-up ml-1 text-[11px] text-pup-maroon animate-in fade-in zoom-in duration-normal dark:text-primary"></HugeIcon>
   ) : (
-    <LucideIcon  className="ph-bold ph-caret-down ml-1 text-[11px] text-pup-maroon animate-in fade-in zoom-in duration-normal dark:text-primary"></LucideIcon>
+    <HugeIcon  className="ph-bold ph-caret-down ml-1 text-[11px] text-pup-maroon animate-in fade-in zoom-in duration-normal dark:text-primary"></HugeIcon>
   );
 }
 
@@ -556,7 +556,7 @@ export default function DocumentRequestsTab({
                 {/* Search Input */}
                 <div className="w-full sm:w-[260px] lg:w-[300px] relative group shrink-0">
                   <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                    <LucideIcon  className="ph-bold ph-magnifying-glass text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm"></LucideIcon>
+                    <HugeIcon  className="ph-bold ph-magnifying-glass text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm"></HugeIcon>
                   </div>
                   <Input
                     value={q}
@@ -737,7 +737,7 @@ export default function DocumentRequestsTab({
                 <Empty className="h-[320px] flex flex-col items-center justify-center text-center text-gray-500 border-0 dark:text-zinc-400">
                   <EmptyHeader className="flex flex-col items-center gap-0">
                     <EmptyMedia className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm dark:bg-card dark:border-white/10 dark:shadow-none">
-                      <LucideIcon  className="ph-duotone ph-warning-circle text-xl text-pup-maroon dark:text-primary" />
+                      <HugeIcon  className="ph-duotone ph-warning-circle text-xl text-pup-maroon dark:text-primary" />
                     </EmptyMedia>
                     <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">Could Not Load Requests</EmptyTitle>
                     <EmptyDescription className="text-sm font-medium text-gray-600 mt-1 max-w-md dark:text-zinc-300">
@@ -835,7 +835,7 @@ export default function DocumentRequestsTab({
                               <div className="relative mb-6">
                                 <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
                                 <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
-                                  <LucideIcon  className="ph-duotone ph-magnifying-glass text-xl text-gray-300 dark:text-zinc-600"></LucideIcon>
+                                  <HugeIcon  className="ph-duotone ph-magnifying-glass text-xl text-gray-300 dark:text-zinc-600"></HugeIcon>
                                 </EmptyMedia>
                               </div>
                               <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">No Document Requests Found</EmptyTitle>
@@ -912,7 +912,7 @@ export default function DocumentRequestsTab({
                                     title="View student location on storage map"
                                     className="inline-flex items-center gap-1 rounded-full bg-red-50 hover:bg-red-100 px-2.5 py-0.5 text-[11px] font-medium tracking-[0.04em] text-pup-maroon dark:bg-red-950/40 dark:text-primary dark:hover:bg-red-950/60 border border-red-100/30 dark:border-white/5 cursor-pointer transition-colors whitespace-nowrap"
                                   >
-                                    <LucideIcon  className="ph-bold ph-map-pin text-[10px]"></LucideIcon>
+                                    <HugeIcon  className="ph-bold ph-map-pin text-[10px]"></HugeIcon>
                                     RM{loc.room} · CAB-{loc.cabinet} · DRW-{loc.drawer}
                                   </button>
                                 )}
@@ -935,7 +935,7 @@ export default function DocumentRequestsTab({
                                     {charter.tier.shortLabel}
                                   </span>
                                   <span className={cn("inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold whitespace-nowrap", charter.badgeClass)}>
-                                    <LucideIcon  className={cn("ph-bold text-[10px]", charter.icon || "ph-clock")} />
+                                    <HugeIcon  className={cn("ph-bold text-[10px]", charter.icon || "ph-clock")} />
                                     {charter.label}
                                   </span>
                                 </div>
@@ -1110,7 +1110,7 @@ export default function DocumentRequestsTab({
                         </div>
                         {(detail.requester_email || detail.email) && (
                           <div className="text-xs text-gray-500 dark:text-zinc-400 font-normal pt-1.5 border-t border-gray-200/60 dark:border-white/5 truncate flex items-center gap-1.5">
-                            <LucideIcon  className="ph-bold ph-envelope text-gray-400 text-xs"></LucideIcon>
+                            <HugeIcon  className="ph-bold ph-envelope text-gray-400 text-xs"></HugeIcon>
                             <span className="truncate">{detail.requester_email || detail.email}</span>
                           </div>
                         )}
@@ -1137,7 +1137,7 @@ export default function DocumentRequestsTab({
 
                           {studentForRequest || detail.room ? (
                             <div className="text-xs font-semibold text-gray-900 dark:text-zinc-100 flex items-center gap-1.5">
-                              <LucideIcon  className="ph-bold ph-archive text-pup-maroon dark:text-red-400 text-sm"></LucideIcon>
+                              <HugeIcon  className="ph-bold ph-archive text-pup-maroon dark:text-red-400 text-sm"></HugeIcon>
                               <span>Room {detail.room || studentForRequest?.room} · Cabinet {detail.cabinet || studentForRequest?.cabinet} · Drawer {detail.drawer || studentForRequest?.drawer}</span>
                             </div>
                           ) : (
@@ -1170,7 +1170,7 @@ export default function DocumentRequestsTab({
                             onLocateOnMap(target);
                           }}
                         >
-                          <LucideIcon  className="ph-bold ph-map-pin text-sm"></LucideIcon>
+                          <HugeIcon  className="ph-bold ph-map-pin text-sm"></HugeIcon>
                           Locate on Storage Map
                         </Button>
                       </div>
@@ -1189,7 +1189,7 @@ export default function DocumentRequestsTab({
                           {detail.doc_type}
                         </span>
                         <span className="text-[11px] text-gray-500 dark:text-zinc-400 flex items-center gap-1.5">
-                          <LucideIcon  className="ph-bold ph-calendar text-gray-400 text-xs"></LucideIcon>
+                          <HugeIcon  className="ph-bold ph-calendar text-gray-400 text-xs"></HugeIcon>
                           {formatPHDateTime(detail.created_at)}
                         </span>
                       </div>
@@ -1224,7 +1224,7 @@ export default function DocumentRequestsTab({
                                 {charter.tier.name} ({charter.tier.days} Days)
                               </span>
                               <span className={cn("inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold", charter.badgeClass)}>
-                                <LucideIcon  className={cn("ph-bold", charter.icon || "ph-clock")} />
+                                <HugeIcon  className={cn("ph-bold", charter.icon || "ph-clock")} />
                                 {charter.label}
                               </span>
                             </div>
@@ -1262,7 +1262,7 @@ export default function DocumentRequestsTab({
                         {isTerminalStatus ? (
                           <div className="h-9 px-3 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-zinc-800/80 flex items-center justify-between text-xs font-semibold text-gray-800 dark:text-zinc-200">
                             <span className="flex items-center gap-1.5 truncate">
-                              <LucideIcon  className="ph-bold ph-lock-simple text-gray-400 text-xs"></LucideIcon>
+                              <HugeIcon  className="ph-bold ph-lock-simple text-gray-400 text-xs"></HugeIcon>
                               <span>{detail.status === "InProgress" ? "In Progress" : detail.status}</span>
                             </span>
                             <span className="text-[10px] font-medium text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
@@ -1349,7 +1349,7 @@ export default function DocumentRequestsTab({
                   {detail.status === "Ready" && retentionExpiryDate && (
                     <div className="rounded-xl border border-amber-200 bg-amber-50/50 p-3.5 dark:border-amber-950/40 dark:bg-amber-950/10 animate-in fade-in duration-fast">
                       <div className="flex gap-3">
-                        <LucideIcon  className="ph-bold ph-calendar-blank text-amber-700 dark:text-amber-500 text-lg shrink-0 mt-0.5"></LucideIcon>
+                        <HugeIcon  className="ph-bold ph-calendar-blank text-amber-700 dark:text-amber-500 text-lg shrink-0 mt-0.5"></HugeIcon>
                         <div className="text-xs">
                           <span className="font-semibold text-amber-950 dark:text-amber-300 block tracking-wider text-[10px] uppercase">
                             PUP ODRS Retention Policy
@@ -1358,7 +1358,7 @@ export default function DocumentRequestsTab({
                             Unclaimed documents are shredded after 90 days according to ODRS policy.
                           </span>
                           <span className="text-amber-800 dark:text-amber-400 font-semibold block mt-1.5 flex items-center gap-1.5">
-                            <LucideIcon  className="ph-bold ph-warning"></LucideIcon>
+                            <HugeIcon  className="ph-bold ph-warning"></HugeIcon>
                             Shred Schedule: {retentionExpiryDate.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
                             {daysRemaining !== null && (
                               <span className="text-gray-500 dark:text-zinc-500 font-normal">({daysRemaining > 0 ? `${daysRemaining}d left` : "Expired"})</span>
@@ -1483,11 +1483,11 @@ export default function DocumentRequestsTab({
                           setCreateStudentNo("");
                         }}
                       >
-                        <LucideIcon  className="ph-bold ph-x text-[10px]"></LucideIcon>
+                        <HugeIcon  className="ph-bold ph-x text-[10px]"></HugeIcon>
                       </button>
                       <div className="flex items-start gap-3">
                         <div className="w-10 h-10 rounded-full bg-pup-maroon/10 text-pup-maroon flex items-center justify-center shrink-0 dark:bg-pup-maroon/20">
-                          <LucideIcon  className="ph-bold ph-user-focus text-lg"></LucideIcon>
+                          <HugeIcon  className="ph-bold ph-user-focus text-lg"></HugeIcon>
                         </div>
                         <div className="min-w-0 flex-1">
                           <div className="font-semibold text-gray-900 text-sm truncate dark:text-zinc-50">{selectedStudent.name}</div>
@@ -1498,7 +1498,7 @@ export default function DocumentRequestsTab({
                             <span>Year: <strong className="text-gray-800 dark:text-zinc-100">{selectedStudent.yearLevel || selectedStudent.year_level || "—"}</strong></span>
                           </div>
                           <div className="text-[11px] text-pup-maroon dark:text-red-500 font-semibold mt-2 flex items-center gap-1">
-                            <LucideIcon  className="ph-bold ph-archive-tray text-xs"></LucideIcon>
+                            <HugeIcon  className="ph-bold ph-archive-tray text-xs"></HugeIcon>
                             <span>Storage: Room {selectedStudent.room} · Cabinet {selectedStudent.cabinet} · Drawer {selectedStudent.drawer}</span>
                           </div>
                         </div>
@@ -1511,7 +1511,7 @@ export default function DocumentRequestsTab({
                           Search Student (Name or Number)
                         </label>
                         <div className="relative mt-1.5 group">
-                          <LucideIcon  className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 pointer-events-none"></LucideIcon>
+                          <HugeIcon  className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 pointer-events-none"></HugeIcon>
                           <Input
                             className="pl-9 h-10 bg-white dark:bg-zinc-800 border border-gray-200 dark:border-white/10 rounded-xl text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
                             value={studentSearch}
@@ -1670,7 +1670,7 @@ export default function DocumentRequestsTab({
                 >
                   {submitting ? (
                     <>
-                      <LucideIcon  className="ph-bold ph-spinner animate-spin text-sm text-white!"></LucideIcon>
+                      <HugeIcon  className="ph-bold ph-spinner animate-spin text-sm text-white!"></HugeIcon>
                       Saving...
                     </>
                   ) : (
@@ -1708,7 +1708,7 @@ export default function DocumentRequestsTab({
                   <Empty className="py-6 border-red-200 bg-red-50 text-red-800 dark:bg-red-950/30">
                     <EmptyHeader>
                       <EmptyMedia>
-                        <LucideIcon  className="ph-bold ph-warning-circle text-xl text-red-600"></LucideIcon>
+                        <HugeIcon  className="ph-bold ph-warning-circle text-xl text-red-600"></HugeIcon>
                       </EmptyMedia>
                       <EmptyTitle className="text-sm">No Mapped Storage Location</EmptyTitle>
                       <EmptyDescription className="text-red-700/70 text-xs">

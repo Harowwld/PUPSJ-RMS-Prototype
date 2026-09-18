@@ -1,5 +1,5 @@
 "use client";
-import LucideIcon from "@/components/shared/LucideIcon";
+import HugeIcon from "@/components/shared/HugeIcon";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
@@ -468,14 +468,14 @@ export default function DocumentCatalog() {
                   
                   <div className="pt-5 border-t border-black/5 mt-auto">
                     <div className="text-[10px] font-bold uppercase tracking-wider text-gray-400 font-mono mb-3 flex items-center gap-1.5">
-                      <LucideIcon  className="ph-bold ph-shield-check text-sm" />
+                      <HugeIcon  className="ph-bold ph-shield-check text-sm" />
                       Filing Requirements
                     </div>
                     <ul className="space-y-3 text-xs text-gray-600">
                       {doc.requirements?.slice(0, 2).map((req, i) => (
                         <li key={i} className="flex items-start gap-2.5 leading-relaxed">
                           <span className="mt-0.5 flex-shrink-0 w-4 h-4 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-[8px] font-bold">
-                            <LucideIcon  className="ph-bold ph-check" />
+                            <HugeIcon  className="ph-bold ph-check" />
                           </span>
                           <span className="line-clamp-2">{req}</span>
                         </li>

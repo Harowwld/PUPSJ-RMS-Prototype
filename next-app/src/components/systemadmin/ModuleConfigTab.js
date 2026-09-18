@@ -1,6 +1,6 @@
 "use client"
 
-import LucideIcon from "@/components/shared/LucideIcon";
+import HugeIcon from "@/components/shared/HugeIcon";
 import { useState, useEffect, useCallback, useMemo } from "react"
 import { Skeleton } from "@/components/ui/skeleton"
 import ModuleConfigSkeleton from "@/components/systemadmin/skeletons/ModuleConfigSkeleton"
@@ -88,12 +88,12 @@ function StatusChip({ status }) {
 
 function SortIndicator({ column, sortBy, sortOrder }) {
   if (sortBy !== column) {
-    return <LucideIcon  className="ph-bold ph-caret-up-down ml-1 text-[12px] text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"></LucideIcon>
+    return <HugeIcon  className="ph-bold ph-caret-up-down ml-1 text-[12px] text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"></HugeIcon>
   }
   return sortOrder === "ASC" ? (
-    <LucideIcon  className="ph-bold ph-caret-up ml-1 text-[12px] text-gray-400"></LucideIcon>
+    <HugeIcon  className="ph-bold ph-caret-up ml-1 text-[12px] text-gray-400"></HugeIcon>
   ) : (
-    <LucideIcon  className="ph-bold ph-caret-down ml-1 text-[12px] text-gray-400"></LucideIcon>
+    <HugeIcon  className="ph-bold ph-caret-down ml-1 text-[12px] text-gray-400"></HugeIcon>
   )
 }
 
@@ -462,7 +462,7 @@ export default function ModuleConfigTab({ showToast }) {
               <div className="relative mb-6">
                 <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
                 <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
-                  <LucideIcon  className="ph-bold ph-buildings text-3xl text-gray-400 dark:text-zinc-500"></LucideIcon>
+                  <HugeIcon  className="ph-bold ph-buildings text-3xl text-gray-400 dark:text-zinc-500"></HugeIcon>
                 </EmptyMedia>
               </div>
               <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
@@ -526,7 +526,7 @@ export default function ModuleConfigTab({ showToast }) {
                       : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 bg-transparent"
                   )}
                 >
-                  <LucideIcon  className="ph-bold ph-buildings text-sm"></LucideIcon>
+                  <HugeIcon  className="ph-bold ph-buildings text-sm"></HugeIcon>
                   By Department
                 </button>
                 <button
@@ -539,7 +539,7 @@ export default function ModuleConfigTab({ showToast }) {
                       : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 bg-transparent"
                   )}
                 >
-                  <LucideIcon  className="ph-bold ph-table text-sm"></LucideIcon>
+                  <HugeIcon  className="ph-bold ph-table text-sm"></HugeIcon>
                   Summary Table
                 </button>
               </div>
@@ -581,7 +581,7 @@ export default function ModuleConfigTab({ showToast }) {
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0">
             <div className="w-full sm:w-[280px] lg:w-[340px] relative group shrink-0">
               <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                <LucideIcon  className="ph-bold ph-magnifying-glass text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm"></LucideIcon>
+                <HugeIcon  className="ph-bold ph-magnifying-glass text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm"></HugeIcon>
               </div>
               <Input
                 value={searchQuery}
@@ -690,10 +690,10 @@ export default function ModuleConfigTab({ showToast }) {
                   <div className="relative mb-6">
                     <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
                     <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
-                      <LucideIcon  className={cn(
+                      <HugeIcon  className={cn(
                         officeFilter === "Archived" ? "ph-archive" : "ph-buildings",
                         "text-3xl text-gray-400 dark:text-zinc-500"
-                      )}></LucideIcon>
+                      )}></HugeIcon>
                     </EmptyMedia>
                   </div>
                   <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
@@ -711,7 +711,7 @@ export default function ModuleConfigTab({ showToast }) {
                       onClick={() => setOfficeFilter("Active")}
                       className="mt-6 flex h-10 items-center gap-2 rounded-xl border border-gray-300 bg-white px-5 text-xs font-semibold text-gray-700 shadow-xs transition-colors hover:bg-gray-50 dark:bg-zinc-900 dark:border-white/10 dark:text-zinc-300 cursor-pointer"
                     >
-                      <LucideIcon  className="ph-bold ph-arrow-counter-clockwise"></LucideIcon>
+                      <HugeIcon  className="ph-bold ph-arrow-counter-clockwise"></HugeIcon>
                       View
                     </Button>
                   )}
@@ -760,7 +760,7 @@ export default function ModuleConfigTab({ showToast }) {
                                 color: accent,
                               }}
                             >
-                              <LucideIcon  className={cn(officeIconClass, "text-base")}></LucideIcon>
+                              <HugeIcon  className={cn(officeIconClass, "text-base")}></HugeIcon>
                             </div>
                             <div>
                               <div className="text-xs font-bold text-gray-900 dark:text-zinc-50 group-hover:text-pup-maroon transition-colors">
@@ -820,7 +820,7 @@ export default function ModuleConfigTab({ showToast }) {
                       color: currentOffice.accent_color || "#800000",
                     }}
                   >
-                    <LucideIcon  className={cn(getOfficeIcon(currentOffice), "text-xl")}></LucideIcon>
+                    <HugeIcon  className={cn(getOfficeIcon(currentOffice), "text-xl")}></HugeIcon>
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
@@ -847,7 +847,7 @@ export default function ModuleConfigTab({ showToast }) {
                     title={isCurrentArchived ? "Archived departments cannot be modified" : undefined}
                     className="h-8 text-xs font-semibold rounded-xl border-gray-200 dark:border-white/10 cursor-pointer flex items-center gap-1.5 px-3 disabled:cursor-not-allowed disabled:opacity-50"
                   >
-                    <LucideIcon  className="ph-bold ph-checks text-sm text-emerald-600 dark:text-emerald-400"></LucideIcon>
+                    <HugeIcon  className="ph-bold ph-checks text-sm text-emerald-600 dark:text-emerald-400"></HugeIcon>
                     <span>Enable</span>
                   </Button>
                   <Button
@@ -858,7 +858,7 @@ export default function ModuleConfigTab({ showToast }) {
                     title={isCurrentArchived ? "Archived departments cannot be modified" : "Turn off optional features and keep required system tools only"}
                     className="h-8 text-xs font-semibold rounded-xl border-gray-200 dark:border-white/10 text-gray-600 hover:text-red-600 cursor-pointer flex items-center gap-1.5 px-3 disabled:cursor-not-allowed disabled:opacity-50"
                   >
-                    <LucideIcon  className="ph-bold ph-arrow-counter-clockwise text-sm"></LucideIcon>
+                    <HugeIcon  className="ph-bold ph-arrow-counter-clockwise text-sm"></HugeIcon>
                     <span>Essentials Only</span>
                   </Button>
                 </div>
@@ -868,7 +868,7 @@ export default function ModuleConfigTab({ showToast }) {
               {isCurrentArchived && (
                 <div className="mx-5 my-3.5 p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-amber-800 dark:text-amber-300 text-xs">
                   <div className="flex items-center gap-3">
-                    <LucideIcon  className="ph-bold ph-warning-circle text-base text-amber-600 dark:text-amber-400 shrink-0"></LucideIcon>
+                    <HugeIcon  className="ph-bold ph-warning-circle text-base text-amber-600 dark:text-amber-400 shrink-0"></HugeIcon>
                     <span className="leading-relaxed">
                       <strong>Archived Department Notice:</strong> This department is currently archived. Its features cannot be modified while it is archived. Restore this department in <strong>Departments & Stations</strong> to change feature access.
                     </span>
@@ -879,7 +879,7 @@ export default function ModuleConfigTab({ showToast }) {
                     className="px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white dark:bg-amber-500 dark:hover:bg-amber-600 text-xs font-semibold shrink-0 cursor-pointer transition-colors shadow-2xs flex items-center gap-1.5 self-start sm:self-auto"
                   >
                     <span>Restore Department</span>
-                    <LucideIcon  className="ph-bold ph-arrow-right text-xs"></LucideIcon>
+                    <HugeIcon  className="ph-bold ph-arrow-right text-xs"></HugeIcon>
                   </button>
                 </div>
               )}
@@ -894,7 +894,7 @@ export default function ModuleConfigTab({ showToast }) {
                         <div className="relative mb-6">
                           <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
                           <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
-                            <LucideIcon  className="ph-bold ph-magnifying-glass text-3xl text-gray-400 dark:text-zinc-500"></LucideIcon>
+                            <HugeIcon  className="ph-bold ph-magnifying-glass text-3xl text-gray-400 dark:text-zinc-500"></HugeIcon>
                           </EmptyMedia>
                         </div>
                         <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
@@ -909,7 +909,7 @@ export default function ModuleConfigTab({ showToast }) {
                           onClick={handleClearFilters}
                           className="mt-6 flex h-10 items-center gap-2 rounded-xl border border-gray-300 bg-white px-5 text-xs font-semibold text-gray-700 shadow-xs transition-colors hover:bg-gray-50 dark:bg-zinc-900 dark:border-white/10 dark:text-zinc-300 cursor-pointer"
                         >
-                          <LucideIcon  className="ph-bold ph-arrow-counter-clockwise"></LucideIcon>
+                          <HugeIcon  className="ph-bold ph-arrow-counter-clockwise"></HugeIcon>
                           Clear
                         </Button>
                       </EmptyHeader>
@@ -923,7 +923,7 @@ export default function ModuleConfigTab({ showToast }) {
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-2 border-b border-gray-100 dark:border-white/5 gap-2">
                           <div className="flex items-center gap-2.5">
                             <div className="h-7 w-7 rounded-lg bg-red-50 text-pup-maroon dark:bg-red-950/30 dark:text-red-400 flex items-center justify-center text-sm">
-                              <LucideIcon  className="ph-bold ph-shield-check"></LucideIcon>
+                              <HugeIcon  className="ph-bold ph-shield-check"></HugeIcon>
                             </div>
                             <div>
                               <div className="flex items-center gap-2">
@@ -956,7 +956,7 @@ export default function ModuleConfigTab({ showToast }) {
                                 isCurrentArchived && "opacity-40 cursor-not-allowed hover:no-underline"
                               )}
                             >
-                              <LucideIcon  className="ph-bold ph-check text-[10px]"></LucideIcon>
+                              <HugeIcon  className="ph-bold ph-check text-[10px]"></HugeIcon>
                               Enable
                             </button>
                             <span className="text-gray-300 dark:text-zinc-700">·</span>
@@ -970,7 +970,7 @@ export default function ModuleConfigTab({ showToast }) {
                                 isCurrentArchived && "opacity-40 cursor-not-allowed hover:no-underline"
                               )}
                             >
-                              <LucideIcon  className="ph-bold ph-x text-[10px]"></LucideIcon>
+                              <HugeIcon  className="ph-bold ph-x text-[10px]"></HugeIcon>
                               Disable
                             </button>
                           </div>
@@ -1004,7 +1004,7 @@ export default function ModuleConfigTab({ showToast }) {
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-2 border-b border-gray-100 dark:border-white/5 gap-2">
                           <div className="flex items-center gap-2.5">
                             <div className="h-7 w-7 rounded-lg bg-blue-50 text-blue-600 dark:bg-blue-950/30 dark:text-blue-400 flex items-center justify-center text-sm">
-                              <LucideIcon  className="ph-bold ph-identification-badge"></LucideIcon>
+                              <HugeIcon  className="ph-bold ph-identification-badge"></HugeIcon>
                             </div>
                             <div>
                               <div className="flex items-center gap-2">
@@ -1037,7 +1037,7 @@ export default function ModuleConfigTab({ showToast }) {
                                 isCurrentArchived && "opacity-40 cursor-not-allowed hover:no-underline"
                               )}
                             >
-                              <LucideIcon  className="ph-bold ph-check text-[10px]"></LucideIcon>
+                              <HugeIcon  className="ph-bold ph-check text-[10px]"></HugeIcon>
                               Enable
                             </button>
                             <span className="text-gray-300 dark:text-zinc-700">·</span>
@@ -1051,7 +1051,7 @@ export default function ModuleConfigTab({ showToast }) {
                                 isCurrentArchived && "opacity-40 cursor-not-allowed hover:no-underline"
                               )}
                             >
-                              <LucideIcon  className="ph-bold ph-x text-[10px]"></LucideIcon>
+                              <HugeIcon  className="ph-bold ph-x text-[10px]"></HugeIcon>
                               Disable
                             </button>
                           </div>
@@ -1098,10 +1098,10 @@ export default function ModuleConfigTab({ showToast }) {
                   <div className="relative mb-6">
                     <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
                     <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
-                      <LucideIcon  className={cn(
+                      <HugeIcon  className={cn(
                         officeFilter === "Archived" ? "ph-archive" : "ph-buildings",
                         "text-3xl text-gray-400 dark:text-zinc-500"
-                      )}></LucideIcon>
+                      )}></HugeIcon>
                     </EmptyMedia>
                   </div>
                   <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
@@ -1119,7 +1119,7 @@ export default function ModuleConfigTab({ showToast }) {
                       onClick={() => setOfficeFilter("Active")}
                       className="mt-6 flex h-10 items-center gap-2 rounded-xl border border-gray-300 bg-white px-5 text-xs font-semibold text-gray-700 shadow-xs transition-colors hover:bg-gray-50 dark:bg-zinc-900 dark:border-white/10 dark:text-zinc-300 cursor-pointer"
                     >
-                      <LucideIcon  className="ph-bold ph-arrow-counter-clockwise"></LucideIcon>
+                      <HugeIcon  className="ph-bold ph-arrow-counter-clockwise"></HugeIcon>
                       View
                     </Button>
                   )}
@@ -1133,7 +1133,7 @@ export default function ModuleConfigTab({ showToast }) {
                   <div className="relative mb-6">
                     <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
                     <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
-                      <LucideIcon  className="ph-bold ph-magnifying-glass text-3xl text-gray-400 dark:text-zinc-500"></LucideIcon>
+                      <HugeIcon  className="ph-bold ph-magnifying-glass text-3xl text-gray-400 dark:text-zinc-500"></HugeIcon>
                     </EmptyMedia>
                   </div>
                   <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
@@ -1148,7 +1148,7 @@ export default function ModuleConfigTab({ showToast }) {
                     onClick={handleClearFilters}
                     className="mt-6 flex h-10 items-center gap-2 rounded-xl border border-gray-300 bg-white px-5 text-xs font-semibold text-gray-700 shadow-xs transition-colors hover:bg-gray-50 dark:bg-zinc-900 dark:border-white/10 dark:text-zinc-300 cursor-pointer"
                   >
-                    <LucideIcon  className="ph-bold ph-arrow-counter-clockwise"></LucideIcon>
+                    <HugeIcon  className="ph-bold ph-arrow-counter-clockwise"></HugeIcon>
                     Clear
                   </Button>
                 </EmptyHeader>
@@ -1314,7 +1314,7 @@ function ModuleCard({ m, office, assignments, toggling, onToggle, isOfficeArchiv
                   : "bg-gray-200/60 text-gray-500 dark:bg-zinc-800 dark:text-zinc-400"
               )}
             >
-              <LucideIcon  className={cn(moduleIconClass, "text-base")}></LucideIcon>
+              <HugeIcon  className={cn(moduleIconClass, "text-base")}></HugeIcon>
             </div>
             <div>
               <h5 className="text-xs font-bold text-gray-900 dark:text-zinc-50 leading-tight">
@@ -1407,7 +1407,7 @@ function MatrixTableRow({ m, offices, assignments, toggling, onToggle }) {
       <td className="p-4 align-top sticky left-0 bg-white dark:bg-zinc-900 z-10 border-r border-gray-200/80 dark:border-white/10 shadow-[4px_0_8px_-3px_rgba(0,0,0,0.06)]">
         <div className="flex items-start gap-3">
           <div className="mt-0.5 h-7 w-7 rounded-lg bg-gray-100 dark:bg-zinc-800 flex items-center justify-center text-gray-500 dark:text-zinc-400 text-xs shrink-0">
-            <LucideIcon  className={cn(moduleIconClass, "text-sm")}></LucideIcon>
+            <HugeIcon  className={cn(moduleIconClass, "text-sm")}></HugeIcon>
           </div>
           <div>
             <div className="flex items-center gap-2">

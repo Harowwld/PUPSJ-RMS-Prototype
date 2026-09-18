@@ -1,6 +1,6 @@
 "use client"
 
-import LucideIcon from "@/components/shared/LucideIcon";
+import HugeIcon from "@/components/shared/HugeIcon";
 import { useMemo, useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
 
@@ -177,7 +177,7 @@ const StaffTableRow = React.memo(({
                   aria-label="My Account Settings"
                   className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 dark:text-zinc-400 hover:text-blue-600 dark:hover:text-blue-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
                 >
-                  <LucideIcon  className="ph-bold ph-gear-six text-[16px]"></LucideIcon>
+                  <HugeIcon  className="ph-bold ph-gear-six text-[16px]"></HugeIcon>
                 </button>
               </TooltipTrigger>
               <TooltipContent>My Account Settings</TooltipContent>
@@ -192,7 +192,7 @@ const StaffTableRow = React.memo(({
                       aria-label="Edit Staff Member"
                       className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 dark:text-zinc-400 hover:text-amber-600 dark:hover:text-amber-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
                     >
-                      <LucideIcon  className="ph-bold ph-pencil-simple text-[16px]"></LucideIcon>
+                      <HugeIcon  className="ph-bold ph-pencil-simple text-[16px]"></HugeIcon>
                     </button>
                   </TooltipTrigger>
                   <TooltipContent>Edit Staff</TooltipContent>
@@ -207,7 +207,7 @@ const StaffTableRow = React.memo(({
                       aria-label="Restore Staff Member"
                       className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 dark:text-zinc-400 hover:text-emerald-600 dark:hover:text-emerald-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
                     >
-                      <LucideIcon  className="ph-bold ph-archive-restore text-[16px]"></LucideIcon>
+                      <HugeIcon  className="ph-bold ph-archive-restore text-[16px]"></HugeIcon>
                     </button>
                   </TooltipTrigger>
                   <TooltipContent>Restore Staff</TooltipContent>
@@ -220,7 +220,7 @@ const StaffTableRow = React.memo(({
                       aria-label="Archive Staff Member"
                       className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 dark:text-zinc-400 hover:text-amber-600 dark:hover:text-amber-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
                     >
-                      <LucideIcon  className="ph-bold ph-archive text-[16px]"></LucideIcon>
+                      <HugeIcon  className="ph-bold ph-archive text-[16px]"></HugeIcon>
                     </button>
                   </TooltipTrigger>
                   <TooltipContent>Archive Staff</TooltipContent>
@@ -238,12 +238,12 @@ StaffTableRow.displayName = "StaffTableRow"
 
 function SortIndicator({ column, sortBy, sortOrder }) {
   if (sortBy !== column) {
-    return <LucideIcon  className="ph-bold ph-caret-up-down ml-1 text-[12px] text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"></LucideIcon>
+    return <HugeIcon  className="ph-bold ph-caret-up-down ml-1 text-[12px] text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"></HugeIcon>
   }
   return sortOrder === "ASC" ? (
-    <LucideIcon  className="ph-bold ph-caret-up ml-1 text-[12px] text-gray-400"></LucideIcon>
+    <HugeIcon  className="ph-bold ph-caret-up ml-1 text-[12px] text-gray-400"></HugeIcon>
   ) : (
-    <LucideIcon  className="ph-bold ph-caret-down ml-1 text-[12px] text-gray-400"></LucideIcon>
+    <HugeIcon  className="ph-bold ph-caret-down ml-1 text-[12px] text-gray-400"></HugeIcon>
   )
 }
 
@@ -592,7 +592,7 @@ export default function StaffDirectoryTab({
           {/* Right: Search & Role Filter */}
           <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
             <div className="relative flex-1 sm:w-64 min-w-[200px] group">
-              <LucideIcon  className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-xs pointer-events-none" />
+              <HugeIcon  className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-xs pointer-events-none" />
               <Input
                 type="text"
                 placeholder="Search name, email or ID..."
@@ -683,7 +683,7 @@ export default function StaffDirectoryTab({
             <Empty className="flex h-[320px] flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400">
               <EmptyHeader className="flex flex-col items-center gap-0">
                 <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
-                  <LucideIcon  className="ph-duotone ph-warning-circle text-xl text-pup-maroon dark:text-primary" />
+                  <HugeIcon  className="ph-duotone ph-warning-circle text-xl text-pup-maroon dark:text-primary" />
                 </EmptyMedia>
                 <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">
                   Could not load personnel data
@@ -815,7 +815,7 @@ export default function StaffDirectoryTab({
                             <div className="relative mb-6">
                               <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
                               <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
-                                <LucideIcon  className={activeTab === "archived" && !hasActiveFilters && search === "" ? "ph-archive" : "ph-magnifying-glass"}></LucideIcon>
+                                <HugeIcon  className={activeTab === "archived" && !hasActiveFilters && search === "" ? "ph-archive" : "ph-magnifying-glass"}></HugeIcon>
                               </EmptyMedia>
                             </div>
                             <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
@@ -838,7 +838,7 @@ export default function StaffDirectoryTab({
                                 }}
                                 className="mt-6 flex h-10 items-center justify-center rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-6 text-xs font-semibold text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs active:scale-95 cursor-pointer"
                               >
-                                <LucideIcon  className="ph-bold ph-arrow-counter-clockwise mr-2"></LucideIcon>
+                                <HugeIcon  className="ph-bold ph-arrow-counter-clockwise mr-2"></HugeIcon>
                                 Clear
                               </Button>
                             ) : (

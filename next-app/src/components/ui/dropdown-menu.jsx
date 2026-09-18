@@ -4,7 +4,7 @@ import * as React from "react"
 import { Menu as MenuPrimitive } from "@base-ui/react/menu"
 
 import { cn } from "@/lib/utils"
-import { ChevronRightIcon, CheckIcon } from "lucide-react"
+import { ArrowRight01Icon as ChevronRightIcon, Tick01Icon as CheckIcon } from 'hugeicons-react'
 
 function DropdownMenu({
   ...props

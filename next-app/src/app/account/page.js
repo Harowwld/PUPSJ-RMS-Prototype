@@ -1,5 +1,5 @@
 "use client";
-import LucideIcon from "@/components/shared/LucideIcon";
+import HugeIcon from "@/components/shared/HugeIcon";
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 
@@ -704,7 +704,7 @@ function AccountPageContent() {
 
 
   return (
-    <div className="h-screen overflow-hidden flex flex-col bg-gray-50 dark:bg-background font-jakarta selection:bg-pup-maroon selection:text-white">
+    <div className="h-screen overflow-hidden flex flex-col bg-gray-50 dark:bg-background font-jakarta selection:bg-gray-900 selection:text-white">
       <Header authUser={authUser} onLogout={handleLogout} />
 
       <PageTransition className="flex-1 min-h-0 overflow-y-auto w-full">
@@ -728,7 +728,7 @@ function AccountPageContent() {
                   }}
                   className="flex h-10 items-center justify-center gap-2 rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
                 >
-                  <LucideIcon  className="ph-bold ph-arrow-left text-sm"></LucideIcon>
+                  <HugeIcon  className="ph-bold ph-arrow-left text-sm"></HugeIcon>
                   Dashboard
                 </Button>
               }
@@ -744,12 +744,12 @@ function AccountPageContent() {
               <aside className="border-b lg:border-b-0 lg:border-r border-gray-100 dark:border-white/10 p-6 flex flex-col bg-gray-50/40 dark:bg-white/[0.02]">
                 <div className="flex flex-col h-full w-full">
                   {/* Header Section */}
-                  <div className="flex items-center gap-4 w-full mb-6 px-1">
-                    {/* Avatar: 64px, circular */}
+                  <div className="flex flex-col items-center justify-center w-full mb-8 mt-4">
+                    {/* Avatar: 80px, circular */}
                     <div className="flex flex-col items-center shrink-0">
                       <div 
                         onClick={handleAvatarClick}
-                        className="relative group w-16 h-16 shrink-0 rounded-full bg-gray-200 dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 flex items-center justify-center text-xl font-semibold shadow-inner cursor-pointer overflow-hidden transition-all duration-normal hover:ring-2 hover:ring-pup-maroon/20"
+                        className="relative group w-20 h-20 shrink-0 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 flex items-center justify-center text-2xl font-medium shadow-inner cursor-pointer overflow-hidden transition-all duration-normal hover:ring-2 hover:ring-gray-900/20 dark:hover:ring-white/20 mb-3"
                       >
                         {avatarUrl ? (
                           <>
@@ -762,7 +762,7 @@ function AccountPageContent() {
                             />
                             {!avatarLoaded && (
                               <div className="flex h-full w-full items-center justify-center bg-gray-200 dark:bg-zinc-800 animate-pulse">
-                                <LucideIcon  className="ph-bold ph-user text-[24px] text-gray-400 dark:text-zinc-500" />
+                                <HugeIcon  className="ph-bold ph-user text-[24px] text-gray-400 dark:text-zinc-500" />
                               </div>
                             )}
                           </>
@@ -771,7 +771,7 @@ function AccountPageContent() {
                         )}
                         {/* Hover overlay */}
                         <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-fast">
-                          <LucideIcon  className="ph-bold ph-camera text-white text-base"></LucideIcon>
+                          <HugeIcon  className="ph-bold ph-camera text-white text-base"></HugeIcon>
                         </div>
                       </div>
                       <Dialog open={showAvatarPicker} onOpenChange={setShowAvatarPicker}>
@@ -783,7 +783,7 @@ function AccountPageContent() {
                         <button
                           type="button"
                           onClick={handleRemoveAvatar}
-                          className="mt-1.5 text-[11px] font-medium text-red-500 hover:text-red-700 cursor-pointer bg-transparent border-none p-0 focus:outline-none"
+                          className="mt-1 text-[11px] font-medium text-red-500 hover:text-red-700 cursor-pointer bg-transparent border-none p-0 focus:outline-none"
                         >
                           Remove
                         </button>
@@ -791,46 +791,46 @@ function AccountPageContent() {
                     </div>
                     
                     {/* Identity Info */}
-                    <div className="min-w-0 flex flex-col items-start justify-center">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <h3 className="text-base font-semibold text-gray-900 tracking-[-0.01em] dark:text-zinc-50 leading-tight">
-                          {fname} {lname}
-                        </h3>
-                        {authUser?.role && (
-                          <span className="text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-red-50 text-pup-maroon dark:bg-red-500/20 dark:text-red-400 tracking-[0.04em]">
-                            {authUser.role === "Student" ? (clientType || "Student") : getRoleLabel(authUser.role)}
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-xs font-normal text-gray-500 dark:text-zinc-400 mt-1 truncate max-w-[180px]">
+                    <div className="flex flex-col items-center justify-center text-center mt-1">
+                      <h3 className="text-[17px] font-semibold text-gray-900 tracking-tight dark:text-zinc-50 leading-tight">
+                        {fname} {lname}
+                      </h3>
+                      <p className="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-0.5 truncate max-w-[240px]">
                         {authUser?.role === "Student" && studentNo ? (
                           <span className="font-mono text-xs text-gray-700 dark:text-zinc-300 font-medium">{studentNo}</span>
                         ) : (
                           authUser?.email || authUser?.username
                         )}
                       </p>
+                      {authUser?.role && (
+                        <div className="mt-2.5">
+                          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 dark:bg-zinc-800 dark:text-zinc-300 tracking-wider uppercase">
+                            {authUser.role === "Student" ? (clientType || "Student") : getRoleLabel(authUser.role)}
+                          </span>
+                        </div>
+                      )}
                     </div>
                   </div>
 
                   {/* Navigation Menu */}
                   <TabsList className="w-full flex flex-col h-auto bg-transparent p-0 gap-1.5">
                     {[
-                      { id: "profile", label: "Profile", icon: "ph-identification-card" },
+                      { id: "profile", label: "Profile", icon: "ph-user-circle" },
                       { id: "security", label: "Security", icon: "ph-shield-star" }
                     ].map((tab) => (
                       <TabsTrigger
                         key={tab.id}
                         value={tab.id}
-                        className="group flex items-center justify-start gap-3 w-full px-3.5 py-2.5 rounded-xl text-xs font-semibold tracking-[-0.01em] whitespace-nowrap transition-all outline-none cursor-pointer data-[state=active]:bg-white dark:data-[state=active]:bg-zinc-800 data-[state=active]:text-gray-900 dark:data-[state=active]:text-zinc-50 data-[state=active]:shadow-xs text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 hover:bg-gray-100/60 dark:hover:bg-zinc-800/40 border border-transparent data-[state=active]:border-gray-200/60 dark:data-[state=active]:border-white/5"
+                        className="group flex items-center justify-start gap-3 w-full px-3.5 py-2.5 rounded-xl text-xs font-semibold tracking-[-0.01em] whitespace-nowrap transition-all outline-none cursor-pointer data-[state=active]:bg-gray-200/60 dark:data-[state=active]:bg-white/10 data-[state=active]:text-gray-900 dark:data-[state=active]:text-zinc-50 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 hover:bg-gray-100/60 dark:hover:bg-zinc-800/40 border border-transparent"
                       >
-                        <LucideIcon  className={cn(
+                        <HugeIcon  className={cn(
                           "ph-bold text-base shrink-0 transition-colors",
-                          "text-gray-400 group-data-[state=active]:text-pup-maroon dark:text-zinc-500 dark:group-data-[state=active]:text-red-400",
+                          "text-gray-400 group-data-[state=active]:text-gray-900 dark:text-zinc-500 dark:group-data-[state=active]:text-white",
                           tab.icon
-                        )}></LucideIcon>
+                        )}></HugeIcon>
                         <span className="truncate text-left">{tab.label}</span>
                         <div className="shrink-0 ml-auto w-4 h-4 flex items-center justify-center opacity-0 group-data-[state=active]:opacity-100 transition-opacity">
-                          <LucideIcon  className="ph-bold ph-caret-right text-xs text-gray-400 dark:text-zinc-400"></LucideIcon>
+                          <HugeIcon  className="ph-bold ph-caret-right text-xs text-gray-400 dark:text-zinc-400"></HugeIcon>
                         </div>
                       </TabsTrigger>
                     ))}
@@ -855,68 +855,69 @@ function AccountPageContent() {
                   <form onSubmit={submitProfile} className="space-y-6">
                     {profileError && (
                       <div className="p-4 bg-red-50 border border-red-100 text-red-700 text-xs font-semibold rounded-lg flex items-center gap-3 animate-in shake-1 dark:bg-red-500/10 dark:border-red-500/20">
-                        <LucideIcon  className="ph-fill ph-warning-circle text-lg"></LucideIcon>
+                        <HugeIcon  className="ph-fill ph-warning-circle text-lg"></HugeIcon>
                         {profileError}
                       </div>
                     )}
 
                     {authUser?.role === "Student" ? (
                       <>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                          <div className="space-y-1">
-                            <label className="text-[11px] font-medium uppercase tracking-[0.04em] text-gray-500 px-1 dark:text-zinc-450 block">
-                              First Name *
-                            </label>
-                            <Input
-                              type="text"
-                              className="h-10 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-3.5 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
-                              placeholder="e.g. Juan"
-                              value={fname}
-                              onChange={(e) => setFname(e.target.value)}
-                              required
-                            />
+                        <div className="merged-container bg-white dark:bg-zinc-800">
+                          <div className="flex flex-col md:flex-row w-full border-b border-gray-100 dark:border-zinc-700/50 md:divide-x divide-y md:divide-y-0 divide-gray-100 dark:divide-zinc-700/50">
+                            <div className="flex-1 min-w-0">
+                              <div className={`field-wrapper ${fname ? "active" : ""}`}>
+                                <label>First Name</label>
+                                <Input
+                                  type="text"
+                                  placeholder=" "
+                                  className="focus-visible:ring-0 focus-visible:ring-offset-0"
+                                  value={fname}
+                                  onChange={(e) => setFname(e.target.value)}
+                                  required
+                                />
+                              </div>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className={`field-wrapper ${mname ? "active" : ""}`}>
+                                <label>Middle Name (Optional)</label>
+                                <Input
+                                  type="text"
+                                  placeholder=" "
+                                  className="focus-visible:ring-0 focus-visible:ring-offset-0"
+                                  value={mname}
+                                  onChange={(e) => setMname(e.target.value)}
+                                />
+                              </div>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className={`field-wrapper ${lname ? "active" : ""}`}>
+                                <label>Last Name</label>
+                                <Input
+                                  type="text"
+                                  placeholder=" "
+                                  className="focus-visible:ring-0 focus-visible:ring-offset-0"
+                                  value={lname}
+                                  onChange={(e) => setLname(e.target.value)}
+                                  required
+                                />
+                              </div>
+                            </div>
                           </div>
-                          <div className="space-y-1">
-                            <label className="text-[11px] font-medium uppercase tracking-[0.04em] text-gray-500 px-1 dark:text-zinc-450 block">
-                              Middle Name <span className="text-gray-400 font-normal normal-case">(Optional)</span>
-                            </label>
+                          
+                          <div className={`field-wrapper active`}>
+                            <label>Email Address</label>
                             <Input
-                              type="text"
-                              className="h-10 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-3.5 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
-                              placeholder="e.g. Santos"
-                              value={mname}
-                              onChange={(e) => setMname(e.target.value)}
-                            />
-                          </div>
-                          <div className="space-y-1">
-                            <label className="text-[11px] font-medium uppercase tracking-[0.04em] text-gray-500 px-1 dark:text-zinc-450 block">
-                              Last Name *
-                            </label>
-                            <Input
-                              type="text"
-                              className="h-10 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-3.5 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
-                              placeholder="e.g. Dela Cruz"
-                              value={lname}
-                              onChange={(e) => setLname(e.target.value)}
-                              required
+                              type="email"
+                              placeholder=" "
+                              className="focus-visible:ring-0 focus-visible:ring-offset-0 text-gray-400 cursor-not-allowed select-none bg-gray-50/50 dark:bg-white/5"
+                              value={username}
+                              readOnly
                             />
                           </div>
                         </div>
-
-                        <div className="space-y-1">
-                          <label className="text-[11px] font-medium uppercase tracking-[0.04em] text-gray-500 px-1 dark:text-zinc-450 block">
-                            Email Address
-                          </label>
-                          <Input
-                            type="email"
-                            className="h-10 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50/70 dark:bg-white/5 px-3.5 text-xs font-normal text-gray-400 dark:text-zinc-500 cursor-not-allowed select-none shadow-none"
-                            value={username}
-                            readOnly
-                          />
-                          <p className="text-[11px] text-gray-400 font-normal mt-1.5 ml-1 dark:text-zinc-500">
-                            Your email is your account identifier and cannot be changed.
-                          </p>
-                        </div>
+                        <p className="text-[11px] text-gray-400 font-normal mt-1.5 ml-1 dark:text-zinc-500">
+                          Your email is your account identifier and cannot be changed.
+                        </p>
 
                         <div className="pt-4 border-t border-gray-100 dark:border-white/10 space-y-4">
                           <div>
@@ -928,88 +929,86 @@ function AccountPageContent() {
                             </p>
                           </div>
 
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-                            <div className="space-y-1">
-                              <label className="text-[11px] font-medium uppercase tracking-[0.04em] text-gray-500 px-1 dark:text-zinc-450 block">
-                                Client Type *
-                              </label>
-                              <Select
-                                containerClassName="h-auto"
-                                value={clientType}
-                                onChange={(e) => setClientType(e.target.value)}
-                                className="h-10 rounded-xl border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-xs font-normal text-gray-900 dark:text-zinc-100 cursor-pointer shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
-                              >
-                                <option value="Student">Student (Currently Enrolled)</option>
-                                <option value="Alumni">Alumni (Graduate / Former Student)</option>
-                              </Select>
-                              <p className="text-[11px] text-gray-400 font-normal mt-1.5 ml-1 dark:text-zinc-500">
-                                Choose whether you are currently enrolled or requesting as an alumnus.
-                              </p>
-                            </div>
+                          <div className="merged-container bg-white dark:bg-zinc-800 mt-2">
+                            <div className="flex flex-col md:flex-row w-full divide-y md:divide-y-0 md:divide-x divide-gray-100 dark:divide-zinc-700/50">
+                              <div className="flex-1 min-w-0">
+                                <div className="field-wrapper select-wrapper active h-full">
+                                  <label className="text-gray-400 dark:text-zinc-500">Client Type</label>
+                                  <Select
+                                    value={clientType}
+                                    onChange={(e) => setClientType(e.target.value)}
+                                    className="border-none shadow-none bg-transparent hover:bg-transparent focus:ring-0 dark:border-none dark:bg-transparent dark:hover:bg-transparent h-[52px] pt-[16px] px-[14px] text-[15px] font-normal w-full"
+                                  >
+                                    <option value="Student">Student (Currently Enrolled)</option>
+                                    <option value="Alumni">Alumni (Graduate / Former Student)</option>
+                                  </Select>
+                                </div>
+                              </div>
 
-                            <div className="space-y-1">
-                              <label className="text-[11px] font-medium uppercase tracking-[0.04em] text-gray-500 px-1 dark:text-zinc-450 block">
-                                Student Number <span className="text-gray-400 font-normal normal-case">(Optional)</span>
-                              </label>
-                              <Input
-                                type="text"
-                                className="h-10 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-3.5 text-xs font-mono font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
-                                placeholder="e.g. 2020-00123-TG-0 (optional)"
-                                value={studentNo}
-                                onChange={(e) => setStudentNo(e.target.value)}
-                              />
-                              <p className="text-[11px] text-gray-400 font-normal mt-1.5 ml-1 dark:text-zinc-500">
-                                Optional in your profile. You will type your student number whenever creating a document request.
-                              </p>
+                              <div className="flex-1 min-w-0">
+                                <div className={`field-wrapper ${studentNo ? "active" : ""}`}>
+                                  <label>Student Number (Optional)</label>
+                                  <Input
+                                    type="text"
+                                    placeholder=" "
+                                    className="focus-visible:ring-0 focus-visible:ring-offset-0 font-mono"
+                                    value={studentNo}
+                                    onChange={(e) => setStudentNo(e.target.value)}
+                                  />
+                                </div>
+                              </div>
                             </div>
                           </div>
+                          <p className="text-[11px] text-gray-400 font-normal mt-1.5 ml-1 dark:text-zinc-500">
+                            Optional in your profile. Choose whether you are currently enrolled or requesting as an alumnus.
+                          </p>
                         </div>
                       </>
                     ) : (
                       <>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                          <div className="space-y-1">
-                            <label className="text-[11px] font-medium uppercase tracking-[0.04em] text-gray-500 px-1 dark:text-zinc-450 block">
-                              First Name
-                            </label>
-                            <Input
-                              type="text"
-                              className="h-10 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-3.5 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
-                              placeholder="First Name"
-                              value={fname}
-                              onChange={(e) => setFname(e.target.value)}
-                              required
-                            />
+                        <div className="merged-container bg-white dark:bg-zinc-800">
+                          <div className="flex flex-col md:flex-row w-full border-b border-gray-100 dark:border-zinc-700/50 md:divide-x divide-y md:divide-y-0 divide-gray-100 dark:divide-zinc-700/50">
+                            <div className="flex-1 min-w-0">
+                              <div className={`field-wrapper ${fname ? "active" : ""}`}>
+                                <label>First Name</label>
+                                <Input
+                                  type="text"
+                                  placeholder=" "
+                                  className="focus-visible:ring-0 focus-visible:ring-offset-0"
+                                  value={fname}
+                                  onChange={(e) => setFname(e.target.value)}
+                                  required
+                                />
+                              </div>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className={`field-wrapper ${lname ? "active" : ""}`}>
+                                <label>Last Name</label>
+                                <Input
+                                  type="text"
+                                  placeholder=" "
+                                  className="focus-visible:ring-0 focus-visible:ring-offset-0"
+                                  value={lname}
+                                  onChange={(e) => setLname(e.target.value)}
+                                  required
+                                />
+                              </div>
+                            </div>
                           </div>
-                          <div className="space-y-1">
-                            <label className="text-[11px] font-medium uppercase tracking-[0.04em] text-gray-500 px-1 dark:text-zinc-450 block">
-                              Last Name
-                            </label>
+                          <div className={`field-wrapper active`}>
+                            <label>Email Address</label>
                             <Input
-                              type="text"
-                              className="h-10 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-3.5 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
-                              placeholder="Last Name"
-                              value={lname}
-                              onChange={(e) => setLname(e.target.value)}
-                              required
+                              type="email"
+                              placeholder=" "
+                              className="focus-visible:ring-0 focus-visible:ring-offset-0 text-gray-400 cursor-not-allowed select-none bg-gray-50/50 dark:bg-white/5"
+                              value={username}
+                              readOnly
                             />
                           </div>
                         </div>
-
-                        <div className="space-y-1">
-                          <label className="text-[11px] font-medium uppercase tracking-[0.04em] text-gray-500 px-1 dark:text-zinc-450 block">
-                            Email Address
-                          </label>
-                          <Input
-                            type="email"
-                            className="h-10 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50/70 dark:bg-white/5 px-3.5 text-xs font-normal text-gray-400 dark:text-zinc-500 cursor-not-allowed select-none shadow-none"
-                            value={username}
-                            readOnly
-                          />
-                          <p className="text-[11px] text-gray-400 font-normal mt-1.5 ml-1 dark:text-zinc-500">
-                            Your email is managed by administrators and cannot be changed.
-                          </p>
-                        </div>
+                        <p className="text-[11px] text-gray-400 font-normal mt-1.5 ml-1 dark:text-zinc-500">
+                          Your email is managed by administrators and cannot be changed.
+                        </p>
                       </>
                     )}
 
@@ -1017,10 +1016,10 @@ function AccountPageContent() {
                       <Button
                         type="submit"
                         disabled={profileLoading}
-                        className="flex h-10 items-center justify-center gap-2 rounded-xl! text-xs font-semibold text-white btn-brand-red active:scale-95 disabled:opacity-50 transition-all cursor-pointer px-5 shadow-xs border-0"
+                        className="flex h-10 items-center justify-center gap-2 rounded-full text-xs font-semibold text-white bg-gray-900 hover:bg-black dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100 active:scale-95 disabled:opacity-50 transition-all cursor-pointer px-6 shadow-xs border-0"
                       >
                         {profileLoading && (
-                          <LucideIcon  className="ph-bold ph-spinner animate-spin text-sm"></LucideIcon>
+                          <HugeIcon  className="ph-bold ph-spinner animate-spin text-sm"></HugeIcon>
                         )}
                         {profileLoading ? "Saving..." : "Save"}
                       </Button>
@@ -1052,45 +1051,39 @@ function AccountPageContent() {
                     <form onSubmit={submitPassword} className="space-y-6">
                       {pwError && (
                         <div className="p-4 bg-red-50 border border-red-100 text-red-700 text-xs font-semibold rounded-lg flex items-center gap-3 animate-in shake-1 dark:bg-red-500/10 dark:border-red-500/20">
-                          <LucideIcon  className="ph-fill ph-warning-circle text-lg"></LucideIcon>
+                          <HugeIcon  className="ph-fill ph-warning-circle text-lg"></HugeIcon>
                           {pwError}
                         </div>
                       )}
 
-                      <div className="grid grid-cols-1 gap-6">
-                        <div className="space-y-1">
-                          <label className="text-[11px] font-medium uppercase tracking-[0.04em] text-gray-500 px-1 dark:text-zinc-450 block">
-                            Current
-                          </label>
-                          <div className="relative group">
-                            <Input
-                              type={showPw.current ? "text" : "password"}
-                              className="h-10 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 pr-10 pl-3.5 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
-                              placeholder="••••••••"
-                              value={pwCurrent}
-                              onChange={(e) => setPwCurrent(e.target.value)}
-                              required
-                            />
-                            <button
-                              type="button"
-                              onClick={() => setShowPw(prev => ({ ...prev, current: !prev.current }))}
-                              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-650 transition-colors dark:text-zinc-500 dark:hover:text-zinc-350 cursor-pointer"
-                            >
-                              <LucideIcon  className={cn("ph-bold", showPw.current ? "ph-eye-slash" : "ph-eye")}></LucideIcon>
-                            </button>
-                          </div>
+                      <div className="merged-container bg-white dark:bg-zinc-800">
+                        <div className={`field-wrapper border-b border-gray-100 dark:border-zinc-700/50 ${pwCurrent ? "active" : ""}`}>
+                          <label>Current Password</label>
+                          <Input
+                            type={showPw.current ? "text" : "password"}
+                            placeholder=" "
+                            className="pr-11 focus-visible:ring-0 focus-visible:ring-offset-0 tracking-widest"
+                            value={pwCurrent}
+                            onChange={(e) => setPwCurrent(e.target.value)}
+                            required
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowPw(prev => ({ ...prev, current: !prev.current }))}
+                            className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors dark:text-zinc-500 z-10"
+                          >
+                            <HugeIcon  className={cn("ph-bold", showPw.current ? "ph-eye-slash" : "ph-eye")}></HugeIcon>
+                          </button>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                          <div className="space-y-1">
-                            <label className="text-[11px] font-medium uppercase tracking-[0.04em] text-gray-500 px-1 dark:text-zinc-450 block">
-                              New
-                            </label>
-                            <div className="relative group">
+                        <div className="flex flex-col md:flex-row w-full divide-y md:divide-y-0 md:divide-x divide-gray-100 dark:divide-zinc-700/50">
+                          <div className="flex-1 min-w-0">
+                            <div className={`field-wrapper ${pwNext ? "active" : ""}`}>
+                              <label>New Password</label>
                               <Input
                                 type={showPw.next ? "text" : "password"}
-                                className="h-10 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 pr-10 pl-3.5 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
-                                placeholder="••••••••"
+                                placeholder=" "
+                                className="pr-11 focus-visible:ring-0 focus-visible:ring-offset-0 tracking-widest"
                                 value={pwNext}
                                 onChange={(e) => setPwNext(e.target.value)}
                                 required
@@ -1098,24 +1091,20 @@ function AccountPageContent() {
                               <button
                                 type="button"
                                 onClick={() => setShowPw(prev => ({ ...prev, next: !prev.next }))}
-                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-650 transition-colors dark:text-zinc-500 dark:hover:text-zinc-350 cursor-pointer"
+                                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors dark:text-zinc-500 z-10"
                               >
-                                <LucideIcon  className={cn("ph-bold", showPw.next ? "ph-eye-slash" : "ph-eye")}></LucideIcon>
+                                <HugeIcon  className={cn("ph-bold", showPw.next ? "ph-eye-slash" : "ph-eye")}></HugeIcon>
                               </button>
                             </div>
-                            <p className="text-[10px] text-gray-400 px-1 dark:text-zinc-500">
-                              Must be at least 8 characters long.
-                            </p>
                           </div>
-                          <div className="space-y-1">
-                            <label className="text-[11px] font-medium uppercase tracking-[0.04em] text-gray-500 px-1 dark:text-zinc-450 block">
-                              Confirm
-                            </label>
-                            <div className="relative group">
+                          
+                          <div className="flex-1 min-w-0">
+                            <div className={`field-wrapper ${pwConfirm ? "active" : ""}`}>
+                              <label>Confirm Password</label>
                               <Input
                                 type={showPw.confirm ? "text" : "password"}
-                                className="h-10 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 pr-10 pl-3.5 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
-                                placeholder="••••••••"
+                                placeholder=" "
+                                className="pr-11 focus-visible:ring-0 focus-visible:ring-offset-0 tracking-widest"
                                 value={pwConfirm}
                                 onChange={(e) => setPwConfirm(e.target.value)}
                                 required
@@ -1123,23 +1112,26 @@ function AccountPageContent() {
                               <button
                                 type="button"
                                 onClick={() => setShowPw(prev => ({ ...prev, confirm: !prev.confirm }))}
-                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-650 transition-colors dark:text-zinc-500 dark:hover:text-zinc-350 cursor-pointer"
+                                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors dark:text-zinc-500 z-10"
                               >
-                                <LucideIcon  className={cn("ph-bold", showPw.confirm ? "ph-eye-slash" : "ph-eye")}></LucideIcon>
+                                <HugeIcon  className={cn("ph-bold", showPw.confirm ? "ph-eye-slash" : "ph-eye")}></HugeIcon>
                               </button>
                             </div>
                           </div>
                         </div>
                       </div>
+                      <p className="text-[10px] text-gray-400 px-1 dark:text-zinc-500 mt-1">
+                        Must be at least 8 characters long.
+                      </p>
 
                       <div className="flex justify-end pt-4">
                         <Button
                           type="submit"
                           disabled={pwLoading}
-                          className="flex h-10 items-center justify-center gap-2 rounded-xl! text-xs font-semibold text-white btn-brand-red active:scale-95 disabled:opacity-50 transition-all cursor-pointer px-5 shadow-xs border-0"
+                          className="flex h-10 items-center justify-center gap-2 rounded-full text-xs font-semibold text-white bg-gray-900 hover:bg-black dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100 active:scale-95 disabled:opacity-50 transition-all cursor-pointer px-6 shadow-xs border-0"
                         >
                           {pwLoading && (
-                            <LucideIcon  className="ph-bold ph-spinner animate-spin text-sm"></LucideIcon>
+                            <HugeIcon  className="ph-bold ph-spinner animate-spin text-sm"></HugeIcon>
                           )}
                           {pwLoading ? "Updating..." : "Update"}
                         </Button>
@@ -1168,7 +1160,7 @@ function AccountPageContent() {
                     <form onSubmit={submitSecurity} className="space-y-6">
                       {secError && (
                         <div className="p-4 bg-red-50 border border-red-100 text-red-700 text-xs font-semibold rounded-lg flex items-center gap-3 animate-in shake-1 dark:bg-red-500/10 dark:border-red-500/20">
-                          <LucideIcon  className="ph-fill ph-warning-circle text-lg"></LucideIcon>
+                          <HugeIcon  className="ph-fill ph-warning-circle text-lg"></HugeIcon>
                           {secError}
                         </div>
                       )}
@@ -1176,7 +1168,7 @@ function AccountPageContent() {
                       <div className="space-y-6">
                         {globalQuestions.length === 0 ? (
                           <div className="p-8 text-center bg-gray-50/50 rounded-2xl border border-dashed border-gray-200 text-gray-400 font-medium text-xs dark:bg-card dark:border-white/10 dark:text-zinc-500">
-                            <LucideIcon  className="ph-duotone ph-mask-sad text-xl mb-3 block opacity-40"></LucideIcon>
+                            <HugeIcon  className="ph-duotone ph-mask-sad text-xl mb-3 block opacity-40"></HugeIcon>
                             No recovery questions configured.
                           </div>
                         ) : (
@@ -1203,7 +1195,7 @@ function AccountPageContent() {
                                           });
                                         }
                                       }}
-                                      className="text-[12px] font-medium text-pup-maroon dark:text-red-400 hover:text-pup-darkMaroon dark:hover:text-red-300 transition-colors cursor-pointer"
+                                      className="text-[12px] font-medium text-gray-900 dark:text-red-400 hover:text-black dark:hover:text-red-300 transition-colors cursor-pointer"
                                     >
                                       {isEditing ? "Cancel" : "Edit"}
                                     </button>
@@ -1214,7 +1206,7 @@ function AccountPageContent() {
                                   {showInput ? (
                                     <Input
                                       type="text"
-                                      className="h-10 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-3.5 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all animate-in fade-in slide-in-from-top-1 duration-normal"
+                                      className="h-10 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-3.5 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-gray-900 focus-visible:ring-1 focus-visible:ring-gray-900 dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all animate-in fade-in slide-in-from-top-1 duration-normal"
                                       placeholder="••••••••"
                                       value={secAnswers[q.id] || ""}
                                       onChange={(e) => setSecAnswers({ ...secAnswers, [q.id]: e.target.value })}
@@ -1236,10 +1228,10 @@ function AccountPageContent() {
                         <Button
                           type="submit"
                           disabled={secLoading || globalQuestions.length === 0}
-                          className="flex h-10 items-center justify-center gap-2 rounded-xl! text-xs font-semibold text-white btn-brand-red active:scale-95 disabled:opacity-50 transition-all cursor-pointer px-5 shadow-xs border-0"
+                          className="flex h-10 items-center justify-center gap-2 rounded-full text-xs font-semibold text-white bg-gray-900 hover:bg-black dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100 active:scale-95 disabled:opacity-50 transition-all cursor-pointer px-6 shadow-xs border-0"
                         >
                           {secLoading && (
-                            <LucideIcon  className="ph-bold ph-spinner animate-spin text-sm"></LucideIcon>
+                            <HugeIcon  className="ph-bold ph-spinner animate-spin text-sm"></HugeIcon>
                           )}
                           {secLoading ? "Saving..." : "Save"}
                         </Button>
@@ -1272,7 +1264,7 @@ function AccountPageContent() {
                             <div className="space-y-2 mt-4">
                                <div className="bg-white px-4 py-3 rounded-xl border border-gray-200 flex flex-col gap-1.5 shadow-xs dark:bg-card dark:border-white/10">
                                   <span className="text-[9px] font-semibold text-gray-400 tracking-widest dark:text-zinc-500">Secret key</span>
-                                  <span className="text-sm font-semibold text-pup-maroon dark:text-primary tracking-wider break-all font-jakarta">{totpSetupData.secret}</span>
+                                  <span className="text-sm font-semibold text-gray-900 dark:text-primary tracking-wider break-all font-jakarta">{totpSetupData.secret}</span>
                                 </div>
                                <div className="bg-white px-4 py-3 rounded-xl border border-gray-200 flex flex-col gap-1.5 shadow-xs dark:bg-card dark:border-white/10">
                                   <span className="text-[9px] font-semibold text-gray-400 tracking-widest dark:text-zinc-500">Serial key (Backup)</span>
@@ -1298,7 +1290,7 @@ function AccountPageContent() {
                           <Input
                             type="text"
                             maxLength={6}
-                            className="h-16 rounded-xl border border-gray-200 bg-white text-center text-xl font-semibold text-gray-900 shadow-inner transition-all focus-visible:border-pup-maroon/20 focus-visible:ring-4 focus-visible:ring-pup-maroon/5 dark:border-white/10 dark:bg-card dark:text-zinc-50 dark:shadow-none"
+                            className="h-16 rounded-xl border border-gray-200 bg-white text-center text-xl font-semibold text-gray-900 shadow-inner transition-all focus-visible:border-gray-900/20 focus-visible:ring-4 focus-visible:ring-gray-900/5 dark:border-white/10 dark:bg-card dark:text-zinc-50 dark:shadow-none"
                             placeholder="000000"
                             value={totpToken}
                             onChange={(e) => setTotpToken(e.target.value.replace(/\D/g, "").slice(0, 6))}
@@ -1308,7 +1300,7 @@ function AccountPageContent() {
 
                         {totpError && (
                           <div className="p-5 bg-red-50 border-2 border-red-100 text-red-700 text-sm font-semibold rounded-xl flex items-center gap-4 animate-in shake-1 dark:data-[state=active]:bg-red-500/10">
-                            <LucideIcon  className="ph-fill ph-warning-circle text-xl"></LucideIcon>
+                            <HugeIcon  className="ph-fill ph-warning-circle text-xl"></HugeIcon>
                             {totpError}
                           </div>
                         )}
@@ -1327,10 +1319,10 @@ function AccountPageContent() {
                             type="button"
                             onClick={verifyTOTP}
                             disabled={totpLoading || totpToken.length !== 6}
-                            className="flex h-10 items-center justify-center gap-2 rounded-xl! text-xs font-semibold text-white btn-brand-red active:scale-95 disabled:opacity-50 transition-all cursor-pointer px-5 shadow-xs border-0"
+                            className="flex h-10 items-center justify-center gap-2 rounded-full text-xs font-semibold text-white bg-gray-900 hover:bg-black dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100 active:scale-95 disabled:opacity-50 transition-all cursor-pointer px-6 shadow-xs border-0"
                           >
                             {totpLoading && (
-                              <LucideIcon  className="ph-bold ph-spinner animate-spin text-sm"></LucideIcon>
+                              <HugeIcon  className="ph-bold ph-spinner animate-spin text-sm"></HugeIcon>
                             )}
                             Activate 2FA
                           </Button>
@@ -1342,7 +1334,7 @@ function AccountPageContent() {
                         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 py-6">
                           <div className="flex gap-3 items-start">
                             <div className="w-8 h-8 flex items-center justify-center text-gray-400 dark:text-zinc-500 shrink-0">
-                              <LucideIcon  className="ph-bold ph-device-mobile text-[16px]"></LucideIcon>
+                              <HugeIcon  className="ph-bold ph-device-mobile text-[16px]"></HugeIcon>
                             </div>
                             <div>
                               <h4 className="text-[14px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50 flex items-center gap-2 leading-tight">
@@ -1373,10 +1365,10 @@ function AccountPageContent() {
                                  type="button"
                                  onClick={startTOTPSetup}
                                  disabled={totpSetupLoading}
-                                 className="flex h-10 items-center justify-center gap-2 rounded-xl! text-xs font-semibold text-white btn-brand-red active:scale-95 disabled:opacity-50 transition-all cursor-pointer px-5 shadow-xs border-0"
+                                 className="flex h-10 items-center justify-center gap-2 rounded-full text-xs font-semibold text-white bg-gray-900 hover:bg-black dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100 active:scale-95 disabled:opacity-50 transition-all cursor-pointer px-6 shadow-xs border-0"
                                >
                                  {totpSetupLoading && (
-                                   <LucideIcon  className="ph-bold ph-spinner animate-spin text-sm"></LucideIcon>
+                                   <HugeIcon  className="ph-bold ph-spinner animate-spin text-sm"></HugeIcon>
                                  )}
                                  Set Up
                                </Button>
@@ -1404,7 +1396,7 @@ function AccountPageContent() {
 
                              {totpError && (
                                <div className="p-5 bg-red-50 border-2 border-red-100 text-red-700 text-sm font-semibold rounded-xl flex items-center gap-4 animate-in shake-1 dark:bg-red-500/10">
-                                 <LucideIcon  className="ph-fill ph-warning-circle text-xl"></LucideIcon>
+                                 <HugeIcon  className="ph-fill ph-warning-circle text-xl"></HugeIcon>
                                  {totpError}
                                </div>
                              )}
@@ -1425,10 +1417,10 @@ function AccountPageContent() {
                                     setTotpStep("idle");
                                   }}
                                   disabled={totpLoading || totpToken.length !== 6}
-                                  className="flex h-10 items-center justify-center gap-2 rounded-xl! text-xs font-semibold text-white btn-brand-red active:scale-95 disabled:opacity-50 transition-all cursor-pointer px-5 shadow-xs border-0"
+                                  className="flex h-10 items-center justify-center gap-2 rounded-full text-xs font-semibold text-white bg-gray-900 hover:bg-black dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100 active:scale-95 disabled:opacity-50 transition-all cursor-pointer px-6 shadow-xs border-0"
                                 >
                                   {totpLoading && (
-                                    <LucideIcon  className="ph-bold ph-spinner animate-spin text-sm"></LucideIcon>
+                                    <HugeIcon  className="ph-bold ph-spinner animate-spin text-sm"></HugeIcon>
                                   )}
                                   Confirm Disable
                                 </Button>
@@ -1440,7 +1432,7 @@ function AccountPageContent() {
                         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 py-6">
                           <div className="flex gap-3 items-start">
                             <div className="w-8 h-8 flex items-center justify-center text-gray-400 dark:text-zinc-500 shrink-0">
-                              <LucideIcon  className="ph-bold ph-shield-check text-[16px]"></LucideIcon>
+                              <HugeIcon  className="ph-bold ph-shield-check text-[16px]"></HugeIcon>
                             </div>
                             <div>
                               <h4 className="text-[14px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50 flex items-center gap-2 leading-tight">
@@ -1498,10 +1490,10 @@ function AccountPageContent() {
                               type="button"
                               onClick={generateNewRecoveryCodes}
                               disabled={recoveryCodesLoading}
-                              className="flex h-10 items-center justify-center gap-2 rounded-xl! text-xs font-semibold text-white btn-brand-red active:scale-95 disabled:opacity-50 transition-all cursor-pointer px-5 shadow-xs border-0"
+                              className="flex h-10 items-center justify-center gap-2 rounded-full text-xs font-semibold text-white bg-gray-900 hover:bg-black dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100 active:scale-95 disabled:opacity-50 transition-all cursor-pointer px-6 shadow-xs border-0"
                             >
                               {recoveryCodesLoading && (
-                                <LucideIcon  className="ph-bold ph-spinner animate-spin text-sm"></LucideIcon>
+                                <HugeIcon  className="ph-bold ph-spinner animate-spin text-sm"></HugeIcon>
                               )}
                               {recoveryCodesCount > 0 ? "Regenerate" : "Generate"}
                             </Button>
@@ -1523,7 +1515,7 @@ function AccountPageContent() {
             <div className="relative pb-4">
                <DialogClose asChild>
                  <button className="absolute top-0 right-0 w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-zinc-800 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors focus:outline-none cursor-pointer">
-                   <LucideIcon  className="ph-bold ph-x text-sm"></LucideIcon>
+                   <HugeIcon  className="ph-bold ph-x text-sm"></HugeIcon>
                  </button>
                </DialogClose>
                <DialogTitle className="text-[20px] font-bold text-[#1C1C1E] dark:text-zinc-100 tracking-tight">Recovery Codes</DialogTitle>
@@ -1558,7 +1550,7 @@ function AccountPageContent() {
                     variant="outline" 
                     className="flex-1 flex h-10 items-center justify-center gap-2 rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
                   >
-                    <LucideIcon  className="ph-bold ph-copy text-sm"></LucideIcon> Copy
+                    <HugeIcon  className="ph-bold ph-copy text-sm"></HugeIcon> Copy
                   </Button>
                   <Button 
                     type="button"
@@ -1566,13 +1558,13 @@ function AccountPageContent() {
                     variant="outline" 
                     className="flex-1 flex h-10 items-center justify-center gap-2 rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
                   >
-                    <LucideIcon  className="ph-bold ph-download-simple text-sm"></LucideIcon> Save
+                    <HugeIcon  className="ph-bold ph-download-simple text-sm"></HugeIcon> Save
                   </Button>
                 </div>
                 <Button 
                   type="button"
                   onClick={() => setShowRecoveryCodesDialog(false)}
-                  className="w-full flex h-10 items-center justify-center rounded-xl! text-xs font-semibold text-white btn-brand-red active:scale-95 transition-all cursor-pointer px-5 shadow-xs border-0"
+                  className="w-full flex h-10 items-center justify-center rounded-full text-xs font-semibold text-white bg-gray-900 hover:bg-black dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100 active:scale-95 transition-all cursor-pointer px-5 shadow-xs border-0"
                 >
                   Done
                 </Button>

@@ -1,6 +1,6 @@
 "use client"
 
-import LucideIcon from "@/components/shared/LucideIcon";
+import HugeIcon from "@/components/shared/HugeIcon";
 import { useState, useEffect, useMemo } from "react"
 
 import { Input } from "@/components/ui/input"
@@ -264,7 +264,7 @@ export default function RecordsArchiveTab({
               className="flex h-10 items-center gap-2 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
             >
               Storage Explorer
-              <LucideIcon  className="ph-bold ph-arrow-right text-[14px]"></LucideIcon>
+              <HugeIcon  className="ph-bold ph-arrow-right text-[14px]"></HugeIcon>
             </Button>
           }
         />
@@ -300,7 +300,7 @@ export default function RecordsArchiveTab({
           {/* Right: Search Toolbar */}
           <div className="flex-1 md:max-w-md relative group">
             <div className="relative">
-              <LucideIcon  className="ph-bold ph-magnifying-glass absolute top-1/2 -translate-y-1/2 left-3 text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm pointer-events-none"></LucideIcon>
+              <HugeIcon  className="ph-bold ph-magnifying-glass absolute top-1/2 -translate-y-1/2 left-3 text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm pointer-events-none"></HugeIcon>
               <Input
                 type="text"
                 placeholder="Search Student"
@@ -314,7 +314,7 @@ export default function RecordsArchiveTab({
                   onClick={() => setQuickQuery("")}
                   className="absolute top-1/2 right-3 -translate-y-1/2 text-gray-400 transition-colors hover:text-pup-maroon dark:hover:text-red-500 dark:text-zinc-500"
                 >
-                  <LucideIcon  className="ph-bold ph-x-circle text-[15px]"></LucideIcon>
+                  <HugeIcon  className="ph-bold ph-x-circle text-[15px]"></HugeIcon>
                 </button>
               )}
             </div>
@@ -350,7 +350,7 @@ export default function RecordsArchiveTab({
                           {s.studentNo}
                         </div>
                       </div>
-                      <LucideIcon  className="ph-bold ph-caret-right text-sm text-gray-400 group-hover:text-pup-maroon dark:group-hover:text-red-500 dark:text-zinc-500"></LucideIcon>
+                      <HugeIcon  className="ph-bold ph-caret-right text-sm text-gray-400 group-hover:text-pup-maroon dark:group-hover:text-red-500 dark:text-zinc-500"></HugeIcon>
                     </div>
                   ))
                 )}
@@ -370,7 +370,7 @@ export default function RecordsArchiveTab({
                     onClick={() => onBreadcrumbClick({ level: "years" })}
                     className="h-9 px-2.5 font-semibold text-xs text-gray-600 hover:text-gray-900 hover:bg-transparent dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-transparent transition-colors flex items-center gap-1.5 rounded-xl shadow-none! border-0!"
                   >
-                    <LucideIcon  className="ph-bold ph-arrow-left text-sm"></LucideIcon>
+                    <HugeIcon  className="ph-bold ph-arrow-left text-sm"></HugeIcon>
                     Back
                   </Button>
                 )}
@@ -463,7 +463,7 @@ export default function RecordsArchiveTab({
                     <div className="relative mb-6">
                       <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
                       <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
-                        <LucideIcon  className="ph-duotone ph-users-three text-3xl text-gray-400 dark:text-zinc-500"></LucideIcon>
+                        <HugeIcon  className="ph-duotone ph-users-three text-3xl text-gray-400 dark:text-zinc-500"></HugeIcon>
                       </EmptyMedia>
                     </div>
                     <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
@@ -491,7 +491,7 @@ export default function RecordsArchiveTab({
                     <div className="relative mb-6">
                       <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
                       <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
-                        <LucideIcon  className="ph-duotone ph-archive text-3xl text-gray-400 dark:text-zinc-500"></LucideIcon>
+                        <HugeIcon  className="ph-duotone ph-archive text-3xl text-gray-400 dark:text-zinc-500"></HugeIcon>
                       </EmptyMedia>
                     </div>
                     <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
@@ -537,7 +537,7 @@ export default function RecordsArchiveTab({
                                 )}
                                 title="Change Folder Color"
                               >
-                                <LucideIcon  className="ph-bold ph-palette text-xs" />
+                                <HugeIcon  className="ph-bold ph-palette text-xs" />
                               </Button>
                             </PopoverTrigger>
                             <PopoverContent className="w-36 p-2 rounded-xl bg-white/95 backdrop-blur-md border border-gray-200 shadow-xl" side="top" align="end">
@@ -628,10 +628,10 @@ export default function RecordsArchiveTab({
                     <div className="relative mb-6">
                       <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
                       <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
-                        <LucideIcon  className={cn(
+                        <HugeIcon  className={cn(
                           "ph-duotone text-3xl text-gray-400 dark:text-zinc-500",
                           showArchived ? "ph-archive" : "ph-users"
-                        )}></LucideIcon>
+                        )}></HugeIcon>
                       </EmptyMedia>
                     </div>
                     <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
@@ -678,7 +678,7 @@ export default function RecordsArchiveTab({
                                ? "bg-white border-white text-[#0A84FF]" 
                                : "border-white/40 bg-white/10 hover:border-white/80"
                            )}>
-                             {isSelected && <LucideIcon  className="ph-bold ph-check text-[10px]" />}
+                             {isSelected && <HugeIcon  className="ph-bold ph-check text-[10px]" />}
                            </div>
                         </div>
                         <div className="flex items-start w-full">
@@ -700,7 +700,7 @@ export default function RecordsArchiveTab({
                             </div>
                             <div className="mt-2 flex items-center justify-between gap-2">
                               <div className="flex items-center gap-1.5 text-white/80">
-                                <LucideIcon  className="ph-bold ph-map-pin text-[14px]"></LucideIcon>
+                                <HugeIcon  className="ph-bold ph-map-pin text-[14px]"></HugeIcon>
                                 <span className="text-[13px] font-medium text-white/80 select-none whitespace-nowrap">
                                   Room {row.student.room} • Cabinet {row.student.cabinet} • Drawer {row.student.drawer}
                                 </span>
@@ -716,7 +716,7 @@ export default function RecordsArchiveTab({
                                   }}
                                   className="h-8 rounded-xl border-white/30 bg-white/10 px-2.5 text-[9px] font-semibold text-white shadow-xs hover:bg-white/20 active:scale-95 transition-all"
                                 >
-                                  <LucideIcon  className="ph-bold ph-archive-restore mr-1"></LucideIcon>
+                                  <HugeIcon  className="ph-bold ph-archive-restore mr-1"></HugeIcon>
                                   Restore
                                 </Button>
                               )}
@@ -801,7 +801,7 @@ export default function RecordsArchiveTab({
                                    title="Locate"
                                    className="w-8 h-8 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 text-gray-400 dark:text-zinc-500 transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
                                  >
-                                   <LucideIcon  className="ph-bold ph-map-pin text-[16px]"></LucideIcon>
+                                   <HugeIcon  className="ph-bold ph-map-pin text-[16px]"></HugeIcon>
                                  </button>
                               </div>
                             </td>

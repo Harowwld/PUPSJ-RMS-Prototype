@@ -1,6 +1,6 @@
 "use client"
 
-import LucideIcon from "@/components/shared/LucideIcon";
+import HugeIcon from "@/components/shared/HugeIcon";
 import React, { useState, useRef, useEffect, useMemo, useCallback } from "react"
 import { Reorder } from "framer-motion"
 import { Card } from "@/components/ui/card"
@@ -34,12 +34,12 @@ import { getCachedData, setCachedData, invalidateDataCache } from "@/lib/dataCac
 
 function SortIndicator({ column, sortBy, sortOrder }) {
   if (sortBy !== column) {
-    return <LucideIcon  className="ph-bold ph-caret-up-down ml-1 text-[11px] text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"></LucideIcon>
+    return <HugeIcon  className="ph-bold ph-caret-up-down ml-1 text-[11px] text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"></HugeIcon>
   }
   return sortOrder === "ASC" ? (
-    <LucideIcon  className="ph-bold ph-caret-up ml-1 text-[11px] text-pup-maroon dark:text-primary animate-in fade-in zoom-in duration-normal"></LucideIcon>
+    <HugeIcon  className="ph-bold ph-caret-up ml-1 text-[11px] text-pup-maroon dark:text-primary animate-in fade-in zoom-in duration-normal"></HugeIcon>
   ) : (
-    <LucideIcon  className="ph-bold ph-caret-down ml-1 text-[11px] text-pup-maroon dark:text-primary animate-in fade-in zoom-in duration-normal"></LucideIcon>
+    <HugeIcon  className="ph-bold ph-caret-down ml-1 text-[11px] text-pup-maroon dark:text-primary animate-in fade-in zoom-in duration-normal"></HugeIcon>
   )
 }
 
@@ -300,35 +300,35 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
                   <div
                     onClick={() => setSelectedKpi(selectedKpi === stat.key ? null : stat.key)}
                     className={cn(
-                      "relative overflow-hidden rounded-xl border p-4 cursor-pointer select-none transition-all",
-                      "border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-zinc-900/30 hover:border-gray-200 dark:hover:border-white/10",
-                      selectedKpi === stat.key && (stat.color === "blue" ? "border-blue-500/40 ring-1 ring-blue-500/20" : "border-emerald-500/40 ring-1 ring-emerald-500/20")
+                      "relative overflow-hidden rounded-[18px] border cursor-pointer select-none transition-all shadow-[0_2px_10px_rgb(0,0,0,0.04)] hover:shadow-[0_4px_15px_rgb(0,0,0,0.06)] flex flex-col justify-between min-h-[110px] bg-gray-50 dark:bg-zinc-900",
+                      selectedKpi === stat.key
+                        ? `border-${stat.color}-500/50 ring-1 ring-${stat.color}-500/20`
+                        : "border-gray-100 dark:border-white/5"
                     )}
                   >
-                    
-                    <div className="absolute bottom-3 right-3 text-gray-300 dark:text-zinc-600 pointer-events-none opacity-50 group-hover:opacity-100 transition-opacity z-[1]">
-                      <LucideIcon className="ph-bold ph-dots-six-vertical text-lg" />
-                    </div>
-                    <div className="relative z-10">
-                      <div className="mb-1 flex items-center justify-between">
-                        <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
+                    <div className="flex justify-between items-start p-4 pb-0">
+                      <div className="flex flex-col gap-1">
+                        <span className="text-[13px] font-medium text-gray-500 dark:text-zinc-400 capitalize">
                           {stat.label}
                         </span>
-                        <LucideIcon  className={cn("ph-bold ph-caret-down text-xs text-gray-400 transition-transform duration-300", selectedKpi === stat.key && "rotate-180")} />
                       </div>
-                      <div className="flex items-baseline gap-2">
-                        <span className="text-2xl font-black text-gray-900 dark:text-zinc-50 tracking-tight">
+                      <div className={cn("w-8 h-8 rounded-[10px] flex items-center justify-center text-white shadow-sm shrink-0", stat.color === "blue" ? "bg-[#3b82f6]" : "bg-[#10b981]")}>
+                        <HugeIcon className={cn("ph-bold text-[15px]", stat.color === "blue" ? "ph-file-text" : "ph-users")} />
+                      </div>
+                    </div>
+                    
+                    <div className="flex justify-between items-end p-4 pt-1">
+                      <div className="flex flex-col gap-1">
+                        <span className="text-[28px] font-bold text-gray-900 dark:text-white leading-none tracking-tight">
                           {typeof stat.value === "number" ? stat.value.toLocaleString() : stat.value}
                         </span>
-                        <span className={cn("text-xs font-medium", 
-                          stat.color === "blue" ? "text-blue-600 dark:text-blue-400" : "text-emerald-600 dark:text-emerald-400"
-                        )}>
+                        <span className={cn("text-[11px] font-medium mb-1", `text-${stat.color}-600 dark:text-${stat.color}-400`)}>
                           {stat.sublabel}
                         </span>
                       </div>
+                      <HugeIcon className="ph-bold ph-dots-six-vertical cursor-grab active:cursor-grabbing hover:text-gray-400 dark:hover:text-zinc-500 text-gray-300 dark:text-zinc-700 text-lg mb-0.5" />
                     </div>
                   </div>
-
                   {/* Expandable details drawer */}
                   <div
                     className={cn(
@@ -440,7 +440,7 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0">
             <div className="w-full sm:w-[280px] relative group shrink-0">
               <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                <LucideIcon  className="ph-bold ph-magnifying-glass text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm"></LucideIcon>
+                <HugeIcon  className="ph-bold ph-magnifying-glass text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm"></HugeIcon>
               </div>
               <Input
                 value={search}
@@ -480,7 +480,7 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
                     <div className="relative mb-6">
                       <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
                       <EmptyMedia className="relative z-10 flex h-20 w-20 items-center justify-center rounded-2xl border border-gray-100 bg-white shadow-md dark:border-white/10 dark:bg-card">
-                        <LucideIcon  className="ph-bold ph-tray text-3xl text-gray-400 dark:text-zinc-500"></LucideIcon>
+                        <HugeIcon  className="ph-bold ph-tray text-3xl text-gray-400 dark:text-zinc-500"></HugeIcon>
                       </EmptyMedia>
                     </div>
                     <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">
@@ -501,7 +501,7 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
                         }}
                         className="mt-4 flex h-9 items-center gap-2 rounded-xl border border-gray-300 bg-white px-4 text-xs font-semibold text-gray-700 shadow-xs hover:bg-gray-50 dark:bg-zinc-900 dark:border-white/10 dark:text-zinc-300 cursor-pointer"
                       >
-                        <LucideIcon  className="ph-bold ph-arrow-counter-clockwise"></LucideIcon>
+                        <HugeIcon  className="ph-bold ph-arrow-counter-clockwise"></HugeIcon>
                         Clear
                       </Button>
                     )}
@@ -600,12 +600,12 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
                           <td className="p-4 align-middle">
                             {isRegistrar ? (
                               <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-[#800000]/10 text-pup-maroon dark:bg-pup-maroon/20 dark:text-rose-300">
-                                <LucideIcon  className="ph-bold ph-certificate text-xs"></LucideIcon>
+                                <HugeIcon  className="ph-bold ph-certificate text-xs"></HugeIcon>
                                 Registrar
                               </span>
                             ) : (
                               <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300">
-                                <LucideIcon  className="ph-bold ph-student text-xs"></LucideIcon>
+                                <HugeIcon  className="ph-bold ph-student text-xs"></HugeIcon>
                                 OSAS
                               </span>
                             )}
@@ -628,7 +628,7 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
                             </div>
                             {tx.originalFilename && (
                               <div className="text-[11px] text-[#8E8E93] dark:text-zinc-500 flex items-center gap-1 mt-0.5">
-                                <LucideIcon  className="ph-bold ph-file-pdf text-red-500"></LucideIcon>
+                                <HugeIcon  className="ph-bold ph-file-pdf text-red-500"></HugeIcon>
                                 <span className="truncate max-w-[200px]">{tx.originalFilename}</span>
                               </div>
                             )}
@@ -672,7 +672,7 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
                                     aria-label="View Details"
                                     className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
                                   >
-                                    <LucideIcon  className="ph-bold ph-eye text-[16px]"></LucideIcon>
+                                    <HugeIcon  className="ph-bold ph-eye text-[16px]"></HugeIcon>
                                   </button>
                                 </TooltipTrigger>
                                 <TooltipContent>View Details</TooltipContent>
@@ -757,12 +757,12 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
                   <div className="flex items-center gap-2 mb-1.5 flex-wrap">
                     {selectedItem?.officeId === "registrar" ? (
                       <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-[#800000]/10 text-pup-maroon dark:bg-pup-maroon/20 dark:text-rose-300">
-                        <LucideIcon  className="ph-bold ph-certificate text-xs"></LucideIcon>
+                        <HugeIcon  className="ph-bold ph-certificate text-xs"></HugeIcon>
                         Registrar Document Request
                       </span>
                     ) : (
                       <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300">
-                        <LucideIcon  className="ph-bold ph-student text-xs"></LucideIcon>
+                        <HugeIcon  className="ph-bold ph-student text-xs"></HugeIcon>
                         OSAS Event Proposal
                       </span>
                     )}
@@ -842,7 +842,7 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
                 <div className="p-3 rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/70 dark:bg-zinc-800/40 flex items-center justify-between gap-3">
                   <div className="flex items-center gap-2.5 min-w-0">
                     <div className="w-8 h-8 rounded-lg bg-red-100 text-red-700 dark:bg-red-950/50 dark:text-red-400 flex items-center justify-center shrink-0">
-                      <LucideIcon  className="ph-bold ph-file-pdf text-base"></LucideIcon>
+                      <HugeIcon  className="ph-bold ph-file-pdf text-base"></HugeIcon>
                     </div>
                     <div className="min-w-0">
                       <span className="font-semibold text-gray-900 dark:text-zinc-100 text-xs block truncate">
@@ -863,7 +863,7 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
                     onClick={() => handleOpenPdfPreview(selectedItem)}
                     className="text-xs font-semibold text-blue-600 dark:text-blue-400 bg-white dark:bg-zinc-800 border border-blue-200 dark:border-blue-900/40 hover:bg-blue-50 dark:hover:bg-blue-950/40 shrink-0 h-8 px-2.5 rounded-lg cursor-pointer shadow-xs active:scale-95 transition-all"
                   >
-                    <LucideIcon  className="ph-bold ph-eye text-sm mr-1"></LucideIcon> Preview
+                    <HugeIcon  className="ph-bold ph-eye text-sm mr-1"></HugeIcon> Preview
                   </Button>
                 </div>
               )}

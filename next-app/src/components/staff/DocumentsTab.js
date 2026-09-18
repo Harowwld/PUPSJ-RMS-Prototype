@@ -1,5 +1,5 @@
 "use client";
-import LucideIcon from "@/components/shared/LucideIcon";
+import HugeIcon from "@/components/shared/HugeIcon";
 import { useState, useEffect, useMemo } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -45,11 +45,11 @@ const STATUS_TABS = [
 
 function SortIndicator({ column, sortBy, sortOrder }) {
   if (sortBy !== column)
-    return <LucideIcon  className="ph-bold ph-caret-up-down ml-1 text-[11px] opacity-40 transition-opacity group-hover:opacity-70 dark:opacity-30 dark:group-hover:opacity-60"></LucideIcon>;
+    return <HugeIcon  className="ph-bold ph-caret-up-down ml-1 text-[11px] opacity-40 transition-opacity group-hover:opacity-70 dark:opacity-30 dark:group-hover:opacity-60"></HugeIcon>;
   return sortOrder === "ASC" ? (
-    <LucideIcon  className="ph-bold ph-caret-up ml-1 text-[11px] text-pup-maroon animate-in fade-in zoom-in duration-300 dark:text-primary"></LucideIcon>
+    <HugeIcon  className="ph-bold ph-caret-up ml-1 text-[11px] text-pup-maroon animate-in fade-in zoom-in duration-300 dark:text-primary"></HugeIcon>
   ) : (
-    <LucideIcon  className="ph-bold ph-caret-down ml-1 text-[11px] text-pup-maroon animate-in fade-in zoom-in duration-300 dark:text-primary"></LucideIcon>
+    <HugeIcon  className="ph-bold ph-caret-down ml-1 text-[11px] text-pup-maroon animate-in fade-in zoom-in duration-300 dark:text-primary"></HugeIcon>
   );
 }
 
@@ -175,7 +175,7 @@ function DocumentsTable({
                   <div className="relative mb-4">
                     <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
                     <EmptyMedia className="relative z-10 flex h-20 w-20 items-center justify-center rounded-2xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
-                      <LucideIcon  className="ph-duotone ph-magnifying-glass text-3xl text-gray-400 dark:text-zinc-500"></LucideIcon>
+                      <HugeIcon  className="ph-duotone ph-magnifying-glass text-3xl text-gray-400 dark:text-zinc-500"></HugeIcon>
                     </EmptyMedia>
                   </div>
                   <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">Search Documents</EmptyTitle>
@@ -195,7 +195,7 @@ function DocumentsTable({
                   <div className="relative mb-4">
                     <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
                     <EmptyMedia className="relative z-10 flex h-20 w-20 items-center justify-center rounded-2xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
-                      <LucideIcon  className="ph-duotone ph-magnifying-glass text-3xl text-gray-400 dark:text-zinc-500"></LucideIcon>
+                      <HugeIcon  className="ph-duotone ph-magnifying-glass text-3xl text-gray-400 dark:text-zinc-500"></HugeIcon>
                     </EmptyMedia>
                   </div>
                   <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">No Results Found</EmptyTitle>
@@ -229,7 +229,7 @@ function DocumentsTable({
                   variant="outline"
                   className="flex w-fit items-center gap-1.5 px-2.5 py-1 rounded-full border border-pup-maroon/20 bg-pup-maroon/10 text-[9px] font-semibold tracking-wider text-pup-maroon whitespace-nowrap dark:border-red-400/20 dark:bg-red-400/10 dark:text-red-400 shadow-none"
                 >
-                  <LucideIcon  className="ph-bold ph-file-text text-[10px]"></LucideIcon>
+                  <HugeIcon  className="ph-bold ph-file-text text-[10px]"></HugeIcon>
                   {r.doc_type}
                 </Badge>
               </td>
@@ -240,7 +240,7 @@ function DocumentsTable({
                       variant="outline"
                       className="flex w-fit items-center gap-1.5 px-2.5 py-1 rounded-full border border-amber-500/20 bg-amber-500/10 text-[9px] font-semibold tracking-wider text-amber-600 dark:border-amber-400/20 dark:bg-amber-400/10 dark:text-amber-400 shadow-none"
                     >
-                      <LucideIcon  className="ph-fill ph-warning-circle text-[10px]"></LucideIcon>
+                      <HugeIcon  className="ph-fill ph-warning-circle text-[10px]"></HugeIcon>
                       Unverified
                     </Badge>
                   ) : (
@@ -248,7 +248,7 @@ function DocumentsTable({
                       variant="outline"
                       className="flex w-fit items-center gap-1.5 px-2.5 py-1 rounded-full border border-emerald-500/20 bg-emerald-500/10 text-[9px] font-semibold tracking-wider text-emerald-600 dark:border-emerald-400/20 dark:bg-emerald-400/10 dark:text-emerald-400 shadow-none"
                     >
-                      <LucideIcon  className="ph-fill ph-check-circle text-[10px]"></LucideIcon>
+                      <HugeIcon  className="ph-fill ph-check-circle text-[10px]"></HugeIcon>
                       Uploaded
                     </Badge>
                   )
@@ -257,7 +257,7 @@ function DocumentsTable({
                     variant="outline"
                     className="flex w-fit items-center gap-1.5 px-2.5 py-1 rounded-full border border-red-500/20 bg-red-500/10 text-[9px] font-semibold tracking-wider text-red-600 dark:border-red-400/20 dark:bg-red-400/10 dark:text-red-400 shadow-none"
                   >
-                    <LucideIcon  className="ph-fill ph-x-circle text-[10px]"></LucideIcon>
+                    <HugeIcon  className="ph-fill ph-x-circle text-[10px]"></HugeIcon>
                     Missing
                   </Badge>
                 )}
@@ -649,7 +649,7 @@ export default function DocumentsTab({
               {/* Search Input */}
               <div className="w-full sm:w-[260px] lg:w-[300px] relative group shrink-0">
                 <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                  <LucideIcon  className="ph-bold ph-magnifying-glass text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm"></LucideIcon>
+                  <HugeIcon  className="ph-bold ph-magnifying-glass text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm"></HugeIcon>
                 </div>
                 <Input
                   value={searchQuery}
@@ -757,7 +757,7 @@ export default function DocumentsTab({
                   <Empty className="h-[320px] flex flex-col items-center justify-center text-center text-gray-500 border-0 dark:text-zinc-400">
                     <EmptyHeader className="flex flex-col items-center gap-0">
                       <EmptyMedia className="w-16 h-16 rounded-2xl bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm dark:bg-card dark:border-white/10 dark:shadow-none">
-                        <LucideIcon  className="ph-duotone ph-warning-circle text-2xl text-pup-maroon dark:text-primary" />
+                        <HugeIcon  className="ph-duotone ph-warning-circle text-2xl text-pup-maroon dark:text-primary" />
                       </EmptyMedia>
                       <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">Could Not Load Report</EmptyTitle>
                       <EmptyDescription className="text-xs font-normal text-gray-500 mt-1 max-w-md dark:text-zinc-400">
@@ -1010,7 +1010,7 @@ export default function DocumentsTab({
                 <div className="pt-4">
                   <div className="bg-red-50 border border-red-100 rounded-xl p-4 dark:bg-red-950/30">
                     <div className="flex gap-3">
-                      <LucideIcon  className="ph-duotone ph-warning-circle text-xl text-red-600 shrink-0"></LucideIcon>
+                      <HugeIcon  className="ph-duotone ph-warning-circle text-xl text-red-600 shrink-0"></HugeIcon>
                       <div>
                         <p className="text-xs font-semibold text-red-900 tracking-tight">Archive Record</p>
                         <p className="text-[11px] text-red-700 mt-1">
@@ -1057,7 +1057,7 @@ export default function DocumentsTab({
               >
                 {editStudentSaving ? (
                   <>
-                    <LucideIcon  className="ph-bold ph-spinner animate-spin mr-2"></LucideIcon>
+                    <HugeIcon  className="ph-bold ph-spinner animate-spin mr-2"></HugeIcon>
                     Saving...
                   </>
                 ) : (
@@ -1119,7 +1119,7 @@ export default function DocumentsTab({
                       onClick={() => setIsFullscreen(false)}
                       className="h-10 w-10 rounded-full bg-black/50 text-white hover:bg-black/70 backdrop-blur-md border-0 active:scale-95 transition-all"
                     >
-                      <LucideIcon  className="ph-bold ph-x text-lg"></LucideIcon>
+                      <HugeIcon  className="ph-bold ph-x text-lg"></HugeIcon>
                     </Button>
                   </div>
                   <iframe
@@ -1141,7 +1141,7 @@ export default function DocumentsTab({
                 ) : (
                   <div className="flex h-full items-center justify-center bg-white dark:bg-card">
                     <div className="flex flex-col items-center gap-4 text-gray-400">
-                      <LucideIcon  className="ph-duotone ph-file-dashed text-xl"></LucideIcon>
+                      <HugeIcon  className="ph-duotone ph-file-dashed text-xl"></HugeIcon>
                       <p className="text-sm font-medium">No document file available.</p>
                     </div>
                   </div>
@@ -1165,7 +1165,7 @@ export default function DocumentsTab({
                       <label className="text-[10px] font-semibold tracking-widest text-gray-400">Document Category</label>
                       <div className="mt-1.5">
                         <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-pup-maroon/20 bg-pup-maroon/10 text-[10px] font-semibold tracking-wider text-pup-maroon dark:border-red-400/20 dark:bg-red-400/10 dark:text-red-400">
-                          <LucideIcon  className="ph-bold ph-file text-[11px]"></LucideIcon>
+                          <HugeIcon  className="ph-bold ph-file text-[11px]"></HugeIcon>
                           {selectedDoc?.doc_type}
                         </span>
                       </div>
@@ -1182,18 +1182,18 @@ export default function DocumentsTab({
                         {selectedDoc?.status === "uploaded" ? (
                           selectedDoc.verificationStatus === "unverified" ? (
                             <div className="flex w-fit items-center gap-1.5 rounded-full border px-3 py-1.5 text-[10px] font-semibold tracking-wider shadow-xs bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/20 dark:text-amber-500/90 dark:border-amber-900/50">
-                              <LucideIcon  className="ph-fill ph-warning-circle text-[11px]"></LucideIcon>
+                              <HugeIcon  className="ph-fill ph-warning-circle text-[11px]"></HugeIcon>
                               Unverified
                             </div>
                           ) : (
                             <div className="flex w-fit items-center gap-1.5 rounded-full border px-3 py-1.5 text-[10px] font-semibold tracking-wider shadow-xs bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/20 dark:text-emerald-500/90 dark:border-emerald-900/50">
-                              <LucideIcon  className="ph-fill ph-check-circle text-[11px]"></LucideIcon>
+                              <HugeIcon  className="ph-fill ph-check-circle text-[11px]"></HugeIcon>
                               Uploaded
                             </div>
                           )
                         ) : (
                           <div className="flex w-fit items-center gap-1.5 rounded-full border px-3 py-1.5 text-[10px] font-semibold tracking-wider shadow-xs bg-red-50 text-red-700 border-red-200 dark:bg-red-950/20 dark:text-red-500/90 dark:border-red-900/50">
-                            <LucideIcon  className="ph-fill ph-x-circle text-[11px]"></LucideIcon>
+                            <HugeIcon  className="ph-fill ph-x-circle text-[11px]"></HugeIcon>
                             Missing
                           </div>
                         )}
@@ -1243,7 +1243,7 @@ export default function DocumentsTab({
                         isFullscreen && "bg-pup-maroon dark:bg-red-600 text-white hover:bg-pup-darkMaroon border-pup-darkMaroon"
                       )}
                     >
-                      <LucideIcon  className={cn("ph-bold text-xl", isFullscreen ? "ph-corners-in" : "ph-corners-out")}></LucideIcon>
+                      <HugeIcon  className={cn("ph-bold text-xl", isFullscreen ? "ph-corners-in" : "ph-corners-out")}></HugeIcon>
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent className="bg-zinc-900 text-white border-zinc-800">

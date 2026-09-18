@@ -1,6 +1,6 @@
 "use client"
 
-import LucideIcon from "@/components/shared/LucideIcon";
+import HugeIcon from "@/components/shared/HugeIcon";
 import { useState, useEffect } from "react"
 import { cn } from "@/lib/utils"
 import { Card, CardContent, CardTitle, CardDescription } from "@/components/ui/card"
@@ -136,7 +136,7 @@ export default function BulkImportTab({
                   className="text-gray-400 hover:text-gray-700 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors bg-transparent border-0 p-0 cursor-pointer flex items-center justify-center w-8 h-8 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800"
                   title="Import Instructions"
                 >
-                  <LucideIcon  className="ph-bold ph-question text-[18px]"></LucideIcon>
+                  <HugeIcon  className="ph-bold ph-question text-[18px]"></HugeIcon>
                 </button>
               }
             />
@@ -188,7 +188,7 @@ export default function BulkImportTab({
                   className="absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0"
                 />
                 <div className="pointer-events-none flex flex-col items-center justify-center text-center w-full h-full">
-                  <LucideIcon  className={cn("ti ti-upload text-[24px] transition-colors duration-fast", importDropActive ? "text-pup-maroon" : "text-gray-400 dark:text-zinc-500")}></LucideIcon>
+                  <HugeIcon  className={cn("ti ti-upload text-[24px] transition-colors duration-fast", importDropActive ? "text-pup-maroon" : "text-gray-400 dark:text-zinc-500")}></HugeIcon>
                   <p className="text-sm font-semibold text-gray-900 dark:text-zinc-100 mt-3 m-0">
                     Drop CSV file here
                   </p>
@@ -226,7 +226,7 @@ export default function BulkImportTab({
           </div>            <div className="flex items-center gap-4">
               <div className="relative group w-[220px]">
                 <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                  <LucideIcon  className="ph-bold ph-magnifying-glass text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-xs"></LucideIcon>
+                  <HugeIcon  className="ph-bold ph-magnifying-glass text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-xs"></HugeIcon>
                 </div>
                 <Input
                   type="text"
@@ -312,7 +312,7 @@ export default function BulkImportTab({
                   <tr className="bg-gray-50/50 transition-colors hover:bg-gray-50 dark:bg-card dark:hover:bg-white/5">
                     <td className="p-4 text-center">
                       <div className="flex h-5 w-5 mx-auto items-center justify-center rounded-full border-2 border-dashed border-gray-300 dark:border-white/10">
-                        <LucideIcon  className="ph-bold ph-plus text-[10px] text-gray-400 dark:text-zinc-500"></LucideIcon>
+                        <HugeIcon  className="ph-bold ph-plus text-[10px] text-gray-400 dark:text-zinc-500"></HugeIcon>
                       </div>
                     </td>
                     <td className="p-4 text-center text-[11px] text-gray-400 font-medium dark:text-zinc-500">
@@ -537,7 +537,7 @@ export default function BulkImportTab({
                               <Tooltip>
                                 <TooltipTrigger asChild>
                                   <div className="inline-flex cursor-help items-center gap-1 rounded-full bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-400 px-[10px] py-[2.5px] text-[11px] font-medium tracking-[0.04em] whitespace-nowrap">
-                                    <LucideIcon  className="ph-bold ph-warning-circle text-xs"></LucideIcon>
+                                    <HugeIcon  className="ph-bold ph-warning-circle text-xs"></HugeIcon>
                                     <span>{row.error}</span>
                                   </div>
                                 </TooltipTrigger>
@@ -553,7 +553,7 @@ export default function BulkImportTab({
                                     onClick={() => startEdit(row)}
                                     className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 transition-colors flex items-center justify-center border-0 bg-transparent cursor-pointer active:scale-95"
                                   >
-                                    <LucideIcon  className="ph-bold ph-pencil-simple text-sm"></LucideIcon>
+                                    <HugeIcon  className="ph-bold ph-pencil-simple text-sm"></HugeIcon>
                                   </button>
                                 </TooltipTrigger>
                                 <TooltipContent side="top">Fix Entry</TooltipContent>
@@ -562,7 +562,7 @@ export default function BulkImportTab({
                           ) : (
                             <div className="flex items-center justify-end gap-2">
                               <div className="inline-flex items-center gap-1 rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 px-[10px] py-[2.5px] text-[11px] font-medium tracking-[0.04em] whitespace-nowrap">
-                                <LucideIcon  className="ph-bold ph-check-circle text-xs"></LucideIcon>
+                                <HugeIcon  className="ph-bold ph-check-circle text-xs"></HugeIcon>
                                 <span>Validated</span>
                               </div>
                               <Tooltip>
@@ -571,7 +571,7 @@ export default function BulkImportTab({
                                     onClick={() => startEdit(row)}
                                     className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 transition-colors flex items-center justify-center border-0 bg-transparent cursor-pointer active:scale-95"
                                   >
-                                    <LucideIcon  className="ph-bold ph-pencil-simple text-sm"></LucideIcon>
+                                    <HugeIcon  className="ph-bold ph-pencil-simple text-sm"></HugeIcon>
                                   </button>
                                 </TooltipTrigger>
                                 <TooltipContent side="top">Edit Entry</TooltipContent>
@@ -676,7 +676,7 @@ export default function BulkImportTab({
           <div className="flex max-w-sm flex-col items-center gap-6 text-center">
             <div className="relative">
               <div className="h-20 w-20 animate-spin rounded-full border-4 border-gray-200 border-t-pup-maroon dark:border-white/10"></div>
-              <LucideIcon  className="ph-duotone ph-database absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-xl text-pup-maroon dark:text-primary"></LucideIcon>
+              <HugeIcon  className="ph-duotone ph-database absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-xl text-pup-maroon dark:text-primary"></HugeIcon>
             </div>
             <div>
               <h3 className="text-xl font-semibold text-gray-900 dark:text-zinc-50">Adding Records</h3>
@@ -691,7 +691,7 @@ export default function BulkImportTab({
           <div className="flex w-full max-w-md flex-col items-center gap-8 px-6 text-center">
             <div className="relative">
               <div className="flex h-20 w-20 items-center justify-center rounded-full bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400">
-                <LucideIcon  className="ph-bold ph-check text-[32px]"></LucideIcon>
+                <HugeIcon  className="ph-bold ph-check text-[32px]"></HugeIcon>
               </div>
             </div>
 
@@ -747,7 +747,7 @@ export default function BulkImportTab({
             onClick={() => setShowInstructions(false)}
             className="absolute right-8 top-8 text-gray-400 hover:text-gray-600 dark:text-zinc-400 dark:hover:text-zinc-200 transition-colors border-0 bg-transparent p-0 cursor-pointer"
           >
-            <LucideIcon  className="ph-bold ph-x text-base"></LucideIcon>
+            <HugeIcon  className="ph-bold ph-x text-base"></HugeIcon>
           </button>
 
           {/* Modal Header */}
@@ -791,7 +791,7 @@ export default function BulkImportTab({
                   className="absolute top-4 right-4 text-[#8E8E93] hover:text-[#111] transition-colors border-0 bg-transparent p-0 cursor-pointer flex items-center justify-center"
                   title="Copy Example"
                 >
-                  <LucideIcon  className="ph-bold ph-copy ti-copy text-[14px]"></LucideIcon>
+                  <HugeIcon  className="ph-bold ph-copy ti-copy text-[14px]"></HugeIcon>
                 </button>
 
                 <div className="text-[11px] text-[#8E8E93] mb-3 normal-case font-sans">CSV Structure Example</div>
@@ -845,7 +845,7 @@ export default function BulkImportTab({
                     className="flex items-start gap-3"
                   >
                     <div className="flex h-5 w-5 shrink-0 items-center justify-center text-[#8E8E93] mt-[2px]">
-                      <LucideIcon  className={`ph-bold ${rule.icon} text-[16px]`}></LucideIcon>
+                      <HugeIcon  className={`ph-bold ${rule.icon} text-[16px]`}></HugeIcon>
                     </div>
                     <div>
                       <div className="text-[13px] font-medium text-[#111] dark:text-zinc-50 leading-tight">

@@ -315,7 +315,7 @@ function SystemAdminPageContent({ authUser: propAuthUser }) {
         <main className="relative w-full min-w-0 min-h-0 flex-1 bg-white/25 dark:bg-zinc-950/25 overflow-y-auto backdrop-blur-xs">
           <div 
             className="flex-1 p-4 flex flex-col min-h-0 w-full"
-            style={{ transform: `scale(${zoomFactor})`, transformOrigin: 'top left', width: `${100 / zoomFactor}%`, height: `${100 / zoomFactor}%` }}
+            style={{ transform: `scale(${zoomFactor})`, transformOrigin: 'top left', width: `${100 / zoomFactor}%`, minHeight: `${100 / zoomFactor}%` }}
           >
             {view === "offices" && <OfficeManagementTab showToast={showToast} />}
             {view === "modules" && <ModuleConfigTab showToast={showToast} />}

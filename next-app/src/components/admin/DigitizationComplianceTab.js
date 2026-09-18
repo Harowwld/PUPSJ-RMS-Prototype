@@ -1,5 +1,5 @@
 "use client";
-import LucideIcon from "@/components/shared/LucideIcon";
+import HugeIcon from "@/components/shared/HugeIcon";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
@@ -115,12 +115,12 @@ export default function DigitizationComplianceTab({
   const SortIndicator = ({ column }) => {
     if (sortBy !== column)
       return (
-        <LucideIcon  className="ph-bold ph-caret-up-down ml-1 text-[12px] text-gray-400 dark:text-zinc-500 opacity-0 group-hover:opacity-100 transition-opacity"></LucideIcon>
+        <HugeIcon  className="ph-bold ph-caret-up-down ml-1 text-[12px] text-gray-400 dark:text-zinc-500 opacity-0 group-hover:opacity-100 transition-opacity"></HugeIcon>
       );
     return sortOrder === "asc" ? (
-      <LucideIcon  className="ph-bold ph-caret-up ml-1 text-[12px] text-pup-maroon dark:text-primary"></LucideIcon>
+      <HugeIcon  className="ph-bold ph-caret-up ml-1 text-[12px] text-pup-maroon dark:text-primary"></HugeIcon>
     ) : (
-      <LucideIcon  className="ph-bold ph-caret-down ml-1 text-[12px] text-pup-maroon dark:text-primary"></LucideIcon>
+      <HugeIcon  className="ph-bold ph-caret-down ml-1 text-[12px] text-pup-maroon dark:text-primary"></HugeIcon>
     );
   };
 
@@ -417,7 +417,7 @@ export default function DigitizationComplianceTab({
                   className="flex h-10 items-center justify-center rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
                 >
                   {isExportingCsv ? (
-                    <LucideIcon  className="ph-bold ph-spinner animate-spin text-[16px]"></LucideIcon>
+                    <HugeIcon  className="ph-bold ph-spinner animate-spin text-[16px]"></HugeIcon>
                   ) : (
                     "Export"
                   )}
@@ -430,7 +430,7 @@ export default function DigitizationComplianceTab({
                   className="flex h-10 items-center justify-center rounded-xl! btn-brand-red text-white font-semibold text-xs active:scale-95 disabled:opacity-50 transition-all cursor-pointer px-5 shadow-xs"
                 >
                   {isGeneratingPdf ? (
-                    <LucideIcon  className="ph-bold ph-spinner animate-spin text-[16px] flex items-center justify-center"></LucideIcon>
+                    <HugeIcon  className="ph-bold ph-spinner animate-spin text-[16px] flex items-center justify-center"></HugeIcon>
                   ) : (
                     "Download"
                   )}
@@ -476,7 +476,7 @@ export default function DigitizationComplianceTab({
                         <TooltipProvider delayDuration={200}>
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <LucideIcon  className="ph-bold ph-info cursor-help text-xs text-gray-400 hover:text-gray-600 dark:hover:text-zinc-300 transition-colors" />
+                              <HugeIcon  className="ph-bold ph-info cursor-help text-xs text-gray-400 hover:text-gray-600 dark:hover:text-zinc-300 transition-colors" />
                             </TooltipTrigger>
                             <TooltipContent 
                               side="right" 
@@ -494,7 +494,7 @@ export default function DigitizationComplianceTab({
                         </TooltipProvider>
                       </div>
                       <div className="w-8 h-8 rounded-[10px] flex items-center justify-center text-white shadow-sm shrink-0 bg-[#ef4444]">
-                        <LucideIcon className="ph-bold text-[15px] ph-pie-chart" />
+                        <HugeIcon className="ph-bold text-[15px] ph-pie-chart" />
                       </div>
                     </div>
                     
@@ -504,7 +504,7 @@ export default function DigitizationComplianceTab({
                           {summary?.percentDigitized ?? 0}%
                         </span>
                       </div>
-                      <LucideIcon className="ph-bold ph-dots-six-vertical cursor-grab active:cursor-grabbing hover:text-gray-400 dark:hover:text-zinc-500 text-gray-300 dark:text-zinc-700 text-lg mb-0.5" />
+                      <HugeIcon className="ph-bold ph-dots-six-vertical cursor-grab active:cursor-grabbing hover:text-gray-400 dark:hover:text-zinc-500 text-gray-300 dark:text-zinc-700 text-lg mb-0.5" />
                     </div>
                   </div>
 
@@ -571,7 +571,7 @@ export default function DigitizationComplianceTab({
                         Students
                       </span>
                       <div className="w-8 h-8 rounded-[10px] flex items-center justify-center text-white shadow-sm shrink-0 bg-[#3b82f6]">
-                        <LucideIcon className="ph-bold text-[15px] ph-users" />
+                        <HugeIcon className="ph-bold text-[15px] ph-users" />
                       </div>
                     </div>
                     
@@ -579,7 +579,7 @@ export default function DigitizationComplianceTab({
                       <span className="text-[28px] font-bold text-gray-900 dark:text-white leading-none tracking-tight">
                         {summary?.totalStudents?.toLocaleString?.() ?? summary?.totalStudents ?? 0}
                       </span>
-                      <LucideIcon className="ph-bold ph-dots-six-vertical cursor-grab active:cursor-grabbing hover:text-gray-400 dark:hover:text-zinc-500 text-gray-300 dark:text-zinc-700 text-lg mb-0.5" />
+                      <HugeIcon className="ph-bold ph-dots-six-vertical cursor-grab active:cursor-grabbing hover:text-gray-400 dark:hover:text-zinc-500 text-gray-300 dark:text-zinc-700 text-lg mb-0.5" />
                     </div>
                   </div>
 
@@ -632,7 +632,7 @@ export default function DigitizationComplianceTab({
                         Complete
                       </span>
                       <div className="w-8 h-8 rounded-[10px] flex items-center justify-center text-white shadow-sm shrink-0 bg-[#22c55e]">
-                        <LucideIcon className="ph-bold text-[15px] ph-check-circle" />
+                        <HugeIcon className="ph-bold text-[15px] ph-check-circle" />
                       </div>
                     </div>
                     
@@ -645,7 +645,7 @@ export default function DigitizationComplianceTab({
                           {(summary?.digitizedStudents ?? summary?.fullyDigitizedStudents ?? 0).toLocaleString()} Done
                         </span>
                       </div>
-                      <LucideIcon className="ph-bold ph-dots-six-vertical cursor-grab active:cursor-grabbing hover:text-gray-400 dark:hover:text-zinc-500 text-gray-300 dark:text-zinc-700 text-lg mb-0.5" />
+                      <HugeIcon className="ph-bold ph-dots-six-vertical cursor-grab active:cursor-grabbing hover:text-gray-400 dark:hover:text-zinc-500 text-gray-300 dark:text-zinc-700 text-lg mb-0.5" />
                     </div>
                   </div>
 
@@ -733,7 +733,7 @@ export default function DigitizationComplianceTab({
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 flex-wrap">
             {/* Search */}
             <div className="relative flex-1 sm:w-64 min-w-[200px] group">
-              <LucideIcon  className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-xs pointer-events-none"></LucideIcon>
+              <HugeIcon  className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-xs pointer-events-none"></HugeIcon>
               <Input
                 type="text"
                 placeholder="Search Program"
@@ -874,7 +874,7 @@ export default function DigitizationComplianceTab({
                   {/* Context & Formula */}
                   <div className="flex-1">
                     <div className="flex items-start gap-3">
-                      <LucideIcon  className="ph-bold ph-target text-[16px] text-gray-400 dark:text-zinc-500 shrink-0 mt-1" />
+                      <HugeIcon  className="ph-bold ph-target text-[16px] text-gray-400 dark:text-zinc-500 shrink-0 mt-1" />
                       <div>
                         <h3 className="text-[14px] font-semibold text-gray-900 tracking-[-0.01em] dark:text-zinc-50 m-0">
                           Digitization Target
@@ -936,7 +936,7 @@ export default function DigitizationComplianceTab({
                 <div className="relative mb-6">
                   <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
                   <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
-                    <LucideIcon  className="ph-duotone ph-warning-circle text-3xl text-pup-maroon dark:text-primary" />
+                    <HugeIcon  className="ph-duotone ph-warning-circle text-3xl text-pup-maroon dark:text-primary" />
                   </EmptyMedia>
                 </div>
                 <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">Data Unavailable</EmptyTitle>
@@ -1053,7 +1053,7 @@ export default function DigitizationComplianceTab({
                     <div className="relative mb-6">
                       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-36 h-36 rounded-full bg-gray-100/50 dark:bg-zinc-800/30"></div>
                       <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
-                        <LucideIcon  className="ph-duotone ph-magnifying-glass text-xl text-gray-300 dark:text-zinc-600"></LucideIcon>
+                        <HugeIcon  className="ph-duotone ph-magnifying-glass text-xl text-gray-300 dark:text-zinc-600"></HugeIcon>
                       </EmptyMedia>
                     </div>
                     <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">No data found</EmptyTitle>
@@ -1069,7 +1069,7 @@ export default function DigitizationComplianceTab({
                         onClick={handleClearAll}
                         className="mt-6 flex h-10 items-center gap-3 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-6 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-colors hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 tracking-wide cursor-pointer"
                       >
-                        <LucideIcon  className="ph-bold ph-arrow-counter-clockwise"></LucideIcon>
+                        <HugeIcon  className="ph-bold ph-arrow-counter-clockwise"></HugeIcon>
                         Clear
                       </Button>
                     )}
@@ -1130,7 +1130,7 @@ export default function DigitizationComplianceTab({
                   cursor: 'pointer'
                 }}
               >
-                <LucideIcon  className="ti ti-x" style={{ fontSize: '16px' }}></LucideIcon>
+                <HugeIcon  className="ti ti-x" style={{ fontSize: '16px' }}></HugeIcon>
               </button>
             </DialogClose>
           </DialogHeader>
@@ -1146,7 +1146,7 @@ export default function DigitizationComplianceTab({
                       onClick={() => setIsFullscreenPreview(false)}
                       className="h-10 w-10 rounded-full bg-black/50 text-white hover:bg-black/70 backdrop-blur-md border-0"
                     >
-                      <LucideIcon  className="ph-bold ph-x text-lg"></LucideIcon>
+                      <HugeIcon  className="ph-bold ph-x text-lg"></HugeIcon>
                     </Button>
                   </div>
                 )}
@@ -1170,7 +1170,7 @@ export default function DigitizationComplianceTab({
               <div className="flex flex-1 items-center justify-center bg-white p-6 dark:bg-card">
                 <div className="max-w-lg text-center">
                   <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-gray-50 dark:border-white/10 dark:bg-card">
-                    <LucideIcon  className="ph-bold ph-circle-notch animate-spin text-xl text-pup-maroon dark:text-primary"></LucideIcon>
+                    <HugeIcon  className="ph-bold ph-circle-notch animate-spin text-xl text-pup-maroon dark:text-primary"></HugeIcon>
                   </div>
                   <p className="text-sm font-semibold text-gray-600 dark:text-zinc-300">
                     Generating...
@@ -1187,7 +1187,7 @@ export default function DigitizationComplianceTab({
               onClick={() => setIsFullscreenPreview(!isFullscreenPreview)}
               className="text-[#8E8E93] hover:text-[#111] dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/10 transition-colors rounded-xl shadow-none border-0 p-0 h-10 w-10 cursor-pointer"
             >
-              <LucideIcon  className="ti ti-arrows-vertical text-[16px]"></LucideIcon>
+              <HugeIcon  className="ti ti-arrows-vertical text-[16px]"></HugeIcon>
             </Button>
 
             <div className="flex items-center gap-2.5 ml-auto">

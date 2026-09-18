@@ -1,6 +1,6 @@
 "use client"
 
-import LucideIcon from "@/components/shared/LucideIcon";
+import HugeIcon from "@/components/shared/HugeIcon";
 import { Skeleton } from "@/components/ui/skeleton"
 import { Card, CardContent } from "@/components/ui/card"
 import PageHeader from "@/components/shared/PageHeader"
@@ -53,7 +53,7 @@ export default function LandingBentoSkeleton() {
               <div className="w-full flex items-center justify-between gap-3 px-5 py-3.5">
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="w-8 h-8 rounded-lg bg-pup-maroon text-white flex items-center justify-center shrink-0">
-                    <LucideIcon  className="ph-bold ph-cursor-click text-sm" />
+                    <HugeIcon  className="ph-bold ph-cursor-click text-sm" />
                   </div>
                   <div className="min-w-0">
                     <h3 className="text-[13px] font-semibold text-gray-900 dark:text-zinc-50 truncate">
@@ -64,7 +64,7 @@ export default function LandingBentoSkeleton() {
                     </p>
                   </div>
                 </div>
-                <LucideIcon  className="ph-bold ph-caret-down text-gray-400 text-sm shrink-0 rotate-180" />
+                <HugeIcon  className="ph-bold ph-caret-down text-gray-400 text-sm shrink-0 rotate-180" />
               </div>
 
               {/* Expanded Form Content */}
@@ -133,7 +133,7 @@ export default function LandingBentoSkeleton() {
                 <div className="w-full flex items-center justify-between gap-3 px-5 py-3.5">
                   <div className="flex items-center gap-3 min-w-0">
                     <div className="w-8 h-8 rounded-lg bg-gray-200/80 dark:bg-zinc-800 text-gray-500 dark:text-zinc-400 flex items-center justify-center shrink-0">
-                      <LucideIcon  className={`${card.icon} text-sm`} />
+                      <HugeIcon  className={`${card.icon} text-sm`} />
                     </div>
                     <div className="min-w-0">
                       <h3 className="text-[13px] font-semibold text-gray-900 dark:text-zinc-50 truncate">
@@ -144,7 +144,7 @@ export default function LandingBentoSkeleton() {
                       </p>
                     </div>
                   </div>
-                  <LucideIcon  className="ph-bold ph-caret-down text-gray-400 text-sm shrink-0" />
+                  <HugeIcon  className="ph-bold ph-caret-down text-gray-400 text-sm shrink-0" />
                 </div>
               </div>
             ))}

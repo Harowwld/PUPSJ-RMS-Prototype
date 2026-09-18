@@ -1,6 +1,6 @@
 "use client"
 
-import LucideIcon from "@/components/shared/LucideIcon";
+import HugeIcon from "@/components/shared/HugeIcon";
 import { memo } from "react"
 import { Button } from "@/components/ui/button"
 import {
@@ -178,7 +178,7 @@ const CabinetCanvas = memo(({
             activeRoom?.door?.rotation === 90 && "-rotate-90", // Opposite flip for right
             activeRoom?.door?.rotation === 270 && "rotate-90"  // Opposite flip for left
           )}>
-            <LucideIcon  className="ph-fill ph-door text-xs" />
+            <HugeIcon  className="ph-fill ph-door text-xs" />
             ENTRANCE
           </span>
         </div>
@@ -451,7 +451,7 @@ const CabinetElement = memo(({
                   className="h-8 w-8 rounded-full text-gray-700 hover:bg-gray-100 hover:text-pup-maroon dark:hover:text-red-500 dark:text-zinc-200 dark:bg-muted dark:hover:bg-white/10 cursor-pointer"
                   onClick={duplicateSelectedCabinet}
                 >
-                  <LucideIcon  className="ph-bold ph-copy text-sm" />
+                  <HugeIcon  className="ph-bold ph-copy text-sm" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent side="top">
@@ -470,7 +470,7 @@ const CabinetElement = memo(({
                   className="h-8 w-8 rounded-full text-gray-700 hover:bg-gray-100 hover:text-red-600 dark:text-zinc-200 dark:bg-muted dark:hover:bg-white/10 cursor-pointer"
                   onClick={() => setBulkConfirmOpen(true)}
                 >
-                  <LucideIcon  className="ph-bold ph-trash text-sm" />
+                  <HugeIcon  className="ph-bold ph-trash text-sm" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent side="top">Delete</TooltipContent>

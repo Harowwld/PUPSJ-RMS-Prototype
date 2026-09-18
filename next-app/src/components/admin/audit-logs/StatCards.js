@@ -1,4 +1,4 @@
-import LucideIcon from "@/components/shared/LucideIcon";
+import HugeIcon from "@/components/shared/HugeIcon";
 import { useState, useRef, useEffect, useMemo, useCallback } from "react"
 import { Reorder } from "framer-motion"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -120,7 +120,7 @@ const [kpiOrder, setKpiOrder] = useState(["total", "today", "auth"]);
                         stat.color === "amber" ? "bg-[#f59e0b]" :
                         "bg-[#ef4444]"
                       )}>
-                        <LucideIcon className={cn("ph-bold text-[15px]", stat.iconClass || "ph-activity")} />
+                        <HugeIcon className={cn("ph-bold text-[15px]", stat.iconClass || "ph-activity")} />
                       </div>
                     </div>
                     
@@ -128,7 +128,7 @@ const [kpiOrder, setKpiOrder] = useState(["total", "today", "auth"]);
                       <span className="text-[28px] font-bold text-gray-900 dark:text-white leading-none tracking-tight">
                         {stat.value.toLocaleString()}
                       </span>
-                      <LucideIcon className="ph-bold ph-dots-six-vertical cursor-grab active:cursor-grabbing hover:text-gray-400 dark:hover:text-zinc-500 text-gray-300 dark:text-zinc-700 text-lg mb-0.5" />
+                      <HugeIcon className="ph-bold ph-dots-six-vertical cursor-grab active:cursor-grabbing hover:text-gray-400 dark:hover:text-zinc-500 text-gray-300 dark:text-zinc-700 text-lg mb-0.5" />
                     </div>
                   </div>
 
