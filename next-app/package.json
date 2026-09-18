@@ -7,7 +7,7 @@
     "dev": "node scripts/start-local-dev.mjs",
     "dev:next": "next dev",
     "build": "next build",
-    "start": "next start",
+    "start": "pnpm build && next start",
     "lint": "eslint",
     "audit:buttons": "node scripts/audit-button-theme.mjs",
     "audit:empty-states": "node scripts/audit-empty-states.mjs",
@@ -28,7 +28,6 @@
   "dependencies": {
     "@base-ui/react": "^1.8.0",
     "@marcosdemik/liquidglass": "^2.0.5",
-    "@marsidev/react-turnstile": "^1.6.1",
     "adm-zip": "^0.6.1",
     "better-sqlite3": "^12.11.1",
     "chokidar": "^4.0.3",
