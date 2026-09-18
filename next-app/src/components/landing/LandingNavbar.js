@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import BevelButton from "@/components/ui/bevel-button";
+import { getClientSession } from "@/lib/clientAuth";
 
 export default function LandingNavbar() {
   const router = useRouter();
@@ -18,11 +19,10 @@ export default function LandingNavbar() {
     let isMounted = true;
     (async () => {
       try {
-        const res = await fetch("/api/auth/me", { cache: "no-store" });
-        const json = await res.json().catch(() => null);
+        const session = await getClientSession();
         if (isMounted) {
-          if (res.ok && json?.ok && json?.data) {
-            setSessionUser(json.data);
+          if (session.ok && session.data) {
+            setSessionUser(session.data);
           } else {
             setSessionUser(null);
           }
@@ -276,5 +276,4 @@ export default function LandingNavbar() {
   </>
 );
 }
-
 

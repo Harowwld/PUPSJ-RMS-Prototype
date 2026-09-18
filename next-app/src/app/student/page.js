@@ -15,6 +15,7 @@ import { RefreshButton } from "@/components/shared/RefreshButton";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Select } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { getClientSession } from "@/lib/clientAuth";
 import {
   Empty,
   EmptyHeader,
@@ -286,21 +287,20 @@ export default function StudentDashboard() {
   const load = useCallback(async () => {
     try {
       setLoading(true);
-      const meRes = await fetch("/api/auth/me", { cache: "no-store" });
-      const meJson = await meRes.json().catch(() => null);
-      if (!meRes.ok || meJson?.data?.role !== "Student") {
-        if (meRes.status !== 401) {
-          const error = meJson?.error || "Unable to load your student session.";
+      const session = await getClientSession();
+      if (!session.ok || session.data?.role !== "Student") {
+        if (session.status !== 401) {
+          const error = "Unable to load your student session.";
           setMessage(error);
           showToast("Student session unavailable", error, true);
         }
         return;
       }
-      setMe(meJson.data);
+      setMe(session.data);
       setRequestForm((prev) => ({
         ...prev,
-        clientType: meJson.data.client_type || prev.clientType || "Student",
-        studentNo: prev.studentNo || meJson.data.student_no || "",
+        clientType: session.data.client_type || prev.clientType || "Student",
+        studentNo: prev.studentNo || session.data.student_no || "",
       }));
       const [requestRes, proposalRes, typesRes, activityRes, coursesRes] = await Promise.all([
         fetch("/api/student/document-requests", { cache: "no-store" }),
@@ -325,8 +325,8 @@ export default function StudentDashboard() {
 
   useEffect(() => {
     if (me === null) {
-      fetch("/api/auth/me", { cache: "no-store" })
-        .then((response) => { if (response.status === 401) router.replace("/"); })
+      getClientSession()
+        .then((session) => { if (session.status === 401) router.replace("/"); })
         .catch(() => router.replace("/"));
     }
   }, [me, router]);

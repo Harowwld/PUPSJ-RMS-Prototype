@@ -12,6 +12,7 @@ import { SystemAdminGuard, useAuthUser } from "@/components/shared/AuthGuard"
 import { Skeleton } from "@/components/ui/skeleton"
 import KpiStatCardsSkeleton from "@/components/systemadmin/skeletons/KpiStatCardsSkeleton"
 import { cn } from "@/lib/utils"
+import { getClientSession } from "@/lib/clientAuth"
 
 function TabLoadingSkeleton() {
   return (
@@ -231,15 +232,14 @@ function SystemAdminPageContent({ authUser: propAuthUser }) {
     }
     ;(async () => {
       try {
-        const res = await fetch("/api/auth/me")
-        const json = await res.json().catch(() => null)
-        if (!res.ok || !json?.ok) {
-          if (res.status === 401) {
+        const session = await getClientSession()
+        if (!session.ok || !session.data) {
+          if (session.status === 401) {
             router.push("/")
           }
           return
         }
-        setAuthUser(json.data)
+        setAuthUser(session.data)
         setLoading(false)
       } catch (err) {
         console.error("[SuperAdminPage] Profile fetch failed:", err)
