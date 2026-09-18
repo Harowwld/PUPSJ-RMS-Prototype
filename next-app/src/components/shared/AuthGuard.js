@@ -3,16 +3,11 @@
 import React, { createContext, useContext, useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Skeleton } from "@/components/ui/skeleton"
-import { isAdminRole, isStaffRole, isSuperAdminRole, isSystemAdminRole } from "@/lib/roleUtils"
 import { getRoleBranding } from "@/lib/roleBranding"
 import { getClientSession } from "@/lib/clientAuth"
 
 export const AuthUserContext = createContext(null)
 export const useAuthUser = () => useContext(AuthUserContext)
-
-const NO_REQUIRED_ROLES = []
-const SYSTEM_ADMIN_ROLES = ["SystemAdmin", "SuperAdmin"]
-const ADMIN_ROLES = ["Admin"]
 
 function applyAccessibility(highContrast) {
   if (typeof window === "undefined") return;
@@ -27,11 +22,10 @@ function applyAccessibility(highContrast) {
 /**
  * Higher-order component that protects routes requiring authentication
  * @param {object} props
- * @param {string[]} props.allowedRoles - Array of allowed roles (e.g., ["Admin", "Staff"])
  * @param {React.ReactNode} props.children - Child components to render if authorized
  * @param {string} props.redirectTo - Path to redirect to if unauthorized (default: "/")
  */
-export function AuthGuard({ allowedRoles = NO_REQUIRED_ROLES, children, redirectTo = "/" }) {
+export function AuthGuard({ children, redirectTo = "/" }) {
   const router = useRouter()
   const [currentUser, setCurrentUser] = useState(null)
   const [isAuthorized, setIsAuthorized] = useState(null)
@@ -44,23 +38,13 @@ export function AuthGuard({ allowedRoles = NO_REQUIRED_ROLES, children, redirect
         console.info("[auth-debug] route_guard.session_response", { path: window.location.pathname, status: session.status })
 
         if (!session.ok) {
-          if (session.status === 401) {
-            console.info("[auth-debug] route_guard.redirect_missing_session", { path: window.location.pathname, redirectTo })
-            console.log(
-              "[AuthGuard] Unauthorized access attempt, redirecting to:",
-              redirectTo
-            )
-            router.push(redirectTo)
-            return
-          }
-          setIsAuthorized(false)
-          setIsLoading(false)
+          console.info("[auth-debug] route_guard.redirect_invalid_session", { path: window.location.pathname, redirectTo })
+          router.push(redirectTo)
           return
         }
 
         if (!session.data) {
-          setIsAuthorized(false)
-          setIsLoading(false)
+          router.push(redirectTo)
           return
         }
 
@@ -101,45 +85,6 @@ export function AuthGuard({ allowedRoles = NO_REQUIRED_ROLES, children, redirect
           return
         }
 
-        // Check role requirements
-        if (allowedRoles.length > 0) {
-          const userRole = String(user.role || "").toLowerCase()
-          
-          let hasRequiredRole = false
-          if (allowedRoles.includes("SystemAdmin") || allowedRoles.includes("SuperAdmin")) {
-            if (isSystemAdminRole(userRole)) hasRequiredRole = true
-          }
-          if (!hasRequiredRole && allowedRoles.includes("Admin")) {
-            if (isAdminRole(userRole) || isSystemAdminRole(userRole)) hasRequiredRole = true
-          }
-          if (!hasRequiredRole && allowedRoles.includes("Staff")) {
-            if (isStaffRole(userRole) || isSystemAdminRole(userRole)) hasRequiredRole = true
-          }
-          
-          // Fallback to strict array comparison if not explicitly handled
-          if (!hasRequiredRole) {
-            console.info("[auth-debug] route_guard.redirect_unauthorized_role", { path: window.location.pathname, role: user.role, redirectTo })
-            hasRequiredRole = allowedRoles.some(
-              (role) => String(role).toLowerCase() === userRole
-            )
-          }
-
-          if (!hasRequiredRole) {
-            console.log("[AuthGuard] Insufficient role privileges:", {
-              userRole: user.role,
-              requiredRoles: allowedRoles,
-            })
-
-            // Redirect staff to appropriate page if they try to access admin
-            if (isStaffRole(userRole)) {
-              router.push("/staff")
-            } else {
-              router.push(redirectTo)
-            }
-            return
-          }
-        }
-
         setIsAuthorized(true)
       } catch (err) {
         console.error("[AuthGuard] Validation error:", err)
@@ -149,7 +94,7 @@ export function AuthGuard({ allowedRoles = NO_REQUIRED_ROLES, children, redirect
       }
     };
     checkAuth();
-  }, [router, allowedRoles, redirectTo])
+  }, [router, redirectTo])
 
   useEffect(() => {
     const handleStorageChange = () => {
@@ -200,18 +145,18 @@ export function AuthGuard({ allowedRoles = NO_REQUIRED_ROLES, children, redirect
  * Specific guard for systemadmin-only routes
  */
 export function SystemAdminGuard({ children }) {
-  return <AuthGuard allowedRoles={SYSTEM_ADMIN_ROLES}>{children}</AuthGuard>
+  return <AuthGuard>{children}</AuthGuard>
 }
 
 export function SuperAdminGuard({ children }) {
-  return <AuthGuard allowedRoles={SYSTEM_ADMIN_ROLES}>{children}</AuthGuard>
+  return <AuthGuard>{children}</AuthGuard>
 }
 
 /**
  * Specific guard for admin-only routes
  */
 export function AdminGuard({ children }) {
-  return <AuthGuard allowedRoles={ADMIN_ROLES}>{children}</AuthGuard>
+  return <AuthGuard>{children}</AuthGuard>
 }
 
 /**

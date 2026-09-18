@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSessionCookieName, verifySessionToken } from "./src/lib/jwt";
 import { isPublicSessionPath } from "./src/lib/middlewarePolicy.js";
+import { canAccessPage } from "./src/lib/roleUtils.js";
 
 function constantTimeEqual(a, b) {
   const sa = String(a || "");
@@ -57,7 +58,14 @@ export async function middleware(req) {
   }
 
   // 3. Public routes
-  if (pathname === "/" || pathname === "/login" || pathname === "/student") {
+  if (pathname === "/" || pathname === "/login") {
+    return addSecurityHeaders(continueWithNonce(req, nonce), nonce);
+  }
+
+  // The student portal is a public login/register entry point when there is
+  // no session. Authenticated users still pass through the normal role gate.
+  if ((pathname === "/student" || pathname.startsWith("/student/")) &&
+      !req.cookies.get(getSessionCookieName())?.value) {
     return addSecurityHeaders(continueWithNonce(req, nonce), nonce);
   }
 
@@ -84,57 +92,10 @@ export async function middleware(req) {
     return addSecurityHeaders(NextResponse.redirect(url), nonce);
   }
 
-  const role = String(payload?.role || "").toLowerCase().trim();
-  const isSystemAdmin = role === "systemadmin" || role === "superadmin";
-  const isAdmin = ["admin", "administrator"].includes(role);
-  const isStudent = role === "student";
-
-  if (pathname.startsWith("/student")) {
-    if (!isStudent) {
-      const url = req.nextUrl.clone();
-      url.pathname = "/";
-      return addSecurityHeaders(NextResponse.redirect(url), nonce);
-    }
-  }
-
-  // Prevent students from accessing staff or admin dashboards
-  if (isStudent) {
-    if (
-      pathname.startsWith("/staff") ||
-      pathname.startsWith("/admin") ||
-      pathname.startsWith("/systemadmin") ||
-      pathname.startsWith("/superadmin")
-    ) {
-      const url = req.nextUrl.clone();
-      url.pathname = "/student";
-      return addSecurityHeaders(NextResponse.redirect(url), nonce);
-    }
-  }
-
-  // 5. Role-based routing
-  if (pathname.startsWith("/systemadmin") || pathname.startsWith("/superadmin")) {
-    if (!isSystemAdmin) {
-      const url = req.nextUrl.clone();
-      url.pathname = isSystemAdmin || isAdmin ? "/admin" : "/staff";
-      if (!isAdmin && !isSystemAdmin) url.pathname = "/";
-      return addSecurityHeaders(NextResponse.redirect(url), nonce);
-    }
-  }
-
-  if (pathname.startsWith("/admin")) {
-    if (!isAdmin && !isSystemAdmin) {
-      const url = req.nextUrl.clone();
-      url.pathname = "/staff";
-      return addSecurityHeaders(NextResponse.redirect(url), nonce);
-    }
-  }
-
-  if (pathname.startsWith("/staff") || pathname.startsWith("/account")) {
-    if (!role) {
-      const url = req.nextUrl.clone();
-      url.pathname = "/";
-      return addSecurityHeaders(NextResponse.redirect(url), nonce);
-    }
+  if (!pathname.startsWith("/api/") && !canAccessPage(pathname, payload?.role)) {
+    const url = req.nextUrl.clone();
+    url.pathname = "/";
+    return addSecurityHeaders(NextResponse.redirect(url), nonce);
   }
 
   // Route handlers resolve the current principal and office from the request
