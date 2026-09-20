@@ -34,20 +34,38 @@ export async function listDocumentRequests({
     params.push(officeId);
   }
   if (status) {
-    filters.push("dr.status = ?");
-    params.push(status);
+    const list = Array.isArray(status) ? status : String(status).split(",").map((s) => s.trim()).filter(Boolean);
+    if (list.length === 1) {
+      filters.push("dr.status = ?");
+      params.push(list[0]);
+    } else if (list.length > 1) {
+      filters.push(`dr.status IN (${list.map(() => "?").join(", ")})`);
+      params.push(...list);
+    }
   }
   if (studentNo) {
     filters.push("dr.student_no = ?");
     params.push(studentNo);
   }
   if (clientType) {
-    filters.push("dr.client_type = ?");
-    params.push(clientType);
+    const list = Array.isArray(clientType) ? clientType : String(clientType).split(",").map((s) => s.trim()).filter(Boolean);
+    if (list.length === 1) {
+      filters.push("dr.client_type = ?");
+      params.push(list[0]);
+    } else if (list.length > 1) {
+      filters.push(`dr.client_type IN (${list.map(() => "?").join(", ")})`);
+      params.push(...list);
+    }
   }
   if (docType) {
-    filters.push("dr.doc_type = ?");
-    params.push(docType);
+    const list = Array.isArray(docType) ? docType : String(docType).split(",").map((s) => s.trim()).filter(Boolean);
+    if (list.length === 1) {
+      filters.push("dr.doc_type = ?");
+      params.push(list[0]);
+    } else if (list.length > 1) {
+      filters.push(`dr.doc_type IN (${list.map(() => "?").join(", ")})`);
+      params.push(...list);
+    }
   }
   if (q) {
     filters.push(
@@ -110,20 +128,38 @@ export async function countDocumentRequests({
     params.push(officeId);
   }
   if (status) {
-    filters.push("dr.status = ?");
-    params.push(status);
+    const list = Array.isArray(status) ? status : String(status).split(",").map((s) => s.trim()).filter(Boolean);
+    if (list.length === 1) {
+      filters.push("dr.status = ?");
+      params.push(list[0]);
+    } else if (list.length > 1) {
+      filters.push(`dr.status IN (${list.map(() => "?").join(", ")})`);
+      params.push(...list);
+    }
   }
   if (studentNo) {
     filters.push("dr.student_no = ?");
     params.push(studentNo);
   }
   if (clientType) {
-    filters.push("dr.client_type = ?");
-    params.push(clientType);
+    const list = Array.isArray(clientType) ? clientType : String(clientType).split(",").map((s) => s.trim()).filter(Boolean);
+    if (list.length === 1) {
+      filters.push("dr.client_type = ?");
+      params.push(list[0]);
+    } else if (list.length > 1) {
+      filters.push(`dr.client_type IN (${list.map(() => "?").join(", ")})`);
+      params.push(...list);
+    }
   }
   if (docType) {
-    filters.push("dr.doc_type = ?");
-    params.push(docType);
+    const list = Array.isArray(docType) ? docType : String(docType).split(",").map((s) => s.trim()).filter(Boolean);
+    if (list.length === 1) {
+      filters.push("dr.doc_type = ?");
+      params.push(list[0]);
+    } else if (list.length > 1) {
+      filters.push(`dr.doc_type IN (${list.map(() => "?").join(", ")})`);
+      params.push(...list);
+    }
   }
   if (q) {
     filters.push(

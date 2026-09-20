@@ -49,6 +49,8 @@ import {
 } from "@/components/ui/dialog";
 import PageHeader from "@/components/shared/PageHeader";
 import { RefreshButton } from "@/components/shared/RefreshButton";
+import MultiCriteriaFilter from "@/components/shared/MultiCriteriaFilter";
+import ActiveFilterChips from "@/components/shared/ActiveFilterChips";
 import { Select } from "@/components/ui/select"
 
 export default function DigitizationComplianceTab({
@@ -383,6 +385,87 @@ export default function DigitizationComplianceTab({
     setRequireApproved(false);
     setTableSearch("");
   }, []);
+
+  const filterCriteriaGroups = useMemo(() => {
+    return [
+      {
+        id: "status",
+        label: "Student Status",
+        options: [
+          { id: "Active", label: "Active Students", dotColor: "bg-emerald-500" },
+          { id: "Archived", label: "Archived Students", dotColor: "bg-gray-400" },
+        ],
+        selected: statusFilter === "All" ? [] : [statusFilter],
+        onChange: (vals) => {
+          if (vals.length === 0 || vals.length === 2) {
+            setStatusFilter("All");
+          } else {
+            setStatusFilter(vals[0]);
+          }
+        }
+      },
+      {
+        id: "course",
+        label: "Academic Program",
+        options: courses.map((c) => ({
+          id: String(c.code || ""),
+          label: c.code ? `${c.code}${c.name ? ` — ${c.name}` : ""}` : c.name || "Program",
+        })),
+        selected: courseFilter ? [courseFilter] : [],
+        onChange: (vals) => {
+          setCourseFilter(vals.length > 0 ? vals[vals.length - 1] : "");
+        }
+      },
+      {
+        id: "approval",
+        label: "Verification Requirement",
+        options: [
+          { id: "approved", label: "Approved Only", dotColor: "bg-emerald-500" },
+        ],
+        selected: requireApproved ? ["approved"] : [],
+        onChange: (vals) => {
+          setRequireApproved(vals.includes("approved"));
+        }
+      }
+    ];
+  }, [courses, statusFilter, courseFilter, requireApproved]);
+
+  const filterPresets = useMemo(() => [
+    {
+      label: "Active",
+      isActive: statusFilter === "Active" && !courseFilter && !requireApproved,
+      onSelect: () => {
+        setStatusFilter("Active");
+        setCourseFilter("");
+        setRequireApproved(false);
+      }
+    },
+    {
+      label: "All Students",
+      isActive: statusFilter === "All" && !courseFilter && !requireApproved,
+      onSelect: () => {
+        setStatusFilter("All");
+        setCourseFilter("");
+        setRequireApproved(false);
+      }
+    },
+    {
+      label: "Approved Only",
+      isActive: requireApproved && !courseFilter,
+      onSelect: () => {
+        setRequireApproved(true);
+      }
+    },
+    {
+      label: "Archived",
+      isActive: statusFilter === "Archived" && !courseFilter && !requireApproved,
+      onSelect: () => {
+        setStatusFilter("Archived");
+        setCourseFilter("");
+        setRequireApproved(false);
+      }
+    }
+  ], [statusFilter, courseFilter, requireApproved]);
 
   const hasActiveFilters = statusFilter !== "Active" || courseFilter !== "" || requireApproved || tableSearch !== "";
 
@@ -746,22 +829,13 @@ export default function DigitizationComplianceTab({
               </div>
             </div>
 
-            {/* Academic Program Select */}
-            <div className="w-[180px]">
-              <Select
-                value={courseFilter}
-                onChange={(e) => setCourseFilter(e.target.value)}
-                disabled={coursesLoading}
-                className="h-9 rounded-xl border border-gray-200 text-xs font-normal bg-white dark:bg-zinc-800 dark:border-white/10"
-              >
-                <option value="">All Programs</option>
-                {courses.map((c) => (
-                  <option key={c.code || c.id} value={String(c.code || "")}>
-                    {c.code}{c.name ? ` — ${c.name}` : ""}
-                  </option>
-                ))}
-              </Select>
-            </div>
+            {/* Multi-Criteria Filters (Status, Program, Requirement) */}
+            <MultiCriteriaFilter
+              groups={filterCriteriaGroups}
+              presets={filterPresets}
+              align="end"
+              buttonLabel="Filter Compliance"
+            />
 
             {/* Validation Requirement Segmented Control */}
             <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-gray-200/60 dark:border-white/5">
@@ -795,65 +869,46 @@ export default function DigitizationComplianceTab({
 
         {/* Active Filter Chips Row */}
         {hasActiveFilters && (
-          <div className="flex-none border-t border-gray-100 dark:border-white/10 bg-white dark:bg-card px-6 py-3 animate-in fade-in slide-in-from-top-1 duration-normal">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="mr-1 text-[11px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500">
-                Active filters:
-              </span>
-              {statusFilter !== "Active" && (
-                <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
-                  Status: {statusFilter}
-                  <button
-                    onClick={() => setStatusFilter("Active")}
-                    className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
-                  >
-                    ×
-                  </button>
-                </div>
-              )}
-              {courseFilter !== "" && (
-                <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
-                  Program: {courseFilter}
-                  <button
-                    onClick={() => setCourseFilter("")}
-                    className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
-                  >
-                    ×
-                  </button>
-                </div>
-              )}
-              {requireApproved && (
-                <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
-                  Requirement: Approved Only
-                  <button
-                    onClick={() => setRequireApproved(false)}
-                    className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
-                  >
-                    ×
-                  </button>
-                </div>
-              )}
-              {tableSearch && (
-                <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
-                  Search: {tableSearch}
-                  <button
-                    onClick={() => setTableSearch("")}
-                    className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
-                  >
-                    ×
-                  </button>
-                </div>
-              )}
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleClearAll}
-                className="h-auto text-[12px] font-medium text-gray-400 dark:text-zinc-500 border-0 bg-transparent hover:bg-transparent shadow-none p-0 hover:text-red-600 dark:hover:text-red-500 transition-colors cursor-pointer"
-              >
-                Clear
-              </Button>
-            </div>
-          </div>
+          <ActiveFilterChips
+            groups={[
+              ...(statusFilter !== "Active"
+                ? [
+                    {
+                      key: "status",
+                      label: "Status",
+                      values: [statusFilter],
+                      onRemove: () => setStatusFilter("Active"),
+                      formatValue: (val) => (val === "All" ? "All Students" : val)
+                    }
+                  ]
+                : []),
+              ...(courseFilter !== ""
+                ? [
+                    {
+                      key: "course",
+                      label: "Program",
+                      values: [courseFilter],
+                      onRemove: () => setCourseFilter(""),
+                      formatValue: (val) => val
+                    }
+                  ]
+                : []),
+              ...(requireApproved
+                ? [
+                    {
+                      key: "requirement",
+                      label: "Requirement",
+                      values: ["Approved Only"],
+                      onRemove: () => setRequireApproved(false),
+                      formatValue: (val) => val
+                    }
+                  ]
+                : [])
+            ]}
+            searchQuery={tableSearch}
+            onClearSearch={() => setTableSearch("")}
+            onClearAll={handleClearAll}
+          />
         )}
 
         {/* Calculation block skeletons or data */}

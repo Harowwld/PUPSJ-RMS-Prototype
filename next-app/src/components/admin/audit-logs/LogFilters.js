@@ -1,5 +1,6 @@
 "use client"
 
+import { useMemo } from "react"
 import HugeIcon from "@/components/shared/HugeIcon";
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -11,6 +12,7 @@ import {
 import { Calendar } from "@/components/ui/calendar"
 import { cn } from "@/lib/utils"
 import { format } from "date-fns"
+import MultiCriteriaFilter from "@/components/shared/MultiCriteriaFilter"
 import { Select } from "@/components/ui/select"
 
 function parseDateLocal(str) {
@@ -92,6 +94,77 @@ export default function LogFilters({
     return null
   })()
 
+  const selectedSeverities = useMemo(() => {
+    if (!logSeverityFilter || logSeverityFilter === "All") return []
+    return logSeverityFilter.split(",").map((s) => s.trim()).filter(Boolean)
+  }, [logSeverityFilter])
+
+  const selectedRoles = useMemo(() => {
+    if (!logRoleFilter || logRoleFilter === "All") return []
+    return logRoleFilter.split(",").map((s) => s.trim()).filter(Boolean)
+  }, [logRoleFilter])
+
+  const filterCriteriaGroups = useMemo(() => [
+    {
+      id: "severity",
+      label: "Severity",
+      options: [
+        { id: "INFO", label: "Information", dotColor: "bg-blue-500" },
+        { id: "WARNING", label: "Warnings", dotColor: "bg-amber-500" },
+        { id: "CRITICAL", label: "Critical", dotColor: "bg-rose-500" },
+      ],
+      selected: selectedSeverities,
+      onChange: (vals) => {
+        setLogSeverityFilter(vals.length === 0 ? "All" : vals.join(","))
+        setLogPage(1)
+      }
+    },
+    {
+      id: "role",
+      label: "Role",
+      options: [
+        { id: "Admin", label: "Administrators" },
+        { id: "Staff", label: "Regular Staff" },
+        { id: "System", label: "System Service" },
+      ],
+      selected: selectedRoles,
+      onChange: (vals) => {
+        setLogRoleFilter(vals.length === 0 ? "All" : vals.join(","))
+        setLogPage(1)
+      }
+    }
+  ], [selectedSeverities, selectedRoles, setLogSeverityFilter, setLogRoleFilter, setLogPage])
+
+  const filterPresets = useMemo(() => [
+    {
+      label: "All",
+      isActive: selectedSeverities.length === 0 && selectedRoles.length === 0,
+      onSelect: () => {
+        setLogSeverityFilter("All")
+        setLogRoleFilter("All")
+        setLogPage(1)
+      }
+    },
+    {
+      label: "Critical & Warnings",
+      isActive: selectedSeverities.includes("CRITICAL") && selectedSeverities.includes("WARNING") && selectedRoles.length === 0,
+      onSelect: () => {
+        setLogSeverityFilter("CRITICAL,WARNING")
+        setLogRoleFilter("All")
+        setLogPage(1)
+      }
+    },
+    {
+      label: "Admin Events",
+      isActive: selectedRoles.length === 1 && selectedRoles[0] === "Admin" && selectedSeverities.length === 0,
+      onSelect: () => {
+        setLogSeverityFilter("All")
+        setLogRoleFilter("Admin")
+        setLogPage(1)
+      }
+    }
+  ], [selectedSeverities, selectedRoles, setLogSeverityFilter, setLogRoleFilter, setLogPage])
+
   return (
     <div className="border-t border-gray-100 dark:border-white/10 p-5 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
       {/* Left: Severity Filter Line Tabs */}
@@ -104,7 +177,7 @@ export default function LogFilters({
           }}
           className={cn(
             "relative h-9 flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent whitespace-nowrap",
-            logSeverityFilter === "All"
+            selectedSeverities.length === 0
               ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
               : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
           )}
@@ -120,7 +193,7 @@ export default function LogFilters({
           }}
           className={cn(
             "relative h-9 flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent whitespace-nowrap",
-            logSeverityFilter === "INFO"
+            selectedSeverities.length === 1 && selectedSeverities[0] === "INFO"
               ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
               : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
           )}
@@ -136,7 +209,7 @@ export default function LogFilters({
           }}
           className={cn(
             "relative h-9 flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent whitespace-nowrap",
-            logSeverityFilter === "WARNING"
+            selectedSeverities.length === 1 && selectedSeverities[0] === "WARNING"
               ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
               : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
           )}
@@ -152,7 +225,7 @@ export default function LogFilters({
           }}
           className={cn(
             "relative h-9 flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent whitespace-nowrap",
-            logSeverityFilter === "CRITICAL"
+            selectedSeverities.length === 1 && selectedSeverities[0] === "CRITICAL"
               ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
               : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
           )}
@@ -190,22 +263,13 @@ export default function LogFilters({
           )}
         </div>
 
-        {/* Role Select */}
-        <div className="w-[140px]">
-          <Select
-            value={logRoleFilter}
-            onChange={handleRoleChange}
-            disabled={isLoading}
-            className="h-9 rounded-xl border border-gray-200 text-xs font-normal bg-white dark:bg-zinc-800 dark:border-white/10 cursor-pointer shadow-none"
-            menuClassName="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-900 shadow-2xl p-1.5"
-            optionClassName="rounded-lg text-xs font-normal py-1.5 px-2.5 hover:bg-gray-100 dark:hover:bg-zinc-800"
-          >
-            <option value="All">All Roles</option>
-            <option value="Admin">Admin</option>
-            <option value="Staff">Staff</option>
-            <option value="System">System</option>
-          </Select>
-        </div>
+        {/* Multi-Criteria Filters (Severity, Role) */}
+        <MultiCriteriaFilter
+          groups={filterCriteriaGroups}
+          presets={filterPresets}
+          align="end"
+          buttonLabel="Filter Events"
+        />
 
         {/* Time Shortcuts */}
         <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-gray-200/60 dark:border-white/5 shrink-0">

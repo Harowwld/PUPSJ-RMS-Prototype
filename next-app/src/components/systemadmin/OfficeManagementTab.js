@@ -21,6 +21,8 @@ import { RefreshButton } from "@/components/shared/RefreshButton"
 import ConfirmModal from "@/components/shared/ConfirmModal"
 import { Badge } from "@/components/ui/badge"
 import { Select } from "@/components/ui/select"
+import MultiCriteriaFilter from "@/components/shared/MultiCriteriaFilter"
+import ActiveFilterChips from "@/components/shared/ActiveFilterChips"
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip"
 import {
   Empty,
@@ -111,8 +113,13 @@ export default function OfficeManagementTab({ showToast }) {
   const [availableModules, setAvailableModules] = useState([])
   const [loading, setLoading] = useState(true)
   const [isManualLoading, setIsManualLoading] = useState(false)
+  // Filters & Search
   const [searchQuery, setSearchQuery] = useState("")
-  const [statusFilter, setStatusFilter] = useState("Active")
+  const [statusFilter, setStatusFilter] = useState("Active") // "Active" | "Inactive"
+  const [officeCriteria, setOfficeCriteria] = useState({
+    staff_status: [],
+    module_status: [],
+  })
   const [selectedKpi, setSelectedKpi] = useState(null);
   const [kpiOrder, setKpiOrder] = useState(["total", "active", "staff"]);
   const [archiveOfficeTarget, setArchiveOfficeTarget] = useState(null)
@@ -426,15 +433,98 @@ export default function OfficeManagementTab({ showToast }) {
     }
   }
 
+  const officeFilterGroups = useMemo(() => {
+    const list = offices || []
+    const isArchived = statusFilter !== "Active"
+    const currentTabOffices = list.filter((o) => (isArchived ? o.status !== "Active" : o.status === "Active"))
+
+    return [
+      {
+        id: "staff_status",
+        label: "Personnel Assignment",
+        options: [
+          {
+            value: "has_staff",
+            label: "Has Personnel",
+            dotColor: "bg-emerald-500",
+            count: currentTabOffices.filter((o) => (o.staff_count || 0) > 0).length,
+          },
+          {
+            value: "no_staff",
+            label: "Unassigned Personnel",
+            dotColor: "bg-amber-500",
+            count: currentTabOffices.filter((o) => (o.staff_count || 0) === 0).length,
+          },
+        ],
+      },
+      {
+        id: "module_status",
+        label: "Module Footprint",
+        options: [
+          {
+            value: "has_modules",
+            label: "Custom Modules",
+            dotColor: "bg-blue-500",
+            count: currentTabOffices.filter((o) => (o.module_count || 0) > 0).length,
+          },
+          {
+            value: "default_only",
+            label: "Standard Defaults",
+            dotColor: "bg-purple-500",
+            count: currentTabOffices.filter((o) => (o.module_count || 0) === 0).length,
+          },
+        ],
+      },
+    ]
+  }, [offices, statusFilter])
+
+  const officeFilterPresets = useMemo(
+    () => [
+      {
+        label: "All",
+        values: { staff_status: [], module_status: [] },
+        activeCondition: (sel) => !sel?.staff_status?.length && !sel?.module_status?.length,
+      },
+      {
+        label: "Staffed",
+        values: { staff_status: ["has_staff"] },
+      },
+      {
+        label: "Custom Modules",
+        values: { module_status: ["has_modules"] },
+      },
+    ],
+    []
+  )
+
   const filteredOffices = useMemo(() => {
+    const selectedStaff = officeCriteria.staff_status || []
+    const selectedMods = officeCriteria.module_status || []
+
     const list = offices.filter((o) => {
       const matchesSearch =
+        !searchQuery ||
         o.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         o.short_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         o.id.toLowerCase().includes(searchQuery.toLowerCase())
       const isArchived = o.status !== "Active"
       const matchesTab = statusFilter === "Active" ? !isArchived : isArchived
-      return matchesSearch && matchesTab
+
+      let matchesStaff = true
+      if (selectedStaff.length > 0) {
+        const hasStaff = (o.staff_count || 0) > 0
+        const key = hasStaff ? "has_staff" : "no_staff"
+        matchesStaff = selectedStaff.includes(key)
+      }
+
+      let matchesMod = true
+      if (selectedMods.length > 0) {
+        const hasMod = (o.module_count || 0) > 0
+        const key = hasMod ? "has_modules" : "default_only"
+        matchesMod = selectedMods.includes(key)
+      }
+
+      return matchesSearch && matchesTab && matchesStaff && matchesMod
     })
 
     list.sort((a, b) => {
@@ -468,7 +558,7 @@ export default function OfficeManagementTab({ showToast }) {
     })
 
     return list
-  }, [offices, searchQuery, statusFilter, sortBy, sortOrder])
+  }, [offices, searchQuery, statusFilter, officeCriteria, sortBy, sortOrder])
 
   const totalPages = Math.max(1, Math.ceil(filteredOffices.length / pageSize))
   const startIndex = (page - 1) * pageSize
@@ -477,10 +567,14 @@ export default function OfficeManagementTab({ showToast }) {
     return filteredOffices.slice(startIndex, startIndex + pageSize)
   }, [filteredOffices, startIndex, pageSize])
 
-  const hasActiveFilters = searchQuery !== ""
+  const hasActiveFilters =
+    searchQuery !== "" ||
+    (officeCriteria.staff_status?.length > 0) ||
+    (officeCriteria.module_status?.length > 0)
 
   const handleClearFilters = () => {
     setSearchQuery("")
+    setOfficeCriteria({ staff_status: [], module_status: [] })
   }
 
   const statCardsData = [
@@ -736,6 +830,20 @@ export default function OfficeManagementTab({ showToast }) {
               </div>
             </div>
 
+            {/* Multi-Criteria Popover Filter */}
+            <div className="w-full sm:w-auto shrink-0">
+              <MultiCriteriaFilter
+                title="Filter Departments"
+                groups={officeFilterGroups}
+                selected={officeCriteria}
+                onChange={setOfficeCriteria}
+                presets={officeFilterPresets}
+                totalCount={offices.filter((o) => (statusFilter === "Active" ? o.status === "Active" : o.status !== "Active")).length}
+                matchingCount={filteredOffices.length}
+                onReset={() => setOfficeCriteria({ staff_status: [], module_status: [] })}
+              />
+            </div>
+
             {/* View Switcher: Grid vs Table */}
             <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl shrink-0 border border-gray-200/60 dark:border-white/5">
               <button
@@ -771,34 +879,20 @@ export default function OfficeManagementTab({ showToast }) {
         </div>
 
         {/* Active Filter Chips Row */}
-        {hasActiveFilters && (
-          <div className="flex-none border-t border-gray-100 dark:border-white/10 bg-white dark:bg-card px-6 py-2.5 animate-in fade-in slide-in-from-top-1 duration-normal">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="mr-1 text-[11px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500">
-                Active filters:
-              </span>
-              {searchQuery && (
-                <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
-                  Search: {searchQuery}
-                  <button
-                    onClick={() => setSearchQuery("")}
-                    className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
-                  >
-                    ×
-                  </button>
-                </div>
-              )}
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleClearFilters}
-                className="h-auto text-[12px] font-medium text-gray-400 dark:text-zinc-500 border-0 bg-transparent hover:bg-transparent shadow-none p-0 hover:text-red-600 dark:hover:text-red-500 transition-colors cursor-pointer"
-              >
-                Clear
-              </Button>
-            </div>
-          </div>
-        )}
+        <ActiveFilterChips
+          groups={officeFilterGroups}
+          selected={officeCriteria}
+          onRemove={(groupId, val) => {
+            setOfficeCriteria((prev) => ({
+              ...prev,
+              [groupId]: (prev[groupId] || []).filter((v) => v !== val),
+            }))
+          }}
+          searchQuery={searchQuery}
+          onClearSearch={() => setSearchQuery("")}
+          onClearAll={handleClearFilters}
+          className="border-t border-gray-100 dark:border-white/10 bg-white dark:bg-card px-6 py-2.5"
+        />
 
         {/* Content Section inside the single card */}
         <div className="overflow-hidden rounded-b-2xl border-t border-gray-200 dark:border-white/10 bg-white dark:bg-card flex flex-col flex-1">

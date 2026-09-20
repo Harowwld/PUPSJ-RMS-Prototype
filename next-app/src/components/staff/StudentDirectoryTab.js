@@ -29,6 +29,8 @@ import { Reorder } from "framer-motion";
 import RegisterStudentModal from "./RegisterStudentModal";
 import EditStudentModal from "./EditStudentModal";
 import StudentProfileSheet from "./StudentProfileSheet";
+import MultiCriteriaFilter from "@/components/shared/MultiCriteriaFilter";
+import ActiveFilterChips from "@/components/shared/ActiveFilterChips";
 
 function SortIndicator({ column, sortBy, sortOrder }) {
   if (sortBy !== column) {
@@ -59,9 +61,9 @@ export default function StudentDirectoryTab({
 }) {
   const [activeTab, setActiveTab] = useState("active"); // "active" | "archived" | "all"
   const [searchQuery, setSearchQuery] = useState("");
-  const [courseFilter, setCourseFilter] = useState("all");
-  const [yearFilter, setYearFilter] = useState("all");
-  const [sectionFilter, setSectionFilter] = useState("all");
+  const [courseFilters, setCourseFilters] = useState([]);
+  const [yearFilters, setYearFilters] = useState([]);
+  const [sectionFilters, setSectionFilters] = useState([]);
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [selectedKpi, setSelectedKpi] = useState(null);
@@ -159,17 +161,18 @@ export default function StudentDirectoryTab({
     return Array.from(years).sort((a, b) => b - a);
   }, [students, archivedStudents]);
 
-  // Dynamic sections filtered by courseFilter
+  // Dynamic sections filtered by courseFilters
   const availableFilterSections = useMemo(() => {
-    if (courseFilter === "all") {
+    if (courseFilters.length === 0) {
       const secs = new Set(sections.map((s) => s.name));
       return Array.from(secs).sort();
     }
+    const upperCodes = new Set(courseFilters.map((c) => c.toUpperCase()));
     return sections
-      .filter((s) => String(s.course_code || "").toUpperCase() === courseFilter.toUpperCase())
+      .filter((s) => upperCodes.has(String(s.course_code || "").toUpperCase()))
       .map((s) => s.name)
       .sort();
-  }, [sections, courseFilter]);
+  }, [sections, courseFilters]);
 
   // Document count lookup map
   const docCountMap = useMemo(() => {
@@ -252,25 +255,23 @@ export default function StudentDirectoryTab({
     }
 
     // Course filter
-    if (courseFilter !== "all") {
-      result = result.filter(
-        (s) =>
-          String(s.courseCode || "").trim().toUpperCase() ===
-          courseFilter.trim().toUpperCase()
+    if (courseFilters.length > 0) {
+      result = result.filter((s) =>
+        courseFilters.some((code) => String(s.courseCode || "").trim().toUpperCase() === code.trim().toUpperCase())
       );
     }
 
     // Year filter
-    if (yearFilter !== "all") {
-      result = result.filter(
-        (s) => String(s.yearLevel || s.year_level) === String(yearFilter)
+    if (yearFilters.length > 0) {
+      result = result.filter((s) =>
+        yearFilters.some((yr) => String(s.yearLevel || s.year_level) === String(yr))
       );
     }
 
     // Section filter
-    if (sectionFilter !== "all") {
-      result = result.filter(
-        (s) => String(s.section || "").trim().toUpperCase() === sectionFilter.trim().toUpperCase()
+    if (sectionFilters.length > 0) {
+      result = result.filter((s) =>
+        sectionFilters.some((sec) => String(s.section || "").trim().toUpperCase() === sec.trim().toUpperCase())
       );
     }
 
@@ -297,13 +298,117 @@ export default function StudentDirectoryTab({
   }, [
     allAvailableStudents,
     searchQuery,
-    courseFilter,
-    yearFilter,
-    sectionFilter,
+    courseFilters,
+    yearFilters,
+    sectionFilters,
     sortBy,
     sortOrder,
     docCountMap,
   ]);
+
+  const filterGroups = useMemo(() => [
+    {
+      id: "course",
+      label: "Academic Program",
+      options: (courses || []).map((c) => ({
+        value: c.code,
+        label: c.code,
+        count: allAvailableStudents.filter((s) => String(s.courseCode || "").toUpperCase() === c.code.toUpperCase()).length,
+      })),
+    },
+    {
+      id: "year",
+      label: "Batch / Entry Year",
+      options: availableYears.map((yr) => ({
+        value: String(yr),
+        label: `Batch ${yr}`,
+        count: allAvailableStudents.filter((s) => String(s.yearLevel || s.year_level) === String(yr)).length,
+      })),
+    },
+    {
+      id: "section",
+      label: "Class Section",
+      options: availableFilterSections.map((sec) => ({
+        value: sec,
+        label: `Section ${sec}`,
+        count: allAvailableStudents.filter((s) => String(s.section || "").toUpperCase() === sec.toUpperCase()).length,
+      })),
+    },
+  ], [courses, allAvailableStudents, availableYears, availableFilterSections]);
+
+  const filterValues = useMemo(() => ({
+    course: courseFilters,
+    year: yearFilters,
+    section: sectionFilters,
+  }), [courseFilters, yearFilters, sectionFilters]);
+
+  const handleFilterChange = useCallback((groupId, values) => {
+    if (groupId === "course") {
+      setCourseFilters(values);
+      setPage(1);
+    } else if (groupId === "year") {
+      setYearFilters(values);
+      setPage(1);
+    } else if (groupId === "section") {
+      setSectionFilters(values);
+      setPage(1);
+    }
+  }, []);
+
+  const handleResetFilters = useCallback(() => {
+    setSearchQuery("");
+    setCourseFilters([]);
+    setYearFilters([]);
+    setSectionFilters([]);
+    setPage(1);
+  }, []);
+
+  const filterPresets = useMemo(() => {
+    const latestYear = availableYears[0] ? String(availableYears[0]) : null;
+    const presets = [
+      { label: "All Students", values: { course: [], year: [], section: [] } },
+    ];
+    if (latestYear) {
+      presets.push({
+        label: `Newest (${latestYear})`,
+        values: { course: courseFilters, year: [latestYear], section: sectionFilters },
+      });
+    }
+    return presets;
+  }, [availableYears, courseFilters, sectionFilters]);
+
+  const activeChips = useMemo(() => {
+    const chips = [];
+    if (searchQuery.trim()) {
+      chips.push({
+        id: "search",
+        label: `Search: ${searchQuery.trim()}`,
+        onRemove: () => { setSearchQuery(""); setPage(1); },
+      });
+    }
+    courseFilters.forEach((c) => {
+      chips.push({
+        id: `course-${c}`,
+        label: `Program: ${c}`,
+        onRemove: () => { setCourseFilters((prev) => prev.filter((item) => item !== c)); setPage(1); },
+      });
+    });
+    yearFilters.forEach((y) => {
+      chips.push({
+        id: `year-${y}`,
+        label: `Batch ${y}`,
+        onRemove: () => { setYearFilters((prev) => prev.filter((item) => item !== y)); setPage(1); },
+      });
+    });
+    sectionFilters.forEach((sec) => {
+      chips.push({
+        id: `sec-${sec}`,
+        label: `Section ${sec}`,
+        onRemove: () => { setSectionFilters((prev) => prev.filter((item) => item !== sec)); setPage(1); },
+      });
+    });
+    return chips;
+  }, [searchQuery, courseFilters, yearFilters, sectionFilters]);
 
   // Pagination slice
   const totalPages = Math.max(1, Math.ceil(filteredStudents.length / itemsPerPage));
@@ -314,17 +419,9 @@ export default function StudentDirectoryTab({
 
   const hasActiveFilters =
     searchQuery.trim() !== "" ||
-    courseFilter !== "all" ||
-    yearFilter !== "all" ||
-    sectionFilter !== "all";
-
-  const handleResetFilters = () => {
-    setSearchQuery("");
-    setCourseFilter("all");
-    setYearFilter("all");
-    setSectionFilter("all");
-    setPage(1);
-  };
+    courseFilters.length > 0 ||
+    yearFilters.length > 0 ||
+    sectionFilters.length > 0;
 
   const handleSort = (col) => {
     if (sortBy === col) {
@@ -921,7 +1018,7 @@ export default function StudentDirectoryTab({
             <div className="flex flex-wrap items-center gap-2.5 flex-1 lg:justify-end">
               {/* Search Bar */}
               <div className="relative w-full sm:w-64">
-                <HugeIcon  className="ph-bold ph-magnifying-glass absolute top-1/2 -translate-y-1/2 left-3 text-gray-400 dark:text-zinc-500 text-sm pointer-events-none"></HugeIcon>
+                <HugeIcon className="ph-bold ph-magnifying-glass absolute top-1/2 -translate-y-1/2 left-3 text-gray-400 dark:text-zinc-500 text-sm pointer-events-none" />
                 <Input
                   type="text"
                   placeholder="Search student no. or name"
@@ -935,80 +1032,34 @@ export default function StudentDirectoryTab({
                 {searchQuery && (
                   <button
                     type="button"
-                    onClick={() => setSearchQuery("")}
-                    className="absolute top-1/2 right-2.5 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-zinc-200"
+                    onClick={() => { setSearchQuery(""); setPage(1); }}
+                    className="absolute top-1/2 right-2.5 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-zinc-200 cursor-pointer"
                   >
-                    <HugeIcon  className="ph-bold ph-x-circle text-[14px]"></HugeIcon>
+                    <HugeIcon className="ph-bold ph-x-circle text-[14px]" />
                   </button>
                 )}
               </div>
 
-              {/* Course Filter */}
-              <div className="w-full sm:w-36">
-                <Select
-                  value={courseFilter}
-                  onValueChange={(val) => {
-                    setCourseFilter(val);
-                    setSectionFilter("all");
-                    setPage(1);
-                  }}
-                  options={[
-                    { value: "all", label: "All Programs" },
-                    ...courses.map((c) => ({ value: c.code, label: c.code })),
-                  ]}
-                  placeholder="Program"
-                  buttonClassName="h-9 text-xs rounded-xl border border-gray-200 dark:border-white/10"
-                />
-              </div>
-
-              {/* Year Filter */}
-              <div className="w-full sm:w-32">
-                <Select
-                  value={yearFilter}
-                  onValueChange={(val) => {
-                    setYearFilter(val);
-                    setPage(1);
-                  }}
-                  options={[
-                    { value: "all", label: "All Years" },
-                    ...availableYears.map((yr) => ({ value: String(yr), label: `Batch ${yr}` })),
-                  ]}
-                  placeholder="Entry Year"
-                  buttonClassName="h-9 text-xs rounded-xl border border-gray-200 dark:border-white/10"
-                />
-              </div>
-
-              {/* Section Filter */}
-              <div className="w-full sm:w-32">
-                <Select
-                  value={sectionFilter}
-                  onValueChange={(val) => {
-                    setSectionFilter(val);
-                    setPage(1);
-                  }}
-                  options={[
-                    { value: "all", label: "All Sections" },
-                    ...availableFilterSections.map((sec) => ({ value: sec, label: `Sec ${sec}` })),
-                  ]}
-                  placeholder="Section"
-                  buttonClassName="h-9 text-xs rounded-xl border border-gray-200 dark:border-white/10"
-                />
-              </div>
-
-              {/* Clear Filters Button */}
-              {hasActiveFilters && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  onClick={handleResetFilters}
-                  className="h-9 px-2.5 text-xs text-pup-maroon dark:text-red-400 hover:bg-pup-maroon/10 rounded-xl cursor-pointer"
-                >
-                  <HugeIcon  className="ph-bold ph-arrow-counter-clockwise mr-1 text-xs"></HugeIcon>
-                  Reset
-                </Button>
-              )}
+              {/* MultiCriteriaFilter Popover */}
+              <MultiCriteriaFilter
+                title="Filter Students"
+                groups={filterGroups}
+                selectedValues={filterValues}
+                onChange={handleFilterChange}
+                onClearAll={handleResetFilters}
+                presets={filterPresets}
+                totalCount={allAvailableStudents.length}
+                filteredCount={filteredStudents.length}
+              />
             </div>
           </div>
+
+          {/* Active Filter Chips */}
+          <ActiveFilterChips
+            chips={activeChips}
+            onClearAll={handleResetFilters}
+            className="border-t border-gray-100 dark:border-white/10 px-6 py-2.5"
+          />
 
           {/* 4. Main Data Table */}
           <div className={cn("flex-1 bg-white dark:bg-card overflow-hidden", filteredStudents.length === 0 && "rounded-b-2xl")}>

@@ -32,6 +32,8 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog"
+import MultiCriteriaFilter from "@/components/shared/MultiCriteriaFilter"
+import ActiveFilterChips from "@/components/shared/ActiveFilterChips"
 
 function SortIndicator({ column, sortBy, sortOrder }) {
   if (sortBy !== column) {
@@ -100,8 +102,8 @@ export default function NotificationsTab({
   // Search & Filters
   const [searchQuery, setSearchQuery] = useState("")
   const [debouncedSearch, setDebouncedSearch] = useState("")
-  const [decisionFilter, setDecisionFilter] = useState("")
-  const [readStatusFilter, setReadStatusFilter] = useState("")
+  const [decisionFilters, setDecisionFilters] = useState([])
+  const [readStatusFilters, setReadStatusFilters] = useState([])
 
   const [detailModalOpen, setDetailModalOpen] = useState(false)
   const [selectedNotif, setSelectedNotif] = useState(null)
@@ -124,7 +126,7 @@ export default function NotificationsTab({
 
   useEffect(() => {
     setPage(1)
-  }, [debouncedSearch, decisionFilter, readStatusFilter, activeTab])
+  }, [debouncedSearch, decisionFilters, readStatusFilters, activeTab])
 
   const totalPages = Math.max(1, Math.ceil(total / itemsPerPage) || 1)
   const displayPage = Math.min(page, totalPages)
@@ -141,8 +143,8 @@ export default function NotificationsTab({
       qs.set("sortOrder", sortOrder)
       qs.set("tab", activeTab)
       if (debouncedSearch) qs.set("search", debouncedSearch)
-      if (decisionFilter) qs.set("decision", decisionFilter)
-      if (readStatusFilter) qs.set("readStatus", readStatusFilter)
+      if (decisionFilters.length > 0) qs.set("decision", decisionFilters.join(","))
+      if (readStatusFilters.length > 0) qs.set("readStatus", readStatusFilters.join(","))
 
       const [res] = await Promise.all([
         fetch(`/api/notifications?${qs.toString()}`, { cache: "no-store" }),
@@ -167,7 +169,7 @@ export default function NotificationsTab({
       setInitialLoading(false)
       setIsRefreshing(false)
     }
-  }, [offset, itemsPerPage, sortBy, sortOrder, activeTab, debouncedSearch, decisionFilter, readStatusFilter])
+  }, [offset, itemsPerPage, sortBy, sortOrder, activeTab, debouncedSearch, decisionFilters, readStatusFilters])
 
   // Refresh handler
   const handleRefresh = async () => {
@@ -298,16 +300,79 @@ export default function NotificationsTab({
     }
   }, [load])
 
-  const handleClearFilters = () => {
-    setSearchQuery("")
-    setDecisionFilter("")
-    setReadStatusFilter("")
-    setPage(1)
-  }
+  const filterGroups = useMemo(() => [
+    {
+      id: "decision",
+      label: "Review Decision",
+      options: [
+        { value: "Approved", label: "Approved", indicatorColor: "bg-emerald-500" },
+        { value: "Declined", label: "Declined", indicatorColor: "bg-rose-500" },
+      ],
+    },
+    {
+      id: "readStatus",
+      label: "Read Status",
+      options: [
+        { value: "unread", label: "Unread", indicatorColor: "bg-sky-500" },
+        { value: "read", label: "Read", indicatorColor: "bg-zinc-400" },
+      ],
+    },
+  ], []);
+
+  const filterValues = useMemo(() => ({
+    decision: decisionFilters,
+    readStatus: readStatusFilters,
+  }), [decisionFilters, readStatusFilters]);
+
+  const handleFilterChange = useCallback((groupId, values) => {
+    if (groupId === "decision") setDecisionFilters(values);
+    else if (groupId === "readStatus") setReadStatusFilters(values);
+    setPage(1);
+  }, []);
+
+  const handleClearFilters = useCallback(() => {
+    setSearchQuery("");
+    setDecisionFilters([]);
+    setReadStatusFilters([]);
+    setPage(1);
+  }, []);
+
+  const filterPresets = useMemo(() => [
+    { label: "All Notifications", values: { decision: [], readStatus: [] } },
+    { label: "Unread Only", values: { decision: [], readStatus: ["unread"] } },
+    { label: "Approved Only", values: { decision: ["Approved"], readStatus: [] } },
+    { label: "Declined Only", values: { decision: ["Declined"], readStatus: [] } },
+  ], []);
+
+  const activeChips = useMemo(() => {
+    const chips = [];
+    if (searchQuery.trim()) {
+      chips.push({
+        id: "search",
+        label: `Search: ${searchQuery.trim()}`,
+        onRemove: () => { setSearchQuery(""); setPage(1); },
+      });
+    }
+    decisionFilters.forEach((d) => {
+      chips.push({
+        id: `decision-${d}`,
+        label: `Decision: ${d}`,
+        onRemove: () => { setDecisionFilters((prev) => prev.filter((item) => item !== d)); setPage(1); },
+      });
+    });
+    readStatusFilters.forEach((r) => {
+      chips.push({
+        id: `readStatus-${r}`,
+        label: `Status: ${r === "unread" ? "Unread" : "Read"}`,
+        onRemove: () => { setReadStatusFilters((prev) => prev.filter((item) => item !== r)); setPage(1); },
+      });
+    });
+    return chips;
+  }, [searchQuery, decisionFilters, readStatusFilters]);
 
   const hasActiveFilters = Boolean(
-    searchQuery.trim() || decisionFilter || readStatusFilter
-  )
+    searchQuery.trim() || decisionFilters.length > 0 || readStatusFilters.length > 0
+  );
 
   return (
     <TooltipProvider delayDuration={200}>
@@ -398,12 +463,12 @@ export default function NotificationsTab({
               </button>
             </div>
 
-            {/* Right: Search Input & Dropdown Popovers Group */}
+            {/* Right: Search Input & Multi-Criteria Filter Group */}
             <div className="flex flex-wrap items-center gap-2.5 max-w-full">
               {/* Search Input */}
               <div className="w-full sm:w-60 md:w-64 relative group min-w-0">
                 <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                  <HugeIcon  className="ph-bold ph-magnifying-glass text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm"></HugeIcon>
+                  <HugeIcon className="ph-bold ph-magnifying-glass text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm" />
                 </div>
                 <Input
                   value={searchQuery}
@@ -416,97 +481,26 @@ export default function NotificationsTab({
                 </div>
               </div>
 
-              {/* Decision Select Popover */}
-              <div className="w-full sm:w-36 min-w-0">
-                <Select
-                  value={decisionFilter}
-                  onChange={(e) => {
-                    setDecisionFilter(e.target.value)
-                    setPage(1)
-                  }}
-                  className="h-9 rounded-xl border border-gray-200 dark:border-white/10 text-xs font-normal text-[#111111] dark:text-zinc-200 cursor-pointer shadow-none"
-                  menuClassName="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-900 shadow-2xl p-1.5"
-                  optionClassName="rounded-lg text-xs font-normal py-1.5 px-2.5 hover:bg-gray-100 dark:hover:bg-zinc-800"
-                >
-                  <option value="">All Decisions</option>
-                  <option value="Approved">Approved</option>
-                  <option value="Declined">Declined</option>
-                </Select>
-              </div>
-
-              {/* Read Status Select Popover */}
-              <div className="w-full sm:w-32 min-w-0">
-                <Select
-                  value={readStatusFilter}
-                  onChange={(e) => {
-                    setReadStatusFilter(e.target.value)
-                    setPage(1)
-                  }}
-                  className="h-9 rounded-xl border border-gray-200 dark:border-white/10 text-xs font-normal text-[#111111] dark:text-zinc-200 cursor-pointer shadow-none"
-                  menuClassName="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-900 shadow-2xl p-1.5"
-                  optionClassName="rounded-lg text-xs font-normal py-1.5 px-2.5 hover:bg-gray-100 dark:hover:bg-zinc-800"
-                >
-                  <option value="">All Statuses</option>
-                  <option value="unread">Unread</option>
-                  <option value="read">Read</option>
-                </Select>
-              </div>
+              {/* Multi-Criteria Filter Popover */}
+              <MultiCriteriaFilter
+                title="Filter Notifications"
+                groups={filterGroups}
+                selectedValues={filterValues}
+                onChange={handleFilterChange}
+                onClearAll={handleClearFilters}
+                presets={filterPresets}
+                totalCount={total}
+                filteredCount={items.length}
+              />
             </div>
           </div>
 
-          {/* 3. Active Filter Chips Row */}
-          {hasActiveFilters && (
-            <div className="flex-none border-t border-gray-100 dark:border-white/10 bg-white dark:bg-card px-6 py-2.5 animate-in fade-in slide-in-from-top-1 duration-normal">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="mr-1 text-[11px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500">
-                  Active filters:
-                </span>
-                {searchQuery.trim() && (
-                  <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
-                    Search: {searchQuery.trim()}
-                    <button
-                      type="button"
-                      onClick={() => setSearchQuery("")}
-                      className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
-                    >
-                      ×
-                    </button>
-                  </div>
-                )}
-                {decisionFilter && (
-                  <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
-                    Decision: {decisionFilter}
-                    <button
-                      type="button"
-                      onClick={() => setDecisionFilter("")}
-                      className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
-                    >
-                      ×
-                    </button>
-                  </div>
-                )}
-                {readStatusFilter && (
-                  <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
-                    Status: {readStatusFilter === "unread" ? "Unread" : "Read"}
-                    <button
-                      type="button"
-                      onClick={() => setReadStatusFilter("")}
-                      className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
-                    >
-                      ×
-                    </button>
-                  </div>
-                )}
-                <button
-                  type="button"
-                  onClick={handleClearFilters}
-                  className="ml-1 text-[11px] font-semibold text-pup-maroon hover:text-pup-darkMaroon dark:text-red-400 dark:hover:text-red-300 transition-colors cursor-pointer border-0 bg-transparent p-0"
-                >
-                  Clear
-                </button>
-              </div>
-            </div>
-          )}
+          {/* 3. Active Filter Chips */}
+          <ActiveFilterChips
+            chips={activeChips}
+            onClearAll={handleClearFilters}
+            className="border-t border-gray-100 dark:border-white/10 px-6 py-2.5"
+          />
 
           {/* 4. Table / Skeleton / Empty State */}
           {isLoading && !isRefreshing ? (

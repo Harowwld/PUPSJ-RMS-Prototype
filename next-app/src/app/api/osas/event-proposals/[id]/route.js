@@ -10,7 +10,20 @@ export const runtime = "nodejs";
 const validStatuses = new Set(["Submitted", "Under Review", "Needs Revision", "Approved", "Declined"]);
 
 async function getAuthorizedProposal(id, access) {
-  const proposal = await queryOne("SELECT * FROM event_proposals WHERE id = $1 AND office_id = 'osas'", [id]);
+  const proposal = await queryOne(
+    `SELECT ep.*,
+            COALESCE(s.name, sa_student.name, ep.student_no, 'Student Officer') AS student_name,
+            so.name AS verified_org_name,
+            so.acronym AS org_acronym,
+            so.category AS org_category
+     FROM event_proposals ep
+     LEFT JOIN students s ON s.student_no = ep.student_no
+     LEFT JOIN student_accounts sa ON sa.id = ep.student_account_id
+     LEFT JOIN students sa_student ON sa_student.student_no = sa.student_no
+     LEFT JOIN student_organizations so ON so.id = ep.organization_id
+     WHERE ep.id = $1 AND ep.office_id = 'osas'`,
+    [id]
+  );
   return proposal && canAccessResource(access, "proposal", proposal) ? proposal : null;
 }
 

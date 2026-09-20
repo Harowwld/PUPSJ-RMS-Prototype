@@ -79,21 +79,37 @@ const Select = React.forwardRef(({
         : { value: opt, label: String(opt) }
     )
   } else if (children) {
-    const mapped = React.Children.map(children, (child) => {
-      if (!child) return null
-      if (child.type === "option") {
-        return {
-          value: child.props.value,
-          label: child.props.children,
-          disabled: child.props.disabled,
+    const extractOptions = (nodes) => {
+      const list = []
+      React.Children.forEach(nodes, (child, idx) => {
+        if (!child) return
+        if (child.type === React.Fragment) {
+          list.push(...extractOptions(child.props.children))
+        } else if (child.type === "optgroup") {
+          if (child.props.label) {
+            list.push({
+              isHeader: true,
+              label: child.props.label,
+              key: `header-${child.props.label}-${idx}`,
+            })
+          }
+          if (child.props.children) {
+            list.push(...extractOptions(child.props.children))
+          }
+        } else if (child.type === "option") {
+          list.push({
+            value: child.props.value,
+            label: child.props.children,
+            disabled: child.props.disabled,
+          })
         }
-      }
-      return null
-    })
-    options = (mapped || []).filter(Boolean)
+      })
+      return list
+    }
+    options = extractOptions(children)
   }
 
-  const selectedOption = options.find((o) => String(o.value) === String(value))
+  const selectedOption = options.find((o) => !o.isHeader && String(o.value) === String(value))
 
   const handleSelect = (val) => {
     if (onValueChange) {
@@ -122,25 +138,42 @@ const Select = React.forwardRef(({
       )}
     >
       <div className="max-h-60 overflow-y-auto overflow-x-hidden w-full scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-zinc-800">
-        {options.map((option) => (
-          <button
-            key={option.value}
-            type="button"
-            disabled={option.disabled}
-            onClick={() => handleSelect(option.value)}
-            className={cn(
-              "flex w-full items-center rounded-lg px-3 py-2 text-left text-xs font-normal transition-colors min-w-0",
-              String(value) === String(option.value)
-                ? "bg-pup-maroon/10 text-pup-maroon dark:bg-red-500/20 dark:text-red-400"
-                : "text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-white/5",
-              option.disabled && "opacity-50 cursor-not-allowed",
-              optionClassName
-            )}
-            title={option.label}
-          >
-            <span className="truncate flex-1">{option.label}</span>
-          </button>
-        ))}
+        {options.map((option, idx) => {
+          if (option.isHeader) {
+            return (
+              <div
+                key={option.key || `header-${idx}`}
+                className="px-3 pt-2.5 pb-1 text-[10px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider select-none border-t first:border-t-0 border-gray-100 dark:border-white/5 first:pt-1.5"
+              >
+                {option.label}
+              </div>
+            )
+          }
+
+          const isSelected = String(value) === String(option.value)
+          return (
+            <button
+              key={option.value !== undefined ? String(option.value) : `opt-${idx}`}
+              type="button"
+              disabled={option.disabled}
+              onClick={() => handleSelect(option.value)}
+              className={cn(
+                "flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-xs font-normal transition-colors min-w-0 cursor-pointer",
+                isSelected
+                  ? "bg-pup-maroon/10 text-pup-maroon font-medium dark:bg-red-500/20 dark:text-red-400"
+                  : "text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-white/5",
+                option.disabled && "opacity-50 cursor-not-allowed",
+                optionClassName
+              )}
+              title={typeof option.label === "string" ? option.label : undefined}
+            >
+              <span className="truncate flex-1 min-w-0">{option.label}</span>
+              {isSelected && (
+                <i className="ph-bold ph-check text-xs ml-2 text-pup-maroon dark:text-red-400 shrink-0" />
+              )}
+            </button>
+          )
+        })}
       </div>
     </div>
   )
@@ -169,7 +202,7 @@ const Select = React.forwardRef(({
           className="flex-1 text-left truncate min-w-0"
           title={selectedOption ? String(selectedOption.label ?? "") : ""}
         >
-          {selectedOption ? selectedOption.label : (placeholder !== undefined ? placeholder : (options[0]?.label || "Select..."))}
+          {selectedOption ? selectedOption.label : (placeholder !== undefined ? placeholder : (options.find((o) => !o.isHeader)?.label || "Select..."))}
         </span>
         <i
           className={cn(

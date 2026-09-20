@@ -39,6 +39,8 @@ import {
 import PageHeader from "@/components/shared/PageHeader"
 import FloatingActionBar from "@/components/shared/FloatingActionBar"
 import { RefreshButton } from "@/components/shared/RefreshButton"
+import MultiCriteriaFilter from "@/components/shared/MultiCriteriaFilter"
+import ActiveFilterChips from "@/components/shared/ActiveFilterChips"
 import { cn } from "@/lib/utils"
 import React from "react"
 import { Select } from "@/components/ui/select"
@@ -275,7 +277,22 @@ export default function StaffDirectoryTab({
   const [jumpPage, setJumpPage] = useState("1")
   const [lastSelectedId, setLastSelectedId] = useState(null)
 
-  const hasActiveFilters = localSearch !== "" || roleFilter !== "All";
+  const [roleFilters, setRoleFilters] = useState(() => {
+    if (!roleFilter || roleFilter === "All") return []
+    return roleFilter.split(",").map((s) => s.trim()).filter(Boolean)
+  })
+  const [statusFilters, setStatusFilters] = useState([])
+  const [twoFactorFilters, setTwoFactorFilters] = useState([])
+
+  // Synchronize roleFilters when external roleFilter prop changes
+  useEffect(() => {
+    if (!roleFilter || roleFilter === "All") {
+      setRoleFilters([])
+    } else {
+      const list = roleFilter.split(",").map((s) => s.trim()).filter(Boolean)
+      setRoleFilters(list)
+    }
+  }, [roleFilter])
 
   // Filter staff to the active office scope (excludes SuperAdmin/SystemAdmin and other offices like OSAS)
   const officeStaff = useMemo(() => {
@@ -292,6 +309,120 @@ export default function StaffDirectoryTab({
       return true
     })
   }, [staffData, officeId])
+
+  const filterCriteriaGroups = useMemo(() => {
+    const list = officeStaff || []
+    const adminCount = list.filter((s) => s.role === "Admin").length
+    const staffCount = list.filter((s) => s.role === "Staff").length
+    const activeCount = list.filter((s) => s.status === "Active").length
+    const inactiveCount = list.filter((s) => s.status === "Inactive").length
+    const twoFaCount = list.filter((s) => s.totp_enabled).length
+    const noTwoFaCount = list.filter((s) => !s.totp_enabled).length
+
+    return [
+      {
+        id: "role",
+        label: "Personnel Role",
+        options: [
+          { id: "Admin", label: "Administrators", count: adminCount },
+          { id: "Staff", label: "Regular Staff", count: staffCount },
+        ],
+        selected: roleFilters,
+        onChange: (vals) => {
+          setRoleFilters(vals)
+          if (setRoleFilter) {
+            setRoleFilter(vals.length === 1 ? vals[0] : (vals.length === 0 ? "All" : vals.join(",")))
+          }
+          setCurrentPage(1)
+        }
+      },
+      {
+        id: "status",
+        label: "Account Status",
+        options: [
+          { id: "Active", label: "Active", count: activeCount, dotColor: "bg-emerald-500" },
+          { id: "Inactive", label: "Inactive", count: inactiveCount, dotColor: "bg-gray-400" },
+        ],
+        selected: statusFilters,
+        onChange: (vals) => {
+          setStatusFilters(vals)
+          setCurrentPage(1)
+        }
+      },
+      {
+        id: "twoFactor",
+        label: "2FA Security",
+        options: [
+          { id: "enabled", label: "2FA Enabled", count: twoFaCount, dotColor: "bg-emerald-500" },
+          { id: "disabled", label: "2FA Disabled", count: noTwoFaCount, dotColor: "bg-amber-500" },
+        ],
+        selected: twoFactorFilters,
+        onChange: (vals) => {
+          setTwoFactorFilters(vals)
+          setCurrentPage(1)
+        }
+      }
+    ]
+  }, [officeStaff, roleFilters, statusFilters, twoFactorFilters, setRoleFilter])
+
+  const filterPresets = useMemo(() => [
+    {
+      label: "All",
+      isActive: roleFilters.length === 0 && statusFilters.length === 0 && twoFactorFilters.length === 0,
+      onSelect: () => {
+        setRoleFilters([])
+        setStatusFilters([])
+        setTwoFactorFilters([])
+        setRoleFilter?.("All")
+        setCurrentPage(1)
+      }
+    },
+    {
+      label: "Admins",
+      isActive: roleFilters.length === 1 && roleFilters[0] === "Admin" && statusFilters.length === 0 && twoFactorFilters.length === 0,
+      onSelect: () => {
+        setRoleFilters(["Admin"])
+        setStatusFilters([])
+        setTwoFactorFilters([])
+        setRoleFilter?.("Admin")
+        setCurrentPage(1)
+      }
+    },
+    {
+      label: "Staff",
+      isActive: roleFilters.length === 1 && roleFilters[0] === "Staff" && statusFilters.length === 0 && twoFactorFilters.length === 0,
+      onSelect: () => {
+        setRoleFilters(["Staff"])
+        setStatusFilters([])
+        setTwoFactorFilters([])
+        setRoleFilter?.("Staff")
+        setCurrentPage(1)
+      }
+    },
+    {
+      label: "Active Only",
+      isActive: roleFilters.length === 0 && statusFilters.length === 1 && statusFilters[0] === "Active" && twoFactorFilters.length === 0,
+      onSelect: () => {
+        setRoleFilters([])
+        setStatusFilters(["Active"])
+        setTwoFactorFilters([])
+        setRoleFilter?.("All")
+        setCurrentPage(1)
+      }
+    }
+  ], [roleFilters, statusFilters, twoFactorFilters, setRoleFilter])
+
+  const hasActiveFilters = localSearch !== "" || roleFilters.length > 0 || statusFilters.length > 0 || twoFactorFilters.length > 0;
+
+  const handleClearFilters = useCallback(() => {
+    setLocalSearch("")
+    setSearch("")
+    setRoleFilters([])
+    setStatusFilters([])
+    setTwoFactorFilters([])
+    setRoleFilter?.("All")
+    setCurrentPage(1)
+  }, [setSearch, setRoleFilter])
 
   // Sync local search with external search prop initially
   useEffect(() => {
@@ -326,15 +457,20 @@ export default function StaffDirectoryTab({
           s.id.toLowerCase().includes(q) ||
           (s.email || "").toLowerCase().includes(q)
 
-      const matchesRole = roleFilter === "All" || s.role === roleFilter
+      const matchesRole = roleFilters.length === 0 || roleFilters.includes(s.role)
+      const matchesStatus = statusFilters.length === 0 || statusFilters.includes(s.status)
+      const matchesTwoFactor =
+        twoFactorFilters.length === 0 ||
+        (twoFactorFilters.includes("enabled") && Boolean(s.totp_enabled)) ||
+        (twoFactorFilters.includes("disabled") && !s.totp_enabled)
 
       // Filter by tab status
       const isArchived = s.status === "Archived"
       const matchesTab = activeTab === "active" ? !isArchived : isArchived
 
-      return matchesSearch && matchesRole && matchesTab
+      return matchesSearch && matchesRole && matchesStatus && matchesTwoFactor && matchesTab
     })
-  }, [search, roleFilter, officeStaff, activeTab])
+  }, [search, roleFilters, statusFilters, twoFactorFilters, officeStaff, activeTab])
 
   const [sortBy, setSortBy] = useState("id")
   const [sortOrder, setSortOrder] = useState("ASC")
@@ -608,69 +744,61 @@ export default function StaffDirectoryTab({
               )}
             </div>
 
-            <div className="w-40">
-              <Select
-                value={roleFilter}
-                onChange={(e) => setRoleFilter(e.target.value)}
-                disabled={isLoading}
-                className="h-9 rounded-xl text-xs font-normal border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-[#111111] dark:text-zinc-200 cursor-pointer shadow-none"
-              >
-                <option value="All">All Roles</option>
-                <option value="Admin">Administrators</option>
-                <option value="Staff">Regular Staff</option>
-              </Select>
-            </div>
+            {/* Multi-Criteria Filters (Role, Status, 2FA) */}
+            <MultiCriteriaFilter
+              groups={filterCriteriaGroups}
+              presets={filterPresets}
+              align="end"
+              buttonLabel="Filter Personnel"
+            />
           </div>
         </div>
 
         {/* Active Filter Chips Row */}
         {hasActiveFilters && (
-          <div className="flex-none border-t border-gray-100 dark:border-white/10 bg-white dark:bg-card px-6 py-3 animate-in fade-in slide-in-from-top-1 duration-normal">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="mr-1 text-[11px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500">
-                Active filters:
-              </span>
-              {localSearch && (
-                <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
-                  Search: {localSearch}
-                  <button
-                    onClick={() => { 
-                      setLocalSearch(""); 
-                      setSearch("");
-                      setCurrentPage(1); 
-                    }}
-                    className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
-                  >
-                    ×
-                  </button>
-                </div>
-              )}
-              {roleFilter !== "All" && (
-                <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
-                  Role: {roleFilter === "Admin" ? "Administrators" : roleFilter === "Staff" ? "Regular Staff" : roleFilter}
-                  <button
-                    onClick={() => { setRoleFilter("All"); setCurrentPage(1); }}
-                    className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
-                  >
-                    ×
-                  </button>
-                </div>
-              )}
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  setLocalSearch("")
-                  setSearch("")
-                  setRoleFilter("All")
+          <ActiveFilterChips
+            groups={[
+              {
+                key: "role",
+                label: "Role",
+                values: roleFilters,
+                onRemove: (val) => {
+                  const next = roleFilters.filter((v) => v !== val)
+                  setRoleFilters(next)
+                  setRoleFilter?.(next.length === 1 ? next[0] : (next.length === 0 ? "All" : next.join(",")))
                   setCurrentPage(1)
-                }}
-                className="h-auto text-[12px] font-medium text-gray-400 dark:text-zinc-500 border-0 bg-transparent hover:bg-transparent shadow-none p-0 hover:text-red-600 dark:hover:text-red-500 transition-colors cursor-pointer"
-              >
-                Clear
-              </Button>
-            </div>
-          </div>
+                },
+                formatValue: (val) => (val === "Admin" ? "Administrators" : val === "Staff" ? "Regular Staff" : val)
+              },
+              {
+                key: "status",
+                label: "Status",
+                values: statusFilters,
+                onRemove: (val) => {
+                  setStatusFilters((prev) => prev.filter((v) => v !== val))
+                  setCurrentPage(1)
+                },
+                formatValue: (val) => val
+              },
+              {
+                key: "twoFactor",
+                label: "2FA",
+                values: twoFactorFilters,
+                onRemove: (val) => {
+                  setTwoFactorFilters((prev) => prev.filter((v) => v !== val))
+                  setCurrentPage(1)
+                },
+                formatValue: (val) => (val === "enabled" ? "2FA Enabled" : "2FA Disabled")
+              }
+            ]}
+            searchQuery={localSearch}
+            onClearSearch={() => {
+              setLocalSearch("")
+              setSearch("")
+              setCurrentPage(1)
+            }}
+            onClearAll={handleClearFilters}
+          />
         )}
 
         {/* Content Area: Loading / Error / Table */}
@@ -830,12 +958,7 @@ export default function StaffDirectoryTab({
                               <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => {
-                                  setLocalSearch("")
-                                  setSearch("")
-                                  setRoleFilter("All")
-                                  setCurrentPage(1)
-                                }}
+                                onClick={handleClearFilters}
                                 className="mt-6 flex h-10 items-center justify-center rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-6 text-xs font-semibold text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs active:scale-95 cursor-pointer"
                               >
                                 <HugeIcon  className="ph-bold ph-arrow-counter-clockwise mr-2"></HugeIcon>

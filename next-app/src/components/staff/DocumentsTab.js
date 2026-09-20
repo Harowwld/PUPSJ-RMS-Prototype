@@ -28,6 +28,8 @@ import { RefreshButton } from "@/components/shared/RefreshButton";
 import { Select } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { canonicalizeCabinetId } from "@/lib/storageLayoutUtils";
+import MultiCriteriaFilter from "@/components/shared/MultiCriteriaFilter";
+import ActiveFilterChips from "@/components/shared/ActiveFilterChips";
 import {
   Tooltip,
   TooltipContent,
@@ -354,7 +356,12 @@ export default function DocumentsTab({
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [selectedDoc, setSelectedDoc] = useState(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [statusFilter, setStatusFilter] = useState("");
+  const [statusFilters, setStatusFilters] = useState([]);
+  const [docTypeFilters, setDocTypeFilters] = useState(
+    Array.isArray(docsForm.docTypes) && docsForm.docTypes.length > 0
+      ? docsForm.docTypes
+      : docsForm.docType ? [docsForm.docType] : []
+  );
 
   const searchQuery = docsForm.studentName || docsForm.studentNo || "";
 
@@ -371,43 +378,150 @@ export default function DocumentsTab({
   };
 
   const handleClearAllFilters = () => {
-    const cleared = { studentNo: "", studentName: "", docType: "" };
+    const cleared = { studentNo: "", studentName: "", docType: "", docTypes: [] };
     setDocsForm(cleared);
-    setStatusFilter("");
+    setStatusFilters([]);
+    setDocTypeFilters([]);
     refreshDocuments(cleared);
     setPage(1);
   };
 
-  const hasActiveFilters = Boolean(searchQuery || statusFilter || docsForm.docType);
+  const hasActiveFilters = Boolean(
+    searchQuery || statusFilters.length > 0 || docTypeFilters.length > 0
+  );
 
-  useEffect(() => {
-    if (!detailModalOpen) {
-      setIsFullscreen(false);
+  const filterGroups = useMemo(() => {
+    const uploadedCount = docsRows.filter((r) => r.status === "uploaded").length;
+    const verifiedCount = docsRows.filter(
+      (r) => r.status === "uploaded" && r.verificationStatus === "verified"
+    ).length;
+    const unverifiedCount = docsRows.filter(
+      (r) => r.status === "uploaded" && r.verificationStatus === "unverified"
+    ).length;
+    const missingCount = docsRows.filter((r) => r.status === "missing").length;
+
+    return [
+      {
+        id: "status",
+        label: "Document Status",
+        options: [
+          { value: "Uploaded", label: "Uploaded", indicatorColor: "bg-blue-500", count: uploadedCount },
+          { value: "Verified", label: "Verified", indicatorColor: "bg-emerald-500", count: verifiedCount },
+          { value: "Unverified", label: "Unverified", indicatorColor: "bg-amber-500", count: unverifiedCount },
+          { value: "Missing", label: "Missing", indicatorColor: "bg-rose-500", count: missingCount },
+        ],
+      },
+      {
+        id: "docType",
+        label: "Document Type",
+        options: (docTypes || []).map((t) => ({
+          value: t,
+          label: t,
+          count: docsRows.filter((r) => r.doc_type === t).length,
+        })),
+      },
+    ];
+  }, [docsRows, docTypes]);
+
+  const filterValues = useMemo(() => ({
+    status: statusFilters,
+    docType: docTypeFilters,
+  }), [statusFilters, docTypeFilters]);
+
+  const handleFilterChange = useCallback((groupId, values) => {
+    if (groupId === "status") {
+      setStatusFilters(values);
+      setPage(1);
+    } else if (groupId === "docType") {
+      setDocTypeFilters(values);
+      const next = {
+        ...docsForm,
+        docTypes: values,
+        docType: values.length === 1 ? values[0] : "",
+      };
+      setDocsForm(next);
+      refreshDocuments(next);
+      setPage(1);
     }
-  }, [detailModalOpen]);
+  }, [docsForm, setDocsForm, refreshDocuments]);
 
-  const handleViewDetails = (doc) => {
-    setSelectedDoc(doc);
-    setDetailModalOpen(true);
-  };
+  const filterPresets = useMemo(() => [
+    {
+      label: "All Documents",
+      values: { status: [], docType: [] },
+    },
+    {
+      label: "Verified Only",
+      values: { status: ["Verified"], docType: docTypeFilters },
+    },
+    {
+      label: "Needs Action",
+      values: { status: ["Unverified", "Missing"], docType: docTypeFilters },
+    },
+    {
+      label: "Uploaded Only",
+      values: { status: ["Uploaded"], docType: docTypeFilters },
+    },
+  ], [docTypeFilters]);
 
-  // Sorting & Pagination state
-  const [sortBy, setSortBy] = useState("student_no");
-  const [sortOrder, setSortOrder] = useState("ASC");
-  const [page, setPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
-  const [jumpPage, setJumpPage] = useState("1");
+  const activeChips = useMemo(() => {
+    const chips = [];
+    if (searchQuery.trim()) {
+      chips.push({
+        id: "search",
+        label: `Search: ${searchQuery.trim()}`,
+        onRemove: () => handleSearchChange(""),
+      });
+    }
+    statusFilters.forEach((st) => {
+      chips.push({
+        id: `status-${st}`,
+        label: `Status: ${st}`,
+        onRemove: () => setStatusFilters((prev) => prev.filter((s) => s !== st)),
+      });
+    });
+    docTypeFilters.forEach((dt) => {
+      chips.push({
+        id: `docType-${dt}`,
+        label: `Type: ${dt}`,
+        onRemove: () => {
+          const nextTypes = docTypeFilters.filter((t) => t !== dt);
+          setDocTypeFilters(nextTypes);
+          const nextForm = {
+            ...docsForm,
+            docTypes: nextTypes,
+            docType: nextTypes.length === 1 ? nextTypes[0] : "",
+          };
+          setDocsForm(nextForm);
+          refreshDocuments(nextForm);
+          setPage(1);
+        },
+      });
+    });
+    return chips;
+  }, [searchQuery, statusFilters, docTypeFilters, docsForm, setDocsForm, refreshDocuments]);
 
   const filteredRows = useMemo(() => {
-    if (!statusFilter) return docsRows;
-    return docsRows.filter((r) => {
-      if (statusFilter === "Uploaded") return r.status === "uploaded";
-      if (statusFilter === "Verified") return r.status === "uploaded" && r.verificationStatus === "verified";
-      if (statusFilter === "Unverified") return r.status === "uploaded" && r.verificationStatus === "unverified";
-      if (statusFilter === "Missing") return r.status === "missing";
-      return true;
-    });
-  }, [docsRows, statusFilter]);
+    let rows = docsRows;
+
+    if (statusFilters.length > 0) {
+      rows = rows.filter((r) => {
+        return statusFilters.some((status) => {
+          if (status === "Uploaded") return r.status === "uploaded";
+          if (status === "Verified") return r.status === "uploaded" && r.verificationStatus === "verified";
+          if (status === "Unverified") return r.status === "uploaded" && r.verificationStatus === "unverified";
+          if (status === "Missing") return r.status === "missing";
+          return true;
+        });
+      });
+    }
+
+    if (docTypeFilters.length > 0) {
+      rows = rows.filter((r) => docTypeFilters.includes(r.doc_type));
+    }
+
+    return rows;
+  }, [docsRows, statusFilters, docTypeFilters]);
 
   // Reset page when search parameters/filteredRows change
   useEffect(() => {
@@ -611,20 +725,34 @@ export default function DocumentsTab({
             {/* Left: Status Line Tabs */}
             <div className="flex items-center gap-6 shrink-0 select-none overflow-x-auto">
               {STATUS_TABS.map((tab) => {
-                const isActive = statusFilter === tab.value;
-                const count = statusCounts[tab.value] ?? 0;
+                const isAll = tab.value === "";
+                const isActive = isAll
+                  ? statusFilters.length === 0
+                  : statusFilters.length === 1 && statusFilters[0] === tab.value;
+                const count = isAll
+                  ? docsRows.length
+                  : tab.value === "Uploaded"
+                  ? docsRows.filter((r) => r.status === "uploaded").length
+                  : tab.value === "Verified"
+                  ? docsRows.filter((r) => r.status === "uploaded" && r.verificationStatus === "verified").length
+                  : tab.value === "Unverified"
+                  ? docsRows.filter((r) => r.status === "uploaded" && r.verificationStatus === "unverified").length
+                  : tab.value === "Missing"
+                  ? docsRows.filter((r) => r.status === "missing").length
+                  : 0;
+
                 return (
                   <button
-                    key={tab.value}
+                    key={tab.value || "all"}
                     type="button"
                     onClick={() => {
-                      setStatusFilter(tab.value);
+                      setStatusFilters(tab.value ? [tab.value] : []);
                       setPage(1);
                     }}
                     className={cn(
                       "relative h-9 flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent whitespace-nowrap",
                       isActive
-                        ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
+                        ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-pup-maroon dark:after:bg-red-400"
                         : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
                     )}
                   >
@@ -644,12 +772,12 @@ export default function DocumentsTab({
               })}
             </div>
 
-            {/* Right: Search & Filters */}
+            {/* Right: Search & Unified MultiCriteriaFilter */}
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0">
               {/* Search Input */}
               <div className="w-full sm:w-[260px] lg:w-[300px] relative group shrink-0">
                 <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                  <HugeIcon  className="ph-bold ph-magnifying-glass text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm"></HugeIcon>
+                  <HugeIcon className="ph-bold ph-magnifying-glass text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm" />
                 </div>
                 <Input
                   value={searchQuery}
@@ -662,91 +790,26 @@ export default function DocumentsTab({
                 </div>
               </div>
 
-              {/* Document Type Filter */}
-              <div className="w-full sm:w-[185px] shrink-0">
-                <Select
-                  value={docsForm.docType}
-                  onChange={(e) => {
-                    const v = e.target.value;
-                    const next = { ...docsForm, docType: v };
-                    setDocsForm(next);
-                    refreshDocuments(next);
-                    setPage(1);
-                  }}
-                  className="h-9 rounded-xl border border-gray-200 dark:border-white/10 text-xs font-normal text-[#111111] dark:text-zinc-200 cursor-pointer shadow-none"
-                  menuClassName="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-900 shadow-2xl p-1.5"
-                  optionClassName="rounded-lg text-xs font-normal py-1.5 px-2.5 hover:bg-gray-100 dark:hover:bg-zinc-800"
-                >
-                  <option value="">All Document Types</option>
-                  {docTypes.map((t) => (
-                    <option key={t} value={t}>
-                      {t}
-                    </option>
-                  ))}
-                </Select>
-              </div>
+              {/* MultiCriteriaFilter Popover */}
+              <MultiCriteriaFilter
+                title="Filter Documents"
+                groups={filterGroups}
+                selectedValues={filterValues}
+                onChange={handleFilterChange}
+                onClearAll={handleClearAllFilters}
+                presets={filterPresets}
+                totalCount={docsRows.length}
+                filteredCount={filteredRows.length}
+              />
             </div>
           </div>
 
           {/* 3. Active Filters Chips Row */}
-          {hasActiveFilters && (
-            <div className="flex-none border-t border-gray-100 dark:border-white/10 bg-white dark:bg-card px-6 py-2.5 animate-in fade-in slide-in-from-top-1 duration-normal">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="mr-1 text-[11px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500">
-                  Active filters:
-                </span>
-                {searchQuery && (
-                  <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
-                    Search: {searchQuery}
-                    <button
-                      onClick={() => handleSearchChange("")}
-                      className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
-                    >
-                      ×
-                    </button>
-                  </div>
-                )}
-                {statusFilter && (
-                  <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
-                    Status: {statusFilter}
-                    <button
-                      onClick={() => {
-                        setStatusFilter("");
-                        setPage(1);
-                      }}
-                      className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
-                    >
-                      ×
-                    </button>
-                  </div>
-                )}
-                {docsForm.docType && (
-                  <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
-                    Type: {docsForm.docType}
-                    <button
-                      onClick={() => {
-                        const next = { ...docsForm, docType: "" };
-                        setDocsForm(next);
-                        refreshDocuments(next);
-                        setPage(1);
-                      }}
-                      className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
-                    >
-                      ×
-                    </button>
-                  </div>
-                )}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleClearAllFilters}
-                  className="h-auto text-[12px] font-medium text-gray-400 dark:text-zinc-500 border-0 bg-transparent hover:bg-transparent shadow-none p-0 hover:text-red-600 dark:hover:text-red-500 transition-colors cursor-pointer"
-                >
-                  Clear
-                </Button>
-              </div>
-            </div>
-          )}
+          <ActiveFilterChips
+            chips={activeChips}
+            onClearAll={handleClearAllFilters}
+            className="border-t border-gray-100 dark:border-white/10 px-6 py-2.5"
+          />
 
           {/* 4. Documents Table Content */}
           <div className="flex flex-col flex-1 w-full min-h-0">

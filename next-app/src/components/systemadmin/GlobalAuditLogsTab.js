@@ -28,6 +28,8 @@ import { formatPHDateTime } from "@/lib/timeFormat"
 import { format } from "date-fns"
 import { cn } from "@/lib/utils"
 import { Select } from "@/components/ui/select"
+import MultiCriteriaFilter from "@/components/shared/MultiCriteriaFilter"
+import ActiveFilterChips from "@/components/shared/ActiveFilterChips"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Calendar } from "@/components/ui/calendar"
 import { generateAuditLogsPdf } from "@/lib/pdfGenerator"
@@ -112,8 +114,10 @@ export default function GlobalAuditLogsTab({ showToast }) {
   const [limit, setLimit] = useState(10)
   const [search, setSearch] = useState("")
   const [localSearch, setLocalSearch] = useState("")
-  const [officeFilter, setOfficeFilter] = useState("All")
-  const [severityFilter, setSeverityFilter] = useState("All")
+  const [logFilters, setLogFilters] = useState({
+    severity: [],
+    office: [],
+  })
   const [startDate, setStartDate] = useState("")
   const [endDate, setEndDate] = useState("")
 
@@ -162,16 +166,66 @@ export default function GlobalAuditLogsTab({ showToast }) {
     return []
   }, [])
 
+  const logFilterGroups = useMemo(() => {
+    const sevOptions = [
+      { value: "INFO", label: "Information", dotColor: "bg-blue-500" },
+      { value: "WARNING", label: "Warning", dotColor: "bg-amber-500" },
+      { value: "CRITICAL", label: "Critical Security", dotColor: "bg-rose-500" },
+    ]
+
+    const officeOptions = [
+      { value: "global", label: "Global (Platform)" },
+      ...(Array.isArray(offices) ? offices : []).map((o) => ({
+        value: o.id,
+        label: o.short_name || o.name,
+      })),
+    ]
+
+    return [
+      {
+        id: "severity",
+        label: "Severity Level",
+        options: sevOptions,
+      },
+      {
+        id: "office",
+        label: "Scope / Partition",
+        options: officeOptions,
+      },
+    ]
+  }, [offices])
+
+  const logFilterPresets = useMemo(
+    () => [
+      {
+        label: "All",
+        values: { severity: [], office: [] },
+        activeCondition: (sel) => !sel?.severity?.length && !sel?.office?.length,
+      },
+      {
+        label: "Critical & Warnings",
+        values: { severity: ["CRITICAL", "WARNING"] },
+      },
+      {
+        label: "Platform Only",
+        values: { office: ["global"] },
+      },
+    ],
+    []
+  )
+
   const fetchStats = useCallback(async () => {
-    const statsKey = `audit_stats_${officeFilter}_${severityFilter}_${search}_${startDate}_${endDate}`
+    const officeStr = (logFilters.office || []).join(",")
+    const sevStr = (logFilters.severity || []).join(",")
+    const statsKey = `audit_stats_${officeStr}_${sevStr}_${search}_${startDate}_${endDate}`
     const cachedStats = getCachedData(statsKey)
     if (cachedStats) {
       setLogStats(cachedStats)
     }
 
     try {
-      const officeQuery = officeFilter !== "All" ? `&officeId=${encodeURIComponent(officeFilter)}` : ""
-      const severityQuery = severityFilter !== "All" ? `&severity=${encodeURIComponent(severityFilter)}` : ""
+      const officeQuery = officeStr ? `&officeId=${encodeURIComponent(officeStr)}` : ""
+      const severityQuery = sevStr ? `&severity=${encodeURIComponent(sevStr)}` : ""
       const searchQuery = search ? `&search=${encodeURIComponent(search)}` : ""
       const startQuery = startDate ? `&startDate=${encodeURIComponent(startDate)}` : ""
       const endQuery = endDate ? `&endDate=${encodeURIComponent(endDate)}` : ""
@@ -185,11 +239,13 @@ export default function GlobalAuditLogsTab({ showToast }) {
     } catch (err) {
       console.error("Failed to fetch global audit log stats", err)
     }
-  }, [officeFilter, severityFilter, search, startDate, endDate])
+  }, [logFilters, search, startDate, endDate])
 
   const fetchLogs = useCallback(
     async (isManual = false, currentOffices = null) => {
-      const logsKey = `audit_logs_${page}_${limit}_${officeFilter}_${severityFilter}_${search}_${startDate}_${endDate}_${sortBy}_${sortOrder}`
+      const officeStr = (logFilters.office || []).join(",")
+      const sevStr = (logFilters.severity || []).join(",")
+      const logsKey = `audit_logs_${page}_${limit}_${officeStr}_${sevStr}_${search}_${startDate}_${endDate}_${sortBy}_${sortOrder}`
       if (!isManual) {
         const cached = getCachedData(logsKey)
         if (cached) {
@@ -206,8 +262,8 @@ export default function GlobalAuditLogsTab({ showToast }) {
       setError(null)
       try {
         const offset = (page - 1) * limit
-        const officeQuery = officeFilter !== "All" ? `&officeId=${encodeURIComponent(officeFilter)}` : ""
-        const severityQuery = severityFilter !== "All" ? `&severity=${encodeURIComponent(severityFilter)}` : ""
+        const officeQuery = officeStr ? `&officeId=${encodeURIComponent(officeStr)}` : ""
+        const severityQuery = sevStr ? `&severity=${encodeURIComponent(sevStr)}` : ""
         const searchQuery = search ? `&search=${encodeURIComponent(search)}` : ""
         const startQuery = startDate ? `&startDate=${encodeURIComponent(startDate)}` : ""
         const endQuery = endDate ? `&endDate=${encodeURIComponent(endDate)}` : ""
@@ -264,7 +320,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
         setIsManualLoading(false)
       }
     },
-    [page, limit, officeFilter, severityFilter, search, startDate, endDate, sortBy, sortOrder, showToast]
+    [page, limit, logFilters, search, startDate, endDate, sortBy, sortOrder, showToast]
   )
 
   useEffect(() => {
@@ -359,8 +415,10 @@ export default function GlobalAuditLogsTab({ showToast }) {
   })()
 
   const fetchAllForExport = async () => {
-    const officeQuery = officeFilter !== "All" ? `&officeId=${encodeURIComponent(officeFilter)}` : ""
-    const sevQuery = severityFilter !== "All" ? `&severity=${encodeURIComponent(severityFilter)}` : ""
+    const officeStr = (logFilters.office || []).join(",")
+    const sevStr = (logFilters.severity || []).join(",")
+    const officeQuery = officeStr ? `&officeId=${encodeURIComponent(officeStr)}` : ""
+    const sevQuery = sevStr ? `&severity=${encodeURIComponent(sevStr)}` : ""
     const startQuery = startDate ? `&startDate=${encodeURIComponent(startDate)}` : ""
     const endQuery = endDate ? `&endDate=${encodeURIComponent(endDate)}` : ""
     const res = await fetch(
@@ -515,8 +573,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
   const handleClearFilters = () => {
     setLocalSearch("")
     setSearch("")
-    setOfficeFilter("All")
-    setSeverityFilter("All")
+    setLogFilters({ severity: [], office: [] })
     setStartDate("")
     setEndDate("")
     setPage(1)
@@ -525,7 +582,11 @@ export default function GlobalAuditLogsTab({ showToast }) {
   const totalPages = Math.ceil(total / limit) || 1
   const displayPage = Math.min(page, totalPages)
   const hasActiveFilters =
-    localSearch !== "" || officeFilter !== "All" || severityFilter !== "All" || startDate !== "" || endDate !== ""
+    localSearch !== "" ||
+    (logFilters.severity?.length > 0) ||
+    (logFilters.office?.length > 0) ||
+    startDate !== "" ||
+    endDate !== ""
 
   return (
     <TooltipProvider delay={200}>
@@ -597,12 +658,12 @@ export default function GlobalAuditLogsTab({ showToast }) {
               <button
                 type="button"
                 onClick={() => {
-                  setSeverityFilter("All")
+                  setLogFilters((prev) => ({ ...prev, severity: [] }))
                   setPage(1)
                 }}
                 className={cn(
                   "relative h-9 flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent whitespace-nowrap",
-                  severityFilter === "All"
+                  (!logFilters.severity || logFilters.severity.length === 0)
                     ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
                     : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
                 )}
@@ -613,12 +674,12 @@ export default function GlobalAuditLogsTab({ showToast }) {
               <button
                 type="button"
                 onClick={() => {
-                  setSeverityFilter("INFO")
+                  setLogFilters((prev) => ({ ...prev, severity: ["INFO"] }))
                   setPage(1)
                 }}
                 className={cn(
                   "relative h-9 flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent whitespace-nowrap",
-                  severityFilter === "INFO"
+                  logFilters.severity?.length === 1 && logFilters.severity[0] === "INFO"
                     ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
                     : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
                 )}
@@ -629,12 +690,12 @@ export default function GlobalAuditLogsTab({ showToast }) {
               <button
                 type="button"
                 onClick={() => {
-                  setSeverityFilter("WARNING")
+                  setLogFilters((prev) => ({ ...prev, severity: ["WARNING"] }))
                   setPage(1)
                 }}
                 className={cn(
                   "relative h-9 flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent whitespace-nowrap",
-                  severityFilter === "WARNING"
+                  logFilters.severity?.length === 1 && logFilters.severity[0] === "WARNING"
                     ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
                     : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
                 )}
@@ -645,12 +706,12 @@ export default function GlobalAuditLogsTab({ showToast }) {
               <button
                 type="button"
                 onClick={() => {
-                  setSeverityFilter("CRITICAL")
+                  setLogFilters((prev) => ({ ...prev, severity: ["CRITICAL"] }))
                   setPage(1)
                 }}
                 className={cn(
                   "relative h-9 flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent whitespace-nowrap",
-                  severityFilter === "CRITICAL"
+                  logFilters.severity?.length === 1 && logFilters.severity[0] === "CRITICAL"
                     ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
                     : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
                 )}
@@ -659,7 +720,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
               </button>
             </div>
 
-            {/* Search, Scope, Time, and Date Range Controls */}
+            {/* Search, Multi-Criteria Filter, Time, and Date Range Controls */}
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 flex-wrap">
               {/* Search */}
               <div className="relative flex-1 sm:w-64 min-w-[200px] group">
@@ -673,24 +734,23 @@ export default function GlobalAuditLogsTab({ showToast }) {
                 />
               </div>
 
-              {/* Scope Select */}
-              <div className="w-[140px]">
-                <Select
-                  value={officeFilter}
-                  onChange={(e) => {
-                    setOfficeFilter(e.target.value)
+              {/* Multi-Criteria Popover Filter */}
+              <div className="w-full sm:w-auto shrink-0">
+                <MultiCriteriaFilter
+                  title="Filter Logs"
+                  groups={logFilterGroups}
+                  selected={logFilters}
+                  onChange={(newFilters) => {
+                    setLogFilters(newFilters)
                     setPage(1)
                   }}
-                  className="h-9 rounded-xl border border-gray-200 text-xs font-normal bg-white dark:bg-zinc-800 dark:border-white/10"
-                >
-                  <option value="All">All Scopes</option>
-                  <option value="global">Global (Platform)</option>
-                  {(Array.isArray(offices) ? offices : []).map((o) => (
-                    <option key={o.id} value={o.id}>
-                      {o.short_name}
-                    </option>
-                  ))}
-                </Select>
+                  presets={logFilterPresets}
+                  totalCount={total}
+                  onReset={() => {
+                    setLogFilters({ severity: [], office: [] })
+                    setPage(1)
+                  }}
+                />
               </div>
 
               {/* Time Shortcuts */}
@@ -780,81 +840,42 @@ export default function GlobalAuditLogsTab({ showToast }) {
           </div>
 
           {/* Active Filter Chips Row */}
-          {hasActiveFilters && (
-            <div className="flex-none border-t border-gray-100 dark:border-white/10 bg-white dark:bg-card px-6 py-3 animate-in fade-in slide-in-from-top-1 duration-normal">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="mr-1 text-[11px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500">
-                  Active filters:
-                </span>
-                {localSearch && (
-                  <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
-                    Search: {localSearch}
-                    <button
-                      onClick={() => {
-                        setLocalSearch("")
-                        setSearch("")
-                        setPage(1)
-                      }}
-                      className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
-                    >
-                      ×
-                    </button>
-                  </div>
-                )}
-                {officeFilter !== "All" && (
-                  <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
-                    Scope: {officeFilter === "global" ? "Global (Platform)" : (Array.isArray(offices) ? offices : []).find((o) => o.id === officeFilter)?.short_name || officeFilter}
-                    <button
-                      onClick={() => {
-                        setOfficeFilter("All")
-                        setPage(1)
-                      }}
-                      className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
-                    >
-                      ×
-                    </button>
-                  </div>
-                )}
-                {severityFilter !== "All" && (
-                  <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
-                    Severity: {severityFilter}
-                    <button
-                      onClick={() => {
-                        setSeverityFilter("All")
-                        setPage(1)
-                      }}
-                      className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
-                    >
-                      ×
-                    </button>
-                  </div>
-                )}
-                {(startDate || endDate) && (
-                  <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
-                    Date: {startDate ? format(parseDateLocal(startDate), "MMM d, yyyy") : "Start"} → {endDate ? format(parseDateLocal(endDate), "MMM d, yyyy") : "End"}
-                    <button
-                      onClick={() => {
+          <ActiveFilterChips
+            groups={logFilterGroups}
+            selected={logFilters}
+            onRemove={(groupId, val) => {
+              setLogFilters((prev) => ({
+                ...prev,
+                [groupId]: (prev[groupId] || []).filter((v) => v !== val),
+              }))
+              setPage(1)
+            }}
+            searchQuery={localSearch}
+            onClearSearch={() => {
+              setLocalSearch("")
+              setSearch("")
+              setPage(1)
+            }}
+            extraChips={[
+              ...(startDate || endDate
+                ? [
+                    {
+                      groupLabel: "Date Range",
+                      label: `${startDate ? format(parseDateLocal(startDate), "MMM d, yyyy") : "Start"} → ${endDate ? format(parseDateLocal(endDate), "MMM d, yyyy") : "End"}`,
+                      onClear: () => {
                         setStartDate("")
                         setEndDate("")
                         setPage(1)
-                      }}
-                      className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
-                    >
-                      ×
-                    </button>
-                  </div>
-                )}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleClearFilters}
-                  className="h-auto text-[12px] font-medium text-gray-400 dark:text-zinc-500 border-0 bg-transparent hover:bg-transparent shadow-none p-0 hover:text-red-600 dark:hover:text-red-500 transition-colors cursor-pointer"
-                >
-                  Clear
-                </Button>
-              </div>
-            </div>
-          )}
+                      },
+                    },
+                  ]
+                : []),
+            ]}
+            onClearAll={() => {
+              handleClearFilters()
+            }}
+            className="border-t border-gray-100 dark:border-white/10 bg-white dark:bg-card px-6 py-2.5"
+          />
 
           {/* Content Area inside Single Card */}
           {loading && (!logs || logs.length === 0) ? (

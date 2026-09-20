@@ -3,11 +3,109 @@ import React from 'react';
 import * as icons from 'hugeicons-react';
 import { cn } from '@/lib/utils';
 
+export function getIconByTitle(title = "") {
+  const t = String(title || "").toLowerCase().trim();
+  if (!t) return null;
+  
+  // OSAS & Student Affairs
+  if (t.includes("osas") || t.includes("proposal") || t.includes("student affairs")) {
+    return "SchoolIcon";
+  }
+  // Compliance & Requirements
+  if (t.includes("compliance") || t.includes("checklist") || t.includes("requirement")) {
+    return "CheckListIcon";
+  }
+  // Documents & Requests
+  if (t.includes("document request") || t.includes("odrs") || t.includes("transcript") || t.includes("diploma") || t.includes("certificate")) {
+    return "File02Icon";
+  }
+  if (t.includes("matrix") || t.includes("documents")) {
+    return "File02Icon";
+  }
+  // Students & Directory
+  if (t.includes("student directory") || t.includes("student profile") || (t.includes("student") && t.includes("record"))) {
+    return "UserSearch01Icon";
+  }
+  if (t.includes("student")) {
+    return "StudentIcon";
+  }
+  // Activity, Timeline & Audit Logs
+  if (t.includes("activity") || t.includes("history") || t.includes("log") || t.includes("timeline") || t.includes("audit")) {
+    return "Time01Icon";
+  }
+  // Staff Directory
+  if (t.includes("directory") || t.includes("staff") || t.includes("personnel") || t.includes("users")) {
+    return "UserSearch01Icon";
+  }
+  // Security
+  if (t.includes("security") || t.includes("shield")) {
+    return "Shield01Icon";
+  }
+  // Storage & Archive
+  if (t.includes("storage") || t.includes("cabinet") || t.includes("warehouse")) {
+    return "WarehouseIcon";
+  }
+  if (t.includes("backup") || t.includes("database")) {
+    return "Database01Icon";
+  }
+  // Settings & Config
+  if (t.includes("setting") || t.includes("config") || t.includes("preference")) {
+    return "Settings01Icon";
+  }
+  // Analytics
+  if (t.includes("analytic") || t.includes("metric") || t.includes("trend") || t.includes("chart")) {
+    return "Analytics01Icon";
+  }
+  // Review & Approval
+  if (t.includes("review") || t.includes("verify") || t.includes("approve")) {
+    return "TaskDone01Icon";
+  }
+  // Navigation & Controls
+  if (t.includes("sidebar")) {
+    return "LayoutLeftIcon";
+  }
+  if (t.includes("zoom in")) {
+    return "ZoomInAreaIcon";
+  }
+  if (t.includes("zoom out")) {
+    return "ZoomOutAreaIcon";
+  }
+  if (t.includes("zoom") || t.includes("scale")) {
+    return "ArrowLeftRightIcon";
+  }
+  if (t.includes("sign out") || t.includes("logout")) {
+    return "Logout01Icon";
+  }
+  if (t.includes("notification") || t.includes("alert") || t.includes("inbox") || t.includes("bell")) {
+    return "Notification01Icon";
+  }
+  if (t.includes("scan") || t.includes("upload") || t.includes("ingest")) {
+    return "FingerPrintScanIcon";
+  }
+  if (t.includes("archive") || t.includes("box")) {
+    return "Archive01Icon";
+  }
+  if (t.includes("office") || t.includes("department") || t.includes("building") || t.includes("station")) {
+    return "Building01Icon";
+  }
+  if (t.includes("feature") || t.includes("module")) {
+    return "LayoutGridIcon";
+  }
+  if (t.includes("operation") || t.includes("health") || t.includes("status")) {
+    return "Activity01Icon";
+  }
+  if (t.includes("cms") || t.includes("landing") || t.includes("portal") || t.includes("website") || t.includes("dashboard")) {
+    return "DashboardSquare01Icon";
+  }
+  return null;
+}
+
 const iconMapping = {
   "magnifying-glass": "Search01Icon",
   "magnifying-glass-minus": "ZoomOutAreaIcon",
   "magnifying-glass-plus": "ZoomInAreaIcon",
   "gear-six": "Settings01Icon",
+  "gear": "Settings01Icon",
   "house": "Home01Icon",
   "envelope": "Mail01Icon",
   "folder-open": "FolderOpenIcon",
@@ -66,15 +164,15 @@ const iconMapping = {
   "upload-simple": "Upload01Icon",
   "file-csv": "File01Icon",
   "cloud-arrow-up": "CloudUploadIcon",
-  "shield-slash": "StarIcon",
-  "shield-key": "StarIcon",
+  "shield-slash": "Shield02Icon",
+  "shield-key": "ShieldKeyIcon",
   "chart-bar": "Analytics01Icon",
   "chart-line": "ChartLineData01Icon",
   "chart-pie": "PieChartIcon",
   "chart-pie-slice": "PieChartIcon",
-  "file-check": "StarIcon",
+  "file-check": "TaskDone01Icon",
   "layout-sidebar": "Layout01Icon",
-  "check-circle": "StarIcon",
+  "check-circle": "CheckmarkCircle01Icon",
   "x-circle": "CancelCircleIcon",
   "arrow-left": "ArrowLeft02Icon",
   "arrow-right": "ArrowRight02Icon",
@@ -91,7 +189,7 @@ const iconMapping = {
   "users": "UserSearch01Icon",
   "user-plus": "UserAdd01Icon",
   "arrow-up-right": "ArrowUpRight01Icon",
-  "shield-check": "StarIcon",
+  "shield-check": "Shield01Icon",
   "eye": "ViewIcon",
   "camera": "Camera01Icon",
   "key": "Key01Icon",
@@ -99,37 +197,38 @@ const iconMapping = {
   "copy": "Copy01Icon",
   "link": "Link01Icon",
   "heart": "FavouriteIcon",
-  "gear": "IncognitoIcon",
   "paperclip": "Attachment01Icon",
   "file": "File01Icon",
   "checks": "TickDouble01Icon",
   "floppy-disk": "SaveEnergy01Icon",
-  "certificate": "StarIcon",
+  "certificate": "Certificate01Icon",
   "book-2": "BookOpen01Icon",
   "device-laptop": "LaptopIcon",
   "messages": "Message01Icon",
-  "folder-archive": "StarIcon",
+  "folder-archive": "Archive01Icon",
   "buildings": "Building01Icon",
   "building": "Building02Icon",
   "squares-four": "LayoutGridIcon",
   "heartbeat": "Activity01Icon",
   "clock-counter-clockwise": "Time01Icon",
   "sign-in": "Login01Icon",
-  "newspaper-clipping": "StarIcon",
+  "newspaper-clipping": "News01Icon",
   "broadcast": "RadioIcon",
   "cube": "AlignBoxBottomCenterIcon",
-  "caret-up-down": "StarIcon",
+  "caret-up-down": "ArrowUpDownIcon",
   "arrows-clockwise": "RefreshIcon",
   "shield-star": "Shield01Icon",
   "usb-slash": "UsbIcon",
   "lock-key": "LockIcon",
   "envelope-simple": "Mail01Icon",
-  "student": "StarIcon",
+  "student": "StudentIcon",
+  "school": "SchoolIcon",
+  "school-01": "School01Icon",
   "circle-notch": "Loading01Icon",
   "arrows-vertical": "ArrowUpDownIcon",
   "calendar-dots": "Calendar01Icon",
   "lightning": "EnergyIcon",
-  "chart-line-up": "StarIcon",
+  "chart-line-up": "Analytics01Icon",
   "mouse-left-click": "Mouse01Icon",
   "dots-six-vertical": "DragDropIcon",
   "books": "LibraryIcon",
@@ -141,20 +240,20 @@ const iconMapping = {
   "tray": "InboxIcon",
   "user-focus": "UserStatusIcon",
   "archive-tray": "Archive01Icon",
-  "user-circle-gear": "StarIcon",
+  "user-circle-gear": "UserSettings01Icon",
   "file-dashed": "FileAddIcon",
-  "corners-in": "StarIcon",
-  "corners-out": "StarIcon",
+  "corners-in": "ArrowShrink01Icon",
+  "corners-out": "ArrowExpand01Icon",
   "arrow-square-out": "LinkSquare01Icon",
   "envelopes": "FilterMailSquareIcon",
   "clipboard-text": "ClipboardIcon",
   "check-double": "TickDouble01Icon",
   "rotate-clockwise": "ReloadIcon",
-  "identification-badge": "StarIcon",
+  "identification-badge": "Contact01Icon",
   "info-circle": "CovidInfoIcon",
   "tools": "Wrench01Icon",
-  "desktop": "StarIcon",
-  "device-desktop": "StarIcon",
+  "desktop": "ComputerIcon",
+  "device-desktop": "ComputerIcon",
   "flow-arrow": "WorkflowCircle01Icon",
   "workflow": "WorkflowCircle01Icon",
   "question": "HelpCircleIcon",
@@ -163,15 +262,15 @@ const iconMapping = {
   "files": "Files01Icon",
   "scales": "JusticeScale01Icon",
   "text-t": "TextFontIcon",
-  "cursor-click": "StarIcon",
-  "devices": "StarIcon",
+  "cursor-click": "Cursor01Icon",
+  "devices": "ComputerPhoneSyncIcon",
   "hand-pointing": "CursorPointer01Icon",
   "clock-countdown": "HourglassIcon",
   "globe-hemisphere-east": "GlobeIcon",
   "bell-ringing": "Notification02Icon",
   "list-dashes": "Menu01Icon",
-  "button": "StarIcon",
-  "wave-sine": "StarIcon",
+  "button": "Touch01Icon",
+  "wave-sine": "Activity01Icon",
   "paper-plane-tilt": "SentIcon",
   "paper-plane-right": "SentIcon",
   "file-arrow-up": "FileUploadIcon",
@@ -179,7 +278,7 @@ const iconMapping = {
   "path": "Route01Icon",
   "browser": "LayoutBottomIcon",
   "panel-bottom": "LayoutBottomIcon",
-  "arrow-counter-clockwise": "StarIcon",
+  "arrow-counter-clockwise": "ReloadIcon",
   "arrows-left-right": "ArrowLeftRightIcon",
   "arrows-out": "ArrowExpand01Icon",
   "device-mobile": "SmartPhone01Icon",
@@ -189,20 +288,20 @@ const iconMapping = {
   "users-three": "UserSearch01Icon",
   "warning-circle": "Alert01Icon",
   "warning": "Alert02Icon",
-  "seal-check": "StarIcon",
-  "trend-up": "StarIcon",
+  "seal-check": "CheckmarkBadge01Icon",
+  "trend-up": "Analytics01Icon",
   "warehouse": "WarehouseIcon",
   "database-backup": "DatabaseIcon",
   "tray-arrow-up": "FileUploadIcon",
   "archive-box": "Archive01Icon",
   "sidebar-simple": "LayoutLeftIcon",
-  "arrows-out-line-horizontal": "StarIcon",
+  "arrows-out-line-horizontal": "ArrowLeftRightIcon",
   "history": "Time01Icon",
   "activity": "Activity01Icon",
   "layout": "DashboardSquare01Icon",
   "image": "Image01Icon",
   "git-merge": "GitMergeIcon",
-  "clipboard-check": "StarIcon",
+  "clipboard-check": "CheckListIcon",
   "sign-out": "Logout01Icon",
   "database": "Database01Icon",
   "info": "CovidInfoIcon",
@@ -213,24 +312,32 @@ const iconMapping = {
   "arrow-down": "ArrowDown01Icon",
   "handshake": "Agreement01Icon",
   "panel-left": "SidebarLeftIcon",
-  "panel-left-dashed": "SidebarLeft01Icon"
+  "panel-left-dashed": "SidebarLeft01Icon",
+  "star": "StarIcon"
 };
 
 function toCamelCase(str) {
   return str.replace(/-([a-z0-9])/g, (g) => g[1].toUpperCase());
 }
 
-function getHugeName(rawName) {
-  if (iconMapping[rawName]) return iconMapping[rawName];
-  const camelName = toCamelCase(rawName);
+function getHugeName(rawIconName, title) {
+  if (rawIconName && iconMapping[rawIconName]) {
+    return iconMapping[rawIconName];
+  }
+  if (title) {
+    const fromTitle = getIconByTitle(title);
+    if (fromTitle) return fromTitle;
+  }
+  if (!rawIconName) return "HelpCircleIcon";
+  const camelName = toCamelCase(rawIconName);
   const capitalized = camelName.charAt(0).toUpperCase() + camelName.slice(1);
   return capitalized + 'Icon';
 }
 
-export default function HugeIcon({ className, size, ...props }) {
-  if (!className) return null;
+export default function HugeIcon({ className, size, title, name, ...props }) {
+  if (!className && !title && !name) return null;
   
-  const classParts = className.split(' ');
+  const classParts = (className || "").split(' ');
   let rawIconName = null;
   let remainingClasses = [];
   
@@ -244,29 +351,31 @@ export default function HugeIcon({ className, size, ...props }) {
     }
   }
   
-  if (!rawIconName) return null;
-  
-  const hugeName = getHugeName(rawIconName);
+  const itemTitle = title || name || props['aria-label'] || "";
+  let hugeName = getHugeName(rawIconName, itemTitle);
   let IconComponent = icons[hugeName];
   
-  if (!IconComponent) {
+  if (!IconComponent && hugeName) {
     if (icons[hugeName.replace('Icon', '01Icon')]) {
        IconComponent = icons[hugeName.replace('Icon', '01Icon')];
     } else if (icons[hugeName.replace('Icon', '02Icon')]) {
        IconComponent = icons[hugeName.replace('Icon', '02Icon')];
-    } else {
-       console.warn(`Hugeicons: Icon ${hugeName} not found for ${rawIconName}`);
-       IconComponent = icons['HelpCircleIcon'] || icons['StarIcon'] || Object.values(icons)[0];
+    }
+  }
+
+  // If still not found and we have a title, attempt title-based icon resolution
+  if (!IconComponent && itemTitle) {
+    const fallbackFromTitle = getIconByTitle(itemTitle);
+    if (fallbackFromTitle && icons[fallbackFromTitle]) {
+      IconComponent = icons[fallbackFromTitle];
     }
   }
   
-  if (!IconComponent) return null;
-  // Convert standard size (like "1em" or unspecified) to a reasonable pixel size if needed, but hugeicons handles size via props.
+  if (!IconComponent) {
+    IconComponent = icons['HelpCircleIcon'] || icons['File01Icon'] || Object.values(icons)[0];
+  }
   
-  // Actually, hugeicons defaults to size={24}. 
-  // Let's omit size entirely if not provided, or provide size="1em".
-  // wait, hugeicons-react uses size={24} by default.
-  // We'll just pass size={size || "1em"}.
+  if (!IconComponent) return null;
   
   return <IconComponent className={cn(remainingClasses)} size={size || "1em"} {...props} />;
 }

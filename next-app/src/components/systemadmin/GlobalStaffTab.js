@@ -23,6 +23,8 @@ import { RefreshButton } from "@/components/shared/RefreshButton"
 import ConfirmModal from "@/components/shared/ConfirmModal"
 import FloatingActionBar from "@/components/shared/FloatingActionBar"
 import { Select } from "@/components/ui/select"
+import MultiCriteriaFilter from "@/components/shared/MultiCriteriaFilter"
+import ActiveFilterChips from "@/components/shared/ActiveFilterChips"
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip"
 import {
   Empty,
@@ -55,8 +57,10 @@ export default function GlobalStaffTab({ authUser, showToast }) {
   
   // Filters & Search
   const [search, setSearch] = useState("")
-  const [officeFilter, setOfficeFilter] = useState("All")
-  const [roleFilter, setRoleFilter] = useState("All")
+  const [staffFilters, setStaffFilters] = useState({
+    role: [],
+    office: [],
+  })
   const [statusFilter, setStatusFilter] = useState("Active")
   
   // Sorting
@@ -81,7 +85,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
     setPage(1)
     setSelectedIds(new Set())
     setLastSelectedId(null)
-  }, [search, officeFilter, roleFilter, statusFilter])
+  }, [search, staffFilters, statusFilter])
 
   // Dialogs
   const [formOpen, setFormOpen] = useState(false)
@@ -170,9 +174,9 @@ export default function GlobalStaffTab({ authUser, showToast }) {
   useEffect(() => {
     const handleSwitch = (e) => {
       if (e.detail?.officeId) {
-        setOfficeFilter(e.detail.officeId)
+        setStaffFilters((prev) => ({ ...prev, office: [e.detail.officeId] }))
       } else if (e.detail?.view === "staff") {
-        setOfficeFilter("All")
+        setStaffFilters({ role: [], office: [] })
       }
     }
     window.addEventListener("switch-view", handleSwitch)
@@ -341,10 +345,82 @@ export default function GlobalStaffTab({ authUser, showToast }) {
     }
   }
 
+  const staffFilterGroups = useMemo(() => {
+    const roleOptions = [
+      {
+        value: "SystemAdmin",
+        label: "System Admin",
+        dotColor: "bg-purple-500",
+        count: staff.filter((s) => s.role === "SystemAdmin" && (statusFilter === "Active" ? s.status === "Active" : s.status !== "Active")).length,
+      },
+      {
+        value: "Admin",
+        label: "Administrator",
+        dotColor: "bg-pup-maroon",
+        count: staff.filter((s) => s.role === "Admin" && (statusFilter === "Active" ? s.status === "Active" : s.status !== "Active")).length,
+      },
+      {
+        value: "Staff",
+        label: "Regular Staff",
+        dotColor: "bg-blue-500",
+        count: staff.filter((s) => s.role === "Staff" && (statusFilter === "Active" ? s.status === "Active" : s.status !== "Active")).length,
+      },
+    ];
+
+    const officeOptions = [
+      {
+        value: "global",
+        label: "System Admin (Platform)",
+        count: staff.filter((s) => !s.office_id && (statusFilter === "Active" ? s.status === "Active" : s.status !== "Active")).length,
+      },
+      ...(Array.isArray(offices) ? offices : []).map((o) => ({
+        value: o.id,
+        label: o.short_name || o.name,
+        count: staff.filter((s) => s.office_id === o.id && (statusFilter === "Active" ? s.status === "Active" : s.status !== "Active")).length,
+      })),
+    ];
+
+    return [
+      {
+        id: "role",
+        label: "Personnel Role",
+        options: roleOptions,
+      },
+      {
+        id: "office",
+        label: "Office Partition",
+        options: officeOptions,
+      },
+    ];
+  }, [staff, offices, statusFilter]);
+
+  const staffFilterPresets = useMemo(
+    () => [
+      {
+        label: "All",
+        values: { role: [], office: [] },
+        activeCondition: (sel) => !sel?.role?.length && !sel?.office?.length,
+      },
+      {
+        label: "Admins",
+        values: { role: ["SystemAdmin", "Admin"] },
+      },
+      {
+        label: "Staff",
+        values: { role: ["Staff"] },
+      },
+    ],
+    []
+  );
+
   const filteredStaff = useMemo(() => {
-    return staff.filter(member => {
+    const selectedRoles = staffFilters.role || [];
+    const selectedOffices = staffFilters.office || [];
+
+    const list = staff.filter((member) => {
       // Search query filter
       const matchesSearch = 
+        !search ||
         member.fname.toLowerCase().includes(search.toLowerCase()) ||
         member.lname.toLowerCase().includes(search.toLowerCase()) ||
         member.email.toLowerCase().includes(search.toLowerCase()) ||
@@ -352,14 +428,15 @@ export default function GlobalStaffTab({ authUser, showToast }) {
       
       // Office filter
       const matchesOffice = 
-        officeFilter === "All" ||
-        (officeFilter === "global" && !member.office_id) ||
-        member.office_id === officeFilter
+        selectedOffices.length === 0 ||
+        selectedOffices.some((off) => {
+          if (off === "global") return !member.office_id;
+          return member.office_id === off;
+        });
 
       // Role filter
       const matchesRole =
-        roleFilter === "All" ||
-        member.role === roleFilter
+        selectedRoles.length === 0 || selectedRoles.includes(member.role);
 
       // Status filter
       const matchesStatus = statusFilter === "Active" 
@@ -395,7 +472,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
     })
 
     return list
-  }, [staff, search, officeFilter, roleFilter, statusFilter, sortBy, sortOrder, offices])
+  }, [staff, search, staffFilters, statusFilter, sortBy, sortOrder, offices])
 
   const startIndex = (page - 1) * pageSize
   const endIndex = startIndex + pageSize
@@ -405,7 +482,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
   useEffect(() => {
     setSelectedIds(new Set())
     setLastSelectedId(null)
-  }, [statusFilter, page, pageSize, search, officeFilter, roleFilter])
+  }, [statusFilter, page, pageSize, search, staffFilters])
 
   // Prune stale selected IDs when filtered staff updates
   useEffect(() => {
@@ -603,12 +680,14 @@ export default function GlobalStaffTab({ authUser, showToast }) {
     }
   }, [staff])
 
-  const hasActiveFilters = search !== "" || officeFilter !== "All" || roleFilter !== "All"
+  const hasActiveFilters =
+    search !== "" ||
+    (staffFilters.role?.length > 0) ||
+    (staffFilters.office?.length > 0)
 
   const handleClearFilters = () => {
     setSearch("")
-    setOfficeFilter("All")
-    setRoleFilter("All")
+    setStaffFilters({ role: [], office: [] })
     setPage(1)
   }
 
@@ -836,103 +915,51 @@ export default function GlobalStaffTab({ authUser, showToast }) {
               </div>
             </div>
 
-            {/* Office Partition Select */}
-            <div className="w-full sm:w-[165px] shrink-0">
-              <Select
-                value={officeFilter}
-                onChange={(e) => setOfficeFilter(e.target.value)}
-                className="h-9 rounded-xl border border-gray-200 dark:border-white/10 text-xs font-normal text-[#111111] dark:text-zinc-200 cursor-pointer shadow-none"
-                menuClassName="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-900 shadow-2xl p-1.5"
-                optionClassName="rounded-lg text-xs font-normal py-1.5 px-2.5 hover:bg-gray-100 dark:hover:bg-zinc-800"
-              >
-                <option value="All">All Offices</option>
-                <option value="global">System Admin</option>
-                {(Array.isArray(offices) ? offices : []).map((o) => (
-                  <option key={o.id} value={o.id}>
-                    {o.short_name}
-                  </option>
-                ))}
-              </Select>
-            </div>
-
-            {/* Role Select */}
-            <div className="w-full sm:w-[145px] shrink-0">
-              <Select
-                value={roleFilter}
-                onChange={(e) => setRoleFilter(e.target.value)}
-                className="h-9 rounded-xl border border-gray-200 dark:border-white/10 text-xs font-normal text-[#111111] dark:text-zinc-200 cursor-pointer shadow-none"
-                menuClassName="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-900 shadow-2xl p-1.5"
-                optionClassName="rounded-lg text-xs font-normal py-1.5 px-2.5 hover:bg-gray-100 dark:hover:bg-zinc-800"
-              >
-                <option value="All">All Roles</option>
-                <option value="SystemAdmin">System Admin</option>
-                <option value="Admin">Administrator</option>
-                <option value="Staff">Regular Staff</option>
-              </Select>
+            {/* Unified Multi-Criteria Popover Filter */}
+            <div className="w-full sm:w-auto shrink-0">
+              <MultiCriteriaFilter
+                title="Filter Personnel"
+                groups={staffFilterGroups}
+                selected={staffFilters}
+                onChange={(newFilters) => {
+                  setStaffFilters(newFilters)
+                  setPage(1)
+                }}
+                presets={staffFilterPresets}
+                totalCount={staff.filter((s) => (statusFilter === "Active" ? s.status === "Active" : s.status !== "Active")).length}
+                matchingCount={filteredStaff.length}
+                onReset={() => {
+                  setStaffFilters({ role: [], office: [] })
+                  setPage(1)
+                }}
+              />
             </div>
           </div>
         </div>
 
         {/* Active Filter Chips Row */}
-        {hasActiveFilters && (
-          <div className="flex-none border-t border-gray-100 dark:border-white/10 bg-white dark:bg-card px-6 py-2.5 animate-in fade-in slide-in-from-top-1 duration-normal">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="mr-1 text-[11px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500">
-                Active filters:
-              </span>
-              {search && (
-                <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
-                  Search: {search}
-                  <button
-                    onClick={() => {
-                      setSearch("")
-                      setPage(1)
-                    }}
-                    className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
-                  >
-                    ×
-                  </button>
-                </div>
-              )}
-              {officeFilter !== "All" && (
-                <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
-                  Office: {officeFilter === "global" ? "System Admin" : (Array.isArray(offices) ? offices : []).find((o) => o.id === officeFilter)?.short_name || officeFilter}
-                  <button
-                    onClick={() => {
-                      setOfficeFilter("All")
-                      setPage(1)
-                    }}
-                    className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
-                  >
-                    ×
-                  </button>
-                </div>
-              )}
-              {roleFilter !== "All" && (
-                <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
-                  Role: {roleFilter === "SystemAdmin" ? "System Admin" : roleFilter === "Admin" ? "Administrator" : roleFilter === "Staff" ? "Regular Staff" : roleFilter}
-                  <button
-                    onClick={() => {
-                      setRoleFilter("All")
-                      setPage(1)
-                    }}
-                    className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-350 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
-                  >
-                    ×
-                  </button>
-                </div>
-              )}
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleClearFilters}
-                className="h-auto text-[12px] font-medium text-gray-400 dark:text-zinc-500 border-0 bg-transparent hover:bg-transparent shadow-none p-0 hover:text-red-600 dark:hover:text-red-500 transition-colors cursor-pointer"
-              >
-                Clear
-              </Button>
-            </div>
-          </div>
-        )}
+        <ActiveFilterChips
+          groups={staffFilterGroups}
+          selected={staffFilters}
+          onRemove={(groupId, val) => {
+            setStaffFilters((prev) => ({
+              ...prev,
+              [groupId]: (prev[groupId] || []).filter((v) => v !== val),
+            }))
+            setPage(1)
+          }}
+          searchQuery={search}
+          onClearSearch={() => {
+            setSearch("")
+            setPage(1)
+          }}
+          onClearAll={() => {
+            setSearch("")
+            setStaffFilters({ role: [], office: [] })
+            setPage(1)
+          }}
+          className="border-t border-gray-100 dark:border-white/10 bg-white dark:bg-card px-6 py-2.5"
+        />
 
         {/* Content Section: Directory Table inside the single Card */}
         <div className="overflow-hidden rounded-b-2xl border-t border-gray-200 dark:border-white/10 bg-white dark:bg-card flex flex-col flex-1">

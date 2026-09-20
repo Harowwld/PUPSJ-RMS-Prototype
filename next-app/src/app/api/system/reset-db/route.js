@@ -208,6 +208,7 @@ async function handleResetDb(req) {
     const demoStudents = [
       ["2022-10001-MN-1", "DELA CRUZ, JUAN A.", "BSIT", 2024, "BSIT-4A", "student@pup.local"],
       ["2023-00001-IT-1", "TEST STUDENT", "BSIT", 4, "BSIT-4A", "test.student@pup.local"],
+      ["2021-00123-SJ-0", "MARIANO, CEDRICK", "BSIT", 4, "BSIT-4A", "marianocedrick412@gmail.com"],
     ];
 
     for (const [sNo, sName, cCode, yLevel, sSec, sEmail] of demoStudents) {

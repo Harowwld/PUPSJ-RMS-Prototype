@@ -36,6 +36,7 @@ import BackupTableSkeleton from "./backup/BackupTableSkeleton"
 import PageHeader from "@/components/shared/PageHeader"
 import FloatingActionBar from "@/components/shared/FloatingActionBar"
 import { RefreshButton } from "@/components/shared/RefreshButton"
+import ActiveFilterChips from "@/components/shared/ActiveFilterChips"
 import { cn } from "@/lib/utils"
 
 export default function BackupTab({
@@ -488,52 +489,24 @@ export default function BackupTab({
                   {(localSearch !== "" ||
                     backupStartDate !== "" ||
                     backupEndDate !== "") && (
-                    <div className="flex-none border-t border-gray-100 dark:border-white/10 bg-white dark:bg-card px-6 py-3 animate-in fade-in slide-in-from-top-1 duration-normal">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="mr-1 text-[11px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500">
-                          Active filters:
-                        </span>
-                        {localSearch && (
-                          <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
-                            Search: {localSearch}
-                            <button
-                              onClick={() => {
-                                setLocalSearch("")
-                                setBackupSearch("")
-                                setPage(1)
-                              }}
-                              className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
-                            >
-                              ×
-                            </button>
-                          </div>
-                        )}
-                        {(backupStartDate || backupEndDate) && (
-                          <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
-                            Range: {backupStartDate ? format(parseDateLocal(backupStartDate), "MMM d, yyyy") : "..."} to{" "}
-                            {backupEndDate ? format(parseDateLocal(backupEndDate), "MMM d, yyyy") : "..."}
-                            <button
-                              onClick={() => {
-                                setBackupStartDate("")
-                                setBackupEndDate("")
-                                setPage(1)
-                              }}
-                              className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
-                            >
-                              ×
-                            </button>
-                          </div>
-                        )}
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={handleClearFilters}
-                          className="h-auto text-[12px] font-medium text-gray-400 dark:text-zinc-500 border-0 bg-transparent hover:bg-transparent shadow-none p-0 hover:text-red-600 dark:hover:text-red-500 transition-colors cursor-pointer"
-                        >
-                          Clear
-                        </Button>
-                      </div>
-                    </div>
+                    <ActiveFilterChips
+                      searchQuery={localSearch}
+                      onClearSearch={() => {
+                        setLocalSearch("")
+                        setBackupSearch("")
+                        setPage(1)
+                      }}
+                      extraChips={(backupStartDate || backupEndDate) ? [{
+                        key: "dateRange",
+                        label: `Range: ${backupStartDate ? format(parseDateLocal(backupStartDate), "MMM d, yyyy") : "..."} to ${backupEndDate ? format(parseDateLocal(backupEndDate), "MMM d, yyyy") : "..."}`,
+                        onRemove: () => {
+                          setBackupStartDate("")
+                          setBackupEndDate("")
+                          setPage(1)
+                        }
+                      }] : []}
+                      onClearAll={handleClearFilters}
+                    />
                   )}
 
                   <div className="flex-1 flex flex-col min-h-0 rounded-b-2xl overflow-hidden">

@@ -17,6 +17,8 @@ import {
 import PageHeader from "@/components/shared/PageHeader";
 import { RefreshButton } from "@/components/shared/RefreshButton";
 import BatchReviewSkeleton from "@/components/staff/skeletons/BatchReviewSkeleton";
+import MultiCriteriaFilter from "@/components/shared/MultiCriteriaFilter";
+import ActiveFilterChips from "@/components/shared/ActiveFilterChips";
 import { cn } from "@/lib/utils";
 
 const STATUS_TABS = [
@@ -54,7 +56,8 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
   const [rows, setRows] = useState([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(0);
-  const [status, setStatus] = useState("Conflict");
+  const [statusFilters, setStatusFilters] = useState(["Conflict"]);
+  const [docTypeFilters, setDocTypeFilters] = useState([]);
   const [query, setQuery] = useState("");
   const [selectedId, setSelectedId] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -68,7 +71,8 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
     setLoading(true);
     try {
       const params = new URLSearchParams({ limit: "50", offset: String(page * 50) });
-      if (status) params.set("status", status);
+      if (statusFilters.length > 0) params.set("status", statusFilters.join(","));
+      if (docTypeFilters.length > 0) params.set("docType", docTypeFilters.join(","));
       if (query.trim()) params.set("q", query.trim());
       const response = await fetch(`/api/ingest/review?${params}`, { cache: "no-store" });
       const json = await response.json().catch(() => null);
@@ -81,11 +85,91 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
     } finally {
       setLoading(false);
     }
-  }, [page, query, showToast, status]);
+  }, [page, query, showToast, statusFilters, docTypeFilters]);
 
   useEffect(() => {
     load();
   }, [load]);
+
+  const filterGroups = useMemo(() => [
+    {
+      id: "status",
+      label: "Review Status",
+      options: [
+        { value: "Conflict", label: "Needs Review", indicatorColor: "bg-amber-500" },
+        { value: "Confirmed", label: "Confirmed", indicatorColor: "bg-emerald-500" },
+        { value: "Failed", label: "Failed", indicatorColor: "bg-rose-500" },
+        { value: "Processing", label: "Processing", indicatorColor: "bg-blue-500" },
+      ],
+    },
+    {
+      id: "docType",
+      label: "Document Type",
+      options: (docTypes || []).map((t) => ({ value: t, label: t })),
+    },
+  ], [docTypes]);
+
+  const filterValues = useMemo(() => ({
+    status: statusFilters,
+    docType: docTypeFilters,
+  }), [statusFilters, docTypeFilters]);
+
+  const handleFilterChange = useCallback((groupId, values) => {
+    if (groupId === "status") {
+      setStatusFilters(values);
+      setPage(0);
+    } else if (groupId === "docType") {
+      setDocTypeFilters(values);
+      setPage(0);
+    }
+  }, []);
+
+  const handleClearFilters = useCallback(() => {
+    setQuery("");
+    setStatusFilters([]);
+    setDocTypeFilters([]);
+    setPage(0);
+  }, []);
+
+  const filterPresets = useMemo(() => [
+    { label: "All Records", values: { status: [], docType: [] } },
+    { label: "Needs Review", values: { status: ["Conflict"], docType: docTypeFilters } },
+    { label: "Confirmed", values: { status: ["Confirmed"], docType: docTypeFilters } },
+    { label: "Action Required", values: { status: ["Conflict", "Failed"], docType: docTypeFilters } },
+  ], [docTypeFilters]);
+
+  const activeChips = useMemo(() => {
+    const chips = [];
+    if (query.trim()) {
+      chips.push({
+        id: "search",
+        label: `Search: ${query.trim()}`,
+        onRemove: () => { setQuery(""); setPage(0); },
+      });
+    }
+    statusFilters.forEach((st) => {
+      const label = st === "Conflict" ? "Needs Review" : st;
+      chips.push({
+        id: `status-${st}`,
+        label: `Status: ${label}`,
+        onRemove: () => {
+          setStatusFilters((prev) => prev.filter((s) => s !== st));
+          setPage(0);
+        },
+      });
+    });
+    docTypeFilters.forEach((dt) => {
+      chips.push({
+        id: `docType-${dt}`,
+        label: `Type: ${dt}`,
+        onRemove: () => {
+          setDocTypeFilters((prev) => prev.filter((t) => t !== dt));
+          setPage(0);
+        },
+      });
+    });
+    return chips;
+  }, [query, statusFilters, docTypeFilters]);
 
   const action = async (kind, body = {}) => {
     if (!selected) return;
@@ -102,7 +186,7 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
       if (kind === "retry") {
         // Retry changes review_status to Processing. Keep it visible instead
         // of letting the current Needs Review filter make it look deleted.
-        setStatus("");
+        setStatusFilters([]);
         setPage(0);
         setSelectedId(actionId);
       }
@@ -182,13 +266,15 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
             {/* Left: Status Line Tabs */}
             <div className="flex items-center gap-6 shrink-0 select-none overflow-x-auto">
               {STATUS_TABS.map((item) => {
-                const isActive = status === item.id;
+                const isActive = item.id === ""
+                  ? statusFilters.length === 0
+                  : statusFilters.length === 1 && statusFilters[0] === item.id;
                 return (
                   <button
-                    key={item.id}
+                    key={item.id || "all"}
                     type="button"
                     onClick={() => {
-                      setStatus(item.id);
+                      setStatusFilters(item.id ? [item.id] : []);
                       setPage(0);
                     }}
                     className={cn(
@@ -204,48 +290,45 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
               })}
             </div>
 
-            {/* Right: Search Input with Icon and Number Count */}
-            <div className="w-full sm:w-[260px] lg:w-[300px] relative group shrink-0">
-              <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                <HugeIcon  className="ph-bold ph-magnifying-glass text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm"></HugeIcon>
+            {/* Right: Search Input & MultiCriteriaFilter */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0">
+              <div className="w-full sm:w-[260px] lg:w-[300px] relative group shrink-0">
+                <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                  <HugeIcon className="ph-bold ph-magnifying-glass text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm" />
+                </div>
+                <Input
+                  value={query}
+                  onChange={(e) => {
+                    setQuery(e.target.value);
+                    setPage(0);
+                  }}
+                  placeholder="Search filename or OCR text..."
+                  className="h-9 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 pl-8 pr-16 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
+                />
+                <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] text-gray-400 dark:text-zinc-500 font-medium">
+                  {total > 0 ? `${total.toLocaleString()}` : "0"}
+                </div>
               </div>
-              <Input
-                value={query}
-                onChange={(e) => {
-                  setQuery(e.target.value);
-                  setPage(0);
-                }}
-                placeholder="Search filename or OCR text..."
-                className="h-9 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 pl-8 pr-16 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
+
+              <MultiCriteriaFilter
+                title="Filter Queue"
+                groups={filterGroups}
+                selectedValues={filterValues}
+                onChange={handleFilterChange}
+                onClearAll={handleClearFilters}
+                presets={filterPresets}
+                totalCount={total}
+                filteredCount={rows.length}
               />
-              <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] text-gray-400 dark:text-zinc-500 font-medium">
-                {total > 0 ? `${total.toLocaleString()}` : "0"}
-              </div>
             </div>
           </div>
 
           {/* Active Filter Chips */}
-          {query && (
-            <div className="flex-none border-t border-gray-100 dark:border-white/10 bg-white dark:bg-card px-6 py-2.5 animate-in fade-in slide-in-from-top-1 duration-normal">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="mr-1 text-[11px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500">
-                  Active filters:
-                </span>
-                <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
-                  Search: {query}
-                  <button
-                    onClick={() => {
-                      setQuery("");
-                      setPage(0);
-                    }}
-                    className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
-                  >
-                    ×
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
+          <ActiveFilterChips
+            chips={activeChips}
+            onClearAll={handleClearFilters}
+            className="border-t border-gray-100 dark:border-white/10 px-6 py-2.5"
+          />
 
           {loading ? (
             <BatchReviewSkeleton />

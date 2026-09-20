@@ -18,6 +18,8 @@ import PageHeader from "@/components/shared/PageHeader";
 import { RefreshButton } from "@/components/shared/RefreshButton";
 import OsasMonitoringSkeleton from "@/components/staff/skeletons/OsasMonitoringSkeleton";
 import PDFPreviewModal from "@/components/shared/PDFPreviewModal";
+import MultiCriteriaFilter from "@/components/shared/MultiCriteriaFilter";
+import ActiveFilterChips from "@/components/shared/ActiveFilterChips";
 
 const STATUS_OPTIONS = [
   "Submitted",
@@ -233,7 +235,8 @@ export default function OsasMonitoringTab({ showToast }) {
   const [viewMode, setViewMode] = useState("list"); // "list" | "kanban"
   const [status, setStatus] = useState("Submitted");
   const [note, setNote] = useState("");
-  const [statusFilter, setStatusFilter] = useState("All");
+  const [statusFilters, setStatusFilters] = useState([]);
+  const [orgFilters, setOrgFilters] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -414,9 +417,96 @@ export default function OsasMonitoringTab({ showToast }) {
     ];
   }, [counts]);
 
+  const availableOrgs = useMemo(() => {
+    const orgs = new Set();
+    rows.forEach((r) => {
+      if (r.organization_name) orgs.add(r.organization_name);
+    });
+    return Array.from(orgs).sort();
+  }, [rows]);
+
+  const filterGroups = useMemo(() => [
+    {
+      id: "status",
+      label: "Proposal Status",
+      options: [
+        { value: "Submitted", label: "Submitted", indicatorColor: "bg-blue-500", count: counts.Submitted },
+        { value: "Under Review", label: "Under Review", indicatorColor: "bg-amber-500", count: counts["Under Review"] },
+        { value: "Needs Revision", label: "Needs Revision", indicatorColor: "bg-purple-500", count: counts["Needs Revision"] },
+        { value: "Approved", label: "Approved", indicatorColor: "bg-emerald-500", count: counts.Approved },
+        { value: "Declined", label: "Declined", indicatorColor: "bg-rose-500", count: counts.Declined },
+      ],
+    },
+    {
+      id: "org",
+      label: "Organization",
+      options: availableOrgs.map((org) => ({
+        value: org,
+        label: org,
+        count: rows.filter((r) => r.organization_name === org).length,
+      })),
+    },
+  ], [counts, availableOrgs, rows]);
+
+  const filterValues = useMemo(() => ({
+    status: statusFilters,
+    org: orgFilters,
+  }), [statusFilters, orgFilters]);
+
+  const handleFilterChange = useCallback((groupId, values) => {
+    if (groupId === "status") setStatusFilters(values);
+    else if (groupId === "org") setOrgFilters(values);
+    setPage(1);
+  }, []);
+
+  const handleClearFilters = useCallback(() => {
+    setSearchQuery("");
+    setStatusFilters([]);
+    setOrgFilters([]);
+    setPage(1);
+  }, []);
+
+  const filterPresets = useMemo(() => [
+    { label: "All Proposals", values: { status: [], org: [] } },
+    { label: "Active Review", values: { status: ["Under Review", "Needs Revision"], org: orgFilters } },
+    { label: "Approved Only", values: { status: ["Approved"], org: orgFilters } },
+    { label: "Needs Revision", values: { status: ["Needs Revision"], org: orgFilters } },
+  ], [orgFilters]);
+
+  const activeChips = useMemo(() => {
+    const chips = [];
+    if (searchQuery.trim()) {
+      chips.push({
+        id: "search",
+        label: `Search: ${searchQuery.trim()}`,
+        onRemove: () => { setSearchQuery(""); setPage(1); },
+      });
+    }
+    statusFilters.forEach((st) => {
+      chips.push({
+        id: `status-${st}`,
+        label: `Status: ${st}`,
+        onRemove: () => { setStatusFilters((prev) => prev.filter((s) => s !== st)); setPage(1); },
+      });
+    });
+    orgFilters.forEach((org) => {
+      chips.push({
+        id: `org-${org}`,
+        label: `Org: ${org}`,
+        onRemove: () => { setOrgFilters((prev) => prev.filter((o) => o !== org)); setPage(1); },
+      });
+    });
+    return chips;
+  }, [searchQuery, statusFilters, orgFilters]);
+
+  const hasActiveFilters = Boolean(
+    searchQuery.trim() || statusFilters.length > 0 || orgFilters.length > 0
+  );
+
   const filteredRows = useMemo(() => {
     return rows.filter((item) => {
-      if (statusFilter !== "All" && item.status !== statusFilter) return false;
+      if (statusFilters.length > 0 && !statusFilters.includes(item.status)) return false;
+      if (orgFilters.length > 0 && !orgFilters.includes(item.organization_name)) return false;
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase().trim();
         const matchTitle = (item.title || "").toLowerCase().includes(q);
@@ -428,7 +518,7 @@ export default function OsasMonitoringTab({ showToast }) {
       }
       return true;
     });
-  }, [rows, statusFilter, searchQuery]);
+  }, [rows, statusFilters, orgFilters, searchQuery]);
 
   const totalPages = Math.max(1, Math.ceil(filteredRows.length / itemsPerPage));
   const safePage = Math.min(Math.max(1, page), totalPages);
@@ -441,6 +531,7 @@ export default function OsasMonitoringTab({ showToast }) {
   const getProposalsForColumn = (columnKey) => {
     return rows.filter((item) => {
       if (item.status !== columnKey) return false;
+      if (orgFilters.length > 0 && !orgFilters.includes(item.organization_name)) return false;
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase().trim();
         const matchTitle = (item.title || "").toLowerCase().includes(q);
@@ -457,10 +548,6 @@ export default function OsasMonitoringTab({ showToast }) {
   if (loading) {
     return <OsasMonitoringSkeleton />;
   }
-
-  const hasActiveFilters = Boolean(
-    searchQuery || (viewMode === "list" && statusFilter !== "All")
-  );
 
   return (
     <div className="font-jakarta w-full flex flex-1 flex-col h-full min-h-0 gap-6 focus:outline-none animate-fade-up select-none">
@@ -522,13 +609,16 @@ export default function OsasMonitoringTab({ showToast }) {
           {viewMode === "list" ? (
             <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0 scrollbar-none">
               {filterTabs.map((tab) => {
-                const isActive = statusFilter === tab.key;
+                const isActive =
+                  tab.key === "All"
+                    ? statusFilters.length === 0
+                    : statusFilters.length === 1 && statusFilters[0] === tab.key;
                 return (
                   <button
                     key={tab.key}
                     type="button"
                     onClick={() => {
-                      setStatusFilter(tab.key);
+                      setStatusFilters(tab.key === "All" ? [] : [tab.key]);
                       setPage(1);
                     }}
                     className={cn(
@@ -556,91 +646,60 @@ export default function OsasMonitoringTab({ showToast }) {
           ) : (
             <div className="text-xs text-gray-500 dark:text-zinc-400 flex items-center gap-2">
               <span className="inline-flex items-center gap-1.5 font-medium">
-                <HugeIcon  className="ph-bold ph-kanban text-sm text-pup-maroon dark:text-red-400"></HugeIcon>
+                <HugeIcon className="ph-bold ph-kanban text-sm text-pup-maroon dark:text-red-400" />
                 <span>Pipeline: <strong className="text-gray-900 dark:text-zinc-100">{rows.length}</strong> total proposals across stages</span>
               </span>
             </div>
           )}
 
-          {/* Right: Search Input */}
-          <div className="relative w-full md:w-80 shrink-0 group">
-            <HugeIcon  className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-500 text-xs pointer-events-none transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400"></HugeIcon>
-            <Input
-              type="text"
-              placeholder="Search proposals, students, orgs..."
-              value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value);
-                setPage(1);
-              }}
-              className="h-9 pl-8 pr-8 text-xs rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
-            />
-            {searchQuery && (
-              <button
-                type="button"
-                onClick={() => {
-                  setSearchQuery("");
+          {/* Right: Search Input + Multi-Criteria Filter */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 shrink-0">
+            <div className="relative w-full sm:w-64 md:w-72 shrink-0 group">
+              <HugeIcon className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-500 text-xs pointer-events-none transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400" />
+              <Input
+                type="text"
+                placeholder="Search proposals, students, orgs..."
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
                   setPage(1);
                 }}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-pup-maroon dark:hover:text-red-400 cursor-pointer border-0 bg-transparent p-0 leading-none"
-                aria-label="Clear search"
-              >
-                <HugeIcon  className="ph-bold ph-x text-xs"></HugeIcon>
-              </button>
-            )}
+                className="h-9 pl-8 pr-8 text-xs rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearchQuery("");
+                    setPage(1);
+                  }}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-pup-maroon dark:hover:text-red-400 cursor-pointer border-0 bg-transparent p-0 leading-none"
+                  aria-label="Clear search"
+                >
+                  <HugeIcon className="ph-bold ph-x text-xs" />
+                </button>
+              )}
+            </div>
+
+            <MultiCriteriaFilter
+              title="Filter Proposals"
+              groups={filterGroups}
+              selectedValues={filterValues}
+              onChange={handleFilterChange}
+              onClearAll={handleClearFilters}
+              presets={filterPresets}
+              totalCount={rows.length}
+              filteredCount={filteredRows.length}
+            />
           </div>
         </div>
 
-        {/* 3. Active Filter Chips Row */}
-        {hasActiveFilters && (
-          <div className="flex-none border-t border-gray-100 dark:border-white/10 bg-white dark:bg-card px-6 py-2.5 animate-in fade-in slide-in-from-top-1 duration-normal">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="mr-1 text-[11px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500">
-                Active filters:
-              </span>
-              {searchQuery && (
-                <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
-                  Search: {searchQuery}
-                  <button
-                    onClick={() => {
-                      setSearchQuery("");
-                      setPage(1);
-                    }}
-                    className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
-                  >
-                    ×
-                  </button>
-                </div>
-              )}
-              {viewMode === "list" && statusFilter !== "All" && (
-                <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
-                  Status: {statusFilter}
-                  <button
-                    onClick={() => {
-                      setStatusFilter("All");
-                      setPage(1);
-                    }}
-                    className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
-                  >
-                    ×
-                  </button>
-                </div>
-              )}
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  setSearchQuery("");
-                  setStatusFilter("All");
-                  setPage(1);
-                }}
-                className="h-auto text-[12px] font-medium text-gray-400 dark:text-zinc-500 border-0 bg-transparent hover:bg-transparent shadow-none p-0 hover:text-red-600 dark:hover:text-red-500 transition-colors cursor-pointer"
-              >
-                Clear
-              </Button>
-            </div>
-          </div>
-        )}
+        {/* 3. Active Filter Chips */}
+        <ActiveFilterChips
+          chips={activeChips}
+          onClearAll={handleClearFilters}
+          className="border-t border-gray-100 dark:border-white/10 px-6 py-2.5"
+        />
 
         {/* 4. Full-Width Seamless Content: Table List View OR Kanban Board */}
         {viewMode === "list" && (
@@ -667,16 +726,26 @@ export default function OsasMonitoringTab({ showToast }) {
                         <div className="font-semibold text-gray-900 dark:text-zinc-100 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors line-clamp-1">
                           {item.title}
                         </div>
-                        <div className="text-[11px] text-gray-500 dark:text-zinc-400 mt-0.5 truncate">
-                          {item.organization_name}
+                        <div className="flex items-center gap-1.5 text-[11px] text-gray-500 dark:text-zinc-400 mt-0.5 truncate">
+                          {item.org_acronym && (
+                            <span className="px-1.5 py-0.2 text-[10px] font-bold rounded bg-red-50 text-pup-maroon dark:bg-red-950/40 dark:text-red-400 border border-red-100 dark:border-red-900/30 shrink-0">
+                              {item.org_acronym}
+                            </span>
+                          )}
+                          <span>{item.verified_org_name || item.organization_name}</span>
                         </div>
                       </td>
                       <td className="py-3.5 px-6 whitespace-nowrap">
-                        <div className="font-medium text-gray-800 dark:text-zinc-200">
-                          {item.student_name}
+                        <div className="font-medium text-gray-800 dark:text-zinc-200 flex items-center gap-1.5">
+                          <span>{item.student_name}</span>
+                          {item.officer_position && (
+                            <span className="text-[10px] px-1.5 py-0.2 rounded bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 font-normal">
+                              {item.officer_position}
+                            </span>
+                          )}
                         </div>
                         <div className="font-mono text-[11px] text-gray-400 dark:text-zinc-500">
-                          {item.student_no}
+                          {item.submitted_by_email || item.student_no}
                         </div>
                       </td>
                       <td className="py-3.5 px-6 whitespace-nowrap">
@@ -826,9 +895,16 @@ export default function OsasMonitoringTab({ showToast }) {
                         >
                           {/* Card Header: Org Tag & Drag Handle */}
                           <div className="flex items-center justify-between gap-2">
-                            <span className="text-[10px] font-bold uppercase tracking-wider text-pup-maroon dark:text-red-400 bg-red-50 dark:bg-red-950/30 px-2 py-0.5 rounded border border-pup-maroon/15 truncate max-w-[190px]">
-                              {item.organization_name}
-                            </span>
+                            <div className="flex items-center gap-1.5 truncate max-w-[190px]">
+                              {item.org_acronym && (
+                                <span className="px-1.5 py-0.5 text-[9px] font-bold rounded bg-red-50 text-pup-maroon dark:bg-red-950/40 dark:text-red-400 border border-red-100 dark:border-red-900/30 shrink-0">
+                                  {item.org_acronym}
+                                </span>
+                              )}
+                              <span className="text-[10px] font-bold uppercase tracking-wider text-pup-maroon dark:text-red-400 truncate">
+                                {item.verified_org_name || item.organization_name}
+                              </span>
+                            </div>
                             <HugeIcon 
                               className="ph-bold ph-dots-six-vertical text-gray-300 dark:text-zinc-600 group-hover:text-gray-500 dark:group-hover:text-zinc-400 text-sm transition-colors shrink-0"
                               title="Drag to change stage"
@@ -842,10 +918,15 @@ export default function OsasMonitoringTab({ showToast }) {
 
                           {/* Proponent info */}
                           <div className="flex items-center gap-1.5 text-[11px] text-gray-500 dark:text-zinc-400">
-                            <HugeIcon  className="ph-bold ph-user text-gray-400 text-xs shrink-0"></HugeIcon>
-                            <span className="truncate font-medium text-gray-700 dark:text-zinc-300">{item.student_name}</span>
+                            <HugeIcon className="ph-bold ph-user-check text-emerald-600 dark:text-emerald-400 text-xs shrink-0" />
+                            <span className="truncate font-medium text-gray-700 dark:text-zinc-300">
+                              {item.student_name}
+                              {item.officer_position ? ` (${item.officer_position})` : ""}
+                            </span>
                             <span className="text-gray-300 dark:text-zinc-600">·</span>
-                            <span className="font-mono text-[10px] shrink-0">{item.student_no}</span>
+                            <span className="font-mono text-[10px] shrink-0 truncate max-w-[100px]">
+                              {item.submitted_by_email || item.student_no}
+                            </span>
                           </div>
 
                           {/* Card Footer: Submitted Date & Review */}
@@ -962,7 +1043,7 @@ export default function OsasMonitoringTab({ showToast }) {
       >
         <SheetContent
           side="right"
-          className="w-full sm:max-w-xl md:max-w-2xl data-[side=right]:sm:max-w-xl data-[side=right]:md:max-w-2xl flex flex-col h-full bg-white dark:bg-card border-l border-gray-200 dark:border-white/10 p-0 shadow-2xl font-jakarta overflow-hidden"
+          className="w-full sm:max-w-2xl md:max-w-3xl lg:max-w-4xl data-[side=right]:w-full data-[side=right]:sm:max-w-2xl data-[side=right]:md:max-w-3xl data-[side=right]:lg:max-w-4xl flex flex-col h-full bg-white dark:bg-card border-l border-gray-200 dark:border-white/10 p-0 shadow-2xl font-jakarta overflow-hidden"
         >
           {selected && (
             <>
@@ -974,9 +1055,16 @@ export default function OsasMonitoringTab({ showToast }) {
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 flex-wrap mb-1">
-                      <span className="text-[11px] font-bold uppercase tracking-wider text-pup-maroon dark:text-red-400 bg-red-50 dark:bg-red-950/30 px-2 py-0.5 rounded-md border border-pup-maroon/20">
-                        {selected.organization_name}
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-pup-maroon dark:text-red-400 bg-red-50 dark:bg-red-950/30 px-2.5 py-0.5 rounded-md border border-pup-maroon/20 flex items-center gap-1.5">
+                        {selected.org_acronym && <span>[{selected.org_acronym}]</span>}
+                        <span>{selected.verified_org_name || selected.organization_name}</span>
                       </span>
+                      {selected.is_verified_officer && (
+                        <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 dark:bg-emerald-950/30 px-2 py-0.5 rounded-md border border-emerald-200 dark:border-emerald-800/40 flex items-center gap-1">
+                          <HugeIcon className="ph-bold ph-shield-check text-xs" />
+                          Verified Submitter
+                        </span>
+                      )}
                       <span
                         className={cn(
                           "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold shrink-0",
@@ -990,10 +1078,15 @@ export default function OsasMonitoringTab({ showToast }) {
                     <SheetTitle className="text-lg font-bold tracking-tight text-gray-900 dark:text-zinc-50 leading-snug">
                       {selected.title}
                     </SheetTitle>
-                    <SheetDescription className="mt-1 text-xs text-gray-500 dark:text-zinc-400 flex items-center gap-2">
+                    <SheetDescription className="mt-1 text-xs text-gray-500 dark:text-zinc-400 flex items-center gap-2 flex-wrap">
                       <span>Proponent: <strong className="text-gray-700 dark:text-zinc-300">{selected.student_name}</strong></span>
+                      {selected.officer_position && (
+                        <span className="px-1.5 py-0.2 rounded bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 text-[10px] font-semibold">
+                          {selected.officer_position}
+                        </span>
+                      )}
                       <span>·</span>
-                      <span className="font-mono">{selected.student_no}</span>
+                      <span className="font-mono">{selected.submitted_by_email || selected.student_no}</span>
                     </SheetDescription>
                   </div>
                 </div>

@@ -4,7 +4,11 @@ import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-import { Select } from "@/components/ui/select";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import PageHeader from "@/components/shared/PageHeader";
 import { RefreshButton } from "@/components/shared/RefreshButton";
 import { formatPHDateTime } from "@/lib/timeFormat";
@@ -35,10 +39,10 @@ export default function StudentComplianceTab({ authUser }) {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [categoryFilter, setCategoryFilter] = useState("all");
+  const [statusFilters, setStatusFilters] = useState([]); // Array of strings: "missing", "submitted"
+  const [categoryFilters, setCategoryFilters] = useState([]); // Array of category names e.g. ["Admission", "Identity"]
   const [viewMode, setViewMode] = useState("table"); // "table" | "cards"
-  const [sortBy, setSortBy] = useState("default"); // "default" | "name" | "status"
+  const [sortConfig, setSortConfig] = useState({ column: "priority", direction: "asc" }); // column: "priority" | "docType" | "category" | "status"
 
   // Modals
   const [printModalOpen, setPrintModalOpen] = useState(false);
@@ -55,11 +59,6 @@ export default function StudentComplianceTab({ authUser }) {
         throw new Error(json.error || "Failed to load document compliance records.");
       }
       setData(json.data);
-      if (isManualRefresh) {
-        toast.success("Checklist Refreshed", {
-          description: "Your document compliance records are up to date.",
-        });
-      }
     } catch (err) {
       toast.error("Error Loading Compliance", {
         description: err.message || "Could not retrieve document checklist.",
@@ -74,8 +73,64 @@ export default function StudentComplianceTab({ authUser }) {
     loadComplianceData();
   }, [loadComplianceData]);
 
+  // Category counts and list
+  const availableCategories = useMemo(() => {
+    if (!data?.requirements) return [];
+    const set = new Set(data.requirements.map((r) => r.category).filter(Boolean));
+    return Array.from(set);
+  }, [data?.requirements]);
 
-  // Filtered & Sorted Requirements
+  const categoryCounts = useMemo(() => {
+    if (!data?.requirements) return {};
+    const counts = {};
+    data.requirements.forEach((r) => {
+      if (r.category) {
+        counts[r.category] = (counts[r.category] || 0) + 1;
+      }
+    });
+    return counts;
+  }, [data?.requirements]);
+
+  // Toggle filter helpers
+  const toggleStatusFilter = (statusKey) => {
+    setStatusFilters((prev) =>
+      prev.includes(statusKey) ? prev.filter((s) => s !== statusKey) : [...prev, statusKey]
+    );
+  };
+
+  const toggleCategoryFilter = (cat) => {
+    setCategoryFilters((prev) =>
+      prev.includes(cat) ? prev.filter((c) => c !== cat) : [...prev, cat]
+    );
+  };
+
+  const clearAllFilters = () => {
+    setStatusFilters([]);
+    setCategoryFilters([]);
+    setSearchQuery("");
+    setSortConfig({ column: "priority", direction: "asc" });
+  };
+
+  const activeFilterCount = statusFilters.length + categoryFilters.length;
+
+  const activeFilterSummary = useMemo(() => {
+    if (activeFilterCount === 0) return "Filter Requirements";
+    if (statusFilters.length > 0 && categoryFilters.length === 0) {
+      if (statusFilters.length === 2) return "Pending & Completed";
+      return statusFilters[0] === "missing" ? "Pending Only" : "Completed Only";
+    }
+    if (categoryFilters.length > 0 && statusFilters.length === 0) {
+      if (categoryFilters.length === 1) return categoryFilters[0];
+      return `${categoryFilters.length} Categories`;
+    }
+    if (statusFilters.length === 1) {
+      const statusLabel = statusFilters[0] === "missing" ? "Pending" : "Completed";
+      return `${statusLabel} + ${categoryFilters.length} ${categoryFilters.length === 1 ? "Cat" : "Cats"}`;
+    }
+    return `Filters (${activeFilterCount})`;
+  }, [activeFilterCount, statusFilters, categoryFilters]);
+
+  // Filtered Requirements (Combined Criteria)
   const filteredRequirements = useMemo(() => {
     if (!data?.requirements) return [];
     const q = searchQuery.trim().toLowerCase();
@@ -88,41 +143,60 @@ export default function StudentComplianceTab({ authUser }) {
         (item.description && item.description.toLowerCase().includes(q)) ||
         (item.document?.originalFilename && item.document.originalFilename.toLowerCase().includes(q));
 
+      // Status criteria (if any checked, must match one of checked statuses)
       let matchesStatus = true;
-      if (statusFilter === "missing") matchesStatus = item.status === "Not Submitted";
-      else if (statusFilter === "submitted") matchesStatus = item.status === "Submitted";
+      if (statusFilters.length > 0) {
+        const itemKey = item.status === "Submitted" ? "submitted" : "missing";
+        matchesStatus = statusFilters.includes(itemKey);
+      }
 
+      // Category criteria (if any checked, must match one of checked categories)
       let matchesCategory = true;
-      if (categoryFilter !== "all") {
-        matchesCategory = item.category === categoryFilter;
+      if (categoryFilters.length > 0) {
+        matchesCategory = categoryFilters.includes(item.category);
       }
 
       return matchesSearch && matchesStatus && matchesCategory;
     });
-  }, [data?.requirements, searchQuery, statusFilter, categoryFilter]);
+  }, [data?.requirements, searchQuery, statusFilters, categoryFilters]);
 
+  // Sorted Requirements
   const sortedRequirements = useMemo(() => {
     return [...filteredRequirements].sort((a, b) => {
-      if (sortBy === "name") {
-        return a.docType.localeCompare(b.docType);
+      if (sortConfig.column === "docType") {
+        const comp = a.docType.localeCompare(b.docType);
+        return sortConfig.direction === "asc" ? comp : -comp;
       }
-      if (sortBy === "status") {
+      if (sortConfig.column === "category") {
+        const comp = a.category.localeCompare(b.category);
+        return sortConfig.direction === "asc" ? comp : -comp;
+      }
+      if (sortConfig.column === "status") {
         const order = { "Not Submitted": 0, Submitted: 1 };
-        return (order[a.status] ?? 2) - (order[b.status] ?? 2);
+        const comp = (order[a.status] ?? 2) - (order[b.status] ?? 2);
+        return sortConfig.direction === "asc" ? comp : -comp;
       }
-      // Default: Not Submitted first, then Submitted, then alphabetical
+      // Default: "priority" (Not Submitted first, then Submitted, then alphabetical by docType)
       const order = { "Not Submitted": 0, Submitted: 1 };
       const diff = (order[a.status] ?? 2) - (order[b.status] ?? 2);
-      if (diff !== 0) return diff;
+      if (diff !== 0) {
+        return sortConfig.direction === "asc" ? diff : -diff;
+      }
       return a.docType.localeCompare(b.docType);
     });
-  }, [filteredRequirements, sortBy]);
+  }, [filteredRequirements, sortConfig]);
 
-  const availableCategories = useMemo(() => {
-    if (!data?.requirements) return [];
-    const set = new Set(data.requirements.map((r) => r.category).filter(Boolean));
-    return Array.from(set);
-  }, [data?.requirements]);
+  const handleSort = (column) => {
+    setSortConfig((prev) => {
+      if (prev.column !== column) {
+        return { column, direction: "asc" };
+      }
+      if (prev.direction === "asc") {
+        return { column, direction: "desc" };
+      }
+      return { column: "priority", direction: "asc" };
+    });
+  };
 
   if (loading && !data) {
     return <StudentComplianceSkeleton />;
@@ -401,8 +475,10 @@ export default function StudentComplianceTab({ authUser }) {
               <RefreshButton
                 onRefresh={() => loadComplianceData(true)}
                 isLoading={refreshing}
-                title="Refresh Records"
+                title="Refresh Checklist"
               />
+
+              <div className="h-6 w-px bg-gray-200 dark:bg-zinc-800" />
 
               <Button
                 type="button"
@@ -552,48 +628,250 @@ export default function StudentComplianceTab({ authUser }) {
               </div>
             </div>
 
-            {/* Status Filter */}
-            <div className="w-full sm:w-44">
-              <Select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="h-9 text-xs rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 shadow-none"
-              >
-                <option value="all">All Records ({data?.requirements?.length || 0})</option>
-                <option value="missing">Not Submitted ({summary.missingCount})</option>
-                <option value="submitted">Submitted ({summary.submittedCount || summary.approvedCount})</option>
-              </Select>
-            </div>
-
-            {/* Category Filter */}
-            {availableCategories.length > 0 && (
-              <div className="w-full sm:w-40">
-                <Select
-                  value={categoryFilter}
-                  onChange={(e) => setCategoryFilter(e.target.value)}
-                  className="h-9 text-xs rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 shadow-none"
+            {/* Multi-Criteria Checkbox Filter Dropdown */}
+            <div className="w-full sm:w-auto">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    type="button"
+                    className={cn(
+                      "h-9 px-3 text-xs rounded-xl border flex items-center justify-between gap-2 shadow-none cursor-pointer transition-all active:scale-95 w-full sm:w-auto min-w-[180px]",
+                      activeFilterCount > 0
+                        ? "border-pup-maroon/40 bg-pup-maroon/5 text-pup-maroon font-medium hover:bg-pup-maroon/10 dark:border-red-500/40 dark:bg-red-500/10 dark:text-red-400 dark:hover:bg-red-500/20"
+                        : "border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700"
+                    )}
+                  >
+                    <div className="flex items-center gap-2 min-w-0">
+                      <HugeIcon
+                        className={cn(
+                          "ph-bold text-xs shrink-0",
+                          activeFilterCount > 0 ? "ph-funnel-simple text-pup-maroon dark:text-red-400" : "ph-funnel text-gray-400 dark:text-zinc-500"
+                        )}
+                      />
+                      <span className="truncate">
+                        {activeFilterCount === 0
+                          ? "Filter Requirements"
+                          : activeFilterCount === 1
+                          ? activeFilterSummary
+                          : `Filters (${activeFilterCount})`}
+                      </span>
+                      {activeFilterCount > 0 && (
+                        <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-pup-maroon px-1 text-[10px] font-bold text-white dark:bg-red-500">
+                          {activeFilterCount}
+                        </span>
+                      )}
+                    </div>
+                    <HugeIcon className="ph-bold ph-caret-down text-[10px] text-gray-400 dark:text-zinc-500 shrink-0 ml-1" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent
+                  align="end"
+                  sideOffset={6}
+                  className="w-72 sm:w-80 rounded-2xl border border-gray-200 bg-white p-0 shadow-2xl dark:border-white/10 dark:bg-zinc-900 overflow-hidden font-jakarta"
                 >
-                  <option value="all">All Categories</option>
-                  {availableCategories.map((cat) => (
-                    <option key={cat} value={cat}>
-                      {cat}
-                    </option>
-                  ))}
-                </Select>
-              </div>
-            )}
+                  {/* Popover Header */}
+                  <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-white/10 bg-gray-50/60 dark:bg-zinc-800/40">
+                    <div className="flex items-center gap-2">
+                      <HugeIcon className="ph-bold ph-faders text-xs text-gray-500 dark:text-zinc-400" />
+                      <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
+                        Combine Filter Criteria
+                      </span>
+                    </div>
+                    {activeFilterCount > 0 && (
+                      <button
+                        type="button"
+                        onClick={clearAllFilters}
+                        className="text-[11px] font-semibold text-pup-maroon dark:text-red-400 hover:underline cursor-pointer"
+                      >
+                        Reset all
+                      </button>
+                    )}
+                  </div>
 
-            {/* Priority Sort */}
-            <div className="w-full sm:w-32">
-              <Select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className="h-9 text-xs rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 shadow-none"
-              >
-                <option value="default">Priority Sort</option>
-                <option value="name">Alphabetical</option>
-                <option value="status">By Status</option>
-              </Select>
+                  {/* Quick Presets Bar */}
+                  <div className="p-3 pb-0">
+                    <div className="flex items-center gap-1 p-1 bg-gray-100/80 dark:bg-zinc-800/60 rounded-xl border border-gray-200/50 dark:border-white/5">
+                      <button
+                        type="button"
+                        onClick={() => setStatusFilters([])}
+                        className={cn(
+                          "flex-1 py-1 px-2 text-[11px] font-medium rounded-lg transition-all cursor-pointer text-center",
+                          statusFilters.length === 0
+                            ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs font-semibold"
+                            : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
+                        )}
+                      >
+                        All
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setStatusFilters(["missing"])}
+                        className={cn(
+                          "flex-1 py-1 px-2 text-[11px] font-medium rounded-lg transition-all cursor-pointer text-center",
+                          statusFilters.length === 1 && statusFilters.includes("missing")
+                            ? "bg-white dark:bg-zinc-700 text-amber-700 dark:text-amber-300 shadow-xs font-semibold"
+                            : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
+                        )}
+                      >
+                        Pending ({summary.missingCount})
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setStatusFilters(["submitted"])}
+                        className={cn(
+                          "flex-1 py-1 px-2 text-[11px] font-medium rounded-lg transition-all cursor-pointer text-center",
+                          statusFilters.length === 1 && statusFilters.includes("submitted")
+                            ? "bg-white dark:bg-zinc-700 text-emerald-700 dark:text-emerald-300 shadow-xs font-semibold"
+                            : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
+                        )}
+                      >
+                        Completed ({summary.submittedCount || summary.approvedCount})
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Filter Options List */}
+                  <div className="max-h-72 overflow-y-auto p-3 space-y-4 scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-zinc-800">
+                    {/* Status Group */}
+                    <div>
+                      <div className="flex items-center justify-between px-1 mb-1.5">
+                        <span className="text-[10px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">
+                          Status Criteria
+                        </span>
+                        {statusFilters.length > 0 && (
+                          <span className="text-[10px] font-semibold text-pup-maroon dark:text-red-400">
+                            {statusFilters.length} selected
+                          </span>
+                        )}
+                      </div>
+                      <div className="space-y-1">
+                        {/* Option: Pending Submission */}
+                        <div
+                          onClick={() => toggleStatusFilter("missing")}
+                          className="flex items-center justify-between p-2 rounded-xl hover:bg-gray-100/70 dark:hover:bg-white/5 cursor-pointer select-none transition-colors group"
+                        >
+                          <div className="flex items-center gap-2.5">
+                            <div
+                              className={cn(
+                                "w-4 h-4 rounded-[5px] border flex items-center justify-center transition-all shrink-0",
+                                statusFilters.includes("missing")
+                                  ? "bg-pup-maroon border-pup-maroon text-white dark:bg-red-600 dark:border-red-600"
+                                  : "border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 group-hover:border-gray-400"
+                              )}
+                            >
+                              {statusFilters.includes("missing") && (
+                                <HugeIcon className="ph-bold ph-check text-[10px]" />
+                              )}
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                              <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" />
+                              <span className="text-xs font-medium text-gray-800 dark:text-zinc-200">
+                                Pending Submission
+                              </span>
+                            </div>
+                          </div>
+                          <span className="text-[11px] font-semibold text-gray-400 dark:text-zinc-500 tabular-nums">
+                            {summary.missingCount}
+                          </span>
+                        </div>
+
+                        {/* Option: Completed */}
+                        <div
+                          onClick={() => toggleStatusFilter("submitted")}
+                          className="flex items-center justify-between p-2 rounded-xl hover:bg-gray-100/70 dark:hover:bg-white/5 cursor-pointer select-none transition-colors group"
+                        >
+                          <div className="flex items-center gap-2.5">
+                            <div
+                              className={cn(
+                                "w-4 h-4 rounded-[5px] border flex items-center justify-center transition-all shrink-0",
+                                statusFilters.includes("submitted")
+                                  ? "bg-pup-maroon border-pup-maroon text-white dark:bg-red-600 dark:border-red-600"
+                                  : "border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 group-hover:border-gray-400"
+                              )}
+                            >
+                              {statusFilters.includes("submitted") && (
+                                <HugeIcon className="ph-bold ph-check text-[10px]" />
+                              )}
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
+                              <span className="text-xs font-medium text-gray-800 dark:text-zinc-200">
+                                Completed / Archived
+                              </span>
+                            </div>
+                          </div>
+                          <span className="text-[11px] font-semibold text-gray-400 dark:text-zinc-500 tabular-nums">
+                            {summary.submittedCount || summary.approvedCount}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Category Group */}
+                    {availableCategories.length > 0 && (
+                      <div className="pt-2 border-t border-gray-100 dark:border-white/5">
+                        <div className="flex items-center justify-between px-1 mb-1.5">
+                          <span className="text-[10px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">
+                            Categories
+                          </span>
+                          {categoryFilters.length > 0 && (
+                            <span className="text-[10px] font-semibold text-pup-maroon dark:text-red-400">
+                              {categoryFilters.length} selected
+                            </span>
+                          )}
+                        </div>
+                        <div className="space-y-1">
+                          {availableCategories.map((cat) => {
+                            const isChecked = categoryFilters.includes(cat);
+                            const count = categoryCounts[cat] || 0;
+                            return (
+                              <div
+                                key={cat}
+                                onClick={() => toggleCategoryFilter(cat)}
+                                className="flex items-center justify-between p-2 rounded-xl hover:bg-gray-100/70 dark:hover:bg-white/5 cursor-pointer select-none transition-colors group"
+                              >
+                                <div className="flex items-center gap-2.5 min-w-0">
+                                  <div
+                                    className={cn(
+                                      "w-4 h-4 rounded-[5px] border flex items-center justify-center transition-all shrink-0",
+                                      isChecked
+                                        ? "bg-pup-maroon border-pup-maroon text-white dark:bg-red-600 dark:border-red-600"
+                                        : "border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 group-hover:border-gray-400"
+                                    )}
+                                  >
+                                    {isChecked && (
+                                      <HugeIcon className="ph-bold ph-check text-[10px]" />
+                                    )}
+                                  </div>
+                                  <span className="text-xs font-medium text-gray-800 dark:text-zinc-200 truncate">
+                                    {cat}
+                                  </span>
+                                </div>
+                                <span className="text-[11px] font-semibold text-gray-400 dark:text-zinc-500 tabular-nums shrink-0 ml-2">
+                                  {count}
+                                </span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Popover Footer */}
+                  <div className="px-4 py-2.5 border-t border-gray-100 dark:border-white/10 bg-gray-50/60 dark:bg-zinc-800/40 flex items-center justify-between text-xs">
+                    <span className="text-gray-500 dark:text-zinc-400 text-[11px]">
+                      Matching: <strong className="text-gray-900 dark:text-zinc-100">{filteredRequirements.length}</strong> of {data?.requirements?.length || 0}
+                    </span>
+                    {activeFilterCount > 0 && (
+                      <span className="text-[10px] font-medium text-emerald-600 dark:text-emerald-400">
+                        Combined active
+                      </span>
+                    )}
+                  </div>
+                </PopoverContent>
+              </Popover>
             </div>
 
             {/* View Mode Toggle */}
@@ -629,31 +907,50 @@ export default function StudentComplianceTab({ authUser }) {
         </div>
 
         {/* D. Active Filter Chips Bar */}
-        {(statusFilter !== "all" || categoryFilter !== "all" || searchQuery) && (
+        {(statusFilters.length > 0 || categoryFilters.length > 0 || sortConfig.column !== "priority" || searchQuery) && (
           <div className="flex-none border-t border-gray-100 bg-white px-6 py-2.5 animate-in fade-in slide-in-from-top-1 duration-normal dark:border-white/10 dark:bg-card">
             <div className="flex flex-wrap items-center gap-2">
               <span className="mr-1 text-[11px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500">
                 Active filters:
               </span>
-              {statusFilter !== "all" && (
-                <div className="flex items-center gap-[6px] rounded-[6px] bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
-                  Status: {statusFilter === "missing" ? "NOT SUBMITTED" : "SUBMITTED"}
+              {statusFilters.map((s) => (
+                <div
+                  key={s}
+                  className="flex items-center gap-[6px] rounded-[6px] bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50"
+                >
+                  Status: {s === "missing" ? "PENDING" : "COMPLETED"}
                   <button
                     type="button"
-                    onClick={() => setStatusFilter("all")}
+                    onClick={() => toggleStatusFilter(s)}
                     className="hover:text-red-500 cursor-pointer"
                   >
                     <HugeIcon  className="ph-bold ph-x text-[10px]" />
                   </button>
                 </div>
-              )}
-              {categoryFilter !== "all" && (
-                <div className="flex items-center gap-[6px] rounded-[6px] bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
-                  Category: {categoryFilter}
+              ))}
+              {categoryFilters.map((cat) => (
+                <div
+                  key={cat}
+                  className="flex items-center gap-[6px] rounded-[6px] bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50"
+                >
+                  Category: {cat}
                   <button
                     type="button"
-                    onClick={() => setCategoryFilter("all")}
+                    onClick={() => toggleCategoryFilter(cat)}
                     className="hover:text-red-500 cursor-pointer"
+                  >
+                    <HugeIcon  className="ph-bold ph-x text-[10px]" />
+                  </button>
+                </div>
+              ))}
+              {sortConfig.column !== "priority" && (
+                <div className="flex items-center gap-[6px] rounded-[6px] bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
+                  Sort: {sortConfig.column === "docType" ? "Requirement" : sortConfig.column === "category" ? "Category" : "Status"} ({sortConfig.direction === "asc" ? "Asc" : "Desc"})
+                  <button
+                    type="button"
+                    onClick={() => setSortConfig({ column: "priority", direction: "asc" })}
+                    className="hover:text-red-500 cursor-pointer"
+                    title="Reset to priority sort"
                   >
                     <HugeIcon  className="ph-bold ph-x text-[10px]" />
                   </button>
@@ -673,11 +970,7 @@ export default function StudentComplianceTab({ authUser }) {
               )}
               <button
                 type="button"
-                onClick={() => {
-                  setStatusFilter("all");
-                  setCategoryFilter("all");
-                  setSearchQuery("");
-                }}
+                onClick={clearAllFilters}
                 className="text-[11px] font-semibold text-pup-maroon dark:text-red-400 hover:underline cursor-pointer ml-1"
               >
                 Clear all
@@ -701,8 +994,8 @@ export default function StudentComplianceTab({ authUser }) {
                     No Matching Requirements Found
                   </EmptyTitle>
                   <EmptyDescription className="text-xs text-gray-500 dark:text-zinc-400 max-w-sm mx-auto mt-1">
-                    {searchQuery || statusFilter !== "all" || categoryFilter !== "all"
-                      ? "Try adjusting your search query or clearing the status/category filters."
+                    {searchQuery || statusFilters.length > 0 || categoryFilters.length > 0
+                      ? "Try adjusting your search query or clearing some of the combined filters."
                       : "There are currently no document requirements assigned for your degree program."}
                   </EmptyDescription>
                 </EmptyHeader>
@@ -713,10 +1006,61 @@ export default function StudentComplianceTab({ authUser }) {
             <div className="w-full overflow-x-auto border border-gray-100 dark:border-white/10 rounded-xl overflow-hidden">
               <table className="min-w-full text-sm">
                 <thead className="sticky top-0 z-10 border-b border-gray-100 dark:border-white/10 bg-white dark:bg-card">
-                  <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">
-                    <th className="p-4 min-w-[260px]">Requirement</th>
-                    <th className="p-4 min-w-[160px]">Category</th>
-                    <th className="p-4 min-w-[140px]">Status</th>
+                  <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500 select-none">
+                    <th
+                      className="p-4 min-w-[260px] cursor-pointer hover:text-gray-900 dark:hover:text-zinc-200 transition-colors"
+                      onClick={() => handleSort("docType")}
+                    >
+                      <div className="flex items-center gap-1.5">
+                        <span>Requirement</span>
+                        {sortConfig.column === "docType" ? (
+                          <HugeIcon
+                            className={cn(
+                              "text-xs text-pup-maroon dark:text-red-400 ph-bold",
+                              sortConfig.direction === "asc" ? "ph-caret-up" : "ph-caret-down"
+                            )}
+                          />
+                        ) : (
+                          <HugeIcon className="ph-bold ph-caret-up-down text-[10px] text-gray-300 dark:text-zinc-600 opacity-60" />
+                        )}
+                      </div>
+                    </th>
+                    <th
+                      className="p-4 min-w-[160px] cursor-pointer hover:text-gray-900 dark:hover:text-zinc-200 transition-colors"
+                      onClick={() => handleSort("category")}
+                    >
+                      <div className="flex items-center gap-1.5">
+                        <span>Category</span>
+                        {sortConfig.column === "category" ? (
+                          <HugeIcon
+                            className={cn(
+                              "text-xs text-pup-maroon dark:text-red-400 ph-bold",
+                              sortConfig.direction === "asc" ? "ph-caret-up" : "ph-caret-down"
+                            )}
+                          />
+                        ) : (
+                          <HugeIcon className="ph-bold ph-caret-up-down text-[10px] text-gray-300 dark:text-zinc-600 opacity-60" />
+                        )}
+                      </div>
+                    </th>
+                    <th
+                      className="p-4 min-w-[140px] cursor-pointer hover:text-gray-900 dark:hover:text-zinc-200 transition-colors"
+                      onClick={() => handleSort("status")}
+                    >
+                      <div className="flex items-center gap-1.5">
+                        <span>Status</span>
+                        {sortConfig.column === "status" ? (
+                          <HugeIcon
+                            className={cn(
+                              "text-xs text-pup-maroon dark:text-red-400 ph-bold",
+                              sortConfig.direction === "asc" ? "ph-caret-up" : "ph-caret-down"
+                            )}
+                          />
+                        ) : (
+                          <HugeIcon className="ph-bold ph-caret-up-down text-[10px] text-gray-300 dark:text-zinc-600 opacity-60" />
+                        )}
+                      </div>
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 dark:divide-white/5">
@@ -742,11 +1086,11 @@ export default function StudentComplianceTab({ authUser }) {
                         <td className="p-4 whitespace-nowrap">
                           {isSubmitted ? (
                             <span className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold bg-emerald-50 text-emerald-800 border-emerald-200/80 dark:bg-emerald-950/30 dark:text-emerald-300">
-                              <HugeIcon  className="ph-bold ph-check text-xs" /> Submitted
+                              <HugeIcon  className="ph-bold ph-check text-xs" /> Completed
                             </span>
                           ) : (
                             <span className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold bg-amber-50 text-amber-800 border-amber-200/80 dark:bg-amber-950/30 dark:text-amber-300">
-                              <HugeIcon  className="ph-bold ph-x text-xs" /> Not Submitted
+                              <HugeIcon  className="ph-bold ph-clock text-xs" /> Pending Submission
                             </span>
                           )}
                         </td>
@@ -758,7 +1102,41 @@ export default function StudentComplianceTab({ authUser }) {
             </div>
           ) : (
             /* Cards View */
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-3">
+              <div className="flex items-center justify-between text-xs text-gray-500 px-1 select-none">
+                <span className="text-xs text-gray-500 dark:text-zinc-400">
+                  Showing <strong className="text-gray-900 dark:text-zinc-200">{sortedRequirements.length}</strong> requirements
+                </span>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[11px] text-gray-400 dark:text-zinc-500">Sort:</span>
+                  <button
+                    type="button"
+                    onClick={() => handleSort("docType")}
+                    className={cn(
+                      "px-2.5 py-1 rounded-lg text-xs font-medium cursor-pointer transition-colors border",
+                      sortConfig.column === "docType"
+                        ? "bg-pup-maroon/10 text-pup-maroon border-pup-maroon/30 dark:bg-red-500/20 dark:text-red-400 dark:border-red-500/30 font-semibold"
+                        : "bg-gray-50 dark:bg-zinc-800/80 border-gray-200 dark:border-white/5 text-gray-600 dark:text-zinc-400 hover:bg-gray-100 dark:hover:bg-zinc-800"
+                    )}
+                  >
+                    Name {sortConfig.column === "docType" && (sortConfig.direction === "asc" ? "↑" : "↓")}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleSort("status")}
+                    className={cn(
+                      "px-2.5 py-1 rounded-lg text-xs font-medium cursor-pointer transition-colors border",
+                      sortConfig.column === "status"
+                        ? "bg-pup-maroon/10 text-pup-maroon border-pup-maroon/30 dark:bg-red-500/20 dark:text-red-400 dark:border-red-500/30 font-semibold"
+                        : "bg-gray-50 dark:bg-zinc-800/80 border-gray-200 dark:border-white/5 text-gray-600 dark:text-zinc-400 hover:bg-gray-100 dark:hover:bg-zinc-800"
+                    )}
+                  >
+                    Status {sortConfig.column === "status" && (sortConfig.direction === "asc" ? "↑" : "↓")}
+                  </button>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {sortedRequirements.map((item) => {
                 const isSubmitted = item.status === "Submitted";
 
@@ -810,8 +1188,8 @@ export default function StudentComplianceTab({ authUser }) {
                               : "bg-amber-50 text-amber-800 border-amber-200/80 dark:bg-amber-950/30 dark:text-amber-300"
                           )}
                         >
-                          <HugeIcon  className={cn("text-xs ph-bold", isSubmitted ? "ph-check" : "ph-x")} />
-                          {isSubmitted ? "Submitted" : "Not Submitted"}
+                          <HugeIcon  className={cn("text-xs ph-bold", isSubmitted ? "ph-check" : "ph-clock")} />
+                          {isSubmitted ? "Completed" : "Pending Submission"}
                         </span>
                       </div>
 
@@ -838,6 +1216,7 @@ export default function StudentComplianceTab({ authUser }) {
                   </div>
                 );
               })}
+              </div>
             </div>
           )}
         </div>

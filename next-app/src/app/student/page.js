@@ -43,6 +43,8 @@ import {
 } from "@/components/student/skeletons";
 import StudentComplianceTab from "@/components/student/StudentComplianceTab";
 import { Skeleton } from "@/components/ui/skeleton";
+import MultiCriteriaFilter from "@/components/shared/MultiCriteriaFilter";
+import ActiveFilterChips from "@/components/shared/ActiveFilterChips";
 
 function SortIndicator({ column, sortBy, sortOrder }) {
   if (sortBy !== column) {
@@ -67,7 +69,8 @@ export default function StudentDashboard() {
   const [authMode, setAuthMode] = useState("login");
   const [auth, setAuth] = useState({ studentNo: "", name: "", password: "" });
   const [requestForm, setRequestForm] = useState({ studentNo: "", docType: "", notes: "", clientType: "Student", courseCode: "" });
-  const [proposalForm, setProposalForm] = useState({ title: "", organizationName: "", eventDate: "", file: null });
+  const [proposalForm, setProposalForm] = useState({ title: "", organizationId: "", organizationName: "", eventDate: "", file: null });
+  const [myOrganizations, setMyOrganizations] = useState([]);
   const [message, setMessage] = useState("");
   const [view, setView] = useState("odrs");
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -82,7 +85,10 @@ export default function StudentDashboard() {
 
   // Table state for Request History
   const [requestSearch, setRequestSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("All");
+  const [requestFilters, setRequestFilters] = useState({
+    status: [],
+    doc_type: [],
+  });
   const [sortBy, setSortBy] = useState("created_at");
   const [sortOrder, setSortOrder] = useState("DESC");
   const [currentPage, setCurrentPage] = useState(1);
@@ -92,6 +98,13 @@ export default function StudentDashboard() {
   const [isFormOpen, setIsFormOpen] = useState(true);
   const [pdfPreviewOpen, setPdfPreviewOpen] = useState(false);
   const [pdfPreviewData, setPdfPreviewData] = useState(null);
+
+  // Filter state for OSAS Event Proposals
+  const [proposalSearch, setProposalSearch] = useState("");
+  const [proposalFilters, setProposalFilters] = useState({
+    status: [],
+    organization: [],
+  });
 
   const handleOpenPdfPreview = useCallback((proposal) => {
     if (!proposal?.id) return;
@@ -149,7 +162,133 @@ export default function StudentDashboard() {
     }
   };
 
-  const hasActiveFilters = requestSearch !== "" || statusFilter !== "All";
+  const hasActiveFilters =
+    requestSearch !== "" ||
+    (requestFilters.status?.length > 0) ||
+    (requestFilters.doc_type?.length > 0);
+
+  const requestFilterGroups = useMemo(() => {
+    const reqs = data.requests || [];
+
+    const statusOptions = [
+      { value: "Pending", label: "Pending", dotColor: "bg-amber-500", count: reqs.filter((r) => r.status === "Pending").length },
+      { value: "InProgress", label: "In Progress", dotColor: "bg-blue-500", count: reqs.filter((r) => r.status === "InProgress").length },
+      { value: "Ready", label: "Ready for Pickup", dotColor: "bg-cyan-500", count: reqs.filter((r) => r.status === "Ready").length },
+      { value: "Completed", label: "Completed", dotColor: "bg-emerald-500", count: reqs.filter((r) => r.status === "Completed").length },
+      { value: "Cancelled", label: "Cancelled", dotColor: "bg-rose-500", count: reqs.filter((r) => r.status === "Cancelled").length },
+    ];
+
+    const typesMap = {};
+    reqs.forEach((r) => {
+      if (r.doc_type) {
+        typesMap[r.doc_type] = (typesMap[r.doc_type] || 0) + 1;
+      }
+    });
+
+    const docTypeOptions = Object.entries(typesMap).map(([dt, count]) => ({
+      value: dt,
+      label: dt,
+      count,
+    }));
+
+    const groups = [
+      {
+        id: "status",
+        label: "Request Status",
+        options: statusOptions,
+      },
+    ];
+
+    if (docTypeOptions.length > 0) {
+      groups.push({
+        id: "doc_type",
+        label: "Document Type",
+        options: docTypeOptions,
+      });
+    }
+
+    return groups;
+  }, [data.requests]);
+
+  const requestFilterPresets = useMemo(
+    () => [
+      {
+        label: "All",
+        values: { status: [], doc_type: [] },
+        activeCondition: (sel) => !sel?.status?.length && !sel?.doc_type?.length,
+      },
+      {
+        label: "Pending",
+        values: { status: ["Pending"] },
+      },
+      {
+        label: "Completed",
+        values: { status: ["Completed"] },
+      },
+    ],
+    []
+  );
+
+  const proposalFilterGroups = useMemo(() => {
+    const props = data.proposals || [];
+
+    const statusOptions = [
+      { value: "Pending", label: "Pending", dotColor: "bg-amber-500", count: props.filter((p) => p.status === "Pending").length },
+      { value: "UnderReview", label: "Under Review", dotColor: "bg-blue-500", count: props.filter((p) => p.status === "UnderReview").length },
+      { value: "Approved", label: "Approved", dotColor: "bg-emerald-500", count: props.filter((p) => p.status === "Approved").length },
+      { value: "RevisionsRequested", label: "Revisions Requested", dotColor: "bg-purple-500", count: props.filter((p) => p.status === "RevisionsRequested").length },
+      { value: "Rejected", label: "Rejected", dotColor: "bg-rose-500", count: props.filter((p) => p.status === "Rejected").length },
+    ];
+
+    const orgMap = {};
+    props.forEach((p) => {
+      const org = p.organization_name || "General";
+      orgMap[org] = (orgMap[org] || 0) + 1;
+    });
+
+    const orgOptions = Object.entries(orgMap).map(([org, count]) => ({
+      value: org,
+      label: org,
+      count,
+    }));
+
+    const groups = [
+      {
+        id: "status",
+        label: "Review Status",
+        options: statusOptions,
+      },
+    ];
+
+    if (orgOptions.length > 0) {
+      groups.push({
+        id: "organization",
+        label: "Organization",
+        options: orgOptions,
+      });
+    }
+
+    return groups;
+  }, [data.proposals]);
+
+  const proposalFilterPresets = useMemo(
+    () => [
+      {
+        label: "All",
+        values: { status: [], organization: [] },
+        activeCondition: (sel) => !sel?.status?.length && !sel?.organization?.length,
+      },
+      {
+        label: "Pending",
+        values: { status: ["Pending"] },
+      },
+      {
+        label: "Approved",
+        values: { status: ["Approved"] },
+      },
+    ],
+    []
+  );
 
   const handleSort = (column) => {
     if (sortBy === column) {
@@ -168,6 +307,9 @@ export default function StudentDashboard() {
 
   const filteredRequests = useMemo(() => {
     const q = (requestSearch || "").trim().toLowerCase();
+    const selectedStatuses = requestFilters.status || [];
+    const selectedDocTypes = requestFilters.doc_type || [];
+
     return (data.requests || []).filter((item) => {
       const matchesSearch =
         !q ||
@@ -178,11 +320,37 @@ export default function StudentDashboard() {
         (item.client_type || "").toLowerCase().includes(q) ||
         (item.student_no || "").toLowerCase().includes(q);
 
-      const matchesStatus = statusFilter === "All" || item.status === statusFilter;
+      const matchesStatus =
+        selectedStatuses.length === 0 || selectedStatuses.includes(item.status);
 
-      return matchesSearch && matchesStatus;
+      const matchesDocType =
+        selectedDocTypes.length === 0 || selectedDocTypes.includes(item.doc_type);
+
+      return matchesSearch && matchesStatus && matchesDocType;
     });
-  }, [data.requests, requestSearch, statusFilter]);
+  }, [data.requests, requestSearch, requestFilters]);
+
+  const filteredProposals = useMemo(() => {
+    const q = (proposalSearch || "").trim().toLowerCase();
+    const selectedStatuses = proposalFilters.status || [];
+    const selectedOrgs = proposalFilters.organization || [];
+
+    return (data.proposals || []).filter((item) => {
+      const matchesSearch =
+        !q ||
+        (item.title || "").toLowerCase().includes(q) ||
+        (item.organization_name || "").toLowerCase().includes(q) ||
+        (item.status || "").toLowerCase().includes(q);
+
+      const matchesStatus =
+        selectedStatuses.length === 0 || selectedStatuses.includes(item.status);
+
+      const matchesOrg =
+        selectedOrgs.length === 0 || selectedOrgs.includes(item.organization_name || "General");
+
+      return matchesSearch && matchesStatus && matchesOrg;
+    });
+  }, [data.proposals, proposalSearch, proposalFilters]);
 
   const sortedRequests = useMemo(() => {
     return [...filteredRequests].sort((a, b) => {
@@ -303,19 +471,36 @@ export default function StudentDashboard() {
         clientType: session.data.client_type || prev.clientType || "Student",
         studentNo: prev.studentNo || session.data.student_no || "",
       }));
-      const [requestRes, proposalRes, typesRes, activityRes, coursesRes] = await Promise.all([
+      const [requestRes, proposalRes, typesRes, activityRes, coursesRes, orgsRes] = await Promise.all([
         fetch("/api/student/document-requests", { cache: "no-store" }),
         fetch("/api/student/event-proposals", { cache: "no-store" }),
         fetch("/api/doc-types", { cache: "no-store" }),
         fetch("/api/student/activity", { cache: "no-store" }),
         fetch("/api/courses", { cache: "no-store" }),
+        fetch("/api/student/organizations", { cache: "no-store" }),
       ]);
-      const [requestJson, proposalJson, typesJson, activityJson, coursesJson] = await Promise.all([requestRes.json(), proposalRes.json(), typesRes.json(), activityRes.json(), coursesRes.json()]);
+      const [requestJson, proposalJson, typesJson, activityJson, coursesJson, orgsJson] = await Promise.all([
+        requestRes.json(),
+        proposalRes.json(),
+        typesRes.json(),
+        activityRes.json(),
+        coursesRes.json(),
+        orgsRes.json(),
+      ]);
       if (!requestRes.ok || !requestJson?.ok || !proposalRes.ok || !proposalJson?.ok) {
         throw new Error(requestJson?.error || proposalJson?.error || "Unable to load student records.");
       }
       setDocTypes(Array.isArray(typesJson?.data) ? typesJson.data : []);
       setCourses(Array.isArray(coursesJson?.data) ? coursesJson.data : []);
+      const loadedOrgs = Array.isArray(orgsJson?.data) ? orgsJson.data : [];
+      setMyOrganizations(loadedOrgs);
+      if (loadedOrgs.length > 0) {
+        setProposalForm((prev) => ({
+          ...prev,
+          organizationId: prev.organizationId || loadedOrgs[0].organization_id,
+          organizationName: prev.organizationName || loadedOrgs[0].organization_name,
+        }));
+      }
       setData({ requests: requestJson?.data?.requests || [], documents: requestJson?.data?.documents || [], proposals: proposalJson?.data || [], activity: activityJson?.data || [] });
     } finally {
       setLoading(false);
@@ -422,12 +607,23 @@ export default function StudentDashboard() {
   async function submitProposal(event) {
     event.preventDefault(); setMessage(""); setProposalSubmitting(true);
     try {
-    const form = new FormData();
-    Object.entries(proposalForm).forEach(([key, value]) => value && form.set(key, value));
-    const res = await fetch("/api/student/event-proposals", { method: "POST", body: form });
-    const json = await res.json();
-    if (!res.ok || !json.ok) { const error = json.error || "Unable to submit proposal."; setMessage(error); showToast("Proposal failed", error, true); return; }
-    setProposalForm({ title: "", organizationName: "", eventDate: "", file: null }); showToast("Proposal submitted", "OSAS can now review your Event Proposal."); await load();
+      const selectedOrg = myOrganizations.find((o) => o.organization_id === proposalForm.organizationId) || myOrganizations[0];
+      if (!selectedOrg) {
+        throw new Error("You must be an authorized officer of a recognized student organization to submit proposals.");
+      }
+      const form = new FormData();
+      form.set("title", proposalForm.title);
+      form.set("organizationId", selectedOrg.organization_id);
+      form.set("organizationName", selectedOrg.organization_name);
+      form.set("eventDate", proposalForm.eventDate);
+      if (proposalForm.file) form.set("file", proposalForm.file);
+
+      const res = await fetch("/api/student/event-proposals", { method: "POST", body: form });
+      const json = await res.json();
+      if (!res.ok || !json.ok) { const error = json.error || "Unable to submit proposal."; setMessage(error); showToast("Proposal failed", error, true); return; }
+      setProposalForm({ title: "", organizationId: myOrganizations[0]?.organization_id || "", organizationName: "", eventDate: "", file: null });
+      showToast("Proposal submitted", "OSAS can now review your Event Proposal.");
+      await load();
     } catch (error) {
       const message = error.message || "Unable to submit proposal."; setMessage(message); showToast("Proposal failed", message, true);
     } finally { setProposalSubmitting(false); }
@@ -816,78 +1012,50 @@ export default function StudentDashboard() {
                           </div>
                         </div>
 
-                        <div className="w-full sm:w-[155px] shrink-0">
-                          <Select
-                            value={statusFilter}
-                            onChange={(e) => {
-                              setStatusFilter(e.target.value);
+                        <div className="w-full sm:w-auto shrink-0">
+                          <MultiCriteriaFilter
+                            title="Filter Requests"
+                            groups={requestFilterGroups}
+                            selected={requestFilters}
+                            onChange={(newFilters) => {
+                              setRequestFilters(newFilters);
                               setCurrentPage(1);
                             }}
-                            className="h-9 rounded-xl border border-gray-200 dark:border-white/10 text-xs font-normal text-[#111111] dark:text-zinc-200 cursor-pointer shadow-none"
-                            menuClassName="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-900 shadow-2xl p-1.5"
-                            optionClassName="rounded-lg text-xs font-normal py-1.5 px-2.5 hover:bg-gray-100 dark:hover:bg-zinc-800"
-                          >
-                            <option value="All">All Statuses</option>
-                            {requestStatuses.map((st) => (
-                              <option key={st} value={st}>
-                                {st}
-                              </option>
-                            ))}
-                          </Select>
+                            presets={requestFilterPresets}
+                            totalCount={data.requests.length}
+                            matchingCount={filteredRequests.length}
+                            onReset={() => {
+                              setRequestFilters({ status: [], doc_type: [] });
+                              setCurrentPage(1);
+                            }}
+                          />
                         </div>
                       </div>
                     </div>
 
-                    {/* 4. Active Filters Pill Bar */}
-                    {hasActiveFilters && (
-                      <div className="flex-none border-t border-gray-100 bg-white px-6 py-2.5 animate-in fade-in slide-in-from-top-1 duration-normal dark:border-white/10 dark:bg-card">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span className="mr-1 text-[11px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500">
-                            Active filters:
-                          </span>
-                          {requestSearch && (
-                            <div className="flex items-center gap-[6px] rounded-[6px] bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
-                              Search: {requestSearch}
-                              <button
-                                onClick={() => {
-                                  setRequestSearch("");
-                                  setCurrentPage(1);
-                                }}
-                                className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
-                              >
-                                ×
-                              </button>
-                            </div>
-                          )}
-                          {statusFilter !== "All" && (
-                            <div className="flex items-center gap-[6px] rounded-[6px] bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
-                              Status: {statusFilter}
-                              <button
-                                onClick={() => {
-                                  setStatusFilter("All");
-                                  setCurrentPage(1);
-                                }}
-                                className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
-                              >
-                                ×
-                              </button>
-                            </div>
-                          )}
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {
-                              setRequestSearch("");
-                              setStatusFilter("All");
-                              setCurrentPage(1);
-                            }}
-                            className="h-auto text-[12px] font-medium text-gray-400 dark:text-zinc-500 border-0 bg-transparent hover:bg-transparent shadow-none p-0 hover:text-red-600 dark:hover:text-red-500 transition-colors cursor-pointer"
-                          >
-                            Clear
-                          </Button>
-                        </div>
-                      </div>
-                    )}
+                    {/* 4. Active Filter Chips Bar */}
+                    <ActiveFilterChips
+                      groups={requestFilterGroups}
+                      selected={requestFilters}
+                      onRemove={(groupId, val) => {
+                        setRequestFilters((prev) => ({
+                          ...prev,
+                          [groupId]: (prev[groupId] || []).filter((v) => v !== val),
+                        }));
+                        setCurrentPage(1);
+                      }}
+                      searchQuery={requestSearch}
+                      onClearSearch={() => {
+                        setRequestSearch("");
+                        setCurrentPage(1);
+                      }}
+                      onClearAll={() => {
+                        setRequestSearch("");
+                        setRequestFilters({ status: [], doc_type: [] });
+                        setCurrentPage(1);
+                      }}
+                      className="border-t border-gray-100 dark:border-white/10 bg-white dark:bg-card px-6 py-2.5"
+                    />
 
                     {/* 5. Request History Table */}
                     <div className="w-full overflow-x-auto border-t border-gray-100 dark:border-white/10 flex-1">
@@ -1148,13 +1316,16 @@ export default function StudentDashboard() {
                           type="button"
                           onClick={() => setIsFormOpen((prev) => !prev)}
                           variant={isFormOpen ? "outline" : "default"}
+                          disabled={myOrganizations.length === 0}
+                          title={myOrganizations.length === 0 ? "You must be an authorized officer in the OSAS whitelist to submit proposals" : undefined}
                           className={cn(
                             "flex h-10 px-5 text-xs font-semibold rounded-xl! active:scale-95 transition-all cursor-pointer shadow-xs",
                             isFormOpen
                               ? "border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700"
-                              : "btn-brand-red text-white! border-0"
+                              : "btn-brand-red text-white! border-0",
+                            myOrganizations.length === 0 && "opacity-50 cursor-not-allowed"
                           )}
-                          style={!isFormOpen ? { color: "#ffffff" } : undefined}
+                          style={!isFormOpen && myOrganizations.length > 0 ? { color: "#ffffff" } : undefined}
                         >
                           {isFormOpen ? "Hide Form" : "New Proposal"}
                         </Button>
@@ -1162,8 +1333,40 @@ export default function StudentDashboard() {
                     }
                   />
 
+                  {/* Verified Officer Affiliation Banner */}
+                  {myOrganizations.length > 0 ? (
+                    <div className="mx-6 mb-2 p-4 rounded-xl border border-blue-200/70 dark:border-blue-900/40 bg-blue-50/50 dark:bg-blue-950/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-xl bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 flex items-center justify-center shrink-0">
+                          <HugeIcon className="ph-bold ph-shield-check text-base" />
+                        </div>
+                        <div>
+                          <div className="text-xs font-bold text-gray-900 dark:text-zinc-100 flex items-center gap-2">
+                            <span>Verified Student Officer</span>
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300">
+                              Authorized Submitter
+                            </span>
+                          </div>
+                          <div className="text-xs text-gray-600 dark:text-zinc-400 mt-0.5">
+                            {myOrganizations.map((o) => `${o.organization_name} (${o.officer_position})`).join(" · ")}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="mx-6 mb-2 p-4 rounded-xl border border-amber-200 dark:border-amber-900/30 bg-amber-50/50 dark:bg-amber-950/20 flex items-start gap-3">
+                      <div className="w-9 h-9 rounded-xl bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 flex items-center justify-center shrink-0 mt-0.5">
+                        <HugeIcon className="ph-bold ph-info text-base" />
+                      </div>
+                      <div className="text-xs text-amber-900 dark:text-amber-200 leading-relaxed">
+                        <div className="font-bold mb-0.5">Officer Whitelist Notice</div>
+                        Event proposals may only be submitted by recognized student organization officers whitelisted by OSAS. If you represent an accredited organization, please contact OSAS to whitelist your student account (<strong>{me?.email}</strong>).
+                      </div>
+                    </div>
+                  )}
+
                   {/* 2. Inline Proposal Form Section */}
-                  {isFormOpen && (
+                  {isFormOpen && myOrganizations.length > 0 && (
                     <div className="border-t border-gray-100 dark:border-white/10 p-5 sm:p-6 bg-gray-50/40 dark:bg-zinc-900/20 animate-in fade-in slide-in-from-top-2 duration-fast">
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-gray-100 dark:border-white/10">
                         <div className="flex items-center gap-3">
@@ -1194,19 +1397,31 @@ export default function StudentDashboard() {
                             />
                           </div>
 
-                          {/* Organization */}
+                          {/* Organization Dropdown */}
                           <div className="min-w-0">
                             <label htmlFor="osas-org-name" className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-200">
-                              Organization <span className="text-red-500">*</span>
+                              Authorized Organization <span className="text-red-500">*</span>
                             </label>
-                            <Input
+                            <Select
                               id="osas-org-name"
-                              placeholder="Organization name"
-                              value={proposalForm.organizationName}
-                              onChange={(e) => setProposalForm({ ...proposalForm, organizationName: e.target.value })}
-                              required
-                              className="h-10 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-3 text-xs text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
-                            />
+                              value={proposalForm.organizationId || (myOrganizations[0]?.organization_id || "")}
+                              onChange={(e) => {
+                                const orgId = e.target.value;
+                                const org = myOrganizations.find((o) => o.organization_id === orgId);
+                                setProposalForm({
+                                  ...proposalForm,
+                                  organizationId: orgId,
+                                  organizationName: org?.organization_name || "",
+                                });
+                              }}
+                              className="h-10 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-xs text-gray-900 dark:text-zinc-100 shadow-none"
+                            >
+                              {myOrganizations.map((o) => (
+                                <option key={o.organization_id} value={o.organization_id}>
+                                  {o.organization_name} {o.acronym ? `(${o.acronym})` : ""} — {o.officer_position}
+                                </option>
+                              ))}
+                            </Select>
                           </div>
 
                           {/* Event Date */}
@@ -1278,8 +1493,8 @@ export default function StudentDashboard() {
                   )}
 
                   {/* 3. Submission History Header */}
-                  <div className="border-t border-gray-100 dark:border-white/10 p-5 flex flex-col gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div className="border-t border-gray-100 dark:border-white/10 p-5 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
+                    <div className="flex items-center gap-3 shrink-0">
                       <div>
                         <h3 className="text-[15px] font-semibold text-gray-900 dark:text-zinc-50">Submission History</h3>
                         <p className="mt-0.5 text-xs text-gray-500 dark:text-zinc-400">Follow OSAS review updates and requested revisions.</p>
@@ -1287,12 +1502,65 @@ export default function StudentDashboard() {
                       {loading ? (
                         <Skeleton className="h-6 w-16 rounded-full dark:bg-muted" />
                       ) : (
-                        <span className="self-start sm:self-auto rounded-full bg-gray-100 px-3 py-1 text-xs font-bold text-gray-600 dark:bg-zinc-800 dark:text-zinc-300">
+                        <span className="self-center rounded-full bg-gray-100 px-3 py-1 text-xs font-bold text-gray-600 dark:bg-zinc-800 dark:text-zinc-300">
                           {data.proposals.length} total
                         </span>
                       )}
                     </div>
+
+                    {/* Search & MultiCriteria Filter */}
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
+                      <div className="relative flex-1 sm:w-64 lg:w-72 min-w-[200px] group">
+                        <HugeIcon className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-xs pointer-events-none" />
+                        <Input
+                          type="text"
+                          placeholder="Search proposals..."
+                          className="h-9 pl-8 pr-16 w-full rounded-xl text-xs font-normal border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
+                          value={proposalSearch}
+                          onChange={(e) => setProposalSearch(e.target.value)}
+                        />
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-[11px] text-gray-400 dark:text-zinc-500">
+                          {loading ? (
+                            <Skeleton className="h-3.5 w-10 rounded dark:bg-muted" />
+                          ) : (
+                            `${filteredProposals.length} results`
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="w-full sm:w-auto shrink-0">
+                        <MultiCriteriaFilter
+                          title="Filter Proposals"
+                          groups={proposalFilterGroups}
+                          selected={proposalFilters}
+                          onChange={setProposalFilters}
+                          presets={proposalFilterPresets}
+                          totalCount={data.proposals.length}
+                          matchingCount={filteredProposals.length}
+                          onReset={() => setProposalFilters({ status: [], organization: [] })}
+                        />
+                      </div>
+                    </div>
                   </div>
+
+                  {/* Active Filter Chips for Proposals */}
+                  <ActiveFilterChips
+                    groups={proposalFilterGroups}
+                    selected={proposalFilters}
+                    onRemove={(groupId, val) => {
+                      setProposalFilters((prev) => ({
+                        ...prev,
+                        [groupId]: (prev[groupId] || []).filter((v) => v !== val),
+                      }));
+                    }}
+                    searchQuery={proposalSearch}
+                    onClearSearch={() => setProposalSearch("")}
+                    onClearAll={() => {
+                      setProposalSearch("");
+                      setProposalFilters({ status: [], organization: [] });
+                    }}
+                    className="border-t border-gray-100 dark:border-white/10 bg-white dark:bg-card px-6 py-2.5"
+                  />
 
                   {/* 4. Proposals List */}
                   <div className="border-t border-gray-100 dark:border-white/10 flex-1">
@@ -1327,9 +1595,33 @@ export default function StudentDashboard() {
                           </EmptyHeader>
                         </Empty>
                       </div>
+                    ) : filteredProposals.length === 0 ? (
+                      <div className="p-12 text-center">
+                        <Empty className="flex h-[240px] flex-col items-center justify-center border-0 bg-transparent text-center">
+                          <EmptyHeader className="flex flex-col items-center gap-0">
+                            <EmptyTitle className="text-base font-semibold text-gray-900 dark:text-zinc-50">
+                              No matching proposals
+                            </EmptyTitle>
+                            <EmptyDescription className="max-w-xs text-xs font-medium text-gray-500 dark:text-zinc-400 mt-1">
+                              No event proposals match your current search or combined filter criteria.
+                            </EmptyDescription>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={() => {
+                                setProposalSearch("");
+                                setProposalFilters({ status: [], organization: [] });
+                              }}
+                              className="mt-4 h-9 px-4 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 cursor-pointer"
+                            >
+                              Reset filters
+                            </Button>
+                          </EmptyHeader>
+                        </Empty>
+                      </div>
                     ) : (
                       <div className="p-5 space-y-3">
-                        {data.proposals.map((item) => (
+                        {filteredProposals.map((item) => (
                           <article
                             key={item.id}
                             onClick={() => setSelectedProposalForDetail(item)}
@@ -1393,7 +1685,7 @@ export default function StudentDashboard() {
         open={Boolean(selectedRequestForDetail)}
         onOpenChange={(open) => !open && setSelectedRequestForDetail(null)}
       >
-        <SheetContent side="right" className="sm:max-w-md w-full flex flex-col font-jakarta dark:bg-[#1c1c1e]">
+        <SheetContent side="right" className="w-full sm:max-w-xl md:max-w-2xl lg:max-w-3xl data-[side=right]:w-full data-[side=right]:sm:max-w-xl data-[side=right]:md:max-w-2xl data-[side=right]:lg:max-w-3xl flex flex-col font-jakarta dark:bg-[#1c1c1e]">
           <SheetHeader className="border-b border-gray-100 dark:border-white/10 p-5 pb-4 space-y-2">
             <div className="flex items-center justify-between pr-8">
               <span className="text-xs font-semibold text-pup-maroon bg-red-50 dark:bg-red-950/40 px-3 py-1 rounded-full border border-red-100 dark:border-red-900/30">
@@ -1479,7 +1771,7 @@ export default function StudentDashboard() {
         open={Boolean(selectedProposalForDetail)}
         onOpenChange={(open) => !open && setSelectedProposalForDetail(null)}
       >
-        <SheetContent side="right" className="sm:max-w-md w-full flex flex-col font-jakarta dark:bg-[#1c1c1e]">
+        <SheetContent side="right" className="w-full sm:max-w-xl md:max-w-2xl lg:max-w-3xl data-[side=right]:w-full data-[side=right]:sm:max-w-xl data-[side=right]:md:max-w-2xl data-[side=right]:lg:max-w-3xl flex flex-col font-jakarta dark:bg-[#1c1c1e]">
           <SheetHeader className="border-b border-gray-100 dark:border-white/10 p-5 pb-4 space-y-2">
             <div className="flex items-center justify-between pr-8">
               <span className="text-xs font-semibold text-pup-maroon bg-red-50 dark:bg-red-950/40 px-3 py-1 rounded-full border border-red-100 dark:border-red-900/30">

@@ -7,8 +7,9 @@ import ModuleConfigSkeleton from "@/components/systemadmin/skeletons/ModuleConfi
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
 import { Select } from "@/components/ui/select"
+import MultiCriteriaFilter from "@/components/shared/MultiCriteriaFilter"
+import ActiveFilterChips from "@/components/shared/ActiveFilterChips"
 import PageHeader from "@/components/shared/PageHeader"
 import { RefreshButton } from "@/components/shared/RefreshButton"
 import ConfirmModal from "@/components/shared/ConfirmModal"
@@ -45,20 +46,24 @@ function getModuleIcon(m) {
   if (m?.id === "backup") return "ph-bold ph-database-backup"
   if (m?.id === "audit_logs") return "ph-bold ph-shield-check"
   if (m?.id === "document_requests") return "ph-bold ph-tray-arrow-up"
+  if (m?.id === "student_directory") return "ph-bold ph-users"
   if (m?.id === "scan_upload") return "ph-bold ph-scan"
   if (m?.id === "documents") return "ph-bold ph-file-text"
   if (m?.id === "notifications") return "ph-bold ph-bell"
   if (m?.id === "records_archive") return "ph-bold ph-archive-box"
   if (m?.id === "storage_explorer") return "ph-bold ph-folder-open"
+  if (m?.id === "student_organizations") return "ph-bold ph-buildings"
   return "ph-bold ph-cube"
 }
 
 function getModuleTargetText(m) {
   if (m?.is_system) return "Required System Feature"
+  if (m?.id === "student_organizations") return "OSAS Student Organizations & Whitelist"
   if (m?.id === "scan_upload") return "Document Scanning Station"
   if (m?.id === "documents") return "Student Records Search"
   if (m?.id === "records_review") return "Document Approvals"
   if (m?.id === "document_requests") return "Student Document Requests"
+  if (m?.id === "student_directory") return "Student Master Records & Profiles"
   if (m?.id === "compliance_analytics") return "Digitization Progress Reports"
   if (m?.id === "request_analytics") return "Request Turnaround Reports"
   if (m?.id === "records_archive" || m?.id === "storage_explorer") return "Physical File Archive Finder"
@@ -101,10 +106,11 @@ export default function ModuleConfigTab({ showToast }) {
   const [matrix, setMatrix] = useState(null)
   const [loading, setLoading] = useState(true)
   const [isManualLoading, setIsManualLoading] = useState(false)
-  const [toggling, setToggling] = useState({}) // { [key]: boolean }
   const [searchQuery, setSearchQuery] = useState("")
-  const [categoryFilter, setCategoryFilter] = useState("All") // "All" | "admin" | "staff"
-  const [moduleStatusFilter, setModuleStatusFilter] = useState("All") // "All" | "enabled" | "disabled"
+  const [moduleFilters, setModuleFilters] = useState({
+    category: [],
+    status: [],
+  })
   const [officeFilter, setOfficeFilter] = useState("Active") // "Active" | "Archived"
   const [selectedOfficeId, setSelectedOfficeId] = useState("")
   const [viewMode, setViewMode] = useState("office") // "office" | "matrix"
@@ -375,24 +381,98 @@ export default function ModuleConfigTab({ showToast }) {
     return { active, archived }
   }, [matrix])
 
+  const moduleFilterGroups = useMemo(() => {
+    const modules = matrix?.modules || []
+
+    const catOptions = [
+      {
+        value: "admin",
+        label: "Supervisors & Heads",
+        dotColor: "bg-purple-500",
+        count: modules.filter((m) => m.category === "admin").length,
+      },
+      {
+        value: "staff",
+        label: "Staff Tools",
+        dotColor: "bg-blue-500",
+        count: modules.filter((m) => m.category === "staff").length,
+      },
+    ]
+
+    const statusOptions = [
+      {
+        value: "enabled",
+        label: "Enabled",
+        dotColor: "bg-emerald-500",
+      },
+      {
+        value: "disabled",
+        label: "Disabled",
+        dotColor: "bg-amber-500",
+      },
+    ]
+
+    return [
+      {
+        id: "category",
+        label: "Target Role",
+        options: catOptions,
+      },
+      {
+        id: "status",
+        label: "Module Status",
+        options: statusOptions,
+      },
+    ]
+  }, [matrix])
+
+  const moduleFilterPresets = useMemo(
+    () => [
+      {
+        label: "All",
+        values: { category: [], status: [] },
+        activeCondition: (sel) => !sel?.category?.length && !sel?.status?.length,
+      },
+      {
+        label: "Enabled",
+        values: { status: ["enabled"] },
+      },
+      {
+        label: "Supervisors",
+        values: { category: ["admin"] },
+      },
+      {
+        label: "Staff",
+        values: { category: ["staff"] },
+      },
+    ],
+    []
+  )
+
   const filteredModules = useMemo(() => {
     if (!matrix?.modules) return []
-    return matrix.modules.filter((m) => {
+    const selectedCats = moduleFilters.category || []
+    const selectedStatuses = moduleFilters.status || []
+
+    const list = matrix.modules.filter((m) => {
       const matchesSearch =
+        !searchQuery ||
         m.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         m.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
         (m.description || "").toLowerCase().includes(searchQuery.toLowerCase())
-      const matchesCat = categoryFilter === "All" || m.category === categoryFilter
+
+      const matchesCat = selectedCats.length === 0 || selectedCats.includes(m.category)
 
       let matchesState = true
-      if (moduleStatusFilter !== "All") {
+      if (selectedStatuses.length > 0) {
+        let isEnabled = false
         if (viewMode === "office" && currentOffice) {
-          const isEnabled = Boolean(m.is_system) || Boolean(matrix.assignments[currentOffice.id]?.[m.id]?.enabled)
-          matchesState = moduleStatusFilter === "enabled" ? isEnabled : !isEnabled
+          isEnabled = Boolean(m.is_system) || Boolean(matrix.assignments[currentOffice.id]?.[m.id]?.enabled)
         } else {
-          const anyEnabled = Boolean(m.is_system) || (matrix.offices || []).some((o) => matrix.assignments[o.id]?.[m.id]?.enabled)
-          matchesState = moduleStatusFilter === "enabled" ? anyEnabled : !anyEnabled
+          isEnabled = Boolean(m.is_system) || (matrix.offices || []).some((o) => matrix.assignments[o.id]?.[m.id]?.enabled)
         }
+        const stateKey = isEnabled ? "enabled" : "disabled"
+        matchesState = selectedStatuses.includes(stateKey)
       }
 
       return matchesSearch && matchesCat && matchesState
@@ -407,7 +487,7 @@ export default function ModuleConfigTab({ showToast }) {
     })
 
     return list
-  }, [matrix, searchQuery, categoryFilter, moduleStatusFilter, viewMode, currentOffice, matrixSortOrder])
+  }, [matrix, searchQuery, moduleFilters, viewMode, currentOffice, matrixSortOrder])
 
   const groupedModules = useMemo(() => {
     const admin = filteredModules.filter((m) => m.category === "admin")
@@ -594,89 +674,37 @@ export default function ModuleConfigTab({ showToast }) {
               </div>
             </div>
 
-            {/* Role Select Popover */}
-            <div className="w-full sm:w-[170px] shrink-0">
-              <Select
-                value={categoryFilter}
-                onChange={(e) => setCategoryFilter(e.target.value)}
-                className="h-9 rounded-xl border border-gray-200 dark:border-white/10 text-xs font-normal text-[#111111] dark:text-zinc-200 cursor-pointer shadow-none"
-                menuClassName="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-900 shadow-2xl p-1.5"
-                optionClassName="rounded-lg text-xs font-normal py-1.5 px-2.5 hover:bg-gray-100 dark:hover:bg-zinc-800"
-              >
-                <option value="All">All Roles ({modules.length})</option>
-                <option value="admin">Supervisors ({modules.filter((m) => m.category === "admin").length})</option>
-                <option value="staff">Staff Tools ({modules.filter((m) => m.category === "staff").length})</option>
-              </Select>
-            </div>
-
-            {/* Status Select Popover */}
-            <div className="w-full sm:w-[140px] shrink-0">
-              <Select
-                value={moduleStatusFilter}
-                onChange={(e) => setModuleStatusFilter(e.target.value)}
-                className="h-9 rounded-xl border border-gray-200 dark:border-white/10 text-xs font-normal text-[#111111] dark:text-zinc-200 cursor-pointer shadow-none"
-                menuClassName="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-900 shadow-2xl p-1.5"
-                optionClassName="rounded-lg text-xs font-normal py-1.5 px-2.5 hover:bg-gray-100 dark:hover:bg-zinc-800"
-              >
-                <option value="All">All Status</option>
-                <option value="enabled">Enabled Only</option>
-                <option value="disabled">Disabled Only</option>
-              </Select>
+            {/* Multi-Criteria Filter Dropdown */}
+            <div className="w-full sm:w-auto shrink-0">
+              <MultiCriteriaFilter
+                title="Filter Features"
+                groups={moduleFilterGroups}
+                selected={moduleFilters}
+                onChange={setModuleFilters}
+                presets={moduleFilterPresets}
+                totalCount={modules.length}
+                matchingCount={filteredModules.length}
+                onReset={() => setModuleFilters({ category: [], status: [] })}
+              />
             </div>
           </div>
         </div>
 
         {/* Active Filter Chips Row */}
-        {hasActiveFilters && (
-          <div className="flex-none border-t border-gray-100 dark:border-white/10 bg-white dark:bg-card px-6 py-2.5 animate-in fade-in slide-in-from-top-1 duration-normal">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="mr-1 text-[11px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500">
-                Active filters:
-              </span>
-              {searchQuery && (
-                <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
-                  Search: {searchQuery}
-                  <button
-                    onClick={() => setSearchQuery("")}
-                    className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
-                  >
-                    ×
-                  </button>
-                </div>
-              )}
-              {categoryFilter !== "All" && (
-                <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
-                  Role: {categoryFilter === "admin" ? "Supervisors & Heads" : "Staff Tools"}
-                  <button
-                    onClick={() => setCategoryFilter("All")}
-                    className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
-                  >
-                    ×
-                  </button>
-                </div>
-              )}
-              {moduleStatusFilter !== "All" && (
-                <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
-                  Feature: {moduleStatusFilter === "enabled" ? "Enabled Only" : "Disabled Only"}
-                  <button
-                    onClick={() => setModuleStatusFilter("All")}
-                    className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
-                  >
-                    ×
-                  </button>
-                </div>
-              )}
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleClearFilters}
-                className="h-auto text-[12px] font-medium text-gray-400 dark:text-zinc-500 border-0 bg-transparent hover:bg-transparent shadow-none p-0 hover:text-red-600 dark:hover:text-red-500 transition-colors cursor-pointer"
-              >
-                Clear
-              </Button>
-            </div>
-          </div>
-        )}
+        <ActiveFilterChips
+          groups={moduleFilterGroups}
+          selected={moduleFilters}
+          onRemove={(groupId, val) => {
+            setModuleFilters((prev) => ({
+              ...prev,
+              [groupId]: (prev[groupId] || []).filter((v) => v !== val),
+            }))
+          }}
+          searchQuery={searchQuery}
+          onClearSearch={() => setSearchQuery("")}
+          onClearAll={handleClearFilters}
+          className="border-t border-gray-100 dark:border-white/10 bg-white dark:bg-card px-6 py-2.5"
+        />
 
         {/* Content Section: By Office or Matrix inside the single Card */}
         <div className="overflow-hidden rounded-b-2xl border-t border-gray-200 dark:border-white/10 bg-white dark:bg-card flex flex-col flex-1">

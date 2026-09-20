@@ -37,6 +37,8 @@ import {
 import PageHeader from "@/components/shared/PageHeader";
 import { RefreshButton } from "@/components/shared/RefreshButton";
 import { Select } from "@/components/ui/select";
+import MultiCriteriaFilter from "@/components/shared/MultiCriteriaFilter";
+import ActiveFilterChips from "@/components/shared/ActiveFilterChips";
 import {
   ALLOWED_STATUS_TRANSITIONS,
   TERMINAL_REQUEST_STATUSES,
@@ -102,10 +104,10 @@ export default function DocumentRequestsTab({
   const [isManualLoading, setIsManualLoading] = useState(false);
   const [q, setQ] = useState("");
   const [debouncedQ, setDebouncedQ] = useState("");
-  const [statusFilter, setStatusFilter] = useState("");
-  const [clientTypeFilter, setClientTypeFilter] = useState("");
-  const [docTypeFilter, setDocTypeFilter] = useState("");
-  const [charterFilter, setCharterFilter] = useState("");
+  const [statusFilters, setStatusFilters] = useState([]);
+  const [clientTypeFilters, setClientTypeFilters] = useState([]);
+  const [docTypeFilters, setDocTypeFilters] = useState([]);
+  const [charterFilters, setCharterFilters] = useState([]);
   const [page, setPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [sortBy, setSortBy] = useState("created_at");
@@ -203,9 +205,9 @@ export default function DocumentRequestsTab({
         qs.set("limit", String(itemsPerPage));
         qs.set("offset", String(offset));
         if (debouncedQ) qs.set("q", debouncedQ);
-        if (statusFilter) qs.set("status", statusFilter);
-        if (clientTypeFilter) qs.set("clientType", clientTypeFilter);
-        if (docTypeFilter) qs.set("docType", docTypeFilter);
+        if (statusFilters.length > 0) qs.set("status", statusFilters.join(","));
+        if (clientTypeFilters.length > 0) qs.set("clientType", clientTypeFilters.join(","));
+        if (docTypeFilters.length > 0) qs.set("docType", docTypeFilters.join(","));
         qs.set("sortBy", sortBy);
         qs.set("sortOrder", sortOrder);
         const res = await fetch(`/api/document-requests?${qs}`, {
@@ -234,7 +236,7 @@ export default function DocumentRequestsTab({
         setIsManualLoading(false);
       }
     },
-    [page, itemsPerPage, debouncedQ, statusFilter, clientTypeFilter, docTypeFilter, sortBy, sortOrder, showToast]
+    [page, itemsPerPage, debouncedQ, statusFilters, clientTypeFilters, docTypeFilters, sortBy, sortOrder, showToast]
   );
 
   const handleSort = (column) => {
@@ -459,24 +461,126 @@ export default function DocumentRequestsTab({
   const totalPages = Math.max(1, Math.ceil(total / itemsPerPage));
 
   const displayedRows = useMemo(() => {
-    if (!charterFilter) return rows;
+    if (charterFilters.length === 0) return rows;
     return rows.filter((r) => {
       const charter = getRequestCharterStatus(r);
-      return charter.status === charterFilter;
+      return charterFilters.includes(charter.status);
     });
-  }, [rows, charterFilter]);
+  }, [rows, charterFilters]);
 
-  const handleClearFilters = () => {
-    setQ("");
-    setStatusFilter("");
-    setClientTypeFilter("");
-    setDocTypeFilter("");
-    setCharterFilter("");
+  const filterGroups = useMemo(() => [
+    {
+      id: "status",
+      label: "Request Status",
+      options: [
+        { value: "Pending", label: "Pending", indicatorColor: "bg-amber-500" },
+        { value: "InProgress", label: "In Progress", indicatorColor: "bg-blue-500" },
+        { value: "Ready", label: "Ready", indicatorColor: "bg-emerald-500" },
+        { value: "Completed", label: "Completed", indicatorColor: "bg-emerald-600" },
+        { value: "Cancelled", label: "Cancelled", indicatorColor: "bg-gray-400" },
+        { value: "Shredded", label: "Shredded", indicatorColor: "bg-rose-500" },
+      ],
+    },
+    {
+      id: "clientType",
+      label: "Client Type",
+      options: [
+        { value: "Student", label: "Students" },
+        { value: "Alumni", label: "Alumni" },
+      ],
+    },
+    {
+      id: "docType",
+      label: "Document Type",
+      options: (docTypes || []).map((dt) => ({ value: dt, label: dt })),
+    },
+    {
+      id: "charter",
+      label: "Citizen's Charter SLA",
+      options: [
+        { value: "OnTrack", label: "On Schedule", indicatorColor: "bg-emerald-500" },
+        { value: "DueSoon", label: "Due Today", indicatorColor: "bg-amber-500" },
+        { value: "Overdue", label: "Overdue (RA 11032)", indicatorColor: "bg-rose-500" },
+        { value: "Compliant", label: "Met SLA", indicatorColor: "bg-emerald-600" },
+        { value: "Delayed", label: "Delayed", indicatorColor: "bg-rose-400" },
+      ],
+    },
+  ], [docTypes]);
+
+  const filterValues = useMemo(() => ({
+    status: statusFilters,
+    clientType: clientTypeFilters,
+    docType: docTypeFilters,
+    charter: charterFilters,
+  }), [statusFilters, clientTypeFilters, docTypeFilters, charterFilters]);
+
+  const handleFilterChange = useCallback((groupId, values) => {
+    if (groupId === "status") setStatusFilters(values);
+    else if (groupId === "clientType") setClientTypeFilters(values);
+    else if (groupId === "docType") setDocTypeFilters(values);
+    else if (groupId === "charter") setCharterFilters(values);
     setPage(1);
-  };
+  }, []);
+
+  const handleClearFilters = useCallback(() => {
+    setQ("");
+    setStatusFilters([]);
+    setClientTypeFilters([]);
+    setDocTypeFilters([]);
+    setCharterFilters([]);
+    setPage(1);
+  }, []);
+
+  const filterPresets = useMemo(() => [
+    { label: "All Requests", values: { status: [], clientType: [], docType: [], charter: [] } },
+    { label: "In Progress", values: { status: ["InProgress"], clientType: clientTypeFilters, docType: docTypeFilters, charter: charterFilters } },
+    { label: "Ready for Pickup", values: { status: ["Ready"], clientType: clientTypeFilters, docType: docTypeFilters, charter: charterFilters } },
+    { label: "Overdue / Risk", values: { status: statusFilters, clientType: clientTypeFilters, docType: docTypeFilters, charter: ["Overdue", "DueSoon"] } },
+  ], [statusFilters, clientTypeFilters, docTypeFilters, charterFilters]);
+
+  const activeChips = useMemo(() => {
+    const chips = [];
+    if (q.trim()) {
+      chips.push({
+        id: "search",
+        label: `Search: ${q.trim()}`,
+        onRemove: () => { setQ(""); setPage(1); },
+      });
+    }
+    statusFilters.forEach((st) => {
+      chips.push({
+        id: `status-${st}`,
+        label: `Status: ${st === "InProgress" ? "In Progress" : st}`,
+        onRemove: () => { setStatusFilters((prev) => prev.filter((s) => s !== st)); setPage(1); },
+      });
+    });
+    clientTypeFilters.forEach((ct) => {
+      chips.push({
+        id: `client-${ct}`,
+        label: `Client: ${ct === "Student" ? "Students" : "Alumni"}`,
+        onRemove: () => { setClientTypeFilters((prev) => prev.filter((c) => c !== ct)); setPage(1); },
+      });
+    });
+    docTypeFilters.forEach((dt) => {
+      chips.push({
+        id: `docType-${dt}`,
+        label: `Doc: ${dt}`,
+        onRemove: () => { setDocTypeFilters((prev) => prev.filter((d) => d !== dt)); setPage(1); },
+      });
+    });
+    charterFilters.forEach((cf) => {
+      const label = cf === "OnTrack" ? "On Schedule" : cf === "DueSoon" ? "Due Today" : cf === "Overdue" ? "Overdue" : cf === "Compliant" ? "Met SLA" : cf;
+      chips.push({
+        id: `charter-${cf}`,
+        label: `Charter: ${label}`,
+        onRemove: () => { setCharterFilters((prev) => prev.filter((c) => c !== cf)); setPage(1); },
+      });
+    });
+    return chips;
+  }, [q, statusFilters, clientTypeFilters, docTypeFilters, charterFilters]);
 
   const hasActiveFilters = Boolean(
-    q || statusFilter || clientTypeFilter || docTypeFilter || charterFilter
+    q.trim() || statusFilters.length > 0 || clientTypeFilters.length > 0 || docTypeFilters.length > 0 || charterFilters.length > 0
   );
 
   return (
@@ -572,160 +676,28 @@ export default function DocumentRequestsTab({
                   </div>
                 </div>
 
-                {/* Status Select Popover */}
-                <div className="w-full sm:w-[155px] shrink-0">
-                  <Select
-                    value={statusFilter}
-                    onChange={(e) => {
-                      setStatusFilter(e.target.value);
-                      setPage(1);
-                    }}
-                    className="h-9 rounded-xl border border-gray-200 dark:border-white/10 text-xs font-normal text-[#111111] dark:text-zinc-200 cursor-pointer shadow-none"
-                    menuClassName="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-900 shadow-2xl p-1.5"
-                    optionClassName="rounded-lg text-xs font-normal py-1.5 px-2.5 hover:bg-gray-100 dark:hover:bg-zinc-800"
-                  >
-                    <option value="">All Statuses</option>
-                    <option value="Pending">Pending</option>
-                    <option value="InProgress">In Progress</option>
-                    <option value="Ready">Ready</option>
-                    <option value="Completed">Completed</option>
-                    <option value="Cancelled">Cancelled</option>
-                    <option value="Shredded">Shredded</option>
-                  </Select>
-                </div>
-
-                {/* Document Type Select Popover */}
-                <div className="w-full sm:w-[175px] shrink-0">
-                  <Select
-                    value={docTypeFilter}
-                    onChange={(e) => {
-                      setDocTypeFilter(e.target.value);
-                      setPage(1);
-                    }}
-                    className="h-9 rounded-xl border border-gray-200 dark:border-white/10 text-xs font-normal text-[#111111] dark:text-zinc-200 cursor-pointer shadow-none"
-                    menuClassName="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-900 shadow-2xl p-1.5"
-                    optionClassName="rounded-lg text-xs font-normal py-1.5 px-2.5 hover:bg-gray-100 dark:hover:bg-zinc-800"
-                  >
-                    <option value="">All Documents</option>
-                    {docTypes.map((dt) => (
-                      <option key={dt} value={dt}>
-                        {dt}
-                      </option>
-                    ))}
-                  </Select>
-                </div>
-
-                {/* Citizen's Charter Status Select Popover */}
-                <div className="w-full sm:w-[170px] shrink-0">
-                  <Select
-                    value={charterFilter}
-                    onChange={(e) => {
-                      setCharterFilter(e.target.value);
-                      setPage(1);
-                    }}
-                    className="h-9 rounded-xl border border-gray-200 dark:border-white/10 text-xs font-normal text-[#111111] dark:text-zinc-200 cursor-pointer shadow-none"
-                    menuClassName="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-900 shadow-2xl p-1.5"
-                    optionClassName="rounded-lg text-xs font-normal py-1.5 px-2.5 hover:bg-gray-100 dark:hover:bg-zinc-800"
-                  >
-                    <option value="">All Charter Status</option>
-                    <option value="OnTrack">On Schedule</option>
-                    <option value="DueSoon">Due Today</option>
-                    <option value="Overdue">Overdue (RA 11032)</option>
-                    <option value="Compliant">Met SLA</option>
-                    <option value="Delayed">Delayed</option>
-                  </Select>
-                </div>
+                {/* MultiCriteriaFilter Popover */}
+                <MultiCriteriaFilter
+                  title="Filter Requests"
+                  groups={filterGroups}
+                  selectedValues={filterValues}
+                  onChange={handleFilterChange}
+                  onClearAll={handleClearFilters}
+                  presets={filterPresets}
+                  totalCount={total}
+                  filteredCount={displayedRows.length}
+                />
               </div>
             </div>
           )}
 
           {/* 3. Active Filter Chips Row */}
-          {!loading && !error && hasActiveFilters && (
-            <div className="flex-none border-t border-gray-100 dark:border-white/10 bg-white dark:bg-card px-6 py-2.5 animate-in fade-in slide-in-from-top-1 duration-normal">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="mr-1 text-[11px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500">
-                  Active filters:
-                </span>
-                {q && (
-                  <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
-                    Search: {q}
-                    <button
-                      onClick={() => {
-                        setQ("");
-                        setPage(1);
-                      }}
-                      className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
-                    >
-                      ×
-                    </button>
-                  </div>
-                )}
-                {clientTypeFilter && (
-                  <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
-                    Client: {clientTypeFilter === "Student" ? "Students" : "Alumni"}
-                    <button
-                      onClick={() => {
-                        setClientTypeFilter("");
-                        setPage(1);
-                      }}
-                      className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
-                    >
-                      ×
-                    </button>
-                  </div>
-                )}
-                {statusFilter && (
-                  <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
-                    Status: {statusFilter === "InProgress" ? "In Progress" : statusFilter}
-                    <button
-                      onClick={() => {
-                        setStatusFilter("");
-                        setPage(1);
-                      }}
-                      className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
-                    >
-                      ×
-                    </button>
-                  </div>
-                )}
-                {docTypeFilter && (
-                  <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
-                    Document: {docTypeFilter}
-                    <button
-                      onClick={() => {
-                        setDocTypeFilter("");
-                        setPage(1);
-                      }}
-                      className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
-                    >
-                      ×
-                    </button>
-                  </div>
-                )}
-                {charterFilter && (
-                  <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
-                    Charter: {charterFilter === "OnTrack" ? "On Schedule" : charterFilter === "DueSoon" ? "Due Today" : charterFilter === "Overdue" ? "Overdue" : charterFilter === "Compliant" ? "Met SLA" : charterFilter}
-                    <button
-                      onClick={() => {
-                        setCharterFilter("");
-                        setPage(1);
-                      }}
-                      className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
-                    >
-                      ×
-                    </button>
-                  </div>
-                )}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleClearFilters}
-                  className="h-auto text-[12px] font-medium text-gray-400 dark:text-zinc-500 border-0 bg-transparent hover:bg-transparent shadow-none p-0 hover:text-red-600 dark:hover:text-red-500 transition-colors cursor-pointer"
-                >
-                  Clear
-                </Button>
-              </div>
-            </div>
+          {!loading && !error && (
+            <ActiveFilterChips
+              chips={activeChips}
+              onClearAll={handleClearFilters}
+              className="border-t border-gray-100 dark:border-white/10 px-6 py-2.5"
+            />
           )}
 
           {/* 4. Full-Width Table Body */}
@@ -1041,7 +1013,7 @@ export default function DocumentRequestsTab({
           }}
         >
           <SheetContent
-            className="font-jakarta flex flex-col border-l bg-white p-0 shadow-2xl data-[side=right]:w-full data-[side=right]:sm:max-w-[620px] data-[side=right]:md:max-w-[700px] sm:max-w-[620px]! md:max-w-[700px]! w-full dark:border-white/10 dark:bg-[#121214]"
+            className="font-jakarta flex flex-col border-l bg-white p-0 shadow-2xl data-[side=right]:w-full data-[side=right]:sm:max-w-2xl data-[side=right]:md:max-w-3xl data-[side=right]:lg:max-w-4xl sm:max-w-2xl md:max-w-3xl lg:max-w-4xl w-full dark:border-white/10 dark:bg-[#121214]"
             style={{ borderLeft: "0.5px solid rgba(0,0,0,0.08)" }}
           >
             {/* Sheet Header */}

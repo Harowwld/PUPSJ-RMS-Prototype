@@ -19,6 +19,7 @@ export function RefreshButton({
   isLoading,
   className,
   title = "Refresh",
+  showToast = true,
 }) {
   const [clickState, setClickState] = useState("idle") // idle, pending, loading, finished
 
@@ -45,20 +46,22 @@ export function RefreshButton({
         setClickState("finished")
       }
     } else if (clickState === "finished") {
-      const toastTitle = title.startsWith("Refresh ") 
-        ? title.replace("Refresh ", "") + " Refreshed" 
-        : title + " Refreshed"
-        
-      toast.success(toastTitle, {
-        description: "Loaded latest data from repository.",
-      })
+      if (showToast) {
+        const toastTitle = title.startsWith("Refresh ") 
+          ? title.replace("Refresh ", "") + " Refreshed" 
+          : title + " Refreshed"
+          
+        toast.success(toastTitle, {
+          description: "Loaded latest data from repository.",
+        })
+      }
       setClickState("idle")
     }
     
     return () => {
       if (timer) clearTimeout(timer)
     }
-  }, [isLoading, clickState, title])
+  }, [isLoading, clickState, title, showToast])
 
   return (
     <Tooltip>
