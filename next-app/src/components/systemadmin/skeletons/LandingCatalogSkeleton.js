@@ -18,7 +18,7 @@ export default function LandingCatalogSkeleton() {
               </span>
             </div>
           }
-          description="Configure authentic university credentials, filing requirements, client eligibility, and interactive Ferris Wheel 3D cards."
+          description="Configure authentic university credentials, filing requirements, client eligibility, and Apple-style carousel cards."
           showBorder={false}
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
           descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
@@ -59,7 +59,7 @@ export default function LandingCatalogSkeleton() {
                     </span>
                   </div>
                   <p className="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">
-                    Select a credential to edit or drag position on the wheel.
+                    Select a credential to edit or adjust order in the carousel.
                   </p>
                 </div>
 

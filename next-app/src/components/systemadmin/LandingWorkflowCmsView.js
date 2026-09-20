@@ -10,8 +10,6 @@ import { Skeleton } from "@/components/ui/skeleton"
 import LandingWorkflowSkeleton from "@/components/systemadmin/skeletons/LandingWorkflowSkeleton"
 import PageHeader from "@/components/shared/PageHeader"
 import ConfirmModal from "@/components/shared/ConfirmModal"
-import BevelButton from "@/components/ui/bevel-button"
-import MorphButton from "@/components/ui/morph-button"
 import { cn } from "@/lib/utils"
 
 const DEFAULT_WORKFLOW = {
@@ -133,27 +131,54 @@ export default function LandingWorkflowCmsView({ showToast }) {
     [showToast]
   )
 
-  const fetchWorkflowData = useCallback(async () => {
-    try {
-      setLoading(true)
-      const res = await fetch("/api/landing/workflow", { cache: "no-store" })
-      const json = await res.json()
-      if (res.ok && json.ok && json.data) {
-        setWorkflowData(json.data)
-      } else {
-        notify(json.error || "Failed to load workflow configuration", true)
+  const fetchWorkflowData = useCallback(
+    async (isRefresh = false) => {
+      if (isRefresh) {
+        setLoading(true)
       }
-    } catch (err) {
-      console.error("[LandingWorkflowCmsView] Fetch error:", err)
-      notify("Network error fetching workflow settings", true)
-    } finally {
-      setLoading(false)
-    }
-  }, [notify])
+      try {
+        const res = await fetch("/api/landing/workflow", { cache: "no-store" })
+        const json = await res.json()
+        if (res.ok && json.ok && json.data) {
+          setWorkflowData(json.data)
+        } else {
+          notify(json.error || "Failed to load workflow configuration", true)
+        }
+      } catch (err) {
+        console.error("[LandingWorkflowCmsView] Fetch error:", err)
+        notify("Network error fetching workflow settings", true)
+      } finally {
+        setLoading(false)
+      }
+    },
+    [notify]
+  )
 
   useEffect(() => {
-    fetchWorkflowData()
-  }, [fetchWorkflowData])
+    let ignore = false
+    async function init() {
+      try {
+        const res = await fetch("/api/landing/workflow", { cache: "no-store" })
+        const json = await res.json()
+        if (ignore) return
+        if (res.ok && json.ok && json.data) {
+          setWorkflowData(json.data)
+        } else {
+          notify(json.error || "Failed to load workflow configuration", true)
+        }
+      } catch (err) {
+        if (ignore) return
+        console.error("[LandingWorkflowCmsView] Fetch error:", err)
+        notify("Network error fetching workflow settings", true)
+      } finally {
+        if (!ignore) setLoading(false)
+      }
+    }
+    init()
+    return () => {
+      ignore = true
+    }
+  }, [notify])
 
   const handleSave = async () => {
     if (!workflowData.headingLine1.trim() || !workflowData.headingLine2.trim()) {
@@ -797,44 +822,19 @@ export default function LandingWorkflowCmsView({ showToast }) {
                 </div>
               </div>
 
-              {/* Miniature Workflow Simulator */}
-              <div className="relative w-full rounded-2xl overflow-hidden border border-gray-200 dark:border-white/10 bg-zinc-950 shadow-lg p-6 sm:p-10 select-none text-white">
-                {/* Ambient glow blobs */}
-                <div className="absolute top-0 left-1/4 w-72 h-72 bg-[#800000]/20 rounded-full blur-[100px] pointer-events-none" />
-                <div className="absolute bottom-0 right-1/4 w-72 h-72 bg-amber-600/10 rounded-full blur-[120px] pointer-events-none" />
-
-                <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+              {/* Miniature Workflow Simulator Matching ProcessWorkflow.js */}
+              <div className="relative w-full rounded-2xl overflow-hidden border border-gray-200 dark:border-white/10 bg-zinc-950 shadow-lg p-6 sm:p-12 select-none text-white">
+                <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-14 items-center">
                   {/* Left Column Preview (Centered relative to steps) */}
-                  <div className="lg:col-span-5 space-y-4 flex flex-col justify-center my-auto">
-                    <h3 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight leading-tight">
+                  <div className="lg:col-span-5 space-y-5 flex flex-col justify-center my-auto">
+                    <h3 className="text-3xl sm:text-4xl lg:text-5xl font-semibold text-white tracking-tight leading-[1.1] max-w-[320px]">
                       {workflowData.headingLine1 || "How to Request"}<br />
                       {workflowData.headingLine2 || "Your Documents."}
                     </h3>
 
-                    <p className="text-xs text-zinc-400 leading-relaxed font-normal">
+                    <p className="text-xs sm:text-sm text-zinc-400 leading-relaxed font-normal max-w-md">
                       {workflowData.description}
                     </p>
-
-                    <div className="flex flex-wrap items-center gap-2 pt-2">
-                      {workflowData.primaryButtonEnabled !== false && (
-                        <BevelButton
-                          type="button"
-                          className="h-9 px-4 rounded-full font-semibold text-xs tracking-wide shadow-[0_10px_25px_rgba(128,0,0,0.3)] pointer-events-none"
-                        >
-                          {workflowData.primaryButtonText || "Request Document"}
-                        </BevelButton>
-                      )}
-
-                      {workflowData.secondaryButtonEnabled !== false && (
-                        <MorphButton
-                          variant="secondary"
-                          className="h-9 px-3.5 rounded-full text-xs font-medium liquid-glass-dark pointer-events-none text-white/90"
-                        >
-                          <span>{workflowData.secondaryButtonText || "Explore Services"}</span>
-                          <span className="opacity-70 text-[10px] ml-1">↓</span>
-                        </MorphButton>
-                      )}
-                    </div>
                   </div>
 
                   {/* Right Column Steps Preview */}
@@ -861,58 +861,42 @@ export default function LandingWorkflowCmsView({ showToast }) {
                           <div className="absolute left-0 top-0">
                             <div
                               className={cn(
-                                "w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center font-mono text-xs font-bold transition-all duration-300",
+                                "w-11 h-11 rounded-full flex items-center justify-center font-mono text-sm transition-all duration-300",
                                 isSelected
-                                  ? "bg-[#800000] text-white border-2 border-red-400/80 scale-105"
-                                  : "liquid-glass-dark text-zinc-400 group-hover:text-white"
+                                  ? "bg-[#800000] text-white shadow-md"
+                                  : "bg-white/5 border border-white/10 text-zinc-400 group-hover:text-white"
                               )}
                             >
                               {step.num || String(sIdx + 1).padStart(2, "0")}
                             </div>
-
-                            {sIdx < currentSteps.length - 1 && (
-                              <div className="absolute left-1/2 top-11 sm:top-12 w-[1px] h-8 sm:h-12 -translate-x-1/2 bg-gradient-to-b from-white/30 via-white/10 to-transparent pointer-events-none" />
-                            )}
                           </div>
 
                           {/* Content */}
                           <div className="pt-0.5">
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className="text-[9px] font-mono uppercase tracking-widest text-red-400 font-bold">
-                                Step {step.num || String(sIdx + 1).padStart(2, "0")}
-                              </span>
-                              {step.summary && (
-                                <>
-                                  
-                                  <span className="text-[10px] font-mono text-zinc-400">
-                                    {step.summary}
-                                  </span>
-                                </>
-                              )}
-                            </div>
-
-                            <h4 className="text-sm sm:text-base font-bold text-white tracking-tight mb-1.5 group-hover:text-red-100 transition-colors">
+                            <h4 className="text-base sm:text-lg font-medium text-white tracking-tight mb-1.5 group-hover:text-red-200 transition-colors">
                               {step.title}
                             </h4>
 
-                            <p className="text-[11px] text-zinc-400 leading-relaxed font-normal max-w-md mb-2">
-                              {step.desc}
-                            </p>
+                            {step.desc && (
+                              <p className="text-xs text-zinc-400 leading-relaxed font-normal max-w-xl mb-3">
+                                {step.desc}
+                              </p>
+                            )}
 
-                            <div className="flex flex-wrap items-center gap-1.5">
+                            <div className="flex flex-wrap items-center gap-2">
                               {(step.tags || []).map((t, ti) => (
                                 <span
                                   key={ti}
-                                  className="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-mono font-medium liquid-glass-dark-pill text-zinc-300"
+                                  className="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-medium bg-transparent border border-white/10 text-zinc-400"
                                 >
                                   {t}
                                 </span>
                               ))}
 
                               {step.actionLabel && (
-                                <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-red-400 ml-1">
+                                <span className="inline-flex items-center gap-1 text-[10px] font-medium text-red-500 ml-2">
                                   <span>{step.actionLabel}</span>
-                                  <HugeIcon  className="ph-bold ph-arrow-right text-[9px]" />
+                                  <HugeIcon className="ph-bold ph-arrow-right text-[10px]" />
                                 </span>
                               )}
                             </div>

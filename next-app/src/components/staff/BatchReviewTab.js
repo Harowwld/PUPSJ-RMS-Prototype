@@ -131,12 +131,6 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
     setPage(0);
   }, []);
 
-  const filterPresets = useMemo(() => [
-    { label: "All Records", values: { status: [], docType: [] } },
-    { label: "Needs Review", values: { status: ["Conflict"], docType: docTypeFilters } },
-    { label: "Confirmed", values: { status: ["Confirmed"], docType: docTypeFilters } },
-    { label: "Action Required", values: { status: ["Conflict", "Failed"], docType: docTypeFilters } },
-  ], [docTypeFilters]);
 
   const activeChips = useMemo(() => {
     const chips = [];
@@ -316,7 +310,6 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
                 selectedValues={filterValues}
                 onChange={handleFilterChange}
                 onClearAll={handleClearFilters}
-                presets={filterPresets}
                 totalCount={total}
                 filteredCount={rows.length}
               />

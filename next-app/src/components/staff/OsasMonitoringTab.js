@@ -466,12 +466,6 @@ export default function OsasMonitoringTab({ showToast }) {
     setPage(1);
   }, []);
 
-  const filterPresets = useMemo(() => [
-    { label: "All Proposals", values: { status: [], org: [] } },
-    { label: "Active Review", values: { status: ["Under Review", "Needs Revision"], org: orgFilters } },
-    { label: "Approved Only", values: { status: ["Approved"], org: orgFilters } },
-    { label: "Needs Revision", values: { status: ["Needs Revision"], org: orgFilters } },
-  ], [orgFilters]);
 
   const activeChips = useMemo(() => {
     const chips = [];
@@ -563,7 +557,7 @@ export default function OsasMonitoringTab({ showToast }) {
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
           descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
           actions={
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
               {/* Segmented View Mode Toggle */}
               <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-gray-200/60 dark:border-white/5 shrink-0">
                 <button
@@ -687,7 +681,6 @@ export default function OsasMonitoringTab({ showToast }) {
               selectedValues={filterValues}
               onChange={handleFilterChange}
               onClearAll={handleClearFilters}
-              presets={filterPresets}
               totalCount={rows.length}
               filteredCount={filteredRows.length}
             />

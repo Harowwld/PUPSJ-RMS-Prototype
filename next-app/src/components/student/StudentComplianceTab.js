@@ -460,7 +460,7 @@ export default function StudentComplianceTab({ authUser }) {
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
           descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
           actions={
-            <div className="flex items-center gap-2.5 sm:gap-3">
+            <div className="flex items-center gap-2">
               <span className="hidden md:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-700 border border-gray-200 dark:bg-zinc-800 dark:border-white/10 dark:text-zinc-300">
                 <HugeIcon  className="ph-bold ph-eye text-[12px]"></HugeIcon>
                 Viewer Only
@@ -623,7 +623,7 @@ export default function StudentComplianceTab({ authUser }) {
                 {loading ? (
                   <Skeleton className="h-3.5 w-10 rounded dark:bg-muted" />
                 ) : (
-                  `${filteredRequirements.length} results`
+                  filteredRequirements.length
                 )}
               </div>
             </div>

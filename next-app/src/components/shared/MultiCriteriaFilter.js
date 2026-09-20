@@ -12,96 +12,121 @@ import { cn } from "@/lib/utils";
 
 /**
  * MultiCriteriaFilter
- * A unified, Apple HIG-compliant multi-criteria checkbox popover filter.
- *
- * @param {string} title - Default placeholder title on trigger button (e.g. "Filter Requirements")
- * @param {Array} groups - Filter groups: [{ id: "status", label: "Status Criteria", options: [{ value, label, count, dotColor }] }]
- * @param {Object} selected - Selected values: { status: ["pending"], category: ["admission"] }
- * @param {Function} onChange - Callback when selection changes: (newSelected) => void
- * @param {Array} presets - Optional presets: [{ label: "All", values: {} }, { label: "Pending", values: { status: ["pending"] } }]
- * @param {number} totalCount - Total number of unfiltered items
- * @param {number} matchingCount - Number of currently matching filtered items
- * @param {Function} onReset - Callback when resetting all filters
- * @param {string} align - Popover alignment ("start" | "end" | "center")
- * @param {string} className - Wrapper container className
- * @param {string} triggerClassName - Trigger button custom className
+ * Unified Apple HIG-compliant multi-criteria checkbox popover filter.
  */
 export default function MultiCriteriaFilter({
-  title = "Filter Records",
+  title,
+  buttonLabel,
   groups = [],
-  selected = {},
+  selected,
+  selectedValues,
   onChange,
-  presets = [],
   totalCount,
   matchingCount,
+  filteredCount,
   onReset,
+  onClearAll,
   align = "end",
   className,
   triggerClassName,
 }) {
+  const displayTitle = buttonLabel || title || "Filter Records";
+  const effectiveMatching = filteredCount !== undefined ? filteredCount : matchingCount;
+
+  // Resolve current selection map across both object-based and per-group APIs
+  const effectiveSelected = useMemo(() => {
+    const map = { ...(selectedValues || selected || {}) };
+    groups.forEach((g) => {
+      if (Array.isArray(g.selected)) {
+        map[g.id] = g.selected;
+      }
+    });
+    return map;
+  }, [selected, selectedValues, groups]);
+
   // Count total active criteria
   const activeCount = useMemo(() => {
-    return Object.values(selected || {}).reduce((acc, curr) => {
+    return Object.values(effectiveSelected).reduce((acc, curr) => {
       return acc + (Array.isArray(curr) ? curr.length : 0);
     }, 0);
-  }, [selected]);
+  }, [effectiveSelected]);
 
   // Compute trigger summary label
   const triggerLabel = useMemo(() => {
-    if (activeCount === 0) return title;
+    if (activeCount === 0) return displayTitle;
 
     // Single active criterion: find its display label
     if (activeCount === 1) {
       for (const group of groups) {
-        const selectedInGroup = selected?.[group.id];
+        const selectedInGroup = effectiveSelected[group.id];
         if (Array.isArray(selectedInGroup) && selectedInGroup.length === 1) {
-          const opt = group.options?.find((o) => String(o.value) === String(selectedInGroup[0]));
+          const opt = group.options?.find(
+            (o) => String(o.value ?? o.id) === String(selectedInGroup[0])
+          );
           if (opt?.label) return opt.label;
         }
       }
     }
 
-    // Single group with multiple items
-    const activeGroups = groups.filter((g) => (selected?.[g.id]?.length || 0) > 0);
+    // Single group with multiple items: return group label (count is in the badge)
+    const activeGroups = groups.filter((g) => (effectiveSelected[g.id]?.length || 0) > 0);
     if (activeGroups.length === 1) {
-      const g = activeGroups[0];
-      return `${g.label}: ${selected[g.id].length}`;
+      return activeGroups[0].label;
     }
 
-    return `Filters (${activeCount})`;
-  }, [activeCount, title, groups, selected]);
+    // Multiple groups active: return base title (count is in the badge)
+    return displayTitle;
+  }, [activeCount, displayTitle, groups, effectiveSelected]);
 
-  const toggleOption = (groupId, val) => {
-    if (!onChange) return;
-    const currentList = selected?.[groupId] || [];
-    const exists = currentList.includes(val);
+  const toggleOption = (group, rawVal) => {
+    const currentList = effectiveSelected[group.id] || [];
+    const exists = currentList.includes(rawVal);
     const updatedList = exists
-      ? currentList.filter((v) => v !== val)
-      : [...currentList, val];
+      ? currentList.filter((v) => v !== rawVal)
+      : [...currentList, rawVal];
 
-    onChange({
-      ...selected,
-      [groupId]: updatedList,
-    });
-  };
-
-  const handleApplyPreset = (presetValues) => {
-    if (!onChange) return;
-    onChange({
-      ...selected,
-      ...presetValues,
-    });
+    if (typeof group.onChange === "function") {
+      group.onChange(updatedList);
+    } else if (typeof onChange === "function") {
+      if (selectedValues !== undefined) {
+        onChange(group.id, updatedList);
+      } else {
+        onChange({
+          ...effectiveSelected,
+          [group.id]: updatedList,
+        });
+      }
+    }
   };
 
   const handleResetAll = () => {
-    if (onReset) {
+    if (typeof onClearAll === "function") {
+      onClearAll();
+      return;
+    }
+    if (typeof onReset === "function") {
       onReset();
-    } else if (onChange) {
-      const cleared = {};
-      groups.forEach((g) => {
-        cleared[g.id] = [];
-      });
-      onChange(cleared);
+      return;
+    }
+
+    let hasGroupHandlers = false;
+    groups.forEach((g) => {
+      if (typeof g.onChange === "function") {
+        hasGroupHandlers = true;
+        g.onChange([]);
+      }
+    });
+
+    if (!hasGroupHandlers && typeof onChange === "function") {
+      if (selectedValues !== undefined) {
+        groups.forEach((g) => onChange(g.id, []));
+      } else {
+        const cleared = {};
+        groups.forEach((g) => {
+          cleared[g.id] = [];
+        });
+        onChange(cleared);
+      }
     }
   };
 
@@ -164,46 +189,10 @@ export default function MultiCriteriaFilter({
             )}
           </div>
 
-          {/* Quick Presets Bar (Optional) */}
-          {presets.length > 0 && (
-            <div className="p-3 pb-0">
-              <div className="flex items-center gap-1 p-1 bg-gray-100/80 dark:bg-zinc-800/60 rounded-xl border border-gray-200/50 dark:border-white/5">
-                {presets.map((preset) => {
-                  const isActive = preset.activeCondition
-                    ? preset.activeCondition(selected)
-                    : Object.entries(preset.values || {}).every(([k, vals]) => {
-                        const cur = selected?.[k] || [];
-                        if (vals.length === 0) return cur.length === 0;
-                        return (
-                          cur.length === vals.length &&
-                          cur.every((v) => vals.includes(v))
-                        );
-                      });
-
-                  return (
-                    <button
-                      key={preset.label}
-                      type="button"
-                      onClick={() => handleApplyPreset(preset.values)}
-                      className={cn(
-                        "flex-1 py-1 px-2 text-[11px] font-medium rounded-lg transition-all cursor-pointer text-center truncate",
-                        isActive
-                          ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs font-semibold"
-                          : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
-                      )}
-                    >
-                      {preset.label}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
           {/* Filter Groups List */}
           <div className="max-h-72 overflow-y-auto p-3 space-y-4 scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-zinc-800">
             {groups.map((group, groupIdx) => {
-              const selectedInGroup = selected?.[group.id] || [];
+              const selectedInGroup = effectiveSelected[group.id] || [];
 
               return (
                 <div
@@ -223,12 +212,14 @@ export default function MultiCriteriaFilter({
 
                   <div className="space-y-1">
                     {group.options?.map((opt) => {
-                      const isChecked = selectedInGroup.includes(opt.value);
+                      const optValue = opt.value ?? opt.id;
+                      const isChecked = selectedInGroup.includes(optValue);
+                      const dot = opt.dotColor || opt.indicatorColor;
 
                       return (
                         <div
-                          key={String(opt.value)}
-                          onClick={() => toggleOption(group.id, opt.value)}
+                          key={String(optValue)}
+                          onClick={() => toggleOption(group, optValue)}
                           className="flex items-center justify-between p-2 rounded-xl hover:bg-gray-100/70 dark:hover:bg-white/5 cursor-pointer select-none transition-colors group/item"
                         >
                           <div className="flex items-center gap-2.5 min-w-0">
@@ -246,8 +237,8 @@ export default function MultiCriteriaFilter({
                             </div>
 
                             <div className="flex items-center gap-1.5 min-w-0">
-                              {opt.dotColor && (
-                                <span className={cn("w-1.5 h-1.5 rounded-full shrink-0", opt.dotColor)} />
+                              {dot && (
+                                <span className={cn("w-1.5 h-1.5 rounded-full shrink-0", dot)} />
                               )}
                               <span className="text-xs font-medium text-gray-800 dark:text-zinc-200 truncate">
                                 {opt.label}
@@ -272,9 +263,9 @@ export default function MultiCriteriaFilter({
           {/* Popover Footer */}
           <div className="px-4 py-2.5 border-t border-gray-100 dark:border-white/10 bg-gray-50/60 dark:bg-zinc-800/40 flex items-center justify-between text-xs">
             <span className="text-gray-500 dark:text-zinc-400 text-[11px]">
-              {matchingCount !== undefined && totalCount !== undefined ? (
+              {effectiveMatching !== undefined && totalCount !== undefined ? (
                 <>
-                  Matching: <strong className="text-gray-900 dark:text-zinc-100">{matchingCount}</strong> of {totalCount}
+                  Matching: <strong className="text-gray-900 dark:text-zinc-100">{effectiveMatching}</strong> of {totalCount}
                 </>
               ) : (
                 "Combined criteria"

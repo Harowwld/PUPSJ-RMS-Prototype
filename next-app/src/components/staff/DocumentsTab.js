@@ -445,24 +445,6 @@ export default function DocumentsTab({
     }
   }, [docsForm, setDocsForm, refreshDocuments]);
 
-  const filterPresets = useMemo(() => [
-    {
-      label: "All Documents",
-      values: { status: [], docType: [] },
-    },
-    {
-      label: "Verified Only",
-      values: { status: ["Verified"], docType: docTypeFilters },
-    },
-    {
-      label: "Needs Action",
-      values: { status: ["Unverified", "Missing"], docType: docTypeFilters },
-    },
-    {
-      label: "Uploaded Only",
-      values: { status: ["Uploaded"], docType: docTypeFilters },
-    },
-  ], [docTypeFilters]);
 
   const activeChips = useMemo(() => {
     const chips = [];
@@ -698,7 +680,7 @@ export default function DocumentsTab({
             titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
             descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
             actions={
-              <div className="flex items-center gap-6">
+              <div className="flex items-center gap-2">
                 <RefreshButton
                   onRefresh={async () => {
                     setIsManualRefreshing(true);
@@ -797,7 +779,6 @@ export default function DocumentsTab({
                 selectedValues={filterValues}
                 onChange={handleFilterChange}
                 onClearAll={handleClearAllFilters}
-                presets={filterPresets}
                 totalCount={docsRows.length}
                 filteredCount={filteredRows.length}
               />

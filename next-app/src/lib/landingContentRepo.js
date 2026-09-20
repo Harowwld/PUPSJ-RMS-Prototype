@@ -100,40 +100,36 @@ export const DEFAULT_BENTO_CONTENT = {
     title: "Request Online in Minutes",
     description:
       "Select the document you need, specify your purpose, and submit your request straight from your phone or computer.",
+    step1Label: "Select Document",
+    step2Label: "Specify Purpose",
+    buttonLabel: "Submit",
+    successLabel: "Submitted!",
+    // Legacy fields preserved for backward compatibility
     portalTag: "Online Request Portal",
     campusLabel: "PUP San Juan Campus",
     accordionTitle: "Choose Document & Purpose",
     documents: [
-      {
-        name: "Transcript of Records (TOR)",
-        purpose: "Employment / Job Application",
-        tag: "Selected",
-      },
-      {
-        name: "Certificate of Grades (COG)",
-        purpose: "Scholarship & Honor Evaluation",
-        tag: "Selected",
-      },
-      {
-        name: "Certificate of Registration",
-        purpose: "PRC Licensure Exam Filing",
-        tag: "Selected",
-      },
-      {
-        name: "Certified True Copy (CTC)",
-        purpose: "Government & Embassy Clearance",
-        tag: "Selected",
-      },
+      { name: "Transcript of Records (TOR)", purpose: "Employment / Job Application", tag: "Selected" },
+      { name: "Certificate of Grades (COG)", purpose: "Scholarship & Honor Evaluation", tag: "Selected" },
+      { name: "Certificate of Registration", purpose: "PRC Licensure Exam Filing", tag: "Selected" },
+      { name: "Certified True Copy (CTC)", purpose: "Government & Embassy Clearance", tag: "Selected" },
     ],
     studentStub: "Student: 2022-04912-SJ-0",
     verifiedBadge: "Verified Student",
   },
 
-  // Card 2: Pick-Up Schedule & SLAs
+  // Card 2: Pick-Up Schedule & Milestones
   card2: {
     title: "Know Exactly When It's Ready",
     description:
       "Every document follows a clear schedule so you know exactly when to visit the Registrar counter.",
+    step1Title: "Clear Schedule",
+    step1Subtitle: "Based on document type",
+    step2Title: "Live Notifications",
+    step2Subtitle: "Track progress instantly",
+    step3Title: "Visit Counter",
+    step3Subtitle: "No waiting in lines",
+    // Legacy fields preserved for backward compatibility
     headerText: "Clear Pick-Up Schedule",
     subtitleHint: "Counted in working days once cleared",
     instructionsText: "Processing times depend on the type of document you requested:",
@@ -146,11 +142,15 @@ export const DEFAULT_BENTO_CONTENT = {
     sealFooter: "Stamped with the official university dry seal",
   },
 
-  // Card 3: Campus Archives
+  // Card 3: Campus Archives Flow
   card3: {
     title: "Direct from Campus Archives",
     description:
       "Your online request connects directly to Room 1 archive cabinets, so staff can retrieve your folder faster.",
+    step1Label: "Request",
+    step2Label: "Room 1",
+    step3Label: "Staff",
+    // Legacy fields
     roomCode: "R1",
     cabinetCode: "C-A",
     drawerCode: "D-2",
@@ -161,6 +161,10 @@ export const DEFAULT_BENTO_CONTENT = {
     title: "What You Need to Prepare",
     description:
       "Have your student number, email, and signed clearance ready so your request is evaluated right away.",
+    item1: "Student Number",
+    item2: "Active Email",
+    item3: "Campus Clearance",
+    // Legacy fields
     checklistHeader: "Checklist",
     primaryItemTitle: "Student Number & Email",
     primaryItemDesc: "Your official student number and an active email for notifications.",
@@ -174,6 +178,11 @@ export const DEFAULT_BENTO_CONTENT = {
     title: "Protected by Law (RA 11032)",
     description:
       "Backed by the Ease of Doing Business Act. Transparent tracking with zero hidden delays.",
+    badgeLabel: "RA 11032",
+    item1: "Zero Red Tape",
+    item2: "No Hidden Delays",
+    item3: "Transparent Tracking",
+    // Legacy fields
     tab1Label: "Promise",
     tab2Label: "RA 11032",
     tab3Label: "Tracking",
@@ -219,6 +228,10 @@ function sanitizeBentoContent(raw) {
   const card1 = {
     title: typeof rawC1.title === "string" && rawC1.title.trim() !== "" ? rawC1.title.trim() : def.card1.title,
     description: typeof rawC1.description === "string" && rawC1.description.trim() !== "" ? rawC1.description.trim() : def.card1.description,
+    step1Label: typeof rawC1.step1Label === "string" && rawC1.step1Label.trim() !== "" ? rawC1.step1Label.trim() : def.card1.step1Label,
+    step2Label: typeof rawC1.step2Label === "string" && rawC1.step2Label.trim() !== "" ? rawC1.step2Label.trim() : def.card1.step2Label,
+    buttonLabel: typeof rawC1.buttonLabel === "string" && rawC1.buttonLabel.trim() !== "" ? rawC1.buttonLabel.trim() : def.card1.buttonLabel,
+    successLabel: typeof rawC1.successLabel === "string" && rawC1.successLabel.trim() !== "" ? rawC1.successLabel.trim() : def.card1.successLabel,
     portalTag: typeof rawC1.portalTag === "string" && rawC1.portalTag.trim() !== "" ? rawC1.portalTag.trim() : def.card1.portalTag,
     campusLabel: typeof rawC1.campusLabel === "string" && rawC1.campusLabel.trim() !== "" ? rawC1.campusLabel.trim() : def.card1.campusLabel,
     accordionTitle: typeof rawC1.accordionTitle === "string" && rawC1.accordionTitle.trim() !== "" ? rawC1.accordionTitle.trim() : def.card1.accordionTitle,
@@ -239,6 +252,12 @@ function sanitizeBentoContent(raw) {
   const card2 = {
     title: typeof rawC2.title === "string" && rawC2.title.trim() !== "" ? rawC2.title.trim() : def.card2.title,
     description: typeof rawC2.description === "string" && rawC2.description.trim() !== "" ? rawC2.description.trim() : def.card2.description,
+    step1Title: typeof rawC2.step1Title === "string" && rawC2.step1Title.trim() !== "" ? rawC2.step1Title.trim() : def.card2.step1Title,
+    step1Subtitle: typeof rawC2.step1Subtitle === "string" && rawC2.step1Subtitle.trim() !== "" ? rawC2.step1Subtitle.trim() : def.card2.step1Subtitle,
+    step2Title: typeof rawC2.step2Title === "string" && rawC2.step2Title.trim() !== "" ? rawC2.step2Title.trim() : def.card2.step2Title,
+    step2Subtitle: typeof rawC2.step2Subtitle === "string" && rawC2.step2Subtitle.trim() !== "" ? rawC2.step2Subtitle.trim() : def.card2.step2Subtitle,
+    step3Title: typeof rawC2.step3Title === "string" && rawC2.step3Title.trim() !== "" ? rawC2.step3Title.trim() : def.card2.step3Title,
+    step3Subtitle: typeof rawC2.step3Subtitle === "string" && rawC2.step3Subtitle.trim() !== "" ? rawC2.step3Subtitle.trim() : def.card2.step3Subtitle,
     headerText: typeof rawC2.headerText === "string" && rawC2.headerText.trim() !== "" ? rawC2.headerText.trim() : def.card2.headerText,
     subtitleHint: typeof rawC2.subtitleHint === "string" && rawC2.subtitleHint.trim() !== "" ? rawC2.subtitleHint.trim() : def.card2.subtitleHint,
     instructionsText: typeof rawC2.instructionsText === "string" && rawC2.instructionsText.trim() !== "" ? rawC2.instructionsText.trim() : def.card2.instructionsText,
@@ -252,6 +271,9 @@ function sanitizeBentoContent(raw) {
   const card3 = {
     title: typeof rawC3.title === "string" && rawC3.title.trim() !== "" ? rawC3.title.trim() : def.card3.title,
     description: typeof rawC3.description === "string" && rawC3.description.trim() !== "" ? rawC3.description.trim() : def.card3.description,
+    step1Label: typeof rawC3.step1Label === "string" && rawC3.step1Label.trim() !== "" ? rawC3.step1Label.trim() : def.card3.step1Label,
+    step2Label: typeof rawC3.step2Label === "string" && rawC3.step2Label.trim() !== "" ? rawC3.step2Label.trim() : def.card3.step2Label,
+    step3Label: typeof rawC3.step3Label === "string" && rawC3.step3Label.trim() !== "" ? rawC3.step3Label.trim() : def.card3.step3Label,
     roomCode: typeof rawC3.roomCode === "string" && rawC3.roomCode.trim() !== "" ? rawC3.roomCode.trim() : def.card3.roomCode,
     cabinetCode: typeof rawC3.cabinetCode === "string" && rawC3.cabinetCode.trim() !== "" ? rawC3.cabinetCode.trim() : def.card3.cabinetCode,
     drawerCode: typeof rawC3.drawerCode === "string" && rawC3.drawerCode.trim() !== "" ? rawC3.drawerCode.trim() : def.card3.drawerCode,
@@ -262,6 +284,9 @@ function sanitizeBentoContent(raw) {
   const card4 = {
     title: typeof rawC4.title === "string" && rawC4.title.trim() !== "" ? rawC4.title.trim() : def.card4.title,
     description: typeof rawC4.description === "string" && rawC4.description.trim() !== "" ? rawC4.description.trim() : def.card4.description,
+    item1: typeof rawC4.item1 === "string" && rawC4.item1.trim() !== "" ? rawC4.item1.trim() : def.card4.item1,
+    item2: typeof rawC4.item2 === "string" && rawC4.item2.trim() !== "" ? rawC4.item2.trim() : def.card4.item2,
+    item3: typeof rawC4.item3 === "string" && rawC4.item3.trim() !== "" ? rawC4.item3.trim() : def.card4.item3,
     checklistHeader: typeof rawC4.checklistHeader === "string" && rawC4.checklistHeader.trim() !== "" ? rawC4.checklistHeader.trim() : def.card4.checklistHeader,
     primaryItemTitle: typeof rawC4.primaryItemTitle === "string" && rawC4.primaryItemTitle.trim() !== "" ? rawC4.primaryItemTitle.trim() : def.card4.primaryItemTitle,
     primaryItemDesc: typeof rawC4.primaryItemDesc === "string" && rawC4.primaryItemDesc.trim() !== "" ? rawC4.primaryItemDesc.trim() : def.card4.primaryItemDesc,
@@ -275,6 +300,10 @@ function sanitizeBentoContent(raw) {
   const card5 = {
     title: typeof rawC5.title === "string" && rawC5.title.trim() !== "" ? rawC5.title.trim() : def.card5.title,
     description: typeof rawC5.description === "string" && rawC5.description.trim() !== "" ? rawC5.description.trim() : def.card5.description,
+    badgeLabel: typeof rawC5.badgeLabel === "string" && rawC5.badgeLabel.trim() !== "" ? rawC5.badgeLabel.trim() : def.card5.badgeLabel,
+    item1: typeof rawC5.item1 === "string" && rawC5.item1.trim() !== "" ? rawC5.item1.trim() : def.card5.item1,
+    item2: typeof rawC5.item2 === "string" && rawC5.item2.trim() !== "" ? rawC5.item2.trim() : def.card5.item2,
+    item3: typeof rawC5.item3 === "string" && rawC5.item3.trim() !== "" ? rawC5.item3.trim() : def.card5.item3,
     tab1Label: typeof rawC5.tab1Label === "string" && rawC5.tab1Label.trim() !== "" ? rawC5.tab1Label.trim() : def.card5.tab1Label,
     tab2Label: typeof rawC5.tab2Label === "string" && rawC5.tab2Label.trim() !== "" ? rawC5.tab2Label.trim() : def.card5.tab2Label,
     tab3Label: typeof rawC5.tab3Label === "string" && rawC5.tab3Label.trim() !== "" ? rawC5.tab3Label.trim() : def.card5.tab3Label,

@@ -9,7 +9,6 @@ import { Select } from "@/components/ui/select"
 import { Skeleton } from "@/components/ui/skeleton"
 import PageHeader from "@/components/shared/PageHeader"
 import ConfirmModal from "@/components/shared/ConfirmModal"
-import BevelButton from "@/components/ui/bevel-button"
 import LandingBentoCmsView from "./LandingBentoCmsView"
 import LandingWorkflowCmsView from "./LandingWorkflowCmsView"
 import LandingCatalogCmsView from "./LandingCatalogCmsView"
@@ -26,7 +25,9 @@ export default function LandingPageCmsTab({ showToast }) {
   useEffect(() => {
     const urlSection = new URLSearchParams(window.location.search).get("section")
     if (urlSection && ["hero", "bento", "workflow", "catalog", "faq", "footer"].includes(urlSection)) {
-      setCurrentSection(urlSection)
+      queueMicrotask(() => {
+        setCurrentSection(urlSection)
+      })
     }
 
     const handleSwitch = (e) => {
@@ -84,27 +85,54 @@ export default function LandingPageCmsTab({ showToast }) {
   )
 
   // Fetch current hero settings
-  const fetchHeroData = useCallback(async () => {
-    try {
-      setLoading(true)
-      const res = await fetch("/api/landing/hero", { cache: "no-store" })
-      const json = await res.json()
-      if (res.ok && json.ok && json.data) {
-        setHeroData(json.data)
-      } else {
-        notify(json.error || "Failed to load hero configuration", true)
+  const fetchHeroData = useCallback(
+    async (isRefresh = false) => {
+      if (isRefresh) {
+        setLoading(true)
       }
-    } catch (err) {
-      console.error("[LandingPageCmsTab] Fetch error:", err)
-      notify("Network error fetching hero settings", true)
-    } finally {
-      setLoading(false)
-    }
-  }, [notify])
+      try {
+        const res = await fetch("/api/landing/hero", { cache: "no-store" })
+        const json = await res.json()
+        if (res.ok && json.ok && json.data) {
+          setHeroData(json.data)
+        } else {
+          notify(json.error || "Failed to load hero configuration", true)
+        }
+      } catch (err) {
+        console.error("[LandingPageCmsTab] Fetch error:", err)
+        notify("Network error fetching hero settings", true)
+      } finally {
+        setLoading(false)
+      }
+    },
+    [notify]
+  )
 
   useEffect(() => {
-    fetchHeroData()
-  }, [fetchHeroData])
+    let ignore = false
+    async function init() {
+      try {
+        const res = await fetch("/api/landing/hero", { cache: "no-store" })
+        const json = await res.json()
+        if (ignore) return
+        if (res.ok && json.ok && json.data) {
+          setHeroData(json.data)
+        } else {
+          notify(json.error || "Failed to load hero configuration", true)
+        }
+      } catch (err) {
+        if (ignore) return
+        console.error("[LandingPageCmsTab] Fetch error:", err)
+        notify("Network error fetching hero settings", true)
+      } finally {
+        if (!ignore) setLoading(false)
+      }
+    }
+    init()
+    return () => {
+      ignore = true
+    }
+  }, [notify])
 
   // Handle Save
   const handleSave = async () => {
@@ -877,87 +905,85 @@ export default function LandingPageCmsTab({ showToast }) {
                 </div>
               </div>
 
-              {/* Miniature Hero Simulator */}
-              <div className="relative w-full rounded-2xl overflow-hidden border border-gray-200 dark:border-white/10 bg-zinc-950 shadow-lg min-h-[480px] sm:min-h-[520px] flex flex-col justify-between p-6 sm:p-10 select-none">
-                {/* Background Images */}
-                <div className="absolute inset-0 w-full h-full z-0 overflow-hidden pointer-events-none">
-                  {heroData.slides.map((s, sIdx) => (
-                    <div
-                      key={sIdx}
-                      className={cn(
-                        "absolute inset-0 w-full h-full transition-opacity duration-700 ease-in-out",
-                        sIdx === previewSlideIdx ? "opacity-100" : "opacity-0"
-                      )}
-                    >
-                      <img
-                        src={s.src}
-                        alt={s.alt}
-                        className="w-full h-full object-cover object-center"
-                        onError={(e) => {
-                          e.currentTarget.src = "/assets/pup/landing-1.jpg"
-                        }}
-                      />
-                    </div>
-                  ))}
-                  {/* Atmospheric Gradient Scrims matching LandingHero */}
-                  <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-zinc-950/95 via-zinc-950/70 to-zinc-950/30" />
-                  <div className="absolute inset-0 w-full h-full bg-gradient-to-t from-zinc-950 via-zinc-950/30 to-transparent" />
-                  <div className="absolute inset-0 w-full h-full bg-[#800000]/10 mix-blend-overlay" />
-                </div>
-
-                {/* Simulated Hero Text Cluster */}
-                <div className="relative z-10 w-full max-w-xl my-auto py-6">
-                  <h2 className="text-3xl sm:text-5xl font-black text-white tracking-tight sm:tracking-tighter mb-4 leading-[1.08]">
-                    <span className="block">{heroData.headlineLine1 || "Tanglaw ng Bayan,"}</span>
-                    <span className="block text-slate-100">{heroData.headlineLine2 || "Dambana ng Kagitingan."}</span>
-                  </h2>
-
-                  <p className="text-xs sm:text-sm text-slate-200/85 leading-relaxed max-w-md mb-6 font-normal">
-                    {heroData.description ||
-                      "Official institutional records keeping, archive retrieval, and document verification system for Polytechnic University of the Philippines San Juan Campus."}
-                  </p>
-
-                  <div>
-                    <BevelButton
-                      type="button"
-                      className="h-10 px-6 rounded-full text-xs font-bold tracking-wide flex items-center gap-2 cursor-pointer shadow-md pointer-events-none"
-                    >
-                      <span>Request Document</span>
-                      <HugeIcon  className="ph-bold ph-arrow-right text-xs" />
-                    </BevelButton>
-                  </div>
-                </div>
-
-                {/* Simulated Bottom Accreditation Pill */}
-                <div className="relative z-10 px-4 py-2.5 rounded-xl bg-zinc-950/60 backdrop-blur-md border border-white/10 flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] text-white/80">
-                  <div className="flex items-center gap-2 truncate">
-                    <HugeIcon  className="ph-bold ph-map-pin text-white/50 text-xs" />
-                    <span className="truncate">
-                      {heroData.campusAddress || "223 Ortega St. cor. A. Mabini St., Addition Hills, San Juan City"}
-                    </span>
-                  </div>
-
-                  {/* Dots indicator */}
-                  <div className="flex items-center gap-1.5">
-                    {heroData.slides.map((_, dotIdx) => (
-                      <button
-                        key={dotIdx}
-                        type="button"
-                        onClick={() => setPreviewSlideIdx(dotIdx)}
+              {/* Miniature Hero Simulator Matching LandingHero.js */}
+              <div className="relative w-full rounded-2xl overflow-hidden border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-900/50 shadow-sm flex flex-col select-none">
+                {/* Hero Image & Content Frame */}
+                <div className="relative w-full min-h-[460px] sm:min-h-[500px] overflow-hidden flex flex-col justify-center px-6 sm:px-12">
+                  {/* Background Images */}
+                  <div className="absolute inset-0 w-full h-full z-0 overflow-hidden pointer-events-none bg-white">
+                    {heroData.slides.map((s, sIdx) => (
+                      <div
+                        key={sIdx}
                         className={cn(
-                          "h-1.5 rounded-full transition-all duration-300 cursor-pointer",
-                          dotIdx === previewSlideIdx
-                            ? "w-6 bg-white"
-                            : "w-1.5 bg-white/40 hover:bg-white/70"
+                          "absolute inset-0 w-full h-full transition-opacity duration-700 ease-in-out",
+                          sIdx === previewSlideIdx ? "opacity-100" : "opacity-0"
                         )}
-                      />
+                      >
+                        <img
+                          src={s.src}
+                          alt={s.alt || "Campus Photo"}
+                          className="w-full h-full object-cover object-center"
+                          onError={(e) => {
+                            e.currentTarget.src = "/assets/pup/landing-1.jpg"
+                          }}
+                        />
+                      </div>
                     ))}
+                    {/* Atmospheric Gradient Scrims matching LandingHero.js */}
+                    <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-black/95 via-black/70 to-black/30" />
+                    <div className="absolute inset-0 w-full h-full bg-gradient-to-t from-black via-black/30 to-transparent" />
+                    <div className="absolute inset-0 w-full h-full bg-[#800000]/30" />
                   </div>
 
-                  <div className="hidden sm:flex items-center gap-2 font-mono text-[10px] text-white/60">
-                    <span>{heroData.registrarHours || "REGISTRAR: 8:00 AM – 5:00 PM"}</span>
-                    <span>·</span>
-                    <span>{heroData.operatingDays || "MON – FRI"}</span>
+                  {/* Centered Hero Content Matching LandingHero.js */}
+                  <div className="relative z-10 w-full max-w-4xl mx-auto my-auto py-8 sm:py-12 flex flex-col items-center text-center">
+                    <h2
+                      style={{
+                        fontSize: "clamp(1.75rem, 4vw, 3.25rem)",
+                        lineHeight: 1.04,
+                      }}
+                      className="tanglaw-heading font-extrabold text-white tracking-tight sm:tracking-tighter mb-4"
+                    >
+                      <span className="block">{heroData.headlineLine1 || "Tanglaw ng Bayan,"}</span>
+                      <span className="block">{heroData.headlineLine2 || "Dambana ng Kagitingan."}</span>
+                    </h2>
+
+                    <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed max-w-xl mx-auto mb-8 font-normal">
+                      {heroData.description ||
+                        "Official institutional records keeping, archive retrieval, and document verification system for Polytechnic University of the Philippines San Juan Campus."}
+                    </p>
+
+                    <div className="flex items-center justify-center">
+                      <Button
+                        type="button"
+                        className="h-10 px-8 rounded-full btn-brand-red text-xs font-medium text-white shadow-md pointer-events-none active:scale-95 transition-all"
+                      >
+                        <span>{heroData.ctaText || "Request"}</span>
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Apple-Style Pagination Dots Outside Image Panel Matching LandingHero.js */}
+                <div className="w-full flex justify-center py-4 bg-white dark:bg-zinc-950 border-t border-gray-100 dark:border-white/5">
+                  <div className="flex items-center gap-2 px-3 py-1">
+                    {heroData.slides.map((_, dotIdx) => {
+                      const isActive = dotIdx === previewSlideIdx
+                      return (
+                        <button
+                          key={dotIdx}
+                          type="button"
+                          onClick={() => setPreviewSlideIdx(dotIdx)}
+                          aria-label={`View photo ${dotIdx + 1}`}
+                          className={cn(
+                            "h-1.5 rounded-full transition-all duration-500 ease-out cursor-pointer",
+                            isActive
+                              ? "w-6 bg-gray-800 dark:bg-zinc-100"
+                              : "w-1.5 bg-gray-300 dark:bg-zinc-700 hover:bg-gray-400"
+                          )}
+                        />
+                      )
+                    })}
                   </div>
                 </div>
               </div>

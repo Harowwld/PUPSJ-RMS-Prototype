@@ -531,13 +531,6 @@ export default function DocumentRequestsTab({
     setPage(1);
   }, []);
 
-  const filterPresets = useMemo(() => [
-    { label: "All Requests", values: { status: [], clientType: [], docType: [], charter: [] } },
-    { label: "In Progress", values: { status: ["InProgress"], clientType: clientTypeFilters, docType: docTypeFilters, charter: charterFilters } },
-    { label: "Ready for Pickup", values: { status: ["Ready"], clientType: clientTypeFilters, docType: docTypeFilters, charter: charterFilters } },
-    { label: "Overdue / Risk", values: { status: statusFilters, clientType: clientTypeFilters, docType: docTypeFilters, charter: ["Overdue", "DueSoon"] } },
-  ], [statusFilters, clientTypeFilters, docTypeFilters, charterFilters]);
-
   const activeChips = useMemo(() => {
     const chips = [];
     if (q.trim()) {
@@ -598,7 +591,7 @@ export default function DocumentRequestsTab({
             titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
             descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
             actions={
-              <div className="flex items-center gap-6">
+              <div className="flex items-center gap-2">
                 <RefreshButton
                   onRefresh={() => loadList({ showLoading: false, manual: true })}
                   isLoading={isManualLoading}
@@ -683,7 +676,6 @@ export default function DocumentRequestsTab({
                   selectedValues={filterValues}
                   onChange={handleFilterChange}
                   onClearAll={handleClearFilters}
-                  presets={filterPresets}
                   totalCount={total}
                   filteredCount={displayedRows.length}
                 />

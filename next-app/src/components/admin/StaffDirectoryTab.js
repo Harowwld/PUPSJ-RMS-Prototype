@@ -365,52 +365,6 @@ export default function StaffDirectoryTab({
     ]
   }, [officeStaff, roleFilters, statusFilters, twoFactorFilters, setRoleFilter])
 
-  const filterPresets = useMemo(() => [
-    {
-      label: "All",
-      isActive: roleFilters.length === 0 && statusFilters.length === 0 && twoFactorFilters.length === 0,
-      onSelect: () => {
-        setRoleFilters([])
-        setStatusFilters([])
-        setTwoFactorFilters([])
-        setRoleFilter?.("All")
-        setCurrentPage(1)
-      }
-    },
-    {
-      label: "Admins",
-      isActive: roleFilters.length === 1 && roleFilters[0] === "Admin" && statusFilters.length === 0 && twoFactorFilters.length === 0,
-      onSelect: () => {
-        setRoleFilters(["Admin"])
-        setStatusFilters([])
-        setTwoFactorFilters([])
-        setRoleFilter?.("Admin")
-        setCurrentPage(1)
-      }
-    },
-    {
-      label: "Staff",
-      isActive: roleFilters.length === 1 && roleFilters[0] === "Staff" && statusFilters.length === 0 && twoFactorFilters.length === 0,
-      onSelect: () => {
-        setRoleFilters(["Staff"])
-        setStatusFilters([])
-        setTwoFactorFilters([])
-        setRoleFilter?.("Staff")
-        setCurrentPage(1)
-      }
-    },
-    {
-      label: "Active Only",
-      isActive: roleFilters.length === 0 && statusFilters.length === 1 && statusFilters[0] === "Active" && twoFactorFilters.length === 0,
-      onSelect: () => {
-        setRoleFilters([])
-        setStatusFilters(["Active"])
-        setTwoFactorFilters([])
-        setRoleFilter?.("All")
-        setCurrentPage(1)
-      }
-    }
-  ], [roleFilters, statusFilters, twoFactorFilters, setRoleFilter])
 
   const hasActiveFilters = localSearch !== "" || roleFilters.length > 0 || statusFilters.length > 0 || twoFactorFilters.length > 0;
 
@@ -675,7 +629,7 @@ export default function StaffDirectoryTab({
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
           descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
           actions={
-            <div className="flex items-center gap-6">
+            <div className="flex items-center gap-2">
               <RefreshButton
                 onRefresh={onRefresh}
                 isLoading={isLoading}
@@ -737,17 +691,14 @@ export default function StaffDirectoryTab({
                 onChange={(e) => setLocalSearch(e.target.value)}
                 disabled={isLoading}
               />
-              {localSearch && (
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] font-mono text-gray-400 dark:text-zinc-500 pointer-events-none">
-                  {filteredStaff.length} results
-                </span>
-              )}
+              <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] font-mono text-gray-400 dark:text-zinc-500">
+                {filteredStaff.length}
+              </div>
             </div>
 
             {/* Multi-Criteria Filters (Role, Status, 2FA) */}
             <MultiCriteriaFilter
               groups={filterCriteriaGroups}
-              presets={filterPresets}
               align="end"
               buttonLabel="Filter Personnel"
             />

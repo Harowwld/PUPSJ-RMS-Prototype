@@ -63,6 +63,13 @@ function statusBadgeClass(status) {
   return "bg-gray-100 text-gray-800 dark:bg-zinc-800 dark:text-zinc-300"
 }
 
+function formatStudentRequester(name, studentNo) {
+  if (!name || name.startsWith("enc:")) {
+    return studentNo ? `Student (${studentNo})` : "Student"
+  }
+  return name
+}
+
 export default function CampusOperationsTab({ showToast }) {
 const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
     const [health, setHealth] = useState(null)
@@ -96,7 +103,7 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
     setPdfPreviewData({
       url,
       title: item.title || item.originalFilename,
-      studentName: item.studentName,
+      studentName: formatStudentRequester(item.studentName, item.studentNo),
       docType: item.officeId === "registrar" ? "Document Request" : "Event Proposal",
       originalFilename: item.originalFilename,
     })
@@ -166,10 +173,11 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
     }
   }
 
+  const transactions = health?.transactions
   // Filtered transactions for cross-department activity stream
   const filteredTransactions = useMemo(() => {
-    if (!health?.transactions) return []
-    return health.transactions.filter((tx) => {
+    if (!transactions) return []
+    return transactions.filter((tx) => {
       // Channel tab filter
       if (activeTab === "registrar" && tx.officeId !== "registrar") return false
       if (activeTab === "osas" && tx.officeId !== "osas") return false
@@ -187,7 +195,8 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
       if (search.trim()) {
         const q = search.toLowerCase()
         const matchTitle = (tx.title || "").toLowerCase().includes(q)
-        const matchStudent = (tx.studentNo || "").toLowerCase().includes(q) || (tx.studentName || "").toLowerCase().includes(q)
+        const studentDisplay = formatStudentRequester(tx.studentName, tx.studentNo).toLowerCase()
+        const matchStudent = (tx.studentNo || "").toLowerCase().includes(q) || studentDisplay.includes(q)
         const matchOrg = (tx.organizationName || "").toLowerCase().includes(q)
         const matchStatus = (tx.status || "").toLowerCase().includes(q)
         const matchNotes = (tx.notes || "").toLowerCase().includes(q)
@@ -198,7 +207,7 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
 
       return true
     })
-  }, [health?.transactions, activeTab, statusFilter, search])
+  }, [transactions, activeTab, statusFilter, search])
 
   // Sorted transactions
   const sortedTransactions = useMemo(() => {
@@ -206,7 +215,10 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
       let aVal = a[sortBy] ?? ""
       let bVal = b[sortBy] ?? ""
 
-      if (sortBy === "createdAt") {
+      if (sortBy === "studentName") {
+        aVal = formatStudentRequester(a.studentName, a.studentNo).toLowerCase()
+        bVal = formatStudentRequester(b.studentName, b.studentNo).toLowerCase()
+      } else if (sortBy === "createdAt") {
         aVal = new Date(aVal).getTime() || 0
         bVal = new Date(bVal).getTime() || 0
       } else {
@@ -449,7 +461,7 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
                 className="h-9 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 pl-8 pr-16 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
               />
               <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] text-gray-400 dark:text-zinc-500 font-mono">
-                {sortedTransactions.length} results
+                {sortedTransactions.length}
               </div>
             </div>
 
@@ -613,8 +625,11 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
 
                           {/* Student Requester */}
                           <td className="p-4 align-middle">
-                            <div className="font-semibold text-[13px] text-gray-900 dark:text-zinc-50">
-                              {tx.studentName}
+                            <div
+                              className="font-semibold text-[13px] text-gray-900 dark:text-zinc-50 truncate max-w-[180px] sm:max-w-[220px]"
+                              title={formatStudentRequester(tx.studentName, tx.studentNo)}
+                            >
+                              {formatStudentRequester(tx.studentName, tx.studentNo)}
                             </div>
                             <div className="text-[11px] font-mono text-[#8E8E93] dark:text-zinc-500 mt-0.5">
                               {tx.studentNo}
@@ -784,8 +799,11 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
                   <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">
                     Student Requester
                   </span>
-                  <div className="font-semibold text-xs text-gray-900 dark:text-zinc-50 truncate">
-                    {selectedItem?.studentName}
+                  <div
+                    className="font-semibold text-xs text-gray-900 dark:text-zinc-50 truncate max-w-full"
+                    title={formatStudentRequester(selectedItem?.studentName, selectedItem?.studentNo)}
+                  >
+                    {formatStudentRequester(selectedItem?.studentName, selectedItem?.studentNo)}
                   </div>
                   <div className="text-[11px] font-mono text-gray-400 mt-0.5">
                     {selectedItem?.studentNo}

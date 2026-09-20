@@ -7,6 +7,7 @@ import ModuleConfigSkeleton from "@/components/systemadmin/skeletons/ModuleConfi
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 import { Select } from "@/components/ui/select"
 import MultiCriteriaFilter from "@/components/shared/MultiCriteriaFilter"
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips"
@@ -115,6 +116,7 @@ export default function ModuleConfigTab({ showToast }) {
   const [selectedOfficeId, setSelectedOfficeId] = useState("")
   const [viewMode, setViewMode] = useState("office") // "office" | "matrix"
   const [confirmModalState, setConfirmModalState] = useState(null)
+  const [toggling, setToggling] = useState({})
   
   // Matrix Table Sorting
   const [matrixSortBy, setMatrixSortBy] = useState("name")
@@ -426,29 +428,6 @@ export default function ModuleConfigTab({ showToast }) {
     ]
   }, [matrix])
 
-  const moduleFilterPresets = useMemo(
-    () => [
-      {
-        label: "All",
-        values: { category: [], status: [] },
-        activeCondition: (sel) => !sel?.category?.length && !sel?.status?.length,
-      },
-      {
-        label: "Enabled",
-        values: { status: ["enabled"] },
-      },
-      {
-        label: "Supervisors",
-        values: { category: ["admin"] },
-      },
-      {
-        label: "Staff",
-        values: { category: ["staff"] },
-      },
-    ],
-    []
-  )
-
   const filteredModules = useMemo(() => {
     if (!matrix?.modules) return []
     const selectedCats = moduleFilters.category || []
@@ -511,13 +490,12 @@ export default function ModuleConfigTab({ showToast }) {
 
   const hasActiveFilters =
     searchQuery !== "" ||
-    categoryFilter !== "All" ||
-    moduleStatusFilter !== "All"
+    (moduleFilters?.category && moduleFilters.category.length > 0) ||
+    (moduleFilters?.status && moduleFilters.status.length > 0)
 
   const handleClearFilters = () => {
     setSearchQuery("")
-    setCategoryFilter("All")
-    setModuleStatusFilter("All")
+    setModuleFilters({ category: [], status: [] })
   }
 
   if (loading) {
@@ -586,43 +564,43 @@ export default function ModuleConfigTab({ showToast }) {
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
           descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
           actions={
-            <div className="flex items-center gap-6">
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-gray-200/60 dark:border-white/5">
+                <button
+                  type="button"
+                  onClick={() => setViewMode("office")}
+                  title="Department View"
+                  className={cn(
+                    "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer border-0",
+                    viewMode === "office"
+                      ? "bg-slate-900 text-white dark:bg-zinc-100 dark:text-zinc-900 shadow-xs"
+                      : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white bg-transparent"
+                  )}
+                >
+                  <HugeIcon className="ph-bold ph-buildings text-sm" />
+                  <span>Department View</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setViewMode("matrix")}
+                  title="Feature Matrix"
+                  className={cn(
+                    "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer border-0",
+                    viewMode === "matrix"
+                      ? "bg-slate-900 text-white dark:bg-zinc-100 dark:text-zinc-900 shadow-xs"
+                      : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white bg-transparent"
+                  )}
+                >
+                  <HugeIcon className="ph-bold ph-table text-sm" />
+                  <span>Feature Matrix</span>
+                </button>
+              </div>
+
               <RefreshButton
                 onRefresh={handleManualRefresh}
                 isLoading={isManualLoading}
                 title="Refresh Module Configuration"
               />
-
-              <div className="h-6 w-px bg-gray-200 dark:bg-zinc-800" />
-
-              <div className="flex items-center gap-2 bg-gray-100 dark:bg-zinc-800/70 p-1 rounded-xl border border-gray-200/60 dark:border-white/5">
-                <button
-                  type="button"
-                  onClick={() => setViewMode("office")}
-                  className={cn(
-                    "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer border-0",
-                    viewMode === "office"
-                      ? "bg-white dark:bg-zinc-900 text-gray-900 dark:text-zinc-50 shadow-xs"
-                      : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 bg-transparent"
-                  )}
-                >
-                  <HugeIcon  className="ph-bold ph-buildings text-sm"></HugeIcon>
-                  By Department
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setViewMode("matrix")}
-                  className={cn(
-                    "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer border-0",
-                    viewMode === "matrix"
-                      ? "bg-white dark:bg-zinc-900 text-gray-900 dark:text-zinc-50 shadow-xs"
-                      : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 bg-transparent"
-                  )}
-                >
-                  <HugeIcon  className="ph-bold ph-table text-sm"></HugeIcon>
-                  Summary Table
-                </button>
-              </div>
             </div>
           }
         />
@@ -641,7 +619,7 @@ export default function ModuleConfigTab({ showToast }) {
                   : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
               )}
             >
-              Active Departments ({officeFilterCounts.active})
+              Active ({officeFilterCounts.active})
             </button>
             <button
               type="button"
@@ -670,7 +648,7 @@ export default function ModuleConfigTab({ showToast }) {
                 className="h-9 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 pl-8 pr-20 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
               />
               <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] text-gray-400 dark:text-zinc-500 font-mono">
-                {filteredModules.length} features
+                {filteredModules.length}
               </div>
             </div>
 
@@ -681,7 +659,6 @@ export default function ModuleConfigTab({ showToast }) {
                 groups={moduleFilterGroups}
                 selected={moduleFilters}
                 onChange={setModuleFilters}
-                presets={moduleFilterPresets}
                 totalCount={modules.length}
                 matchingCount={filteredModules.length}
                 onReset={() => setModuleFilters({ category: [], status: [] })}
@@ -946,7 +923,7 @@ export default function ModuleConfigTab({ showToast }) {
                 ) : (
                   <>
                     {/* ROLE OPERATION GROUP 1: SUPERVISOR & HEAD TOOLS */}
-                    {(categoryFilter === "All" || categoryFilter === "admin") && (
+                    {groupedModules.admin.length > 0 && (
                       <div className="space-y-4">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-2 border-b border-gray-100 dark:border-white/5 gap-2">
                           <div className="flex items-center gap-2.5">
@@ -1027,7 +1004,7 @@ export default function ModuleConfigTab({ showToast }) {
                     )}
 
                     {/* ROLE OPERATION GROUP 2: STAFF & FRONTLINE TOOLS */}
-                    {(categoryFilter === "All" || categoryFilter === "staff") && (
+                    {groupedModules.staff.length > 0 && (
                       <div className="space-y-4">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-2 border-b border-gray-100 dark:border-white/5 gap-2">
                           <div className="flex items-center gap-2.5">
@@ -1234,7 +1211,7 @@ export default function ModuleConfigTab({ showToast }) {
 
                 <tbody className="divide-y divide-gray-100 dark:divide-white/5">
                   {/* Head / Admin Group Row */}
-                  {(categoryFilter === "All" || categoryFilter === "admin") && groupedModules.admin.length > 0 && (
+                  {groupedModules.admin.length > 0 && (
                     <>
                       <tr className="bg-gray-100/60 dark:bg-zinc-950/40">
                         <td
@@ -1258,7 +1235,7 @@ export default function ModuleConfigTab({ showToast }) {
                   )}
 
                   {/* Staff Workspace Group Row */}
-                  {(categoryFilter === "All" || categoryFilter === "staff") && groupedModules.staff.length > 0 && (
+                  {groupedModules.staff.length > 0 && (
                     <>
                       <tr className="bg-gray-100/60 dark:bg-zinc-950/40">
                         <td

@@ -399,7 +399,7 @@ export default function SectionsTab({
                   </button>
                 )}
                 <span className="text-[12px] font-normal text-gray-400 dark:text-zinc-500 pointer-events-none">
-                  {filteredSectionsFull.length > 0 ? `${filteredSectionsFull.length} results` : "0 results"}
+                  {filteredSectionsFull.length}
                 </span>
               </div>
             </div>

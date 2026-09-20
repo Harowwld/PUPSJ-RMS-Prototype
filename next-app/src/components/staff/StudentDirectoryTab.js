@@ -363,20 +363,6 @@ export default function StudentDirectoryTab({
     setPage(1);
   }, []);
 
-  const filterPresets = useMemo(() => {
-    const latestYear = availableYears[0] ? String(availableYears[0]) : null;
-    const presets = [
-      { label: "All Students", values: { course: [], year: [], section: [] } },
-    ];
-    if (latestYear) {
-      presets.push({
-        label: `Newest (${latestYear})`,
-        values: { course: courseFilters, year: [latestYear], section: sectionFilters },
-      });
-    }
-    return presets;
-  }, [availableYears, courseFilters, sectionFilters]);
-
   const activeChips = useMemo(() => {
     const chips = [];
     if (searchQuery.trim()) {
@@ -625,7 +611,7 @@ export default function StudentDirectoryTab({
             titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
             descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
             actions={
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
                 <RefreshButton
                   onRefresh={handleRefresh}
                   isLoading={loading || isRefreshing}
@@ -634,7 +620,7 @@ export default function StudentDirectoryTab({
 
                 <div className="h-6 w-px bg-gray-200 dark:bg-zinc-800" />
 
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
                   <Button
                     type="button"
                     variant="outline"
@@ -1047,7 +1033,6 @@ export default function StudentDirectoryTab({
                 selectedValues={filterValues}
                 onChange={handleFilterChange}
                 onClearAll={handleResetFilters}
-                presets={filterPresets}
                 totalCount={allAvailableStudents.length}
                 filteredCount={filteredStudents.length}
               />

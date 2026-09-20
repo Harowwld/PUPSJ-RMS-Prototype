@@ -3,8 +3,6 @@ import HugeIcon from "@/components/shared/HugeIcon";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import BevelButton from "@/components/ui/bevel-button";
-import DocumentCardPreview from "./DocumentCardPreview";
 
 export const CATALOG_ITEMS = [
   {
@@ -150,65 +148,6 @@ export default function DocumentCatalog() {
   const [dragScrollLeft, setDragScrollLeft] = useState(0);
   const totalItems = items.length;
   const safeActiveIndex = activeIndex < totalItems ? activeIndex : 0;
-
-  // Section reference for sizing the giant Ferris Wheel
-  const sectionRef = useRef(null);
-  const [wheelGeometry, setWheelGeometry] = useState({
-    radius: 580,
-    centerX: 1350,
-    centerY: 450,
-    scale: 1,
-  });
-
-  // Responsive Ferris Wheel geometry calculation
-  useEffect(() => {
-    if (!sectionRef.current) return;
-
-    const updateGeometry = () => {
-      if (!sectionRef.current) return;
-      const width = sectionRef.current.clientWidth;
-      const height = sectionRef.current.clientHeight || 800;
-
-      if (width < 640) {
-        // Mobile: Circle center positioned comfortably past right edge
-        setWheelGeometry({
-          radius: 350,
-          centerX: width * 1.05,
-          centerY: height * 0.65,
-          scale: 0.78,
-        });
-      } else if (width < 1024) {
-        // Tablet: Circle center at right edge
-        setWheelGeometry({
-          radius: 460,
-          centerX: width * 1.02,
-          centerY: height * 0.5,
-          scale: 0.88,
-        });
-      } else if (width < 1440) {
-        // Standard Desktop: Center near right edge (~98% of width)
-        setWheelGeometry({
-          radius: 560,
-          centerX: width * 0.98,
-          centerY: height * 0.5,
-          scale: 1,
-        });
-      } else {
-        // Large & Ultrawide Desktop: Center aligned near right edge (~100% of width)
-        setWheelGeometry({
-          radius: 620,
-          centerX: width * 1.00,
-          centerY: height * 0.5,
-          scale: 1.05,
-        });
-      }
-    };
-
-    updateGeometry();
-    const ro = new ResizeObserver(updateGeometry);
-    ro.observe(sectionRef.current);
-    return () => ro.disconnect();
-  }, []);
 
   const carouselRef = useRef(null);
   const scrollTimeout = useRef(null);
@@ -400,7 +339,6 @@ export default function DocumentCatalog() {
   return (
     <section
       id="catalog"
-      ref={sectionRef}
       className="relative w-full py-16 sm:py-20 lg:py-24 overflow-hidden bg-white select-none font-jakarta min-h-0 flex items-center"
     >
 

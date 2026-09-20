@@ -210,24 +210,6 @@ export default function StudentDashboard() {
     return groups;
   }, [data.requests]);
 
-  const requestFilterPresets = useMemo(
-    () => [
-      {
-        label: "All",
-        values: { status: [], doc_type: [] },
-        activeCondition: (sel) => !sel?.status?.length && !sel?.doc_type?.length,
-      },
-      {
-        label: "Pending",
-        values: { status: ["Pending"] },
-      },
-      {
-        label: "Completed",
-        values: { status: ["Completed"] },
-      },
-    ],
-    []
-  );
 
   const proposalFilterGroups = useMemo(() => {
     const props = data.proposals || [];
@@ -271,24 +253,6 @@ export default function StudentDashboard() {
     return groups;
   }, [data.proposals]);
 
-  const proposalFilterPresets = useMemo(
-    () => [
-      {
-        label: "All",
-        values: { status: [], organization: [] },
-        activeCondition: (sel) => !sel?.status?.length && !sel?.organization?.length,
-      },
-      {
-        label: "Pending",
-        values: { status: ["Pending"] },
-      },
-      {
-        label: "Approved",
-        values: { status: ["Approved"] },
-      },
-    ],
-    []
-  );
 
   const handleSort = (column) => {
     if (sortBy === column) {
@@ -1007,7 +971,7 @@ export default function StudentDashboard() {
                             {loading ? (
                               <Skeleton className="h-3.5 w-10 rounded dark:bg-muted" />
                             ) : (
-                              `${filteredRequests.length} results`
+                              filteredRequests.length
                             )}
                           </div>
                         </div>
@@ -1021,7 +985,6 @@ export default function StudentDashboard() {
                               setRequestFilters(newFilters);
                               setCurrentPage(1);
                             }}
-                            presets={requestFilterPresets}
                             totalCount={data.requests.length}
                             matchingCount={filteredRequests.length}
                             onReset={() => {
@@ -1523,7 +1486,7 @@ export default function StudentDashboard() {
                           {loading ? (
                             <Skeleton className="h-3.5 w-10 rounded dark:bg-muted" />
                           ) : (
-                            `${filteredProposals.length} results`
+                            filteredProposals.length
                           )}
                         </div>
                       </div>
@@ -1534,7 +1497,6 @@ export default function StudentDashboard() {
                           groups={proposalFilterGroups}
                           selected={proposalFilters}
                           onChange={setProposalFilters}
-                          presets={proposalFilterPresets}
                           totalCount={data.proposals.length}
                           matchingCount={filteredProposals.length}
                           onReset={() => setProposalFilters({ status: [], organization: [] })}

@@ -337,12 +337,6 @@ export default function NotificationsTab({
     setPage(1);
   }, []);
 
-  const filterPresets = useMemo(() => [
-    { label: "All Notifications", values: { decision: [], readStatus: [] } },
-    { label: "Unread Only", values: { decision: [], readStatus: ["unread"] } },
-    { label: "Approved Only", values: { decision: ["Approved"], readStatus: [] } },
-    { label: "Declined Only", values: { decision: ["Declined"], readStatus: [] } },
-  ], []);
 
   const activeChips = useMemo(() => {
     const chips = [];
@@ -398,7 +392,7 @@ export default function NotificationsTab({
             titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
             descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
             actions={
-              <div className="flex items-center gap-6">
+              <div className="flex items-center gap-2">
                 <RefreshButton
                   onRefresh={handleRefresh}
                   isLoading={isRefreshing}
@@ -488,7 +482,6 @@ export default function NotificationsTab({
                 selectedValues={filterValues}
                 onChange={handleFilterChange}
                 onClearAll={handleClearFilters}
-                presets={filterPresets}
                 totalCount={total}
                 filteredCount={items.length}
               />

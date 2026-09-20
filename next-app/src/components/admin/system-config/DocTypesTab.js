@@ -373,7 +373,7 @@ export default function DocTypesTab({
                     </button>
                   )}
                   <span className="text-[12px] font-normal text-gray-400 dark:text-zinc-500 pointer-events-none">
-                    {filteredDocTypesFull.length > 0 ? `${filteredDocTypesFull.length} results` : "0 results"}
+                    {filteredDocTypesFull.length}
                   </span>
                 </div>
               </div>

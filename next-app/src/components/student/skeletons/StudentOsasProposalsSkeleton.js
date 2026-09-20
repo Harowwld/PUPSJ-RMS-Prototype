@@ -62,7 +62,7 @@ export default function StudentOsasProposalsSkeleton({ count = 3, showForm = tru
               <Skeleton className="h-3.5 w-72 sm:w-96 rounded dark:bg-muted" />
             </div>
           </div>
-          <div className="flex items-center gap-3 sm:gap-4">
+          <div className="flex items-center gap-2">
             <Skeleton className="hidden sm:inline-block h-6 w-32 rounded-full dark:bg-muted" />
             <Skeleton className="h-10 w-10 rounded-xl dark:bg-muted" />
             <div className="h-6 w-px bg-gray-200 dark:bg-zinc-800" />

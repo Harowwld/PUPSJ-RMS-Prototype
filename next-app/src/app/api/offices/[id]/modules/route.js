@@ -40,13 +40,34 @@ export async function PUT(req, { params }) {
     if (!body || !Array.isArray(body.moduleIds)) {
       return NextResponse.json({ ok: false, error: "Missing moduleIds array in body" }, { status: 400 });
     }
-    const office = await queryOne("SELECT id, status FROM offices WHERE id = $1", [id]);
+    const office = await queryOne("SELECT id, name, short_name, status FROM offices WHERE id = $1", [id]);
     if (!office) return NextResponse.json({ ok: false, error: "Office not found" }, { status: 404 });
     if (office.status === "Inactive" || office.status === "Archived") {
       return NextResponse.json({ ok: false, error: "Archived offices cannot be modified. Please reactivate the office first." }, { status: 400 });
     }
     const requested = new Set(body.moduleIds.map(String));
-    const modules = await query("SELECT id, is_system FROM modules");
+    const modules = await query("SELECT id, name, is_system FROM modules ORDER BY sort_order ASC, name ASC");
+
+    // Track previous module states to log exact diff
+    const prevRows = await query(
+      "SELECT module_id, enabled FROM office_modules WHERE office_id = $1",
+      [id]
+    );
+    const prevEnabledMap = new Map((prevRows || []).map((r) => [r.module_id, Boolean(r.enabled)]));
+
+    const newlyEnabled = [];
+    const newlyDisabled = [];
+
+    for (const m of modules) {
+      const isNowEnabled = Boolean(m.is_system || requested.has(m.id));
+      const wasEnabled = prevEnabledMap.has(m.id) ? prevEnabledMap.get(m.id) : false;
+      if (isNowEnabled && !wasEnabled) {
+        newlyEnabled.push(m.name || m.id);
+      } else if (!isNowEnabled && wasEnabled) {
+        newlyDisabled.push(m.name || m.id);
+      }
+    }
+
     await transaction(async ({ query: run }) => {
       for (const moduleRow of modules) {
         const enabled = moduleRow.is_system || requested.has(moduleRow.id);
@@ -56,9 +77,23 @@ export async function PUT(req, { params }) {
       }
     });
     const updated = await query("SELECT * FROM office_modules WHERE office_id = $1 ORDER BY module_id", [id]);
+
+    const officeLabel = office.short_name || office.name || id;
+    let detailsText = "";
+    if (newlyEnabled.length > 0 && newlyDisabled.length > 0) {
+      detailsText = `Updated modules for ${officeLabel}: enabled [${newlyEnabled.join(", ")}], disabled [${newlyDisabled.join(", ")}].`;
+    } else if (newlyEnabled.length > 0) {
+      detailsText = `Enabled module(s) [${newlyEnabled.join(", ")}] for ${officeLabel}.`;
+    } else if (newlyDisabled.length > 0) {
+      detailsText = `Disabled module(s) [${newlyDisabled.join(", ")}] for ${officeLabel}.`;
+    } else {
+      const activeModules = modules.filter((m) => m.is_system || requested.has(m.id)).map((m) => m.name || m.id);
+      detailsText = `Re-saved module access assignments for ${officeLabel} (${activeModules.length} active: ${activeModules.join(", ")}).`;
+    }
+
     await writeGlobalAuditLog(req, "Updated module access", {
       officeId: id,
-      details: "Module access assignments changed.",
+      details: detailsText,
       entity_type: "office",
       entity_id: id,
     });

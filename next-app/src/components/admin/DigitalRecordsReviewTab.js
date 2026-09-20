@@ -258,48 +258,6 @@ export default function DigitalRecordsReviewTab({
     ]
   }, [records, statusFilters, docTypeFilters, activeDocTypes, setStatusFilter])
 
-  const filterPresets = useMemo(() => [
-    {
-      label: "All",
-      isActive: statusFilters.length === 0 && docTypeFilters.length === 0,
-      onSelect: () => {
-        setStatusFilters([])
-        setDocTypeFilters([])
-        setStatusFilter?.("All")
-        setCurrentPage(1)
-      }
-    },
-    {
-      label: "Pending",
-      isActive: statusFilters.length === 1 && statusFilters[0] === "Pending" && docTypeFilters.length === 0,
-      onSelect: () => {
-        setStatusFilters(["Pending"])
-        setDocTypeFilters([])
-        setStatusFilter?.("Pending")
-        setCurrentPage(1)
-      }
-    },
-    {
-      label: "Approved",
-      isActive: statusFilters.length === 1 && statusFilters[0] === "Approved" && docTypeFilters.length === 0,
-      onSelect: () => {
-        setStatusFilters(["Approved"])
-        setDocTypeFilters([])
-        setStatusFilter?.("Approved")
-        setCurrentPage(1)
-      }
-    },
-    {
-      label: "Declined",
-      isActive: statusFilters.length === 1 && statusFilters[0] === "Declined" && docTypeFilters.length === 0,
-      onSelect: () => {
-        setStatusFilters(["Declined"])
-        setDocTypeFilters([])
-        setStatusFilter?.("Declined")
-        setCurrentPage(1)
-      }
-    }
-  ], [statusFilters, docTypeFilters, setStatusFilter])
 
   const extraChips = useMemo(() => {
     if (dateFrom || dateTo) {
@@ -816,7 +774,7 @@ export default function DigitalRecordsReviewTab({
             titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
             descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
             actions={
-              <div className="flex items-center gap-6">
+              <div className="flex items-center gap-2">
                 <RefreshButton 
                   onRefresh={onRefresh} 
                   isLoading={isManualLoading} 
@@ -850,17 +808,17 @@ export default function DigitalRecordsReviewTab({
             </div>
           ) : !error ? (
             <div className="px-6 pb-6">
-              <Reorder.Group as="div" axis="x" values={kpiOrder} onReorder={setKpiOrder} ref={statCardsRef} className="grid grid-cols-1 gap-4 md:grid-cols-3 items-start relative z-20">
+              <Reorder.Group as="div" axis="x" values={kpiOrder} onReorder={setKpiOrder} ref={statCardsRef} className="flex flex-wrap gap-4 items-stretch w-full relative z-20 transition-all duration-500">
                 {kpiOrder.map(key => {
                   if (key === "pending") return (
-                <Reorder.Item as="div" value="pending" key="pending" className={cn("cursor-grab active:cursor-grabbing", 
+                <Reorder.Item as="div" value="pending" key="pending" className={cn("flex-1 min-w-[280px] cursor-grab active:cursor-grabbing", 
                   "relative group rounded-xl",
                   selectedKpi === "pending" ? "z-30" : "z-10"
                 )}>
                   <div
                     onClick={() => setSelectedKpi(selectedKpi === "pending" ? null : "pending")}
                     className={cn(
-                      "relative overflow-hidden rounded-[18px] border cursor-pointer select-none transition-all shadow-[0_2px_10px_rgb(0,0,0,0.04)] hover:shadow-[0_4px_15px_rgb(0,0,0,0.06)] flex flex-col justify-between min-h-[110px] bg-gray-50 dark:bg-zinc-900",
+                      "relative overflow-hidden rounded-[18px] border cursor-pointer select-none transition-all shadow-[0_2px_10px_rgb(0,0,0,0.04)] hover:shadow-[0_4px_15px_rgb(0,0,0,0.06)] flex flex-col justify-between min-h-[110px] h-full bg-gray-50 dark:bg-zinc-900",
                       selectedKpi === "pending"
                         ? "border-amber-500/50 ring-1 ring-amber-500/20"
                         : "border-gray-100 dark:border-white/5"
@@ -876,9 +834,14 @@ export default function DigitalRecordsReviewTab({
                     </div>
                     
                     <div className="flex justify-between items-end p-4 pt-1">
-                      <span className="text-[28px] font-bold text-gray-900 dark:text-white leading-none tracking-tight">
-                        {stats.pending.toLocaleString()}
-                      </span>
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-[28px] font-bold text-gray-900 dark:text-white leading-none tracking-tight">
+                          {stats.pending.toLocaleString()}
+                        </span>
+                        <span className="text-xs font-medium text-amber-600 dark:text-amber-400 mb-1">
+                          {stats.pendingToday.toLocaleString()} received today
+                        </span>
+                      </div>
                       <HugeIcon className="ph-bold ph-dots-six-vertical cursor-grab active:cursor-grabbing hover:text-gray-400 dark:hover:text-zinc-500 text-gray-300 dark:text-zinc-700 text-lg mb-0.5" />
 
                     </div>
@@ -932,14 +895,14 @@ export default function DigitalRecordsReviewTab({
                 </Reorder.Item>
                   )
                   if (key === "approved") return (
-                <Reorder.Item as="div" value="approved" key="approved" className={cn("cursor-grab active:cursor-grabbing", 
+                <Reorder.Item as="div" value="approved" key="approved" className={cn("flex-1 min-w-[280px] cursor-grab active:cursor-grabbing", 
                   "relative group rounded-xl",
                   selectedKpi === "approved" ? "z-30" : "z-10"
                 )}>
                   <div
                     onClick={() => setSelectedKpi(selectedKpi === "approved" ? null : "approved")}
                     className={cn(
-                      "relative overflow-hidden rounded-[18px] border cursor-pointer select-none transition-all shadow-[0_2px_10px_rgb(0,0,0,0.04)] hover:shadow-[0_4px_15px_rgb(0,0,0,0.06)] flex flex-col justify-between min-h-[110px] bg-gray-50 dark:bg-zinc-900",
+                      "relative overflow-hidden rounded-[18px] border cursor-pointer select-none transition-all shadow-[0_2px_10px_rgb(0,0,0,0.04)] hover:shadow-[0_4px_15px_rgb(0,0,0,0.06)] flex flex-col justify-between min-h-[110px] h-full bg-gray-50 dark:bg-zinc-900",
                       selectedKpi === "approved"
                         ? "border-emerald-500/50 ring-1 ring-emerald-500/20"
                         : "border-gray-100 dark:border-white/5"
@@ -955,9 +918,14 @@ export default function DigitalRecordsReviewTab({
                     </div>
                     
                     <div className="flex justify-between items-end p-4 pt-1">
-                      <span className="text-[28px] font-bold text-gray-900 dark:text-white leading-none tracking-tight">
-                        {stats.totalApproved.toLocaleString()}
-                      </span>
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-[28px] font-bold text-gray-900 dark:text-white leading-none tracking-tight">
+                          {stats.totalApproved.toLocaleString()}
+                        </span>
+                        <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400 mb-1">
+                          {stats.approvedToday.toLocaleString()} approved today
+                        </span>
+                      </div>
                       <HugeIcon className="ph-bold ph-dots-six-vertical cursor-grab active:cursor-grabbing hover:text-gray-400 dark:hover:text-zinc-500 text-gray-300 dark:text-zinc-700 text-lg mb-0.5" />
 
                     </div>
@@ -1004,14 +972,14 @@ export default function DigitalRecordsReviewTab({
                 </Reorder.Item>
                   )
                   if (key === "declined") return (
-                <Reorder.Item as="div" value="declined" key="declined" className={cn("cursor-grab active:cursor-grabbing", 
+                <Reorder.Item as="div" value="declined" key="declined" className={cn("flex-1 min-w-[280px] cursor-grab active:cursor-grabbing", 
                   "relative group rounded-xl",
                   selectedKpi === "declined" ? "z-30" : "z-10"
                 )}>
                   <div
                     onClick={() => setSelectedKpi(selectedKpi === "declined" ? null : "declined")}
                     className={cn(
-                      "relative overflow-hidden rounded-[18px] border cursor-pointer select-none transition-all shadow-[0_2px_10px_rgb(0,0,0,0.04)] hover:shadow-[0_4px_15px_rgb(0,0,0,0.06)] flex flex-col justify-between min-h-[110px] bg-gray-50 dark:bg-zinc-900",
+                      "relative overflow-hidden rounded-[18px] border cursor-pointer select-none transition-all shadow-[0_2px_10px_rgb(0,0,0,0.04)] hover:shadow-[0_4px_15px_rgb(0,0,0,0.06)] flex flex-col justify-between min-h-[110px] h-full bg-gray-50 dark:bg-zinc-900",
                       selectedKpi === "declined"
                         ? "border-red-500/50 ring-1 ring-red-500/20"
                         : "border-gray-100 dark:border-white/5"
@@ -1027,9 +995,14 @@ export default function DigitalRecordsReviewTab({
                     </div>
                     
                     <div className="flex justify-between items-end p-4 pt-1">
-                      <span className="text-[28px] font-bold text-gray-900 dark:text-white leading-none tracking-tight">
-                        {stats.totalDeclined.toLocaleString()}
-                      </span>
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-[28px] font-bold text-gray-900 dark:text-white leading-none tracking-tight">
+                          {stats.totalDeclined.toLocaleString()}
+                        </span>
+                        <span className="text-xs font-medium text-red-600 dark:text-red-400 mb-1">
+                          {stats.declinedToday.toLocaleString()} returned today
+                        </span>
+                      </div>
                       <HugeIcon className="ph-bold ph-dots-six-vertical cursor-grab active:cursor-grabbing hover:text-gray-400 dark:hover:text-zinc-500 text-gray-300 dark:text-zinc-700 text-lg mb-0.5" />
 
                     </div>
@@ -1096,96 +1069,27 @@ export default function DigitalRecordsReviewTab({
           ) : null}
 
         {/* Navigation Toolbar */}
-        <div className="border-t border-gray-100 dark:border-white/10 p-5 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
-          {/* Status Filter Line Tabs */}
-          <div className="flex items-center gap-6 shrink-0 select-none overflow-x-auto">
-            <button
-              type="button"
-              onClick={() => {
-                setStatusFilters([])
-                setStatusFilter?.("All")
-                setCurrentPage(1)
-              }}
-              className={cn(
-                "relative h-9 flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent whitespace-nowrap",
-                statusFilters.length === 0
-                  ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
-                  : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
-              )}
-            >
-              All Records
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setStatusFilters(["Pending"])
-                setStatusFilter?.("Pending")
-                setCurrentPage(1)
-              }}
-              className={cn(
-                "relative h-9 flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent whitespace-nowrap",
-                statusFilters.length === 1 && statusFilters[0] === "Pending"
-                  ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
-                  : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
-              )}
-            >
-              Pending
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setStatusFilters(["Approved"])
-                setStatusFilter?.("Approved")
-                setCurrentPage(1)
-              }}
-              className={cn(
-                "relative h-9 flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent whitespace-nowrap",
-                statusFilters.length === 1 && statusFilters[0] === "Approved"
-                  ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
-                  : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
-              )}
-            >
-              Approved
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setStatusFilters(["Declined"])
-                setStatusFilter?.("Declined")
-                setCurrentPage(1)
-              }}
-              className={cn(
-                "relative h-9 flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent whitespace-nowrap",
-                statusFilters.length === 1 && statusFilters[0] === "Declined"
-                  ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
-                  : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
-              )}
-            >
-              Declined
-            </button>
+        <div className="border-t border-gray-100 dark:border-white/10 p-5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-gray-50/40 dark:bg-zinc-900/30">
+          {/* Search */}
+          <div className="relative flex-1 sm:w-64 min-w-[200px] max-w-sm group">
+            <HugeIcon  className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-xs pointer-events-none"></HugeIcon>
+            <Input
+              type="text"
+              placeholder="Search Student"
+              className="pl-8 pr-16 h-9 text-xs w-full bg-white dark:bg-zinc-800 border border-gray-200 dark:border-white/10 rounded-xl text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
+              value={localSearch}
+              onChange={(e) => setLocalSearch(e.target.value)}
+            />
+            <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] font-mono text-gray-400 dark:text-zinc-500">
+              {sortedRecords.length}
+            </div>
           </div>
 
-          {/* Search, Doc Type, Time, and Date Range Controls */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 flex-wrap">
-            {/* Search */}
-            <div className="relative flex-1 sm:w-64 min-w-[200px] group">
-              <HugeIcon  className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-xs pointer-events-none"></HugeIcon>
-              <Input
-                type="text"
-                placeholder="Search Student"
-                className="pl-8 pr-16 h-9 text-xs w-full bg-white dark:bg-zinc-800 border border-gray-200 dark:border-white/10 rounded-xl text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
-                value={localSearch}
-                onChange={(e) => setLocalSearch(e.target.value)}
-              />
-              <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] font-mono text-gray-400 dark:text-zinc-500">
-                {sortedRecords.length > 0 ? `${sortedRecords.length} results` : "0 results"}
-              </div>
-            </div>
-
+          {/* Doc Type, Time, and Date Range Controls */}
+          <div className="flex flex-wrap items-center gap-3">
             {/* Multi-Criteria Filters (Status + Doc Type) */}
             <MultiCriteriaFilter
               groups={filterCriteriaGroups}
-              presets={filterPresets}
               align="end"
               buttonLabel="Filter Records"
             />

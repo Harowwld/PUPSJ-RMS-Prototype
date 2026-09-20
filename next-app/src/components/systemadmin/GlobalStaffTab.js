@@ -36,6 +36,7 @@ import {
 import { cn } from "@/lib/utils"
 import { Reorder } from "framer-motion";
 import { getCachedData, setCachedData, invalidateDataCache } from "@/lib/dataCache"
+import { isSystemAdminRole } from "@/lib/roleUtils"
 
 function SortIndicator({ column, sortBy, sortOrder }) {
   if (sortBy !== column) {
@@ -80,6 +81,14 @@ export default function GlobalStaffTab({ authUser, showToast }) {
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(20)
 
+  // Multi-Selection State & Batch Actions
+  const [selectedIds, setSelectedIds] = useState(new Set())
+  const [lastSelectedId, setLastSelectedId] = useState(null)
+  const [bulkArchiveOpen, setBulkArchiveOpen] = useState(false)
+  const [bulkArchiveLoading, setBulkArchiveLoading] = useState(false)
+  const [bulkRestoreOpen, setBulkRestoreOpen] = useState(false)
+  const [bulkRestoreLoading, setBulkRestoreLoading] = useState(false)
+
   // Reset page and selection when search or filters change
   useEffect(() => {
     setPage(1)
@@ -113,14 +122,6 @@ export default function GlobalStaffTab({ authUser, showToast }) {
   const [isArchiving, setIsArchiving] = useState(false)
   const [restoreTarget, setRestoreTarget] = useState(null)
   const [isRestoring, setIsRestoring] = useState(false)
-
-  // Multi-Selection State & Batch Actions
-  const [selectedIds, setSelectedIds] = useState(new Set())
-  const [lastSelectedId, setLastSelectedId] = useState(null)
-  const [bulkArchiveOpen, setBulkArchiveOpen] = useState(false)
-  const [bulkArchiveLoading, setBulkArchiveLoading] = useState(false)
-  const [bulkRestoreOpen, setBulkRestoreOpen] = useState(false)
-  const [bulkRestoreLoading, setBulkRestoreLoading] = useState(false)
 
   const fetchData = useCallback(async () => {
     // SWR Cache-first: instant render from cache if available
@@ -351,7 +352,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
         value: "SystemAdmin",
         label: "System Admin",
         dotColor: "bg-purple-500",
-        count: staff.filter((s) => s.role === "SystemAdmin" && (statusFilter === "Active" ? s.status === "Active" : s.status !== "Active")).length,
+        count: staff.filter((s) => isSystemAdminRole(s.role) && (statusFilter === "Active" ? s.status === "Active" : s.status !== "Active")).length,
       },
       {
         value: "Admin",
@@ -394,24 +395,6 @@ export default function GlobalStaffTab({ authUser, showToast }) {
     ];
   }, [staff, offices, statusFilter]);
 
-  const staffFilterPresets = useMemo(
-    () => [
-      {
-        label: "All",
-        values: { role: [], office: [] },
-        activeCondition: (sel) => !sel?.role?.length && !sel?.office?.length,
-      },
-      {
-        label: "Admins",
-        values: { role: ["SystemAdmin", "Admin"] },
-      },
-      {
-        label: "Staff",
-        values: { role: ["Staff"] },
-      },
-    ],
-    []
-  );
 
   const filteredStaff = useMemo(() => {
     const selectedRoles = staffFilters.role || [];
@@ -436,7 +419,11 @@ export default function GlobalStaffTab({ authUser, showToast }) {
 
       // Role filter
       const matchesRole =
-        selectedRoles.length === 0 || selectedRoles.includes(member.role);
+        selectedRoles.length === 0 ||
+        selectedRoles.some((r) => {
+          if (r === "SystemAdmin") return isSystemAdminRole(member.role);
+          return member.role === r;
+        });
 
       // Status filter
       const matchesStatus = statusFilter === "Active" 
@@ -737,7 +724,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
           descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
           actions={
-            <div className="flex items-center gap-6">
+            <div className="flex items-center gap-2">
               <RefreshButton
                 onRefresh={handleManualRefresh}
                 isLoading={isManualLoading}
@@ -763,16 +750,16 @@ export default function GlobalStaffTab({ authUser, showToast }) {
           </div>
         ) : (
           <div className="px-6 pb-6">
-            <Reorder.Group as="div" axis="x" values={kpiOrder} onReorder={setKpiOrder} ref={statCardsRef} className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 items-start relative z-20 transition-all duration-500">
+            <Reorder.Group as="div" axis="x" values={kpiOrder} onReorder={setKpiOrder} ref={statCardsRef} className="flex flex-wrap gap-4 items-stretch w-full relative z-20 transition-all duration-500">
               {kpiOrder.map((kpiKey) => {
                 const stat = statCardsData.find(s => s.key === kpiKey);
                 if (!stat) return null;
                 return (
-                <Reorder.Item as="div" value={stat.key} key={stat.key} className={cn("relative group rounded-xl", selectedKpi === stat.key ? "z-30" : "z-10")}>
+                <Reorder.Item as="div" value={stat.key} key={stat.key} className={cn("flex-1 min-w-[280px] relative group rounded-xl", selectedKpi === stat.key ? "z-30" : "z-10")}>
                   <div
                     onClick={() => setSelectedKpi(selectedKpi === stat.key ? null : stat.key)}
                     className={cn(
-                      "relative overflow-hidden rounded-[18px] border cursor-pointer select-none transition-all shadow-[0_2px_10px_rgb(0,0,0,0.04)] hover:shadow-[0_4px_15px_rgb(0,0,0,0.06)] flex flex-col justify-between min-h-[110px] bg-gray-50 dark:bg-zinc-900",
+                      "relative overflow-hidden rounded-[18px] border cursor-pointer select-none transition-all shadow-[0_2px_10px_rgb(0,0,0,0.04)] hover:shadow-[0_4px_15px_rgb(0,0,0,0.06)] flex flex-col justify-between min-h-[110px] h-full bg-gray-50 dark:bg-zinc-900",
                       selectedKpi === stat.key
                         ? `border-${stat.color}-500/50 ring-1 ring-${stat.color}-500/20`
                         : "border-gray-100 dark:border-white/5"
@@ -882,7 +869,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                   : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
               )}
             >
-              Active Personnel ({stats.active})
+              Active ({stats.active})
             </button>
             <button
               type="button"
@@ -925,7 +912,6 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                   setStaffFilters(newFilters)
                   setPage(1)
                 }}
-                presets={staffFilterPresets}
                 totalCount={staff.filter((s) => (statusFilter === "Active" ? s.status === "Active" : s.status !== "Active")).length}
                 matchingCount={filteredStaff.length}
                 onReset={() => {

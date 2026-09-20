@@ -317,7 +317,7 @@ function SystemAdminPageContent({ authUser: propAuthUser }) {
             className="flex-1 p-4 flex flex-col min-h-0 w-full"
             style={{ transform: `scale(${zoomFactor})`, transformOrigin: 'top left', width: `${100 / zoomFactor}%`, minHeight: `${100 / zoomFactor}%` }}
           >
-            {view === "offices" && <OfficeManagementTab showToast={showToast} />}
+            {view === "offices" && <OfficeManagementTab showToast={showToast} onSwitchTab={switchView} />}
             {view === "modules" && <ModuleConfigTab showToast={showToast} />}
             {view === "staff" && <GlobalStaffTab authUser={authUser} showToast={showToast} />}
             {view === "security" && <SecurityQuestionsTab showToast={showToast} />}

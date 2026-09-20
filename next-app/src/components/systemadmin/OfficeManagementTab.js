@@ -21,8 +21,6 @@ import { RefreshButton } from "@/components/shared/RefreshButton"
 import ConfirmModal from "@/components/shared/ConfirmModal"
 import { Badge } from "@/components/ui/badge"
 import { Select } from "@/components/ui/select"
-import MultiCriteriaFilter from "@/components/shared/MultiCriteriaFilter"
-import ActiveFilterChips from "@/components/shared/ActiveFilterChips"
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip"
 import {
   Empty,
@@ -108,7 +106,7 @@ function SortIndicator({ column, sortBy, sortOrder }) {
   )
 }
 
-export default function OfficeManagementTab({ showToast }) {
+export default function OfficeManagementTab({ showToast, onSwitchTab }) {
   const [offices, setOffices] = useState([])
   const [availableModules, setAvailableModules] = useState([])
   const [loading, setLoading] = useState(true)
@@ -116,10 +114,6 @@ export default function OfficeManagementTab({ showToast }) {
   // Filters & Search
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState("Active") // "Active" | "Inactive"
-  const [officeCriteria, setOfficeCriteria] = useState({
-    staff_status: [],
-    module_status: [],
-  })
   const [selectedKpi, setSelectedKpi] = useState(null);
   const [kpiOrder, setKpiOrder] = useState(["total", "active", "staff"]);
   const [archiveOfficeTarget, setArchiveOfficeTarget] = useState(null)
@@ -433,74 +427,7 @@ export default function OfficeManagementTab({ showToast }) {
     }
   }
 
-  const officeFilterGroups = useMemo(() => {
-    const list = offices || []
-    const isArchived = statusFilter !== "Active"
-    const currentTabOffices = list.filter((o) => (isArchived ? o.status !== "Active" : o.status === "Active"))
-
-    return [
-      {
-        id: "staff_status",
-        label: "Personnel Assignment",
-        options: [
-          {
-            value: "has_staff",
-            label: "Has Personnel",
-            dotColor: "bg-emerald-500",
-            count: currentTabOffices.filter((o) => (o.staff_count || 0) > 0).length,
-          },
-          {
-            value: "no_staff",
-            label: "Unassigned Personnel",
-            dotColor: "bg-amber-500",
-            count: currentTabOffices.filter((o) => (o.staff_count || 0) === 0).length,
-          },
-        ],
-      },
-      {
-        id: "module_status",
-        label: "Module Footprint",
-        options: [
-          {
-            value: "has_modules",
-            label: "Custom Modules",
-            dotColor: "bg-blue-500",
-            count: currentTabOffices.filter((o) => (o.module_count || 0) > 0).length,
-          },
-          {
-            value: "default_only",
-            label: "Standard Defaults",
-            dotColor: "bg-purple-500",
-            count: currentTabOffices.filter((o) => (o.module_count || 0) === 0).length,
-          },
-        ],
-      },
-    ]
-  }, [offices, statusFilter])
-
-  const officeFilterPresets = useMemo(
-    () => [
-      {
-        label: "All",
-        values: { staff_status: [], module_status: [] },
-        activeCondition: (sel) => !sel?.staff_status?.length && !sel?.module_status?.length,
-      },
-      {
-        label: "Staffed",
-        values: { staff_status: ["has_staff"] },
-      },
-      {
-        label: "Custom Modules",
-        values: { module_status: ["has_modules"] },
-      },
-    ],
-    []
-  )
-
   const filteredOffices = useMemo(() => {
-    const selectedStaff = officeCriteria.staff_status || []
-    const selectedMods = officeCriteria.module_status || []
-
     const list = offices.filter((o) => {
       const matchesSearch =
         !searchQuery ||
@@ -510,21 +437,7 @@ export default function OfficeManagementTab({ showToast }) {
       const isArchived = o.status !== "Active"
       const matchesTab = statusFilter === "Active" ? !isArchived : isArchived
 
-      let matchesStaff = true
-      if (selectedStaff.length > 0) {
-        const hasStaff = (o.staff_count || 0) > 0
-        const key = hasStaff ? "has_staff" : "no_staff"
-        matchesStaff = selectedStaff.includes(key)
-      }
-
-      let matchesMod = true
-      if (selectedMods.length > 0) {
-        const hasMod = (o.module_count || 0) > 0
-        const key = hasMod ? "has_modules" : "default_only"
-        matchesMod = selectedMods.includes(key)
-      }
-
-      return matchesSearch && matchesTab && matchesStaff && matchesMod
+      return matchesSearch && matchesTab
     })
 
     list.sort((a, b) => {
@@ -558,7 +471,7 @@ export default function OfficeManagementTab({ showToast }) {
     })
 
     return list
-  }, [offices, searchQuery, statusFilter, officeCriteria, sortBy, sortOrder])
+  }, [offices, searchQuery, statusFilter, sortBy, sortOrder])
 
   const totalPages = Math.max(1, Math.ceil(filteredOffices.length / pageSize))
   const startIndex = (page - 1) * pageSize
@@ -566,16 +479,6 @@ export default function OfficeManagementTab({ showToast }) {
   const paginatedOffices = useMemo(() => {
     return filteredOffices.slice(startIndex, startIndex + pageSize)
   }, [filteredOffices, startIndex, pageSize])
-
-  const hasActiveFilters =
-    searchQuery !== "" ||
-    (officeCriteria.staff_status?.length > 0) ||
-    (officeCriteria.module_status?.length > 0)
-
-  const handleClearFilters = () => {
-    setSearchQuery("")
-    setOfficeCriteria({ staff_status: [], module_status: [] })
-  }
 
   const statCardsData = [
     {
@@ -629,15 +532,50 @@ export default function OfficeManagementTab({ showToast }) {
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
           descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
           actions={
-            <div className="flex items-center gap-6">
+            <div className="flex items-center gap-2">
+              {/* 1. View Switcher: Grid vs Table with SuperAdmin Styling */}
+              <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl shrink-0 border border-gray-200/60 dark:border-white/5">
+                <button
+                  type="button"
+                  onClick={() => setLayoutView("grid")}
+                  title="Grid Card View"
+                  className={cn(
+                    "inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer border-0",
+                    layoutView === "grid"
+                      ? "bg-slate-900 text-white dark:bg-zinc-100 dark:text-zinc-900 shadow-xs"
+                      : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white bg-transparent"
+                  )}
+                >
+                  <HugeIcon className="ph-bold ph-squares-four text-sm" />
+                  <span>Grid</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setLayoutView("table")}
+                  title="Compact Table View"
+                  className={cn(
+                    "inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer border-0",
+                    layoutView === "table"
+                      ? "bg-slate-900 text-white dark:bg-zinc-100 dark:text-zinc-900 shadow-xs"
+                      : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white bg-transparent"
+                  )}
+                >
+                  <HugeIcon className="ph-bold ph-list-dashes text-sm" />
+                  <span>Table</span>
+                </button>
+              </div>
+
+              {/* 2. Refresh Button (beside table/grid on left side of separator) */}
               <RefreshButton
                 onRefresh={handleManualRefresh}
                 isLoading={isManualLoading}
                 title="Refresh Offices & Modules"
               />
 
+              {/* 3. Separator */}
               <div className="h-6 w-px bg-gray-200 dark:bg-zinc-800" />
 
+              {/* 4. Add Button */}
               <Button
                 onClick={handleOpenCreate}
                 className="flex h-10 items-center justify-center rounded-xl! btn-brand-red text-white font-semibold text-xs active:scale-95 transition-all cursor-pointer px-5 shadow-xs"
@@ -655,16 +593,16 @@ export default function OfficeManagementTab({ showToast }) {
           </div>
         ) : (
           <div className="px-6 pb-6">
-            <Reorder.Group as="div" axis="x" values={kpiOrder} onReorder={setKpiOrder} ref={statCardsRef} className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 items-start relative z-20 transition-all duration-500">
+            <Reorder.Group as="div" axis="x" values={kpiOrder} onReorder={setKpiOrder} ref={statCardsRef} className="flex flex-wrap gap-4 items-stretch w-full relative z-20 transition-all duration-500">
               {kpiOrder.map((kpiKey) => {
                 const stat = statCardsData.find(s => s.key === kpiKey);
                 if (!stat) return null;
                 return (
-                <Reorder.Item as="div" value={stat.key} key={stat.key} className={cn("relative group rounded-xl", selectedKpi === stat.key ? "z-30" : "z-10")}>
+                <Reorder.Item as="div" value={stat.key} key={stat.key} className={cn("flex-1 min-w-[280px] relative group rounded-xl", selectedKpi === stat.key ? "z-30" : "z-10")}>
                   <div
                     onClick={() => setSelectedKpi(selectedKpi === stat.key ? null : stat.key)}
                     className={cn(
-                      "relative overflow-hidden rounded-[18px] border cursor-pointer select-none transition-all shadow-[0_2px_10px_rgb(0,0,0,0.04)] hover:shadow-[0_4px_15px_rgb(0,0,0,0.06)] flex flex-col justify-between min-h-[110px] bg-gray-50 dark:bg-zinc-900",
+                      "relative overflow-hidden rounded-[18px] border cursor-pointer select-none transition-all shadow-[0_2px_10px_rgb(0,0,0,0.04)] hover:shadow-[0_4px_15px_rgb(0,0,0,0.06)] flex flex-col justify-between min-h-[110px] h-full bg-gray-50 dark:bg-zinc-900",
                       selectedKpi === stat.key
                         ? `border-${stat.color}-500/50 ring-1 ring-${stat.color}-500/20`
                         : "border-gray-100 dark:border-white/5"
@@ -759,7 +697,12 @@ export default function OfficeManagementTab({ showToast }) {
                             type="button"
                             onClick={(e) => {
                               e.stopPropagation()
-                              onSwitchTab?.("global_staff")
+                              setSelectedKpi(null)
+                              if (typeof onSwitchTab === "function") {
+                                onSwitchTab("staff")
+                              } else if (typeof window !== "undefined") {
+                                window.dispatchEvent(new CustomEvent("switch-view", { detail: { view: "staff" } }))
+                              }
                             }}
                             className="bg-gray-50 dark:bg-zinc-800/60 hover:bg-gray-100 dark:hover:bg-zinc-700/60 transition-colors p-2.5 rounded-lg text-left cursor-pointer border border-gray-100 dark:border-white/5"
                           >
@@ -797,7 +740,7 @@ export default function OfficeManagementTab({ showToast }) {
                   : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
               )}
             >
-              Active Departments ({stats.active})
+              Active ({stats.active})
             </button>
             <button
               type="button"
@@ -813,86 +756,34 @@ export default function OfficeManagementTab({ showToast }) {
             </button>
           </div>
 
-          {/* Right: Search Input & View Switcher Group */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0">
-            <div className="w-full sm:w-[320px] lg:w-[380px] relative group shrink-0">
-              <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                <HugeIcon  className="ph-bold ph-magnifying-glass text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm"></HugeIcon>
-              </div>
-              <Input
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search offices by name, acronym, ID..."
-                className="h-9 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 pl-8 pr-20 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
-              />
-              <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] text-gray-400 dark:text-zinc-500 font-mono">
-                {filteredOffices.length > 0 ? `${filteredOffices.length} results` : "0 results"}
-              </div>
+          {/* Right: Search Input */}
+          <div className="w-full sm:w-[320px] lg:w-[380px] relative group shrink-0">
+            <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+              <HugeIcon  className="ph-bold ph-magnifying-glass text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm"></HugeIcon>
             </div>
-
-            {/* Multi-Criteria Popover Filter */}
-            <div className="w-full sm:w-auto shrink-0">
-              <MultiCriteriaFilter
-                title="Filter Departments"
-                groups={officeFilterGroups}
-                selected={officeCriteria}
-                onChange={setOfficeCriteria}
-                presets={officeFilterPresets}
-                totalCount={offices.filter((o) => (statusFilter === "Active" ? o.status === "Active" : o.status !== "Active")).length}
-                matchingCount={filteredOffices.length}
-                onReset={() => setOfficeCriteria({ staff_status: [], module_status: [] })}
-              />
-            </div>
-
-            {/* View Switcher: Grid vs Table */}
-            <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl shrink-0 border border-gray-200/60 dark:border-white/5">
-              <button
-                type="button"
-                onClick={() => setLayoutView("grid")}
-                title="Grid Card View"
-                className={cn(
-                  "h-7 px-3 rounded-lg flex items-center gap-1.5 text-xs font-semibold transition-all cursor-pointer border-0",
-                  layoutView === "grid"
-                    ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-zinc-50 shadow-xs"
-                    : "text-gray-500 hover:text-gray-800 dark:text-zinc-400 dark:hover:text-zinc-200 bg-transparent"
-                )}
-              >
-                <HugeIcon  className="ph-bold ph-squares-four text-sm"></HugeIcon>
-                <span className="hidden sm:inline">Grid</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setLayoutView("table")}
-                title="Compact Table View"
-                className={cn(
-                  "h-7 px-3 rounded-lg flex items-center gap-1.5 text-xs font-semibold transition-all cursor-pointer border-0",
-                  layoutView === "table"
-                    ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-zinc-50 shadow-xs"
-                    : "text-gray-500 hover:text-gray-800 dark:text-zinc-400 dark:hover:text-zinc-200 bg-transparent"
-                )}
-              >
-                <HugeIcon  className="ph-bold ph-list-dashes text-sm"></HugeIcon>
-                <span className="hidden sm:inline">Table</span>
-              </button>
+            <Input
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search offices by name, acronym, ID..."
+              className="h-9 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 pl-8 pr-20 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
+            />
+            <div className="absolute inset-y-0 right-3 flex items-center gap-1.5">
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery("")}
+                  className="text-gray-400 hover:text-gray-600 dark:hover:text-zinc-300 cursor-pointer"
+                  title="Clear search"
+                >
+                  <HugeIcon className="ph-bold ph-x-circle text-[13px]" />
+                </button>
+              )}
+              <span className="text-[11px] text-gray-400 dark:text-zinc-500 font-mono pointer-events-none">
+                {filteredOffices.length}
+              </span>
             </div>
           </div>
         </div>
-
-        {/* Active Filter Chips Row */}
-        <ActiveFilterChips
-          groups={officeFilterGroups}
-          selected={officeCriteria}
-          onRemove={(groupId, val) => {
-            setOfficeCriteria((prev) => ({
-              ...prev,
-              [groupId]: (prev[groupId] || []).filter((v) => v !== val),
-            }))
-          }}
-          searchQuery={searchQuery}
-          onClearSearch={() => setSearchQuery("")}
-          onClearAll={handleClearFilters}
-          className="border-t border-gray-100 dark:border-white/10 bg-white dark:bg-card px-6 py-2.5"
-        />
 
         {/* Content Section inside the single card */}
         <div className="overflow-hidden rounded-b-2xl border-t border-gray-200 dark:border-white/10 bg-white dark:bg-card flex flex-col flex-1">

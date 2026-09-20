@@ -1,5 +1,4 @@
 "use client"
-import { Reorder } from "framer-motion";
 
 import HugeIcon from "@/components/shared/HugeIcon";
 import React, { useState, useEffect, useCallback } from "react"
@@ -18,12 +17,14 @@ import {
 import { cn } from "@/lib/utils"
 
 export default function SecurityQuestionsTab({ showToast }) {
-  const [questions, setQuestions] = useState(["", ""])
+  const [questions, setQuestions] = useState([
+    { id: 1, question: "", is_required: true },
+    { id: 2, question: "", is_required: true },
+  ])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [totpModalOpen, setTotpModalOpen] = useState(false)
   const [totpLoading, setTotpLoading] = useState(false)
-  const [kpiOrder, setKpiOrder] = useState(["total", "enforced"])
 
   const loadQuestions = useCallback(async (isManual = false) => {
     if (isManual) setLoading(true)
@@ -36,14 +37,25 @@ export default function SecurityQuestionsTab({ showToast }) {
       }
 
       if (Array.isArray(json.data)) {
-        const list = [...json.data]
+        const list = json.data.map((item, idx) => {
+          if (typeof item === "string") {
+            return { id: idx + 1, question: item, is_required: idx < 2 }
+          }
+          return {
+            id: item.id || idx + 1,
+            question: item.question || "",
+            is_required: item.is_required !== undefined ? Boolean(item.is_required) : true,
+          }
+        })
         while (list.length < 2) {
-          list.push("")
+          list.push({
+            id: list.length + 1,
+            question: "",
+            is_required: true,
+          })
         }
         setQuestions(list)
       }
-
-      
     } catch (err) {
       showToast?.({
         title: "Load Failed",
@@ -60,11 +72,14 @@ export default function SecurityQuestionsTab({ showToast }) {
   }, [loadQuestions])
 
   const handleAddQuestion = () => {
-    setQuestions((prev) => [...prev, ""])
+    setQuestions((prev) => [
+      ...prev,
+      { id: Date.now(), question: "", is_required: false },
+    ])
   }
 
   const handleRemoveQuestion = (index) => {
-    if (questions.length > 2) {
+    if (questions.length > 1) {
       setQuestions((prev) => prev.filter((_, i) => i !== index))
     }
   }
@@ -72,25 +87,49 @@ export default function SecurityQuestionsTab({ showToast }) {
   const handleQuestionChange = (index, value) => {
     setQuestions((prev) => {
       const copy = [...prev]
-      copy[index] = value
+      copy[index] = { ...copy[index], question: value }
+      return copy
+    })
+  }
+
+  const handleToggleRequired = (index) => {
+    setQuestions((prev) => {
+      const copy = [...prev]
+      copy[index] = { ...copy[index], is_required: !copy[index].is_required }
       return copy
     })
   }
 
   const handleSave = async (totpToken = null) => {
-    const filtered = questions.map((q) => String(q || "").trim()).filter(Boolean)
+    const cleanQuestions = questions
+      .map((q) => ({
+        id: q.id,
+        question: String(q.question || "").trim(),
+        is_required: Boolean(q.is_required),
+      }))
+      .filter((q) => q.question.length > 0)
 
-    if (filtered.length < 2) {
+    if (cleanQuestions.length === 0) {
       showToast?.({
         title: "Validation Error",
-        description: "At least two security questions are required by institution policy.",
+        description: "At least one security challenge question is required.",
         variant: "destructive",
       })
       return
     }
 
-    for (let i = 0; i < filtered.length; i++) {
-      const q = filtered[i]
+    const requiredCount = cleanQuestions.filter((q) => q.is_required).length
+    if (requiredCount < 1) {
+      showToast?.({
+        title: "Validation Error",
+        description: "At least one question must be marked as Required for account recovery.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    for (let i = 0; i < cleanQuestions.length; i++) {
+      const q = cleanQuestions[i].question
       if (q.length < 10) {
         showToast?.({
           title: "Question Too Short",
@@ -120,7 +159,7 @@ export default function SecurityQuestionsTab({ showToast }) {
       const res = await fetch("/api/system/security-questions", {
         method: "PUT",
         headers,
-        body: JSON.stringify({ questions: filtered }),
+        body: JSON.stringify({ questions: cleanQuestions }),
       })
 
       const json = await res.json().catch(() => null)
@@ -169,8 +208,6 @@ export default function SecurityQuestionsTab({ showToast }) {
     }
   }
 
-  const activeQuestionsCount = questions.filter((q) => q.trim().length > 0).length
-
   return (
     <div className="animate-fade-up font-jakarta flex flex-1 flex-col h-full min-h-0 w-full gap-6">
       <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none isolate font-jakarta mb-4 min-h-0 flex-1">
@@ -178,8 +215,8 @@ export default function SecurityQuestionsTab({ showToast }) {
         <PageHeader
           icon="ph-bold ph-shield-check"
           title="Global Security Questions"
-          description="Define institutional verification challenges for staff account recovery and password resets system-wide."
-          showBorder={false}
+          description="Define institutional verification challenges for staff account recovery. Mark mandatory challenges as Required (minimum 10 characters)."
+          showBorder={true}
           className="p-6"
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
           descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
@@ -199,7 +236,7 @@ export default function SecurityQuestionsTab({ showToast }) {
                 className="flex h-10 items-center justify-center rounded-xl! btn-brand-red text-white font-semibold text-xs active:scale-95 transition-all cursor-pointer px-5 shadow-xs border-0"
               >
                 {saving ? (
-                  <HugeIcon  className="ph-bold ph-spinner animate-spin text-[16px]"></HugeIcon>
+                  <HugeIcon className="ph-bold ph-spinner animate-spin text-[16px]" />
                 ) : (
                   "Save"
                 )}
@@ -208,177 +245,162 @@ export default function SecurityQuestionsTab({ showToast }) {
           }
         />
 
-        {/* Top Summary Stat Cards */}
-        <div className="px-6 pb-6">
-          <Reorder.Group as="div" axis="x" values={kpiOrder} onReorder={setKpiOrder} className="grid grid-cols-1 gap-4 md:grid-cols-2 items-start relative z-20">
-            {kpiOrder.map(key => {
-              if (key === "total") return (
-            <Reorder.Item as="div" value="total" key="total" className="relative group rounded-xl">
-              <div className="relative overflow-hidden rounded-[18px] border border-gray-100 dark:border-white/5 cursor-pointer select-none transition-all shadow-[0_2px_10px_rgb(0,0,0,0.04)] hover:shadow-[0_4px_15px_rgb(0,0,0,0.06)] flex flex-col justify-between min-h-[110px] bg-gray-50 dark:bg-zinc-900">
-                <div className="flex justify-between items-start p-4 pb-0">
-                  <div className="flex flex-col gap-1">
-                    <span className="text-[13px] font-medium text-gray-500 dark:text-zinc-400 capitalize">
-                      Configured Challenges
-                    </span>
-                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 w-fit">
-                      2 Required
-                    </span>
-                  </div>
-                  <div className="w-8 h-8 rounded-[10px] flex items-center justify-center text-white shadow-sm shrink-0 bg-[#10b981]">
-                    <HugeIcon className="ph-bold text-[15px] ph-shield-check" />
-                  </div>
-                </div>
-                
-                <div className="flex justify-between items-end p-4 pt-1">
-                  <div className="flex flex-col gap-1">
-                    <span className="text-[28px] font-bold text-gray-900 dark:text-white leading-none tracking-tight">
-                      {loading ? "..." : activeQuestionsCount}
-                    </span>
-                    <span className="text-xs font-medium text-gray-400 dark:text-zinc-500 mb-0.5">
-                      Staff must configure and answer these challenges upon onboarding.
-                    </span>
-                  </div>
-                  <HugeIcon className="ph-bold ph-dots-six-vertical cursor-grab active:cursor-grabbing hover:text-gray-400 dark:hover:text-zinc-500 text-gray-300 dark:text-zinc-700 text-lg mb-0.5" />
-                </div>
-              </div>
-            </Reorder.Item>
-              );
-              if (key === "enforced") return (
-            <Reorder.Item as="div" value="enforced" key="enforced" className="relative group rounded-xl">
-              <div className="relative overflow-hidden rounded-[18px] border border-gray-100 dark:border-white/5 cursor-pointer select-none transition-all shadow-[0_2px_10px_rgb(0,0,0,0.04)] hover:shadow-[0_4px_15px_rgb(0,0,0,0.06)] flex flex-col justify-between min-h-[110px] bg-gray-50 dark:bg-zinc-900">
-                <div className="flex justify-between items-start p-4 pb-0">
-                  <div className="flex flex-col gap-1">
-                    <span className="text-[13px] font-medium text-gray-500 dark:text-zinc-400 capitalize">
-                      Entropy & Policy Standard
-                    </span>
-                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400 w-fit">
-                      Enforced
-                    </span>
-                  </div>
-                  <div className="w-8 h-8 rounded-[10px] flex items-center justify-center text-white shadow-sm shrink-0 bg-[#3b82f6]">
-                    <HugeIcon className="ph-bold text-[15px] ph-lock-key" />
-                  </div>
-                </div>
-                
-                <div className="flex justify-between items-end p-4 pt-1">
-                  <div className="flex flex-col gap-1">
-                    <span className="text-[28px] font-bold text-gray-900 dark:text-white leading-none tracking-tight">
-                      10+ Chars
-                    </span>
-                    <span className="text-xs font-medium text-gray-400 dark:text-zinc-500 mb-0.5">
-                      Guarantees high-entropy challenges resisting brute-force attacks.
-                    </span>
-                  </div>
-                  <HugeIcon className="ph-bold ph-dots-six-vertical cursor-grab active:cursor-grabbing hover:text-gray-400 dark:hover:text-zinc-500 text-gray-300 dark:text-zinc-700 text-lg mb-0.5" />
-                </div>
-              </div>
-            </Reorder.Item>
-              );
-              return null;
-            })}
-          </Reorder.Group>
-        </div>
-
-        {/* Divider */}
-        <div className="border-t border-gray-100 dark:border-white/10" />
-
         {/* Questions Form Area */}
         <div className="p-6">
           {loading ? (
-            <div className="max-w-3xl space-y-4">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="space-y-2">
-                  <Skeleton className="h-4 w-40 rounded dark:bg-muted" />
-                  <Skeleton className="h-10 w-full rounded-xl dark:bg-muted" />
+            <div className="w-full space-y-4">
+              {[1, 2].map((i) => (
+                <div key={i} className="rounded-2xl border border-gray-100 dark:border-white/5 bg-gray-50/20 dark:bg-zinc-900/20 p-4 space-y-3">
+                  <div className="flex justify-between items-center">
+                    <Skeleton className="h-5 w-32 rounded-lg dark:bg-muted" />
+                    <Skeleton className="h-7 w-36 rounded-xl dark:bg-muted" />
+                  </div>
+                  <Skeleton className="h-10.5 w-full rounded-xl dark:bg-muted" />
+                  <Skeleton className="h-4 w-48 rounded dark:bg-muted" />
                 </div>
               ))}
             </div>
           ) : (
-            <div className="max-w-3xl space-y-5">
+            <div className="w-full space-y-4">
               {questions.map((q, i) => {
-                const trimmed = q.trim()
-                const isWeak = trimmed.length > 0 && (trimmed.length < 10 || new Set(trimmed.toLowerCase().replace(/\s/g, "")).size < 5)
+                const text = q.question || ""
+                const trimmed = text.trim()
+                const isWeak =
+                  trimmed.length > 0 &&
+                  (trimmed.length < 10 ||
+                    new Set(trimmed.toLowerCase().replace(/\s/g, "")).size < 5)
 
                 return (
-                  <div key={i} className="group flex flex-col">
-                    <div className="flex items-center justify-between gap-2 mb-1.5">
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-[12px] font-medium text-gray-400 dark:text-zinc-500 select-none font-mono">
+                  <div
+                    key={q.id || i}
+                    className="rounded-2xl border border-gray-200/80 dark:border-white/10 bg-gray-50/30 dark:bg-zinc-900/40 p-4 transition-all hover:border-gray-300 dark:hover:border-white/20 space-y-2.5"
+                  >
+                    {/* Top Row: Question label & Controls */}
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2">
+                        <span className="flex items-center justify-center w-6 h-6 rounded-lg bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 font-semibold font-mono text-xs border border-gray-200 dark:border-white/10 shadow-2xs">
                           {i + 1}
                         </span>
-                        <label className="text-[12px] font-medium text-gray-700 dark:text-zinc-300">
-                          Security Challenge Question
-                          {i < 2 ? (
-                            <span className="ml-1 text-[12px] font-semibold text-red-500">*</span>
-                          ) : (
-                            <span className="ml-1.5 text-[11px] font-normal text-gray-400 dark:text-zinc-500">
-                              (Optional)
-                            </span>
-                          )}
-                        </label>
+                        <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
+                          Question {i + 1}
+                        </span>
+                        {q.is_required ? (
+                          <span className="text-[10px] font-semibold text-red-700 dark:text-red-400 bg-red-50 dark:bg-red-950/50 px-2 py-0.5 rounded-full border border-red-200 dark:border-red-900/50">
+                            Required
+                          </span>
+                        ) : (
+                          <span className="text-[10px] font-medium text-gray-500 dark:text-zinc-400 bg-gray-100 dark:bg-zinc-800 px-2 py-0.5 rounded-full border border-gray-200 dark:border-white/10">
+                            Optional
+                          </span>
+                        )}
                       </div>
 
-                      <div className="flex items-center gap-3">
-                        {trimmed.length > 0 && (
-                          <div>
-                            {isWeak ? (
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <span className="inline-flex items-center gap-1 text-[11px] font-medium text-amber-600 dark:text-amber-400 cursor-help">
-                                    <HugeIcon  className="ph-bold ph-warning text-xs" />
-                                    Weak Challenge
-                                  </span>
-                                </TooltipTrigger>
-                                <TooltipContent side="top" className="bg-amber-50 text-amber-900 border border-amber-200 dark:bg-amber-950 dark:text-amber-200 dark:border-amber-900/50 text-xs">
-                                  <p className="font-semibold">Minimum 10 characters and 5 unique characters required.</p>
-                                </TooltipContent>
-                              </Tooltip>
-                            ) : (
-                              <span className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-600 dark:text-emerald-400">
-                                <HugeIcon  className="ph-bold ph-check text-xs" />
-                                Strong
-                              </span>
-                            )}
-                          </div>
-                        )}
-
-                        {i >= 2 && (
+                      <div className="flex items-center gap-2">
+                        {/* Clear Segmented Control [ Required | Optional ] */}
+                        <div className="inline-flex items-center bg-gray-200/70 dark:bg-zinc-800 p-0.5 rounded-xl border border-gray-200/60 dark:border-white/5">
                           <button
                             type="button"
-                            onClick={() => handleRemoveQuestion(i)}
-                            className="text-[11px] font-medium text-gray-400 hover:text-red-600 dark:text-zinc-500 dark:hover:text-red-400 transition-colors bg-transparent border-0 p-0 cursor-pointer"
+                            onClick={() => !q.is_required && handleToggleRequired(i)}
+                            className={cn(
+                              "px-3 py-1 text-[11px] font-semibold rounded-lg transition-all cursor-pointer",
+                              q.is_required
+                                ? "bg-white dark:bg-zinc-700 text-pup-maroon dark:text-red-400 shadow-xs"
+                                : "text-gray-500 hover:text-gray-800 dark:text-zinc-400 dark:hover:text-zinc-200"
+                            )}
                           >
-                            Remove
+                            Required
                           </button>
+                          <button
+                            type="button"
+                            onClick={() => q.is_required && handleToggleRequired(i)}
+                            className={cn(
+                              "px-3 py-1 text-[11px] font-semibold rounded-lg transition-all cursor-pointer",
+                              !q.is_required
+                                ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-zinc-100 shadow-xs"
+                                : "text-gray-500 hover:text-gray-800 dark:text-zinc-400 dark:hover:text-zinc-200"
+                            )}
+                          >
+                            Optional
+                          </button>
+                        </div>
+
+                        {/* Delete button */}
+                        {questions.length > 1 && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveQuestion(i)}
+                                className="w-8 h-8 rounded-xl flex items-center justify-center text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 dark:hover:text-red-400 transition-all cursor-pointer border border-transparent hover:border-red-200 dark:hover:border-red-900/50 active:scale-95"
+                                aria-label="Remove Question"
+                              >
+                                <HugeIcon className="ph-bold ph-trash text-sm" />
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent side="top" className="text-xs">
+                              <p>Remove Question</p>
+                            </TooltipContent>
+                          </Tooltip>
                         )}
                       </div>
                     </div>
 
+                    {/* Full Width Input field */}
                     <Input
                       type="text"
                       placeholder="e.g., What was the name of your first elementary school?"
-                      value={q}
+                      value={text}
                       onChange={(e) => handleQuestionChange(i, e.target.value)}
                       className={cn(
-                        "h-10 rounded-xl border bg-white dark:bg-zinc-800 text-xs text-gray-900 dark:text-zinc-100 px-3 transition-all focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon shadow-xs",
+                        "h-10.5 w-full rounded-xl border bg-white dark:bg-zinc-800 text-xs text-gray-900 dark:text-zinc-100 px-3.5 placeholder:text-gray-400 dark:placeholder:text-zinc-500 transition-all focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon shadow-2xs",
                         isWeak
-                          ? "border-amber-400 dark:border-amber-600"
+                          ? "border-amber-400 dark:border-amber-600 focus-visible:ring-amber-500"
                           : "border-gray-200 dark:border-white/10"
                       )}
                     />
+
+                    {/* Inline Guidance / Validation Text */}
+                    <div className="flex items-center justify-between px-1 text-[11px]">
+                      {trimmed.length === 0 ? (
+                        <span className="text-gray-400 dark:text-zinc-500">
+                          {q.is_required
+                            ? "Required challenge: Staff must answer this during account recovery setup."
+                            : "Optional challenge: Staff may choose to configure this as an alternate."}
+                        </span>
+                      ) : isWeak ? (
+                        <span className="text-amber-600 dark:text-amber-400 font-medium flex items-center gap-1.5">
+                          <HugeIcon className="ph-bold ph-warning-circle text-xs" />
+                          {trimmed.length < 10
+                            ? `Must be at least 10 characters (${trimmed.length}/10)`
+                            : "Question is too repetitive or simple. Provide a more complex challenge."}
+                        </span>
+                      ) : (
+                        <span className="text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1.5">
+                          <HugeIcon className="ph-bold ph-check-circle text-xs" />
+                          Valid challenge question
+                        </span>
+                      )}
+
+                      {trimmed.length > 0 && (
+                        <span className="text-[10px] text-gray-400 dark:text-zinc-500 font-mono">
+                          {trimmed.length} chars
+                        </span>
+                      )}
+                    </div>
                   </div>
                 )
               })}
 
+              {/* Broken Lines (Dashed) Add Security Question Button */}
               <div className="pt-2">
-                <Button
+                <button
                   type="button"
-                  variant="outline"
                   onClick={handleAddQuestion}
-                  className="h-9 px-4 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all inline-flex items-center gap-1.5"
+                  className="w-full h-12 rounded-xl border-2 border-dashed border-gray-200 hover:border-pup-maroon/60 dark:border-white/15 dark:hover:border-pup-maroon/60 bg-gray-50/40 hover:bg-pup-maroon/5 dark:bg-zinc-900/20 dark:hover:bg-pup-maroon/10 text-gray-600 dark:text-zinc-400 hover:text-pup-maroon dark:hover:text-pup-maroon transition-all flex items-center justify-center gap-2 text-xs font-semibold cursor-pointer active:scale-[0.99]"
                 >
-                  Add
-                </Button>
+                  <HugeIcon className="ph-bold ph-plus text-sm" />
+                  <span>Add Security Question</span>
+                </button>
               </div>
             </div>
           )}

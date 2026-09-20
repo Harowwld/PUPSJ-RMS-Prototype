@@ -19,7 +19,7 @@ export default function LandingBentoSkeleton() {
               </span>
             </div>
           }
-          description="Manage public portal bento grid features, SLA turnaround schedules, campus archive locations, and citizen charter commitments."
+          description="Manage public portal bento grid features, interactive animation simulation steps, archive retrieval nodes, and statutory compliance tags."
           showBorder={false}
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
           descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
@@ -53,18 +53,18 @@ export default function LandingBentoSkeleton() {
               <div className="w-full flex items-center justify-between gap-3 px-5 py-3.5">
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="w-8 h-8 rounded-lg bg-pup-maroon text-white flex items-center justify-center shrink-0">
-                    <HugeIcon  className="ph-bold ph-cursor-click text-sm" />
+                    <HugeIcon className="ph-bold ph-cursor-click text-sm" />
                   </div>
                   <div className="min-w-0">
                     <h3 className="text-[13px] font-semibold text-gray-900 dark:text-zinc-50 truncate">
                       Card 1: Online Request Simulation
                     </h3>
                     <p className="text-[11px] text-gray-500 dark:text-zinc-400 mt-0.5 truncate">
-                      Large interactive card showcasing document and purpose selection.
+                      Large card showcasing document selection, purpose choice, and submission.
                     </p>
                   </div>
                 </div>
-                <HugeIcon  className="ph-bold ph-caret-down text-gray-400 text-sm shrink-0 rotate-180" />
+                <HugeIcon className="ph-bold ph-caret-down text-gray-400 text-sm shrink-0 rotate-180" />
               </div>
 
               {/* Expanded Form Content */}
@@ -85,19 +85,13 @@ export default function LandingBentoSkeleton() {
                   <Skeleton className="h-16 w-full rounded-xl dark:bg-muted" />
                 </div>
 
-                {/* Sample Cycled Documents */}
+                {/* Simulation Flow Steps */}
                 <div className="space-y-2">
                   <Skeleton className="h-3 w-48 rounded dark:bg-muted" />
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {[1, 2, 3, 4].map((i) => (
-                      <div
-                        key={i}
-                        className="p-3 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-card space-y-2"
-                      >
-                        <Skeleton className="h-8 w-full rounded-lg dark:bg-muted" />
-                        <Skeleton className="h-8 w-full rounded-lg dark:bg-muted" />
-                      </div>
-                    ))}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <Skeleton className="h-10 w-full rounded-xl dark:bg-muted" />
+                    <Skeleton className="h-10 w-full rounded-xl dark:bg-muted" />
+                    <Skeleton className="h-10 w-full rounded-xl dark:bg-muted" />
                   </div>
                 </div>
               </div>
@@ -106,24 +100,24 @@ export default function LandingBentoSkeleton() {
             {/* ACCORDION CARDS 2-5: COLLAPSED */}
             {[
               {
-                icon: "ph-bold ph-clock-countdown",
-                title: "Card 2: Processing Turnaround & SLAs",
-                desc: "Medium card with active SLA badges and turn-around time commitments.",
+                icon: "ph-bold ph-calendar-check",
+                title: "Card 2: Processing Schedule & Milestones",
+                desc: "Large card showing document pickup schedule, notifications, and counter visit.",
               },
               {
-                icon: "ph-bold ph-map-pin",
-                title: "Card 3: Physical Archives & Floor Plan 3D",
-                desc: "Compact card highlighting campus archive storage room and vault safety.",
+                icon: "ph-bold ph-archive",
+                title: "Card 3: Direct from Campus Archives",
+                desc: "Flow diagram connecting online request to Room 1 archive cabinets and staff.",
+              },
+              {
+                icon: "ph-bold ph-check-square-offset",
+                title: "Card 4: What You Need to Prepare",
+                desc: "Preparation checklist items required from students and alumni.",
               },
               {
                 icon: "ph-bold ph-shield-check",
-                title: "Card 4: Enterprise Multi-Role Access",
-                desc: "Compact card demonstrating student, staff, and admin security privileges.",
-              },
-              {
-                icon: "ph-bold ph-scales",
-                title: "Card 5: Citizen Charter & Governance",
-                desc: "Wide interactive card tabulating ARTA commitments and institutional mandates.",
+                title: "Card 5: Protected by Law (RA 11032)",
+                desc: "Ease of Doing Business Act guarantees and anti-red tape commitments.",
               },
             ].map((card, idx) => (
               <div
@@ -133,7 +127,7 @@ export default function LandingBentoSkeleton() {
                 <div className="w-full flex items-center justify-between gap-3 px-5 py-3.5">
                   <div className="flex items-center gap-3 min-w-0">
                     <div className="w-8 h-8 rounded-lg bg-gray-200/80 dark:bg-zinc-800 text-gray-500 dark:text-zinc-400 flex items-center justify-center shrink-0">
-                      <HugeIcon  className={`${card.icon} text-sm`} />
+                      <HugeIcon className={`${card.icon} text-sm`} />
                     </div>
                     <div className="min-w-0">
                       <h3 className="text-[13px] font-semibold text-gray-900 dark:text-zinc-50 truncate">
@@ -144,7 +138,7 @@ export default function LandingBentoSkeleton() {
                       </p>
                     </div>
                   </div>
-                  <HugeIcon  className="ph-bold ph-caret-down text-gray-400 text-sm shrink-0" />
+                  <HugeIcon className="ph-bold ph-caret-down text-gray-400 text-sm shrink-0" />
                 </div>
               </div>
             ))}

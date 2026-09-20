@@ -37,7 +37,7 @@ export const MODULE_REGISTRY = [
     icon: "ph-bold ph-seal-check",
     sidebar_group: "Operations & Analytics",
     sort_order: 1,
-    is_system: 0,
+    is_system: 1, // Cannot be disabled
     component_key: "DigitalRecordsReviewTab",
   },
   {
@@ -48,7 +48,7 @@ export const MODULE_REGISTRY = [
     icon: "ph-bold ph-chart-bar",
     sidebar_group: "Operations & Analytics",
     sort_order: 2,
-    is_system: 0,
+    is_system: 1, // Cannot be disabled
     component_key: "DigitizationComplianceTab",
   },
   {
@@ -103,7 +103,7 @@ export const MODULE_REGISTRY = [
     icon: "ph-bold ph-database-backup",
     sidebar_group: "System Configuration",
     sort_order: 7,
-    is_system: 0,
+    is_system: 1, // Cannot be disabled
     component_key: "BackupTab",
   },
   {
@@ -149,7 +149,7 @@ export const MODULE_REGISTRY = [
     icon: "ph-bold ph-scan",
     sidebar_group: "Operations",
     sort_order: 2,
-    is_system: 0,
+    is_system: 1, // Cannot be disabled
     component_key: "ScanUploadTab",
   },
   {
@@ -160,7 +160,7 @@ export const MODULE_REGISTRY = [
     icon: "ph-bold ph-file-text",
     sidebar_group: "Operations",
     sort_order: 3,
-    is_system: 0,
+    is_system: 1, // Cannot be disabled
     component_key: "DocumentsTab",
   },
   {

@@ -436,13 +436,6 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
     setStatusFilters([]);
   }, []);
 
-  const filterPresets = useMemo(() => [
-    { label: "All Organizations", values: { status: [], category: [] } },
-    { label: "Active Academic", values: { status: ["Active"], category: ["Academic"] } },
-    { label: "Active Non-Academic", values: { status: ["Active"], category: ["Non-Academic"] } },
-    { label: "Archived Only", values: { status: ["Archived"], category: [] } },
-  ], []);
-
   const filteredOrganizations = useMemo(() => {
     return organizations.filter((org) => {
       if (statusFilters.length > 0) {
@@ -529,7 +522,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
             titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
             descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
             actions={
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
                 {/* Segmented View Mode Toggle: Grid vs Table */}
                 <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-gray-200/60 dark:border-white/5 shrink-0">
                   <button
@@ -562,19 +555,21 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                   </button>
                 </div>
 
-                <div className="h-6 w-px bg-gray-200 dark:bg-zinc-800" />
-
+                {/* Refresh Button */}
                 <RefreshButton
                   onRefresh={() => fetchOrganizations(true)}
                   isLoading={loading}
                   title="Refresh Organizations"
                 />
 
+                {/* Separator */}
+                <div className="h-6 w-px bg-gray-200 dark:bg-zinc-800" />
+
+                {/* Register Organization Button */}
                 <Button
                   type="button"
                   onClick={openCreateModal}
                   className="flex h-10 px-5 text-xs font-semibold rounded-xl! btn-brand-red text-white! active:scale-95 disabled:opacity-50 transition-all cursor-pointer shadow-xs"
-                  style={{ color: "#ffffff" }}
                 >
                   Register Organization
                 </Button>
@@ -705,7 +700,6 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                 selectedValues={filterValues}
                 onChange={handleFilterChange}
                 onClearAll={handleResetFilters}
-                presets={filterPresets}
                 totalCount={organizations.length}
                 filteredCount={filteredOrganizations.length}
               />

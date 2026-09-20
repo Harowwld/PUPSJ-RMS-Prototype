@@ -430,42 +430,6 @@ export default function DigitizationComplianceTab({
     ];
   }, [courses, statusFilter, courseFilter, requireApproved]);
 
-  const filterPresets = useMemo(() => [
-    {
-      label: "Active",
-      isActive: statusFilter === "Active" && !courseFilter && !requireApproved,
-      onSelect: () => {
-        setStatusFilter("Active");
-        setCourseFilter("");
-        setRequireApproved(false);
-      }
-    },
-    {
-      label: "All Students",
-      isActive: statusFilter === "All" && !courseFilter && !requireApproved,
-      onSelect: () => {
-        setStatusFilter("All");
-        setCourseFilter("");
-        setRequireApproved(false);
-      }
-    },
-    {
-      label: "Approved Only",
-      isActive: requireApproved && !courseFilter,
-      onSelect: () => {
-        setRequireApproved(true);
-      }
-    },
-    {
-      label: "Archived",
-      isActive: statusFilter === "Archived" && !courseFilter && !requireApproved,
-      onSelect: () => {
-        setStatusFilter("Archived");
-        setCourseFilter("");
-        setRequireApproved(false);
-      }
-    }
-  ], [statusFilter, courseFilter, requireApproved]);
 
   const hasActiveFilters = statusFilter !== "Active" || courseFilter !== "" || requireApproved || tableSearch !== "";
 
@@ -482,7 +446,7 @@ export default function DigitizationComplianceTab({
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
           descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
           actions={
-            <div className="flex items-center gap-6">
+            <div className="flex items-center gap-2">
               <RefreshButton 
                 onRefresh={() => load(true)} 
                 isLoading={manualLoading} 
@@ -825,14 +789,13 @@ export default function DigitizationComplianceTab({
                 onChange={(e) => setTableSearch(e.target.value)}
               />
               <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] font-mono text-gray-400 dark:text-zinc-500">
-                {sortedByCourse.length > 0 ? `${sortedByCourse.length} results` : "0 results"}
+                {sortedByCourse.length}
               </div>
             </div>
 
             {/* Multi-Criteria Filters (Status, Program, Requirement) */}
             <MultiCriteriaFilter
               groups={filterCriteriaGroups}
-              presets={filterPresets}
               align="end"
               buttonLabel="Filter Compliance"
             />

@@ -5,6 +5,7 @@ import {
   Card,
 } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
+import PageHeader from "@/components/shared/PageHeader"
 import { cn } from "@/lib/utils"
 
 function formatLastSync(val) {
@@ -83,20 +84,19 @@ export default function HealthSidebar({
 
   return (
     <div className="w-[350px] shrink-0 flex flex-col gap-4 h-fit">
-      <Card className="flex flex-col border border-gray-200 bg-white shadow-sm rounded-2xl overflow-hidden dark:border-white/10 dark:bg-card dark:shadow-none">
+      <Card className="flex flex-col p-0 gap-0 border border-gray-200 bg-white shadow-sm rounded-2xl overflow-hidden dark:border-white/10 dark:bg-card dark:shadow-none isolate">
         {/* Page Header */}
-        <div className="border-b border-gray-100 bg-transparent p-6 dark:border-white/10 dark:bg-transparent">
-          <div className="flex flex-col">
-            <h3 className="text-[15px] font-semibold tracking-[-0.01em] text-[#111111] dark:text-zinc-50 mb-[4px]">
-              System Status
-            </h3>
-            <p className="text-[13px] font-normal text-[#8E8E93] m-0">
-              Storage, memory, and system resources.
-            </p>
-          </div>
-        </div>
+        <PageHeader
+          icon="ph-chart-pie-slice"
+          title="System Status"
+          description="Storage, memory, and system resources."
+          showBorder={false}
+          className="p-6"
+          titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
+          descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
+        />
 
-        <div className="p-6 space-y-6">
+        <div className="border-t border-gray-100 dark:border-white/10 p-6 space-y-6">
           {/* Storage Section */}
           <div className="flex flex-col gap-3">
             <div className="flex items-center gap-3">
