@@ -59,7 +59,7 @@ export default function StudentDirectoryTab({
   fetchData,
   showToast,
 }) {
-  const [activeTab, setActiveTab] = useState("active"); // "active" | "archived" | "all"
+  const [activeTab, setActiveTab] = useState("active"); // "active" | "archived"
   const [searchQuery, setSearchQuery] = useState("");
   const [courseFilters, setCourseFilters] = useState([]);
   const [yearFilters, setYearFilters] = useState([]);
@@ -109,22 +109,13 @@ export default function StudentDirectoryTab({
   const [bulkActionType, setBulkActionType] = useState("archive"); // "archive" | "restore"
   const [isBulkProcessing, setIsBulkProcessing] = useState(false);
 
-  // Combine datasets based on active tab
+  // Dataset based on active tab
   const allAvailableStudents = useMemo(() => {
-    if (activeTab === "active") return students;
     if (activeTab === "archived") return archivedStudents;
-    // Tab === "all"
-    const combined = [...students];
-    const seen = new Set(students.map((s) => s.studentNo));
-    for (const s of archivedStudents) {
-      if (!seen.has(s.studentNo)) {
-        combined.push(s);
-      }
-    }
-    return combined;
+    return students;
   }, [activeTab, students, archivedStudents]);
 
-  // Reset selection when switching directory tabs (active / archived / all)
+  // Reset selection when switching directory tabs (active / archived)
   useEffect(() => {
     setSelectedIds(new Set());
     setPage(1);
@@ -982,22 +973,6 @@ export default function StudentDirectoryTab({
               >
                 Archived ({archivedStudents.length})
               </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setActiveTab("all");
-                  setPage(1);
-                }}
-                className={cn(
-                  "relative h-9 flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent",
-                  activeTab === "all"
-                    ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
-                    : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
-                )}
-              >
-                All Records ({students.length + archivedStudents.length})
-              </button>
             </div>
 
             {/* Filter Selects & Search Bar */}
@@ -1410,29 +1385,7 @@ export default function StudentDirectoryTab({
         <FloatingActionBar
           selectedCount={selectedIds.size}
           onCancel={() => setSelectedIds(new Set())}
-          actions={
-            activeTab === "all"
-              ? [
-                  {
-                    label: "Archive",
-                    variant: "danger",
-                    onClick: () => {
-                      setBulkActionType("archive");
-                      setBulkActionOpen(true);
-                    },
-                  },
-                  {
-                    label: "Restore",
-                    variant: "success",
-                    onClick: () => {
-                      setBulkActionType("restore");
-                      setBulkActionOpen(true);
-                    },
-                  },
-                ]
-              : undefined
-          }
-          actionLabel={activeTab === "active" ? "Archive" : activeTab === "archived" ? "Restore" : undefined}
+          actionLabel={activeTab === "active" ? "Archive" : "Restore"}
           actionVariant={activeTab === "active" ? "danger" : "success"}
           onAction={() => {
             if (activeTab === "active") {

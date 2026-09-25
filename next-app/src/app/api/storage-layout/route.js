@@ -22,6 +22,11 @@ function normalizeCabinetId(cabId) {
   return canonicalizeCabinetId(cabId);
 }
 
+function normalizeDrawerIdString(d) {
+  if (d === undefined || d === null) return "";
+  return String(d).trim();
+}
+
 function buildLayoutLocationSet(layout) {
   const set = new Set();
   for (const room of layout?.rooms || []) {
@@ -31,8 +36,8 @@ function buildLayoutLocationSet(layout) {
       const cabId = normalizeCabinetId(cab?.id);
       if (!cabId) continue;
       for (const drawerIdRaw of cab?.drawerIds || []) {
-        const drawerId = Number(drawerIdRaw);
-        if (!Number.isFinite(drawerId)) continue;
+        const drawerId = normalizeDrawerIdString(drawerIdRaw);
+        if (!drawerId) continue;
         set.add(`${roomId}|${cabId}|${drawerId}`);
       }
     }
@@ -41,13 +46,14 @@ function buildLayoutLocationSet(layout) {
 }
 
 function parseLocationKey(key) {
-  const [roomRaw, cabinetRaw, drawerRaw] = String(key || "").split("|");
+  const [roomRaw, cabinetRaw, ...drawerParts] = String(key || "").split("|");
   const room = Number(roomRaw);
   const cabinet = String(cabinetRaw || "").trim();
-  const drawer = Number(drawerRaw);
-  if (!Number.isFinite(room) || !cabinet || !Number.isFinite(drawer)) return null;
+  const drawer = drawerParts.join("|").trim();
+  if (!Number.isFinite(room) || !cabinet || !drawer) return null;
   return { room, cabinet, drawer };
 }
+
 
 function resolveOfficeId(user, req) {
   const requested = String(new URL(req.url).searchParams.get("officeId") || "").trim().toLowerCase();
@@ -106,7 +112,7 @@ export async function PUT(req) {
       const orphaned = usage.filter((u) => {
         const roomId = Number(u.room);
         const cabId = normalizeCabinetId(u.cabinet);
-        const drawerId = Number(u.drawer);
+        const drawerId = normalizeDrawerIdString(u.drawer);
         if (!roomId || !cabId || !drawerId) return false;
         const key = `${roomId}|${cabId}|${drawerId}`;
         return existingSet.has(key) && !proposedSet.has(key);

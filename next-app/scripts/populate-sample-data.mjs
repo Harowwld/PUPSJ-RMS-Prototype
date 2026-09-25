@@ -365,8 +365,17 @@ export async function seed({ force: forceOverride } = {}) {
     for (const [code, name] of [["BSA", "Bachelor of Science in Accountancy"]]) {
       await run(`INSERT INTO courses (office_id, code, name, status) VALUES ('osas', $1, $2, 'Active') ON CONFLICT (office_id, code) DO UPDATE SET name=EXCLUDED.name, status='Active'`, [code, name]);
     }
-    await run(`INSERT INTO sections (office_id, name, course_code, status) VALUES ('osas', 'BSA-2A', 'BSA', 'Active') ON CONFLICT (office_id, name, course_code) DO UPDATE SET status='Active'`);
-    for (const name of ["Good Moral Certificate", "Clearance Form", "Organization Registration Certificate", "Activity Permit"]) {
+    await run(`DELETE FROM sections WHERE office_id = 'osas'`);
+    for (const name of [
+      "Event Proposal",
+      "Constitution & By-Laws (CBL)",
+      "Activity Request",
+      "Financial Liquidation Report",
+      "Student Disciplinary Clearance",
+      "Organization Registration Certificate",
+      "Good Moral Certificate",
+      "Clearance Form",
+    ]) {
       await run(`INSERT INTO document_types (office_id, name, name_norm, status) VALUES ('osas', $1, $2, 'Active') ON CONFLICT (office_id, name_norm) DO UPDATE SET name=EXCLUDED.name, status='Active'`, [name, name.toLowerCase()]);
     }
 

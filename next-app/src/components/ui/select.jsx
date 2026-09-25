@@ -3,6 +3,7 @@
 import * as React from "react"
 import { createPortal } from "react-dom"
 import { cn } from "@/lib/utils"
+import { ArrowDown01Icon, Tick01Icon, UnfoldMoreIcon } from "hugeicons-react"
 
 const Select = React.forwardRef(({
   className,
@@ -17,6 +18,7 @@ const Select = React.forwardRef(({
   menuClassName,
   optionClassName,
   usePortal = true,
+  indicator = "caret",
   ...props
 }, ref) => {
   const [isOpen, setIsOpen] = React.useState(false)
@@ -169,7 +171,7 @@ const Select = React.forwardRef(({
             >
               <span className="truncate flex-1 min-w-0">{option.label}</span>
               {isSelected && (
-                <i className="ph-bold ph-check text-xs ml-2 text-pup-maroon dark:text-red-400 shrink-0" />
+                <Tick01Icon size={14} className="ml-2 text-pup-maroon dark:text-red-400 shrink-0" />
               )}
             </button>
           )
@@ -191,7 +193,7 @@ const Select = React.forwardRef(({
         }}
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
-          "flex h-11 w-full items-center justify-between overflow-hidden rounded-xl border border-gray-200 bg-white px-3 text-xs font-normal text-gray-700 shadow-none outline-none transition-all hover:bg-gray-50 focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 dark:border-white/10 dark:bg-card dark:text-zinc-200 dark:hover:bg-zinc-800 min-w-0",
+          "flex h-11 w-full items-center justify-between overflow-hidden rounded-xl border border-gray-200 bg-white px-3 text-xs font-normal text-gray-700 shadow-none outline-none transition-all hover:bg-gray-50 focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 dark:border-white/10 dark:bg-card dark:text-zinc-200 dark:hover:bg-zinc-800 min-w-0 cursor-pointer",
           isOpen && "border-pup-maroon ring-1 ring-pup-maroon dark:border-red-500/80 dark:ring-red-500/80",
           buttonClassName,
           className
@@ -204,12 +206,23 @@ const Select = React.forwardRef(({
         >
           {selectedOption ? selectedOption.label : (placeholder !== undefined ? placeholder : (options.find((o) => !o.isHeader)?.label || "Select..."))}
         </span>
-        <i
-          className={cn(
-            "ph-bold ph-caret-down ml-auto shrink-0 text-gray-400 text-[10px] transition-all duration-300",
-            isOpen ? "rotate-180 text-pup-maroon dark:text-primary" : ""
-          )}
-        ></i>
+        {indicator === "updown" ? (
+          <UnfoldMoreIcon
+            size={16}
+            className={cn(
+              "ml-2 shrink-0 text-gray-400 dark:text-zinc-500 transition-colors duration-200 pointer-events-none",
+              isOpen && "text-pup-maroon dark:text-red-400"
+            )}
+          />
+        ) : (
+          <ArrowDown01Icon
+            size={16}
+            className={cn(
+              "ml-2 shrink-0 text-gray-400 dark:text-zinc-500 transition-transform duration-200 pointer-events-none",
+              isOpen && "rotate-180 text-pup-maroon dark:text-red-400"
+            )}
+          />
+        )}
       </button>
 
       {isOpen && mounted && (usePortal ? createPortal(renderMenu(), document.body) : renderMenu())}

@@ -1113,7 +1113,7 @@ export default function StudentDashboard() {
                                         size="sm"
                                         onClick={() => {
                                           setRequestSearch("");
-                                          setStatusFilter("All");
+                                          setRequestFilters({ status: [], doc_type: [] });
                                           setCurrentPage(1);
                                         }}
                                         className="mt-5 flex h-9 items-center gap-2 rounded-xl border border-gray-300 bg-white px-4 text-xs font-semibold text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:bg-card dark:text-zinc-300 cursor-pointer"

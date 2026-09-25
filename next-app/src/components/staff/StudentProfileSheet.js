@@ -175,7 +175,7 @@ export default function StudentProfileSheet({
             </div>
             <div className="min-w-0 flex-1">
               <SheetTitle className="text-[19px] font-bold tracking-tight text-gray-900 dark:text-zinc-50 truncate leading-snug">
-                {student.name}
+                {student.name && !student.name.startsWith("enc:v1:") ? student.name : (student.studentNo ? `Student (${student.studentNo})` : "Student Profile")}
               </SheetTitle>
               <SheetDescription className="mt-1 flex items-center flex-wrap gap-2 text-xs">
                 <span className="font-mono font-semibold text-gray-700 dark:text-zinc-300 bg-gray-100 dark:bg-zinc-800 px-2.5 py-0.5 rounded-full">

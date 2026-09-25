@@ -221,7 +221,6 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
         children: [
           { key: "requests", label: "Document Requests", iconClass: "ph-bold ph-tray-arrow-up" },
           { key: "osas_monitoring", label: "OSAS Monitoring", iconClass: "ph-bold ph-student" },
-          { key: "organizations", label: "Student Organizations", iconClass: "ph-bold ph-buildings" },
           { key: "upload", label: "Scan & Upload", iconClass: "ph-bold ph-scan" },
           { key: "batch_review", label: "Batch Review", iconClass: "ph-bold ph-check-square" },
           { key: "documents", label: "Documents", iconClass: "ph-bold ph-file-text" },
@@ -232,8 +231,9 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
         type: "group",
         label: "Records Archive",
         children: [
-          { key: "search", label: "Records & Archive", iconClass: "ph-bold ph-archive-box" },
           { key: "students", label: "Student Directory", iconClass: "ph-bold ph-users" },
+          { key: "organizations", label: "Student Organizations", iconClass: "ph-bold ph-buildings" },
+          { key: "search", label: "Records & Archive", iconClass: "ph-bold ph-archive-box" },
           { key: "storage", label: "Storage Explorer", iconClass: "ph-bold ph-folder-open" },
         ]
       }
@@ -694,29 +694,31 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
         title: "PUP Storage Rooms",
         rooms: storageLayout.rooms.map((r) => ({
           room: r.id,
-          occupiedCount: students.filter((s) => s.room === r.id).length,
+          name: r.name || `Room ${r.id}`,
+          occupiedCount: students.filter((s) => String(s.room) === String(r.id)).length,
           cabinetsCount: r.cabinets?.length || 0,
-          isTarget: activeStudent?.room === r.id,
+          isTarget: String(activeStudent?.room) === String(r.id),
         })),
       };
     }
     if (currentLocatorLevel === "cabinets") {
-      const roomDef = storageLayout.rooms.find((r) => r.id === selectedRoom);
+      const roomDef = storageLayout.rooms.find((r) => String(r.id) === String(selectedRoom));
       if (!roomDef) return { kind: "cabinets", cabinets: [] };
       return {
         kind: "cabinets",
         room: selectedRoom,
+        roomName: roomDef.name || `Room ${selectedRoom}`,
         roomDoor: roomDef.door || null,
         cabinets: roomDef.cabinets.map((c) => {
           const normCab = String(c.id);
           return {
             cab: normCab,
             occupiedCount: students.filter(
-              (s) => s.room === selectedRoom && s.cabinet === normCab,
+              (s) => String(s.room) === String(selectedRoom) && String(s.cabinet) === normCab,
             ).length,
             isTarget:
-              activeStudent?.room === selectedRoom &&
-              activeStudent?.cabinet === normCab,
+              String(activeStudent?.room) === String(selectedRoom) &&
+              String(activeStudent?.cabinet) === normCab,
             rect: c.rect,
             rotation: c.rotation || 0,
             drawerIds: c.drawerIds,
@@ -725,9 +727,9 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
       };
     }
     if (currentLocatorLevel === "drawers") {
-      const roomDef = storageLayout.rooms.find((r) => r.id === selectedRoom);
+      const roomDef = storageLayout.rooms.find((r) => String(r.id) === String(selectedRoom));
       const cabinetDef = roomDef?.cabinets?.find(
-        (c) => String(c.id) === selectedCabinet
+        (c) => String(c.id) === String(selectedCabinet)
       );
       if (!cabinetDef)
         return {
@@ -739,6 +741,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
       return {
         kind: "drawers",
         room: selectedRoom,
+        roomName: roomDef?.name || `Room ${selectedRoom}`,
         cabinet: selectedCabinet,
         roomDoor: roomDef?.door || null,
         cabinetRect: cabinetDef.rect,
@@ -747,22 +750,22 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
           return {
             cab: normCab,
             occupiedCount: students.filter(
-              (s) => s.room === selectedRoom && s.cabinet === normCab,
+              (s) => String(s.room) === String(selectedRoom) && String(s.cabinet) === normCab,
             ).length,
             isTarget:
-              activeStudent?.room === selectedRoom &&
-              activeStudent?.cabinet === normCab,
+              String(activeStudent?.room) === String(selectedRoom) &&
+              String(activeStudent?.cabinet) === normCab,
             rect: c.rect,
             rotation: c.rotation || 0,
             drawerIds: c.drawerIds,
           };
         }),
-        drawers: cabinetDef.drawerIds.map((d) => {
+        drawers: (cabinetDef.drawerIds || []).map((d) => {
           const drawerStudents = students.filter(
             (s) =>
-              s.room === selectedRoom &&
-              s.cabinet === selectedCabinet &&
-              s.drawer === d
+              String(s.room) === String(selectedRoom) &&
+              String(s.cabinet) === String(selectedCabinet) &&
+              String(s.drawer) === String(d)
           );
           return {
             drawer: d,
@@ -1718,7 +1721,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
               }}
               students={students}
               archivedStudents={archivedStudents}
-              staffDocs={staffDocs.filter((doc) => doc.source_type !== "event_proposal")}
+              staffDocs={authUser?.office_id === "osas" ? staffDocs : staffDocs.filter((doc) => doc.source_type !== "event_proposal")}
               officeLabel={authUser?.office_id === "osas" ? "OSAS" : "Registrar"}
               explorerItems={explorerItems}
               onSwitchView={setView}

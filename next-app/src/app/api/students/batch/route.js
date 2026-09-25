@@ -70,7 +70,11 @@ function validateStudentPayload(body, layout) {
   if (!cabinet) {
     return { ok: false, error: "Invalid cabinet" };
   }
-  if (!Number.isFinite(drawer) || drawer < 1) {
+  const parsedDrawerInt = parseInt(drawer);
+  const normalizedDrawer = Number.isInteger(parsedDrawerInt) && String(parsedDrawerInt) === String(drawer).trim()
+    ? parsedDrawerInt
+    : String(drawer || "").trim();
+  if (!normalizedDrawer || (typeof normalizedDrawer === "number" && normalizedDrawer < 1)) {
     return { ok: false, error: "Invalid drawer" };
   }
 
@@ -83,7 +87,7 @@ function validateStudentPayload(body, layout) {
   if (!cabDef) {
     return { ok: false, error: `Cabinet ${cabinet} does not exist in Room ${room}` };
   }
-  if (!cabDef.drawerIds?.includes(drawer)) {
+  if (!cabDef.drawerIds?.some(d => String(d) === String(normalizedDrawer))) {
     return { ok: false, error: `Drawer ${drawer} does not exist in Cabinet ${cabinet} (Room ${room})` };
   }
 

@@ -3,6 +3,7 @@ import { updateStaff, getStaffByUsername, getStaffById } from "@/lib/staffRepo";
 import { writeAuditLog, writeGlobalAuditLog } from "@/lib/auditLogRequest";
 import { query, queryOne } from "@/lib/postgres";
 import { requireAuth, createAuthErrorResponse } from "../../../../lib/authHelpers";
+import { encryptPII, decryptPII } from "@/lib/piiEncryption";
 
 export const runtime = "nodejs";
 
@@ -33,8 +34,9 @@ export async function POST(req) {
          WHERE (sa.id = $1 AND $1 IS NOT NULL)
             OR (sa.student_no IS NOT NULL AND upper(sa.student_no) = upper($2) AND $2 IS NOT NULL)
             OR (lower(sa.email) = lower($3) AND $3 IS NOT NULL)
+            OR (sa.email = $4 AND $4 IS NOT NULL)
          LIMIT 1`,
-        [accountId, principal.studentNo || null, principal.email || null]
+        [accountId, principal.studentNo || null, principal.email || null, principal.email ? encryptPII(principal.email.toLowerCase()) : null]
       );
 
       if (!studentAccount) {
@@ -46,7 +48,7 @@ export async function POST(req) {
       const cleanLast = String(lname || "").trim();
       const cleanMiddle = String(mname || "").trim();
       // Email is not editable in account settings: preserve existing email
-      const cleanEmail = studentAccount.email;
+      const cleanEmail = decryptPII(studentAccount.email);
       const cleanClientType = String(client_type || studentAccount.client_type || "Student").trim();
       const currentStudentNo = studentAccount.student_no || "";
       const newStudentNo = String(student_no || "").trim().toUpperCase() || null;
@@ -69,8 +71,17 @@ export async function POST(req) {
         `UPDATE student_accounts 
          SET first_name = $1, middle_name = $2, last_name = $3, client_type = $4, updated_at = NOW()
          WHERE id = $5`,
-        [cleanFirst, cleanMiddle, cleanLast, cleanClientType, studentAccount.id]
+        [encryptPII(cleanFirst), encryptPII(cleanMiddle), encryptPII(cleanLast), cleanClientType, studentAccount.id]
       );
+
+      if (currentStudentNo) {
+        await query(
+          `UPDATE students 
+           SET name = $1, updated_at = NOW()
+           WHERE upper(student_no) = upper($2)`,
+          [encryptPII(formattedFullName), currentStudentNo]
+        );
+      }
 
       await writeGlobalAuditLog(req, "Student profile updated", {
         actor: currentStudentNo || cleanEmail,

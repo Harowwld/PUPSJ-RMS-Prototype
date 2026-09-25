@@ -175,26 +175,37 @@ export const MODULE_REGISTRY = [
     component_key: "NotificationsTab",
   },
   {
-    id: "records_archive",
-    name: "Records & Archive",
-    description: "Physical records browser and search",
-    category: "staff",
-    icon: "ph-bold ph-archive-box",
-    sidebar_group: "Records Archive",
-    sort_order: 5,
-    is_system: 0,
-    component_key: "RecordsArchiveTab",
-  },
-  {
     id: "student_directory",
     name: "Student Directory",
     description: "Manage student master records, academic profiles, and physical archive assignments",
     category: "staff",
     icon: "ph-bold ph-users",
     sidebar_group: "Records Archive",
-    sort_order: 7,
+    sort_order: 5,
     is_system: 0,
     component_key: "StudentDirectoryTab",
+  },
+  {
+    id: "student_organizations",
+    name: "Student Organizations",
+    description: "Manage recognized student organizations, Constitution & By-Laws (CBL), and officer whitelists",
+    category: "staff",
+    icon: "ph-bold ph-buildings",
+    sidebar_group: "Records Archive",
+    sort_order: 6,
+    is_system: 0,
+    component_key: "StudentOrganizationsTab",
+  },
+  {
+    id: "records_archive",
+    name: "Records & Archive",
+    description: "Physical records browser and search",
+    category: "staff",
+    icon: "ph-bold ph-archive-box",
+    sidebar_group: "Records Archive",
+    sort_order: 7,
+    is_system: 0,
+    component_key: "RecordsArchiveTab",
   },
   {
     id: "storage_explorer",
@@ -206,17 +217,6 @@ export const MODULE_REGISTRY = [
     sort_order: 8,
     is_system: 0,
     component_key: "StorageExplorerTab",
-  },
-  {
-    id: "student_organizations",
-    name: "Student Organizations",
-    description: "Manage recognized student organizations, Constitution & By-Laws (CBL), and officer whitelists",
-    category: "staff",
-    icon: "ph-bold ph-buildings",
-    sidebar_group: "Operations",
-    sort_order: 9,
-    is_system: 0,
-    component_key: "StudentOrganizationsTab",
   },
 ];
 
@@ -254,10 +254,11 @@ export const DEFAULT_OFFICE_MODULES = {
     "records_archive", "storage_explorer",
   ],
   osas: [
-    // OSAS modules — no storage/physical archive modules
+    // OSAS modules — operations, digitization, and physical/digital storage suite
     "records_review", "compliance_analytics",
-    "staff_directory", "system_config", "backup", "audit_logs",
+    "staff_directory", "storage_layout", "system_config", "backup", "audit_logs",
     "osas_monitoring", "student_organizations", "scan_upload", "documents", "notifications",
+    "records_archive", "storage_explorer",
   ],
 };
 

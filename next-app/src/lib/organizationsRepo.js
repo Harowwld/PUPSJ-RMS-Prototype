@@ -1,4 +1,5 @@
 import { query, queryOne } from "./postgres.js";
+import { decryptPII } from "./piiEncryption.js";
 
 function slugify(text) {
   return String(text || "")
@@ -113,7 +114,7 @@ export async function getOrganizationById(id) {
     [id]
   );
 
-  const proposals = await query(
+  const rawProposals = await query(
     `SELECT ep.*, s.name AS student_name
      FROM event_proposals ep
      LEFT JOIN students s ON s.student_no = ep.student_no
@@ -121,10 +122,18 @@ export async function getOrganizationById(id) {
      ORDER BY ep.created_at DESC`,
     [id]
   );
+  const proposals = rawProposals.map((p) => ({
+    ...p,
+    student_name: p.student_name ? decryptPII(p.student_name) : p.student_name,
+  }));
 
   return {
     ...org,
-    officers,
+    officers: officers.map((o) => ({
+      ...o,
+      student_name: o.student_name ? decryptPII(o.student_name) : o.student_name,
+      email: o.email ? decryptPII(o.email) : o.email,
+    })),
     proposals,
   };
 }
@@ -253,7 +262,7 @@ export async function updateOrganizationBylaws(id, {
  */
 export async function getOfficersByOrganizationId(orgId) {
   if (!orgId) return [];
-  return query(
+  const rows = await query(
     `SELECT * FROM organization_officers
      WHERE organization_id = $1
      ORDER BY
@@ -268,6 +277,11 @@ export async function getOfficersByOrganizationId(orgId) {
        created_at ASC`,
     [orgId]
   );
+  return rows.map((r) => ({
+    ...r,
+    student_name: r.student_name ? decryptPII(r.student_name) : r.student_name,
+    email: r.email ? decryptPII(r.email) : r.email,
+  }));
 }
 
 /**

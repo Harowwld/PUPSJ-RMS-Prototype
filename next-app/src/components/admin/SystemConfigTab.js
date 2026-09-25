@@ -43,7 +43,9 @@ export default function SystemConfigTab({
   showToast,
   logAdminAction,
   error: errorProp = null,
+  authUser = null,
 }) {
+  const isOsas = (authUser?.office_id || "").toLowerCase() === "osas";
   const [activeSubTab, setActiveSubTab] = useState("document-types")
   const [showArchived, setShowArchived] = useState(false)
 
@@ -950,12 +952,13 @@ export default function SystemConfigTab({
   }
 
   function handleCopySample() {
-    const sample =
-      "Category,Name,Code\nDocumentType,Transcript of Records,\nDocumentType,Diploma,\nCourse,Bachelor of Science in Information Technology,BSIT\nCourse,Bachelor of Science in Accountancy,BSA\nSection,Block 1,BSIT\nSection,Section 1,BSA"
-    navigator.clipboard.writeText(sample)
+    const sample = isOsas
+      ? "Category,Name,Code\nDocumentType,Event Proposal,\nDocumentType,Constitution & By-Laws (CBL),\nDocumentType,Activity Request,\nDocumentType,Financial Liquidation Report,\nCourse,Bachelor of Science in Information Technology,BSIT\nCourse,Bachelor of Science in Accountancy,BSA"
+      : "Category,Name,Code\nDocumentType,Transcript of Records,\nDocumentType,Diploma,\nCourse,Bachelor of Science in Information Technology,BSIT\nCourse,Bachelor of Science in Accountancy,BSA\nSection,Block 1,BSIT\nSection,Section 1,BSA";
+    navigator.clipboard.writeText(sample);
     showToast({
       title: "CSV sample copied to clipboard.",
-    })
+    });
   }
 
   /* if (loading && !docTypes.length) {
@@ -1032,19 +1035,21 @@ export default function SystemConfigTab({
               <span>Degree Programs</span>
             </button>
 
-            <button
-              type="button"
-              onClick={() => setActiveSubTab("course-blocks")}
-              className={cn(
-                "flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer border-0",
-                activeSubTab === "course-blocks"
-                  ? "bg-white dark:bg-zinc-800 text-pup-maroon dark:text-red-400 shadow-sm"
-                  : "text-gray-500 hover:text-gray-900 dark:hover:text-white bg-transparent"
-              )}
-            >
-              <HugeIcon  className="ph-bold ph-users-three text-sm" />
-              <span>Course Blocks</span>
-            </button>
+            {!isOsas && (
+              <button
+                type="button"
+                onClick={() => setActiveSubTab("course-blocks")}
+                className={cn(
+                  "flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer border-0",
+                  activeSubTab === "course-blocks"
+                    ? "bg-white dark:bg-zinc-800 text-pup-maroon dark:text-red-400 shadow-sm"
+                    : "text-gray-500 hover:text-gray-900 dark:hover:text-white bg-transparent"
+                )}
+              >
+                <HugeIcon  className="ph-bold ph-users-three text-sm" />
+                <span>Course Blocks</span>
+              </button>
+            )}
 
 
 
@@ -1209,6 +1214,8 @@ export default function SystemConfigTab({
                 onUpdateRow={handleUpdateImportRow}
                 onAddRow={handleManualAddRow}
                 courses={courses}
+                isOsas={isOsas}
+                authUser={authUser}
               />
             </TabsContent>
           </div>
