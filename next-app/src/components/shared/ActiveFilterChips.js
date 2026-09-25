@@ -18,6 +18,7 @@ import { cn } from "@/lib/utils";
  * @param {string} className - Optional container styling
  */
 export default function ActiveFilterChips({
+  chips: passedChips,
   groups = [],
   selected = {},
   onRemove,
@@ -29,6 +30,19 @@ export default function ActiveFilterChips({
 }) {
   // Collect all active chip items
   const chips = [];
+
+  if (Array.isArray(passedChips) && passedChips.length > 0) {
+    passedChips.forEach((c, idx) => {
+      if (!c) return;
+      chips.push({
+        type: "direct",
+        groupId: c.id || idx,
+        groupLabel: c.groupLabel,
+        label: c.label,
+        onClear: c.onRemove || c.onClear,
+      });
+    });
+  }
 
   if (searchQuery && searchQuery.trim().length > 0) {
     chips.push({
@@ -44,23 +58,29 @@ export default function ActiveFilterChips({
         type: `extra-${idx}`,
         groupLabel: extra.groupLabel,
         label: extra.label,
-        onClear: extra.onClear,
+        onClear: extra.onClear || extra.onRemove,
       });
     }
   });
 
   groups.forEach((group) => {
-    const selectedVals = selected?.[group.id] || [];
+    const selectedVals = group.values || selected?.[group.id] || [];
     selectedVals.forEach((val) => {
       const opt = group.options?.find((o) => String(o.value) === String(val));
-      const label = opt?.label || String(val);
+      const label = group.formatValue ? group.formatValue(val) : (opt?.label || String(val));
       chips.push({
         type: "filter",
-        groupId: group.id,
+        groupId: group.id || group.key,
         value: val,
         groupLabel: group.label,
         label,
-        onClear: () => onRemove && onRemove(group.id, val),
+        onClear: () => {
+          if (typeof group.onRemove === "function") {
+            group.onRemove(val);
+          } else if (typeof onRemove === "function") {
+            onRemove(group.id || group.key, val);
+          }
+        },
       });
     });
   });

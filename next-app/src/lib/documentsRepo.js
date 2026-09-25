@@ -2,8 +2,17 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { dbAll, dbGet, dbRun } from "./postgresCompat.js";
+import { decryptPII } from "./piiEncryption.js";
 
 let reviewColumnsEnsured = false;
+
+function decryptDocumentRow(row) {
+  if (!row) return row;
+  if (row.student_name) {
+    row.student_name = decryptPII(row.student_name);
+  }
+  return row;
+}
 
 async function ensureReviewColumns() {
   reviewColumnsEnsured = true;
@@ -188,7 +197,7 @@ export async function listDocuments({
   const lim = Math.min(Math.max(parseInt(limit) || 50, 1), 200);
   const off = Math.max(parseInt(offset) || 0, 0);
 
-  return await dbAll(
+  const rows = await dbAll(
     `
       SELECT *
       FROM documents
@@ -198,6 +207,7 @@ export async function listDocuments({
     `,
     [...params, lim, off]
   );
+  return (rows || []).map(decryptDocumentRow);
 }
 
 export async function getDocumentById(id, { officeId } = {}) {
@@ -209,7 +219,7 @@ export async function getDocumentById(id, { officeId } = {}) {
     params.push(officeId);
   }
   const row = await dbGet(`SELECT * FROM documents WHERE ${filters.join(" AND ")}`, params);
-  return row || null;
+  return decryptDocumentRow(row) || null;
 }
 
 export async function updateDocumentMetadata(id, { studentNo, studentName, docType, isPreviewed }, { officeId } = {}) {

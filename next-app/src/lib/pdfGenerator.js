@@ -303,6 +303,172 @@ export const generateDigitizationCompliancePdf = async (data, summary, meta, byC
 }
 
 /**
+ * Generates an OSAS Student Organization Compliance & Accreditation PDF Report
+ */
+export const generateOrganizationCompliancePdf = async (data, summary, meta, organizations, byCategory) => {
+  const doc = new jsPDF("p", "pt", "a4")
+  const logoData = await getLogoAsPng()
+
+  const docId = `PUPSJ-OSAS-CMP-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`
+  addPUPReportHeader(doc, "Student Organization Compliance Report", { documentId: docId, logoData })
+
+  let y = 215
+  doc.setFont("helvetica", "bold")
+  doc.setFontSize(9)
+  doc.setTextColor(150, 150, 150)
+  doc.text("DATE GENERATED:", 40, y)
+  doc.setTextColor(0, 0, 0)
+  doc.text(formatPHDateTime(new Date().toISOString()), 150, y)
+
+  y += 16
+  doc.setTextColor(150, 150, 150)
+  doc.text("OFFICE:", 40, y)
+  doc.setTextColor(0, 0, 0)
+  doc.text("Office of Student Affairs and Services (OSAS)", 150, y)
+
+  y += 35
+  doc.setFontSize(12)
+  doc.setFont("helvetica", "bold")
+  doc.setTextColor(122, 30, 40) // PUP Maroon
+  doc.text("I. Executive Accreditation Summary", 40, y)
+  doc.setLineWidth(1.5)
+  doc.setDrawColor(122, 30, 40)
+  doc.line(40, y + 5, doc.internal.pageSize.getWidth() - 40, y + 5)
+
+  y += 25
+  doc.setFontSize(10)
+  doc.setFont("helvetica", "normal")
+  doc.setTextColor(60, 60, 60)
+  const intro = "This document presents the official compliance and accreditation assessment of recognized student organizations under the jurisdiction of the Office of Student Affairs and Services (OSAS) at the Polytechnic University of the Philippines - San Juan City Campus. Organizations are audited across institutional pillars: Constitution & By-Laws (CBL) archival, accredited officer roster, designated faculty adviser, and active accreditation standing."
+  const splitIntro = doc.splitTextToSize(intro, doc.internal.pageSize.getWidth() - 80)
+  doc.text(splitIntro, 40, y)
+  y += splitIntro.length * 14 + 15
+
+  // Key performance indicators
+  doc.setFont("helvetica", "bold")
+  doc.setTextColor(80, 80, 80)
+  doc.text("Key Institutional Compliance Indicators:", 40, y)
+  y += 18
+
+  const kpis = [
+    { label: "Total Recognized Organizations", val: `${summary?.totalOrganizations || 0} Organizations` },
+    { label: "Overall Institutional Compliance Rate", val: `${summary?.overallComplianceRate || 0}%` },
+    { label: "Fully Compliant Organizations", val: `${summary?.fullyCompliantCount || 0} (${summary?.fullyCompliantRate || 0}%)` },
+    { label: "Constitution & By-Laws (CBL) Archival", val: `${summary?.cblArchivedCount || 0} of ${summary?.totalOrganizations || 0} (${summary?.cblArchivedRate || 0}%)` },
+    { label: "Accredited Officer Leadership Roster", val: `${summary?.withOfficersCount || 0} Orgs (${summary?.totalActiveOfficers || 0} active leaders)` },
+    { label: "Faculty Adviser Endorsements", val: `${summary?.withAdviserCount || 0} of ${summary?.totalOrganizations || 0} (${summary?.withAdviserRate || 0}%)` },
+  ]
+
+  kpis.forEach(item => {
+    doc.setFont("helvetica", "bold")
+    doc.setTextColor(122, 30, 40)
+    doc.text(item.label, 50, y)
+    doc.setFont("helvetica", "normal")
+    doc.setTextColor(40, 40, 40)
+    doc.text(item.val, doc.internal.pageSize.getWidth() - 50, y, { align: "right" })
+    y += 16
+  })
+
+  y += 20
+  doc.setFontSize(12)
+  doc.setFont("helvetica", "bold")
+  doc.setTextColor(122, 30, 40)
+  doc.text("II. Category Performance Distribution", 40, y)
+  doc.setLineWidth(1.5)
+  doc.setDrawColor(122, 30, 40)
+  doc.line(40, y + 5, doc.internal.pageSize.getWidth() - 40, y + 5)
+  y += 20
+
+  const catTableData = (byCategory || []).map((c) => [
+    c.category,
+    String(c.totalOrganizations),
+    String(c.fullyCompliantCount),
+    `${c.cblArchivedRate || 0}%`,
+    `${c.withOfficersRate || 0}%`,
+    `${c.complianceRate}%`,
+  ])
+
+  autoTable(doc, {
+    startY: y,
+    head: [["Category", "Total Orgs", "Fully Compliant", "CBL Archived", "Officers Whitelisted", "Compliance Rate"]],
+    body: catTableData,
+    theme: "striped",
+    headStyles: { fillColor: [122, 30, 40], textColor: [255, 255, 255], fontStyle: "bold" },
+    styles: { fontSize: 9, cellPadding: 5 },
+    columnStyles: {
+      0: { fontStyle: "bold" },
+      1: { halign: "center" },
+      2: { halign: "center" },
+      3: { halign: "center" },
+      4: { halign: "center" },
+      5: { halign: "right", fontStyle: "bold", textColor: [122, 30, 40] },
+    },
+  })
+
+  doc.addPage()
+  y = 60
+  doc.setFontSize(12)
+  doc.setFont("helvetica", "bold")
+  doc.setTextColor(122, 30, 40)
+  doc.text("III. Detailed Organization Compliance Matrix", 40, y)
+  doc.setLineWidth(1.5)
+  doc.setDrawColor(122, 30, 40)
+  doc.line(40, y + 5, doc.internal.pageSize.getWidth() - 40, y + 5)
+  y += 20
+
+  const orgTableData = (organizations || []).map((o) => [
+    `${o.name} (${o.acronym || "—"})`,
+    o.category,
+    o.adviserName || "Pending",
+    o.hasCbl ? "Archived" : "Pending",
+    `${o.activeOfficerCount} Officers`,
+    o.status,
+    `${o.complianceScore}% (${o.complianceStatus})`,
+  ])
+
+  autoTable(doc, {
+    startY: y,
+    head: [["Organization", "Category", "Adviser", "CBL", "Officers", "Standing", "Compliance"]],
+    body: orgTableData,
+    theme: "striped",
+    headStyles: { fillColor: [122, 30, 40], textColor: [255, 255, 255], fontStyle: "bold" },
+    styles: { fontSize: 8.5, cellPadding: 4.5 },
+    columnStyles: {
+      0: { fontStyle: "bold" },
+      3: { halign: "center" },
+      4: { halign: "center" },
+      5: { halign: "center" },
+      6: { halign: "right", fontStyle: "bold", textColor: [122, 30, 40] },
+    },
+  })
+
+  y = doc.lastAutoTable.finalY + 35
+  if (y > 700) {
+    doc.addPage()
+    y = 60
+  }
+
+  doc.setFontSize(12)
+  doc.setFont("helvetica", "bold")
+  doc.setTextColor(122, 30, 40)
+  doc.text("IV. Certification & Attestation", 40, y)
+  doc.setLineWidth(1.5)
+  doc.setDrawColor(122, 30, 40)
+  doc.line(40, y + 5, doc.internal.pageSize.getWidth() - 40, y + 5)
+  y += 20
+  doc.setFontSize(9.5)
+  doc.setFont("helvetica", "normal")
+  doc.setTextColor(60, 60, 60)
+  const cert = "This official accreditation audit has been prepared by the Office of Student Affairs and Services (OSAS). The compliance metrics documented herein represent active organizational records and official submissions validated by the PUPSJ Records Keeping System."
+  const splitCert = doc.splitTextToSize(cert, doc.internal.pageSize.getWidth() - 80)
+  doc.text(splitCert, 40, y)
+  y += splitCert.length * 13 + 50
+  addSignatures(doc, y)
+
+  return doc.output("blob")
+}
+
+/**
  * Generates a SLA Analytics PDF Report
  */
 export const generateSLAAnalyticsPdf = async (data, total, completionRate, options = {}) => {

@@ -5,6 +5,7 @@ import { query, queryOne } from "@/lib/postgres";
 import { requireOfficeModule } from "@/lib/moduleAccess";
 import { writeGlobalAuditLog } from "@/lib/auditLogRequest";
 import { canAccessResource } from "@/lib/resourceAuthorization";
+import { decryptPII } from "@/lib/piiEncryption";
 
 export const runtime = "nodejs";
 const validStatuses = new Set(["Submitted", "Under Review", "Needs Revision", "Approved", "Declined"]);
@@ -24,7 +25,11 @@ async function getAuthorizedProposal(id, access) {
      WHERE ep.id = $1 AND ep.office_id = 'osas'`,
     [id]
   );
-  return proposal && canAccessResource(access, "proposal", proposal) ? proposal : null;
+  if (!proposal || !canAccessResource(access, "proposal", proposal)) return null;
+  if (proposal.student_name) {
+    proposal.student_name = decryptPII(proposal.student_name);
+  }
+  return proposal;
 }
 
 function resolveProposalFilePath(storageFilename) {

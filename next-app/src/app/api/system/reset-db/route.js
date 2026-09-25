@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { query, transaction } from "@/lib/postgres";
 import { createStaff } from "@/lib/staffRepo";
 import { clearHealthCache } from "@/lib/healthCache";
-import { buildDefaultStorageLayout } from "@/lib/storageLayoutDefaults";
+import { buildDefaultStorageLayout, buildDefaultOsasStorageLayout } from "@/lib/storageLayoutDefaults";
 import { requireSystemAdmin, createAuthErrorResponse } from "@/lib/authHelpers";
 import { hashPassword } from "@/lib/passwordHash";
 
@@ -151,16 +151,16 @@ async function handleResetDb(req) {
         [code, name]
       );
     }
-    await query(
-      `INSERT INTO sections (office_id, name, course_code, status)
-       VALUES ('osas', 'BSA-2A', 'BSA', 'Active')
-       ON CONFLICT (office_id, name, course_code) DO UPDATE SET status='Active'`
-    );
+    await query(`DELETE FROM sections WHERE office_id = 'osas'`);
     for (const name of [
+      "Event Proposal",
+      "Constitution & By-Laws (CBL)",
+      "Activity Request",
+      "Financial Liquidation Report",
+      "Student Disciplinary Clearance",
+      "Organization Registration Certificate",
       "Good Moral Certificate",
       "Clearance Form",
-      "Organization Registration Certificate",
-      "Activity Permit",
     ]) {
       await query(
         `INSERT INTO document_types (office_id, name, name_norm, status)
@@ -249,13 +249,20 @@ async function handleResetDb(req) {
       );
     }
 
-    // Re-seed default storage layout and record reset timestamp
+    // Re-seed default storage layouts and record reset timestamp
     const defaultLayout = buildDefaultStorageLayout();
+    const defaultOsasLayout = buildDefaultOsasStorageLayout();
     await query(
       `INSERT INTO settings (key, value)
        VALUES ('storage_layout:registrar', $1)
        ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = NOW()`,
       [JSON.stringify(defaultLayout)]
+    );
+    await query(
+      `INSERT INTO settings (key, value)
+       VALUES ('storage_layout:osas', $1)
+       ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = NOW()`,
+      [JSON.stringify(defaultOsasLayout)]
     );
     await query(
       `INSERT INTO settings (key, value)

@@ -148,3 +148,9 @@ export function buildDefaultStorageLayout() {
     rooms,
   };
 }
+
+export function buildDefaultOsasStorageLayout() {
+  return buildDefaultStorageLayout();
+}
+
+

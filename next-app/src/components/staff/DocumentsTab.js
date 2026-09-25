@@ -1,6 +1,6 @@
 "use client";
 import HugeIcon from "@/components/shared/HugeIcon";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -363,9 +363,21 @@ export default function DocumentsTab({
       : docsForm.docType ? [docsForm.docType] : []
   );
 
+  const handleViewDetails = (doc) => {
+    setSelectedDoc(doc);
+    setDetailModalOpen(true);
+  };
+
+  // Sorting & Pagination state
+  const [sortBy, setSortBy] = useState("student_no");
+  const [sortOrder, setSortOrder] = useState("ASC");
+  const [page, setPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [jumpPage, setJumpPage] = useState("1");
+
   const searchQuery = docsForm.studentName || docsForm.studentNo || "";
 
-  const handleSearchChange = (val) => {
+  const handleSearchChange = useCallback((val) => {
     const trimmed = val.trim();
     const isStudentNo = /^\d{4}/.test(trimmed);
     const next = {
@@ -375,7 +387,9 @@ export default function DocumentsTab({
     };
     setDocsForm(next);
     refreshDocuments(next);
-  };
+    setPage(1);
+    setJumpPage("1");
+  }, [docsForm, setDocsForm, refreshDocuments]);
 
   const handleClearAllFilters = () => {
     const cleared = { studentNo: "", studentName: "", docType: "", docTypes: [] };
@@ -481,7 +495,7 @@ export default function DocumentsTab({
       });
     });
     return chips;
-  }, [searchQuery, statusFilters, docTypeFilters, docsForm, setDocsForm, refreshDocuments]);
+  }, [searchQuery, statusFilters, docTypeFilters, docsForm, setDocsForm, refreshDocuments, handleSearchChange]);
 
   const filteredRows = useMemo(() => {
     let rows = docsRows;
@@ -504,12 +518,6 @@ export default function DocumentsTab({
 
     return rows;
   }, [docsRows, statusFilters, docTypeFilters]);
-
-  // Reset page when search parameters/filteredRows change
-  useEffect(() => {
-    setPage(1);
-    setJumpPage("1");
-  }, [filteredRows.length]);
 
   const handleSort = (column) => {
     if (sortBy === column) {
@@ -556,12 +564,13 @@ export default function DocumentsTab({
     });
   }, [filteredRows, sortBy, sortOrder]);
 
-  const paginatedRows = useMemo(() => {
-    const start = (page - 1) * itemsPerPage;
-    return sortedRows.slice(start, start + itemsPerPage);
-  }, [sortedRows, page, itemsPerPage]);
-
   const totalPages = Math.max(1, Math.ceil(filteredRows.length / itemsPerPage));
+  const currentPage = Math.min(Math.max(1, page), totalPages);
+
+  const paginatedRows = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    return sortedRows.slice(start, start + itemsPerPage);
+  }, [sortedRows, currentPage, itemsPerPage]);
 
   // Student Edit State
   const [editStudentOpen, setEditStudentOpen] = useState(false);

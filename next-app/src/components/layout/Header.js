@@ -549,14 +549,6 @@ export default function Header({ authUser, onLogout, children }) {
               keywords: "osas student affairs proposals events monitoring activities organizations student submissions",
             },
             {
-              label: "Student Organizations",
-              view: "organizations",
-              icon: "ph-bold ph-buildings",
-              module: "student_organizations",
-              breadcrumb: "Operations • View",
-              keywords: "student organizations osas cbl bylaws officers whitelist student leaders roster accreditation",
-            },
-            {
               label: "Scan & Upload",
               view: "upload",
               icon: "ph-bold ph-scan",
@@ -596,20 +588,28 @@ export default function Header({ authUser, onLogout, children }) {
           badge: "Staff",
           items: [
             {
-              label: "Records & Archive",
-              view: "search",
-              icon: "ph-bold ph-archive-box",
-              module: "records_archive",
-              breadcrumb: "Records Archive • View",
-              keywords: "records archive search students repository files folders year levels browse files",
-            },
-            {
               label: "Student Directory",
               view: "students",
               icon: "ph-bold ph-users",
               module: "student_directory",
               breadcrumb: "Records Archive • View",
               keywords: "student directory students profiles records directory list search archive",
+            },
+            {
+              label: "Student Organizations",
+              view: "organizations",
+              icon: "ph-bold ph-buildings",
+              module: "student_organizations",
+              breadcrumb: "Records Archive • View",
+              keywords: "student organizations osas cbl bylaws officers whitelist student leaders roster accreditation",
+            },
+            {
+              label: "Records & Archive",
+              view: "search",
+              icon: "ph-bold ph-archive-box",
+              module: "records_archive",
+              breadcrumb: "Records Archive • View",
+              keywords: "records archive search students repository files folders year levels browse files",
             },
             {
               label: "Storage Explorer",

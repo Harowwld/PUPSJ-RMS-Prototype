@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { query } from "@/lib/postgres";
 import { requireOfficeModule } from "@/lib/moduleAccess";
 import { canAccessResource } from "@/lib/resourceAuthorization";
+import { decryptPII } from "@/lib/piiEncryption";
 
 export const runtime = "nodejs";
 
@@ -30,5 +31,9 @@ export async function GET(req) {
      ORDER BY ep.created_at DESC`,
     status ? [status] : []
   );
-  return NextResponse.json({ ok: true, data: rows.filter((row) => canAccessResource(access, "proposal", row)) });
+  const accessibleRows = rows.filter((row) => canAccessResource(access, "proposal", row)).map((r) => ({
+    ...r,
+    student_name: r.student_name ? decryptPII(r.student_name) : r.student_name,
+  }));
+  return NextResponse.json({ ok: true, data: accessibleRows });
 }

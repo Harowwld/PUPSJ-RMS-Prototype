@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { query, queryOne } from "@/lib/postgres";
 import { requireStudent, createAuthErrorResponse } from "@/lib/authHelpers";
 import { canAccessResource } from "@/lib/resourceAuthorization";
+import { decryptPII } from "@/lib/piiEncryption";
 
 export const runtime = "nodejs";
 
@@ -121,12 +122,15 @@ export async function GET(req) {
         WHERE s.student_no = $1`,
       [studentNo]
     );
+    if (student?.name) {
+      student.name = decryptPII(student.name);
+    }
   }
 
   if (!student && accountId) {
     const acc = await queryOne(
       `SELECT sa.id, sa.student_no, sa.email, sa.first_name, sa.middle_name, sa.last_name, sa.client_type,
-              s.course_code, s.year_level, s.section, s.status,
+              s.name AS s_name, s.course_code, s.year_level, s.section, s.status,
               s.storage_room, s.storage_cabinet, s.storage_drawer,
               c.name AS course_name
          FROM student_accounts sa
@@ -136,9 +140,14 @@ export async function GET(req) {
       [accountId]
     );
     if (acc) {
-      const computedName = acc.first_name && acc.last_name
-        ? `${acc.last_name.toUpperCase()}, ${acc.first_name.toUpperCase()}${acc.middle_name ? ` ${acc.middle_name[0].toUpperCase()}.` : ""}`
-        : acc.email;
+      const fName = decryptPII(acc.first_name);
+      const mName = decryptPII(acc.middle_name);
+      const lName = decryptPII(acc.last_name);
+      const email = decryptPII(acc.email);
+      const sName = decryptPII(acc.s_name);
+      const computedName = fName && lName
+        ? `${lName.toUpperCase()}, ${fName.toUpperCase()}${mName ? ` ${mName[0].toUpperCase()}.` : ""}`
+        : (sName || email);
       student = {
         student_no: acc.student_no || studentNo || null,
         name: computedName,
@@ -180,7 +189,7 @@ export async function GET(req) {
   const canonicalTypes = Array.from(dedupedTypesMap.values());
 
   // 3. Fetch Submitted Documents for this Student
-  const documents = effectiveStudentNo
+  const rawDocuments = effectiveStudentNo
     ? (await query(
         `SELECT id, office_id, student_no, student_name, doc_type, original_filename,
                 storage_filename, mime_type, size_bytes, approval_status,
@@ -191,6 +200,11 @@ export async function GET(req) {
         [effectiveStudentNo]
       )).filter((item) => canAccessResource(access.user, "document", item))
     : [];
+
+  const documents = rawDocuments.map((doc) => ({
+    ...doc,
+    student_name: doc.student_name ? decryptPII(doc.student_name) : doc.student_name,
+  }));
 
   // Group documents by normalized requirement key
   const docsByGroupKey = new Map();

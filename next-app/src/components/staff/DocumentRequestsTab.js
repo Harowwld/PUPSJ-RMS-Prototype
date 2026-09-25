@@ -626,13 +626,16 @@ export default function DocumentRequestsTab({
                   { label: "Students", value: "Student" },
                   { label: "Alumni", value: "Alumni" },
                 ].map((item) => {
-                  const isActive = clientTypeFilter === item.value;
+                  const isAll = item.value === "";
+                  const isActive = isAll
+                    ? clientTypeFilters.length === 0
+                    : clientTypeFilters.length === 1 && clientTypeFilters[0] === item.value;
                   return (
                     <button
                       key={item.value}
                       type="button"
                       onClick={() => {
-                        setClientTypeFilter(item.value);
+                        setClientTypeFilters(item.value ? [item.value] : []);
                         setPage(1);
                       }}
                       className={cn(
@@ -804,9 +807,9 @@ export default function DocumentRequestsTab({
                               </div>
                               <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">No Document Requests Found</EmptyTitle>
                               <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400">
-                                {clientTypeFilter === "Alumni"
+                                {clientTypeFilters.includes("Alumni") && !clientTypeFilters.includes("Student")
                                   ? "No document requests found matching your filters."
-                                  : clientTypeFilter === "Student"
+                                  : clientTypeFilters.includes("Student") && !clientTypeFilters.includes("Alumni")
                                   ? "No student requests found matching your filters."
                                   : "No document requests match your active filters."}
                               </EmptyDescription>

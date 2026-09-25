@@ -52,14 +52,28 @@ import { RefreshButton } from "@/components/shared/RefreshButton";
 import MultiCriteriaFilter from "@/components/shared/MultiCriteriaFilter";
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips";
 import { Select } from "@/components/ui/select"
+import OSASOrganizationComplianceView from "./OSASOrganizationComplianceView";
 
 export default function DigitizationComplianceTab({
   showToast,
   onLogAction,
+  officeId,
+  authUser,
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
+  const isOsas = (officeId || authUser?.office_id || "").toLowerCase() === "osas";
+
+  if (isOsas) {
+    return (
+      <OSASOrganizationComplianceView
+        showToast={showToast}
+        onLogAction={onLogAction}
+        officeId={officeId || authUser?.office_id || "osas"}
+      />
+    );
+  }
 
   const [kpiOrder, setKpiOrder] = useState(["completeness","students","complete"]);
   const [statusFilter, setStatusFilter] = useState(searchParams.get("status") || "Active");

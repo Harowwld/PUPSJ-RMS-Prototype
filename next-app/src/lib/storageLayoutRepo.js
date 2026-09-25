@@ -1,6 +1,7 @@
 import { dbAll, dbGet, dbRun } from "./postgresCompat.js";
 import {
   buildDefaultStorageLayout,
+  buildDefaultOsasStorageLayout,
   getDefaultDoor,
 } from "./storageLayoutDefaults.js";
 import { canonicalizeCabinetId } from "./storageLayoutUtils.js";
@@ -43,16 +44,36 @@ function normalizeRect(rect) {
   return { x: cx, y: cy, w: cw, h: ch };
 }
 
+function normalizeDrawerId(d) {
+  if (typeof d === "number") {
+    return Number.isFinite(d) && Number.isInteger(d) && d >= 1 ? d : null;
+  }
+  if (typeof d === "string") {
+    const trimmed = d.trim();
+    if (!trimmed) return null;
+    const num = Number(trimmed);
+    if (Number.isFinite(num) && Number.isInteger(num) && num >= 1) {
+      return num;
+    }
+    return trimmed.slice(0, 40);
+  }
+  return null;
+}
+
 function normalizeDrawerIds(drawerIdsRaw) {
   if (!Array.isArray(drawerIdsRaw)) return null;
   const ids = drawerIdsRaw
-    .map((d) => (typeof d === "string" ? Number(d) : d))
-    .filter((d) => Number.isFinite(d) && Number.isInteger(d) && d >= 1);
+    .map(normalizeDrawerId)
+    .filter((d) => d !== null);
   const unique = Array.from(new Set(ids));
-  unique.sort((a, b) => a - b);
+  unique.sort((a, b) => {
+    if (typeof a === "number" && typeof b === "number") return a - b;
+    return String(a).localeCompare(String(b), undefined, { numeric: true });
+  });
   if (unique.length === 0) return null;
   return unique;
 }
+
 
 function normalizeCabinetId(cabinetIdRaw) {
   const id = canonicalizeCabinetId(cabinetIdRaw);
@@ -129,7 +150,11 @@ function normalizeStorageLayout(layoutRaw) {
   return { version: 2, rooms };
 }
 
-export function getDefaultStorageLayout() {
+export function getDefaultStorageLayout({ officeId } = {}) {
+  const norm = String(officeId || "").trim().toLowerCase();
+  if (norm === "osas") {
+    return buildDefaultOsasStorageLayout();
+  }
   return buildDefaultStorageLayout();
 }
 
@@ -141,16 +166,16 @@ export async function getStorageLayout({ officeId } = {}) {
   );
 
   if (!row?.value) {
-    return { version: 2, rooms: [] };
+    return getDefaultStorageLayout({ officeId });
   }
 
   try {
     const parsed = JSON.parse(String(row.value));
     const normalized = normalizeStorageLayout(parsed);
-    if (!normalized) return { version: 2, rooms: [] };
+    if (!normalized) return getDefaultStorageLayout({ officeId });
     return normalized;
   } catch {
-    return { version: 2, rooms: [] };
+    return getDefaultStorageLayout({ officeId });
   }
 }
 
