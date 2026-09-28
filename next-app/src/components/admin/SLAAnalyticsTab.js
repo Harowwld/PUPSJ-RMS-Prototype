@@ -188,7 +188,7 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
           descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
           actions={
-            <div className="flex items-center gap-6">
+            <div className="flex items-center gap-2">
               <RefreshButton 
                 onRefresh={handleRefresh} 
                 isLoading={manualLoading} 

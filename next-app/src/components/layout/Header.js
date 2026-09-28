@@ -543,7 +543,7 @@ export default function Header({ authUser, onLogout, children }) {
             {
               label: "OSAS Monitoring",
               view: "osas_monitoring",
-              icon: "ph-bold ph-student",
+              icon: "ti ti-school",
               module: "osas_monitoring",
               breadcrumb: "Operations • View",
               keywords: "osas student affairs proposals events monitoring activities organizations student submissions",
@@ -588,20 +588,28 @@ export default function Header({ authUser, onLogout, children }) {
           badge: "Staff",
           items: [
             {
-              label: "Records & Archive",
-              view: "search",
-              icon: "ph-bold ph-archive-box",
-              module: "records_archive",
-              breadcrumb: "Records Archive • View",
-              keywords: "records archive search students repository files folders year levels browse files",
-            },
-            {
               label: "Student Directory",
               view: "students",
               icon: "ph-bold ph-users",
               module: "student_directory",
               breadcrumb: "Records Archive • View",
               keywords: "student directory students profiles records directory list search archive",
+            },
+            {
+              label: "Student Organizations",
+              view: "organizations",
+              icon: "ph-bold ph-buildings",
+              module: "student_organizations",
+              breadcrumb: "Records Archive • View",
+              keywords: "student organizations osas cbl bylaws officers whitelist student leaders roster accreditation",
+            },
+            {
+              label: "Records & Archive",
+              view: "search",
+              icon: "ph-bold ph-archive-box",
+              module: "records_archive",
+              breadcrumb: "Records Archive • View",
+              keywords: "records archive search students repository files folders year levels browse files",
             },
             {
               label: "Storage Explorer",
@@ -620,9 +628,6 @@ export default function Header({ authUser, onLogout, children }) {
           ...group,
           items: group.items.filter((item) => {
             if (!hasModuleFilter || !item.module) return true;
-            if (item.view === "students") {
-              return enabledModules.has("student_directory") || enabledModules.has("records_archive");
-            }
             return enabledModules.has(item.module);
           }),
         }))
@@ -637,21 +642,21 @@ export default function Header({ authUser, onLogout, children }) {
             {
               label: "Document Requests",
               view: "odrs",
-              icon: "ph-bold ph-file-text",
+              icon: "ti ti-file-text",
               breadcrumb: "Student Services • View",
               keywords: "document requests odrs transcript diploma certificate grades official records tracking new request status",
             },
             {
               label: "Document Checklist & Compliance",
               view: "compliance",
-              icon: "ph-bold ph-clipboard-check",
+              icon: "ti ti-clipboard-check",
               breadcrumb: "Student Services • View",
               keywords: "document checklist compliance requirements missing documents submitted documents compliance status form 137 psa birth certificate unsubmitted pending",
             },
             {
               label: "OSAS Submissions",
               view: "osas",
-              icon: "ph-bold ph-student",
+              icon: "ti ti-school",
               breadcrumb: "Student Services • View",
               keywords: "osas submissions event proposals activity student affairs organizations clearance submit proposal",
             },
@@ -1168,7 +1173,7 @@ export default function Header({ authUser, onLogout, children }) {
                                     : "bg-gray-100 dark:bg-zinc-800 text-gray-500 dark:text-zinc-400"
                                 )}
                               >
-                                <HugeIcon  className={cn(item.icon, "text-[16px]")}></HugeIcon>
+                                <HugeIcon className={cn(item.icon, "text-[16px]")} title={item.label}></HugeIcon>
                               </div>
                               <div className="flex flex-col min-w-0 flex-1">
                                 <div className="flex items-center gap-2">

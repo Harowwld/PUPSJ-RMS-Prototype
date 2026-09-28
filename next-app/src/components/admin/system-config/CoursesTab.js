@@ -407,7 +407,7 @@ export default function CoursesTab({
                   </button>
                 )}
                 <span className="text-[12px] font-normal text-gray-400 dark:text-zinc-500 pointer-events-none">
-                  {filteredCoursesFull.length > 0 ? `${filteredCoursesFull.length} results` : "0 results"}
+                  {filteredCoursesFull.length}
                 </span>
               </div>
             </div>

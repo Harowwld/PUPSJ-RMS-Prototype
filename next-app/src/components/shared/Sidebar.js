@@ -29,7 +29,7 @@ const ICON_MAP = {
   odrs: { icon: "ti ti-file-text" },
   compliance: { icon: "ti ti-clipboard-check" },
   osas: { icon: "ti ti-school" },
-  osas_monitoring: { icon: "ti ti-clipboard-check" },
+  osas_monitoring: { icon: "ti ti-school" },
   upload: { icon: "ti ti-scan" },
   documents: { icon: "ti ti-file-text" },
   notifications: { icon: "ti ti-bell" },
@@ -318,6 +318,7 @@ export default function Sidebar({ open = true, items, activeKey, onSelect, onLog
                                 data-color={isActive ? "#FFFFFF" : staffIconColor}
                                 style={{ color: isActive ? "#FFFFFF" : staffIconColor }}
                                 className={cn("rms-style-color", childIconName, "text-[22px] transition-colors shrink-0")}
+                                title={child.label}
                               ></HugeIcon>
                             </span>
                             <span
@@ -387,6 +388,7 @@ export default function Sidebar({ open = true, items, activeKey, onSelect, onLog
                     data-color={isActive ? "#FFFFFF" : staffIconColor}
                     style={{ color: isActive ? "#FFFFFF" : staffIconColor }}
                     className={cn("rms-style-color", iconName, "text-[22px] transition-colors shrink-0")}
+                                title={item.label}
                   ></HugeIcon>
                   {/* Collapsed notification dot */}
                   <span

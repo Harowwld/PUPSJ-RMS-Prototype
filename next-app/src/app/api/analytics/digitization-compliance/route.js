@@ -8,6 +8,7 @@ import { isSystemAdminRole } from "../../../../lib/roleUtils";
 import { queryOne } from "../../../../lib/postgres";
 
 import { getDigitizationComplianceSummary } from "../../../../lib/digitizationComplianceRepo";
+import { getOrganizationComplianceSummary } from "../../../../lib/organizationComplianceRepo";
 
 export const runtime = "nodejs";
 
@@ -35,6 +36,24 @@ export async function GET(req) {
       );
       if (!office) return NextResponse.json({ ok: false, error: "Office not found" }, { status: 404 });
     }
+
+    if (officeId === "osas") {
+      const status = searchParams.get("status") || undefined;
+      const category = searchParams.get("category") || undefined;
+      const complianceStatus = searchParams.get("complianceStatus") || undefined;
+      const search = searchParams.get("search") || undefined;
+
+      const data = await getOrganizationComplianceSummary({
+        status,
+        category,
+        complianceStatus,
+        search,
+        officeId,
+      });
+
+      return NextResponse.json({ ok: true, data });
+    }
+
     const statusParam = searchParams.get("status");
     const studentStatus =
       statusParam === null || statusParam === ""

@@ -35,6 +35,7 @@ const NotificationsTab = dynamic(() => import("@/components/staff/NotificationsT
 const DocumentRequestsTab = dynamic(() => import("@/components/staff/DocumentRequestsTab"), { loading: StaffTabLoading });
 const RegistrarODRSTab = dynamic(() => import("@/components/staff/RegistrarODRSTab"), { loading: StaffTabLoading });
 const OsasMonitoringTab = dynamic(() => import("@/components/staff/OsasMonitoringTab"), { loading: StaffTabLoading });
+const StudentOrganizationsTab = dynamic(() => import("@/components/staff/StudentOrganizationsTab"), { loading: StaffTabLoading });
 const StudentDirectoryTab = dynamic(() => import("@/components/staff/StudentDirectoryTab"), { loading: StaffTabLoading });
 
 function normalizeStudentRow(row) {
@@ -78,10 +79,33 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
   const locateTimeoutRef = useRef(null);
   const processedLocateRef = useRef(null);
 
-  const validViews = ["requests", "osas_monitoring", "students", "upload", "batch_review", "documents", "notifications", "search", "storage"];
-  const initialView = validViews.includes(searchParams?.get("view"))
-    ? searchParams.get("view")
-    : (initialAuthUser?.office_id === "osas" ? "osas_monitoring" : "requests");
+  const validViews = ["requests", "osas_monitoring", "organizations", "students", "upload", "batch_review", "documents", "notifications", "search", "storage"];
+  const initialView = (() => {
+    const req = searchParams?.get("view");
+    const enabledSet = new Set(initialAuthUser?.enabled_modules || []);
+    const hasModuleFilter = Array.isArray(initialAuthUser?.enabled_modules) && initialAuthUser.enabled_modules.length > 0;
+    const isTabEnabled = (t) => {
+      const mod = {
+        requests: "document_requests",
+        osas_monitoring: "osas_monitoring",
+        organizations: "student_organizations",
+        students: "student_directory",
+        upload: "scan_upload",
+        batch_review: "scan_upload",
+        documents: "documents",
+        notifications: "notifications",
+        search: "records_archive",
+        storage: "storage_explorer",
+      }[t];
+      return !hasModuleFilter || !mod || enabledSet.has(mod);
+    };
+
+    if (validViews.includes(req) && isTabEnabled(req)) return req;
+    const defaultPreferred = initialAuthUser?.office_id === "osas" ? "osas_monitoring" : "requests";
+    if (isTabEnabled(defaultPreferred)) return defaultPreferred;
+    const firstAllowed = validViews.find(isTabEnabled);
+    return firstAllowed || defaultPreferred;
+  })();
 
   const [view, setView] = useState(initialView);
   const [authUser, setAuthUser] = useState(initialAuthUser);
@@ -107,11 +131,27 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
 
   useEffect(() => {
     const tab = String(searchParams?.get("view") || searchParams?.get("tab") || "").trim()
-    const allowedTabs = new Set(["requests", "osas_monitoring", "students", "upload", "batch_review", "documents", "notifications", "search", "storage"])
+    const allowedTabs = new Set(["requests", "osas_monitoring", "organizations", "students", "upload", "batch_review", "documents", "notifications", "search", "storage"])
     if (allowedTabs.has(tab)) {
+      if (authUser?.enabled_modules) {
+        const enabledSet = new Set(authUser.enabled_modules);
+        const mod = {
+          requests: "document_requests",
+          osas_monitoring: "osas_monitoring",
+          organizations: "student_organizations",
+          students: "student_directory",
+          upload: "scan_upload",
+          batch_review: "scan_upload",
+          documents: "documents",
+          notifications: "notifications",
+          search: "records_archive",
+          storage: "storage_explorer",
+        }[tab];
+        if (mod && !enabledSet.has(mod)) return;
+      }
       setView(tab)
     }
-  }, [searchParams])
+  }, [searchParams, authUser])
   const [loading, setLoading] = useState(!initialAuthUser);
   const [zoomNode, setZoomNode] = useState(3); // 0 to 6 (7 nodes)
   const handleZoomMouseDown = (e) => {
@@ -164,6 +204,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
     const MODULE_KEY_MAP = {
       requests: "document_requests",
       osas_monitoring: "osas_monitoring",
+      organizations: "student_organizations",
       students: "student_directory",
       upload: "scan_upload",
       batch_review: "scan_upload",
@@ -190,8 +231,9 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
         type: "group",
         label: "Records Archive",
         children: [
-          { key: "search", label: "Records & Archive", iconClass: "ph-bold ph-archive-box" },
           { key: "students", label: "Student Directory", iconClass: "ph-bold ph-users" },
+          { key: "organizations", label: "Student Organizations", iconClass: "ph-bold ph-buildings" },
+          { key: "search", label: "Records & Archive", iconClass: "ph-bold ph-archive-box" },
           { key: "storage", label: "Storage Explorer", iconClass: "ph-bold ph-folder-open" },
         ]
       }
@@ -202,9 +244,6 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
       const activeChildren = group.children.filter(child => {
         const requiredModule = MODULE_KEY_MAP[child.key]
         if (!requiredModule) return true
-        if (child.key === "students") {
-          return enabled.has("student_directory") || enabled.has("records_archive")
-        }
         return enabled.has(requiredModule)
       })
       if (activeChildren.length > 0) {
@@ -655,29 +694,31 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
         title: "PUP Storage Rooms",
         rooms: storageLayout.rooms.map((r) => ({
           room: r.id,
-          occupiedCount: students.filter((s) => s.room === r.id).length,
+          name: r.name || `Room ${r.id}`,
+          occupiedCount: students.filter((s) => String(s.room) === String(r.id)).length,
           cabinetsCount: r.cabinets?.length || 0,
-          isTarget: activeStudent?.room === r.id,
+          isTarget: String(activeStudent?.room) === String(r.id),
         })),
       };
     }
     if (currentLocatorLevel === "cabinets") {
-      const roomDef = storageLayout.rooms.find((r) => r.id === selectedRoom);
+      const roomDef = storageLayout.rooms.find((r) => String(r.id) === String(selectedRoom));
       if (!roomDef) return { kind: "cabinets", cabinets: [] };
       return {
         kind: "cabinets",
         room: selectedRoom,
+        roomName: roomDef.name || `Room ${selectedRoom}`,
         roomDoor: roomDef.door || null,
         cabinets: roomDef.cabinets.map((c) => {
           const normCab = String(c.id);
           return {
             cab: normCab,
             occupiedCount: students.filter(
-              (s) => s.room === selectedRoom && s.cabinet === normCab,
+              (s) => String(s.room) === String(selectedRoom) && String(s.cabinet) === normCab,
             ).length,
             isTarget:
-              activeStudent?.room === selectedRoom &&
-              activeStudent?.cabinet === normCab,
+              String(activeStudent?.room) === String(selectedRoom) &&
+              String(activeStudent?.cabinet) === normCab,
             rect: c.rect,
             rotation: c.rotation || 0,
             drawerIds: c.drawerIds,
@@ -686,9 +727,9 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
       };
     }
     if (currentLocatorLevel === "drawers") {
-      const roomDef = storageLayout.rooms.find((r) => r.id === selectedRoom);
+      const roomDef = storageLayout.rooms.find((r) => String(r.id) === String(selectedRoom));
       const cabinetDef = roomDef?.cabinets?.find(
-        (c) => String(c.id) === selectedCabinet
+        (c) => String(c.id) === String(selectedCabinet)
       );
       if (!cabinetDef)
         return {
@@ -700,6 +741,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
       return {
         kind: "drawers",
         room: selectedRoom,
+        roomName: roomDef?.name || `Room ${selectedRoom}`,
         cabinet: selectedCabinet,
         roomDoor: roomDef?.door || null,
         cabinetRect: cabinetDef.rect,
@@ -708,22 +750,22 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
           return {
             cab: normCab,
             occupiedCount: students.filter(
-              (s) => s.room === selectedRoom && s.cabinet === normCab,
+              (s) => String(s.room) === String(selectedRoom) && String(s.cabinet) === normCab,
             ).length,
             isTarget:
-              activeStudent?.room === selectedRoom &&
-              activeStudent?.cabinet === normCab,
+              String(activeStudent?.room) === String(selectedRoom) &&
+              String(activeStudent?.cabinet) === normCab,
             rect: c.rect,
             rotation: c.rotation || 0,
             drawerIds: c.drawerIds,
           };
         }),
-        drawers: cabinetDef.drawerIds.map((d) => {
+        drawers: (cabinetDef.drawerIds || []).map((d) => {
           const drawerStudents = students.filter(
             (s) =>
-              s.room === selectedRoom &&
-              s.cabinet === selectedCabinet &&
-              s.drawer === d
+              String(s.room) === String(selectedRoom) &&
+              String(s.cabinet) === String(selectedCabinet) &&
+              String(s.drawer) === String(d)
           );
           return {
             drawer: d,
@@ -1123,10 +1165,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
       storage: "storage_explorer",
     }
     const requiredModule = MODULE_KEY_MAP[view]
-    const isAllowed =
-      !requiredModule ||
-      enabled.has(requiredModule) ||
-      (view === "students" && enabled.has("records_archive"))
+    const isAllowed = !requiredModule || enabled.has(requiredModule)
     if (!isAllowed) {
       const firstEnabled = sidebarItems.find(item => item.key)
       if (firstEnabled) {
@@ -1334,9 +1373,12 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
       try {
         const trimmedNo = String(form.studentNo || "").trim().toLowerCase();
         const trimmedName = String(form.studentName || "").trim().toLowerCase();
-        const selectedType = String(form.docType || "").trim();
+        const selectedTypes = Array.isArray(form.docTypes) && form.docTypes.length > 0
+          ? form.docTypes
+          : (form.docType ? [form.docType] : []);
+        const hasTypeFilter = selectedTypes.length > 0;
 
-        if (!trimmedNo && !trimmedName && !selectedType) {
+        if (!trimmedNo && !trimmedName && !hasTypeFilter) {
           setDocsRows(staffDocs.filter((doc) => doc.source_type === "event_proposal").map((doc) => ({
             id: doc.id,
             student_no: doc.student_no,
@@ -1375,7 +1417,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
           // 1. Show all ACTUAL documents the student has
           const seenTypes = new Set();
           for (const doc of studentDocs) {
-            if (selectedType && selectedType !== doc.doc_type) continue;
+            if (hasTypeFilter && !selectedTypes.includes(doc.doc_type)) continue;
             
             seenTypes.add(doc.doc_type);
             rows.push({
@@ -1394,7 +1436,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
           // 2. For missing documents, only show ACTIVE docTypes as placeholders
           for (const type of docTypes) {
             if (seenTypes.has(type)) continue; // Already added as "uploaded"
-            if (selectedType && selectedType !== type) continue;
+            if (hasTypeFilter && !selectedTypes.includes(type)) continue;
 
             rows.push({
               id: `missing-${student.studentNo}-${type}`,
@@ -1679,7 +1721,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
               }}
               students={students}
               archivedStudents={archivedStudents}
-              staffDocs={staffDocs.filter((doc) => doc.source_type !== "event_proposal")}
+              staffDocs={authUser?.office_id === "osas" ? staffDocs : staffDocs.filter((doc) => doc.source_type !== "event_proposal")}
               officeLabel={authUser?.office_id === "osas" ? "OSAS" : "Registrar"}
               explorerItems={explorerItems}
               onSwitchView={setView}
@@ -2027,6 +2069,10 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
 
           <TabsContent value="osas_monitoring" className="h-full m-0 border-0 focus-visible:ring-0">
             <OsasMonitoringTab showToast={showToast} />
+          </TabsContent>
+
+          <TabsContent value="organizations" className="h-full m-0 border-0 focus-visible:ring-0">
+            <StudentOrganizationsTab showToast={showToast} />
           </TabsContent>
 
           <TabsContent value="documents" className="h-full m-0 border-0 focus-visible:ring-0">

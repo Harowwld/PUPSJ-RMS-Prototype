@@ -27,13 +27,16 @@ const [kpiOrder, setKpiOrder] = useState(["total", "today", "auth"]);
   }, [selectedKpi]);
 
   const trends = logStats?.trends || [];
+  const activeActors = Number(logStats?.activeActorsCount ?? logStats?.activeactorscount ?? 0);
+  const systemChanges = Number(logStats?.systemChanges ?? logStats?.systemchanges ?? 0);
+  const criticalEvents = Number(logStats?.criticalEvents ?? logStats?.criticalevents ?? 0);
 
   const stats = [
     {
       key: "total",
       label: "Total Events",
       value: Number(logStats?.totalLogs ?? logStats?.totallogs ?? 0),
-      sublabel: "Cumulative system logs",
+      sublabel: `${activeActors.toLocaleString()} active ${activeActors === 1 ? "actor" : "actors"}`,
       color: "blue",
       trendData: trends.map(t => Number(t.total ?? t.count ?? 0)),
       iconClass: "ph-database"
@@ -42,7 +45,7 @@ const [kpiOrder, setKpiOrder] = useState(["total", "today", "auth"]);
       key: "today",
       label: "Activity Today",
       value: Number(logStats?.logsToday ?? logStats?.logstoday ?? 0),
-      sublabel: "Events recorded today",
+      sublabel: `${systemChanges.toLocaleString()} system updates`,
       color: "emerald",
       trendData: trends.map(t => Number(t.total ?? t.count ?? 0)),
       iconClass: "ph-calendar-check"
@@ -51,7 +54,7 @@ const [kpiOrder, setKpiOrder] = useState(["total", "today", "auth"]);
       key: "auth",
       label: "Auth Attempts",
       value: Number(logStats?.authEvents ?? logStats?.authevents ?? 0),
-      sublabel: "Logins & access events",
+      sublabel: `${criticalEvents.toLocaleString()} critical ${criticalEvents === 1 ? "flag" : "flags"}`,
       color: "amber",
       trendData: trends.map(t => Number(t.auth ?? t.authCount ?? t.authcount ?? 0)),
       iconClass: "ph-fingerprint"
@@ -125,9 +128,14 @@ const [kpiOrder, setKpiOrder] = useState(["total", "today", "auth"]);
                     </div>
                     
                     <div className="flex justify-between items-end p-4 pt-1">
-                      <span className="text-[28px] font-bold text-gray-900 dark:text-white leading-none tracking-tight">
-                        {stat.value.toLocaleString()}
-                      </span>
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-[28px] font-bold text-gray-900 dark:text-white leading-none tracking-tight">
+                          {stat.value.toLocaleString()}
+                        </span>
+                        <span className={cn("text-xs font-medium mb-1", getSubColor(stat.color))}>
+                          {stat.sublabel}
+                        </span>
+                      </div>
                       <HugeIcon className="ph-bold ph-dots-six-vertical cursor-grab active:cursor-grabbing hover:text-gray-400 dark:hover:text-zinc-500 text-gray-300 dark:text-zinc-700 text-lg mb-0.5" />
                     </div>
                   </div>

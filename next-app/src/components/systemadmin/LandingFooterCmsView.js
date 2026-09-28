@@ -61,6 +61,16 @@ const DEFAULT_FOOTER_CONTENT = {
   copyrightText: "© 2026 PUP San Juan Campus · All rights reserved.",
 }
 
+function getEmbedUrl(mapsUrl) {
+  try {
+    const url = new URL(mapsUrl || "https://maps.google.com/?q=Polytechnic+University+of+the+Philippines+San+Juan+Campus")
+    const q = url.searchParams.get("q") || "Polytechnic University of the Philippines San Juan Campus"
+    return `https://maps.google.com/maps?width=100%25&height=600&hl=en&q=${encodeURIComponent(q)}&t=&z=15&ie=UTF8&iwloc=B&output=embed`
+  } catch (e) {
+    return `https://maps.google.com/maps?width=100%25&height=600&hl=en&q=${encodeURIComponent("Polytechnic University of the Philippines San Juan Campus")}&t=&z=15&ie=UTF8&iwloc=B&output=embed`
+  }
+}
+
 const SCHEDULE_STATUS_OPTIONS = [
   { value: "open", label: "Open / Regular Hours" },
   { value: "break", label: "Break Shift / Intermediate" },
@@ -91,27 +101,54 @@ export default function LandingFooterCmsView({ showToast }) {
   )
 
   // Fetch current footer configuration
-  const fetchFooterData = useCallback(async () => {
-    try {
-      setLoading(true)
-      const res = await fetch("/api/landing/footer", { cache: "no-store" })
-      const json = await res.json()
-      if (res.ok && json.ok && json.data) {
-        setFooterData(json.data)
-      } else {
-        notify(json.error || "Failed to load footer configuration", true)
+  const fetchFooterData = useCallback(
+    async (isRefresh = false) => {
+      if (isRefresh) {
+        setLoading(true)
       }
-    } catch (err) {
-      console.error("[LandingFooterCmsView] Fetch error:", err)
-      notify("Network error fetching footer settings", true)
-    } finally {
-      setLoading(false)
-    }
-  }, [notify])
+      try {
+        const res = await fetch("/api/landing/footer", { cache: "no-store" })
+        const json = await res.json()
+        if (res.ok && json.ok && json.data) {
+          setFooterData(json.data)
+        } else {
+          notify(json.error || "Failed to load footer configuration", true)
+        }
+      } catch (err) {
+        console.error("[LandingFooterCmsView] Fetch error:", err)
+        notify("Network error fetching footer settings", true)
+      } finally {
+        setLoading(false)
+      }
+    },
+    [notify]
+  )
 
   useEffect(() => {
-    fetchFooterData()
-  }, [fetchFooterData])
+    let ignore = false
+    async function init() {
+      try {
+        const res = await fetch("/api/landing/footer", { cache: "no-store" })
+        const json = await res.json()
+        if (ignore) return
+        if (res.ok && json.ok && json.data) {
+          setFooterData(json.data)
+        } else {
+          notify(json.error || "Failed to load footer configuration", true)
+        }
+      } catch (err) {
+        if (ignore) return
+        console.error("[LandingFooterCmsView] Fetch error:", err)
+        notify("Network error fetching footer settings", true)
+      } finally {
+        if (!ignore) setLoading(false)
+      }
+    }
+    init()
+    return () => {
+      ignore = true
+    }
+  }, [notify])
 
   // Save changes
   const handleSave = async () => {
@@ -988,111 +1025,139 @@ export default function LandingFooterCmsView({ showToast }) {
                 </Button>
               </div>
 
-              {/* Simulated Footer Window */}
-              <div className="w-full rounded-2xl overflow-hidden border border-zinc-800 bg-zinc-950 text-zinc-400 p-6 sm:p-8 select-none relative font-jakarta text-xs">
-                {/* 3-Column Grid */}
-                <div className="relative z-10 grid grid-cols-1 md:grid-cols-3 gap-8 pb-8 border-b border-zinc-800/80">
-                  {/* Col 1 */}
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-6 h-6 flex items-center justify-center shrink-0">
-                        <Image
-                          src="/assets/branding/white-icon.png"
-                          alt="Logo"
-                          width={24}
-                          height={24}
-                          className="w-full h-full object-contain"
-                        />
-                      </div>
-                      <span className="font-bold text-lg text-white tracking-tight">
-                        eManage
-                      </span>
-                    </div>
-                    <p className="text-xs text-zinc-400 leading-relaxed">
-                      {footerData.brandSubtitle}
-                    </p>
-                    <div className="pt-2 text-xs space-y-1">
-                      <div className="font-bold text-zinc-200 flex items-center gap-1.5">
-                        <HugeIcon  className="ph-bold ph-map-pin text-red-400 text-sm" />
-                        <span>{footerData.locationHall}</span>
-                      </div>
-                      <p className="text-zinc-400 text-[11px] pl-5">
-                        {footerData.locationAddress}
-                      </p>
-                      {footerData.mapsEnabled && (
-                        <div className="pl-5 pt-1 text-[11px] font-semibold text-red-400 flex items-center gap-1">
-                          <span>{footerData.mapsLabel}</span>
-                          <HugeIcon  className="ph-bold ph-arrow-square-out text-[10px]" />
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Col 2 */}
-                  <div className="space-y-3">
-                    <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-red-400 block">
-                      {footerData.scheduleEyebrow}
-                    </span>
-                    <div className="font-bold text-sm text-white">
-                      {footerData.scheduleHeading}
-                    </div>
-                    <div className="space-y-2 text-xs">
-                      {(footerData.scheduleItems || []).map((item, i) => (
-                        <div key={i} className="flex items-center justify-between pb-1 border-b border-zinc-800">
-                          <span className="text-zinc-400">{item.label}</span>
-                          <span
-                            className={cn(
-                              "font-mono",
-                              item.status === "closed"
-                                ? "font-medium text-rose-400"
-                                : item.status === "break"
-                                ? "text-zinc-400"
-                                : "font-bold text-white"
-                            )}
-                          >
-                            {item.value}
+              {/* Simulated Footer Window Matching LandingFooter.js Bento Layout */}
+              <div className="w-full rounded-2xl overflow-hidden border border-zinc-800 bg-zinc-950 text-zinc-400 p-4 sm:p-8 select-none relative font-jakarta text-xs">
+                <div className="relative z-10 max-w-[1100px] mx-auto">
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6 pb-8 z-10 relative">
+                    {/* Left Box */}
+                    <div className="lg:col-span-5 bg-zinc-900/40 backdrop-blur-sm border border-white/5 rounded-[2rem] p-6 sm:p-8 flex flex-col justify-between shadow-xl">
+                      <div>
+                        <div className="flex items-center gap-2.5 mb-3">
+                          <div className="w-7 h-7 flex items-center justify-center shrink-0">
+                            <Image
+                              src="/assets/branding/white-icon.png"
+                              alt="eManage Logo"
+                              width={28}
+                              height={28}
+                              className="w-full h-full object-contain"
+                            />
+                          </div>
+                          <span className="font-bold text-xl text-white tracking-tight">
+                            eManage
                           </span>
                         </div>
-                      ))}
-                    </div>
-                  </div>
+                        <p className="text-xs text-zinc-400 leading-relaxed font-normal mb-6 max-w-sm">
+                          {footerData.brandSubtitle}
+                        </p>
+                      </div>
 
-                  {/* Col 3 */}
-                  <div className="space-y-3">
-                    <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-red-400 block">
-                      {footerData.contactsEyebrow}
-                    </span>
-                    <div className="font-bold text-sm text-white">
-                      {footerData.contactsHeading}
-                    </div>
-                    <div className="space-y-2 text-xs">
-                      {(footerData.contactItems || []).map((contact, i) => (
-                        <div key={i}>
-                          <span className="block text-[10px] font-mono text-zinc-500 uppercase">{contact.label}</span>
-                          {contact.type === "email" ? (
-                            <span className="font-semibold text-red-400 break-all">{contact.value}</span>
-                          ) : (
-                            <span className="font-mono text-zinc-300">{contact.value}</span>
-                          )}
+                      <div className="pt-4 border-t border-white/5">
+                        <div className="font-bold text-zinc-200 flex items-center gap-2 mb-1.5 text-xs">
+                          <HugeIcon className="ph-bold ph-map-pin text-red-400" />
+                          <span>{footerData.locationHall}</span>
                         </div>
-                      ))}
+                        <p className="text-zinc-500 leading-relaxed text-[11px] pl-5 mb-4">
+                          {footerData.locationAddress}
+                        </p>
+                        {footerData.mapsEnabled && (
+                          <div className="mt-4 w-full h-[140px] rounded-xl overflow-hidden border border-white/10 bg-zinc-900/50 relative">
+                            <iframe
+                              width="100%"
+                              height="100%"
+                              style={{ border: 0 }}
+                              loading="lazy"
+                              src={getEmbedUrl(footerData.mapsUrl)}
+                            />
+                            <div className="absolute inset-0 pointer-events-none ring-1 ring-inset ring-white/10 rounded-xl" />
+                          </div>
+                        )}
+                      </div>
                     </div>
-                    <div className="pt-2">
-                      <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-zinc-300">
-                        <span>Personnel Sign In</span>
-                        <HugeIcon  className="ph-bold ph-arrow-right text-[10px] text-zinc-400" />
-                      </span>
+
+                    {/* Right Container */}
+                    <div className="lg:col-span-7 flex flex-col gap-4">
+                      <div className="bg-zinc-900/40 backdrop-blur-sm border border-white/5 rounded-[2rem] p-6 sm:p-8 flex-1 grid grid-cols-1 sm:grid-cols-2 gap-6 shadow-xl">
+                        {/* Registrar Schedule */}
+                        <div>
+                          <h4 className="text-[10px] uppercase font-mono font-bold text-red-400 tracking-wider mb-3">
+                            {footerData.scheduleEyebrow || "Registrar Schedule"}
+                          </h4>
+                          <div className="space-y-2">
+                            {(footerData.scheduleItems || []).map((item, idx) => (
+                              <div
+                                key={idx}
+                                className="flex flex-col gap-0.5 pb-2 border-b border-white/5 last:border-0 last:pb-0"
+                              >
+                                <span className="text-[10px] text-zinc-500 font-medium">
+                                  {item.label}
+                                </span>
+                                <span
+                                  className={cn(
+                                    "text-xs font-mono",
+                                    item.status === "closed"
+                                      ? "text-rose-400"
+                                      : item.status === "break"
+                                      ? "text-zinc-400"
+                                      : "text-white font-medium"
+                                  )}
+                                >
+                                  {item.value}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Direct Contact Channels */}
+                        <div>
+                          <h4 className="text-[10px] uppercase font-mono font-bold text-red-400 tracking-wider mb-3">
+                            {footerData.contactsEyebrow || "Official Desk"}
+                          </h4>
+                          <div className="space-y-2">
+                            {(footerData.contactItems || []).map((contact, idx) => (
+                              <div
+                                key={idx}
+                                className="flex flex-col gap-0.5 pb-2 border-b border-white/5 last:border-0 last:pb-0"
+                              >
+                                <span className="text-[10px] font-mono text-zinc-500 uppercase font-medium">
+                                  {contact.label}
+                                </span>
+                                {contact.type === "email" ? (
+                                  <span className="text-xs font-medium text-zinc-200">
+                                    {contact.value}
+                                  </span>
+                                ) : (
+                                  <span className="text-xs font-mono text-zinc-300">
+                                    {contact.value}
+                                  </span>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Sub-footer Links Card */}
+                      <div className="bg-zinc-900/40 backdrop-blur-sm border border-white/5 rounded-2xl px-6 py-3.5 flex flex-wrap items-center justify-between gap-3 shadow-xl">
+                        <span className="text-[10px] font-mono text-zinc-500">
+                          {footerData.copyrightText}
+                        </span>
+                        <div className="text-[10px] font-mono font-medium text-zinc-400 flex items-center gap-1">
+                          <span>Back to Top</span>
+                          <HugeIcon className="ph-bold ph-arrow-up text-[10px]" />
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
 
-                {/* Simulated Ambient Watermark */}
+                {/* Ambient Watermark */}
                 {footerData.watermarkEnabled && (
                   <div className="absolute inset-x-0 bottom-0 pointer-events-none select-none overflow-hidden flex justify-center items-end z-0">
                     <span
                       className="block w-full text-center font-black uppercase tracking-tighter leading-none text-white/[0.08] pointer-events-none whitespace-nowrap translate-y-[45%]"
                       style={{
-                        fontSize: "clamp(3rem, 12vw, 10rem)",
+                        fontSize: "clamp(3rem, 14vw, 11rem)",
                         fontWeight: 900,
                         letterSpacing: "-0.05em",
                       }}
@@ -1101,17 +1166,6 @@ export default function LandingFooterCmsView({ showToast }) {
                     </span>
                   </div>
                 )}
-
-                {/* Streamlined Sub-Footer */}
-                <div className="relative z-10 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-zinc-400">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span>{footerData.copyrightText}</span>
-                  </div>
-                  <div className="flex items-center gap-1.5 text-zinc-400 select-none">
-                    <span>Back to Top</span>
-                    <HugeIcon  className="ph-bold ph-arrow-up text-[10px]" />
-                  </div>
-                </div>
               </div>
             </div>
           )}

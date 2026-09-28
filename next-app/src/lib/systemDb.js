@@ -37,7 +37,7 @@ export const MODULE_REGISTRY = [
     icon: "ph-bold ph-seal-check",
     sidebar_group: "Operations & Analytics",
     sort_order: 1,
-    is_system: 0,
+    is_system: 1, // Cannot be disabled
     component_key: "DigitalRecordsReviewTab",
   },
   {
@@ -48,7 +48,7 @@ export const MODULE_REGISTRY = [
     icon: "ph-bold ph-chart-bar",
     sidebar_group: "Operations & Analytics",
     sort_order: 2,
-    is_system: 0,
+    is_system: 1, // Cannot be disabled
     component_key: "DigitizationComplianceTab",
   },
   {
@@ -103,7 +103,7 @@ export const MODULE_REGISTRY = [
     icon: "ph-bold ph-database-backup",
     sidebar_group: "System Configuration",
     sort_order: 7,
-    is_system: 0,
+    is_system: 1, // Cannot be disabled
     component_key: "BackupTab",
   },
   {
@@ -149,7 +149,7 @@ export const MODULE_REGISTRY = [
     icon: "ph-bold ph-scan",
     sidebar_group: "Operations",
     sort_order: 2,
-    is_system: 0,
+    is_system: 1, // Cannot be disabled
     component_key: "ScanUploadTab",
   },
   {
@@ -160,7 +160,7 @@ export const MODULE_REGISTRY = [
     icon: "ph-bold ph-file-text",
     sidebar_group: "Operations",
     sort_order: 3,
-    is_system: 0,
+    is_system: 1, // Cannot be disabled
     component_key: "DocumentsTab",
   },
   {
@@ -175,13 +175,35 @@ export const MODULE_REGISTRY = [
     component_key: "NotificationsTab",
   },
   {
+    id: "student_directory",
+    name: "Student Directory",
+    description: "Manage student master records, academic profiles, and physical archive assignments",
+    category: "staff",
+    icon: "ph-bold ph-users",
+    sidebar_group: "Records Archive",
+    sort_order: 5,
+    is_system: 0,
+    component_key: "StudentDirectoryTab",
+  },
+  {
+    id: "student_organizations",
+    name: "Student Organizations",
+    description: "Manage recognized student organizations, Constitution & By-Laws (CBL), and officer whitelists",
+    category: "staff",
+    icon: "ph-bold ph-buildings",
+    sidebar_group: "Records Archive",
+    sort_order: 6,
+    is_system: 0,
+    component_key: "StudentOrganizationsTab",
+  },
+  {
     id: "records_archive",
     name: "Records & Archive",
     description: "Physical records browser and search",
     category: "staff",
     icon: "ph-bold ph-archive-box",
     sidebar_group: "Records Archive",
-    sort_order: 5,
+    sort_order: 7,
     is_system: 0,
     component_key: "RecordsArchiveTab",
   },
@@ -192,7 +214,7 @@ export const MODULE_REGISTRY = [
     category: "staff",
     icon: "ph-bold ph-folder-open",
     sidebar_group: "Records Archive",
-    sort_order: 6,
+    sort_order: 8,
     is_system: 0,
     component_key: "StorageExplorerTab",
   },
@@ -228,14 +250,15 @@ export const DEFAULT_OFFICE_MODULES = {
     // All modules enabled for Registrar
     "records_review", "compliance_analytics", "request_analytics",
     "staff_directory", "storage_layout", "system_config", "backup", "audit_logs",
-    "document_requests", "scan_upload", "documents", "notifications",
+    "document_requests", "student_directory", "scan_upload", "documents", "notifications",
     "records_archive", "storage_explorer",
   ],
   osas: [
-    // OSAS modules — no storage/physical archive modules
+    // OSAS modules — operations, digitization, and physical/digital storage suite
     "records_review", "compliance_analytics",
-    "staff_directory", "system_config", "backup", "audit_logs",
-    "osas_monitoring", "scan_upload", "documents", "notifications",
+    "staff_directory", "storage_layout", "system_config", "backup", "audit_logs",
+    "osas_monitoring", "student_organizations", "scan_upload", "documents", "notifications",
+    "records_archive", "storage_explorer",
   ],
 };
 

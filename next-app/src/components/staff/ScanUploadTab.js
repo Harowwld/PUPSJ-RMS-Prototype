@@ -37,7 +37,7 @@ import {
 import PageHeader from "@/components/shared/PageHeader"
 import { RefreshButton } from "@/components/shared/RefreshButton"
 import { canonicalizeCabinetId } from "@/lib/storageLayoutUtils"
-import { findStudentsByOcrName } from "@/lib/ocrClient"
+import { findStudentsByOcrName, splitNameComponents } from "@/lib/ocrClient"
 import ContinuousScanningPanel from "@/components/staff/ContinuousScanningPanel"
 function toNormalCase(str) {
   if (!str) return ""

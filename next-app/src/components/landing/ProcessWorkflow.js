@@ -4,8 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 
-import BevelButton from "@/components/ui/bevel-button";
-import MorphButton from "@/components/ui/morph-button";
+
 
 
 
@@ -179,12 +178,10 @@ export default function ProcessWorkflow() {
                 whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
                 viewport={{ once: true, margin: "-50px" }}
                 transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-                className="text-5xl sm:text-6xl lg:text-7xl font-semibold text-white tracking-tight mb-6 leading-[1.1] max-w-[300px]"
+                className="text-5xl sm:text-6xl lg:text-7xl font-semibold text-white tracking-tight mb-6 leading-[1.1] max-w-[340px]"
               >
-                How to<br />
-                Request<br />
-                Your<br />
-                Documents.
+                {workflow.headingLine1 || "How to Request"}<br />
+                {workflow.headingLine2 || "Your Documents."}
               </motion.h2>
 
               {/* Clear, approachable narrative description */}

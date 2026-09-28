@@ -47,13 +47,16 @@ function studentOwnerAccess(principal, resource) {
   if (!principalIsActive(principal) || !isStudentRole(principal.role) || !resource) return false;
   const resourceStudentNo = resource.studentNo ?? resource.student_no;
   const resourceAccountId = resource.accountId ?? resource.account_id ?? resource.studentAccountId ?? resource.student_account_id;
+  const resourceEmail = resource.submitted_by_email ?? resource.submittedByEmail ?? resource.email;
   const hasStudentNo = Boolean(normalizedId(resourceStudentNo));
   const hasAccountId = Boolean(normalizedId(resourceAccountId));
-  if (!hasStudentNo && !hasAccountId) return false;
+  const hasEmail = Boolean(normalizedId(resourceEmail));
+  if (!hasStudentNo && !hasAccountId && !hasEmail) return false;
 
   const ownsStudentNo = !hasStudentNo || sameId(resourceStudentNo, principal.studentNo ?? principal.student_no);
   const ownsAccount = !hasAccountId || sameId(resourceAccountId, principal.accountId ?? principal.account_id ?? principal.id);
-  return ownsStudentNo && ownsAccount;
+  const ownsEmail = !hasEmail || sameId(String(resourceEmail || "").toLowerCase(), String(principal.email || "").toLowerCase());
+  return ownsStudentNo && ownsAccount && ownsEmail;
 }
 
 function avatarAccess(principal, resource) {

@@ -93,14 +93,16 @@ export default function StorageExplorerTab({
   const breadcrumbs = useMemo(() => {
     const list = [{ level: "rooms", label: "Storage Rooms" }]
     if (selectedRoom != null) {
-      list.push({ level: "cabinets", label: `Room ${selectedRoom}` })
+      const roomDef = locatorModel?.rooms?.find((r) => String(r.room) === String(selectedRoom))
+      const roomLabel = locatorModel?.roomName || roomDef?.name || `Room ${selectedRoom}`
+      list.push({ level: "cabinets", label: roomLabel })
     }
     if (selectedCabinet != null) {
       const cabLabel = String(selectedCabinet).startsWith("CAB") ? selectedCabinet : `Cab ${selectedCabinet}`
       list.push({ level: "drawers", label: cabLabel })
     }
     return list
-  }, [selectedRoom, selectedCabinet])
+  }, [selectedRoom, selectedCabinet, locatorModel])
 
   // Reset/auto-paginate rooms page when locator model or active student changes
   useEffect(() => {
@@ -301,7 +303,7 @@ export default function StorageExplorerTab({
                                   "text-[18px] font-bold tracking-tight font-jakarta leading-none",
                                   isTarget ? "text-white" : "text-gray-900 dark:text-[#f2f2f7]"
                                 )}>
-                                  Room {r.room}
+                                  {r.name || `Room ${r.room}`}
                                 </h5>
                               </div>
 
@@ -537,7 +539,7 @@ export default function StorageExplorerTab({
                                   } : undefined}
                                   onClick={(e) => {
                                     e.stopPropagation()
-                                    setExpandedDrawer(expandedDrawer === d.drawer ? null : d.drawer)
+                                    setExpandedDrawer(String(expandedDrawer) === String(d.drawer) ? null : d.drawer)
                                   }}
                                 >
                                   <div className="flex items-center gap-2">
@@ -550,7 +552,7 @@ export default function StorageExplorerTab({
                                           : "ph-folder text-[#8E8E93]"
                                     )}></HugeIcon>
                                     <span className="text-[14px] font-bold">
-                                      Drawer {d.drawer}
+                                      {String(d.drawer).toLowerCase().startsWith("drawer") ? d.drawer : `Drawer ${d.drawer}`}
                                     </span>
                                   </div>
                                   <span className={cn(
@@ -562,7 +564,7 @@ export default function StorageExplorerTab({
                                 </div>
 
                                 {/* Expanded Detail Panel */}
-                                {expandedDrawer === d.drawer && hasOccupants && d.students && (
+                                {String(expandedDrawer) === String(d.drawer) && hasOccupants && d.students && (
                                   <div className="ml-2 pl-3 border-l border-[#E5E5EA] dark:border-white/10 py-1.5 space-y-3 max-h-52 overflow-y-auto">
                                     {d.students.map((student) => {
                                       const isTargetPerson = activeStudent && student.studentNo === activeStudent.studentNo;

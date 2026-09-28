@@ -15,6 +15,40 @@ function getEncryptionKey() {
   return crypto.createHash("sha256").update(keyHex).digest();
 }
 
+function getDecryptionCandidateKeys() {
+  const candidates = [];
+  try {
+    candidates.push(getEncryptionKey());
+  } catch {}
+
+  const stringCandidates = [
+    process.env.JWT_SECRET,
+    process.env.PII_ENCRYPTION_KEY,
+    "default_insecure_fallback_key_123456",
+    "replace_with_a_long_random_value",
+  ].filter(Boolean);
+
+  for (const s of stringCandidates) {
+    try {
+      candidates.push(crypto.createHash("sha256").update(s).digest());
+      if (s.length === 64 && /^[0-9a-fA-F]+$/.test(s)) {
+        candidates.push(Buffer.from(s, "hex"));
+      }
+    } catch {}
+  }
+
+  const seen = new Set();
+  const unique = [];
+  for (const k of candidates) {
+    const h = k.toString("hex");
+    if (!seen.has(h)) {
+      seen.add(h);
+      unique.push(k);
+    }
+  }
+  return unique;
+}
+
 /**
  * Deterministically encrypts a string so it can be searched with exact matches in the DB.
  */
@@ -44,16 +78,26 @@ export function decryptPII(ciphertext) {
   }
   try {
     const parts = ciphertext.split(':');
+    if (parts.length < 4) return ciphertext;
     const iv = Buffer.from(parts[2], 'hex');
     const encryptedText = parts[3];
-    const key = getEncryptionKey();
+    const keys = getDecryptionCandidateKeys();
 
-    const decipher = crypto.createDecipheriv(ALGO, key, iv);
-    let decrypted = decipher.update(encryptedText, 'hex', 'utf8');
-    decrypted += decipher.final('utf8');
-    return decrypted;
+    for (const key of keys) {
+      try {
+        const decipher = crypto.createDecipheriv(ALGO, key, iv);
+        let decrypted = decipher.update(encryptedText, 'hex', 'utf8');
+        decrypted += decipher.final('utf8');
+        return decrypted;
+      } catch {
+        // Try next candidate key
+      }
+    }
+
+    console.error("[decryptPII Error]: Could not decrypt with any candidate key");
+    return ciphertext; // Fallback to returning ciphertext if all decryptions fail
   } catch (error) {
     console.error("[decryptPII Error]:", error);
-    return ciphertext; // Fallback to returning ciphertext if decryption fails
+    return ciphertext;
   }
 }

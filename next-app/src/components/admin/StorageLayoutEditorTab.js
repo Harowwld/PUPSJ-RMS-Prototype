@@ -69,6 +69,8 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
   const [saveCountdown, setSaveCountdown] = useState(0)
   const [bulkConfirmOpen, setBulkConfirmOpen] = useState(false)
 
+  const [renameRoomOpen, setRenameRoomOpen] = useState(false)
+  const [newRoomName, setNewRoomName] = useState("")
   const [deleteRoomConfirmOpen, setDeleteRoomConfirmOpen] = useState(false)
   const [resetRoomConfirmOpen, setResetRoomConfirmOpen] = useState(false)
   const [templateApplyConfirmOpen, setTemplateApplyConfirmOpen] = useState(false)
@@ -406,6 +408,130 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
     
     commitLayout(nextLayout, "Remove Drawer")
   }, [activeRoom, selectedCabinet, layout, commitLayout])
+
+  const handleRenameRoom = useCallback(() => {
+    if (!activeRoom || !newRoomName.trim()) return
+    const trimmed = newRoomName.trim()
+    const nextRooms = layout.rooms.map((r) =>
+      String(r.id) === String(activeRoom.id) ? { ...r, name: trimmed } : r
+    )
+    const nextLayout = { ...layout, rooms: nextRooms }
+    commitLayout(nextLayout, `Rename Room to "${trimmed}"`)
+    setRenameRoomOpen(false)
+    showToast?.({ title: "Room Renamed", description: `Room ${activeRoom.id} is now named "${trimmed}".` })
+  }, [activeRoom, newRoomName, layout, commitLayout, showToast])
+
+  const updateDrawerId = useCallback((cabinetId, oldId, newId) => {
+    if (!activeRoom || !cabinetId || newId === undefined || newId === null) return
+    const trimmed = typeof newId === "string" ? newId.trim() : newId
+    if (trimmed === "" || String(trimmed) === String(oldId)) return
+
+    const parsedInt = parseInt(trimmed)
+    const finalId = Number.isInteger(parsedInt) && String(parsedInt) === String(trimmed) ? parsedInt : trimmed
+
+    const cab = activeRoom.cabinets.find((c) => String(c.id) === String(cabinetId))
+    if (!cab) return
+
+    const currentIds = cab.drawerIds || []
+    if (currentIds.some((d) => String(d).toLowerCase() === String(finalId).toLowerCase() && String(d) !== String(oldId))) {
+      showToast?.({ title: "Duplicate Drawer ID", description: `Cabinet ${cab.id} already has drawer "${finalId}".` }, true)
+      return
+    }
+
+    const nextDrawerIds = currentIds.map((d) => String(d) === String(oldId) ? finalId : d)
+    const updatedCabinets = activeRoom.cabinets.map((c) =>
+      String(c.id) === String(cabinetId) ? { ...c, drawerIds: nextDrawerIds } : c
+    )
+    const nextRooms = layout.rooms.map((r) =>
+      String(r.id) === String(activeRoom.id) ? { ...r, cabinets: updatedCabinets } : r
+    )
+    const nextLayout = { ...layout, rooms: nextRooms }
+    commitLayout(nextLayout, `Rename Drawer to ${finalId}`)
+    showToast?.({ title: "Drawer Updated", description: `Drawer renamed to "${finalId}".` })
+  }, [activeRoom, layout, commitLayout, showToast])
+
+  const addCustomDrawer = useCallback((cabinetId, customId) => {
+    if (!activeRoom || !cabinetId) return
+    const cab = activeRoom.cabinets.find((c) => String(c.id) === String(cabinetId))
+    if (!cab) return
+
+    const currentIds = cab.drawerIds || []
+    let finalId
+    if (customId !== undefined && customId !== null && String(customId).trim() !== "") {
+      const trimmed = String(customId).trim()
+      const parsedInt = parseInt(trimmed)
+      finalId = Number.isInteger(parsedInt) && String(parsedInt) === trimmed ? parsedInt : trimmed
+    } else {
+      finalId = (Math.max(0, ...currentIds.map(Number).filter(Number.isFinite)) || 0) + 1
+    }
+
+    if (currentIds.some((d) => String(d).toLowerCase() === String(finalId).toLowerCase())) {
+      showToast?.({ title: "Duplicate Drawer ID", description: `Cabinet ${cab.id} already has drawer "${finalId}".` }, true)
+      return
+    }
+
+    const nextDrawerIds = [...currentIds, finalId]
+    const updatedCabinets = activeRoom.cabinets.map((c) =>
+      String(c.id) === String(cabinetId) ? { ...c, drawerIds: nextDrawerIds } : c
+    )
+    const nextRooms = layout.rooms.map((r) =>
+      String(r.id) === String(activeRoom.id) ? { ...r, cabinets: updatedCabinets } : r
+    )
+    const nextLayout = { ...layout, rooms: nextRooms }
+    commitLayout(nextLayout, `Add Drawer ${finalId}`)
+  }, [activeRoom, layout, commitLayout, showToast])
+
+  const removeSpecificDrawer = useCallback((cabinetId, drawerId) => {
+    if (!activeRoom || !cabinetId) return
+    const cab = activeRoom.cabinets.find((c) => String(c.id) === String(cabinetId))
+    if (!cab) return
+    const currentIds = cab.drawerIds || []
+    if (currentIds.length <= 1) {
+      showToast?.({ title: "Cannot Remove", description: "Cabinets must have at least one drawer slot." }, true)
+      return
+    }
+
+    const usageKey = `${activeRoom.id}|${cab.id}|${drawerId}`
+    const studentCount = studentDrawerUsage.get(usageKey) || 0
+    if (studentCount > 0) {
+      showToast?.({ title: "Drawer Occupied", description: `Drawer ${drawerId} stores ${studentCount} student records. Reassign them first.` }, true)
+      return
+    }
+
+    const nextDrawerIds = currentIds.filter((d) => String(d) !== String(drawerId))
+    const updatedCabinets = activeRoom.cabinets.map((c) =>
+      String(c.id) === String(cabinetId) ? { ...c, drawerIds: nextDrawerIds } : c
+    )
+    const nextRooms = layout.rooms.map((r) =>
+      String(r.id) === String(activeRoom.id) ? { ...r, cabinets: updatedCabinets } : r
+    )
+    const nextLayout = { ...layout, rooms: nextRooms }
+    commitLayout(nextLayout, `Remove Drawer ${drawerId}`)
+  }, [activeRoom, layout, studentDrawerUsage, commitLayout, showToast])
+
+  const setCabinetYearPreset = useCallback((cabinetId, startYear) => {
+    if (!activeRoom || !cabinetId) return
+    const parsedStart = parseInt(startYear)
+    if (!Number.isFinite(parsedStart) || parsedStart < 1900 || parsedStart > 2200) {
+      showToast?.({ title: "Invalid Year", description: "Enter a valid 4-digit calendar year (e.g. 2015)." }, true)
+      return
+    }
+    const cab = activeRoom.cabinets.find((c) => String(c.id) === String(cabinetId))
+    if (!cab) return
+
+    const drawerCount = (cab.drawerIds || []).length || 4
+    const nextDrawerIds = Array.from({ length: drawerCount }, (_, i) => parsedStart + i)
+
+    const updatedCabinets = activeRoom.cabinets.map((c) =>
+      String(c.id) === String(cabinetId) ? { ...c, drawerIds: nextDrawerIds } : c
+    )
+    const nextRooms = layout.rooms.map((r) =>
+      String(r.id) === String(activeRoom.id) ? { ...r, cabinets: updatedCabinets } : r
+    )
+    const nextLayout = { ...layout, rooms: nextRooms }
+    commitLayout(nextLayout, `Set Drawers to Years starting ${parsedStart}`)
+    showToast?.({ title: "Year Preset Applied", description: `Drawers set to ${nextDrawerIds.join(", ")}.` })
+  }, [activeRoom, layout, commitLayout, showToast])
 
   const updateSelectedRectFromNormalized = useCallback((nextRect) => {
     if (!activeRoom || !selectedCabinet) return
@@ -1231,6 +1357,19 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
 
         <button
           type="button"
+          onClick={() => {
+            setNewRoomName(activeRoom?.name || `Room ${activeRoom?.id || ""}`)
+            setRenameRoomOpen(true)
+          }}
+          disabled={!activeRoom}
+          className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-pup-maroon dark:text-zinc-400 dark:hover:text-red-400 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer focus:outline-none flex items-center justify-center border-0 bg-transparent active:scale-95"
+          title="Rename Room"
+        >
+          <HugeIcon className="ph-bold ph-pencil-simple text-sm" />
+        </button>
+
+        <button
+          type="button"
           onClick={() => setDeleteRoomConfirmOpen(true)}
           disabled={!activeRoom || activeRoomStudentCount > 0}
           className="w-7 h-7 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/30 text-gray-500 hover:text-red-600 dark:text-zinc-400 dark:hover:text-red-400 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer focus:outline-none flex items-center justify-center border-0 bg-transparent active:scale-95"
@@ -1353,6 +1492,11 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
               carouselIndex={carouselIndex}
               setCarouselIndex={setCarouselIndex}
               selectedCabinetIds={selectedCabinetIds} selectedCabinet={selectedCabinet} duplicateSelectedCabinet={duplicateSelectedCabinet} setBulkConfirmOpen={setBulkConfirmOpen} removeDrawerFromSelected={removeDrawerFromSelected} addDrawerToSelected={addDrawerToSelected} updateSelectedRectFromNormalized={updateSelectedRectFromNormalized} updateSelectedSizeNormalized={updateSelectedSizeNormalized} history={history} historyIndex={historyIndex} revertToHistoryState={revertToHistoryState}
+              updateDrawerId={updateDrawerId}
+              addCustomDrawer={addCustomDrawer}
+              removeSpecificDrawer={removeSpecificDrawer}
+              setCabinetYearPreset={setCabinetYearPreset}
+              studentDrawerUsage={studentDrawerUsage}
             />
           </div>
         </div>
@@ -1458,6 +1602,22 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
         onConfirm={() => saveCurrentAsTemplate(newTemplateName)}
         isLoading={saving}
         buttonIcon="ph-floppy-disk"
+        variant="brand"
+      />
+
+      <PromptModal
+        open={renameRoomOpen}
+        onCancel={() => {
+          setRenameRoomOpen(false)
+          setNewRoomName("")
+        }}
+        title="Rename Storage Room"
+        message={`Enter a new display name for ${activeRoom?.name || `Room ${activeRoom?.id || ""}`}.`}
+        confirmLabel="Save Name"
+        value={newRoomName}
+        onChange={setNewRoomName}
+        onConfirm={handleRenameRoom}
+        buttonIcon="ph-check"
         variant="brand"
       />
       <ConfirmModal 

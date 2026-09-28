@@ -52,6 +52,7 @@ export default function BulkImportTab({
   onAddRow,
   onRefresh,
   courses = [],
+  isOsas = false,
 }) {
   const [editingRowIndex, setEditingRowIndex] = useState(null)
   const [editData, setEditData] = useState({ category: "", name: "", code: "" })
@@ -145,8 +146,12 @@ export default function BulkImportTab({
           <div className="flex flex-col flex-1 gap-6 w-full min-h-0">
             <div className="flex items-center gap-2 mt-4">
               <a
-                href="data:text/csv;charset=utf-8,Category,Name,Code%0ADOCUMENT TYPE,Transcript of Records,%0ADOCUMENT TYPE,Diploma,%0ACourse,Bachelor of Science in IT,BSIT%0ACourse,Bachelor of Science in Accountancy,BSA%0ASection,Block 1,BSIT%0ASection,Section 1,BSA"
-                download="PUP-IMPORT-TEMPLATE.csv"
+                href={
+                  isOsas
+                    ? "data:text/csv;charset=utf-8,Category,Name,Code%0ADOCUMENT TYPE,Event Proposal,%0ADOCUMENT TYPE,Constitution & By-Laws (CBL),%0ADOCUMENT TYPE,Activity Request,%0ADOCUMENT TYPE,Financial Liquidation Report,%0ACourse,Bachelor of Science in Information Technology,BSIT%0ACourse,Bachelor of Science in Accountancy,BSA"
+                    : "data:text/csv;charset=utf-8,Category,Name,Code%0ADOCUMENT TYPE,Transcript of Records,%0ADOCUMENT TYPE,Diploma,%0ACourse,Bachelor of Science in IT,BSIT%0ACourse,Bachelor of Science in Accountancy,BSA%0ASection,Block 1,BSIT%0ASection,Section 1,BSA"
+                }
+                download={isOsas ? "OSAS-IMPORT-TEMPLATE.csv" : "PUP-IMPORT-TEMPLATE.csv"}
                 className="inline-flex h-10 items-center justify-center rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-4 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 cursor-pointer active:scale-95"
               >
                 Download
@@ -332,8 +337,8 @@ export default function BulkImportTab({
                         }}
                       >
                         <option value="DOCUMENT TYPE">Document Type</option>
-                        <option value="Course">Course</option>
-                        <option value="Section">Section</option>
+                        <option value="Course">{isOsas ? "Academic Program" : "Course"}</option>
+                        {!isOsas && <option value="Section">Section</option>}
                       </Select>
                     </td>
                     <td className="p-4">
@@ -434,8 +439,8 @@ export default function BulkImportTab({
                               }
                             >
                               <option value="DOCUMENT TYPE">Document Type</option>
-                              <option value="Course">Course</option>
-                              <option value="Section">Section</option>
+                              <option value="Course">{isOsas ? "Academic Program" : "Course"}</option>
+                              {!isOsas && <option value="Section">Section</option>}
                             </Select>
                           ) : (
                             <div

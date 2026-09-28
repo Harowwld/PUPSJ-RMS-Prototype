@@ -157,19 +157,18 @@ export async function requireAuth(req, allowedRoles = []) {
   }
 
   if (allowedRoles.length > 0) {
-      const userRole = normalizeRole(user.role);
-      const requiredRoles = allowedRoles.map(normalizeRole).filter(Boolean);
-      const hasRequiredRole = requiredRoles.includes(userRole) ||
-        (isSystemAdminRole(userRole) && !requiredRoles.includes("Student"));
-      
-      if (!hasRequiredRole) {
-        await logForbiddenAccess(req, allowedRoles.join(" or "), user.role, { userId: user.id, userRole: user.role });
-        return { 
-          user: null, 
-          error: `Access denied. Required role: ${allowedRoles.join(" or ")}` 
-        };
-      }
+    const userRole = normalizeRole(user.role);
+    const requiredRoles = allowedRoles.map(normalizeRole).filter(Boolean);
+    const hasRequiredRole = requiredRoles.includes(userRole);
+
+    if (!hasRequiredRole) {
+      await logForbiddenAccess(req, allowedRoles.join(" or "), user.role, { userId: user.id, userRole: user.role });
+      return {
+        user: null,
+        error: `Access denied. Required role: ${allowedRoles.join(" or ")}`
+      };
     }
+  }
 
   return { user, error: null };
 }
@@ -180,7 +179,7 @@ export async function requireAuth(req, allowedRoles = []) {
  * @returns {Promise<{user: object, error: string|null}>}
  */
 export async function requireAdmin(req) {
-  return requireAuth(req, ["Admin"]);
+  return requireAuth(req, ["Admin", "SystemAdmin", "SuperAdmin"]);
 }
 
 /**
@@ -207,7 +206,7 @@ export async function requireSuperAdmin(req) {
  * @returns {Promise<{user: object, error: string|null}>}
  */
 export async function requireStaff(req) {
-  return requireAuth(req, ["Staff", "Admin", "SystemAdmin", "SuperAdmin"]);
+  return requireAuth(req, ["Staff", "Admin"]);
 }
 
 /**
@@ -230,7 +229,8 @@ export function createAuthErrorResponse(error, status = 401) {
     message.includes("invalid or missing session") ||
     message.includes("invalid session") ||
     message.includes("missing session");
-  const responseStatus = status === 403 && isAuthenticationFailure ? 401 : status;
+  const isAuthorizationFailure = message === "forbidden" || message.includes("access denied") || message.includes("required role");
+  const responseStatus = isAuthenticationFailure ? 401 : isAuthorizationFailure ? 403 : status;
 
   return NextResponse.json(
     { ok: false, error }, 

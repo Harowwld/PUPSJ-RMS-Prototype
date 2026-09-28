@@ -7,7 +7,6 @@ export const WARMUP_PATHS = [
   "/login",
   "/systemadmin",
   "/api/auth/me",
-  "/api/auth/login",
   "/api/account/avatar?id=warmup",
   "/api/landing/hero",
   "/api/landing/faq",

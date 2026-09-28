@@ -1,4 +1,4 @@
-import { dbAll, dbGet, dbRun } from "./sqlite";
+import { dbAll, dbGet, dbRun } from "./postgresCompat.js";
 
 function requireOfficeId(officeId) {
   const value = String(officeId || "").trim().toLowerCase();

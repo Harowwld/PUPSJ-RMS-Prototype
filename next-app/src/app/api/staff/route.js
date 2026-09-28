@@ -25,6 +25,7 @@ export async function GET(req) {
   const status = searchParams.get("status") || "";
   const limit = searchParams.get("limit") || "200";
   const offset = searchParams.get("offset") || "0";
+  const officeFilter = searchParams.get("officeId");
 
   // Resolve office filter context
   let officeId = getPrincipalOfficeId(user); // default to user's own office
@@ -32,7 +33,6 @@ export async function GET(req) {
     return createAuthErrorResponse("Office scope is required", 403);
   }
   if (isSystemAdminRole(user.role)) {
-    const officeFilter = searchParams.get("officeId");
     if (officeFilter === "global" || officeFilter === "null") {
       officeId = null;
     } else if (officeFilter && officeFilter !== "All") {

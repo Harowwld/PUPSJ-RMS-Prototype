@@ -354,7 +354,7 @@ export default function RegisterStudentModal({
                   onValueChange={setDrawer}
                   options={availableDrawers.map((d) => ({
                     value: String(d),
-                    label: `Drawer ${d}`,
+                    label: String(d).toLowerCase().startsWith("drawer") ? String(d) : `Drawer ${d}`,
                   }))}
                   placeholder="Select Drawer"
                   buttonClassName="h-10 text-xs rounded-xl border border-gray-200 dark:border-white/10"

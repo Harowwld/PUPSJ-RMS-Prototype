@@ -1923,6 +1923,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
             <SystemConfigTab
               showToast={showToast}
               logAdminAction={logAdminAction}
+              authUser={authUser}
             />
           )}
 
@@ -1956,6 +1957,8 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
 
           {view === "digitization" && (
             <DigitizationComplianceTab
+              officeId={authUser?.office_id || "registrar"}
+              authUser={authUser}
               showToast={showToast}
               onLogAction={logAdminAction}
             />

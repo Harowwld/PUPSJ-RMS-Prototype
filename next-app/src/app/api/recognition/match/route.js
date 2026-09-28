@@ -3,6 +3,7 @@ import { getPrincipalOfficeId, requireStaff, createAuthErrorResponse } from "../
 import { isSystemAdminRole } from "../../../../lib/roleUtils";
 import { query } from "../../../../lib/postgres";
 import { canAccessResource } from "@/lib/resourceAuthorization";
+import { decryptPII } from "@/lib/piiEncryption";
 
 export const runtime = "nodejs";
 
@@ -56,5 +57,11 @@ export async function POST(req) {
   const authorizedRows = isSystemAdminRole(user.role)
     ? rows
     : rows.filter((row) => canAccessResource(user, "student", { ...row, office_id: officeId }));
-  return NextResponse.json({ ok: true, data: authorizedRows });
+  return NextResponse.json({
+    ok: true,
+    data: authorizedRows.map((r) => ({
+      ...r,
+      name: decryptPII(r.name),
+    })),
+  });
 }

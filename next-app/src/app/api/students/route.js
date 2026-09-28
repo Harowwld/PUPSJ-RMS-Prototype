@@ -68,7 +68,10 @@ export async function POST(req) {
   const section = String(body.section || "").trim();
   const room = parseInt(body.room);
   const cabinet = canonicalizeCabinetId(body.cabinet);
-  const drawer = parseInt(body.drawer);
+  const parsedDrawerInt = parseInt(body.drawer);
+  const drawer = Number.isInteger(parsedDrawerInt) && String(parsedDrawerInt) === String(body.drawer).trim()
+    ? parsedDrawerInt
+    : String(body.drawer || "").trim();
   const status = String(body.status || "Active").trim() || "Active";
   const officeId = resolveOfficeId(access.user, req, body.officeId || body.office_id);
   if (!officeId) return createAuthErrorResponse("You cannot access that office", 403);
@@ -107,7 +110,7 @@ export async function POST(req) {
     );
   }
 
-  if (!Number.isFinite(drawer) || drawer < 1) {
+  if (!drawer || (typeof drawer === "number" && drawer < 1)) {
     return NextResponse.json(
       { ok: false, error: "Invalid drawer" },
       { status: 400 }

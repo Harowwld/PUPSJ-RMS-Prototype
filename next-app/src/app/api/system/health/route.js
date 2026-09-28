@@ -9,6 +9,7 @@ import { dbGet } from "@/lib/postgresCompat";
 
 import { getHealthCache, setHealthCache, clearHealthCache } from "@/lib/healthCache";
 import { requireAdmin, createAuthErrorResponse } from "../../../../lib/authHelpers";
+import { decryptPII } from "@/lib/piiEncryption";
 
 export const runtime = "nodejs";
 
@@ -564,26 +565,32 @@ async function readRecentTransactions() {
       LIMIT 25
     `);
 
-    return rows.map((r) => ({
-      id: r.id,
-      originalId: r.original_id,
-      type: r.type,
-      officeId: r.office_id,
-      officeName: r.office_name,
-      studentNo: r.student_no,
-      studentName: r.student_name,
-      title: r.title,
-      organizationName: r.organization_name,
-      status: r.status,
-      notes: r.notes,
-      originalFilename: r.original_filename,
-      sizeBytes: r.size_bytes ? Number(r.size_bytes) : null,
-      eventDate: r.event_date,
-      storageRoom: r.storage_room,
-      storageCabinet: r.storage_cabinet,
-      storageDrawer: r.storage_drawer,
-      createdAt: r.created_at,
-    }));
+    return rows.map((r) => {
+      let resolvedName = r.student_name ? decryptPII(r.student_name) : null;
+      if (!resolvedName || resolvedName.startsWith("enc:")) {
+        resolvedName = r.student_no ? `Student ${r.student_no}` : "Student";
+      }
+      return {
+        id: r.id,
+        originalId: r.original_id,
+        type: r.type,
+        officeId: r.office_id,
+        officeName: r.office_name,
+        studentNo: r.student_no,
+        studentName: resolvedName,
+        title: r.title,
+        organizationName: r.organization_name,
+        status: r.status,
+        notes: r.notes,
+        originalFilename: r.original_filename,
+        sizeBytes: r.size_bytes ? Number(r.size_bytes) : null,
+        eventDate: r.event_date,
+        storageRoom: r.storage_room,
+        storageCabinet: r.storage_cabinet,
+        storageDrawer: r.storage_drawer,
+        createdAt: r.created_at,
+      };
+    });
   } catch (err) {
     console.error("[readRecentTransactions Error]:", err);
     return [];

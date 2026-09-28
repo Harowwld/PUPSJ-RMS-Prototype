@@ -48,13 +48,25 @@ export async function countAuditLogs(options) {
   }
 
   if (role && role !== "All") {
-    whereClauses.push("role = ?");
-    params.push(role);
+    const roleList = Array.isArray(role) ? role : String(role).split(",").map((s) => s.trim()).filter(Boolean);
+    if (roleList.length === 1) {
+      whereClauses.push("role = ?");
+      params.push(roleList[0]);
+    } else if (roleList.length > 1) {
+      whereClauses.push(`role IN (${roleList.map(() => "?").join(", ")})`);
+      params.push(...roleList);
+    }
   }
 
   if (severity && severity !== "All") {
-    whereClauses.push("severity = ?");
-    params.push(severity);
+    const sevList = Array.isArray(severity) ? severity : String(severity).split(",").map((s) => s.trim()).filter(Boolean);
+    if (sevList.length === 1) {
+      whereClauses.push("severity = ?");
+      params.push(sevList[0]);
+    } else if (sevList.length > 1) {
+      whereClauses.push(`severity IN (${sevList.map(() => "?").join(", ")})`);
+      params.push(...sevList);
+    }
   }
 
   if (startDate) {
@@ -121,13 +133,25 @@ export async function listAuditLogs(options) {
   }
 
   if (role && role !== "All") {
-    whereClauses.push("role = ?");
-    params.push(role);
+    const roleList = Array.isArray(role) ? role : String(role).split(",").map((s) => s.trim()).filter(Boolean);
+    if (roleList.length === 1) {
+      whereClauses.push("role = ?");
+      params.push(roleList[0]);
+    } else if (roleList.length > 1) {
+      whereClauses.push(`role IN (${roleList.map(() => "?").join(", ")})`);
+      params.push(...roleList);
+    }
   }
 
   if (severity && severity !== "All") {
-    whereClauses.push("severity = ?");
-    params.push(severity);
+    const sevList = Array.isArray(severity) ? severity : String(severity).split(",").map((s) => s.trim()).filter(Boolean);
+    if (sevList.length === 1) {
+      whereClauses.push("severity = ?");
+      params.push(sevList[0]);
+    } else if (sevList.length > 1) {
+      whereClauses.push(`severity IN (${sevList.map(() => "?").join(", ")})`);
+      params.push(...sevList);
+    }
   }
 
   if (startDate) {
@@ -269,6 +293,65 @@ export async function createGlobalAuditLog(data) {
   await sysDbRun(sql, [actor, role, officeId, action, details, severity, user_agent, entity_type, entity_id, ip]);
 }
 
+function applyGlobalAuditWhereClauses(whereClauses, params, { officeId, severity, role, startDate, endDate, search }) {
+  if (officeId && officeId !== "All") {
+    const rawList = Array.isArray(officeId) ? officeId : String(officeId).split(",").map((s) => s.trim()).filter(Boolean);
+    const hasGlobal = rawList.includes("global");
+    const specificOffices = rawList.filter((o) => o !== "global");
+
+    if (hasGlobal && specificOffices.length > 0) {
+      whereClauses.push(`(office_id IS NULL OR office_id IN (${specificOffices.map(() => "?").join(", ")}))`);
+      params.push(...specificOffices);
+    } else if (hasGlobal) {
+      whereClauses.push("office_id IS NULL");
+    } else if (specificOffices.length === 1) {
+      whereClauses.push("office_id = ?");
+      params.push(specificOffices[0]);
+    } else if (specificOffices.length > 1) {
+      whereClauses.push(`office_id IN (${specificOffices.map(() => "?").join(", ")})`);
+      params.push(...specificOffices);
+    }
+  }
+
+  if (severity && severity !== "All") {
+    const sevList = Array.isArray(severity) ? severity : String(severity).split(",").map((s) => s.trim()).filter(Boolean);
+    if (sevList.length === 1) {
+      whereClauses.push("severity = ?");
+      params.push(sevList[0]);
+    } else if (sevList.length > 1) {
+      whereClauses.push(`severity IN (${sevList.map(() => "?").join(", ")})`);
+      params.push(...sevList);
+    }
+  }
+
+  if (role && role !== "All") {
+    const roleList = Array.isArray(role) ? role : String(role).split(",").map((s) => s.trim()).filter(Boolean);
+    if (roleList.length === 1) {
+      whereClauses.push("role = ?");
+      params.push(roleList[0]);
+    } else if (roleList.length > 1) {
+      whereClauses.push(`role IN (${roleList.map(() => "?").join(", ")})`);
+      params.push(...roleList);
+    }
+  }
+
+  if (startDate) {
+    whereClauses.push(startDate.includes("T") || startDate.includes(":") ? "created_at >= ?::timestamptz" : "(created_at AT TIME ZONE 'Asia/Manila')::date >= ?::date");
+    params.push(startDate);
+  }
+
+  if (endDate) {
+    whereClauses.push(endDate.includes("T") || endDate.includes(":") ? "created_at <= ?::timestamptz" : "(created_at AT TIME ZONE 'Asia/Manila')::date <= ?::date");
+    params.push(endDate);
+  }
+
+  if (search) {
+    whereClauses.push("(actor ILIKE ? OR action ILIKE ? OR details ILIKE ? OR ip ILIKE ?)");
+    const term = `%${search}%`;
+    params.push(term, term, term, term);
+  }
+}
+
 /**
  * List global audit logs with filtering and pagination.
  */
@@ -288,40 +371,7 @@ export async function listGlobalAuditLogs(options = {}) {
   let params = [];
   let whereClauses = [];
 
-  if (officeId && officeId !== "All") {
-    if (officeId === "global") {
-      whereClauses.push("office_id IS NULL");
-    } else {
-      whereClauses.push("office_id = ?");
-      params.push(officeId);
-    }
-  }
-
-  if (role && role !== "All") {
-    whereClauses.push("role = ?");
-    params.push(role);
-  }
-
-  if (severity && severity !== "All") {
-    whereClauses.push("severity = ?");
-    params.push(severity);
-  }
-
-  if (startDate) {
-    whereClauses.push(startDate.includes("T") || startDate.includes(":") ? "created_at >= ?::timestamptz" : "(created_at AT TIME ZONE 'Asia/Manila')::date >= ?::date");
-    params.push(startDate);
-  }
-
-  if (endDate) {
-    whereClauses.push(endDate.includes("T") || endDate.includes(":") ? "created_at <= ?::timestamptz" : "(created_at AT TIME ZONE 'Asia/Manila')::date <= ?::date");
-    params.push(endDate);
-  }
-
-  if (search) {
-    whereClauses.push("(actor ILIKE ? OR action ILIKE ? OR details ILIKE ? OR ip ILIKE ?)");
-    const term = "%" + search + "%";
-    params.push(term, term, term, term);
-  }
+  applyGlobalAuditWhereClauses(whereClauses, params, { officeId, severity, role, startDate, endDate, search });
 
   if (whereClauses.length > 0) {
     query += " WHERE " + whereClauses.join(" AND ");
@@ -357,40 +407,7 @@ export async function countGlobalAuditLogs(options = {}) {
   let params = [];
   let whereClauses = [];
 
-  if (officeId && officeId !== "All") {
-    if (officeId === "global") {
-      whereClauses.push("office_id IS NULL");
-    } else {
-      whereClauses.push("office_id = ?");
-      params.push(officeId);
-    }
-  }
-
-  if (role && role !== "All") {
-    whereClauses.push("role = ?");
-    params.push(role);
-  }
-
-  if (severity && severity !== "All") {
-    whereClauses.push("severity = ?");
-    params.push(severity);
-  }
-
-  if (startDate) {
-    whereClauses.push(startDate.includes("T") || startDate.includes(":") ? "created_at >= ?::timestamptz" : "(created_at AT TIME ZONE 'Asia/Manila')::date >= ?::date");
-    params.push(startDate);
-  }
-
-  if (endDate) {
-    whereClauses.push(endDate.includes("T") || endDate.includes(":") ? "created_at <= ?::timestamptz" : "(created_at AT TIME ZONE 'Asia/Manila')::date <= ?::date");
-    params.push(endDate);
-  }
-
-  if (search) {
-    whereClauses.push("(actor ILIKE ? OR action ILIKE ? OR details ILIKE ? OR ip ILIKE ?)");
-    const term = "%" + search + "%";
-    params.push(term, term, term, term);
-  }
+  applyGlobalAuditWhereClauses(whereClauses, params, { officeId, severity, role, startDate, endDate, search });
 
   if (whereClauses.length > 0) {
     query += " WHERE " + whereClauses.join(" AND ");
@@ -408,36 +425,14 @@ export async function countGlobalAuditLogs(options = {}) {
 export async function getGlobalAuditLogStats(options = {}) {
   const officeId = options.officeId || options.office_id || "";
   const severity = options.severity || "";
+  const role = options.role || "";
   const startDate = options.startDate || "";
   const endDate = options.endDate || "";
   const search = options.search || "";
   const params = [];
   const whereClauses = [];
 
-  if (officeId && officeId !== "All") {
-    if (officeId === "global") whereClauses.push("office_id IS NULL");
-    else {
-      whereClauses.push("office_id = ?");
-      params.push(officeId);
-    }
-  }
-  if (severity && severity !== "All") {
-    whereClauses.push("severity = ?");
-    params.push(severity);
-  }
-  if (startDate) {
-    whereClauses.push(startDate.includes("T") || startDate.includes(":") ? "created_at >= ?::timestamptz" : "(created_at AT TIME ZONE 'Asia/Manila')::date >= ?::date");
-    params.push(startDate);
-  }
-  if (endDate) {
-    whereClauses.push(endDate.includes("T") || endDate.includes(":") ? "created_at <= ?::timestamptz" : "(created_at AT TIME ZONE 'Asia/Manila')::date <= ?::date");
-    params.push(endDate);
-  }
-  if (search) {
-    whereClauses.push("(actor ILIKE ? OR action ILIKE ? OR details ILIKE ? OR ip ILIKE ?)");
-    const term = `%${search}%`;
-    params.push(term, term, term, term);
-  }
+  applyGlobalAuditWhereClauses(whereClauses, params, { officeId, severity, role, startDate, endDate, search });
 
   const filter = whereClauses.length ? ` WHERE ${whereClauses.join(" AND ")}` : "";
   const [statsRow] = await sysDbAll(

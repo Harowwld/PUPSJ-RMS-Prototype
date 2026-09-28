@@ -101,27 +101,54 @@ export default function LandingFaqCmsView({ showToast }) {
   )
 
   // Fetch current FAQ configuration
-  const fetchFaqData = useCallback(async () => {
-    try {
-      setLoading(true)
-      const res = await fetch("/api/landing/faq", { cache: "no-store" })
-      const json = await res.json()
-      if (res.ok && json.ok && json.data) {
-        setFaqData(json.data)
-      } else {
-        notify(json.error || "Failed to load FAQ configuration", true)
+  const fetchFaqData = useCallback(
+    async (isRefresh = false) => {
+      if (isRefresh) {
+        setLoading(true)
       }
-    } catch (err) {
-      console.error("[LandingFaqCmsView] Fetch error:", err)
-      notify("Network error fetching FAQ settings", true)
-    } finally {
-      setLoading(false)
-    }
-  }, [notify])
+      try {
+        const res = await fetch("/api/landing/faq", { cache: "no-store" })
+        const json = await res.json()
+        if (res.ok && json.ok && json.data) {
+          setFaqData(json.data)
+        } else {
+          notify(json.error || "Failed to load FAQ configuration", true)
+        }
+      } catch (err) {
+        console.error("[LandingFaqCmsView] Fetch error:", err)
+        notify("Network error fetching FAQ settings", true)
+      } finally {
+        setLoading(false)
+      }
+    },
+    [notify]
+  )
 
   useEffect(() => {
-    fetchFaqData()
-  }, [fetchFaqData])
+    let ignore = false
+    async function init() {
+      try {
+        const res = await fetch("/api/landing/faq", { cache: "no-store" })
+        const json = await res.json()
+        if (ignore) return
+        if (res.ok && json.ok && json.data) {
+          setFaqData(json.data)
+        } else {
+          notify(json.error || "Failed to load FAQ configuration", true)
+        }
+      } catch (err) {
+        if (ignore) return
+        console.error("[LandingFaqCmsView] Fetch error:", err)
+        notify("Network error fetching FAQ settings", true)
+      } finally {
+        if (!ignore) setLoading(false)
+      }
+    }
+    init()
+    return () => {
+      ignore = true
+    }
+  }, [notify])
 
   // Save changes
   const handleSave = async () => {
@@ -817,130 +844,110 @@ export default function LandingFaqCmsView({ showToast }) {
                 </span>
               </div>
 
-              {/* Simulated Public Portal Section */}
-              <div className="rounded-[2.5rem] bg-zinc-950 text-white border border-white/[0.08] shadow-[0_30px_70px_-20px_rgba(0,0,0,0.6)] overflow-hidden p-6 sm:p-12 relative select-none">
-                {/* Ambient lighting */}
-                <div className="absolute top-0 right-1/4 w-96 h-96 bg-[#800000]/15 rounded-full blur-[140px] pointer-events-none" />
-                <div className="absolute bottom-0 left-1/4 w-96 h-96 bg-zinc-800/30 rounded-full blur-[140px] pointer-events-none" />
+              {/* Simulated Public Portal Section Matching FAQSection.js */}
+              <div className="rounded-[2.5rem] bg-[#dadddf] dark:bg-zinc-900/60 p-4 sm:p-8 select-none">
+                <div className="max-w-4xl mx-auto bg-white dark:bg-zinc-950 rounded-[2rem] p-6 sm:p-10 shadow-xs">
+                  {/* Section Header */}
+                  <div className="text-center mb-6 sm:mb-8">
+                    <h2 className="text-2xl sm:text-3xl lg:text-4xl font-medium text-black dark:text-white tracking-tight">
+                      {faqData.heading || "Frequently Asked Questions"}
+                    </h2>
+                  </div>
 
-                {/* Section Header */}
-                <div className="text-center max-w-2xl mx-auto mb-8 sm:mb-12 relative z-10">
-                  <h2 className="text-2xl sm:text-4xl lg:text-5xl font-extrabold text-white tracking-tight leading-tight">
-                    {faqData.heading || "Frequently Asked Questions"}
-                  </h2>
-                  <p className="text-xs sm:text-sm text-zinc-400 mt-3 leading-relaxed font-normal">
-                    {faqData.description ||
-                      "Quick answers on requesting, tracking, and claiming your official school records."}
-                  </p>
-
-                  {/* Preview Category Filter Pills */}
+                  {/* Preview Category Filter Pills Matching FAQSection.js */}
                   {uniqueCategories.length > 1 && (
-                    <div className="flex items-center justify-center gap-1.5 flex-wrap mt-6">
-                      <button
-                        type="button"
-                        onClick={() => setPreviewFilter("all")}
-                        className={cn(
-                          "px-3 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer border",
-                          previewFilter === "all"
-                            ? "bg-white text-zinc-950 border-white shadow-sm"
-                            : "bg-white/5 text-zinc-400 border-white/10 hover:border-white/25 hover:text-white"
-                        )}
-                      >
-                        All
-                      </button>
-                      {uniqueCategories.map((cat) => (
+                    <div className="flex justify-center mb-8">
+                      <div className="flex items-center p-1 border border-gray-100 dark:border-white/10 rounded-full bg-white dark:bg-zinc-900 shadow-xs overflow-x-auto gap-1">
                         <button
-                          key={cat}
                           type="button"
-                          onClick={() => setPreviewFilter(cat)}
+                          onClick={() => setPreviewFilter("all")}
                           className={cn(
-                            "px-3 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer border",
-                            previewFilter.toLowerCase() === cat.toLowerCase()
-                              ? "bg-white text-zinc-950 border-white shadow-sm"
-                              : "bg-white/5 text-zinc-400 border-white/10 hover:border-white/25 hover:text-white"
+                            "flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap cursor-pointer",
+                            previewFilter === "all"
+                              ? "bg-[#800000] text-white"
+                              : "bg-transparent text-gray-600 dark:text-zinc-400 hover:bg-gray-50 dark:hover:bg-zinc-800"
                           )}
                         >
-                          {cat}
+                          <HugeIcon className={cn("text-sm ph-bold ph-squares-four", previewFilter === "all" ? "text-white" : "text-gray-400")} />
+                          All Questions
                         </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Accordion List */}
-                <div className="max-w-3xl mx-auto space-y-3 relative z-10">
-                  {faqData.faqs
-                    .filter((f) => {
-                      if (previewFilter === "all") return true
-                      return (f.category || "General").toLowerCase() === previewFilter.toLowerCase()
-                    })
-                    .map((faq, idx) => {
-                      const isOpen = previewOpenIdx === idx
-                      return (
-                        <div
-                          key={faq.id || idx}
-                          className={cn(
-                            "rounded-2xl transition-all duration-200 overflow-hidden border",
-                            isOpen
-                              ? "bg-zinc-900/80 border-white/20 shadow-md shadow-black/40"
-                              : "bg-zinc-900/30 border-white/[0.08] hover:border-white/15"
-                          )}
-                        >
-                          <button
-                            type="button"
-                            onClick={() => setPreviewOpenIdx(isOpen ? null : idx)}
-                            className="w-full flex items-center justify-between p-4 sm:p-5 text-left cursor-pointer select-none transition-colors border-0 bg-transparent"
-                          >
-                            <div className="flex items-center gap-3.5 pr-3 min-w-0">
-                              <span className="font-mono text-[11px] font-bold text-red-400 shrink-0">
-                                {String(idx + 1).padStart(2, "0")}
-                              </span>
-                              <span className="text-xs sm:text-sm font-bold text-white tracking-tight leading-snug">
-                                {faq.q}
-                              </span>
-                            </div>
-
-                            <div
+                        {uniqueCategories.map((cat) => {
+                          const isActive = previewFilter.toLowerCase() === cat.toLowerCase()
+                          return (
+                            <button
+                              key={cat}
+                              type="button"
+                              onClick={() => setPreviewFilter(cat)}
                               className={cn(
-                                "w-7 h-7 rounded-full flex items-center justify-center shrink-0 transition-transform duration-300",
-                                isOpen
-                                  ? "bg-[#800000] text-white rotate-180"
-                                  : "bg-white/10 text-zinc-400"
+                                "flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap cursor-pointer",
+                                isActive
+                                  ? "bg-[#800000] text-white"
+                                  : "bg-transparent text-gray-600 dark:text-zinc-400 hover:bg-gray-50 dark:hover:bg-zinc-800"
                               )}
                             >
-                              <HugeIcon  className="ph-bold ph-caret-down text-xs" />
-                            </div>
-                          </button>
+                              {cat}
+                            </button>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )}
 
-                          <AnimatePresence initial={false}>
-                            {isOpen && (
-                              <motion.div
-                                key="content"
-                                initial={{ height: 0, opacity: 0 }}
-                                animate={{ height: "auto", opacity: 1 }}
-                                exit={{ height: 0, opacity: 0 }}
-                                transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-                                className="overflow-hidden"
-                              >
-                                <div className="px-5 pb-5 pt-1 text-xs sm:text-sm text-zinc-300 leading-relaxed border-t border-white/[0.08] font-normal">
-                                  <p className="pt-3">{faq.a}</p>
-                                  {faq.category && (
-                                    <div className="mt-3 flex items-center gap-2">
-                                      <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-500">
-                                        Category:
-                                      </span>
-                                      <span className="px-2 py-0.5 rounded-md bg-white/5 border border-white/10 text-[10px] text-zinc-400 font-mono">
-                                        {faq.category}
-                                      </span>
-                                    </div>
-                                  )}
-                                </div>
-                              </motion.div>
+                  {/* Accordion List Matching FAQSection.js */}
+                  <div className="max-w-2xl mx-auto space-y-3">
+                    {faqData.faqs
+                      .filter((f) => {
+                        if (previewFilter === "all") return true
+                        return (f.category || "General").toLowerCase() === previewFilter.toLowerCase()
+                      })
+                      .map((faq, idx) => {
+                        const isOpen = previewOpenIdx === idx
+                        return (
+                          <div
+                            key={faq.id || idx}
+                            className={cn(
+                              "rounded-2xl transition-all duration-200 overflow-hidden",
+                              isOpen ? "bg-[#09090b] text-white" : "bg-[#f4f4f5] dark:bg-zinc-800/60 text-black dark:text-zinc-100"
                             )}
-                          </AnimatePresence>
-                        </div>
-                      )
-                    })}
+                          >
+                            <button
+                              type="button"
+                              onClick={() => setPreviewOpenIdx(isOpen ? null : idx)}
+                              className="w-full flex items-center justify-between p-4 sm:p-5 text-left cursor-pointer select-none transition-colors border-0 bg-transparent"
+                            >
+                              <span className={cn("text-xs sm:text-sm font-medium pr-4", isOpen ? "text-white" : "text-black dark:text-zinc-100")}>
+                                {faq.q}
+                              </span>
+
+                              <div className="shrink-0 ml-4">
+                                {isOpen ? (
+                                  <HugeIcon className="ph-bold ph-minus text-white text-base" />
+                                ) : (
+                                  <HugeIcon className="ph-bold ph-plus text-gray-500 dark:text-zinc-400 text-base" />
+                                )}
+                              </div>
+                            </button>
+
+                            <AnimatePresence initial={false}>
+                              {isOpen && (
+                                <motion.div
+                                  key="content"
+                                  initial={{ height: 0, opacity: 0 }}
+                                  animate={{ height: "auto", opacity: 1 }}
+                                  exit={{ height: 0, opacity: 0 }}
+                                  transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+                                  className="overflow-hidden"
+                                >
+                                  <div className="px-4 sm:px-5 pb-5 pt-0 text-xs sm:text-[13px] text-gray-300 leading-relaxed font-normal">
+                                    <p>{faq.a}</p>
+                                  </div>
+                                </motion.div>
+                              )}
+                            </AnimatePresence>
+                          </div>
+                        )
+                      })}
+                  </div>
                 </div>
               </div>
             </div>

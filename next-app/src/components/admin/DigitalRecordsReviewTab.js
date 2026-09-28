@@ -33,6 +33,8 @@ import {
 import PageHeader from "@/components/shared/PageHeader"
 import FloatingActionBar from "@/components/shared/FloatingActionBar"
 import { RefreshButton } from "@/components/shared/RefreshButton"
+import MultiCriteriaFilter from "@/components/shared/MultiCriteriaFilter"
+import ActiveFilterChips from "@/components/shared/ActiveFilterChips"
 import { Select } from "@/components/ui/select"
 import { toast } from "sonner"
 
@@ -107,7 +109,11 @@ export default function DigitalRecordsReviewTab({
   const [localSearch, setLocalSearch] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
-  const [docTypeFilter, setDocTypeFilter] = useState("All")
+  const [docTypeFilters, setDocTypeFilters] = useState([])
+  const [statusFilters, setStatusFilters] = useState(() => {
+    if (!statusFilter || statusFilter === "All") return []
+    return statusFilter.split(",").map((s) => s.trim()).filter(Boolean)
+  })
   const [activeDocTypes, setActiveDocTypes] = useState([])
   const [jumpPage, setJumpPage] = useState("1")
   const [sortBy, setSortBy] = useState("created_at")
@@ -120,6 +126,16 @@ export default function DigitalRecordsReviewTab({
   const [selectedKpi, setSelectedKpi] = useState(null)
   const statCardsRef = useRef(null)
   const [kpiOrder, setKpiOrder] = useState(["pending", "approved", "declined"])
+
+  // Synchronize statusFilters when external statusFilter prop changes
+  useEffect(() => {
+    if (!statusFilter || statusFilter === "All") {
+      setStatusFilters([])
+    } else {
+      const list = statusFilter.split(",").map((s) => s.trim()).filter(Boolean)
+      setStatusFilters(list)
+    }
+  }, [statusFilter])
 
 
   useEffect(() => {
@@ -201,7 +217,64 @@ export default function DigitalRecordsReviewTab({
     }
   }, [cardDetailsData])
 
-  const hasActiveFilters = localSearch !== "" || statusFilter !== "All" || docTypeFilter !== "All" || !!dateFrom || !!dateTo;
+  const filterCriteriaGroups = useMemo(() => {
+    const recs = records || []
+    const pendingCount = recs.filter((r) => r.approval_status === "Pending").length
+    const approvedCount = recs.filter((r) => r.approval_status === "Approved").length
+    const declinedCount = recs.filter((r) => r.approval_status === "Declined").length
+
+    return [
+      {
+        id: "status",
+        label: "Approval Status",
+        options: [
+          { id: "Pending", label: "Pending", count: pendingCount, dotColor: "bg-amber-500" },
+          { id: "Approved", label: "Approved", count: approvedCount, dotColor: "bg-emerald-500" },
+          { id: "Declined", label: "Declined", count: declinedCount, dotColor: "bg-rose-500" },
+        ],
+        selected: statusFilters,
+        onChange: (vals) => {
+          setStatusFilters(vals)
+          if (setStatusFilter) {
+            setStatusFilter(vals.length === 1 ? vals[0] : (vals.length === 0 ? "All" : vals.join(",")))
+          }
+          setCurrentPage(1)
+        }
+      },
+      {
+        id: "docType",
+        label: "Document Type",
+        options: activeDocTypes.map((name) => ({
+          id: name,
+          label: name,
+          count: recs.filter((r) => r.doc_type === name).length,
+        })),
+        selected: docTypeFilters,
+        onChange: (vals) => {
+          setDocTypeFilters(vals)
+          setCurrentPage(1)
+        }
+      }
+    ]
+  }, [records, statusFilters, docTypeFilters, activeDocTypes, setStatusFilter])
+
+
+  const extraChips = useMemo(() => {
+    if (dateFrom || dateTo) {
+      return [{
+        key: "dateRange",
+        label: `${formatChipDate(dateFrom)} – ${formatChipDate(dateTo)}`,
+        onRemove: () => {
+          setDateFrom("")
+          setDateTo("")
+          setCurrentPage(1)
+        }
+      }]
+    }
+    return []
+  }, [dateFrom, dateTo])
+
+  const hasActiveFilters = localSearch !== "" || statusFilters.length > 0 || docTypeFilters.length > 0 || !!dateFrom || !!dateTo;
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -223,7 +296,7 @@ export default function DigitalRecordsReviewTab({
   useEffect(() => {
     setSelectedIds(new Set())
     setLastSelectedId(null)
-  }, [currentPage, statusFilter, docTypeFilter, searchQuery, dateFrom, dateTo])
+  }, [currentPage, statusFilters, docTypeFilters, searchQuery, dateFrom, dateTo])
 
   // Prune stale selections when records dataset updates
   useEffect(() => {
@@ -329,8 +402,8 @@ export default function DigitalRecordsReviewTab({
 
   const sortedRecords = useMemo(() => {
     const baseFiltered = (records || []).filter((r) => {
-      if (statusFilter !== "All" && r.approval_status !== statusFilter) return false
-      if (docTypeFilter !== "All" && r.doc_type !== docTypeFilter) return false
+      if (statusFilters.length > 0 && !statusFilters.includes(r.approval_status)) return false
+      if (docTypeFilters.length > 0 && !docTypeFilters.includes(r.doc_type)) return false
       if (dateFrom || dateTo) {
         let createdDate = ""
         if (r.created_at) {
@@ -376,7 +449,7 @@ export default function DigitalRecordsReviewTab({
       if (valA > valB) return sortOrder === "ASC" ? 1 : -1
       return 0
     })
-  }, [records, statusFilter, docTypeFilter, dateFrom, dateTo, searchQuery, sortBy, sortOrder])
+  }, [records, statusFilters, docTypeFilters, dateFrom, dateTo, searchQuery, sortBy, sortOrder])
 
   const totalPages = Math.ceil(sortedRecords.length / itemsPerPage) || 1
   const displayPage = Math.min(currentPage, totalPages)
@@ -679,8 +752,9 @@ export default function DigitalRecordsReviewTab({
   const handleClearFilters = () => {
     setLocalSearch("")
     setSearchQuery("")
-    setStatusFilter("All")
-    setDocTypeFilter("All")
+    setStatusFilters([])
+    setStatusFilter?.("All")
+    setDocTypeFilters([])
     setDateFrom("")
     setDateTo("")
     setCurrentPage(1)
@@ -700,7 +774,7 @@ export default function DigitalRecordsReviewTab({
             titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
             descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
             actions={
-              <div className="flex items-center gap-6">
+              <div className="flex items-center gap-2">
                 <RefreshButton 
                   onRefresh={onRefresh} 
                   isLoading={isManualLoading} 
@@ -734,18 +808,17 @@ export default function DigitalRecordsReviewTab({
             </div>
           ) : !error ? (
             <div className="px-6 pb-6">
-              <Reorder.Group as="div" axis="x" values={kpiOrder} onReorder={setKpiOrder} ref={statCardsRef} className="grid grid-cols-1 gap-4 md:grid-cols-3 items-start relative z-20">
+              <Reorder.Group as="div" axis="x" values={kpiOrder} onReorder={setKpiOrder} ref={statCardsRef} className="flex flex-wrap gap-4 items-stretch w-full relative z-20 transition-all duration-500">
                 {kpiOrder.map(key => {
                   if (key === "pending") return (
-                <Reorder.Item as="div" value="pending" key="pending" className={cn("cursor-grab active:cursor-grabbing", 
+                <Reorder.Item as="div" value="pending" key="pending" className={cn("flex-1 min-w-[280px] cursor-grab active:cursor-grabbing", 
                   "relative group rounded-xl",
                   selectedKpi === "pending" ? "z-30" : "z-10"
                 )}>
                   <div
                     onClick={() => setSelectedKpi(selectedKpi === "pending" ? null : "pending")}
                     className={cn(
-                      "relative overflow-hidden rounded-[18px] border cursor-pointer select-none transition-all shadow-none flex flex-col justify-between min-h-[110px] bg-gray-50 dark:bg-zinc-900",
-                      selectedKpi === "pending"
+                      "relative overflow-hidden rounded-[18px] border cursor-pointer select-none transition-all shadow-none flex flex-col justify-between min-h-[110px] h-full bg-gray-50 dark:bg-zinc-900",                      selectedKpi === "pending"
                         ? "border-amber-500/50 ring-1 ring-amber-500/20"
                         : "border-gray-100 dark:border-white/5"
                     )}
@@ -760,9 +833,14 @@ export default function DigitalRecordsReviewTab({
                     </div>
                     
                     <div className="flex justify-between items-end p-4 pt-1">
-                      <span className="text-[28px] font-bold text-gray-900 dark:text-white leading-none tracking-tight">
-                        {stats.pending.toLocaleString()}
-                      </span>
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-[28px] font-bold text-gray-900 dark:text-white leading-none tracking-tight">
+                          {stats.pending.toLocaleString()}
+                        </span>
+                        <span className="text-xs font-medium text-amber-600 dark:text-amber-400 mb-1">
+                          {stats.pendingToday.toLocaleString()} received today
+                        </span>
+                      </div>
                       <HugeIcon className="ph-bold ph-dots-six-vertical cursor-grab active:cursor-grabbing hover:text-gray-400 dark:hover:text-zinc-500 text-gray-300 dark:text-zinc-700 text-lg mb-0.5" />
 
                     </div>
@@ -816,15 +894,14 @@ export default function DigitalRecordsReviewTab({
                 </Reorder.Item>
                   )
                   if (key === "approved") return (
-                <Reorder.Item as="div" value="approved" key="approved" className={cn("cursor-grab active:cursor-grabbing", 
+                <Reorder.Item as="div" value="approved" key="approved" className={cn("flex-1 min-w-[280px] cursor-grab active:cursor-grabbing", 
                   "relative group rounded-xl",
                   selectedKpi === "approved" ? "z-30" : "z-10"
                 )}>
                   <div
                     onClick={() => setSelectedKpi(selectedKpi === "approved" ? null : "approved")}
                     className={cn(
-                      "relative overflow-hidden rounded-[18px] border cursor-pointer select-none transition-all shadow-none flex flex-col justify-between min-h-[110px] bg-gray-50 dark:bg-zinc-900",
-                      selectedKpi === "approved"
+                      "relative overflow-hidden rounded-[18px] border cursor-pointer select-none transition-all shadow-none flex flex-col justify-between min-h-[110px] h-full bg-gray-50 dark:bg-zinc-900",                      selectedKpi === "approved"
                         ? "border-emerald-500/50 ring-1 ring-emerald-500/20"
                         : "border-gray-100 dark:border-white/5"
                     )}
@@ -839,9 +916,14 @@ export default function DigitalRecordsReviewTab({
                     </div>
                     
                     <div className="flex justify-between items-end p-4 pt-1">
-                      <span className="text-[28px] font-bold text-gray-900 dark:text-white leading-none tracking-tight">
-                        {stats.totalApproved.toLocaleString()}
-                      </span>
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-[28px] font-bold text-gray-900 dark:text-white leading-none tracking-tight">
+                          {stats.totalApproved.toLocaleString()}
+                        </span>
+                        <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400 mb-1">
+                          {stats.approvedToday.toLocaleString()} approved today
+                        </span>
+                      </div>
                       <HugeIcon className="ph-bold ph-dots-six-vertical cursor-grab active:cursor-grabbing hover:text-gray-400 dark:hover:text-zinc-500 text-gray-300 dark:text-zinc-700 text-lg mb-0.5" />
 
                     </div>
@@ -888,15 +970,14 @@ export default function DigitalRecordsReviewTab({
                 </Reorder.Item>
                   )
                   if (key === "declined") return (
-                <Reorder.Item as="div" value="declined" key="declined" className={cn("cursor-grab active:cursor-grabbing", 
+                <Reorder.Item as="div" value="declined" key="declined" className={cn("flex-1 min-w-[280px] cursor-grab active:cursor-grabbing", 
                   "relative group rounded-xl",
                   selectedKpi === "declined" ? "z-30" : "z-10"
                 )}>
                   <div
                     onClick={() => setSelectedKpi(selectedKpi === "declined" ? null : "declined")}
                     className={cn(
-                      "relative overflow-hidden rounded-[18px] border cursor-pointer select-none transition-all shadow-none flex flex-col justify-between min-h-[110px] bg-gray-50 dark:bg-zinc-900",
-                      selectedKpi === "declined"
+                      "relative overflow-hidden rounded-[18px] border cursor-pointer select-none transition-all shadow-none flex flex-col justify-between min-h-[110px] h-full bg-gray-50 dark:bg-zinc-900",                      selectedKpi === "declined"
                         ? "border-red-500/50 ring-1 ring-red-500/20"
                         : "border-gray-100 dark:border-white/5"
                     )}
@@ -911,9 +992,14 @@ export default function DigitalRecordsReviewTab({
                     </div>
                     
                     <div className="flex justify-between items-end p-4 pt-1">
-                      <span className="text-[28px] font-bold text-gray-900 dark:text-white leading-none tracking-tight">
-                        {stats.totalDeclined.toLocaleString()}
-                      </span>
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-[28px] font-bold text-gray-900 dark:text-white leading-none tracking-tight">
+                          {stats.totalDeclined.toLocaleString()}
+                        </span>
+                        <span className="text-xs font-medium text-red-600 dark:text-red-400 mb-1">
+                          {stats.declinedToday.toLocaleString()} returned today
+                        </span>
+                      </div>
                       <HugeIcon className="ph-bold ph-dots-six-vertical cursor-grab active:cursor-grabbing hover:text-gray-400 dark:hover:text-zinc-500 text-gray-300 dark:text-zinc-700 text-lg mb-0.5" />
 
                     </div>
@@ -980,104 +1066,30 @@ export default function DigitalRecordsReviewTab({
           ) : null}
 
         {/* Navigation Toolbar */}
-        <div className="border-t border-gray-100 dark:border-white/10 p-5 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
-          {/* Status Filter Line Tabs */}
-          <div className="flex items-center gap-6 shrink-0 select-none overflow-x-auto">
-            <button
-              type="button"
-              onClick={() => {
-                setStatusFilter("All")
-                setCurrentPage(1)
-              }}
-              className={cn(
-                "relative h-9 flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent whitespace-nowrap",
-                statusFilter === "All"
-                  ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
-                  : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
-              )}
-            >
-              All Records
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setStatusFilter("Pending")
-                setCurrentPage(1)
-              }}
-              className={cn(
-                "relative h-9 flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent whitespace-nowrap",
-                statusFilter === "Pending"
-                  ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
-                  : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
-              )}
-            >
-              Pending
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setStatusFilter("Approved")
-                setCurrentPage(1)
-              }}
-              className={cn(
-                "relative h-9 flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent whitespace-nowrap",
-                statusFilter === "Approved"
-                  ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
-                  : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
-              )}
-            >
-              Approved
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setStatusFilter("Declined")
-                setCurrentPage(1)
-              }}
-              className={cn(
-                "relative h-9 flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent whitespace-nowrap",
-                statusFilter === "Declined"
-                  ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
-                  : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
-              )}
-            >
-              Declined
-            </button>
+        <div className="border-t border-gray-100 dark:border-white/10 p-5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-gray-50/40 dark:bg-zinc-900/30">
+          {/* Search */}
+          <div className="relative flex-1 sm:w-64 min-w-[200px] max-w-sm group">
+            <HugeIcon  className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-xs pointer-events-none"></HugeIcon>
+            <Input
+              type="text"
+              placeholder="Search Student"
+              className="pl-8 pr-16 h-9 text-xs w-full bg-white dark:bg-zinc-800 border border-gray-200 dark:border-white/10 rounded-xl text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
+              value={localSearch}
+              onChange={(e) => setLocalSearch(e.target.value)}
+            />
+            <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] font-mono text-gray-400 dark:text-zinc-500">
+              {sortedRecords.length}
+            </div>
           </div>
 
-          {/* Search, Doc Type, Time, and Date Range Controls */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 flex-wrap">
-            {/* Search */}
-            <div className="relative flex-1 sm:w-64 min-w-[200px] group">
-              <HugeIcon  className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-xs pointer-events-none"></HugeIcon>
-              <Input
-                type="text"
-                placeholder="Search Student"
-                className="pl-8 pr-16 h-9 text-xs w-full bg-white dark:bg-zinc-800 border border-gray-200 dark:border-white/10 rounded-xl text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
-                value={localSearch}
-                onChange={(e) => setLocalSearch(e.target.value)}
-              />
-              <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] font-mono text-gray-400 dark:text-zinc-500">
-                {sortedRecords.length > 0 ? `${sortedRecords.length} results` : "0 results"}
-              </div>
-            </div>
-
-            {/* Doc Type Select */}
-            <div className="w-[150px]">
-              <Select
-                value={docTypeFilter}
-                onChange={(e) => { 
-                  setDocTypeFilter(e.target.value); 
-                  setCurrentPage(1);
-                }}
-                className="h-9 rounded-xl border border-gray-200 text-xs font-normal bg-white dark:bg-zinc-800 dark:border-white/10"
-              >
-                <option value="All">All Doc Types</option>
-                {activeDocTypes.map((docTypeName) => (
-                  <option key={docTypeName} value={docTypeName}>{docTypeName}</option>
-                ))}
-              </Select>
-            </div>
+          {/* Doc Type, Time, and Date Range Controls */}
+          <div className="flex flex-wrap items-center gap-3">
+            {/* Multi-Criteria Filters (Status + Doc Type) */}
+            <MultiCriteriaFilter
+              groups={filterCriteriaGroups}
+              align="end"
+              buttonLabel="Filter Records"
+            />
 
             {/* Time Shortcuts */}
             <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-gray-200/60 dark:border-white/5">
@@ -1167,79 +1179,39 @@ export default function DigitalRecordsReviewTab({
 
         {/* Active Filter Chips Row */}
         {hasActiveFilters && (
-          <div className="flex-none border-t border-gray-100 dark:border-white/10 bg-white dark:bg-card px-6 py-3 animate-in fade-in slide-in-from-top-1 duration-normal">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="mr-1 text-[11px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500">
-                Active filters:
-              </span>
-              {localSearch && (
-                <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
-                  Search: {localSearch}
-                  <button
-                    onClick={() => {
-                      setLocalSearch("")
-                      setSearchQuery("")
-                      setCurrentPage(1)
-                    }}
-                    className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
-                  >
-                    ×
-                  </button>
-                </div>
-              )}
-              {statusFilter !== "All" && (
-                <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
-                  Status: {statusFilter}
-                  <button
-                    onClick={() => {
-                      setStatusFilter("All")
-                      setCurrentPage(1)
-                    }}
-                    className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
-                  >
-                    ×
-                  </button>
-                </div>
-              )}
-              {docTypeFilter !== "All" && (
-                <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
-                  Type: {docTypeFilter}
-                  <button
-                    onClick={() => {
-                      setDocTypeFilter("All")
-                      setCurrentPage(1)
-                    }}
-                    className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
-                  >
-                    ×
-                  </button>
-                </div>
-              )}
-              {(dateFrom || dateTo) && (
-                <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
-                  {formatChipDate(dateFrom)} – {formatChipDate(dateTo)}
-                  <button
-                    onClick={() => {
-                      setDateFrom("")
-                      setDateTo("")
-                      setCurrentPage(1)
-                    }}
-                    className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
-                  >
-                    ×
-                  </button>
-                </div>
-              )}
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleClearFilters}
-                className="h-auto text-[12px] font-medium text-gray-400 dark:text-zinc-500 border-0 bg-transparent hover:bg-transparent shadow-none p-0 hover:text-red-600 dark:hover:text-red-500 transition-colors cursor-pointer"
-              >
-                Clear
-              </Button>
-            </div>
-          </div>
+          <ActiveFilterChips
+            groups={[
+              {
+                key: "status",
+                label: "Status",
+                values: statusFilters,
+                onRemove: (val) => {
+                  const next = statusFilters.filter((v) => v !== val)
+                  setStatusFilters(next)
+                  setStatusFilter?.(next.length === 1 ? next[0] : (next.length === 0 ? "All" : next.join(",")))
+                  setCurrentPage(1)
+                },
+                formatValue: (val) => val
+              },
+              {
+                key: "docType",
+                label: "Type",
+                values: docTypeFilters,
+                onRemove: (val) => {
+                  setDocTypeFilters((prev) => prev.filter((v) => v !== val))
+                  setCurrentPage(1)
+                }
+              }
+            ]}
+            searchQuery={localSearch}
+            onClearSearch={() => {
+              setLocalSearch("")
+              setSearchQuery("")
+              setCurrentPage(1)
+            }}
+            extraChips={extraChips}
+            onClearAll={handleClearFilters}
+          />
         )}
 
         {/* Content Area */}
@@ -1365,22 +1337,14 @@ export default function DigitalRecordsReviewTab({
                                 : "There are currently no digital records in the system."}
                             </EmptyDescription>
                             {hasActiveFilters && (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => {
-                                  setLocalSearch("")
-                                  setSearchQuery("")
-                                  setStatusFilter("All")
-                                  setDocTypeFilter("All")
-                                  setDateFrom("")
-                                  setDateTo("")
-                                  setCurrentPage(1)
-                                }}
-                                className="mt-6 h-10 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-6 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
-                              >
-                                Clear
-                              </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={handleClearFilters}
+                                  className="mt-6 h-10 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-6 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
+                                >
+                                  Clear
+                                </Button>
                             )}
                           </EmptyHeader>
                         </Empty>

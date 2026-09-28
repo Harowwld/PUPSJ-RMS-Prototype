@@ -144,19 +144,46 @@ async function runOsasTests() {
 
   // 7. Student Submission Workflow
   console.log("\n[Test 7] Testing student event proposal submission flow...");
-  // Login as student
+  // Login as unwhitelisted student to verify 403 security enforcement
   const studentLoginRes = await fetch(`${BASE_URL}/api/auth/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ username: "student@pup.local", password: "student123" }),
   });
   assert.equal(studentLoginRes.status, 200, "Student login should return 200");
-  const studentAuth = extractCookies(studentLoginRes);
+  const unwhitelistedAuth = extractCookies(studentLoginRes);
 
   const pdfBytes = await createDummyPdf();
+  const unwhitelistedFormData = new FormData();
+  unwhitelistedFormData.append("title", "Unauthorized Test Proposal");
+  unwhitelistedFormData.append("organizationName", "Computer Science Guild");
+  unwhitelistedFormData.append("eventDate", "2026-11-20");
+  unwhitelistedFormData.append("file", new Blob([pdfBytes], { type: "application/pdf" }), "test-proposal.pdf");
+
+  const unwhitelistedSubmitRes = await fetch(`${BASE_URL}/api/student/event-proposals`, {
+    method: "POST",
+    headers: {
+      cookie: unwhitelistedAuth.cookieHeader,
+      "x-csrf-token": unwhitelistedAuth.csrfToken,
+    },
+    body: unwhitelistedFormData,
+  });
+  assert.equal(unwhitelistedSubmitRes.status, 403, "Unwhitelisted officer submission must be blocked with 403");
+  console.log("✓ Verified unwhitelisted officer submission is properly blocked (403).");
+
+  // Login as whitelisted student officer (test.student@pup.local)
+  const whitelistedLoginRes = await fetch(`${BASE_URL}/api/auth/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username: "test.student@pup.local", password: "student123" }),
+  });
+  assert.equal(whitelistedLoginRes.status, 200, "Whitelisted student login should return 200");
+  const studentAuth = extractCookies(whitelistedLoginRes);
+
   const formData = new FormData();
   formData.append("title", "Automated Test Coding Competition 2026");
-  formData.append("organizationName", "Computer Science Guild");
+  formData.append("organizationId", "helping-hands");
+  formData.append("organizationName", "Helping Hands Community Organization");
   formData.append("eventDate", "2026-11-20");
   formData.append("file", new Blob([pdfBytes], { type: "application/pdf" }), "automated-test-proposal.pdf");
 
@@ -168,11 +195,11 @@ async function runOsasTests() {
     },
     body: formData,
   });
-  assert.equal(submitRes.status, 201, "Student submission should return 201");
+  assert.equal(submitRes.status, 201, "Whitelisted officer submission should return 201");
   const submitJson = await submitRes.json();
   assert.equal(submitJson.ok, true, "Submission ok should be true");
   const createdProposalId = submitJson.data.id;
-  console.log(`✓ Student successfully submitted proposal with ID: ${createdProposalId}`);
+  console.log(`✓ Whitelisted officer successfully submitted proposal with ID: ${createdProposalId}`);
 
   // Retrieve student's proposals
   const studentListRes = await fetch(`${BASE_URL}/api/student/event-proposals`, {

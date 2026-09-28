@@ -131,15 +131,31 @@ export async function listDocumentReviewNotifications({
     params.push(s, s, s, s, s, s);
   }
 
-  if (decision && ["Approved", "Declined"].includes(decision)) {
-    filters.push("d.approval_status = ?");
-    params.push(decision);
+  if (decision) {
+    const decisionList = (Array.isArray(decision) ? decision : String(decision).split(","))
+      .map((d) => d.trim())
+      .filter((d) => ["Approved", "Declined"].includes(d));
+    if (decisionList.length === 1) {
+      filters.push("d.approval_status = ?");
+      params.push(decisionList[0]);
+    } else if (decisionList.length > 1) {
+      const q = decisionList.map(() => "?").join(", ");
+      filters.push(`d.approval_status IN (${q})`);
+      params.push(...decisionList);
+    }
   }
 
-  if (readStatus === "unread") {
-    filters.push("COALESCE(ns.is_read, FALSE) = FALSE");
-  } else if (readStatus === "read") {
-    filters.push("COALESCE(ns.is_read, FALSE) = TRUE");
+  if (readStatus) {
+    const readList = (Array.isArray(readStatus) ? readStatus : String(readStatus).split(","))
+      .map((r) => r.trim().toLowerCase())
+      .filter(Boolean);
+    const hasRead = readList.includes("read");
+    const hasUnread = readList.includes("unread");
+    if (hasRead && !hasUnread) {
+      filters.push("COALESCE(ns.is_read, FALSE) = TRUE");
+    } else if (hasUnread && !hasRead) {
+      filters.push("COALESCE(ns.is_read, FALSE) = FALSE");
+    }
   }
 
   const whereClause = filters.join(" AND ");

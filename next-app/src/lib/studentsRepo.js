@@ -308,11 +308,13 @@ export async function updateStudent(studentNo, patch) {
   const existing = await getStudentByStudentNo(studentNo, { officeId });
   if (!existing) return null;
 
+  const rawName =
+    patch.name === undefined || patch.name === null
+      ? existing.name
+      : normalizeStudentName(patch.name);
+
   const next = {
-    name:
-      patch.name === undefined || patch.name === null
-        ? existing.name
-        : normalizeStudentName(patch.name),
+    name: encryptPII(rawName),
     course_code: String(patch.courseCode ?? existing.course_code).trim().toUpperCase(),
     year_level:
       patch.yearLevel === undefined ? existing.year_level : parseInt(patch.yearLevel),

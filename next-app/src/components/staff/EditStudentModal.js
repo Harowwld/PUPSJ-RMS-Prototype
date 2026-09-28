@@ -39,7 +39,7 @@ export default function EditStudentModal({
   useEffect(() => {
     if (student && open) {
       setFormError("");
-      setName(student.name || "");
+      setName(student.name && !student.name.startsWith("enc:v1:") ? student.name : "");
       setCourseCode(student.courseCode || student.course_code || "");
       setYearLevel(String(student.yearLevel || student.year_level || ""));
       setSection(student.section || "");
@@ -323,7 +323,7 @@ export default function EditStudentModal({
                   onValueChange={setDrawer}
                   options={availableDrawers.map((d) => ({
                     value: String(d),
-                    label: `Drawer ${d}`,
+                    label: String(d).toLowerCase().startsWith("drawer") ? String(d) : `Drawer ${d}`,
                   }))}
                   placeholder="Select Drawer"
                   buttonClassName="h-10 text-xs rounded-xl border border-gray-200 dark:border-white/10"

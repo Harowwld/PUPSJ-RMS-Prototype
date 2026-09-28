@@ -35,9 +35,16 @@ const CabinetSidebar = memo(({
   updateSelectedSizeNormalized,
   history = [],
   historyIndex = 0,
-  revertToHistoryState
+  revertToHistoryState,
+  updateDrawerId,
+  addCustomDrawer,
+  removeSpecificDrawer,
+  setCabinetYearPreset,
+  studentDrawerUsage,
 }) => {
   const [activeTab, setActiveTab] = React.useState("properties")
+  const [newDrawerInput, setNewDrawerInput] = React.useState("")
+  const [yearPresetStart, setYearPresetStart] = React.useState("")
 
   return (
     <Card className="overflow-hidden rounded-2xl border border-gray-200 shadow-sm select-none dark:border-white/10 dark:shadow-none">
@@ -151,36 +158,151 @@ const CabinetSidebar = memo(({
                 </div>
 
                 {!selectedCabinet.isDoor && (
-                  <div>
-                    <div className="mb-1.5 text-xs font-medium text-gray-600 dark:text-zinc-400">
-                      Drawer count
-                    </div>
-                    <div className="flex items-center h-9 border border-gray-200 dark:border-white/10 dark:bg-zinc-800/50 bg-white rounded-xl overflow-hidden shadow-xs">
-                      <button
-                        type="button"
-                        className="h-full px-3.5 text-sm font-semibold text-gray-600 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-200 border-r border-gray-200 dark:border-white/10 bg-transparent hover:bg-gray-50 dark:hover:bg-zinc-700/50 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer flex items-center justify-center select-none"
-                        onClick={removeDrawerFromSelected}
-                        disabled={(selectedCabinet.drawerIds || []).length <= 1}
-                      >
-                        −
-                      </button>
-
-                      <div className="flex-1 text-center select-none flex items-center justify-center">
-                        <span className="text-xs font-semibold text-gray-900 dark:text-zinc-50">
-                          {(selectedCabinet.drawerIds || []).length}
+                  <div className="space-y-3 pt-1">
+                    <div>
+                      <div className="mb-1.5 flex items-center justify-between text-xs font-medium text-gray-600 dark:text-zinc-400">
+                        <span>Drawer Count</span>
+                        <span className="text-[11px] text-gray-400">
+                          {(selectedCabinet.drawerIds || []).length} slots
                         </span>
-                        <span className="ml-1 text-xs font-normal text-gray-500 dark:text-zinc-400">
-                          Drawers
+                      </div>
+                      <div className="flex items-center h-9 border border-gray-200 dark:border-white/10 dark:bg-zinc-800/50 bg-white rounded-xl overflow-hidden shadow-xs">
+                        <button
+                          type="button"
+                          className="h-full px-3.5 text-sm font-semibold text-gray-600 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-200 border-r border-gray-200 dark:border-white/10 bg-transparent hover:bg-gray-50 dark:hover:bg-zinc-700/50 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer flex items-center justify-center select-none"
+                          onClick={removeDrawerFromSelected}
+                          disabled={(selectedCabinet.drawerIds || []).length <= 1}
+                          title="Remove last drawer"
+                        >
+                          −
+                        </button>
+
+                        <div className="flex-1 text-center select-none flex items-center justify-center">
+                          <span className="text-xs font-semibold text-gray-900 dark:text-zinc-50">
+                            {(selectedCabinet.drawerIds || []).length}
+                          </span>
+                          <span className="ml-1 text-xs font-normal text-gray-500 dark:text-zinc-400">
+                            Drawers
+                          </span>
+                        </div>
+
+                        <button
+                          type="button"
+                          className="h-full px-3.5 text-sm font-semibold text-gray-600 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-200 border-l border-gray-200 dark:border-white/10 bg-transparent hover:bg-gray-50 dark:hover:bg-zinc-700/50 transition-colors cursor-pointer flex items-center justify-center select-none"
+                          onClick={addDrawerToSelected}
+                          title="Add incremented drawer"
+                        >
+                          +
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Individual Drawer Slots & Custom Renaming */}
+                    <div className="space-y-2 pt-1 border-t border-gray-100 dark:border-white/5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-medium text-gray-700 dark:text-zinc-300">
+                          Drawer Slots & Identifiers
                         </span>
                       </div>
 
-                      <button
-                        type="button"
-                        className="h-full px-3.5 text-sm font-semibold text-gray-600 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-200 border-l border-gray-200 dark:border-white/10 bg-transparent hover:bg-gray-50 dark:hover:bg-zinc-700/50 transition-colors cursor-pointer flex items-center justify-center select-none"
-                        onClick={addDrawerToSelected}
-                      >
-                        +
-                      </button>
+                      <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+                        {(selectedCabinet.drawerIds || []).map((drawerId, slotIdx) => (
+                          <div
+                            key={`${selectedCabinet.id}-slot-${slotIdx}-${drawerId}`}
+                            className="flex items-center gap-2 rounded-xl border border-gray-200/80 bg-gray-50/40 p-1.5 px-2.5 dark:border-white/10 dark:bg-zinc-800/40 shadow-2xs"
+                          >
+                            <span className="w-5 text-center text-[10px] font-bold text-gray-400 dark:text-zinc-500">
+                              #{slotIdx + 1}
+                            </span>
+                            <div className="flex-1">
+                              <Input
+                                type="text"
+                                defaultValue={String(drawerId)}
+                                key={`${selectedCabinet.id}-${slotIdx}-${drawerId}`}
+                                placeholder="e.g. 2015"
+                                onBlur={(e) => {
+                                  if (e.target.value.trim() && e.target.value.trim() !== String(drawerId)) {
+                                    updateDrawerId?.(selectedCabinet.id, drawerId, e.target.value.trim())
+                                  }
+                                }}
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter") {
+                                    e.currentTarget.blur()
+                                  }
+                                }}
+                                className="h-7 text-xs font-semibold px-2 py-0 rounded-lg border-gray-200 bg-white dark:bg-zinc-900 dark:border-white/10"
+                              />
+                            </div>
+                            <button
+                              type="button"
+                              disabled={(selectedCabinet.drawerIds || []).length <= 1}
+                              onClick={() => removeSpecificDrawer?.(selectedCabinet.id, drawerId)}
+                              className="w-6 h-6 rounded-md hover:bg-red-50 dark:hover:bg-red-950/30 text-gray-400 hover:text-red-600 dark:hover:text-red-400 disabled:opacity-20 disabled:pointer-events-none transition-colors flex items-center justify-center cursor-pointer"
+                              title="Delete drawer slot"
+                            >
+                              <HugeIcon className="ph-bold ph-trash text-xs" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Add Custom Drawer & Year Preset */}
+                      <div className="pt-1.5 flex flex-col gap-2">
+                        <div className="flex items-center gap-1.5">
+                          <Input
+                            type="text"
+                            placeholder="New ID or Year (e.g. 2015)"
+                            value={newDrawerInput}
+                            onChange={(e) => setNewDrawerInput(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter" && newDrawerInput.trim()) {
+                                addCustomDrawer?.(selectedCabinet.id, newDrawerInput.trim())
+                                setNewDrawerInput("")
+                              }
+                            }}
+                            className="h-8 text-xs rounded-xl border-gray-200 dark:border-white/10"
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => {
+                              if (newDrawerInput.trim()) {
+                                addCustomDrawer?.(selectedCabinet.id, newDrawerInput.trim())
+                                setNewDrawerInput("")
+                              } else {
+                                addDrawerToSelected?.()
+                              }
+                            }}
+                            className="h-8 px-3 text-xs font-semibold rounded-xl shrink-0 cursor-pointer"
+                          >
+                            + Add
+                          </Button>
+                        </div>
+
+                        {/* Consecutive Years Preset Tool */}
+                        <div className="flex items-center gap-1.5 bg-gray-50/70 dark:bg-zinc-900/40 p-1.5 rounded-xl border border-gray-200/60 dark:border-white/5">
+                          <Input
+                            type="number"
+                            placeholder="Start Year (e.g. 2015)"
+                            value={yearPresetStart}
+                            onChange={(e) => setYearPresetStart(e.target.value)}
+                            className="h-7 text-xs rounded-lg border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800"
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => {
+                              if (yearPresetStart) {
+                                setCabinetYearPreset?.(selectedCabinet.id, yearPresetStart)
+                              }
+                            }}
+                            disabled={!yearPresetStart}
+                            className="h-7 px-2.5 text-[11px] font-semibold rounded-lg shrink-0 cursor-pointer text-gray-700 dark:text-zinc-200"
+                          >
+                            Set Years
+                          </Button>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 )}

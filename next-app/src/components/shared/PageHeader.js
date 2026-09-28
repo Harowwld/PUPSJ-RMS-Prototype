@@ -75,43 +75,45 @@ export default function PageHeader({
           </div>
         </div>
 
-        <div className="flex flex-col items-stretch gap-4 sm:flex-row sm:items-end lg:flex-1 lg:justify-end">
-          {/* Filters & Search */}
-          <div className="flex flex-1 flex-col gap-3 sm:flex-row sm:items-end sm:justify-end">
-            {filters}
-            
-            {(onSearchChange || searchValue !== undefined) && (
-              <div className="w-full sm:w-64">
-                <div className="mb-1 flex items-center justify-between">
-                  <label className="block text-[10px] font-semibold text-gray-700 tracking-wide transition-colors dark:text-zinc-200">
-                    {searchLabel}
-                  </label>
-                  {searchCount && (
-                    <span className="text-[9px] font-semibold text-pup-maroon dark:text-primary/70">
-                      {searchCount}
-                    </span>
-                  )}
+        {(filters || onSearchChange || searchValue !== undefined || actions) && (
+          <div className="flex flex-col items-stretch gap-4 sm:flex-row sm:items-end lg:flex-1 lg:justify-end">
+            {/* Filters & Search */}
+            <div className="flex flex-1 flex-col gap-3 sm:flex-row sm:items-end sm:justify-end">
+              {filters}
+              
+              {(onSearchChange || searchValue !== undefined) && (
+                <div className="w-full sm:w-64">
+                  <div className="mb-1 flex items-center justify-between">
+                    <label className="block text-[10px] font-semibold text-gray-700 tracking-wide transition-colors dark:text-zinc-200">
+                      {searchLabel}
+                    </label>
+                    {searchCount && (
+                      <span className="text-[9px] font-semibold text-pup-maroon dark:text-primary/70">
+                        {searchCount}
+                      </span>
+                    )}
+                  </div>
+                  <div className="relative transition-colors group">
+                    <HugeIcon  className="ph-bold ph-magnifying-glass absolute top-1/2 left-3 -translate-y-1/2 text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 pointer-events-none"></HugeIcon>
+                    <Input
+                      placeholder={searchPlaceholder || "Search..."}
+                      className="h-10 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 pl-9 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
+                      value={searchValue || ""}
+                      onChange={(e) => onSearchChange && onSearchChange(e.target.value)}
+                    />
+                  </div>
                 </div>
-                <div className="relative transition-colors group">
-                  <HugeIcon  className="ph-bold ph-magnifying-glass absolute top-1/2 left-3 -translate-y-1/2 text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 pointer-events-none"></HugeIcon>
-                  <Input
-                    placeholder={searchPlaceholder || "Search..."}
-                    className="h-10 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 pl-9 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
-                    value={searchValue || ""}
-                    onChange={(e) => onSearchChange && onSearchChange(e.target.value)}
-                  />
-                </div>
+              )}
+            </div>
+
+            {/* Actions */}
+            {actions && (
+              <div className="flex items-center gap-3">
+                {actions}
               </div>
             )}
           </div>
-
-          {/* Actions */}
-          {actions && (
-            <div className="flex items-center gap-3">
-              {actions}
-            </div>
-          )}
-        </div>
+        )}
       </div>
     </div>
   )

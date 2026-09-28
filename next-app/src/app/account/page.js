@@ -432,8 +432,18 @@ function AccountPageContent() {
       }
     }
 
-    if (payload.length < 2) {
-      setSecError("Please provide answers for at least two questions.");
+    const requiredQuestions = globalQuestions.filter((q) => q.is_required);
+    for (const q of requiredQuestions) {
+      const hasExisting = q.hasAnswer;
+      const hasNewInput = !!(secAnswers[q.id] && secAnswers[q.id].trim());
+      if (!hasExisting && !hasNewInput) {
+        setSecError(`Please provide an answer for the required question: "${q.question}"`);
+        return;
+      }
+    }
+
+    if (payload.length === 0) {
+      setSecError("Please provide at least one answer to save.");
       return;
     }
 
@@ -1179,8 +1189,13 @@ function AccountPageContent() {
                             return (
                               <div key={q.id} className="space-y-1">
                                 <div className="flex items-center justify-between mb-1 px-1">
-                                  <label className="text-[11px] font-medium uppercase tracking-[0.04em] text-gray-500 dark:text-zinc-450 block">
-                                    {q.question}
+                                  <label className="text-[11px] font-medium uppercase tracking-[0.04em] text-gray-500 dark:text-zinc-450 flex items-center gap-1">
+                                    <span>{q.question}</span>
+                                    {q.is_required ? (
+                                      <span className="text-red-500 font-bold text-xs" title="Required challenge">*</span>
+                                    ) : (
+                                      <span className="text-[10px] lowercase text-gray-400 dark:text-zinc-500 tracking-normal font-normal">(optional)</span>
+                                    )}
                                   </label>
                                   {q.hasAnswer && (
                                     <button

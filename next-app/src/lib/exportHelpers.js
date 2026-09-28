@@ -74,3 +74,83 @@ export const downloadSlaCsv = (data, total, completionRate, onLogAction, fileNam
     entityType: "Report",
   })
 }
+
+/**
+ * Exports OSAS Student Organization Compliance data to CSV
+ * @param {Object} data - The organization compliance payload
+ * @param {Function} onLogAction - Callback to log the action
+ * @param {string} fileName - Optional custom filename
+ */
+export const downloadOrganizationComplianceCsv = (data, onLogAction, fileName) => {
+  if (!data) return
+  
+  const finalFileName = fileName || generateExportFilename("OSAS-ORG-COMPLIANCE", "REPORT", "csv");
+  const q = (cell) => `"${String(cell ?? "").replace(/"/g, '""')}"`
+  const row = (cells) => cells.map(q).join(",")
+
+  const summary = data.summary || {}
+  const lines = [
+    row(["OSAS Student Organization Compliance & Accreditation Report", ""]),
+    row(["Generated (Local)", formatPHDateTime(new Date().toISOString())]),
+    "",
+    row(["Summary Metrics", "Value"]),
+    row(["Total Recognized Organizations", summary.totalOrganizations || 0]),
+    row(["Active Organizations", summary.activeOrganizations || 0]),
+    row(["Fully Compliant Organizations", summary.fullyCompliantCount || 0]),
+    row(["Overall Institutional Compliance Rate", `${summary.overallComplianceRate || 0}%`]),
+    row(["Constitution & By-Laws (CBL) Archival Rate", `${summary.cblArchivedRate || 0}% (${summary.cblArchivedCount || 0} archived)`]),
+    row(["Accredited Officer Leadership Roster", `${summary.withOfficersRate || 0}% (${summary.totalActiveOfficers || 0} active leaders)`]),
+    row(["Faculty Adviser Endorsements", `${summary.withAdviserRate || 0}% (${summary.withAdviserCount || 0} appointed)`]),
+    "",
+    row([
+      "Organization ID",
+      "Organization Name",
+      "Acronym",
+      "Category",
+      "Accreditation Standing",
+      "Faculty Adviser",
+      "Adviser Email",
+      "CBL Archived",
+      "Active Officers Count",
+      "Compliance Score (%)",
+      "Compliance Status",
+      "Missing Requirements",
+    ]),
+  ]
+
+  for (const org of data.organizations || []) {
+    lines.push(
+      row([
+        org.id,
+        org.name,
+        org.acronym || "",
+        org.category,
+        org.status,
+        org.adviserName || "",
+        org.adviserEmail || "",
+        org.hasCbl ? "Yes" : "No",
+        org.activeOfficerCount,
+        `${org.complianceScore}%`,
+        org.complianceStatus,
+        (org.missingRequirements || []).join("; "),
+      ])
+    )
+  }
+
+  const blob = new Blob([lines.join("\n")], {
+    type: "text/csv;charset=utf-8;",
+  })
+  const link = document.createElement("a")
+  const url = URL.createObjectURL(blob)
+  link.href = url
+  link.download = finalFileName
+  link.click()
+  URL.revokeObjectURL(url)
+
+  onLogAction?.({
+    action: "Export CSV",
+    details: `exported student organization compliance dataset (${finalFileName}) to local CSV storage volume`,
+    entityType: "Report",
+  })
+}
+

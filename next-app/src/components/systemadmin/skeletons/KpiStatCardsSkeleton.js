@@ -8,15 +8,14 @@ export default function KpiStatCardsSkeleton({ count = 3, className = "" }) {
   return (
     <div
       className={cn(
-        "grid grid-cols-1 gap-4 md:grid-cols-2 items-start w-full",
-        count === 2 ? "lg:grid-cols-2" : count === 4 ? "lg:grid-cols-4" : "lg:grid-cols-3",
+        "flex flex-wrap gap-4 items-stretch w-full",
         className
       )}
     >
       {Array.from({ length: count }).map((_, i) => (
         <Card
           key={i}
-          className="overflow-hidden rounded-xl border border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-zinc-900/30 p-4 shadow-none"
+          className="flex-1 min-w-[280px] overflow-hidden rounded-xl border border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-zinc-900/30 p-4 shadow-none"
         >
           <div className="flex flex-col justify-between h-full gap-1.5">
             <div className="flex items-center justify-between">

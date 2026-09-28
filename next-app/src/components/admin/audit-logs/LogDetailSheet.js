@@ -104,7 +104,7 @@ export default function LogDetailSheet({
       onOpenChange={(open) => !open && setSelectedLog(null)}
     >
       <SheetContent 
-        className="font-jakarta flex flex-col border-l bg-white p-[24px_20px] shadow-none sm:max-w-[320px] w-[320px] dark:border-white/10 dark:bg-[#121214]"
+        className="font-jakarta flex flex-col border-l bg-white p-[24px_20px] shadow-2xl w-full sm:max-w-[480px] md:max-w-[540px] data-[side=right]:w-full data-[side=right]:sm:max-w-[480px] data-[side=right]:md:max-w-[540px] dark:border-white/10 dark:bg-[#121214]"
         style={{ borderLeft: '0.5px solid rgba(0,0,0,0.08)' }}
       >
         <SheetHeader className="shrink-0 p-0 mb-6 border-b-0 bg-transparent text-left relative">
