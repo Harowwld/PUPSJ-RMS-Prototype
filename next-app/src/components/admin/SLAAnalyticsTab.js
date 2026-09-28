@@ -239,7 +239,7 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
               "w-full transition-all duration-500", 
               (loading && !manualLoading) ? "opacity-40 blur-[1px] grayscale-[0.1]" : "opacity-100"
             )}>
-              <SlaKpiCards total={total} completionRate={completionRate} completed={completed} sla={data?.sla} />
+              <SlaKpiCards total={total} completionRate={completionRate} completed={completed} sla={data?.sla} feedback={data?.feedback} />
             </div>
           </div>
         ) : null}

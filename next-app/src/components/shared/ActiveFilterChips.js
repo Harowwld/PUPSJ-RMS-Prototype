@@ -90,7 +90,7 @@ export default function ActiveFilterChips({
   return (
     <div
       className={cn(
-        "flex flex-wrap items-center gap-1.5 pt-1.5 animate-in fade-in-50 duration-200",
+        "flex flex-wrap items-center gap-1.5 px-6 py-2.5 border-t border-gray-100 dark:border-white/10 bg-white dark:bg-card animate-in fade-in-50 duration-200",
         className
       )}
     >

@@ -749,6 +749,7 @@ export default function StaffDirectoryTab({
               setCurrentPage(1)
             }}
             onClearAll={handleClearFilters}
+            className="border-t border-gray-100 dark:border-white/10 bg-white dark:bg-card px-6 py-2.5"
           />
         )}
 
@@ -908,12 +909,11 @@ export default function StaffDirectoryTab({
                             {hasActiveFilters || search !== "" ? (
                               <Button
                                 variant="outline"
-                                size="sm"
                                 onClick={handleClearFilters}
-                                className="mt-6 flex h-10 items-center justify-center rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-6 text-xs font-semibold text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs active:scale-95 cursor-pointer"
+                                className="mt-6 flex h-10 items-center justify-center gap-2 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                               >
-                                <HugeIcon  className="ph-bold ph-arrow-counter-clockwise mr-2"></HugeIcon>
-                                Clear
+                                <HugeIcon className="ph-bold ph-arrow-counter-clockwise text-[14px] shrink-0" />
+                                <span>Clear Filters</span>
                               </Button>
                             ) : (
                               activeTab === "active" && officeStaff.filter(s => s.status !== "Archived").length === 0 && (

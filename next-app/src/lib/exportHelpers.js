@@ -57,6 +57,19 @@ export const downloadSlaCsv = (data, total, completionRate, onLogAction, fileNam
     lines.push(row([dt.name, dt.count]))
   }
 
+  if (data?.feedback) {
+    lines.push("")
+    lines.push(row(["Client Satisfaction Measurement (CSM)", "Value"]))
+    lines.push(row(["Average Satisfaction Score", `${data.feedback.averageRating || 0} / 5.0`]))
+    lines.push(row(["Total Client Ratings", data.feedback.totalResponses || 0]))
+    lines.push(row(["Positive Rating Rate", `${data.feedback.satisfactionRate || 0}%`]))
+    lines.push("")
+    lines.push(row(["Star Rating Breakdown", "Count"]))
+    for (const [star, count] of Object.entries(data.feedback.ratingBreakdown || {})) {
+      lines.push(row([`${star} Star`, count]))
+    }
+  }
+
   const blob = new Blob([lines.join("\n")], {
     type: "text/csv;charset=utf-8;",
   })

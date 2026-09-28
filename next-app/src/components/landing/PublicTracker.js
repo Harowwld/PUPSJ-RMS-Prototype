@@ -207,17 +207,24 @@ export default function PublicTracker() {
                     Official Update Log
                   </span>
                   <div className="space-y-2">
-                    {result.updates.map((up) => (
-                      <div key={up.id} className="p-3 rounded-xl bg-white  border border-gray-200  flex items-start justify-between gap-3 text-xs">
-                        <div>
-                          <span className="font-semibold text-gray-900  mr-2">{up.status}:</span>
-                          <span className="text-gray-600 ">{up.message || "Status updated by Registrar."}</span>
+                    {result.updates.map((up, idx) => {
+                      const isConsecutiveSameStatus =
+                        idx > 0 && up.status === result.updates[idx - 1].status;
+                      const formatStatus = (s) => (s === "InProgress" ? "In Progress" : s === "Ready" ? "Ready to Claim" : s);
+                      return (
+                        <div key={up.id || idx} className="p-3 rounded-xl bg-white  border border-gray-200  flex items-start justify-between gap-3 text-xs">
+                          <div>
+                            <span className="font-semibold text-gray-900 mr-2">
+                              {isConsecutiveSameStatus ? "Follow-Up Notice:" : `${formatStatus(up.status)}:`}
+                            </span>
+                            <span className="text-gray-600 ">{up.message || "Status updated by Registrar."}</span>
+                          </div>
+                          <span className="text-[10px] text-gray-400 shrink-0 font-mono">
+                            {new Date(up.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                          </span>
                         </div>
-                        <span className="text-[10px] text-gray-400 shrink-0 font-mono">
-                          {new Date(up.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                        </span>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               )}

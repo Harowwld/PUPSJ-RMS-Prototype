@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import {
   Popover,
@@ -17,6 +18,17 @@ function parseDateLocal(str) {
   return new Date(y, m - 1, d)
 }
 
+function formatButtonDate(dateStr, fallback) {
+  if (!dateStr) return fallback
+  const d = parseDateLocal(dateStr)
+  if (!d || isNaN(d.getTime())) return fallback
+  try {
+    return format(d, "MMM d")
+  } catch {
+    return fallback
+  }
+}
+
 export default function SlaFilters({
   startDate,
   setStartDate,
@@ -25,6 +37,8 @@ export default function SlaFilters({
   isLoading,
   onRefresh,
 }) {
+  const [startOpen, setStartOpen] = useState(false)
+  const [endOpen, setEndOpen] = useState(false)
   const activeShortcut = (() => {
     if (!startDate || !endDate) return null
     const todayStr = format(new Date(), "yyyy-MM-dd")
@@ -115,7 +129,7 @@ export default function SlaFilters({
       {/* Date Range Pickers */}
       <div className="flex items-center gap-1.5 shrink-0">
         <div className="w-[105px]">
-          <Popover>
+          <Popover open={startOpen} onOpenChange={setStartOpen}>
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
@@ -125,7 +139,7 @@ export default function SlaFilters({
                   !startDate ? "text-gray-400 dark:text-zinc-500" : "text-gray-700 dark:text-zinc-200"
                 )}
               >
-                {startDate ? format(parseDateLocal(startDate), "MMM d") : "Start"}
+                {formatButtonDate(startDate, "Start")}
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto rounded-2xl border border-gray-200 bg-white p-0 shadow-2xl dark:border-white/10 dark:bg-card" align="start">
@@ -134,6 +148,7 @@ export default function SlaFilters({
                 selected={startDate ? parseDateLocal(startDate) : undefined}
                 onSelect={(date) => {
                   setStartDate(date ? format(date, "yyyy-MM-dd") : "")
+                  setStartOpen(false)
                 }}
                 initialFocus
               />
@@ -142,7 +157,7 @@ export default function SlaFilters({
         </div>
         <span className="text-[11px] text-gray-400 dark:text-zinc-500">→</span>
         <div className="w-[105px]">
-          <Popover>
+          <Popover open={endOpen} onOpenChange={setEndOpen}>
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
@@ -152,7 +167,7 @@ export default function SlaFilters({
                   !endDate ? "text-gray-400 dark:text-zinc-500" : "text-gray-700 dark:text-zinc-200"
                 )}
               >
-                {endDate ? format(parseDateLocal(endDate), "MMM d") : "End"}
+                {formatButtonDate(endDate, "End")}
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto rounded-2xl border border-gray-200 bg-white p-0 shadow-2xl dark:border-white/10 dark:bg-card" align="start">
@@ -161,6 +176,7 @@ export default function SlaFilters({
                 selected={endDate ? parseDateLocal(endDate) : undefined}
                 onSelect={(date) => {
                   setEndDate(date ? format(date, "yyyy-MM-dd") : "")
+                  setEndOpen(false)
                 }}
                 initialFocus
               />

@@ -646,9 +646,9 @@ export default function GlobalAuditLogsTab({ showToast }) {
           </div>
 
           {/* Navigation Toolbar */}
-          <div className="border-t border-gray-100 dark:border-white/10 p-5 flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3 bg-gray-50/40 dark:bg-zinc-900/30 flex-wrap">
-            {/* Search Input with Pure Number Count */}
-            <div className="relative w-full sm:w-[260px] lg:w-[300px] shrink-0 group">
+          <div className="border-t border-gray-100 dark:border-white/10 p-5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-gray-50/40 dark:bg-zinc-900/30 flex-wrap">
+            {/* Search Input with Pure Number Count (Left side) */}
+            <div className="relative flex-1 sm:w-64 min-w-[200px] max-w-sm group">
               <HugeIcon className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-xs pointer-events-none" />
               <Input
                 type="text"
@@ -678,8 +678,10 @@ export default function GlobalAuditLogsTab({ showToast }) {
               </div>
             </div>
 
-            {/* Multi-Criteria Popover Filter */}
-            <div className="w-full sm:w-auto shrink-0">
+            {/* Filter controls (Right side) */}
+            <div className="flex flex-wrap items-center gap-3">
+              {/* Multi-Criteria Popover Filter */}
+              <div className="w-full sm:w-auto shrink-0">
               <MultiCriteriaFilter
                 title="Filter Logs"
                 groups={logFilterGroups}
@@ -779,6 +781,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
                 </Popover>
               </div>
             </div>
+            </div>
           </div>
 
           {/* Active Filter Chips Row */}
@@ -860,12 +863,11 @@ export default function GlobalAuditLogsTab({ showToast }) {
                   {hasActiveFilters && (
                     <Button
                       variant="outline"
-                      size="sm"
                       onClick={handleClearFilters}
-                      className="mt-6 flex h-10 items-center gap-2 rounded-xl border border-gray-300 bg-white px-5 text-xs font-semibold text-gray-700 shadow-xs transition-colors hover:bg-gray-50 dark:bg-zinc-900 dark:border-white/10 dark:text-zinc-300 cursor-pointer"
+                      className="mt-6 flex h-10 items-center justify-center gap-2 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                     >
-                      <HugeIcon  className="ph-bold ph-arrow-counter-clockwise"></HugeIcon>
-                      Clear
+                      <HugeIcon className="ph-bold ph-arrow-counter-clockwise text-[14px] shrink-0" />
+                      <span>Clear Filters</span>
                     </Button>
                   )}
                 </EmptyHeader>

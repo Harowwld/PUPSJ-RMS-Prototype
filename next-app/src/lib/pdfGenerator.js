@@ -513,7 +513,8 @@ export const generateSLAAnalyticsPdf = async (data, total, completionRate, optio
   const dataScope = isFiltered 
     ? "during the specified reporting period" 
     : "aggregated from all available historical records";
-  const intro = `This document details the registry's fulfillment efficiency across ${total} total documented requests ${dataScope}. The key performance indicator for public service operations is measured through our Service Level Agreement (SLA) fulfillment completion rate.`
+  const frameworkTitle = data?.sla?.standards?.frameworkName || "Service Level Agreement (SLA)";
+  const intro = `This document details the registry's fulfillment efficiency across ${total} total documented requests ${dataScope}. Public service operations and timeliness are measured against the institutional ${frameworkTitle} fulfillment standard.`;
   const splitIntro = doc.splitTextToSize(intro, doc.internal.pageSize.getWidth() - 80)
   doc.text(splitIntro, 40, y)
   y += splitIntro.length * 14 + 25
@@ -573,7 +574,61 @@ export const generateSLAAnalyticsPdf = async (data, total, completionRate, optio
     columnStyles: { 0: { fontStyle: "bold" }, 1: { halign: "right", fontStyle: "bold", textColor: [122, 30, 40] } },
   })
   
-  y = doc.lastAutoTable.finalY + 60
+  // Section III: Client Satisfaction Measurement (CSM)
+  if (doc.lastAutoTable.finalY + 240 > doc.internal.pageSize.getHeight() - 80) {
+    doc.addPage()
+    y = 60
+  } else {
+    y = doc.lastAutoTable.finalY + 35
+  }
+
+  doc.setFontSize(12)
+  doc.setFont("helvetica", "bold")
+  doc.setTextColor(122, 30, 40) // PUP Maroon
+  doc.text("III. Client Satisfaction Measurement (CSM)", 40, y)
+  doc.setLineWidth(1.5)
+  doc.setDrawColor(122, 30, 40)
+  doc.line(40, y + 5, doc.internal.pageSize.getWidth() - 40, y + 5)
+  y += 25
+
+  doc.setFontSize(10)
+  doc.setFont("helvetica", "normal")
+  doc.setTextColor(60, 60, 60)
+  const csmDesc = "The following metrics represent student client feedback collected via the online document request portal, reflecting service quality, promptness, and administrative satisfaction."
+  const splitCsm = doc.splitTextToSize(csmDesc, doc.internal.pageSize.getWidth() - 80)
+  doc.text(splitCsm, 40, y)
+  y += splitCsm.length * 14 + 10
+
+  const feedbackTotal = data?.feedback?.totalResponses || 0
+  const avgRating = feedbackTotal > 0 ? `${data.feedback.averageRating} / 5.0` : "No ratings"
+  const satRate = feedbackTotal > 0 ? `${data.feedback.satisfactionRate}% Positive` : "N/A"
+
+  const csmRows = [
+    ["Average Client Satisfaction Score", avgRating],
+    ["Total Student Evaluations Received", `${feedbackTotal.toLocaleString()}`],
+    ["Overall Positive Sentiment Rate", satRate],
+    ["5-Star Evaluations", `${data?.feedback?.ratingBreakdown?.[5] || 0}`],
+    ["4-Star Evaluations", `${data?.feedback?.ratingBreakdown?.[4] || 0}`],
+    ["3-Star Evaluations", `${data?.feedback?.ratingBreakdown?.[3] || 0}`],
+    ["2-Star Evaluations", `${data?.feedback?.ratingBreakdown?.[2] || 0}`],
+    ["1-Star Evaluations", `${data?.feedback?.ratingBreakdown?.[1] || 0}`],
+  ]
+
+  autoTable(doc, {
+    startY: y,
+    head: [["Evaluation Metric", "Recorded Result"]],
+    body: csmRows,
+    theme: "striped",
+    headStyles: { fillColor: [122, 30, 40], textColor: [255, 255, 255], fontStyle: "bold" },
+    styles: { fontSize: 9.5, cellPadding: 5 },
+    columnStyles: { 0: { fontStyle: "bold" }, 1: { halign: "right", fontStyle: "bold", textColor: [122, 30, 40] } },
+  })
+
+  y = doc.lastAutoTable.finalY + 50
+  if (y + 120 > doc.internal.pageSize.getHeight()) {
+    doc.addPage()
+    y = 60
+  }
   addSignatures(doc, y)
 
   return doc.output("blob")

@@ -8,7 +8,7 @@ function buildDocQualifiesSql(requireApproved) {
   return "(d.approval_status IS NULL OR d.approval_status != 'Declined')";
 }
 
-function buildStudentWhere({ studentStatus, courseCode, officeId }) {
+function buildStudentWhere({ studentStatus, courseCode, courseCodes, officeId }) {
   const filters = [];
   const params = [];
 
@@ -23,10 +23,25 @@ function buildStudentWhere({ studentStatus, courseCode, officeId }) {
     params.push(officeId);
   }
 
-  const cc = String(courseCode || "").trim().toUpperCase();
-  if (cc) {
+  // Support multiple courses via courseCodes (array or comma-separated) or courseCode
+  const rawList = Array.isArray(courseCodes)
+    ? courseCodes
+    : typeof courseCodes === "string"
+    ? courseCodes.split(",")
+    : typeof courseCode === "string"
+    ? courseCode.split(",")
+    : [];
+
+  const cleanedCourses = rawList
+    .map((c) => String(c || "").trim().toUpperCase())
+    .filter(Boolean);
+
+  if (cleanedCourses.length === 1) {
     filters.push("s.course_code = ?");
-    params.push(cc);
+    params.push(cleanedCourses[0]);
+  } else if (cleanedCourses.length > 1) {
+    filters.push(`s.course_code IN (${cleanedCourses.map(() => "?").join(", ")})`);
+    params.push(...cleanedCourses);
   }
 
   const st = String(studentStatus || "").trim();
@@ -43,7 +58,7 @@ function buildStudentWhere({ studentStatus, courseCode, officeId }) {
   }
 
   const where = filters.length ? `WHERE ${filters.join(" AND ")}` : "";
-  return { where, params };
+  return { where, params, selectedCourses: cleanedCourses };
 }
 
 function roundPercent(ratio) {
@@ -54,6 +69,7 @@ function roundPercent(ratio) {
 export async function getDigitizationComplianceSummary({
   studentStatus = "Active",
   courseCode,
+  courseCodes,
   requireApproved = false,
   officeId,
 } = {}) {
@@ -71,9 +87,10 @@ export async function getDigitizationComplianceSummary({
   const expectedCountPerStudent = allDocTypes.length;
 
   const docQualifies = buildDocQualifiesSql(Boolean(requireApproved));
-  const { where, params } = buildStudentWhere({
+  const { where, params, selectedCourses } = buildStudentWhere({
     studentStatus,
     courseCode,
+    courseCodes,
     officeId: normalizedOfficeId,
   });
   const documentOfficeFilter = normalizedOfficeId ? "AND d.office_id = ?" : "";
@@ -171,7 +188,8 @@ export async function getDigitizationComplianceSummary({
     byYear,
     meta: {
       studentStatus: String(studentStatus || "").trim() || "Active",
-      courseCode: String(courseCode || "").trim() || null,
+      courseCode: selectedCourses.length === 1 ? selectedCourses[0] : (selectedCourses.length > 1 ? selectedCourses.join(", ") : null),
+      courseCodes: selectedCourses,
       requireApproved: Boolean(requireApproved),
       definitions: {
         population: normalizedOfficeId

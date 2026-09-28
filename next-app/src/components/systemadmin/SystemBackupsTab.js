@@ -736,6 +736,7 @@ export default function SystemBackupsTab({ showToast }) {
                     }
                   }] : []}
                   onClearAll={handleClearFilters}
+                  className="border-t border-gray-100 dark:border-white/10 bg-white dark:bg-card px-6 py-2.5"
                 />
               )}
 

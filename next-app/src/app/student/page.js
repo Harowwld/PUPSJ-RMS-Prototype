@@ -42,6 +42,7 @@ import {
   StudentActivityListSkeleton,
 } from "@/components/student/skeletons";
 import StudentComplianceTab from "@/components/student/StudentComplianceTab";
+import StudentFeedbackModal from "@/components/student/StudentFeedbackModal";
 import { Skeleton } from "@/components/ui/skeleton";
 import MultiCriteriaFilter from "@/components/shared/MultiCriteriaFilter";
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips";
@@ -58,6 +59,14 @@ function SortIndicator({ column, sortBy, sortOrder }) {
 }
 
 const requestStatuses = ["Pending", "InProgress", "Ready", "Completed", "Cancelled"];
+
+const RATING_LABELS = {
+  1: "Poor",
+  2: "Fair",
+  3: "Satisfactory",
+  4: "Very Good",
+  5: "Excellent",
+};
 
 export default function StudentDashboard() {
   const router = useRouter();
@@ -98,6 +107,8 @@ export default function StudentDashboard() {
   const [isFormOpen, setIsFormOpen] = useState(true);
   const [pdfPreviewOpen, setPdfPreviewOpen] = useState(false);
   const [pdfPreviewData, setPdfPreviewData] = useState(null);
+  const [feedbackModalOpen, setFeedbackModalOpen] = useState(false);
+  const [feedbackRequest, setFeedbackRequest] = useState(null);
 
   // Filter state for OSAS Event Proposals
   const [proposalSearch, setProposalSearch] = useState("");
@@ -559,6 +570,10 @@ export default function StudentDashboard() {
       }));
       showToast("Request submitted", "The Registrar can now review your document request.");
       await load();
+      if (json.data) {
+        setFeedbackRequest(json.data);
+        setFeedbackModalOpen(true);
+      }
     } catch (error) {
       const message = error.message || "Unable to submit request.";
       setMessage(message);
@@ -567,6 +582,23 @@ export default function StudentDashboard() {
       setRequestSubmitting(false);
     }
   }
+
+  const handleFeedbackSubmitted = (newFeedback) => {
+    if (!newFeedback) return;
+    setData((prev) => ({
+      ...prev,
+      requests: (prev.requests || []).map((req) =>
+        Number(req.id) === Number(newFeedback.document_request_id)
+          ? { ...req, feedback: newFeedback }
+          : req
+      ),
+    }));
+    setSelectedRequestForDetail((prev) =>
+      prev && Number(prev.id) === Number(newFeedback.document_request_id)
+        ? { ...prev, feedback: newFeedback }
+        : prev
+    );
+  };
 
   async function submitProposal(event) {
     event.preventDefault(); setMessage(""); setProposalSubmitting(true);
@@ -1110,16 +1142,15 @@ export default function StudentDashboard() {
                                     {hasActiveFilters ? (
                                       <Button
                                         variant="outline"
-                                        size="sm"
                                         onClick={() => {
                                           setRequestSearch("");
                                           setRequestFilters({ status: [], doc_type: [] });
                                           setCurrentPage(1);
                                         }}
-                                        className="mt-5 flex h-9 items-center gap-2 rounded-xl border border-gray-300 bg-white px-4 text-xs font-semibold text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:bg-card dark:text-zinc-300 cursor-pointer"
+                                        className="mt-6 flex h-10 items-center justify-center gap-2 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                                       >
-                                        <HugeIcon  className="ph-bold ph-arrow-counter-clockwise"></HugeIcon>
-                                        Clear
+                                        <HugeIcon className="ph-bold ph-arrow-counter-clockwise text-[14px] shrink-0" />
+                                        <span>Clear Filters</span>
                                       </Button>
                                     ) : (
                                       <Button
@@ -1163,14 +1194,43 @@ export default function StudentDashboard() {
                                   {formatPHDateTime(item.created_at)}
                                 </td>
                                 <td className="py-0 px-4 align-middle text-right" onClick={(e) => e.stopPropagation()}>
-                                  <button
-                                    type="button"
-                                    onClick={() => setSelectedRequestForDetail(item)}
-                                    title="View Request Updates Timeline"
-                                    className="inline-flex h-7 w-7 items-center justify-center rounded-[6px] text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10 hover:text-pup-maroon dark:hover:text-red-400 transition-colors cursor-pointer"
-                                  >
-                                    <HugeIcon  className="ph-bold ph-clock-counter-clockwise text-[16px]"></HugeIcon>
-                                  </button>
+                                  <div className="flex items-center justify-end gap-1.5">
+                                    {item.feedback ? (
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          setFeedbackRequest(item);
+                                          setFeedbackModalOpen(true);
+                                        }}
+                                        title={`Rated ${item.feedback.rating}/5 stars. Click to edit feedback.`}
+                                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[11px] font-semibold bg-amber-50 text-amber-800 border border-amber-200/80 hover:bg-amber-100 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-900/40 transition-colors cursor-pointer"
+                                      >
+                                        <HugeIcon className="ph-fill ph-star text-[12px] text-amber-500" />
+                                        <span>{item.feedback.rating}/5</span>
+                                      </button>
+                                    ) : (
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          setFeedbackRequest(item);
+                                          setFeedbackModalOpen(true);
+                                        }}
+                                        title="Rate your experience with this request"
+                                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[11px] font-medium text-gray-500 hover:text-pup-maroon hover:bg-red-50/80 border border-dashed border-gray-200 hover:border-red-200 dark:border-white/10 dark:text-zinc-400 dark:hover:bg-red-950/30 dark:hover:text-red-300 transition-colors cursor-pointer"
+                                      >
+                                        <HugeIcon className="ph-bold ph-star text-[11px]" />
+                                        <span>Rate</span>
+                                      </button>
+                                    )}
+                                    <button
+                                      type="button"
+                                      onClick={() => setSelectedRequestForDetail(item)}
+                                      title="View Request Updates Timeline"
+                                      className="inline-flex h-7 w-7 items-center justify-center rounded-[6px] text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10 hover:text-pup-maroon dark:hover:text-red-400 transition-colors cursor-pointer"
+                                    >
+                                      <HugeIcon className="ph-bold ph-clock-counter-clockwise text-[16px]" />
+                                    </button>
+                                  </div>
                                 </td>
                               </tr>
                             ))
@@ -1574,9 +1634,10 @@ export default function StudentDashboard() {
                                 setProposalSearch("");
                                 setProposalFilters({ status: [], organization: [] });
                               }}
-                              className="mt-4 h-9 px-4 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 cursor-pointer"
+                              className="mt-6 flex h-10 items-center justify-center gap-2 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                             >
-                              Reset filters
+                              <HugeIcon className="ph-bold ph-arrow-counter-clockwise text-[14px] shrink-0" />
+                              <span>Clear Filters</span>
                             </Button>
                           </EmptyHeader>
                         </Empty>
@@ -1675,6 +1736,104 @@ export default function StudentDashboard() {
               </p>
             </div>
 
+            {/* Experience Rating & Feedback */}
+            {selectedRequestForDetail?.feedback ? (
+              <div className="rounded-xl bg-amber-50/50 dark:bg-amber-950/20 p-4 border border-amber-200/70 dark:border-amber-900/40 space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="flex h-6 w-6 items-center justify-center rounded-md bg-amber-100 dark:bg-amber-900/50 text-amber-600 dark:text-amber-400">
+                      <HugeIcon className="ph-fill ph-star text-xs" />
+                    </div>
+                    <h4 className="text-[12px] font-semibold text-gray-900 dark:text-zinc-100">
+                      Your Experience Rating
+                    </h4>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFeedbackRequest(selectedRequestForDetail);
+                      setFeedbackModalOpen(true);
+                    }}
+                    className="text-[11px] font-semibold text-pup-maroon hover:underline dark:text-red-400 cursor-pointer"
+                  >
+                    Edit Feedback
+                  </button>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2.5 pt-0.5">
+                  <div className="flex items-center gap-1">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <svg
+                        key={star}
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        className={cn(
+                          "h-4 w-4",
+                          star <= selectedRequestForDetail.feedback.rating
+                            ? "fill-amber-400 text-amber-400"
+                            : "fill-transparent text-gray-300 dark:text-zinc-600"
+                        )}
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                      >
+                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                      </svg>
+                    ))}
+                  </div>
+                  <span className="text-xs font-semibold text-gray-800 dark:text-zinc-200">
+                    {selectedRequestForDetail.feedback.rating}/5 · {RATING_LABELS[selectedRequestForDetail.feedback.rating] || ""}
+                  </span>
+                  {selectedRequestForDetail.feedback.created_at && (
+                    <span className="text-[11px] text-gray-400 dark:text-zinc-500 sm:ml-auto">
+                      Submitted on {formatPHDateTime(selectedRequestForDetail.feedback.created_at)}
+                    </span>
+                  )}
+                </div>
+
+                {selectedRequestForDetail.feedback.aspect_tags?.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 pt-1">
+                    {selectedRequestForDetail.feedback.aspect_tags.map((tag) => (
+                      <span
+                        key={tag}
+                        className="rounded-md bg-white dark:bg-zinc-800 border border-amber-200/60 dark:border-amber-900/30 px-2 py-0.5 text-[11px] font-medium text-amber-900 dark:text-amber-300"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                {selectedRequestForDetail.feedback.comments && (
+                  <p className="text-xs text-gray-700 dark:text-zinc-300 italic pt-1 border-t border-amber-200/40 dark:border-amber-900/30">
+                    "{selectedRequestForDetail.feedback.comments}"
+                  </p>
+                )}
+              </div>
+            ) : (
+              <div className="rounded-xl bg-gray-50/70 dark:bg-zinc-900/40 p-3.5 border border-dashed border-gray-200 dark:border-zinc-800 flex items-center justify-between gap-3">
+                <div>
+                  <h4 className="text-xs font-semibold text-gray-800 dark:text-zinc-200">
+                    Experience Feedback
+                  </h4>
+                  <p className="text-[11px] text-gray-500 dark:text-zinc-400 mt-0.5">
+                    Help us improve by rating your request experience.
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setFeedbackRequest(selectedRequestForDetail);
+                    setFeedbackModalOpen(true);
+                  }}
+                  className="h-8 px-3 text-xs font-semibold rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all shrink-0"
+                >
+                  Rate Experience
+                </Button>
+              </div>
+            )}
+
             <div>
               <h4 className="text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-400 mb-3 flex items-center justify-between">
                 <span>Processing Timeline & Updates</span>
@@ -1688,24 +1847,81 @@ export default function StudentDashboard() {
                   {selectedRequestForDetail.updates.length > 1 && (
                     <div className="absolute left-2.5 top-2.5 bottom-2.5 w-0.5 -translate-x-1/2 bg-gray-200 dark:bg-zinc-800" />
                   )}
-                  {selectedRequestForDetail.updates.map((upd, idx) => (
-                    <div key={upd.id || idx} className="relative pl-7">
-                      <div className="absolute left-2.5 top-1 h-3 w-3 -translate-x-1/2 rounded-full border-2 border-white bg-pup-maroon dark:border-zinc-900 shadow-xs" />
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
-                          {upd.status}
-                        </span>
-                        {upd.created_at && (
-                          <span className="text-[11px] text-gray-400 dark:text-zinc-500">
-                            {formatPHDateTime(upd.created_at)}
-                          </span>
-                        )}
+                  {selectedRequestForDetail.updates.map((upd, idx) => {
+                    const isConsecutiveSameStatus =
+                      idx > 0 && upd.status === selectedRequestForDetail.updates[idx - 1].status;
+                    const formatStatusLabel = (st) => {
+                      if (st === "InProgress") return "In Progress";
+                      if (st === "Ready") return "Ready for Claiming";
+                      return st;
+                    };
+
+                    return (
+                      <div key={upd.id || idx} className="relative pl-7">
+                        <div
+                          className={cn(
+                            "absolute left-2.5 -translate-x-1/2 rounded-full border-2 border-white dark:border-zinc-900 shadow-xs",
+                            isConsecutiveSameStatus
+                              ? "top-1.5 h-2.5 w-2.5 bg-gray-400 dark:bg-zinc-500"
+                              : "top-1 h-3.5 w-3.5 bg-pup-maroon ring-2 ring-pup-maroon/20"
+                          )}
+                        />
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-1.5">
+                            <span
+                              className={cn(
+                                "text-xs",
+                                isConsecutiveSameStatus
+                                  ? "font-semibold text-gray-700 dark:text-zinc-300"
+                                  : "font-bold text-gray-900 dark:text-zinc-100"
+                              )}
+                            >
+                              {isConsecutiveSameStatus ? "Follow-Up Notice" : formatStatusLabel(upd.status)}
+                            </span>
+                            {isConsecutiveSameStatus && (
+                              <span className="text-[10px] font-medium text-gray-500 dark:text-zinc-400 bg-gray-100 dark:bg-zinc-800/80 px-1.5 py-0.5 rounded border border-gray-200/60 dark:border-white/5">
+                                {formatStatusLabel(upd.status)}
+                              </span>
+                            )}
+                          </div>
+                          {upd.created_at && (
+                            <span className="text-[11px] text-gray-400 dark:text-zinc-500 font-mono">
+                              {formatPHDateTime(upd.created_at)}
+                            </span>
+                          )}
+                        </div>
+                        <p className="mt-1 text-xs text-gray-600 dark:text-zinc-400 leading-normal">
+                          {upd.message || "Status updated by Registrar"}
+                        </p>
                       </div>
-                      <p className="mt-1 text-xs text-gray-600 dark:text-zinc-400 leading-normal">
-                        {upd.message || "Status updated by Registrar"}
-                      </p>
-                    </div>
-                  ))}
+                    );
+                  })}
+
+                  {/* Fallback active indicator if ticket status is ahead of logged updates */}
+                  {selectedRequestForDetail?.status &&
+                    selectedRequestForDetail.status !== "Pending" &&
+                    !selectedRequestForDetail.updates?.some((u) => u.status === selectedRequestForDetail.status) && (
+                      <div className="relative pl-7">
+                        <div className="absolute left-2.5 top-1 h-3.5 w-3.5 -translate-x-1/2 rounded-full border-2 border-white dark:border-zinc-900 bg-emerald-600 shadow-xs ring-2 ring-emerald-600/20" />
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-xs font-bold text-gray-900 dark:text-zinc-100">
+                              {selectedRequestForDetail.status === "InProgress"
+                                ? "In Progress"
+                                : selectedRequestForDetail.status === "Ready"
+                                ? "Ready for Claiming"
+                                : selectedRequestForDetail.status}
+                            </span>
+                            <span className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800/40">
+                              Current Active Status
+                            </span>
+                          </div>
+                        </div>
+                        <p className="mt-1 text-xs text-gray-600 dark:text-zinc-400 leading-normal">
+                          Your document request has been updated to {selectedRequestForDetail.status === "InProgress" ? "In Progress" : selectedRequestForDetail.status === "Ready" ? "Ready for Claiming" : selectedRequestForDetail.status} by the Registrar.
+                        </p>
+                      </div>
+                    )}
                 </div>
               ) : (
                 <div className="rounded-lg bg-gray-50 dark:bg-zinc-900/30 p-4 text-center text-xs text-gray-500">
@@ -1820,24 +2036,50 @@ export default function StudentDashboard() {
                   {selectedProposalForDetail.updates.length > 1 && (
                     <div className="absolute left-2.5 top-2.5 bottom-2.5 w-0.5 -translate-x-1/2 bg-gray-200 dark:bg-zinc-800" />
                   )}
-                  {selectedProposalForDetail.updates.map((upd, idx) => (
-                    <div key={upd.id || idx} className="relative pl-7">
-                      <div className="absolute left-2.5 top-1 h-3 w-3 -translate-x-1/2 rounded-full border-2 border-white bg-pup-maroon dark:border-zinc-900 shadow-xs" />
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
-                          {upd.status}
-                        </span>
-                        {upd.created_at && (
-                          <span className="text-[11px] text-gray-400 dark:text-zinc-500">
-                            {formatPHDateTime(upd.created_at)}
-                          </span>
-                        )}
+                  {selectedProposalForDetail.updates.map((upd, idx) => {
+                    const isConsecutiveSameStatus =
+                      idx > 0 && upd.status === selectedProposalForDetail.updates[idx - 1].status;
+
+                    return (
+                      <div key={upd.id || idx} className="relative pl-7">
+                        <div
+                          className={cn(
+                            "absolute left-2.5 -translate-x-1/2 rounded-full border-2 border-white dark:border-zinc-900 shadow-xs",
+                            isConsecutiveSameStatus
+                              ? "top-1.5 h-2.5 w-2.5 bg-gray-400 dark:bg-zinc-500"
+                              : "top-1 h-3.5 w-3.5 bg-pup-maroon ring-2 ring-pup-maroon/20"
+                          )}
+                        />
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-1.5">
+                            <span
+                              className={cn(
+                                "text-xs",
+                                isConsecutiveSameStatus
+                                  ? "font-semibold text-gray-700 dark:text-zinc-300"
+                                  : "font-bold text-gray-900 dark:text-zinc-100"
+                              )}
+                            >
+                              {isConsecutiveSameStatus ? "Evaluation Follow-Up" : upd.status}
+                            </span>
+                            {isConsecutiveSameStatus && (
+                              <span className="text-[10px] font-medium text-gray-500 dark:text-zinc-400 bg-gray-100 dark:bg-zinc-800/80 px-1.5 py-0.5 rounded border border-gray-200/60 dark:border-white/5">
+                                {upd.status}
+                              </span>
+                            )}
+                          </div>
+                          {upd.created_at && (
+                            <span className="text-[11px] text-gray-400 dark:text-zinc-500 font-mono">
+                              {formatPHDateTime(upd.created_at)}
+                            </span>
+                          )}
+                        </div>
+                        <p className="mt-1 text-xs text-gray-600 dark:text-zinc-400 leading-normal">
+                          {upd.message || "Status updated by OSAS"}
+                        </p>
                       </div>
-                      <p className="mt-1 text-xs text-gray-600 dark:text-zinc-400 leading-normal">
-                        {upd.message || "Status updated by OSAS"}
-                      </p>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               ) : (
                 <div className="rounded-lg bg-gray-50 dark:bg-zinc-900/30 p-4 text-center text-xs text-gray-500">
@@ -1868,6 +2110,17 @@ export default function StudentDashboard() {
           setPdfPreviewData(null);
         }}
         preview={pdfPreviewData}
+      />
+
+      {/* Student Request Experience Feedback Modal */}
+      <StudentFeedbackModal
+        open={feedbackModalOpen}
+        onClose={() => {
+          setFeedbackModalOpen(false);
+          setFeedbackRequest(null);
+        }}
+        request={feedbackRequest}
+        onFeedbackSubmitted={handleFeedbackSubmitted}
       />
     </TooltipProvider>
   );

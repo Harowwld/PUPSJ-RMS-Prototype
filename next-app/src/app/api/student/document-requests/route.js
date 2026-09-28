@@ -30,11 +30,17 @@ export async function GET(req) {
   const requests = await query(
     `SELECT dr.*, d.approval_status AS linked_document_status,
             COALESCE(dr.course_code, s.course_code) AS course_code,
-            c.name AS course_name
+            c.name AS course_name,
+            rf.id AS feedback_id,
+            rf.rating AS feedback_rating,
+            rf.aspect_tags AS feedback_aspect_tags,
+            rf.comments AS feedback_comments,
+            rf.created_at AS feedback_created_at
      FROM document_requests dr
      LEFT JOIN documents d ON d.id = dr.linked_document_id AND d.office_id = 'registrar'
      LEFT JOIN students s ON s.student_no = dr.student_no
      LEFT JOIN courses c ON c.code = COALESCE(dr.course_code, s.course_code)
+     LEFT JOIN document_request_feedback rf ON rf.document_request_id = dr.id
      WHERE dr.office_id = 'registrar'
        AND (
          (dr.student_account_id IS NOT NULL AND dr.student_account_id = $1)
@@ -70,6 +76,15 @@ export async function GET(req) {
   }, {});
   authorizedRequests.forEach((item) => {
     item.updates = updatesByRequest[String(item.id)] || [];
+    item.feedback = item.feedback_id
+      ? {
+          id: item.feedback_id,
+          rating: item.feedback_rating,
+          aspect_tags: item.feedback_aspect_tags || [],
+          comments: item.feedback_comments,
+          created_at: item.feedback_created_at,
+        }
+      : null;
   });
 
   return NextResponse.json({ ok: true, data: { requests: authorizedRequests, documents } });

@@ -88,6 +88,16 @@ const formatUploadedDate = (dateString) => {
   }
 }
 
+function formatChipDate(dateStr) {
+  if (!dateStr) return "..."
+  try {
+    const d = new Date(dateStr.includes("T") ? dateStr : dateStr + "T00:00:00")
+    return isNaN(d.getTime()) ? dateStr : format(d, "MMM d, yyyy")
+  } catch (e) {
+    return dateStr
+  }
+}
+
 export default function DigitalRecordsReviewTab({
   records,
   isLoading,
@@ -713,6 +723,12 @@ export default function DigitalRecordsReviewTab({
   }, [dateFrom, dateTo])
 
   const handleShortcutClick = (range) => {
+    if (activeShortcut === range) {
+      setDateFrom("")
+      setDateTo("")
+      setCurrentPage(1)
+      return
+    }
     const end = new Date()
     let start = new Date()
     switch (range) {
@@ -737,16 +753,6 @@ export default function DigitalRecordsReviewTab({
     setDateFrom(format(start, "yyyy-MM-dd"))
     setDateTo(format(end, "yyyy-MM-dd"))
     setCurrentPage(1)
-  }
-
-  const formatChipDate = (dateStr) => {
-    if (!dateStr) return "..."
-    try {
-      const d = new Date(dateStr.includes("T") ? dateStr : dateStr + "T00:00:00")
-      return isNaN(d.getTime()) ? dateStr : format(d, "MMM d, yyyy")
-    } catch (e) {
-      return dateStr
-    }
   }
 
   const handleClearFilters = () => {
@@ -1214,6 +1220,7 @@ export default function DigitalRecordsReviewTab({
             }}
             extraChips={extraChips}
             onClearAll={handleClearFilters}
+            className="border-t border-gray-100 dark:border-white/10 bg-white dark:bg-card px-6 py-2.5"
           />
         )}
 
@@ -1340,14 +1347,14 @@ export default function DigitalRecordsReviewTab({
                                 : "There are currently no digital records in the system."}
                             </EmptyDescription>
                             {hasActiveFilters && (
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={handleClearFilters}
-                                  className="mt-6 h-10 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-6 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
-                                >
-                                  Clear
-                                </Button>
+                              <Button
+                                variant="outline"
+                                onClick={handleClearFilters}
+                                className="mt-6 flex h-10 items-center justify-center gap-2 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
+                              >
+                                <HugeIcon className="ph-bold ph-arrow-counter-clockwise text-[14px] shrink-0" />
+                                <span>Clear Filters</span>
+                              </Button>
                             )}
                           </EmptyHeader>
                         </Empty>

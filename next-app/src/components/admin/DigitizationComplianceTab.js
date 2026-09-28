@@ -54,6 +54,19 @@ import ActiveFilterChips from "@/components/shared/ActiveFilterChips";
 import { Select } from "@/components/ui/select"
 import OSASOrganizationComplianceView from "./OSASOrganizationComplianceView";
 
+function SortIndicator({ column, sortBy, sortOrder }) {
+  if (sortBy !== column) {
+    return (
+      <HugeIcon className="ph-bold ph-caret-up-down ml-1 text-[12px] text-gray-400 dark:text-zinc-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+    );
+  }
+  return sortOrder === "asc" ? (
+    <HugeIcon className="ph-bold ph-caret-up ml-1 text-[12px] text-pup-maroon dark:text-primary" />
+  ) : (
+    <HugeIcon className="ph-bold ph-caret-down ml-1 text-[12px] text-pup-maroon dark:text-primary" />
+  );
+}
+
 export default function DigitizationComplianceTab({
   showToast,
   onLogAction,
@@ -76,8 +89,18 @@ export default function DigitizationComplianceTab({
   }
 
   const [kpiOrder, setKpiOrder] = useState(["completeness","students","complete"]);
-  const [statusFilter, setStatusFilter] = useState(searchParams.get("status") || "Active");
-  const [courseFilter, setCourseFilter] = useState(searchParams.get("course") || "");
+  const [statusFilter, setStatusFilter] = useState(() => {
+    const s = searchParams.get("status");
+    return s === "Archived" ? "Archived" : "Active";
+  });
+  const [courseFilter, setCourseFilter] = useState(() => {
+    const raw = searchParams.getAll("course").concat(searchParams.getAll("courseCode"));
+    if (!raw.length) return [];
+    return raw
+      .flatMap((c) => c.split(","))
+      .map((c) => c.trim())
+      .filter(Boolean);
+  });
   const [requireApproved, setRequireApproved] = useState(searchParams.get("approved") === "1");
 
   const [courses, setCourses] = useState([]);
@@ -128,18 +151,6 @@ export default function DigitizationComplianceTab({
     }
   };
 
-  const SortIndicator = ({ column }) => {
-    if (sortBy !== column)
-      return (
-        <HugeIcon  className="ph-bold ph-caret-up-down ml-1 text-[12px] text-gray-400 dark:text-zinc-500 opacity-0 group-hover:opacity-100 transition-opacity"></HugeIcon>
-      );
-    return sortOrder === "asc" ? (
-      <HugeIcon  className="ph-bold ph-caret-up ml-1 text-[12px] text-pup-maroon dark:text-primary"></HugeIcon>
-    ) : (
-      <HugeIcon  className="ph-bold ph-caret-down ml-1 text-[12px] text-pup-maroon dark:text-primary"></HugeIcon>
-    );
-  };
-
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -164,8 +175,9 @@ export default function DigitizationComplianceTab({
   const buildQueryString = useCallback(() => {
     const params = new URLSearchParams();
     params.set("status", statusFilter);
-    const cc = String(courseFilter || "").trim();
-    if (cc) params.set("courseCode", cc);
+    if (Array.isArray(courseFilter) && courseFilter.length > 0) {
+      params.set("courseCode", courseFilter.join(","));
+    }
     if (requireApproved) params.set("requireApproved", "1");
     return params.toString();
   }, [statusFilter, courseFilter, requireApproved]);
@@ -205,20 +217,21 @@ export default function DigitizationComplianceTab({
     // Always enforce the correct view
     const oldStatus = params.get("status") || "Active";
     const oldCourse = params.get("course") || "";
+    const currentCourse = Array.isArray(courseFilter) ? courseFilter.join(",") : "";
     const oldApproved = params.get("approved") || "0";
     const currentView = params.get("view");
 
     // Only update if something actually changed
     const hasChanged = 
         oldStatus !== statusFilter || 
-        oldCourse !== courseFilter || 
+        oldCourse !== currentCourse || 
         (oldApproved === "1") !== requireApproved ||
         currentView !== "digitization";
 
     if (hasChanged) {
         params.set("view", "digitization");
         params.set("status", statusFilter);
-        if (courseFilter) params.set("course", courseFilter); else params.delete("course");
+        if (currentCourse) params.set("course", currentCourse); else params.delete("course");
         if (requireApproved) params.set("approved", "1"); else params.delete("approved");
         
         const newUrl = `${window.location.pathname}?${params.toString()}`;
@@ -333,7 +346,7 @@ export default function DigitizationComplianceTab({
         row(["System Analytics - Digitization Compliance Report", ""]),
         row(["Generated (server UTC)", meta?.generatedAt || ""]),
         row(["Student status filter", meta?.studentStatus || ""]),
-        row(["Course filter", meta?.courseCode || "All"]),
+        row(["Course filter", meta?.courseCode || (Array.isArray(courseFilter) && courseFilter.length > 0 ? courseFilter.join(", ") : "All")]),
         row(["Require approved only", meta?.requireApproved ? "Yes" : "No"]),
         row(["Requirement", meta?.definitions?.expectedCountFormula || ""]),
         "",
@@ -395,7 +408,7 @@ export default function DigitizationComplianceTab({
 
   const handleClearAll = useCallback(() => {
     setStatusFilter("Active");
-    setCourseFilter("");
+    setCourseFilter([]);
     setRequireApproved(false);
     setTableSearch("");
   }, []);
@@ -409,12 +422,12 @@ export default function DigitizationComplianceTab({
           { id: "Active", label: "Active Students", dotColor: "bg-emerald-500" },
           { id: "Archived", label: "Archived Students", dotColor: "bg-gray-400" },
         ],
-        selected: statusFilter === "All" ? [] : [statusFilter],
+        selected: [statusFilter],
         onChange: (vals) => {
-          if (vals.length === 0 || vals.length === 2) {
-            setStatusFilter("All");
+          if (vals.length === 0) {
+            setStatusFilter("Active");
           } else {
-            setStatusFilter(vals[0]);
+            setStatusFilter(vals[vals.length - 1]);
           }
         }
       },
@@ -425,9 +438,9 @@ export default function DigitizationComplianceTab({
           id: String(c.code || ""),
           label: c.code ? `${c.code}${c.name ? ` — ${c.name}` : ""}` : c.name || "Program",
         })),
-        selected: courseFilter ? [courseFilter] : [],
+        selected: Array.isArray(courseFilter) ? courseFilter : [],
         onChange: (vals) => {
-          setCourseFilter(vals.length > 0 ? vals[vals.length - 1] : "");
+          setCourseFilter(Array.isArray(vals) ? vals : []);
         }
       },
       {
@@ -445,7 +458,7 @@ export default function DigitizationComplianceTab({
   }, [courses, statusFilter, courseFilter, requireApproved]);
 
 
-  const hasActiveFilters = statusFilter !== "Active" || courseFilter !== "" || requireApproved || tableSearch !== "";
+  const hasActiveFilters = statusFilter !== "Active" || (Array.isArray(courseFilter) && courseFilter.length > 0) || requireApproved || tableSearch !== "";
 
   return (
     <div className="flex flex-col flex-1 h-full min-h-0 w-full gap-6 animate-fade-up font-jakarta">
@@ -749,64 +762,36 @@ export default function DigitizationComplianceTab({
         ) : null}
 
         {/* Navigation Toolbar */}
-        <div className="border-t border-gray-100 dark:border-white/10 p-5 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
-          {/* Student Status Filter Line Tabs */}
-          <div className="flex items-center gap-6 shrink-0 select-none overflow-x-auto">
-            <button
-              type="button"
-              onClick={() => setStatusFilter("Active")}
-              className={cn(
-                "relative h-9 flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent whitespace-nowrap",
-                statusFilter === "Active"
-                  ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
-                  : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
+        <div className="border-t border-gray-100 dark:border-white/10 p-5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-gray-50/40 dark:bg-zinc-900/30 flex-wrap">
+          {/* Search Input (Left side) */}
+          <div className="relative flex-1 sm:w-64 min-w-[200px] max-w-sm group">
+            <HugeIcon className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-xs pointer-events-none" />
+            <Input
+              type="text"
+              placeholder="Search Program"
+              className="pl-8 pr-16 h-9 text-xs w-full bg-white dark:bg-zinc-800 border border-gray-200 dark:border-white/10 rounded-xl text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
+              value={tableSearch}
+              onChange={(e) => setTableSearch(e.target.value)}
+            />
+            <div className="absolute inset-y-0 right-3 flex items-center gap-1.5">
+              {tableSearch && (
+                <button
+                  type="button"
+                  onClick={() => setTableSearch("")}
+                  className="text-gray-400 hover:text-gray-600 dark:hover:text-zinc-300 cursor-pointer p-0.5 transition-colors border-0 bg-transparent flex items-center justify-center"
+                  title="Clear search"
+                >
+                  <HugeIcon className="ph-bold ph-x-circle text-[13px]" />
+                </button>
               )}
-            >
-              Active
-            </button>
-            <button
-              type="button"
-              onClick={() => setStatusFilter("All")}
-              className={cn(
-                "relative h-9 flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent whitespace-nowrap",
-                statusFilter === "All"
-                  ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
-                  : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
-              )}
-            >
-              All Students
-            </button>
-            <button
-              type="button"
-              onClick={() => setStatusFilter("Archived")}
-              className={cn(
-                "relative h-9 flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent whitespace-nowrap",
-                statusFilter === "Archived"
-                  ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
-                  : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
-              )}
-            >
-              Archived
-            </button>
+              <span className="text-[11px] font-mono text-gray-400 dark:text-zinc-500 pointer-events-none">
+                {sortedByCourse.length}
+              </span>
+            </div>
           </div>
 
-          {/* Search, Academic Program, and Validation Controls */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 flex-wrap">
-            {/* Search */}
-            <div className="relative flex-1 sm:w-64 min-w-[200px] group">
-              <HugeIcon  className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-xs pointer-events-none"></HugeIcon>
-              <Input
-                type="text"
-                placeholder="Search Program"
-                className="pl-8 pr-16 h-9 text-xs w-full bg-white dark:bg-zinc-800 border border-gray-200 dark:border-white/10 rounded-xl text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
-                value={tableSearch}
-                onChange={(e) => setTableSearch(e.target.value)}
-              />
-              <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] font-mono text-gray-400 dark:text-zinc-500">
-                {sortedByCourse.length}
-              </div>
-            </div>
-
+          {/* Filter controls (Right side) */}
+          <div className="flex flex-wrap items-center gap-3">
             {/* Multi-Criteria Filters (Status, Program, Requirement) */}
             <MultiCriteriaFilter
               groups={filterCriteriaGroups}
@@ -855,17 +840,19 @@ export default function DigitizationComplianceTab({
                       label: "Status",
                       values: [statusFilter],
                       onRemove: () => setStatusFilter("Active"),
-                      formatValue: (val) => (val === "All" ? "All Students" : val)
+                      formatValue: (val) => val
                     }
                   ]
                 : []),
-              ...(courseFilter !== ""
+              ...(Array.isArray(courseFilter) && courseFilter.length > 0
                 ? [
                     {
                       key: "course",
                       label: "Program",
-                      values: [courseFilter],
-                      onRemove: () => setCourseFilter(""),
+                      values: courseFilter,
+                      onRemove: (valToRemove) => {
+                        setCourseFilter((prev) => prev.filter((c) => c !== valToRemove));
+                      },
                       formatValue: (val) => val
                     }
                   ]
@@ -885,6 +872,7 @@ export default function DigitizationComplianceTab({
             searchQuery={tableSearch}
             onClearSearch={() => setTableSearch("")}
             onClearAll={handleClearAll}
+            className="border-t border-gray-100 dark:border-white/10 bg-white dark:bg-card px-6 py-2.5"
           />
         )}
 
@@ -1012,7 +1000,7 @@ export default function DigitizationComplianceTab({
                           onClick={() => handleSort("courseCode")}
                           className="group flex items-center text-[12px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500 transition-colors focus:outline-none cursor-pointer"
                         >
-                          Program <SortIndicator column="courseCode" />
+                          Program <SortIndicator column="courseCode" sortBy={sortBy} sortOrder={sortOrder} />
                         </button>
                       </th>
                       <th className="p-4 px-6 text-center">
@@ -1020,7 +1008,7 @@ export default function DigitizationComplianceTab({
                           onClick={() => handleSort("total")}
                           className="group mx-auto flex items-center text-[12px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500 transition-colors focus:outline-none cursor-pointer"
                         >
-                          Total Students <SortIndicator column="total" />
+                          Total Students <SortIndicator column="total" sortBy={sortBy} sortOrder={sortOrder} />
                         </button>
                       </th>
                       <th className="p-4 px-6 text-center">
@@ -1028,7 +1016,7 @@ export default function DigitizationComplianceTab({
                           onClick={() => handleSort("digitized")}
                           className="group mx-auto flex items-center text-[12px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500 transition-colors focus:outline-none cursor-pointer"
                         >
-                          Fully Digitized <SortIndicator column="digitized" />
+                          Fully Digitized <SortIndicator column="digitized" sortBy={sortBy} sortOrder={sortOrder} />
                         </button>
                       </th>
                       <th className="p-4 px-6 text-right">
@@ -1036,7 +1024,7 @@ export default function DigitizationComplianceTab({
                           onClick={() => handleSort("percent")}
                           className="group ml-auto flex items-center text-[12px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500 transition-colors focus:outline-none cursor-pointer"
                         >
-                          Completeness <SortIndicator column="percent" />
+                          Completeness <SortIndicator column="percent" sortBy={sortBy} sortOrder={sortOrder} />
                         </button>
                       </th>
                     </tr>
@@ -1097,12 +1085,11 @@ export default function DigitizationComplianceTab({
                     {hasActiveFilters && (
                       <Button 
                         variant="outline" 
-                        size="sm" 
                         onClick={handleClearAll}
-                        className="mt-6 flex h-10 items-center gap-3 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-6 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-colors hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 tracking-wide cursor-pointer"
+                        className="mt-6 flex h-10 items-center justify-center gap-2 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                       >
-                        <HugeIcon  className="ph-bold ph-arrow-counter-clockwise"></HugeIcon>
-                        Clear
+                        <HugeIcon className="ph-bold ph-arrow-counter-clockwise text-[14px] shrink-0" />
+                        <span>Clear Filters</span>
                       </Button>
                     )}
                   </EmptyHeader>

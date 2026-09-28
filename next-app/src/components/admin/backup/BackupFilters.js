@@ -33,6 +33,12 @@ export default function BackupFilters({
   isLoading = false,
 }) {
   const handleQuickRange = (range) => {
+    if (activeShortcut === range) {
+      setBackupStartDate("")
+      setBackupEndDate("")
+      setPage?.(1)
+      return
+    }
     const end = new Date()
     let start = new Date()
 
@@ -86,9 +92,9 @@ export default function BackupFilters({
   })()
 
   return (
-    <div className="border-t border-gray-100 dark:border-white/10 p-5 flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3 bg-gray-50/40 dark:bg-zinc-900/30 flex-wrap">
-      {/* Search Bar: Fixed width (sm:w-64), aligned right with other controls */}
-      <div className="relative w-full sm:w-64 shrink-0 group">
+    <div className="border-t border-gray-100 dark:border-white/10 p-5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-gray-50/40 dark:bg-zinc-900/30 flex-wrap">
+      {/* Search Bar: Placed on the left */}
+      <div className="relative flex-1 sm:w-64 min-w-[200px] max-w-sm group">
         <HugeIcon  className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-xs pointer-events-none" />
         <Input
           type="text"
@@ -114,7 +120,9 @@ export default function BackupFilters({
         )}
       </div>
 
-      {/* Time Shortcuts */}
+      {/* Filter controls: Shortcuts and Date Pickers on the right */}
+      <div className="flex flex-wrap items-center gap-3">
+        {/* Time Shortcuts */}
       <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-gray-200/60 dark:border-white/5 shrink-0">
         {[
           { key: "today", label: "Today" },
@@ -197,6 +205,7 @@ export default function BackupFilters({
           </Popover>
         </div>
       </div>
+    </div>
     </div>
   )
 }

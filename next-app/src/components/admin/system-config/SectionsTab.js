@@ -783,9 +783,10 @@ export default function SectionsTab({
                                       setLocalSearch("")
                                       setSelectedCourseFilter("")
                                     }}
-                                    className="mt-4 h-10 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
+                                    className="mt-6 flex h-10 items-center justify-center gap-2 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                                   >
-                                    Clear
+                                    <HugeIcon className="ph-bold ph-arrow-counter-clockwise text-[14px] shrink-0" />
+                                    <span>Clear Filters</span>
                                   </Button>
                                 ) : !showArchived && (
                                   <Button
