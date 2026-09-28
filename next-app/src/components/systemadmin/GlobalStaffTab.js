@@ -665,7 +665,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                 title="Refresh Staff Directory"
               />
 
-              <div className="h-6 w-px bg-gray-200 dark:bg-zinc-800" />
+              
 
               <Button
                 onClick={handleOpenCreate}
@@ -693,7 +693,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                   <div
                     onClick={() => setSelectedKpi(selectedKpi === stat.key ? null : stat.key)}
                     className={cn(
-                      "relative overflow-hidden rounded-[18px] border cursor-pointer select-none transition-all shadow-[0_2px_10px_rgb(0,0,0,0.04)] hover:shadow-[0_4px_15px_rgb(0,0,0,0.06)] flex flex-col justify-between min-h-[110px] bg-gray-50 dark:bg-zinc-900",
+                      "relative overflow-hidden rounded-[18px] border cursor-pointer select-none transition-all shadow-none flex flex-col justify-between min-h-[110px] bg-gray-50 dark:bg-zinc-900",
                       selectedKpi === stat.key
                         ? `border-${stat.color}-500/50 ring-1 ring-${stat.color}-500/20`
                         : "border-gray-100 dark:border-white/5"
@@ -993,7 +993,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                 <th className="w-12 py-0 px-4 text-center align-middle">
                   <input
                     type="checkbox"
-                    className="h-4 w-4 cursor-pointer rounded border border-gray-300 dark:border-white/10"
+                    className="h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-gray-300 dark:border-white/10"
                     checked={
                       paginatedStaff.length > 0 &&
                       paginatedStaff
@@ -1082,7 +1082,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                         <input
                           type="checkbox"
                           className={cn(
-                            "h-4 w-4 cursor-pointer rounded border border-gray-300 dark:border-white/10 transition-opacity",
+                            "h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-gray-300 dark:border-white/10 transition-opacity",
                             isSelected ? "opacity-100" : "opacity-50 group-hover:opacity-80"
                           )}
                           checked={isSelected}

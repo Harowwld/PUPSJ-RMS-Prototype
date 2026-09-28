@@ -195,7 +195,7 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
                 title="Refresh Analytics"
               />
 
-              <div className="h-6 w-px bg-gray-200 dark:bg-zinc-800" />
+              
 
               <div className="flex items-center gap-2">
                 <Button

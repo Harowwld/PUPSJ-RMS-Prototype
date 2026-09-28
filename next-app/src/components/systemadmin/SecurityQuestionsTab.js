@@ -19,6 +19,7 @@ import { cn } from "@/lib/utils"
 
 export default function SecurityQuestionsTab({ showToast }) {
   const [questions, setQuestions] = useState(["", ""])
+  const [kpiOrder, setKpiOrder] = useState(["total", "enforced"])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [totpModalOpen, setTotpModalOpen] = useState(false)
@@ -190,7 +191,7 @@ export default function SecurityQuestionsTab({ showToast }) {
                 title="Refresh Security Questions"
               />
 
-              <div className="h-6 w-px bg-gray-200 dark:bg-zinc-800" />
+              
 
               <Button
                 onClick={() => handleSave()}
@@ -213,7 +214,7 @@ export default function SecurityQuestionsTab({ showToast }) {
             {kpiOrder.map(key => {
               if (key === "total") return (
             <Reorder.Item as="div" value="total" key="total" className="relative group rounded-xl">
-              <div className="relative overflow-hidden rounded-[18px] border border-gray-100 dark:border-white/5 cursor-pointer select-none transition-all shadow-[0_2px_10px_rgb(0,0,0,0.04)] hover:shadow-[0_4px_15px_rgb(0,0,0,0.06)] flex flex-col justify-between min-h-[110px] bg-gray-50 dark:bg-zinc-900">
+              <div className="relative overflow-hidden rounded-[18px] border border-gray-100 dark:border-white/5 cursor-pointer select-none transition-all shadow-none flex flex-col justify-between min-h-[110px] bg-gray-50 dark:bg-zinc-900">
                 <div className="flex justify-between items-start p-4 pb-0">
                   <div className="flex flex-col gap-1">
                     <span className="text-[13px] font-medium text-gray-500 dark:text-zinc-400 capitalize">
@@ -244,7 +245,7 @@ export default function SecurityQuestionsTab({ showToast }) {
               );
               if (key === "enforced") return (
             <Reorder.Item as="div" value="enforced" key="enforced" className="relative group rounded-xl">
-              <div className="relative overflow-hidden rounded-[18px] border border-gray-100 dark:border-white/5 cursor-pointer select-none transition-all shadow-[0_2px_10px_rgb(0,0,0,0.04)] hover:shadow-[0_4px_15px_rgb(0,0,0,0.06)] flex flex-col justify-between min-h-[110px] bg-gray-50 dark:bg-zinc-900">
+              <div className="relative overflow-hidden rounded-[18px] border border-gray-100 dark:border-white/5 cursor-pointer select-none transition-all shadow-none flex flex-col justify-between min-h-[110px] bg-gray-50 dark:bg-zinc-900">
                 <div className="flex justify-between items-start p-4 pb-0">
                   <div className="flex flex-col gap-1">
                     <span className="text-[13px] font-medium text-gray-500 dark:text-zinc-400 capitalize">

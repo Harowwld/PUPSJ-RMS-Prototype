@@ -74,7 +74,7 @@ export default function BackupTable({
                 <input
                   type="checkbox"
                   className={cn(
-                    "h-4 w-4 cursor-pointer rounded border border-gray-300 dark:border-white/10 transition-opacity",
+                    "h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-gray-300 dark:border-white/10 transition-opacity",
                     backups.length > 0 && backups.every((b) => selectedBackupIds.includes(b.id)) ? "opacity-100" : "opacity-50 hover:opacity-85"
                   )}
                   checked={
@@ -218,7 +218,7 @@ export default function BackupTable({
                       <input
                         type="checkbox"
                         className={cn(
-                          "h-4 w-4 cursor-pointer rounded border border-gray-300 dark:border-white/10 transition-opacity",
+                          "h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-gray-300 dark:border-white/10 transition-opacity",
                           isSelected ? "opacity-100" : "opacity-50 group-hover:opacity-80"
                         )}
                         checked={isSelected}

@@ -18,7 +18,7 @@ export default function OsasMonitoringSkeleton() {
           </div>
           <div className="flex items-center gap-3">
             <Skeleton className="h-9 w-32 rounded-xl" />
-            <div className="h-6 w-px bg-gray-200 dark:bg-zinc-800" />
+            
             <Skeleton className="h-10 w-10 rounded-xl" />
           </div>
         </div>

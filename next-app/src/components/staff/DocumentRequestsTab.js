@@ -501,7 +501,7 @@ export default function DocumentRequestsTab({
                   title="Refresh Requests"
                 />
 
-                <div className="h-6 w-px bg-gray-200 dark:bg-zinc-800" />
+                
 
                 <div className="flex items-center gap-2">
                   {!loading && !error && (

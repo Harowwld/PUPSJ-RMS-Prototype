@@ -110,9 +110,9 @@ export default function Sidebar({ open = true, items, activeKey, onSelect, onLog
             }}
             title={open ? "Collapse Sidebar" : "Expand Sidebar"}
             data-tooltip-placement="right"
-            className="flex w-[36px] h-[36px] items-center justify-center rounded-[8px] hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/5 active:scale-95 cursor-pointer transition-all duration-200 ease-out shrink-0"
+            className="flex w-[40px] h-[40px] items-center justify-center rounded-[8px] hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/5 active:scale-95 cursor-pointer transition-all duration-200 ease-out shrink-0"
           >
-            <HugeIcon  className={cn("rms-style-color text-[21px] transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]", open ? "ti ti-panel-left-dashed" : "ti ti-panel-left")} data-color={activeColor} style={{ color: activeColor }}></HugeIcon>
+            <HugeIcon className={cn("text-[#232e3b] dark:text-[#232e3b] text-[24px] transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]", open ? "ti ti-panel-left-dashed" : "ti ti-panel-left")}></HugeIcon>
           </button>
 
           {/* Zoom Control when Sidebar is Visible */}
@@ -140,14 +140,12 @@ export default function Sidebar({ open = true, items, activeKey, onSelect, onLog
                 >
                   <div className="absolute left-0 right-0 h-[2.5px] bg-[#D1D1D6] dark:bg-zinc-700 rounded-full"></div>
                   <div
-                    className="rms-style-width rms-style-background-color absolute left-0 h-[2.5px] rounded-full"
+                    className="rms-style-width bg-[#232e3b] dark:bg-[#232e3b] absolute left-0 h-[2.5px] rounded-full"
                     data-width={`${(zoomNode / 6) * 100}%`}
-                    data-background-color={activeColor}
                   ></div>
                   <div
-                    className="rms-style-left rms-style-border-color absolute -translate-x-1/2 w-[12px] h-[12px] rounded-full bg-white dark:bg-zinc-900 shadow-xs border-2"
+                    className="rms-style-left border-[#232e3b] dark:border-[#232e3b] absolute -translate-x-1/2 w-[12px] h-[12px] rounded-full bg-white dark:bg-zinc-900 shadow-xs border-2"
                     data-left={`${(zoomNode / 6) * 100}%`}
-                    data-border-color={activeColor}
                   ></div>
                 </div>
                 <button
@@ -169,7 +167,7 @@ export default function Sidebar({ open = true, items, activeKey, onSelect, onLog
                     title="Reset scale to 100% (Default)"
                     className="flex items-center gap-1 px-1.5 h-6 text-[10px] font-semibold text-gray-600 dark:text-zinc-300 hover:text-gray-900 dark:hover:text-white bg-gray-200/80 hover:bg-gray-300 dark:bg-zinc-800 dark:hover:bg-zinc-700 rounded-md transition-colors cursor-pointer border-0 shadow-2xs shrink-0 select-none"
                   >
-                    <HugeIcon  className="ti ti-rotate-2 text-[11px]"></HugeIcon>
+                    <HugeIcon  className="ti ti-rotate-2 text-[12px]"></HugeIcon>
                     <span>Reset</span>
                   </button>
                 )}
@@ -187,7 +185,7 @@ export default function Sidebar({ open = true, items, activeKey, onSelect, onLog
               >
                 <span
                   className={cn(
-                    "text-[11px] font-semibold tracking-[0.05em] uppercase text-[#8E8E93] dark:text-zinc-500 whitespace-nowrap px-2 block transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]",
+                    "text-[12px] font-semibold tracking-[0.05em] uppercase text-[#8E8E93] dark:text-zinc-500 whitespace-nowrap px-2 block transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]",
                     open ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-2 pointer-events-none"
                   )}
                 >
@@ -222,7 +220,7 @@ export default function Sidebar({ open = true, items, activeKey, onSelect, onLog
                   data-background-color={hasActiveChild && !isExpanded ? activeColor : undefined}
                   style={hasActiveChild && !isExpanded ? { backgroundColor: activeColor } : undefined}
                   className={cn(
-                    "flex w-full h-[38px] items-center rounded-[8px] text-[14px] outline-none cursor-pointer transition-colors duration-200 ease-out relative group select-none overflow-hidden shrink-0",
+                    "flex w-full h-[42px] items-center rounded-[8px] text-[14px] outline-none cursor-pointer transition-colors duration-200 ease-out relative group select-none overflow-hidden shrink-0",
                     open ? "px-1 justify-start" : "px-0 justify-center",
                     hasActiveChild && !isExpanded
                       ? "text-white font-medium shadow-2xs rms-style-background-color"
@@ -230,11 +228,11 @@ export default function Sidebar({ open = true, items, activeKey, onSelect, onLog
                   )}
                 >
                   <div className={cn("flex items-center overflow-hidden", open ? "min-w-0 flex-1" : "justify-center w-full")}>
-                    <span className="relative w-[36px] h-[36px] flex items-center justify-center shrink-0">
+                    <span className="relative w-[40px] h-[40px] flex items-center justify-center shrink-0">
                       <HugeIcon 
                         data-color={hasActiveChild && !isExpanded ? "#FFFFFF" : staffIconColor}
                         style={{ color: hasActiveChild && !isExpanded ? "#FFFFFF" : staffIconColor }}
-                        className={cn("rms-style-color", iconName, "text-[19px] transition-colors shrink-0")}
+                        className={cn("rms-style-color", iconName, "text-[22px] transition-colors shrink-0")}
                       ></HugeIcon>
                       {/* Collapsed notification dot */}
                       <span
@@ -245,7 +243,7 @@ export default function Sidebar({ open = true, items, activeKey, onSelect, onLog
                     </span>
                     <span
                       className={cn(
-                        "whitespace-nowrap font-medium text-[13.5px] text-left ml-1.5 overflow-hidden block transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]",
+                        "whitespace-nowrap font-medium text-[14.5px] text-left ml-1.5 overflow-hidden block transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]",
                         open
                           ? "opacity-100 max-w-[170px] translate-x-0"
                           : "opacity-0 max-w-0 ml-0 -translate-x-3 pointer-events-none"
@@ -307,7 +305,7 @@ export default function Sidebar({ open = true, items, activeKey, onSelect, onLog
                           data-transition-delay={isExpanded ? `${childIdx * 30}ms` : "0ms"}
                           style={isActive ? { backgroundColor: activeColor } : undefined}
                           className={cn(
-                            "rms-style-transition-delay flex w-full h-[38px] items-center rounded-[8px] text-[14px] outline-none cursor-pointer transition-colors duration-200 ease-out relative group select-none overflow-hidden shrink-0",
+                            "rms-style-transition-delay flex w-full h-[42px] items-center rounded-[8px] text-[14px] outline-none cursor-pointer transition-colors duration-200 ease-out relative group select-none overflow-hidden shrink-0",
                             open ? "pl-4 pr-1 justify-start" : "px-0 justify-center",
                             isActive
                               ? "text-white font-medium shadow-2xs rms-style-background-color"
@@ -315,16 +313,16 @@ export default function Sidebar({ open = true, items, activeKey, onSelect, onLog
                           )}
                         >
                           <div className={cn("flex items-center overflow-hidden", open ? "min-w-0 flex-1" : "justify-center w-full")}>
-                            <span className="w-[36px] h-[36px] flex items-center justify-center shrink-0">
+                            <span className="w-[40px] h-[40px] flex items-center justify-center shrink-0">
                               <HugeIcon 
                                 data-color={isActive ? "#FFFFFF" : staffIconColor}
                                 style={{ color: isActive ? "#FFFFFF" : staffIconColor }}
-                                className={cn("rms-style-color", childIconName, "text-[19px] transition-colors shrink-0")}
+                                className={cn("rms-style-color", childIconName, "text-[22px] transition-colors shrink-0")}
                               ></HugeIcon>
                             </span>
                             <span
                               className={cn(
-                                "whitespace-nowrap font-medium text-[13.5px] text-left ml-1.5 overflow-hidden block transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]",
+                                "whitespace-nowrap font-medium text-[14.5px] text-left ml-1.5 overflow-hidden block transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]",
                                 open
                                   ? "opacity-100 max-w-[170px] translate-x-0"
                                   : "opacity-0 max-w-0 ml-0 -translate-x-3 pointer-events-none"
@@ -376,7 +374,7 @@ export default function Sidebar({ open = true, items, activeKey, onSelect, onLog
               data-background-color={isActive ? activeColor : undefined}
               style={isActive ? { backgroundColor: activeColor } : undefined}
               className={cn(
-                "flex w-full h-[38px] items-center rounded-[8px] text-[14px] outline-none cursor-pointer transition-colors duration-200 ease-out relative group select-none overflow-hidden shrink-0",
+                "flex w-full h-[42px] items-center rounded-[8px] text-[14px] outline-none cursor-pointer transition-colors duration-200 ease-out relative group select-none overflow-hidden shrink-0",
                 open ? "px-1 justify-start" : "px-0 justify-center",
                 isActive
                   ? "text-white font-medium shadow-2xs rms-style-background-color"
@@ -384,11 +382,11 @@ export default function Sidebar({ open = true, items, activeKey, onSelect, onLog
               )}
             >
               <div className={cn("flex items-center overflow-hidden", open ? "min-w-0 flex-1" : "justify-center w-full")}>
-                <span className="relative w-[36px] h-[36px] flex items-center justify-center shrink-0">
+                <span className="relative w-[40px] h-[40px] flex items-center justify-center shrink-0">
                   <HugeIcon 
                     data-color={isActive ? "#FFFFFF" : staffIconColor}
                     style={{ color: isActive ? "#FFFFFF" : staffIconColor }}
-                    className={cn("rms-style-color", iconName, "text-[19px] transition-colors shrink-0")}
+                    className={cn("rms-style-color", iconName, "text-[22px] transition-colors shrink-0")}
                   ></HugeIcon>
                   {/* Collapsed notification dot */}
                   <span
@@ -399,7 +397,7 @@ export default function Sidebar({ open = true, items, activeKey, onSelect, onLog
                 </span>
                 <span
                   className={cn(
-                    "whitespace-nowrap font-medium text-[13.5px] text-left ml-1.5 overflow-hidden block transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]",
+                    "whitespace-nowrap font-medium text-[14.5px] text-left ml-1.5 overflow-hidden block transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]",
                     open
                       ? "opacity-100 max-w-[170px] translate-x-0"
                       : "opacity-0 max-w-0 ml-0 -translate-x-3 pointer-events-none"

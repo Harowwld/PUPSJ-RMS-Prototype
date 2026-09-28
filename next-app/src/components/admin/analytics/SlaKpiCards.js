@@ -16,7 +16,7 @@ export default function SlaKpiCards({ total, completionRate, completed, sla }) {
       {kpiOrder.map(key => {
         if (key === "rate") return (
           <Reorder.Item as="div" value="rate" key="rate" className={cn("relative group rounded-xl w-full cursor-grab active:cursor-grabbing", selectedKpi === "rate" ? "z-30" : "z-10")}>
-            <div onClick={() => setSelectedKpi(selectedKpi === "rate" ? null : "rate")} className={cn("relative overflow-hidden rounded-[18px] border cursor-pointer select-none transition-all shadow-[0_2px_10px_rgb(0,0,0,0.04)] hover:shadow-[0_4px_15px_rgb(0,0,0,0.06)] flex flex-col justify-between min-h-[110px] bg-gray-50 dark:bg-zinc-900", selectedKpi === "rate" ? "border-red-500/50 ring-1 ring-red-500/20" : "border-gray-100 dark:border-white/5")}>
+            <div onClick={() => setSelectedKpi(selectedKpi === "rate" ? null : "rate")} className={cn("relative overflow-hidden rounded-[18px] border cursor-pointer select-none transition-all shadow-none flex flex-col justify-between min-h-[110px] bg-gray-50 dark:bg-zinc-900", selectedKpi === "rate" ? "border-red-500/50 ring-1 ring-red-500/20" : "border-gray-100 dark:border-white/5")}>
               <div className="flex justify-between items-start p-4 pb-0">
                 <div className="flex flex-col gap-1">
                   <span className="text-[13px] font-medium text-gray-500 dark:text-zinc-400 capitalize">Citizen's Charter SLA</span>
@@ -33,7 +33,7 @@ export default function SlaKpiCards({ total, completionRate, completed, sla }) {
         );
         if (key === "total") return (
           <Reorder.Item as="div" value="total" key="total" className={cn("relative group rounded-xl w-full cursor-grab active:cursor-grabbing", selectedKpi === "total" ? "z-30" : "z-10")}>
-            <div onClick={() => setSelectedKpi(selectedKpi === "total" ? null : "total")} className={cn("relative overflow-hidden rounded-[18px] border cursor-pointer select-none transition-all shadow-[0_2px_10px_rgb(0,0,0,0.04)] hover:shadow-[0_4px_15px_rgb(0,0,0,0.06)] flex flex-col justify-between min-h-[110px] bg-gray-50 dark:bg-zinc-900", selectedKpi === "total" ? "border-emerald-500/50 ring-1 ring-emerald-500/20" : "border-gray-100 dark:border-white/5")}>
+            <div onClick={() => setSelectedKpi(selectedKpi === "total" ? null : "total")} className={cn("relative overflow-hidden rounded-[18px] border cursor-pointer select-none transition-all shadow-none flex flex-col justify-between min-h-[110px] bg-gray-50 dark:bg-zinc-900", selectedKpi === "total" ? "border-emerald-500/50 ring-1 ring-emerald-500/20" : "border-gray-100 dark:border-white/5")}>
               <div className="flex justify-between items-start p-4 pb-0">
                 <div className="flex flex-col gap-1"><span className="text-[13px] font-medium text-gray-500 dark:text-zinc-400 capitalize">Total Requests</span></div>
                 <div className={cn("w-8 h-8 rounded-[10px] flex items-center justify-center text-white shadow-sm shrink-0", "bg-[#22c55e]")}><HugeIcon className="ph-bold text-[15px] ph-files" /></div>

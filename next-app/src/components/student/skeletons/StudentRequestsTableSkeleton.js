@@ -99,7 +99,7 @@ export default function StudentRequestsTableSkeleton({ rowCount = 6, showForm = 
           <div className="flex items-center gap-3 sm:gap-4">
             <Skeleton className="hidden sm:inline-block h-6 w-32 rounded-full dark:bg-muted" />
             <Skeleton className="h-10 w-10 rounded-xl dark:bg-muted" />
-            <div className="h-6 w-px bg-gray-200 dark:bg-zinc-800" />
+            
             <Skeleton className="h-10 w-28 rounded-xl dark:bg-muted" />
           </div>
         </div>

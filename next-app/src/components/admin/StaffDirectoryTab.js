@@ -99,7 +99,7 @@ const StaffTableRow = React.memo(({
           <input
             type="checkbox"
             className={cn(
-              "h-4 w-4 cursor-pointer rounded border border-gray-300 dark:border-white/10 transition-opacity",
+              "h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-gray-300 dark:border-white/10 transition-opacity",
               isSelected ? "opacity-100" : "opacity-50 group-hover:opacity-80"
             )}
             checked={isSelected}
@@ -546,7 +546,7 @@ export default function StaffDirectoryTab({
                 title="Refresh Staff Directory"
               />
 
-              <div className="h-6 w-px bg-gray-200 dark:bg-zinc-800" />
+              
 
               <Button
                 onClick={() => onSwitchView("create")}
@@ -703,7 +703,7 @@ export default function StaffDirectoryTab({
                     <th className="w-16 p-4 text-center">
                       <input
                         type="checkbox"
-                        className="h-4 w-4 cursor-pointer rounded border border-gray-300 dark:border-white/10"
+                        className="h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-gray-300 dark:border-white/10"
                         checked={
                           paginatedStaff.some(
                             (s) => s.id !== currentUserId

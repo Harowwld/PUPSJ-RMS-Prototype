@@ -513,7 +513,7 @@ export default function ModuleConfigTab({ showToast }) {
                 title="Refresh Module Configuration"
               />
 
-              <div className="h-6 w-px bg-gray-200 dark:bg-zinc-800" />
+              
 
               <div className="flex items-center gap-2 bg-gray-100 dark:bg-zinc-800/70 p-1 rounded-xl border border-gray-200/60 dark:border-white/5">
                 <button

@@ -293,7 +293,7 @@ export default function BulkImportTab({
                       <th className="w-12 p-4 text-center">
                         <input
                           type="checkbox"
-                          className="h-4 w-4 cursor-pointer rounded border border-gray-300 text-pup-maroon dark:text-primary accent-pup-maroon focus:ring-pup-maroon dark:text-primary dark:border-white/10"
+                          className="h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-gray-300 text-pup-maroon dark:text-primary accent-pup-maroon focus:ring-pup-maroon dark:text-primary dark:border-white/10"
                           checked={
                             importRows.length > 0 &&
                             importRows.filter((r) => !r.error).every((r) => !!importSelected[r.index])
@@ -412,7 +412,7 @@ export default function BulkImportTab({
                         <td className={`p-4 text-center ${row.error ? "border-l-4 border-l-red-500" : ""}`}>
                           <input
                             type="checkbox"
-                            className="h-4 w-4 cursor-pointer rounded border-gray-300 text-pup-maroon dark:text-primary accent-pup-maroon focus:ring-pup-maroon disabled:cursor-not-allowed disabled:opacity-30 dark:text-primary dark:border-white/10"
+                            className="h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border-gray-300 text-pup-maroon dark:text-primary accent-pup-maroon focus:ring-pup-maroon disabled:cursor-not-allowed disabled:opacity-30 dark:text-primary dark:border-white/10"
                             checked={!!importSelected[row.index]}
                             onChange={() => toggleImportRowSelected(row.index)}
                             disabled={!!row.error || isEditing}

@@ -542,7 +542,7 @@ export default function OfficeManagementTab({ showToast }) {
                 title="Refresh Offices & Modules"
               />
 
-              <div className="h-6 w-px bg-gray-200 dark:bg-zinc-800" />
+              
 
               <Button
                 onClick={handleOpenCreate}
@@ -570,7 +570,7 @@ export default function OfficeManagementTab({ showToast }) {
                   <div
                     onClick={() => setSelectedKpi(selectedKpi === stat.key ? null : stat.key)}
                     className={cn(
-                      "relative overflow-hidden rounded-[18px] border cursor-pointer select-none transition-all shadow-[0_2px_10px_rgb(0,0,0,0.04)] hover:shadow-[0_4px_15px_rgb(0,0,0,0.06)] flex flex-col justify-between min-h-[110px] bg-gray-50 dark:bg-zinc-900",
+                      "relative overflow-hidden rounded-[18px] border cursor-pointer select-none transition-all shadow-none flex flex-col justify-between min-h-[110px] bg-gray-50 dark:bg-zinc-900",
                       selectedKpi === stat.key
                         ? `border-${stat.color}-500/50 ring-1 ring-${stat.color}-500/20`
                         : "border-gray-100 dark:border-white/5"

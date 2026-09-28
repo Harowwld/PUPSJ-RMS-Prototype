@@ -707,7 +707,7 @@ export default function DigitalRecordsReviewTab({
                   title="Refresh Review Data"
                 />
 
-                <div className="h-6 w-px bg-gray-200 dark:bg-zinc-800" />
+                
 
                 <div className="flex items-center gap-2">
                   <Button
@@ -744,7 +744,7 @@ export default function DigitalRecordsReviewTab({
                   <div
                     onClick={() => setSelectedKpi(selectedKpi === "pending" ? null : "pending")}
                     className={cn(
-                      "relative overflow-hidden rounded-[18px] border cursor-pointer select-none transition-all shadow-[0_2px_10px_rgb(0,0,0,0.04)] hover:shadow-[0_4px_15px_rgb(0,0,0,0.06)] flex flex-col justify-between min-h-[110px] bg-gray-50 dark:bg-zinc-900",
+                      "relative overflow-hidden rounded-[18px] border cursor-pointer select-none transition-all shadow-none flex flex-col justify-between min-h-[110px] bg-gray-50 dark:bg-zinc-900",
                       selectedKpi === "pending"
                         ? "border-amber-500/50 ring-1 ring-amber-500/20"
                         : "border-gray-100 dark:border-white/5"
@@ -823,7 +823,7 @@ export default function DigitalRecordsReviewTab({
                   <div
                     onClick={() => setSelectedKpi(selectedKpi === "approved" ? null : "approved")}
                     className={cn(
-                      "relative overflow-hidden rounded-[18px] border cursor-pointer select-none transition-all shadow-[0_2px_10px_rgb(0,0,0,0.04)] hover:shadow-[0_4px_15px_rgb(0,0,0,0.06)] flex flex-col justify-between min-h-[110px] bg-gray-50 dark:bg-zinc-900",
+                      "relative overflow-hidden rounded-[18px] border cursor-pointer select-none transition-all shadow-none flex flex-col justify-between min-h-[110px] bg-gray-50 dark:bg-zinc-900",
                       selectedKpi === "approved"
                         ? "border-emerald-500/50 ring-1 ring-emerald-500/20"
                         : "border-gray-100 dark:border-white/5"
@@ -895,7 +895,7 @@ export default function DigitalRecordsReviewTab({
                   <div
                     onClick={() => setSelectedKpi(selectedKpi === "declined" ? null : "declined")}
                     className={cn(
-                      "relative overflow-hidden rounded-[18px] border cursor-pointer select-none transition-all shadow-[0_2px_10px_rgb(0,0,0,0.04)] hover:shadow-[0_4px_15px_rgb(0,0,0,0.06)] flex flex-col justify-between min-h-[110px] bg-gray-50 dark:bg-zinc-900",
+                      "relative overflow-hidden rounded-[18px] border cursor-pointer select-none transition-all shadow-none flex flex-col justify-between min-h-[110px] bg-gray-50 dark:bg-zinc-900",
                       selectedKpi === "declined"
                         ? "border-red-500/50 ring-1 ring-red-500/20"
                         : "border-gray-100 dark:border-white/5"
@@ -1273,7 +1273,7 @@ export default function DigitalRecordsReviewTab({
                     <th className="w-12 p-4 text-center">
                       <input
                         type="checkbox"
-                        className="h-4 w-4 cursor-pointer rounded border border-gray-300 text-pup-maroon dark:text-primary accent-pup-maroon focus:ring-pup-maroon disabled:opacity-20 dark:text-primary dark:border-white/10"
+                        className="h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-gray-300 text-pup-maroon dark:text-primary accent-pup-maroon focus:ring-pup-maroon disabled:opacity-20 dark:text-primary dark:border-white/10"
                         checked={
                           paginatedRecords.length > 0 &&
                           paginatedRecords.filter((r) => r.approval_status === "Pending").length > 0 &&
@@ -1404,7 +1404,7 @@ export default function DigitalRecordsReviewTab({
                               <input
                                 type="checkbox"
                                 className={cn(
-                                  "h-4 w-4 cursor-pointer rounded border border-gray-300 text-pup-maroon dark:text-primary accent-pup-maroon focus:ring-pup-maroon dark:text-primary dark:border-white/10 transition-opacity",
+                                  "h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-gray-300 text-pup-maroon dark:text-primary accent-pup-maroon focus:ring-pup-maroon dark:text-primary dark:border-white/10 transition-opacity",
                                   isSelected ? "opacity-100" : "opacity-50 group-hover:opacity-80"
                                 )}
                                 checked={isSelected}

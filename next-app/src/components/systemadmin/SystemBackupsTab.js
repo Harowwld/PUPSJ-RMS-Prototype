@@ -651,7 +651,7 @@ export default function SystemBackupsTab({ showToast }) {
                       title="Refresh Backup & Maintenance"
                     />
 
-                    <div className="h-6 w-px bg-gray-200 dark:bg-zinc-800" />
+                    
 
                     <div className="flex items-center gap-2">
                       <Button

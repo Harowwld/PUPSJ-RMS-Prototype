@@ -11,16 +11,16 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-pup-maroon text-white hover:bg-pup-darkMaroon",
+        default: "bg-[#232e3b] text-white hover:bg-[#1a222c] rounded-full",
         outline:
-          "border-pup-maroon/40 bg-transparent text-pup-maroon hover:bg-pup-maroon/10 hover:text-pup-maroon aria-expanded:bg-pup-maroon/10 aria-expanded:text-pup-maroon dark:border-pup-maroon/50 dark:bg-transparent dark:hover:bg-pup-maroon/20",
+          "border-[#232e3b]/40 bg-transparent text-[#232e3b] hover:bg-[#232e3b]/10 hover:text-[#232e3b] aria-expanded:bg-[#232e3b]/10 aria-expanded:text-[#232e3b] dark:border-white/50 dark:bg-transparent dark:hover:bg-white/20 dark:text-white dark:hover:text-white rounded-full",
         secondary:
           "bg-secondary text-secondary-foreground hover:bg-secondary/80 aria-expanded:bg-secondary aria-expanded:text-secondary-foreground",
         ghost:
-          "hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:hover:bg-muted/50",
+          "text-[#0A84FF] hover:bg-[#0A84FF]/10 aria-expanded:bg-[#0A84FF]/10 dark:text-[#0A84FF] dark:hover:bg-[#0A84FF]/20 dark:aria-expanded:bg-[#0A84FF]/20",
         destructive:
           "bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:focus-visible:ring-destructive/40",
-        link: "text-primary underline-offset-4 hover:underline",
+        link: "text-[#0A84FF] underline-offset-4 hover:underline",
       },
       size: {
         default:

@@ -1331,7 +1331,6 @@ input[type="checkbox"] {
   background-image: none !important;
   cursor: pointer;
   margin: 0;
-  transform: translateY(1.5px); /* fine-tune optical alignment */
 }
 
 input[type="checkbox"]:checked {
@@ -2140,4 +2139,13 @@ html {
 .scrollbar-hide {
     -ms-overflow-style: none;
     scrollbar-width: none;
+}
+
+.btn-brand-red, .bg-pup-maroon, .btn-brand-orange {
+  background-color: #232e3b !important;
+  color: white !important;
+  border-radius: 9999px !important;
+}
+.btn-brand-red:hover, .bg-pup-maroon:hover, .btn-brand-orange:hover {
+  background-color: #1a222c !important;
 }

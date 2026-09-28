@@ -683,7 +683,7 @@ export default function Home() {
                           <label className="flex items-center gap-2 cursor-pointer">
                             <input
                               type="checkbox"
-                              className="w-4 h-4 rounded-full border-gray-300 text-blue-600 focus:ring-blue-600 accent-blue-600"
+                              className="w-4 h-4 m-0 shrink-0 align-middle rounded-full border-gray-300 text-blue-600 focus:ring-blue-600 accent-blue-600"
                             />
                             <span className="text-[13px] text-[#1D1D1F] dark:text-zinc-300">Keep me signed in</span>
                           </label>
@@ -695,7 +695,7 @@ export default function Home() {
                             resetForgotState();
                             setView("forgot");
                           }}
-                          className="text-[13px] text-[#E5484D] hover:underline focus:outline-none shrink-0 font-normal"
+                          className="text-[13px] text-[#0A84FF] hover:underline focus:outline-none shrink-0 font-normal"
                         >
                           Forgot Password?
                         </button>
@@ -812,7 +812,7 @@ export default function Home() {
                           setView("login");
                           resetForgotState();
                         }}
-                        className="text-[13px] text-[#E5484D] hover:underline focus:outline-none font-normal"
+                        className="text-[13px] text-[#0A84FF] hover:underline focus:outline-none font-normal"
                       >
                         Back
                       </button>
@@ -924,7 +924,7 @@ export default function Home() {
                       <button
                         type="button"
                         onClick={() => setForgotStep(1)}
-                        className="text-[13px] text-[#E5484D] hover:underline focus:outline-none font-normal"
+                        className="text-[13px] text-[#0A84FF] hover:underline focus:outline-none font-normal"
                       >
                         Back
                       </button>
@@ -1124,7 +1124,7 @@ export default function Home() {
                           resetStudentSignupState();
                           setView("login");
                         }}
-                        className="text-[13px] text-[#E5484D] hover:underline focus:outline-none font-normal"
+                        className="text-[13px] text-[#0A84FF] hover:underline focus:outline-none font-normal"
                       >
                         Cancel
                       </button>

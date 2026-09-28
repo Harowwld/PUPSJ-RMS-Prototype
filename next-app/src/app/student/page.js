@@ -591,7 +591,7 @@ export default function StudentDashboard() {
                             isLoading={refreshing}
                             title="Refresh Records"
                           />
-                          <div className="h-6 w-px bg-gray-200 dark:bg-zinc-800" />
+                          
                           <Button
                             type="button"
                             onClick={() => setIsFormOpen((prev) => !prev)}
@@ -1136,7 +1136,7 @@ export default function StudentDashboard() {
                           isLoading={refreshing}
                           title="Refresh Records"
                         />
-                        <div className="h-6 w-px bg-gray-200 dark:bg-zinc-800" />
+                        
                         <Button
                           type="button"
                           onClick={() => setIsFormOpen((prev) => !prev)}

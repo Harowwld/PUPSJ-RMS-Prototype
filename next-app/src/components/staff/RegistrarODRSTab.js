@@ -221,7 +221,7 @@ export default function RegistrarODRSTab({ showToast }) {
                     />
                   </div>
 
-                  <Button className="w-full bg-pup-maroon text-white hover:bg-red-900 font-semibold" onClick={save}>
+                  <Button className="w-full bg-[#232e3b] rounded-full text-white hover:bg-red-900 font-semibold" onClick={save}>
                     Publish
                   </Button>
                 </div>

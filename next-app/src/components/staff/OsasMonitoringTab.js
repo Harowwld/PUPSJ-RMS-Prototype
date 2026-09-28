@@ -509,7 +509,7 @@ export default function OsasMonitoringTab({ showToast }) {
                 </button>
               </div>
 
-              <div className="h-6 w-px bg-gray-200 dark:bg-zinc-800" />
+              
 
               <RefreshButton onRefresh={load} isLoading={loading} title="Refresh Proposals" />
             </div>
