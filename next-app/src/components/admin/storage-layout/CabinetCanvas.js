@@ -31,6 +31,7 @@ const CabinetCanvas = memo(({
   handleCanvasPointerMove,
   handleCanvasPointerUp,
   setSelectedCabinetIds,
+  onOpenRenameCabinet,
   duplicateSelectedCabinet,
   setBulkConfirmOpen,
   dragRef,
@@ -225,6 +226,7 @@ const CabinetCanvas = memo(({
             rot={rot}
             selectedCabinetIds={selectedCabinetIds}
             setSelectedCabinetIds={setSelectedCabinetIds}
+            onOpenRenameCabinet={onOpenRenameCabinet}
             duplicateSelectedCabinet={duplicateSelectedCabinet}
             setBulkConfirmOpen={setBulkConfirmOpen}
             activeRoom={activeRoom}
@@ -247,6 +249,7 @@ const CabinetElement = memo(({
   rot,
   selectedCabinetIds,
   setSelectedCabinetIds,
+  onOpenRenameCabinet,
   duplicateSelectedCabinet,
   setBulkConfirmOpen,
   activeRoom,
@@ -442,6 +445,25 @@ const CabinetElement = memo(({
           onPointerDown={(e) => e.stopPropagation()}
         >
           <div className="flex items-center gap-1 rounded-full border border-gray-200 bg-white p-1 shadow-xl dark:border-white/10 dark:bg-card dark:shadow-none">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 rounded-full text-gray-700 hover:bg-gray-100 hover:text-pup-maroon dark:hover:text-red-500 dark:text-zinc-200 dark:bg-muted dark:hover:bg-white/10 cursor-pointer"
+                  onClick={() => onOpenRenameCabinet?.(cab)}
+                >
+                  <HugeIcon className="ph-bold ph-pencil-simple text-sm" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="top">
+                Rename
+              </TooltipContent>
+            </Tooltip>
+
+            <div className="h-4 w-px bg-gray-200 dark:bg-zinc-700" />
+
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button

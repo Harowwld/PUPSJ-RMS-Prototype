@@ -33,6 +33,15 @@ export const REQUEST_STATUSES = [
 
 export const TERMINAL_REQUEST_STATUSES = ["Completed", "Cancelled", "Shredded"];
 
+export const DEFAULT_REQUEST_STATUS_MESSAGES = {
+  Pending: "Request submitted and queued for evaluation.",
+  InProgress: "Request evaluation in progress. Documents are being retrieved from archives.",
+  Ready: "Document is prepared, dry-sealed, and ready for release/claiming.",
+  Completed: "Document successfully released and claimed. Transaction completed.",
+  Cancelled: "Request was cancelled.",
+  Shredded: "Unclaimed document was shredded in accordance with the 90-day retention schedule.",
+};
+
 export const ALLOWED_STATUS_TRANSITIONS = {
   Pending: ["Pending", "InProgress", "Ready", "Cancelled"],
   InProgress: ["InProgress", "Ready", "Cancelled"],

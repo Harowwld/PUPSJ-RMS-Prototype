@@ -124,23 +124,25 @@ test("OSAS Storage Suite & Workflow Specialization", async (t) => {
     await setStorageLayout(updated, { officeId: "osas" });
   });
 
-  await t.test("9. Drawer Renaming & Years (e.g. 2015): Accepts custom/year drawer IDs", async () => {
+  await t.test("9. Cabinet Renaming: Accepts custom/year cabinet IDs (e.g. 2015) and persists in PostgreSQL", async () => {
     const osasLayout = await getStorageLayout({ officeId: "osas" });
     const updated = JSON.parse(JSON.stringify(osasLayout));
-    // Set cabinet 2020 drawers to consecutive years 2015, 2016, 2017, 2018
-    updated.rooms[0].cabinets[0].drawerIds = [2015, 2016, 2017, 2018];
+    const originalCabId = updated.rooms[0].cabinets[0].id;
+
+    // Rename cabinet to "2015"
+    updated.rooms[0].cabinets[0].id = "2015";
 
     await setStorageLayout(updated, { officeId: "osas" });
 
     const fetched = await getStorageLayout({ officeId: "osas" });
-    assert.deepEqual(
-      fetched.rooms[0].cabinets[0].drawerIds,
-      [2015, 2016, 2017, 2018],
-      "Drawers should be successfully saved with years 2015-2018"
+    assert.equal(
+      fetched.rooms[0].cabinets[0].id,
+      "2015",
+      "Cabinet should be successfully renamed and saved with ID '2015'"
     );
 
-    // Revert to [1, 2, 3, 4]
-    updated.rooms[0].cabinets[0].drawerIds = [1, 2, 3, 4];
+    // Revert cabinet ID
+    updated.rooms[0].cabinets[0].id = originalCabId;
     await setStorageLayout(updated, { officeId: "osas" });
   });
 

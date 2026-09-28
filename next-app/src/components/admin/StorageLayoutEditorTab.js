@@ -71,6 +71,10 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
 
   const [renameRoomOpen, setRenameRoomOpen] = useState(false)
   const [newRoomName, setNewRoomName] = useState("")
+  const [renameCabinetOpen, setRenameCabinetOpen] = useState(false)
+  const [cabinetToRename, setCabinetToRename] = useState(null)
+  const [newCabinetName, setNewCabinetName] = useState("")
+  const [pendingLocationReassignments, setPendingLocationReassignments] = useState([])
   const [deleteRoomConfirmOpen, setDeleteRoomConfirmOpen] = useState(false)
   const [resetRoomConfirmOpen, setResetRoomConfirmOpen] = useState(false)
   const [templateApplyConfirmOpen, setTemplateApplyConfirmOpen] = useState(false)
@@ -421,117 +425,91 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
     showToast?.({ title: "Room Renamed", description: `Room ${activeRoom.id} is now named "${trimmed}".` })
   }, [activeRoom, newRoomName, layout, commitLayout, showToast])
 
-  const updateDrawerId = useCallback((cabinetId, oldId, newId) => {
-    if (!activeRoom || !cabinetId || newId === undefined || newId === null) return
-    const trimmed = typeof newId === "string" ? newId.trim() : newId
-    if (trimmed === "" || String(trimmed) === String(oldId)) return
+  const openRenameCabinet = useCallback((cab = null) => {
+    const target = cab || selectedCabinet
+    if (!target || target.isDoor) return
+    setCabinetToRename(target)
+    setNewCabinetName(String(target.id || ""))
+    setRenameCabinetOpen(true)
+  }, [selectedCabinet])
 
-    const parsedInt = parseInt(trimmed)
-    const finalId = Number.isInteger(parsedInt) && String(parsedInt) === String(trimmed) ? parsedInt : trimmed
-
-    const cab = activeRoom.cabinets.find((c) => String(c.id) === String(cabinetId))
-    if (!cab) return
-
-    const currentIds = cab.drawerIds || []
-    if (currentIds.some((d) => String(d).toLowerCase() === String(finalId).toLowerCase() && String(d) !== String(oldId))) {
-      showToast?.({ title: "Duplicate Drawer ID", description: `Cabinet ${cab.id} already has drawer "${finalId}".` }, true)
+  const handleRenameCabinet = useCallback(() => {
+    const target = cabinetToRename || selectedCabinet
+    if (!activeRoom || !target || target.isDoor) return
+    const trimmed = String(newCabinetName || "").trim()
+    if (!trimmed) {
+      showToast?.({ title: "Invalid Name", description: "Cabinet identifier cannot be empty." }, true)
       return
     }
 
-    const nextDrawerIds = currentIds.map((d) => String(d) === String(oldId) ? finalId : d)
+    const oldId = String(target.id)
+    if (trimmed === oldId) {
+      setRenameCabinetOpen(false)
+      setCabinetToRename(null)
+      return
+    }
+
+    // Check for collision within the active room
+    const exists = activeRoom.cabinets.some(
+      (c) => String(c.id).toLowerCase() === trimmed.toLowerCase() && String(c.id) !== oldId
+    )
+    if (exists) {
+      showToast?.({
+        title: "Duplicate Cabinet Identifier",
+        description: `A cabinet with identifier "${trimmed}" already exists in ${activeRoom.name || `Room ${activeRoom.id}`}.`,
+      }, true)
+      return
+    }
+
+    // Update cabinet ID in layout
     const updatedCabinets = activeRoom.cabinets.map((c) =>
-      String(c.id) === String(cabinetId) ? { ...c, drawerIds: nextDrawerIds } : c
+      String(c.id) === oldId ? { ...c, id: trimmed } : c
     )
     const nextRooms = layout.rooms.map((r) =>
       String(r.id) === String(activeRoom.id) ? { ...r, cabinets: updatedCabinets } : r
     )
     const nextLayout = { ...layout, rooms: nextRooms }
-    commitLayout(nextLayout, `Rename Drawer to ${finalId}`)
-    showToast?.({ title: "Drawer Updated", description: `Drawer renamed to "${finalId}".` })
-  }, [activeRoom, layout, commitLayout, showToast])
 
-  const addCustomDrawer = useCallback((cabinetId, customId) => {
-    if (!activeRoom || !cabinetId) return
-    const cab = activeRoom.cabinets.find((c) => String(c.id) === String(cabinetId))
-    if (!cab) return
+    // Update studentDrawerUsage in local state
+    setStudentDrawerUsage((prev) => {
+      const nextMap = new Map(prev)
+      for (const [key, count] of prev.entries()) {
+        const [rId, cId, dId] = key.split("|")
+        if (Number(rId) === Number(activeRoom.id) && String(cId) === oldId) {
+          nextMap.delete(key)
+          nextMap.set(`${rId}|${trimmed}|${dId}`, count)
+        }
+      }
+      return nextMap
+    })
 
-    const currentIds = cab.drawerIds || []
-    let finalId
-    if (customId !== undefined && customId !== null && String(customId).trim() !== "") {
-      const trimmed = String(customId).trim()
-      const parsedInt = parseInt(trimmed)
-      finalId = Number.isInteger(parsedInt) && String(parsedInt) === trimmed ? parsedInt : trimmed
-    } else {
-      finalId = (Math.max(0, ...currentIds.map(Number).filter(Number.isFinite)) || 0) + 1
-    }
+    // Track reassignments for persistence so student records in DB get updated on save
+    const drawerIds = target.drawerIds || [1, 2, 3, 4]
+    setPendingLocationReassignments((prev) => {
+      const list = [...prev]
+      for (const dId of drawerIds) {
+        const fromKey = `${activeRoom.id}|${oldId}|${dId}`
+        const toKey = `${activeRoom.id}|${trimmed}|${dId}`
+        const existingIdx = list.findIndex((item) => item.toKey === fromKey)
+        if (existingIdx >= 0) {
+          list[existingIdx] = { ...list[existingIdx], toKey }
+        } else {
+          list.push({ fromKey, toKey })
+        }
+      }
+      return list
+    })
 
-    if (currentIds.some((d) => String(d).toLowerCase() === String(finalId).toLowerCase())) {
-      showToast?.({ title: "Duplicate Drawer ID", description: `Cabinet ${cab.id} already has drawer "${finalId}".` }, true)
-      return
-    }
-
-    const nextDrawerIds = [...currentIds, finalId]
-    const updatedCabinets = activeRoom.cabinets.map((c) =>
-      String(c.id) === String(cabinetId) ? { ...c, drawerIds: nextDrawerIds } : c
-    )
-    const nextRooms = layout.rooms.map((r) =>
-      String(r.id) === String(activeRoom.id) ? { ...r, cabinets: updatedCabinets } : r
-    )
-    const nextLayout = { ...layout, rooms: nextRooms }
-    commitLayout(nextLayout, `Add Drawer ${finalId}`)
-  }, [activeRoom, layout, commitLayout, showToast])
-
-  const removeSpecificDrawer = useCallback((cabinetId, drawerId) => {
-    if (!activeRoom || !cabinetId) return
-    const cab = activeRoom.cabinets.find((c) => String(c.id) === String(cabinetId))
-    if (!cab) return
-    const currentIds = cab.drawerIds || []
-    if (currentIds.length <= 1) {
-      showToast?.({ title: "Cannot Remove", description: "Cabinets must have at least one drawer slot." }, true)
-      return
-    }
-
-    const usageKey = `${activeRoom.id}|${cab.id}|${drawerId}`
-    const studentCount = studentDrawerUsage.get(usageKey) || 0
-    if (studentCount > 0) {
-      showToast?.({ title: "Drawer Occupied", description: `Drawer ${drawerId} stores ${studentCount} student records. Reassign them first.` }, true)
-      return
-    }
-
-    const nextDrawerIds = currentIds.filter((d) => String(d) !== String(drawerId))
-    const updatedCabinets = activeRoom.cabinets.map((c) =>
-      String(c.id) === String(cabinetId) ? { ...c, drawerIds: nextDrawerIds } : c
-    )
-    const nextRooms = layout.rooms.map((r) =>
-      String(r.id) === String(activeRoom.id) ? { ...r, cabinets: updatedCabinets } : r
-    )
-    const nextLayout = { ...layout, rooms: nextRooms }
-    commitLayout(nextLayout, `Remove Drawer ${drawerId}`)
-  }, [activeRoom, layout, studentDrawerUsage, commitLayout, showToast])
-
-  const setCabinetYearPreset = useCallback((cabinetId, startYear) => {
-    if (!activeRoom || !cabinetId) return
-    const parsedStart = parseInt(startYear)
-    if (!Number.isFinite(parsedStart) || parsedStart < 1900 || parsedStart > 2200) {
-      showToast?.({ title: "Invalid Year", description: "Enter a valid 4-digit calendar year (e.g. 2015)." }, true)
-      return
-    }
-    const cab = activeRoom.cabinets.find((c) => String(c.id) === String(cabinetId))
-    if (!cab) return
-
-    const drawerCount = (cab.drawerIds || []).length || 4
-    const nextDrawerIds = Array.from({ length: drawerCount }, (_, i) => parsedStart + i)
-
-    const updatedCabinets = activeRoom.cabinets.map((c) =>
-      String(c.id) === String(cabinetId) ? { ...c, drawerIds: nextDrawerIds } : c
-    )
-    const nextRooms = layout.rooms.map((r) =>
-      String(r.id) === String(activeRoom.id) ? { ...r, cabinets: updatedCabinets } : r
-    )
-    const nextLayout = { ...layout, rooms: nextRooms }
-    commitLayout(nextLayout, `Set Drawers to Years starting ${parsedStart}`)
-    showToast?.({ title: "Year Preset Applied", description: `Drawers set to ${nextDrawerIds.join(", ")}.` })
-  }, [activeRoom, layout, commitLayout, showToast])
+    commitLayout(nextLayout, `Rename Cabinet to "${trimmed}"`)
+    setSelectedCabinetIds(new Set([trimmed]))
+    setRenameCabinetOpen(false)
+    setCabinetToRename(null)
+    setNewCabinetName("")
+    showToast?.({
+      title: "Cabinet Renamed",
+      description: `Cabinet ${oldId} is now renamed to "${trimmed}".`,
+    })
+  }, [cabinetToRename, selectedCabinet, activeRoom, newCabinetName, layout, commitLayout, showToast])
 
   const updateSelectedRectFromNormalized = useCallback((nextRect) => {
     if (!activeRoom || !selectedCabinet) return
@@ -756,53 +734,61 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
 
   // 6. LIFE CYCLE / EFFECTS
   useEffect(() => {
-    let timer
+    let intervalTimer
+    let startTimer
     if (saveConfirmOpen) {
-      setSaveCountdown(3)
-      timer = setInterval(() => {
-        setSaveCountdown((prev) => {
-          if (prev <= 1) {
-            clearInterval(timer)
-            return 0
-          }
-          return prev - 1
-        })
-      }, 1000)
+      startTimer = setTimeout(() => {
+        setSaveCountdown(3)
+        intervalTimer = setInterval(() => {
+          setSaveCountdown((prev) => {
+            if (prev <= 1) {
+              clearInterval(intervalTimer)
+              return 0
+            }
+            return prev - 1
+          })
+        }, 1000)
+      }, 0)
     } else {
-      setSaveCountdown(0)
+      startTimer = setTimeout(() => {
+        setSaveCountdown(0)
+      }, 0)
     }
-    return () => clearInterval(timer)
+    return () => {
+      clearTimeout(startTimer)
+      clearInterval(intervalTimer)
+    }
   }, [saveConfirmOpen])
 
   useEffect(() => {
-    if (!activeRoom) {
-      if (selectedCabinetIds.size > 0) {
-        setSelectedCabinetIds(new Set())
-      }
-    } else {
-      const validIds = new Set()
-      for (const id of selectedCabinetIds) {
-        if (activeRoom.cabinets.some((c) => c.id === id) || id === "DOOR") {
-          validIds.add(id)
+    const timer = setTimeout(() => {
+      if (!activeRoom) {
+        if (selectedCabinetIds.size > 0) {
+          setSelectedCabinetIds(new Set())
+        }
+      } else {
+        const validIds = new Set()
+        for (const id of selectedCabinetIds) {
+          if (activeRoom.cabinets.some((c) => c.id === id) || id === "DOOR") {
+            validIds.add(id)
+          }
+        }
+        if (validIds.size !== selectedCabinetIds.size) {
+          setSelectedCabinetIds(validIds)
         }
       }
-      if (validIds.size !== selectedCabinetIds.size) {
-        setSelectedCabinetIds(validIds)
-      }
-    }
-    setCarouselIndex(0)
+      setCarouselIndex(0)
+    }, 0)
+    return () => clearTimeout(timer)
   }, [activeRoom, selectedCabinetIds])
 
-  const [activePath, setActivePath] = useState(null)
   const [simulationMode, setSimulationMode] = useState(false)
 
-  useEffect(() => {
+  const activePath = useMemo(() => {
     if (simulationMode && selectedCabinet && !selectedCabinet.isDoor) {
-      const path = calculatePath(activeRoom, selectedCabinet.id, getDefaultDoor)
-      setActivePath(path)
-    } else {
-      setActivePath(null)
+      return calculatePath(activeRoom, selectedCabinet.id, getDefaultDoor)
     }
+    return null
   }, [simulationMode, selectedCabinet, activeRoom])
 
   const fetchStudentUsage = useCallback(async () => {
@@ -864,6 +850,7 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
       }])
       setHistoryIndex(0)
       setSelectedCabinetIds(new Set())
+      setPendingLocationReassignments([])
       setIsDirty?.(false)
 
       const rooms = Array.isArray(json.data?.rooms) ? json.data.rooms : []
@@ -906,7 +893,10 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
   }, [showToast, setIsDirty, fetchStudentUsage])
 
   useEffect(() => {
-    handleRefresh(false)
+    const timer = setTimeout(() => {
+      handleRefresh(false)
+    }, 0)
+    return () => clearTimeout(timer)
   }, [handleRefresh])
 
   const activeRoomStudentCount = useMemo(() => {
@@ -964,10 +954,18 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
     if (!layout || hasAnyCollisions) return
     setSaving(true)
     try {
+      const payload = {
+        ...layout,
+        version: layout.version || 2,
+      }
+      if (pendingLocationReassignments.length > 0) {
+        payload.reassignments = pendingLocationReassignments
+        payload.skipUsageCheck = true
+      }
       const res = await fetch("/api/storage-layout", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...layout, version: layout.version || 2 }),
+        body: JSON.stringify(payload),
       })
       const json = await res.json()
       if (!res.ok || !json?.ok) throw new Error(json?.error || "Save failed")
@@ -975,11 +973,14 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
       if (json.data) {
         setLayout(json.data)
       }
+      setPendingLocationReassignments([])
       setIsDirty?.(false)
       setSaveConfirmOpen(false)
       showToast?.({
         title: "Layout Saved",
-        description: "Archive room mapping updated.",
+        description: json.movedCount
+          ? `Archive room mapping updated. ${json.movedCount} student record(s) relocated.`
+          : "Archive room mapping updated.",
       })
     } catch (err) {
       showToast?.({ title: "Save Failed", description: err.message }, true)
@@ -1307,99 +1308,144 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
   if (!layout) return null
 
   const renderToolbar = () => (
-    <div className="flex h-[56px] items-center px-6 border-b border-gray-100 dark:border-white/10 bg-gray-50/50 dark:bg-muted/10 select-none">
-      {/* Left group: Undo + Redo */}
-      <div className="flex items-center gap-1 flex-none">
-        <Button
-          type="button"
-          variant="ghost"
-          onClick={undo}
-          disabled={historyIndex <= 0}
-          className="h-9 bg-transparent hover:bg-transparent border-0 px-2.5 text-xs font-semibold text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-200 disabled:text-gray-300 dark:disabled:text-zinc-700 disabled:pointer-events-none transition-colors cursor-pointer flex items-center justify-center shadow-none!"
-        >
-          Undo
-        </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          onClick={redo}
-          disabled={historyIndex >= history.length - 1}
-          className="h-9 bg-transparent hover:bg-transparent border-0 px-2.5 text-xs font-semibold text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-200 disabled:text-gray-300 dark:disabled:text-zinc-700 disabled:pointer-events-none transition-colors cursor-pointer flex items-center justify-center shadow-none!"
-        >
-          Redo
-        </Button>
+    <div className="flex h-[56px] min-h-[56px] items-center justify-between px-6 border-b border-gray-100 dark:border-white/10 bg-gray-50/50 dark:bg-muted/10 select-none overflow-x-auto gap-4 scrollbar-none">
+      {/* Left side: History Group + Room Management Group */}
+      <div className="flex items-center gap-3 flex-none">
+        {/* Group 1: History (Undo / Redo) */}
+        <div className="flex items-center h-9 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 shadow-xs p-0.5">
+          <button
+            type="button"
+            onClick={undo}
+            disabled={historyIndex <= 0}
+            className="h-full w-8 flex items-center justify-center rounded-lg text-gray-600 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-700/60 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer active:scale-95"
+            title="Undo (Ctrl+Z)"
+          >
+            <HugeIcon className="ph-bold ph-arrow-u-up-left text-[14px]" />
+          </button>
+          <div className="h-4 w-px bg-gray-200 dark:bg-white/10" />
+          <button
+            type="button"
+            onClick={redo}
+            disabled={historyIndex >= history.length - 1}
+            className="h-full w-8 flex items-center justify-center rounded-lg text-gray-600 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-700/60 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer active:scale-95"
+            title="Redo (Ctrl+Y)"
+          >
+            <HugeIcon className="ph-bold ph-arrow-u-up-right text-[14px]" />
+          </button>
+        </div>
+
+        {/* Group 2: Room Switcher & Management Capsule */}
+        <div className="flex items-center gap-1.5">
+          {/* Room Selector */}
+          <div className="flex items-center h-9 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 shadow-xs">
+            <div className="flex items-center pl-3 pr-1 text-gray-400 dark:text-zinc-500">
+              <HugeIcon className="ph-bold ph-door text-[14px]" />
+            </div>
+            <Select
+              className="h-full min-w-[130px] w-fit cursor-pointer rounded-none! border-0 bg-transparent pl-1 pr-3 text-xs font-semibold text-gray-800 dark:text-zinc-200 shadow-none hover:bg-transparent focus:ring-0! focus:border-0!"
+              value={String(activeRoomId ?? "")}
+              disabled={!layout?.rooms?.length}
+              onChange={(e) => setActiveRoomId(Number(e.target.value))}
+            >
+              {layout.rooms.map((r) => (
+                <option key={`room-opt-${r.id}`} value={String(r.id)}>{r.name || `Room ${r.id}`}</option>
+              ))}
+            </Select>
+          </div>
+
+          {/* Room CRUD Actions */}
+          <div className="flex items-center h-9 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 shadow-xs p-0.5">
+            <button
+              type="button"
+              onClick={addRoom}
+              className="h-full w-8 flex items-center justify-center rounded-lg text-gray-600 dark:text-zinc-300 hover:bg-gray-100 hover:text-emerald-600 dark:hover:bg-zinc-700/60 dark:hover:text-emerald-400 transition-colors cursor-pointer active:scale-95"
+              title="Add Room"
+            >
+              <HugeIcon className="ph-bold ph-plus text-[14px]" />
+            </button>
+            <div className="h-4 w-px bg-gray-200 dark:bg-white/10" />
+            <button
+              type="button"
+              onClick={() => {
+                setNewRoomName(activeRoom?.name || `Room ${activeRoom?.id || ""}`)
+                setRenameRoomOpen(true)
+              }}
+              disabled={!activeRoom}
+              className="h-full w-8 flex items-center justify-center rounded-lg text-gray-600 dark:text-zinc-300 hover:bg-gray-100 hover:text-pup-maroon dark:hover:bg-zinc-700/60 dark:hover:text-red-400 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer active:scale-95"
+              title="Rename Room"
+            >
+              <HugeIcon className="ph-bold ph-pencil-simple text-[14px]" />
+            </button>
+            <div className="h-4 w-px bg-gray-200 dark:bg-white/10" />
+            <button
+              type="button"
+              onClick={() => setDeleteRoomConfirmOpen(true)}
+              disabled={!activeRoom || activeRoomStudentCount > 0}
+              className="h-full w-8 flex items-center justify-center rounded-lg text-gray-600 dark:text-zinc-300 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/40 dark:hover:text-red-400 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer active:scale-95"
+              title={activeRoomStudentCount > 0 ? "Cannot delete room with active student records" : "Delete Room"}
+            >
+              <HugeIcon className="ph-bold ph-trash text-[14px]" />
+            </button>
+          </div>
+        </div>
       </div>
 
-      {/* Gap between left group and center-left group */}
-      <div className="w-4 flex-none" />
-
-      {/* Center-left group: Room dropdown + add icon + trash icon */}
-      <div className="flex items-center gap-2 flex-none">
-        <Select
-          className="h-9 min-w-[130px] w-fit cursor-pointer rounded-xl border border-gray-200 dark:border-white/10 bg-white px-3 text-xs font-normal text-gray-700 dark:bg-zinc-800 dark:text-zinc-200 shadow-none"
-          value={String(activeRoomId ?? "")}
-          disabled={!layout?.rooms?.length}
-          onChange={(e) => setActiveRoomId(Number(e.target.value))}
-        >
-          {layout.rooms.map((r) => (
-            <option key={`room-opt-${r.id}`} value={String(r.id)}>{r.name || `Room ${r.id}`}</option>
-          ))}
-        </Select>
-
+      {/* Center: Canvas View Controls (Grid & Snap) */}
+      <div className="hidden lg:flex items-center h-9 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 shadow-xs p-0.5 flex-none">
         <button
           type="button"
-          onClick={addRoom}
-          className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-emerald-600 dark:text-zinc-400 dark:hover:text-emerald-400 transition-colors cursor-pointer focus:outline-none flex items-center justify-center border-0 bg-transparent active:scale-95"
-          title="Add"
+          onClick={() => setShowGrid(!showGrid)}
+          className={cn(
+            "h-full px-2.5 flex items-center gap-1.5 rounded-lg text-xs transition-colors cursor-pointer active:scale-95",
+            showGrid
+              ? "bg-gray-100 dark:bg-zinc-700 text-gray-900 dark:text-white font-semibold shadow-2xs"
+              : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-200 font-medium"
+          )}
+          title={showGrid ? "Hide Grid Lines (G)" : "Show Grid Lines (G)"}
         >
-          <HugeIcon  className="ph-bold ph-plus text-sm" />
+          <HugeIcon className="ph-bold ph-grid-four text-[13px]" />
+          <span>Grid</span>
         </button>
-
+        <div className="h-4 w-px bg-gray-200 dark:bg-white/10" />
         <button
           type="button"
-          onClick={() => {
-            setNewRoomName(activeRoom?.name || `Room ${activeRoom?.id || ""}`)
-            setRenameRoomOpen(true)
-          }}
-          disabled={!activeRoom}
-          className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-pup-maroon dark:text-zinc-400 dark:hover:text-red-400 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer focus:outline-none flex items-center justify-center border-0 bg-transparent active:scale-95"
-          title="Rename Room"
+          onClick={() => setSnapToGrid(!snapToGrid)}
+          className={cn(
+            "h-full px-2.5 flex items-center gap-1.5 rounded-lg text-xs transition-colors cursor-pointer active:scale-95",
+            snapToGrid
+              ? "bg-gray-100 dark:bg-zinc-700 text-gray-900 dark:text-white font-semibold shadow-2xs"
+              : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-200 font-medium"
+          )}
+          title={snapToGrid ? "Disable Snap to Grid (S)" : "Enable Snap to Grid (S)"}
         >
-          <HugeIcon className="ph-bold ph-pencil-simple text-sm" />
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setDeleteRoomConfirmOpen(true)}
-          disabled={!activeRoom || activeRoomStudentCount > 0}
-          className="w-7 h-7 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/30 text-gray-500 hover:text-red-600 dark:text-zinc-400 dark:hover:text-red-400 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer focus:outline-none flex items-center justify-center border-0 bg-transparent active:scale-95"
-          title="Delete"
-        >
-          <HugeIcon  className="ph-bold ph-trash text-sm" />
+          <HugeIcon className="ph-bold ph-magnet text-[13px]" />
+          <span>Snap</span>
         </button>
       </div>
 
-      {/* Spacer: flex: 1 to push right group to the far right */}
-      <div className="flex-1" />
-
-      {/* Right group + Save button */}
-      <div className="flex items-center gap-2 flex-none">
+      {/* Right side: Cabinet Insertion + Unified Template Suite */}
+      <div className="flex items-center gap-2.5 flex-none">
+        {/* Group 4: Cabinet Insertion */}
         <Button
           type="button"
           variant="outline"
           onClick={addCabinet}
-          className="flex h-9 items-center justify-center rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
           disabled={!activeRoom}
+          className="h-9 px-3.5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all flex items-center gap-1.5"
+          title="Add a new cabinet to the room"
         >
-          Add
+          <HugeIcon className="ph-bold ph-plus text-[13px]" />
+          <span>Add Cabinet</span>
         </Button>
 
-        {/* Unified Right Group Container */}
-        <div className="relative flex items-center h-9 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 shadow-xs">
+        {/* Group 5: Unified Template Suite Capsule */}
+        <div className="flex items-center h-9 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 shadow-xs divide-x divide-gray-100 dark:divide-white/10">
+          <div className="flex items-center pl-3 pr-1 text-gray-400 dark:text-zinc-500 rounded-l-xl">
+            <HugeIcon className="ph-bold ph-squares-four text-[14px]" />
+          </div>
           <Select
-            usePortal={false}
-            className="h-full w-auto min-w-0 cursor-pointer rounded-none! rounded-l-xl! border-0 bg-transparent pl-3 pr-3 gap-1.5 text-xs font-normal text-gray-700 dark:text-zinc-200 shadow-none hover:bg-black/[0.02]! focus:ring-0! focus:border-0! focus:outline-none! focus-visible:ring-0! focus-visible:border-0! focus:bg-transparent! active:bg-transparent! focus-visible:bg-transparent!"
-            menuClassName="bg-white! border border-gray-200! rounded-xl! shadow-md! dark:border-white/10 dark:bg-card"
+            className="h-full w-auto min-w-[120px] cursor-pointer rounded-none! border-0 bg-transparent pl-1 pr-3 gap-1 text-xs font-medium text-gray-700 dark:text-zinc-200 shadow-none hover:bg-black/[0.02]! focus:ring-0! focus:border-0! focus:outline-none!"
+            menuClassName="bg-white! border border-gray-200! rounded-xl! shadow-xl! dark:border-white/10 dark:bg-card min-w-[200px] w-max z-50"
             optionClassName="text-xs! font-normal! text-gray-900! h-9! px-3! bg-transparent! hover:bg-gray-50! dark:text-zinc-200 dark:hover:bg-white/5 rounded-none!"
             value={selectedTemplateId}
             onChange={(e) => setSelectedTemplateId(e.target.value)}
@@ -1408,52 +1454,37 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
             {templates.map((tpl) => <option key={`tpl-opt-${tpl.id}`} value={tpl.id}>{tpl.name}</option>)}
           </Select>
 
-          <Button
+          <button
             type="button"
-            variant="ghost"
             onClick={() => setTemplateApplyConfirmOpen(true)}
-            className="h-full bg-transparent hover:bg-black/[0.02] border-0 rounded-none! rounded-r-xl! px-3 text-xs font-semibold text-gray-700 dark:text-zinc-200 disabled:text-gray-400 dark:disabled:text-zinc-600 disabled:pointer-events-none transition-colors cursor-pointer flex items-center justify-center shadow-none!"
             disabled={!activeRoom || !selectedTemplateId}
+            className="h-full px-3 text-xs font-semibold text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700/60 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer flex items-center justify-center border-0 bg-transparent active:scale-95 shadow-none"
+            title="Apply selected template to current room"
           >
             Apply
-          </Button>
-        </div>
+          </button>
 
-        {/* Three-dot menu sits OUTSIDE the unified group */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button
-              type="button"
-              className="p-0 border-0 bg-transparent text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer focus:outline-none flex items-center justify-center w-7 h-9"
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              className="h-full px-2.5 flex items-center justify-center text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-zinc-700/60 transition-colors cursor-pointer border-0 bg-transparent focus:outline-none active:scale-95 rounded-r-xl"
+              title="Template Options"
             >
-              <HugeIcon  className="ph-bold ph-dots-three-vertical text-[18px]" />
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48 rounded-xl border border-gray-200 bg-white shadow-md dark:bg-zinc-900 dark:border-white/10">
-            <DropdownMenuItem onClick={() => setSaveTemplateOpen(true)} className="cursor-pointer" disabled={!activeRoom || activeRoom.cabinets?.length === 0}>
-              <HugeIcon  className="ph-bold ph-floppy-disk mr-2" /> Save as Template
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setDeleteTemplateConfirmOpen(true)} className="cursor-pointer text-red-600 focus:text-red-600 dark:text-red-400 dark:focus:text-red-400" disabled={!selectedTemplateId}>
-              <HugeIcon  className="ph-bold ph-trash mr-2" /> Delete Template
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => setRestoreTemplatesConfirmOpen(true)} className="cursor-pointer text-amber-600 focus:text-amber-600 dark:text-amber-400 dark:focus:text-amber-400">
-              <HugeIcon  className="ph-bold ph-arrow-counter-clockwise mr-2" /> Restore Defaults
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-
-        <Button
-          onClick={saveLayout}
-          disabled={saving || hasAnyCollisions}
-          className="flex h-9 w-[84px] items-center justify-center rounded-xl! btn-brand-red text-white font-semibold text-xs active:scale-95 disabled:opacity-30 disabled:grayscale transition-all dark:shadow-none cursor-pointer border-0 shadow-xs"
-        >
-          {saving ? (
-            <HugeIcon  className="ph-bold ph-spinner animate-spin text-sm"></HugeIcon>
-          ) : (
-            "Save"
-          )}
-        </Button>
+              <HugeIcon className="ph-bold ph-dots-three-vertical text-[15px]" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-52 rounded-xl border border-gray-200 bg-white shadow-xl dark:bg-zinc-900 dark:border-white/10 p-1 z-50">
+              <DropdownMenuItem onClick={() => setSaveTemplateOpen(true)} className="cursor-pointer text-xs font-medium py-2 rounded-lg" disabled={!activeRoom || activeRoom.cabinets?.length === 0}>
+                <HugeIcon className="ph-bold ph-floppy-disk mr-2 text-sm text-gray-600 dark:text-zinc-300" /> Save as Template
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setDeleteTemplateConfirmOpen(true)} className="cursor-pointer text-xs font-medium py-2 rounded-lg text-red-600 focus:text-red-600 dark:text-red-400 dark:focus:text-red-400" disabled={!selectedTemplateId}>
+                <HugeIcon className="ph-bold ph-trash mr-2 text-sm" /> Delete Template
+              </DropdownMenuItem>
+              <DropdownMenuSeparator className="my-1 bg-gray-100 dark:bg-white/10" />
+              <DropdownMenuItem onClick={() => setRestoreTemplatesConfirmOpen(true)} className="cursor-pointer text-xs font-medium py-2 rounded-lg text-amber-600 focus:text-amber-600 dark:text-amber-400 dark:focus:text-amber-400">
+                <HugeIcon className="ph-bold ph-arrow-counter-clockwise mr-2 text-sm" /> Restore Defaults
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
     </div>
   )
@@ -1468,11 +1499,25 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
         titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
         descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
         actions={
-          <RefreshButton
-            onRefresh={() => handleRefresh(true)}
-            isLoading={loading}
-            title="Refresh Storage Layout"
-          />
+          <div className="flex items-center gap-3">
+            <RefreshButton
+              onRefresh={() => handleRefresh(true)}
+              isLoading={loading}
+              title="Refresh Storage Layout"
+            />
+            <div className="h-5 w-px bg-gray-200 dark:bg-white/10" />
+            <Button
+              onClick={saveLayout}
+              disabled={saving || hasAnyCollisions}
+              className="flex h-10 px-5 items-center justify-center rounded-xl! btn-brand-red text-white font-semibold text-xs active:scale-95 disabled:opacity-30 disabled:grayscale transition-all dark:shadow-none cursor-pointer border-0 shadow-xs"
+            >
+              {saving ? (
+                <HugeIcon className="ph-bold ph-spinner animate-spin text-sm" />
+              ) : (
+                "Save"
+              )}
+            </Button>
+          </div>
         }
       />
       <div className="border-b border-gray-100 dark:border-white/10 w-full" />
@@ -1483,7 +1528,7 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
         <div className="grid grid-cols-1 gap-6 p-6 lg:grid-cols-3">
           <div className="lg:col-span-2">
             <CabinetCanvas 
-              canvasRef={canvasRef} activeRoom={activeRoom} selectedCabinetIds={selectedCabinetIds} selectedCabinet={selectedCabinet} collidingIds={collidingIds} activePath={activePath} simulationMode={simulationMode} snapToGrid={snapToGrid} showGrid={showGrid} handleCanvasPointerMove={handleCanvasPointerMove} handleCanvasPointerUp={handleCanvasPointerUp} setSelectedCabinetIds={setSelectedCabinetIds} duplicateSelectedCabinet={duplicateSelectedCabinet} setBulkConfirmOpen={setBulkConfirmOpen} dragRef={dragRef} updateSelectedRectFromNormalized={updateSelectedRectFromNormalized} updateSelectedSizeNormalized={updateSelectedSizeNormalized} selectionBox={selectionBox} pushHistory={pushHistory} layout={layout} isModalOpen={false}
+              canvasRef={canvasRef} activeRoom={activeRoom} selectedCabinetIds={selectedCabinetIds} selectedCabinet={selectedCabinet} collidingIds={collidingIds} activePath={activePath} simulationMode={simulationMode} snapToGrid={snapToGrid} showGrid={showGrid} handleCanvasPointerMove={handleCanvasPointerMove} handleCanvasPointerUp={handleCanvasPointerUp} setSelectedCabinetIds={setSelectedCabinetIds} onOpenRenameCabinet={openRenameCabinet} duplicateSelectedCabinet={duplicateSelectedCabinet} setBulkConfirmOpen={setBulkConfirmOpen} dragRef={dragRef} updateSelectedRectFromNormalized={updateSelectedRectFromNormalized} updateSelectedSizeNormalized={updateSelectedSizeNormalized} selectionBox={selectionBox} pushHistory={pushHistory} layout={layout} isModalOpen={false}
             />
           </div>
           <div className="lg:col-span-1 select-none">
@@ -1491,11 +1536,7 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
               activeRoom={activeRoom}
               carouselIndex={carouselIndex}
               setCarouselIndex={setCarouselIndex}
-              selectedCabinetIds={selectedCabinetIds} selectedCabinet={selectedCabinet} duplicateSelectedCabinet={duplicateSelectedCabinet} setBulkConfirmOpen={setBulkConfirmOpen} removeDrawerFromSelected={removeDrawerFromSelected} addDrawerToSelected={addDrawerToSelected} updateSelectedRectFromNormalized={updateSelectedRectFromNormalized} updateSelectedSizeNormalized={updateSelectedSizeNormalized} history={history} historyIndex={historyIndex} revertToHistoryState={revertToHistoryState}
-              updateDrawerId={updateDrawerId}
-              addCustomDrawer={addCustomDrawer}
-              removeSpecificDrawer={removeSpecificDrawer}
-              setCabinetYearPreset={setCabinetYearPreset}
+              selectedCabinetIds={selectedCabinetIds} selectedCabinet={selectedCabinet} onOpenRenameCabinet={openRenameCabinet} duplicateSelectedCabinet={duplicateSelectedCabinet} setBulkConfirmOpen={setBulkConfirmOpen} removeDrawerFromSelected={removeDrawerFromSelected} addDrawerToSelected={addDrawerToSelected} updateSelectedRectFromNormalized={updateSelectedRectFromNormalized} updateSelectedSizeNormalized={updateSelectedSizeNormalized} history={history} historyIndex={historyIndex} revertToHistoryState={revertToHistoryState}
               studentDrawerUsage={studentDrawerUsage}
             />
           </div>
@@ -1613,10 +1654,27 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
         }}
         title="Rename Storage Room"
         message={`Enter a new display name for ${activeRoom?.name || `Room ${activeRoom?.id || ""}`}.`}
-        confirmLabel="Save Name"
+        confirmLabel="Save"
         value={newRoomName}
         onChange={setNewRoomName}
         onConfirm={handleRenameRoom}
+        buttonIcon="ph-check"
+        variant="brand"
+      />
+
+      <PromptModal
+        open={renameCabinetOpen}
+        onCancel={() => {
+          setRenameCabinetOpen(false)
+          setCabinetToRename(null)
+          setNewCabinetName("")
+        }}
+        title="Rename Storage Cabinet"
+        message={`Enter a new identifier or name for Cabinet ${cabinetToRename?.id || selectedCabinet?.id || ""}.`}
+        confirmLabel="Save"
+        value={newCabinetName}
+        onChange={setNewCabinetName}
+        onConfirm={handleRenameCabinet}
         buttonIcon="ph-check"
         variant="brand"
       />

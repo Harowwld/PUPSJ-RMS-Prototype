@@ -1262,7 +1262,7 @@ export default function DocumentRequestsTab({
                           {isTerminalStatus ? "Add Archival Note / Log" : "Add Timeline Update"}
                         </span>
                         <span className="text-[10px] text-gray-400 dark:text-zinc-500">
-                          {isTerminalStatus ? "Audit record note" : "Visible to requester"}
+                          {isTerminalStatus ? "Audit record note" : (editStatus !== detail.status ? "Optional custom notice (defaults if blank)" : "Visible to requester")}
                         </span>
                       </div>
                       <textarea
@@ -1272,6 +1272,8 @@ export default function DocumentRequestsTab({
                         placeholder={
                           isTerminalStatus
                             ? "Add an archival note or release verification detail..."
+                            : editStatus !== detail.status
+                            ? "Optional: Add custom instructions (or leave empty to post standard milestone notification)..."
                             : "e.g. Document printed, awaiting dry seal..."
                         }
                       />
@@ -1285,29 +1287,44 @@ export default function DocumentRequestsTab({
                         Activity History ({detail.updates.length})
                       </span>
                       <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
-                        {detail.updates.map((u, idx) => (
-                          <div
-                            key={u.id || idx}
-                            className="p-3 rounded-xl bg-[#F5F5F7] dark:bg-zinc-800/40 border border-gray-200/70 dark:border-white/5 text-xs space-y-1"
-                          >
-                            <div className="flex items-center justify-between text-[11px]">
-                              <span className="font-semibold text-gray-800 dark:text-zinc-200">
-                                {u.status}
-                              </span>
-                              <span className="text-gray-400 dark:text-zinc-500 text-[10px]">
-                                {formatPHDateTime(u.created_at)}
-                              </span>
-                            </div>
-                            {u.message && (
-                              <div className="text-gray-600 dark:text-zinc-300 text-xs leading-relaxed">
-                                {u.message}
+                        {detail.updates.map((u, idx) => {
+                          const isConsecutiveSameStatus =
+                            idx > 0 && u.status === detail.updates[idx - 1].status;
+                          return (
+                            <div
+                              key={u.id || idx}
+                              className="p-3 rounded-xl bg-[#F5F5F7] dark:bg-zinc-800/40 border border-gray-200/70 dark:border-white/5 text-xs space-y-1"
+                            >
+                              <div className="flex items-center justify-between text-[11px]">
+                                <div className="flex items-center gap-1.5">
+                                  <span className="font-semibold text-gray-800 dark:text-zinc-200">
+                                    {isConsecutiveSameStatus
+                                      ? "Follow-Up Notice"
+                                      : u.status === "InProgress"
+                                      ? "In Progress"
+                                      : u.status}
+                                  </span>
+                                  {isConsecutiveSameStatus && (
+                                    <span className="text-[10px] text-gray-500 dark:text-zinc-400 bg-gray-200/60 dark:bg-zinc-700/60 px-1.5 py-0.5 rounded">
+                                      {u.status}
+                                    </span>
+                                  )}
+                                </div>
+                                <span className="text-gray-400 dark:text-zinc-500 text-[10px] font-mono">
+                                  {formatPHDateTime(u.created_at)}
+                                </span>
                               </div>
-                            )}
-                            <div className="text-[10px] text-gray-400 dark:text-zinc-500">
-                              By {u.actor_name || "Staff"}
+                              {u.message && (
+                                <div className="text-gray-600 dark:text-zinc-300 text-xs leading-relaxed">
+                                  {u.message}
+                                </div>
+                              )}
+                              <div className="text-[10px] text-gray-400 dark:text-zinc-500">
+                                By {u.actor_name || "Staff"}
+                              </div>
                             </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     </div>
                   )}

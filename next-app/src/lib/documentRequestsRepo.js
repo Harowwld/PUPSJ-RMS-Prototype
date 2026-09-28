@@ -1,5 +1,5 @@
 import { dbAll, dbGet, dbRun } from "./postgresCompat.js";
-import { canTransitionRequestStatus } from "./constants.js";
+import { canTransitionRequestStatus, DEFAULT_REQUEST_STATUS_MESSAGES } from "./constants.js";
 
 const VALID_STATUSES = new Set([
   "Pending",
@@ -279,11 +279,18 @@ export async function updateDocumentRequest(id, fields) {
   const cols = [];
   const vals = [];
 
+  let statusChanged = false;
+  let nextStatus = existing.status;
+
   if (fields.status !== undefined) {
     const s = String(fields.status || "");
     if (!isValidRequestStatus(s)) return null;
     if (existing.status && existing.status !== s && !canTransitionRequestStatus(existing.status, s)) {
       throw new Error(`Cannot transition document request from status "${existing.status}" to "${s}". Terminal and progressed requests cannot be reverted.`);
+    }
+    if (existing.status !== s) {
+      statusChanged = true;
+      nextStatus = s;
     }
     cols.push("status = ?");
     vals.push(s);
@@ -318,15 +325,44 @@ export async function updateDocumentRequest(id, fields) {
     );
   }
 
-  if (fields.message && String(fields.message).trim()) {
-    const currentStatus = fields.status || existing.status || "Pending";
-    await dbRun(
-      `INSERT INTO transaction_updates (document_request_id, status, message, created_by)
-       VALUES (?, ?, ?, ?)`,
-      [id, currentStatus, String(fields.message).trim(), fields.updatedBy ?? null]
+  const rawMessage = fields.message !== undefined && fields.message !== null ? String(fields.message).trim() : "";
+
+  // Timeline update handling & deduplication:
+  if (statusChanged) {
+    // When status changes, ALWAYS guarantee a timeline entry is recorded
+    const finalMessage = rawMessage || DEFAULT_REQUEST_STATUS_MESSAGES[nextStatus] || `Status updated to ${nextStatus}.`;
+
+    // Deduplication check against rapid duplicate/double-click submissions
+    const latestUpdate = await dbGet(
+      `SELECT status, message FROM transaction_updates WHERE document_request_id = ? ORDER BY created_at DESC, id DESC LIMIT 1`,
+      [id]
     );
+
+    const isDuplicate = latestUpdate && latestUpdate.status === nextStatus && latestUpdate.message === finalMessage;
+    if (!isDuplicate) {
+      await dbRun(
+        `INSERT INTO transaction_updates (document_request_id, status, message, created_by)
+         VALUES (?, ?, ?, ?)`,
+        [id, nextStatus, finalMessage, fields.updatedBy ?? null]
+      );
+    }
+  } else if (rawMessage) {
+    // Status did NOT change, but caller provided a message/note.
+    // Check if the latest update already has the identical status and message.
+    const latestUpdate = await dbGet(
+      `SELECT status, message FROM transaction_updates WHERE document_request_id = ? ORDER BY created_at DESC, id DESC LIMIT 1`,
+      [id]
+    );
+
+    const isDuplicate = latestUpdate && latestUpdate.status === nextStatus && latestUpdate.message === rawMessage;
+    if (!isDuplicate) {
+      await dbRun(
+        `INSERT INTO transaction_updates (document_request_id, status, message, created_by)
+         VALUES (?, ?, ?, ?)`,
+        [id, nextStatus, rawMessage, fields.updatedBy ?? null]
+      );
+    }
   }
 
-  return await getDocumentRequestById(id);
-  return await getDocumentRequestById(id, { officeId: fields.officeId });
+  return await getDocumentRequestById(id, fields.officeId ? { officeId: fields.officeId } : {});
 }

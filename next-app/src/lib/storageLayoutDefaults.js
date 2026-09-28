@@ -70,62 +70,107 @@ function buildUShapeLayout({ reversed = false } = {}) {
 
   const getNextId = () => `${2020 + (cabIdx++)}`;
 
-  // Left column (4 cabinets)
-  // Start at x=1 unit, y=1 unit
-  for (let i = 0; i < 4; i++) {
-    cabinets.push({
-      id: getNextId(),
-      rect: { 
-        x: GX, 
-        y: (1 + i * 4) * GY, 
-        w, 
-        h 
-      },
-      rotation: 0,
-      drawerIds: [1, 2, 3, 4],
-    });
-  }
-
-  // Base of the U (horizontal row, 5 cabinets)
-  // Base y is either top (1 unit) or bottom (21 units)
-  const baseYUnits = reversed ? 1 : 21;
-  // Room is 40 units wide. 5 cabinets (3 units wide each) + 4 gaps (1 unit each) = 19 units total.
-  // (40 - 19) / 2 = 10.5. To align with grid, use 10.5, but maybe 10 is better for grid?
-  // Actually, to make them perfectly aligned, we should keep it at 10.5 but let's re-verify math.
-  // 3 * 5 = 15. 4 gaps * 1 = 4. 15 + 4 = 19. (40 - 19) / 2 = 10.5.
-  // Let's use 10.5 to keep centered, but wait, GX is 0.025.
-  // Let's align all to integers for perfection. 
-  // 5 cabinets at x = 10, 14, 18, 22, 26? 26 + 3 = 29. 40 - 29 = 11. 
-  // Let's use 11.
+  // Centered U-layout within 40x25 grid
+  // Horizontal: 5 cabinets across (units 11..30, width 19 units: 5 * 3 + 4 * 1)
+  // Left arm at x=11, right arm at x=27. Central walkway = 13 units (0.325).
+  // Door is at x=2..7, y=24..25; leaving 4 units (0.10) walkway from door to cabinet column.
+  // Vertical: 4 rows (units 3..18, height 15 units: 4 * 3 + 3 * 1).
+  // Realistic door clearance: y=18 to door at y=24 is 6 units (0.24) walking space.
   const startXUnits = 11;
-  for (let i = 0; i < 5; i++) {
-    cabinets.push({
-      id: getNextId(),
-      rect: { 
-        x: (startXUnits + i * 4) * GX, 
-        y: baseYUnits * GY, 
-        w, 
-        h 
-      },
-      rotation: 0,
-      drawerIds: [1, 2, 3, 4],
-    });
-  }
+  const baseYUnits = reversed ? 3 : 15;
 
-  // Right column (4 cabinets)
-  // X is 40 - 1 (margin) - 3 (width) = 36 units
-  for (let i = 0; i < 4; i++) {
-    cabinets.push({
-      id: getNextId(),
-      rect: { 
-        x: GX * 36, 
-        y: (1 + i * 4) * GY, 
-        w, 
-        h 
-      },
-      rotation: 0,
-      drawerIds: [1, 2, 3, 4],
-    });
+  if (!reversed) {
+    // Standard U-shape (base at bottom, open at top)
+    // Left arm: 3 cabinets (y = 3, 7, 11)
+    for (let i = 0; i < 3; i++) {
+      cabinets.push({
+        id: getNextId(),
+        rect: {
+          x: startXUnits * GX,
+          y: (3 + i * 4) * GY,
+          w,
+          h,
+        },
+        rotation: 0,
+        drawerIds: [1, 2, 3, 4],
+      });
+    }
+
+    // Base row: 5 cabinets (x = 11, 15, 19, 23, 27 at y = 15)
+    for (let i = 0; i < 5; i++) {
+      cabinets.push({
+        id: getNextId(),
+        rect: {
+          x: (startXUnits + i * 4) * GX,
+          y: baseYUnits * GY,
+          w,
+          h,
+        },
+        rotation: 0,
+        drawerIds: [1, 2, 3, 4],
+      });
+    }
+
+    // Right arm: 3 cabinets (y = 3, 7, 11)
+    for (let i = 0; i < 3; i++) {
+      cabinets.push({
+        id: getNextId(),
+        rect: {
+          x: (startXUnits + 16) * GX,
+          y: (3 + i * 4) * GY,
+          w,
+          h,
+        },
+        rotation: 0,
+        drawerIds: [1, 2, 3, 4],
+      });
+    }
+  } else {
+    // Reversed U-shape (base at top, open towards entrance)
+    // Base row: 5 cabinets (x = 11, 15, 19, 23, 27 at y = 3)
+    for (let i = 0; i < 5; i++) {
+      cabinets.push({
+        id: getNextId(),
+        rect: {
+          x: (startXUnits + i * 4) * GX,
+          y: baseYUnits * GY,
+          w,
+          h,
+        },
+        rotation: 0,
+        drawerIds: [1, 2, 3, 4],
+      });
+    }
+
+    // Left arm: 3 cabinets (y = 7, 11, 15)
+    for (let i = 0; i < 3; i++) {
+      cabinets.push({
+        id: getNextId(),
+        rect: {
+          x: startXUnits * GX,
+          y: (7 + i * 4) * GY,
+          w,
+          h,
+        },
+        rotation: 0,
+        drawerIds: [1, 2, 3, 4],
+      });
+    }
+
+    // Right arm: 3 cabinets (y = 7, 11, 15)
+    for (let i = 0; i < 3; i++) {
+      cabinets.push({
+        id: getNextId(),
+        rect: {
+          x: (startXUnits + 16) * GX,
+          y: (7 + i * 4) * GY,
+          w,
+          h,
+        },
+        rotation: 0,
+        drawerIds: [1, 2, 3, 4],
+      });
+    }
   }
 
   return cabinets;

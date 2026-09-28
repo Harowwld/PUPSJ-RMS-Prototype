@@ -20,6 +20,7 @@ const ICON_MAP = {
   logs: { icon: "ti ti-history" },
   offices: { icon: "ti ti-building-community" },
   modules: { icon: "ti ti-layout-grid" },
+  standards: { icon: "ph-bold ph-clock-countdown" },
   staff: { icon: "ti ti-users" },
   health: { icon: "ti ti-activity-heartbeat" },
   backups: { icon: "ti ti-database-backup" },

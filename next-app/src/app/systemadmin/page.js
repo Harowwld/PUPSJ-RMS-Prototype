@@ -87,8 +87,11 @@ const LandingPageCmsTab = dynamic(() => import("@/components/systemadmin/Landing
 const SecurityQuestionsTab = dynamic(() => import("@/components/systemadmin/SecurityQuestionsTab"), {
   loading: () => <TabLoadingSkeleton />,
 })
+const ServiceStandardsTab = dynamic(() => import("@/components/systemadmin/ServiceStandardsTab"), {
+  loading: () => <TabLoadingSkeleton />,
+})
 
-const VALID_VIEWS = ["offices", "modules", "staff", "security", "logs", "health", "backups", "landing"]
+const VALID_VIEWS = ["offices", "modules", "standards", "staff", "security", "logs", "health", "backups", "landing"]
 
 function SystemAdminPageContent({ authUser: propAuthUser }) {
   const contextUser = useAuthUser()
@@ -260,6 +263,7 @@ function SystemAdminPageContent({ authUser: propAuthUser }) {
     { type: "header", label: "Institutional Governance" },
     { key: "offices", label: "Departments & Stations", iconClass: "ph-bold ph-buildings" },
     { key: "modules", label: "Department Features", iconClass: "ph-bold ph-squares-four" },
+    { key: "standards", label: "Service Standards & SLA", iconClass: "ph-bold ph-clock-countdown" },
     
     { type: "header", label: "Access & Audit" },
     { key: "staff", label: "Global Directory", iconClass: "ph-bold ph-users" },
@@ -319,6 +323,7 @@ function SystemAdminPageContent({ authUser: propAuthUser }) {
           >
             {view === "offices" && <OfficeManagementTab showToast={showToast} onSwitchTab={switchView} />}
             {view === "modules" && <ModuleConfigTab showToast={showToast} />}
+            {view === "standards" && <ServiceStandardsTab showToast={showToast} />}
             {view === "staff" && <GlobalStaffTab authUser={authUser} showToast={showToast} />}
             {view === "security" && <SecurityQuestionsTab showToast={showToast} />}
             {view === "logs" && <GlobalAuditLogsTab showToast={showToast} />}

@@ -60,7 +60,17 @@ export async function GET(req) {
         ? "Active"
         : String(statusParam).trim();
 
-    const courseCode = searchParams.get("courseCode") || "";
+    // Support multiple course codes (comma-separated or repeated parameters: courseCode, courseCodes, course)
+    const courseCodeParams = [
+      ...searchParams.getAll("courseCode"),
+      ...searchParams.getAll("courseCodes"),
+      ...searchParams.getAll("course"),
+    ];
+    const courseCodes = courseCodeParams
+      .flatMap((c) => c.split(","))
+      .map((c) => c.trim())
+      .filter(Boolean);
+
     const requireApproved = parseBool(searchParams.get("requireApproved"));
 
     const thresholdRaw = searchParams.get("threshold");
@@ -72,7 +82,7 @@ export async function GET(req) {
 
     const data = await getDigitizationComplianceSummary({
       studentStatus,
-      courseCode: courseCode.trim() || undefined,
+      courseCodes: courseCodes.length ? courseCodes : undefined,
       requireApproved,
       threshold,
       officeId,

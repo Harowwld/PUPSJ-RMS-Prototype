@@ -19,6 +19,7 @@ const Select = React.forwardRef(({
   optionClassName,
   usePortal = true,
   indicator = "caret",
+  align = "start",
   ...props
 }, ref) => {
   const [isOpen, setIsOpen] = React.useState(false)
@@ -32,29 +33,44 @@ const Select = React.forwardRef(({
     return () => setMounted(false)
   }, [])
 
-  const updateCoords = () => {
+  const updateCoords = React.useCallback(() => {
     if (triggerRef.current) {
       const rect = triggerRef.current.getBoundingClientRect()
+      let left = rect.left
+      const menuWidth = menuRef.current?.offsetWidth || rect.width
+      if (align === "end") {
+        left = rect.right - menuWidth
+      }
+      if (typeof window !== "undefined") {
+        if (left + menuWidth > window.innerWidth - 12) {
+          left = Math.max(12, window.innerWidth - menuWidth - 12)
+        }
+        if (left < 12) {
+          left = 12
+        }
+      }
       setCoords({
         top: rect.bottom,
-        left: rect.left,
+        left,
         width: rect.width,
       })
     }
-  }
+  }, [align])
 
   React.useEffect(() => {
     if (typeof window === "undefined") return
     if (isOpen && usePortal) {
       updateCoords()
+      const raf = requestAnimationFrame(updateCoords)
       window.addEventListener("scroll", updateCoords, true)
       window.addEventListener("resize", updateCoords)
+      return () => {
+        cancelAnimationFrame(raf)
+        window.removeEventListener("scroll", updateCoords, true)
+        window.removeEventListener("resize", updateCoords)
+      }
     }
-    return () => {
-      window.removeEventListener("scroll", updateCoords, true)
-      window.removeEventListener("resize", updateCoords)
-    }
-  }, [isOpen, usePortal])
+  }, [isOpen, usePortal, updateCoords])
 
   React.useEffect(() => {
     if (typeof document === "undefined") return
@@ -130,7 +146,7 @@ const Select = React.forwardRef(({
         position: "fixed",
         top: coords.top + 4,
         left: coords.left,
-        width: coords.width,
+        minWidth: coords.width,
         zIndex: 9999,
       } : undefined}
       className={cn(

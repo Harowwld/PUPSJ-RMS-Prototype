@@ -233,7 +233,7 @@ const ConflictResolutionModals = memo(({
               onClick={openApplyPreview}
               className="h-10 px-5 text-xs font-semibold rounded-xl! btn-brand-red text-white shadow-xs active:scale-95 transition-all cursor-pointer border-0"
             >
-              Continue to Preview
+              Continue
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -300,7 +300,7 @@ const ConflictResolutionModals = memo(({
               onClick={applyTemplateWithMappings}
               className="h-10 px-5 text-xs font-semibold rounded-xl! btn-brand-red text-white shadow-xs active:scale-95 transition-all cursor-pointer border-0"
             >
-              Apply Template
+              Apply
             </Button>
           </DialogFooter>
         </DialogContent>

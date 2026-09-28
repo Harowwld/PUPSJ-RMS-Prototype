@@ -1,13 +1,24 @@
-export function formatPHDateTime(dateString) {
-  if (!dateString) return "—";
-  try {
-    // If it already has T or Z, don't append Z again.
-    let normalized = String(dateString);
-    if (!normalized.includes("T") && !normalized.includes("Z")) {
-      normalized = normalized.replace(" ", "T") + "Z";
+function parseToDate(input) {
+  if (!input) return null;
+  if (input instanceof Date) {
+    return isNaN(input.getTime()) ? null : input;
+  }
+  let s = String(input).trim();
+  if (!s || s === "—") return null;
+  if (!s.includes("T") && !s.includes("Z")) {
+    if (/^\d{4}-\d{2}-\d{2}/.test(s)) {
+      s = s.replace(" ", "T") + "Z";
     }
-    const date = new Date(normalized);
-    if (isNaN(date.getTime())) throw new Error("Invalid");
+  }
+  const d = new Date(s);
+  return isNaN(d.getTime()) ? null : d;
+}
+
+export function formatPHDateTime(dateInput) {
+  if (!dateInput) return "—";
+  try {
+    const date = parseToDate(dateInput);
+    if (!date) return String(dateInput);
 
     const datePH = date.toLocaleDateString("en-PH", {
       timeZone: "Asia/Manila",
@@ -19,19 +30,15 @@ export function formatPHDateTime(dateString) {
     });
     return `${datePH}, ${timePH}`;
   } catch {
-    return String(dateString);
+    return String(dateInput);
   }
 }
 
-export function formatPHDateTimeParts(dateString) {
-  if (!dateString) return { date: "—", time: "" };
+export function formatPHDateTimeParts(dateInput) {
+  if (!dateInput) return { date: "—", time: "" };
   try {
-    let normalized = String(dateString);
-    if (!normalized.includes("T") && !normalized.includes("Z")) {
-      normalized = normalized.replace(" ", "T") + "Z";
-    }
-    const date = new Date(normalized);
-    if (isNaN(date.getTime())) throw new Error("Invalid");
+    const date = parseToDate(dateInput);
+    if (!date) return { date: String(dateInput), time: "" };
 
     const datePart = date.toLocaleDateString("en-PH", {
       timeZone: "Asia/Manila",
@@ -46,7 +53,7 @@ export function formatPHDateTimeParts(dateString) {
     });
     return { date: datePart, time: timePart };
   } catch {
-    return { date: String(dateString), time: "" };
+    return { date: String(dateInput), time: "" };
   }
 }
 
@@ -54,17 +61,13 @@ export function formatPHDateTimeParts(dateString) {
  * Returns a human-readable relative time string (e.g. "2 hours ago", "Yesterday")
  * for dates within the last 48 hours.
  */
-export function formatRelativeTime(dateString) {
-  if (!dateString || dateString === "—") return { relative: "", date: "—", time: "" };
+export function formatRelativeTime(dateInput) {
+  if (!dateInput || dateInput === "—") return { relative: "", date: "—", time: "" };
   try {
-    let normalized = String(dateString);
-    if (!normalized.includes("T") && !normalized.includes("Z")) {
-      normalized = normalized.replace(" ", "T") + "Z";
-    }
-    const date = new Date(normalized);
-    if (isNaN(date.getTime())) return { relative: "", date: String(dateString), time: "" };
+    const date = parseToDate(dateInput);
+    if (!date) return { relative: "", date: String(dateInput), time: "" };
 
-    const parts = formatPHDateTimeParts(dateString);
+    const parts = formatPHDateTimeParts(date);
     const now = new Date();
     const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
 
@@ -92,7 +95,7 @@ export function formatRelativeTime(dateString) {
     
     return { ...parts, relative };
   } catch {
-    return { relative: "", date: String(dateString), time: "" };
+    return { relative: "", date: String(dateInput), time: "" };
   }
 }
 

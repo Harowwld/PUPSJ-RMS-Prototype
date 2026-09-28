@@ -131,9 +131,17 @@ export default function RegistrarODRSTab({ showToast }) {
                     >
                       <div className="flex items-center justify-between gap-2">
                         <strong className="text-gray-900 dark:text-zinc-100 font-semibold">{item.doc_type}</strong>
-                        <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-semibold ${getStatusBadgeClass(item.status)}`}>
-                          {item.status}
-                        </span>
+                        <div className="flex items-center gap-1.5">
+                          {item.feedback && (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 dark:bg-amber-950/40 border border-amber-200/80 dark:border-amber-900/40 px-2 py-0.5 text-[11px] font-semibold text-amber-800 dark:text-amber-300">
+                              <HugeIcon className="ph-fill ph-star text-[11px] text-amber-500" />
+                              <span>{item.feedback.rating}/5</span>
+                            </span>
+                          )}
+                          <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-semibold ${getStatusBadgeClass(item.status)}`}>
+                            {item.status}
+                          </span>
+                        </div>
                       </div>
                       <div className="mt-1 flex items-center gap-1.5 flex-wrap text-xs text-gray-500 dark:text-zinc-400">
                         <span>{item.student_name}</span>
@@ -180,6 +188,37 @@ export default function RegistrarODRSTab({ showToast }) {
                     )}
                   </div>
                 </div>
+
+                {selected.feedback && (
+                  <div className="rounded-xl bg-amber-50/70 dark:bg-amber-950/30 p-3.5 border border-amber-200/70 dark:border-amber-900/40 space-y-1.5 mb-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-amber-800 dark:text-amber-300 flex items-center gap-1.5">
+                        <HugeIcon className="ph-fill ph-star text-xs text-amber-500" />
+                        Student Rating & Experience
+                      </span>
+                      <span className="text-xs font-bold text-amber-900 dark:text-amber-200">
+                        {selected.feedback.rating}/5
+                      </span>
+                    </div>
+                    {selected.feedback.aspect_tags?.length > 0 && (
+                      <div className="flex flex-wrap gap-1 pt-0.5">
+                        {selected.feedback.aspect_tags.map((tag) => (
+                          <span
+                            key={tag}
+                            className="rounded bg-white/80 dark:bg-zinc-800 px-1.5 py-0.5 text-[10px] font-medium text-amber-900 dark:text-amber-300 border border-amber-200/50 dark:border-amber-900/30"
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                    {selected.feedback.comments && (
+                      <p className="text-xs text-gray-700 dark:text-zinc-300 italic pt-1 border-t border-amber-200/40 dark:border-amber-900/30">
+                        &ldquo;{selected.feedback.comments}&rdquo;
+                      </p>
+                    )}
+                  </div>
+                )}
 
                 <div className="space-y-3 flex-1">
                   <div>
