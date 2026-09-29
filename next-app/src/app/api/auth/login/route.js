@@ -17,6 +17,7 @@ import { authDebug } from "@/lib/authDebug";
 import { authenticateStudent, createStudentSession, setStudentSessionCookie } from "@/lib/studentAuth";
 import { setCSRFTokenCookie } from "../../../../lib/csrfProtection";
 import { getSessionVersion, registerSessionToken } from "@/lib/authSessions";
+import { warmRegistrarIngestQueueOnLogin } from "@/lib/ingestEventProcessor";
 
 export const runtime = "nodejs";
 
@@ -230,6 +231,7 @@ async function _POST(req) {
   };
   const token = await signSessionToken(sessionPayload);
   await createSession(token, touched.id, touched.role || "Staff", touched.email, { authLevel: "password" });
+  warmRegistrarIngestQueueOnLogin(touched);
   
   // Reset login rate limit on full successful login
   await resetAuthLoginRateLimit(ipAddress, rateLimitIdentifier);

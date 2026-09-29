@@ -48,3 +48,13 @@ export function triggerIngestProcessing(officeId, reason = "ingest event") {
     if (officeRuns.get(normalizedOfficeId) === run) officeRuns.delete(normalizedOfficeId);
   });
 }
+
+export function warmRegistrarIngestQueueOnLogin(staff) {
+  const officeId = String(staff?.office_id || staff?.officeId || "").trim().toLowerCase();
+  const legacySection = String(staff?.section || "").trim().toLowerCase();
+  const isRegistrar = officeId ? officeId === "registrar" : ["administrative", "records"].includes(legacySection);
+
+  if (isRegistrar) {
+    void triggerIngestProcessing("registrar", "registrar account login");
+  }
+}
