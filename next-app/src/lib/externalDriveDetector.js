@@ -154,8 +154,8 @@ function detectLinuxDrives() {
   // 2. Scan standard removable mount locations: /run/media and /media
   try {
     for (const base of ["/run/media", "/media"]) {
-      if (!fs.existsSync(base)) continue;
-      const userDirs = fs.readdirSync(base);
+      if (!fs.existsSync(/*turbopackIgnore: true*/ base)) continue;
+      const userDirs = fs.readdirSync(/*turbopackIgnore: true*/ base);
 
       for (const u of userDirs) {
         const userPath = path.join(/*turbopackIgnore: true*/ base, u);
