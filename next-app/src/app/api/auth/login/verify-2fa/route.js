@@ -14,6 +14,7 @@ import { writeAuditLog } from "@/lib/auditLogRequest";
 import { checkAuth2FARateLimit, resetAuth2FARateLimit } from "@/lib/rateLimiter";
 import { setCSRFTokenCookie } from "../../../../../lib/csrfProtection";
 import { getSessionVersion, isSessionActive, revokeSession } from "@/lib/authSessions";
+import { warmRegistrarIngestQueueOnLogin } from "@/lib/ingestEventProcessor";
 
 export const runtime = "nodejs";
 
@@ -135,6 +136,7 @@ export async function POST(req) {
   };
   const token = await signSessionToken(sessionPayload);
   await createSession(token, staff.id, staff.role || "Staff", staff.email, { authLevel: "2fa" });
+  warmRegistrarIngestQueueOnLogin(staff);
   
   // Reset login rate limit on successful 2FA
   await resetAuth2FARateLimit(ipAddress, staff.id);

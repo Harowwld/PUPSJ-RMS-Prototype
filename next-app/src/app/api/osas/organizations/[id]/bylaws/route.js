@@ -86,8 +86,8 @@ export async function GET(req, ctx) {
     let filePath = resolveBylawsFilePath(org.bylaws_storage_filename);
     let bytes;
 
-    if (filePath && fs.existsSync(filePath)) {
-      bytes = fs.readFileSync(filePath);
+    if (filePath && fs.existsSync(/*turbopackIgnore: true*/ filePath)) {
+      bytes = fs.readFileSync(/*turbopackIgnore: true*/ filePath);
     } else {
       bytes = await synthesizeFallbackBylawsPdf(org);
       try {

@@ -79,8 +79,8 @@ export async function GET(req, ctx) {
   if (new URL(req.url).searchParams.get("file") === "1") {
     let filePath = resolveProposalFilePath(proposal.storage_filename);
     let bytes;
-    if (filePath && fs.existsSync(filePath)) {
-      bytes = fs.readFileSync(filePath);
+    if (filePath && fs.existsSync(/*turbopackIgnore: true*/ filePath)) {
+      bytes = fs.readFileSync(/*turbopackIgnore: true*/ filePath);
     } else {
       bytes = await synthesizeFallbackPdf(proposal);
       try {

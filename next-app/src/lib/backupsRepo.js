@@ -68,7 +68,7 @@ export function getExternalBackupsDir() {
     if (!targetDir.includes("external_media") && !targetDir.includes("PUPSJ_BACKUPS")) {
       targetDir = path.join(targetDir, "PUPSJ_BACKUPS");
     }
-    if (!fs.existsSync(targetDir)) {
+    if (!fs.existsSync(/*turbopackIgnore: true*/ targetDir)) {
       fs.mkdirSync(targetDir, { recursive: true });
     }
     return targetDir;
@@ -223,8 +223,8 @@ export async function syncBackupExternally(id) {
 
     // Create a dated subfolder: YYYY-MM-DD
     const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
-    const dailyDir = path.join(externalDir, today);
-    if (!fs.existsSync(dailyDir)) {
+    const dailyDir = path.join(/*turbopackIgnore: true*/ externalDir, today);
+    if (!fs.existsSync(/*turbopackIgnore: true*/ dailyDir)) {
       fs.mkdirSync(dailyDir, { recursive: true });
     }
 

@@ -47,7 +47,7 @@ export function getUploadsDir(officeId = null) {
   if (officeId) {
     const custom = officeStorageMap.get(String(officeId).toLowerCase());
     if (custom) {
-      const dir = path.isAbsolute(custom) ? custom : path.join(process.cwd(), custom);
+      const dir = path.isAbsolute(custom) ? custom : path.join(/*turbopackIgnore: true*/ process.cwd(), custom);
       fs.mkdirSync(dir, { recursive: true });
       return dir;
     }

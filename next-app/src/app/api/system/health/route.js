@@ -628,7 +628,7 @@ async function buildHealthData() {
 
   const resolveAbs = (p) => {
     if (!p) return "";
-    return path.isAbsolute(p) ? p : path.join(process.cwd(), p);
+    return path.isAbsolute(p) ? p : path.join(/*turbopackIgnore: true*/ process.cwd(), p);
   };
 
   const officesList = allOffices && allOffices.length > 0 ? allOffices : [
