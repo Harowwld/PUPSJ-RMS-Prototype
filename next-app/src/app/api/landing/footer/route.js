@@ -51,7 +51,7 @@ export async function PUT(req) {
       await writeGlobalAuditLog(req, "Update Landing Page Footer CMS", {
         entity_type: "LandingCMS",
         entity_id: "footer",
-        details: `Updated Landing Page Footer: brand "${updated.brandName}", schedule hours, contacts, and navigation links.`,
+        details: `Updated Landing Page Footer: brand "${updated.brandName}", archive location, schedule hours, and contacts.`,
       });
     }
 

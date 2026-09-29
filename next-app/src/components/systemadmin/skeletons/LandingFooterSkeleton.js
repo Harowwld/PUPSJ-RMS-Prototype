@@ -18,7 +18,7 @@ export default function LandingFooterSkeleton() {
               </span>
             </div>
           }
-          description="Customize institutional credentials, campus archive location, registrar window schedules, contacts, and navigation links."
+          description="Customize campus archive location, registrar window schedules, contacts, ambient watermark, and copyright."
           showBorder={false}
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
           descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
@@ -34,10 +34,7 @@ export default function LandingFooterSkeleton() {
         {/* Tab switcher skeleton */}
         <div className="flex items-center gap-6 shrink-0 h-10 px-6 border-b border-gray-100 dark:border-white/10 bg-white dark:bg-card select-none">
           <div className="relative h-full flex items-center text-[13px] font-semibold text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50">
-            Identity &amp; Watermark
-          </div>
-          <div className="relative h-full flex items-center text-[13px] text-[#8E8E93] font-normal">
-            Schedule &amp; Inquiries (7)
+            Footer Content
           </div>
           <div className="relative h-full flex items-center text-[13px] text-[#8E8E93] font-normal">
             Interactive Live Preview
@@ -45,13 +42,13 @@ export default function LandingFooterSkeleton() {
         </div>
 
         <CardContent className="font-jakarta bg-white p-[24px] dark:bg-card/50 backdrop-blur-md flex flex-col gap-6">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-            {/* Left Column (lg:col-span-7) */}
-            <div className="lg:col-span-7 space-y-5">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            {/* Left Column (lg:col-span-6) */}
+            <div className="lg:col-span-6 space-y-5">
               <div className="rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/30 p-5 space-y-5">
                 <div>
                   <div className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">
-                    Physical Archive Location &amp; Mission
+                    Physical Archive Location
                   </div>
                   <p className="text-[12px] font-normal text-gray-500 dark:text-zinc-400 mt-0.5">
                     Credentials and archive hall details displayed in Column 1.
@@ -61,31 +58,19 @@ export default function LandingFooterSkeleton() {
                 <div className="space-y-4">
                   <div className="space-y-1.5">
                     <Skeleton className="h-3 w-44 rounded dark:bg-muted" />
-                    <Skeleton className="h-20 w-full rounded-xl dark:bg-muted" />
+                    <Skeleton className="h-10 w-full rounded-xl dark:bg-muted" />
                   </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="space-y-1.5">
-                      <Skeleton className="h-3 w-28 rounded dark:bg-muted" />
-                      <Skeleton className="h-10 w-full rounded-xl dark:bg-muted" />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Skeleton className="h-3 w-28 rounded dark:bg-muted" />
-                      <Skeleton className="h-10 w-full rounded-xl dark:bg-muted" />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="space-y-1.5">
-                      <Skeleton className="h-3 w-28 rounded dark:bg-muted" />
-                      <Skeleton className="h-10 w-full rounded-xl dark:bg-muted" />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Skeleton className="h-3 w-28 rounded dark:bg-muted" />
-                      <Skeleton className="h-10 w-full rounded-xl dark:bg-muted" />
-                    </div>
+                  <div className="space-y-1.5">
+                    <Skeleton className="h-3 w-44 rounded dark:bg-muted" />
+                    <Skeleton className="h-10 w-full rounded-xl dark:bg-muted" />
                   </div>
                 </div>
+              </div>
+
+              {/* Map Directions Box */}
+              <div className="rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/30 p-5 space-y-4">
+                <Skeleton className="h-4 w-40 rounded dark:bg-muted" />
+                <Skeleton className="h-10 w-full rounded-xl dark:bg-muted" />
               </div>
 
               {/* Watermark Box */}
@@ -93,22 +78,32 @@ export default function LandingFooterSkeleton() {
                 <Skeleton className="h-4 w-52 rounded dark:bg-muted" />
                 <Skeleton className="h-24 w-full rounded-xl dark:bg-muted" />
               </div>
+
+              {/* Sub-Footer & Copyright */}
+              <div className="rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/30 p-5 space-y-4">
+                <Skeleton className="h-4 w-44 rounded dark:bg-muted" />
+                <Skeleton className="h-10 w-full rounded-xl dark:bg-muted" />
+              </div>
             </div>
 
-            {/* Right Column (lg:col-span-5) */}
-            <div className="lg:col-span-5 space-y-5">
+            {/* Right Column (lg:col-span-6) */}
+            <div className="lg:col-span-6 space-y-5">
               <div className="rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/30 p-5 space-y-4">
                 <Skeleton className="h-4 w-44 rounded dark:bg-muted" />
                 <div className="space-y-3">
                   <Skeleton className="h-10 w-full rounded-xl dark:bg-muted" />
-                  <Skeleton className="h-10 w-full rounded-xl dark:bg-muted" />
-                  <Skeleton className="h-10 w-full rounded-xl dark:bg-muted" />
+                  <Skeleton className="h-14 w-full rounded-xl dark:bg-muted" />
+                  <Skeleton className="h-14 w-full rounded-xl dark:bg-muted" />
                 </div>
               </div>
 
               <div className="rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/30 p-5 space-y-4">
                 <Skeleton className="h-4 w-48 rounded dark:bg-muted" />
-                <Skeleton className="h-12 w-full rounded-xl dark:bg-muted" />
+                <div className="space-y-3">
+                  <Skeleton className="h-10 w-full rounded-xl dark:bg-muted" />
+                  <Skeleton className="h-14 w-full rounded-xl dark:bg-muted" />
+                  <Skeleton className="h-14 w-full rounded-xl dark:bg-muted" />
+                </div>
               </div>
             </div>
           </div>

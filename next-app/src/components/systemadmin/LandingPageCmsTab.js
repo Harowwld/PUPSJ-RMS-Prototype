@@ -9,7 +9,6 @@ import { Select } from "@/components/ui/select"
 import { Skeleton } from "@/components/ui/skeleton"
 import PageHeader from "@/components/shared/PageHeader"
 import ConfirmModal from "@/components/shared/ConfirmModal"
-import LandingBentoCmsView from "./LandingBentoCmsView"
 import LandingWorkflowCmsView from "./LandingWorkflowCmsView"
 import LandingCatalogCmsView from "./LandingCatalogCmsView"
 import LandingFaqCmsView from "./LandingFaqCmsView"
@@ -18,13 +17,13 @@ import LandingHeroSkeleton from "@/components/systemadmin/skeletons/LandingHeroS
 import { cn } from "@/lib/utils"
 
 export default function LandingPageCmsTab({ showToast }) {
-  const [currentSection, setCurrentSection] = useState("hero") // 'hero' | 'bento' | 'workflow' | 'catalog' | 'faq' | 'footer'
+  const [currentSection, setCurrentSection] = useState("hero") // 'hero' | 'workflow' | 'catalog' | 'faq' | 'footer'
   const [loading, setLoading] = useState(true)
 
   // Synchronize section from URL or switch-view events (Command Palette & deep linking)
   useEffect(() => {
     const urlSection = new URLSearchParams(window.location.search).get("section")
-    if (urlSection && ["hero", "bento", "workflow", "catalog", "faq", "footer"].includes(urlSection)) {
+    if (urlSection && ["hero", "workflow", "catalog", "faq", "footer"].includes(urlSection)) {
       queueMicrotask(() => {
         setCurrentSection(urlSection)
       })
@@ -32,7 +31,7 @@ export default function LandingPageCmsTab({ showToast }) {
 
     const handleSwitch = (e) => {
       const targetSec = e.detail?.section
-      if (targetSec && ["hero", "bento", "workflow", "catalog", "faq", "footer"].includes(targetSec)) {
+      if (targetSec && ["hero", "workflow", "catalog", "faq", "footer"].includes(targetSec)) {
         setCurrentSection(targetSec)
       }
     }
@@ -49,7 +48,7 @@ export default function LandingPageCmsTab({ showToast }) {
   const [saving, setSaving] = useState(false)
   const [uploadingIndex, setUploadingIndex] = useState(null)
   const [isAddingPhoto, setIsAddingPhoto] = useState(false)
-  const [activeTab, setActiveTab] = useState("slides") // 'slides' | 'content' | 'preview'
+  const [activeTab, setActiveTab] = useState("slides") // 'slides' | 'preview'
   const [previewSlideIdx, setPreviewSlideIdx] = useState(0)
 
   // Form State
@@ -57,9 +56,6 @@ export default function LandingPageCmsTab({ showToast }) {
     headlineLine1: "",
     headlineLine2: "",
     description: "",
-    campusAddress: "",
-    registrarHours: "",
-    operatingDays: "",
     autoRotateInterval: 5500,
     slides: [],
   })
@@ -363,20 +359,6 @@ export default function LandingPageCmsTab({ showToast }) {
 
         <button
           type="button"
-          onClick={() => handleSelectSection("bento")}
-          className={cn(
-            "flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer border-0",
-            currentSection === "bento"
-              ? "bg-white dark:bg-zinc-800 text-pup-maroon dark:text-red-400 shadow-sm"
-              : "text-gray-500 hover:text-gray-900 dark:hover:text-white bg-transparent"
-          )}
-        >
-          <HugeIcon  className="ph-bold ph-squares-four text-sm" />
-          <span>Features Bento Grid</span>
-        </button>
-
-        <button
-          type="button"
           onClick={() => handleSelectSection("workflow")}
           className={cn(
             "flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer border-0",
@@ -432,7 +414,6 @@ export default function LandingPageCmsTab({ showToast }) {
         </button>
       </div>
 
-      {currentSection === "bento" && <LandingBentoCmsView showToast={showToast} />}
       {currentSection === "workflow" && <LandingWorkflowCmsView showToast={showToast} />}
       {currentSection === "catalog" && <LandingCatalogCmsView showToast={showToast} />}
       {currentSection === "faq" && <LandingFaqCmsView showToast={showToast} />}
@@ -506,20 +487,7 @@ export default function LandingPageCmsTab({ showToast }) {
                 : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
             )}
           >
-            Carousel Photos ({heroData.slides.length})
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveTab("content")}
-            className={cn(
-              "relative h-full flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent",
-              activeTab === "content"
-                ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
-                : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
-            )}
-          >
-            Messaging Information
+            Hero Content
           </button>
 
           <button
@@ -538,10 +506,97 @@ export default function LandingPageCmsTab({ showToast }) {
 
         {/* Content Body */}
         <CardContent className="font-jakarta bg-white p-[24px] dark:bg-card/50 backdrop-blur-md flex flex-col gap-6 rounded-b-2xl">
-          {/* TAB 1: Simplified Carousel Photos (Upload & Preview Centric) */}
+          {/* TAB 1: Hero Content (Messaging + Carousel Combined) */}
           {activeTab === "slides" && (
             <div className="space-y-6">
-              {/* Controls Bar */}
+              {/* Hero Headlines & Institutional Philosophy */}
+              <div className="rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/30 p-5 space-y-5">
+                <div>
+                  <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">
+                    Hero Headlines &amp; Institutional Philosophy
+                  </h3>
+                  <p className="text-[12px] font-normal text-gray-500 dark:text-zinc-400 mt-0.5">
+                    Primary large display typography rendered over campus background photography.
+                  </p>
+                </div>
+
+                <div className="space-y-4">
+                  {/* Headline fields in a two-column row */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <div className="flex justify-between items-center mb-1.5">
+                        <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
+                          Headline Line 1 (Upper)
+                        </label>
+                        <span className="text-[11px] text-gray-400 font-mono">
+                          {heroData.headlineLine1.length}/45
+                        </span>
+                      </div>
+                      <Input
+                        value={heroData.headlineLine1}
+                        onChange={(e) =>
+                          setHeroData((prev) => ({
+                            ...prev,
+                            headlineLine1: e.target.value,
+                          }))
+                        }
+                        placeholder="e.g. Tanglaw ng Bayan,"
+                        maxLength={45}
+                        className="h-10 w-full rounded-xl border border-gray-200 bg-white px-3 text-xs font-normal placeholder:text-gray-400 dark:border-white/10 dark:bg-card focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 dark:focus:ring-pup-maroon/20"
+                      />
+                    </div>
+
+                    <div>
+                      <div className="flex justify-between items-center mb-1.5">
+                        <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
+                          Headline Line 2 (Lower Accent)
+                        </label>
+                        <span className="text-[11px] text-gray-400 font-mono">
+                          {heroData.headlineLine2.length}/45
+                        </span>
+                      </div>
+                      <Input
+                        value={heroData.headlineLine2}
+                        onChange={(e) =>
+                          setHeroData((prev) => ({
+                            ...prev,
+                            headlineLine2: e.target.value,
+                          }))
+                        }
+                        placeholder="e.g. Dambana ng Kagitingan."
+                        maxLength={45}
+                        className="h-10 w-full rounded-xl border border-gray-200 bg-white px-3 text-xs font-normal placeholder:text-gray-400 dark:border-white/10 dark:bg-card focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 dark:focus:ring-pup-maroon/20"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="flex justify-between items-center mb-1.5">
+                      <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
+                        Hero Subtitle & Institutional Description
+                      </label>
+                      <span className="text-[11px] text-gray-400 font-mono">
+                        {heroData.description.length}/280
+                      </span>
+                    </div>
+                    <textarea
+                      value={heroData.description}
+                      onChange={(e) =>
+                        setHeroData((prev) => ({
+                          ...prev,
+                          description: e.target.value,
+                        }))
+                      }
+                      rows={3}
+                      maxLength={280}
+                      placeholder="Official institutional records keeping, archive retrieval, and document verification system..."
+                      className="w-full rounded-xl border border-gray-200 bg-white p-3 text-xs font-normal leading-relaxed placeholder:text-gray-400 dark:border-white/10 dark:bg-card focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 dark:focus:ring-pup-maroon/20 focus:outline-hidden"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Campus Background Photos Controls Bar */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/30 p-4">
                 <div>
                   <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">
@@ -693,170 +748,7 @@ export default function LandingPageCmsTab({ showToast }) {
             </div>
           )}
 
-          {/* TAB 2: Messaging & Information */}
-          {activeTab === "content" && (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Primary Messaging Panel */}
-              <div className="lg:col-span-2 rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/30 p-5 space-y-5">
-                <div>
-                  <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">
-                    Hero Headlines &amp; Institutional Philosophy
-                  </h3>
-                  <p className="text-[12px] font-normal text-gray-500 dark:text-zinc-400 mt-0.5">
-                    Primary large display typography rendered over campus background photography.
-                  </p>
-                </div>
-
-                <div className="space-y-4">
-                  <div>
-                    <div className="flex justify-between items-center mb-1.5">
-                      <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
-                        Headline Line 1 (Upper)
-                      </label>
-                      <span className="text-[11px] text-gray-400 font-mono">
-                        {heroData.headlineLine1.length}/45
-                      </span>
-                    </div>
-                    <Input
-                      value={heroData.headlineLine1}
-                      onChange={(e) =>
-                        setHeroData((prev) => ({
-                          ...prev,
-                          headlineLine1: e.target.value,
-                        }))
-                      }
-                      placeholder="e.g. Tanglaw ng Bayan,"
-                      maxLength={45}
-                      className="h-10 w-full rounded-xl border border-gray-200 bg-white px-3 text-xs font-normal placeholder:text-gray-400 dark:border-white/10 dark:bg-card focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 dark:focus:ring-pup-maroon/20"
-                    />
-                  </div>
-
-                  <div>
-                    <div className="flex justify-between items-center mb-1.5">
-                      <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
-                        Headline Line 2 (Lower Accent)
-                      </label>
-                      <span className="text-[11px] text-gray-400 font-mono">
-                        {heroData.headlineLine2.length}/45
-                      </span>
-                    </div>
-                    <Input
-                      value={heroData.headlineLine2}
-                      onChange={(e) =>
-                        setHeroData((prev) => ({
-                          ...prev,
-                          headlineLine2: e.target.value,
-                        }))
-                      }
-                      placeholder="e.g. Dambana ng Kagitingan."
-                      maxLength={45}
-                      className="h-10 w-full rounded-xl border border-gray-200 bg-white px-3 text-xs font-normal placeholder:text-gray-400 dark:border-white/10 dark:bg-card focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 dark:focus:ring-pup-maroon/20"
-                    />
-                  </div>
-
-                  <div>
-                    <div className="flex justify-between items-center mb-1.5">
-                      <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
-                        Hero Subtitle & Institutional Description
-                      </label>
-                      <span className="text-[11px] text-gray-400 font-mono">
-                        {heroData.description.length}/280
-                      </span>
-                    </div>
-                    <textarea
-                      value={heroData.description}
-                      onChange={(e) =>
-                        setHeroData((prev) => ({
-                          ...prev,
-                          description: e.target.value,
-                        }))
-                      }
-                      rows={3}
-                      maxLength={280}
-                      placeholder="Official institutional records keeping, archive retrieval, and document verification system..."
-                      className="w-full rounded-xl border border-gray-200 bg-white p-3 text-xs font-normal leading-relaxed placeholder:text-gray-400 dark:border-white/10 dark:bg-card focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 dark:focus:ring-pup-maroon/20 focus:outline-hidden"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Campus Information Side Panel */}
-              <div className="rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/30 p-5 space-y-4">
-                <div>
-                  <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">
-                    Campus Information
-                  </h3>
-                  <p className="text-[12px] font-normal text-gray-500 dark:text-zinc-400 mt-0.5">
-                    Displayed in the bottom accreditation pill across the hero section.
-                  </p>
-                </div>
-
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300 mb-1.5">
-                      Campus Address
-                    </label>
-                    <div className="relative">
-                      <HugeIcon  className="ph-bold ph-map-pin absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
-                      <Input
-                        value={heroData.campusAddress}
-                        onChange={(e) =>
-                          setHeroData((prev) => ({
-                            ...prev,
-                            campusAddress: e.target.value,
-                          }))
-                        }
-                        placeholder="223 Ortega St. cor. A. Mabini St., Addition Hills, San Juan City"
-                        className="h-10 w-full rounded-xl border border-gray-200 bg-white pl-9 pr-3 text-xs font-normal dark:border-white/10 dark:bg-card focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300 mb-1.5">
-                      Office Working Hours
-                    </label>
-                    <div className="relative">
-                      <HugeIcon  className="ph-bold ph-clock absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
-                      <Input
-                        value={heroData.registrarHours}
-                        onChange={(e) =>
-                          setHeroData((prev) => ({
-                            ...prev,
-                            registrarHours: e.target.value,
-                          }))
-                        }
-                        placeholder="REGISTRAR: 8:00 AM – 5:00 PM"
-                        className="h-10 w-full rounded-xl border border-gray-200 bg-white pl-9 pr-3 text-xs font-mono dark:border-white/10 dark:bg-card focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300 mb-1.5">
-                      Operating Days
-                    </label>
-                    <div className="relative">
-                      <HugeIcon  className="ph-bold ph-calendar absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
-                      <Input
-                        value={heroData.operatingDays}
-                        onChange={(e) =>
-                          setHeroData((prev) => ({
-                            ...prev,
-                            operatingDays: e.target.value,
-                          }))
-                        }
-                        placeholder="MON – FRI"
-                        className="h-10 w-full rounded-xl border border-gray-200 bg-white pl-9 pr-3 text-xs font-mono dark:border-white/10 dark:bg-card focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* TAB 3: Interactive Live Hero Preview */}
+          {/* TAB 2: Interactive Live Hero Preview */}
           {activeTab === "preview" && (
             <div className="space-y-4">
               <div className="flex items-center justify-between rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/30 p-4">
@@ -906,16 +798,16 @@ export default function LandingPageCmsTab({ showToast }) {
               </div>
 
               {/* Miniature Hero Simulator Matching LandingHero.js */}
-              <div className="relative w-full rounded-2xl overflow-hidden border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-900/50 shadow-sm flex flex-col select-none">
+              <div className="relative w-full rounded-2xl overflow-hidden border border-gray-200 dark:border-white/10 bg-[#ffffff] dark:bg-zinc-900/50 shadow-sm flex flex-col select-none font-jakarta">
                 {/* Hero Image & Content Frame */}
-                <div className="relative w-full min-h-[460px] sm:min-h-[500px] overflow-hidden flex flex-col justify-center px-6 sm:px-12">
+                <div className="relative w-full h-[75vh] min-h-[550px] overflow-hidden flex flex-col justify-center px-6 sm:px-12 lg:px-16">
                   {/* Background Images */}
-                  <div className="absolute inset-0 w-full h-full z-0 overflow-hidden pointer-events-none bg-white">
+                  <div className="absolute inset-0 w-full h-full z-0 overflow-hidden pointer-events-none bg-[#ffffff]">
                     {heroData.slides.map((s, sIdx) => (
                       <div
                         key={sIdx}
                         className={cn(
-                          "absolute inset-0 w-full h-full transition-opacity duration-700 ease-in-out",
+                          "absolute inset-0 w-full h-full transition-opacity duration-1000 ease-in-out",
                           sIdx === previewSlideIdx ? "opacity-100" : "opacity-0"
                         )}
                       >
@@ -936,36 +828,39 @@ export default function LandingPageCmsTab({ showToast }) {
                   </div>
 
                   {/* Centered Hero Content Matching LandingHero.js */}
-                  <div className="relative z-10 w-full max-w-4xl mx-auto my-auto py-8 sm:py-12 flex flex-col items-center text-center">
-                    <h2
-                      style={{
-                        fontSize: "clamp(1.75rem, 4vw, 3.25rem)",
-                        lineHeight: 1.04,
-                      }}
-                      className="tanglaw-heading font-extrabold text-white tracking-tight sm:tracking-tighter mb-4"
-                    >
-                      <span className="block">{heroData.headlineLine1 || "Tanglaw ng Bayan,"}</span>
-                      <span className="block">{heroData.headlineLine2 || "Dambana ng Kagitingan."}</span>
-                    </h2>
-
-                    <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed max-w-xl mx-auto mb-8 font-normal">
-                      {heroData.description ||
-                        "Official institutional records keeping, archive retrieval, and document verification system for Polytechnic University of the Philippines San Juan Campus."}
-                    </p>
-
-                    <div className="flex items-center justify-center">
-                      <Button
-                        type="button"
-                        className="h-10 px-8 rounded-full btn-brand-red text-xs font-medium text-white shadow-md pointer-events-none active:scale-95 transition-all"
+                  <div className="relative z-10 w-full max-w-7xl mx-auto my-auto py-8 sm:py-14 flex flex-col items-center text-center">
+                    <div className="w-full max-w-4xl flex flex-col items-center">
+                      <h1
+                        style={{
+                          fontSize: "clamp(2.25rem, 5vw, 4.5rem)",
+                          lineHeight: 1.04,
+                        }}
+                        className="tanglaw-heading font-extrabold text-white tracking-tight sm:tracking-tighter mb-6"
                       >
-                        <span>{heroData.ctaText || "Request"}</span>
-                      </Button>
+                        <span className="block">{heroData.headlineLine1 || "Tanglaw ng Bayan,"}</span>
+                        <span className="block">{heroData.headlineLine2 || "Dambana ng Kagitingan."}</span>
+                      </h1>
+
+                      <p className="text-xs sm:text-sm md:text-base text-zinc-300 leading-relaxed max-w-xl mx-auto mb-10 font-normal">
+                        {heroData.description ||
+                          "Official institutional records keeping, archive retrieval, and document verification system for Polytechnic University of the Philippines San Juan Campus."}
+                      </p>
+
+                      {/* Action Cluster — centered */}
+                      <div className="flex flex-wrap items-center justify-center gap-4">
+                        <Button
+                          type="button"
+                          className="h-11 px-8 rounded-full btn-brand-red text-[13px] font-medium text-white active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md pointer-events-none"
+                        >
+                          <span>{(!heroData.ctaText || heroData.ctaText === "Request Document") ? "Request" : heroData.ctaText}</span>
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </div>
 
                 {/* Apple-Style Pagination Dots Outside Image Panel Matching LandingHero.js */}
-                <div className="w-full flex justify-center py-4 bg-white dark:bg-zinc-950 border-t border-gray-100 dark:border-white/5">
+                <div className="w-full flex justify-center py-5 bg-[#ffffff] dark:bg-zinc-950">
                   <div className="flex items-center gap-2 px-3 py-1">
                     {heroData.slides.map((_, dotIdx) => {
                       const isActive = dotIdx === previewSlideIdx

@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import PageHeader from "@/components/shared/PageHeader"
 import { RefreshButton } from "@/components/shared/RefreshButton"
 import { TOTPChallengeModal } from "@/components/shared/TOTPChallengeModal"
+import BulkImportQuestionsModal from "@/components/systemadmin/BulkImportQuestionsModal"
 import {
   Tooltip,
   TooltipContent,
@@ -25,6 +26,7 @@ export default function SecurityQuestionsTab({ showToast }) {
   const [saving, setSaving] = useState(false)
   const [totpModalOpen, setTotpModalOpen] = useState(false)
   const [totpLoading, setTotpLoading] = useState(false)
+  const [bulkModalOpen, setBulkModalOpen] = useState(false)
 
   const loadQuestions = useCallback(async (isManual = false) => {
     if (isManual) setLoading(true)
@@ -97,6 +99,26 @@ export default function SecurityQuestionsTab({ showToast }) {
       const copy = [...prev]
       copy[index] = { ...copy[index], is_required: !copy[index].is_required }
       return copy
+    })
+  }
+
+  const handleBulkImport = (newQuestions) => {
+    if (!newQuestions || newQuestions.length === 0) return
+
+    setQuestions((prev) => {
+      const nonEmpties = prev.filter((q) => q.question && q.question.trim().length > 0)
+      if (nonEmpties.length === 0) {
+        return newQuestions.map((q, idx) => ({
+          ...q,
+          is_required: idx === 0 ? true : Boolean(q.is_required),
+        }))
+      }
+      return [...prev, ...newQuestions]
+    })
+
+    showToast?.({
+      title: "Questions Imported",
+      description: `Added ${newQuestions.length} challenge question${newQuestions.length > 1 ? "s" : ""} to the list. Click "Save" to apply changes.`,
     })
   }
 
@@ -227,6 +249,16 @@ export default function SecurityQuestionsTab({ showToast }) {
                 isLoading={loading}
                 title="Refresh Security Questions"
               />
+
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setBulkModalOpen(true)}
+                disabled={loading || saving}
+                className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+              >
+                Import
+              </Button>
 
               <Button
                 onClick={() => handleSave()}
@@ -404,6 +436,14 @@ export default function SecurityQuestionsTab({ showToast }) {
           )}
         </div>
       </Card>
+
+      {/* Bulk Import Questions Modal */}
+      <BulkImportQuestionsModal
+        open={bulkModalOpen}
+        onOpenChange={setBulkModalOpen}
+        existingQuestions={questions}
+        onImport={handleBulkImport}
+      />
 
       {/* TOTP Challenge Modal */}
       <TOTPChallengeModal

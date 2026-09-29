@@ -25,6 +25,7 @@
     "test:hot-folder": "node --test test/hot-folder-stability.test.mjs",
     "populate-sample-data": "node scripts/populate-sample-data.mjs",
     "test:security": "node --experimental-test-module-mocks --test test/security/*.test.mjs",
+    "test:security-questions": "node --env-file=.env.local --test test/security-questions-import.test.mjs",
     "hot-folder-watcher": "node scripts/hot-folder-watcher/watch.mjs"
   },
   "dependencies": {

@@ -15,10 +15,6 @@ export default function LandingHeroSkeleton() {
           <span>Hero Section</span>
         </div>
         <div className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold text-gray-500">
-          <HugeIcon  className="ph-bold ph-squares-four text-sm" />
-          <span>Features Bento Grid</span>
-        </div>
-        <div className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold text-gray-500">
           <HugeIcon  className="ph-bold ph-git-merge text-sm" />
           <span>Workflow &amp; Steps</span>
         </div>
@@ -64,10 +60,7 @@ export default function LandingHeroSkeleton() {
         {/* Tab switcher inside header */}
         <div className="flex items-center gap-6 shrink-0 h-10 px-6 border-b border-gray-100 dark:border-white/10 bg-white dark:bg-card select-none">
           <div className="relative h-full flex items-center text-[13px] font-semibold text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50">
-            Carousel Photos (4)
-          </div>
-          <div className="relative h-full flex items-center text-[13px] text-[#8E8E93] font-normal">
-            Messaging Information
+            Hero Content
           </div>
           <div className="relative h-full flex items-center text-[13px] text-[#8E8E93] font-normal">
             Interactive Live Preview

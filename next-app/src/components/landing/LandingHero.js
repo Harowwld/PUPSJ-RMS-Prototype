@@ -12,10 +12,6 @@ const DEFAULT_HERO_CONTENT = {
     "Official institutional records keeping, archive retrieval, and document verification system for Polytechnic University of the Philippines San Juan Campus.",
   ctaText: "Request",
   ctaLink: "/login",
-  campusAddress:
-    "223 Ortega St. cor. A. Mabini St., Addition Hills, San Juan City",
-  registrarHours: "REGISTRAR: 8:00 AM – 5:00 PM",
-  operatingDays: "MON – FRI",
   autoRotateInterval: 5500,
   slides: [
     {
@@ -148,7 +144,7 @@ export default function LandingHero() {
                 onClick={() => router.push("/login")}
                 className="h-11 px-8 rounded-full btn-brand-red text-[13px] font-medium text-white active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md"
               >
-                <span>Request</span>
+                <span>{hero.ctaText || "Request"}</span>
               </Button>
             </div>
           </div>

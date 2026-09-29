@@ -143,7 +143,7 @@ export async function PUT(req) {
     }
 
     if (keepIds.length > 0) {
-      await query(`DELETE FROM security_questions WHERE id NOT IN (${keepIds.join(",")})`);
+      await query("DELETE FROM security_questions WHERE NOT (id = ANY($1::int[]))", [keepIds]);
     }
 
     const reqCount = saved.filter((q) => q.is_required).length;

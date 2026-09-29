@@ -11,6 +11,7 @@ import ConfirmModal from "@/components/shared/ConfirmModal"
 import { SystemAdminGuard, useAuthUser } from "@/components/shared/AuthGuard"
 import { Skeleton } from "@/components/ui/skeleton"
 import KpiStatCardsSkeleton from "@/components/systemadmin/skeletons/KpiStatCardsSkeleton"
+import InstitutionalBrandingSkeleton from "@/components/systemadmin/skeletons/InstitutionalBrandingSkeleton"
 import { cn } from "@/lib/utils"
 import { getClientSession } from "@/lib/clientAuth"
 
@@ -66,6 +67,9 @@ function TabLoadingSkeleton() {
 const OfficeManagementTab = dynamic(() => import("@/components/systemadmin/OfficeManagementTab"), {
   loading: () => <TabLoadingSkeleton />,
 })
+const InstitutionalBrandingTab = dynamic(() => import("@/components/systemadmin/InstitutionalBrandingTab"), {
+  loading: () => <InstitutionalBrandingSkeleton />,
+})
 const ModuleConfigTab = dynamic(() => import("@/components/systemadmin/ModuleConfigTab"), {
   loading: () => <TabLoadingSkeleton />,
 })
@@ -91,7 +95,7 @@ const ServiceStandardsTab = dynamic(() => import("@/components/systemadmin/Servi
   loading: () => <TabLoadingSkeleton />,
 })
 
-const VALID_VIEWS = ["offices", "modules", "standards", "staff", "security", "logs", "health", "backups", "landing"]
+const VALID_VIEWS = ["offices", "branding", "modules", "standards", "staff", "security", "logs", "health", "backups", "landing"]
 
 function SystemAdminPageContent({ authUser: propAuthUser }) {
   const contextUser = useAuthUser()
@@ -263,19 +267,22 @@ function SystemAdminPageContent({ authUser: propAuthUser }) {
     { type: "header", label: "Institutional Governance" },
     { key: "offices", label: "Departments & Stations", iconClass: "ph-bold ph-buildings" },
     { key: "modules", label: "Department Features", iconClass: "ph-bold ph-squares-four" },
+
+    { type: "header", label: "Campus Operations" },
     { key: "standards", label: "Service Standards & SLA", iconClass: "ph-bold ph-clock-countdown" },
-    
-    { type: "header", label: "Access & Audit" },
+    { key: "health", label: "Campus Operations", iconClass: "ph-bold ph-activity" },
+
+    { type: "header", label: "Public Portal & Identity" },
+    { key: "branding", label: "Institutional Identity", iconClass: "ph-bold ph-certificate" },
+    { key: "landing", label: "Landing Page CMS", iconClass: "ph-bold ph-layout" },
+
+    { type: "header", label: "Personnel & Access" },
     { key: "staff", label: "Global Directory", iconClass: "ph-bold ph-users" },
     { key: "security", label: "Security Questions", iconClass: "ph-bold ph-shield-check" },
-    { key: "logs", label: "Platform Audit Trail", iconClass: "ph-bold ph-history" },
-    
-    { type: "header", label: "Operations & Reliability" },
-    { key: "health", label: "Campus Operations", iconClass: "ph-bold ph-activity" },
-    { key: "backups", label: "Platform Backups", iconClass: "ph-bold ph-cloud-arrow-up" },
 
-    { type: "header", label: "Public Portal & Content" },
-    { key: "landing", label: "Landing Page CMS", iconClass: "ph-bold ph-layout" }
+    { type: "header", label: "System & Security" },
+    { key: "logs", label: "Platform Audit Trail", iconClass: "ph-bold ph-history" },
+    { key: "backups", label: "Platform Backups", iconClass: "ph-bold ph-cloud-arrow-up" },
   ]
 
   if (loading) {
@@ -322,6 +329,7 @@ function SystemAdminPageContent({ authUser: propAuthUser }) {
             style={{ transform: `scale(${zoomFactor})`, transformOrigin: 'top left', width: `${100 / zoomFactor}%`, minHeight: `${100 / zoomFactor}%` }}
           >
             {view === "offices" && <OfficeManagementTab showToast={showToast} onSwitchTab={switchView} />}
+            {view === "branding" && <InstitutionalBrandingTab showToast={showToast} />}
             {view === "modules" && <ModuleConfigTab showToast={showToast} />}
             {view === "standards" && <ServiceStandardsTab showToast={showToast} />}
             {view === "staff" && <GlobalStaffTab authUser={authUser} showToast={showToast} />}

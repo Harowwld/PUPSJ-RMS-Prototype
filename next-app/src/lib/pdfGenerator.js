@@ -3,73 +3,187 @@ import autoTable from "jspdf-autotable"
 import { formatPHDateTime } from "./timeFormat"
 
 /**
- * Helper to convert a source image to a PNG data URL (preserves transparency in jsPDF better than WebP)
+ * Institutional Branding Defaults:
+ * - Default Logo: PUP Logo (/assets/pup-logo.webp)
+ * - Fallback Logo: Official Black eManage Logo (/assets/branding/black-icon.png)
  */
-const getLogoAsPng = () => {
-  return new Promise((resolve) => {
-    const img = new Image()
-    img.crossOrigin = "Anonymous"
-    img.onload = () => {
-      const canvas = document.createElement("canvas")
-      canvas.width = img.width
-      canvas.height = img.height
-      const ctx = canvas.getContext("2d")
-      ctx.drawImage(img, 0, 0)
-      resolve(canvas.toDataURL("image/png"))
+export const DEFAULT_BRANDING_LOGO = "/assets/pup-logo.webp"
+export const OFFICIAL_FALLBACK_LOGO = "/assets/branding/black-icon.png"
+const BRANDING_CACHE_KEY = "institution_branding_cache"
+
+/**
+ * Resolves active institutional branding from localStorage or API.
+ * Guaranteed to return safe values even if completely offline.
+ */
+export async function getInstitutionalBranding() {
+  if (typeof window !== "undefined") {
+    try {
+      const cached = localStorage.getItem(BRANDING_CACHE_KEY)
+      if (cached) {
+        const parsed = JSON.parse(cached)
+        if (parsed && typeof parsed === "object" && parsed.institutionName) {
+          return parsed
+        }
+      }
+    } catch (e) {
+      // ignore cache read failure
     }
-    img.onerror = () => resolve("/assets/pup-logo.webp") // Fallback
-    img.src = "/assets/pup-logo.webp"
+  }
+
+  if (typeof window !== "undefined") {
+    try {
+      const res = await fetch("/api/system/branding", { cache: "no-store" })
+      if (res.ok) {
+        const json = await res.json()
+        if (json.ok && json.data) {
+          try {
+            localStorage.setItem(BRANDING_CACHE_KEY, JSON.stringify(json.data))
+          } catch (e) {}
+          return json.data
+        }
+      }
+    } catch (e) {
+      // Offline or network error - fallback gracefully
+    }
+  }
+
+  return {
+    institutionName: "Polytechnic University of the Philippines",
+    campusName: "San Juan City Campus",
+    tagline: "OFFICIAL ACADEMIC ARCHIVES & RECORDS",
+    brandColor: "#7A1E28",
+    logoUrl: DEFAULT_BRANDING_LOGO,
+    fallbackLogoUrl: OFFICIAL_FALLBACK_LOGO,
+    logoBase64: null,
+  }
+}
+
+/**
+ * Helper to convert hex color to RGB array
+ */
+function hexToRgb(hex) {
+  if (!hex || typeof hex !== "string") return [122, 30, 40]
+  const clean = hex.replace("#", "").trim()
+  if (clean.length === 3) {
+    const r = parseInt(clean[0] + clean[0], 16)
+    const g = parseInt(clean[1] + clean[1], 16)
+    const b = parseInt(clean[2] + clean[2], 16)
+    return [r, g, b]
+  }
+  if (clean.length === 6) {
+    const r = parseInt(clean.substring(0, 2), 16)
+    const g = parseInt(clean.substring(2, 4), 16)
+    const b = parseInt(clean.substring(4, 6), 16)
+    return [r, g, b]
+  }
+  return [122, 30, 40]
+}
+
+/**
+ * Helper to convert a source image or base64 to a PNG data URL (preserves transparency in jsPDF).
+ * Cascades: customSrc -> default PUP logo -> official eManage fallback logo.
+ */
+export const getLogoAsPng = (customSrc = null) => {
+  return new Promise((resolve) => {
+    if (customSrc && typeof customSrc === "string" && customSrc.startsWith("data:image/")) {
+      return resolve(customSrc)
+    }
+
+    const primarySrc = customSrc || DEFAULT_BRANDING_LOGO
+
+    const tryLoad = (src, onFail) => {
+      const img = new Image()
+      img.crossOrigin = "Anonymous"
+      img.onload = () => {
+        try {
+          const canvas = document.createElement("canvas")
+          canvas.width = img.width || 192
+          canvas.height = img.height || 192
+          const ctx = canvas.getContext("2d")
+          ctx.drawImage(img, 0, 0)
+          resolve(canvas.toDataURL("image/png"))
+        } catch (err) {
+          onFail()
+        }
+      }
+      img.onerror = () => onFail()
+      img.src = src
+    }
+
+    tryLoad(primarySrc, () => {
+      if (primarySrc !== DEFAULT_BRANDING_LOGO) {
+        tryLoad(DEFAULT_BRANDING_LOGO, () => {
+          tryLoad(OFFICIAL_FALLBACK_LOGO, () => resolve(OFFICIAL_FALLBACK_LOGO))
+        })
+      } else {
+        tryLoad(OFFICIAL_FALLBACK_LOGO, () => resolve(OFFICIAL_FALLBACK_LOGO))
+      }
+    })
   })
 }
 
 /**
- * Generates a standardized PUP RMS report header (Master Layout)
+ * Generates a standardized RMS report header (Master Layout)
  * @param {jsPDF} doc - The jsPDF instance
  * @param {string} reportTitle - The main report title
- * @param {Object} options - Metadata like documentId, logoData (Base64 PNG)
+ * @param {Object} options - Metadata like documentId, logoData (Base64 PNG), institutionName, etc.
  */
 export const addPUPReportHeader = (doc, reportTitle, options = {}) => {
   const pageWidth = doc.internal.pageSize.getWidth()
-  const { documentId = `PUP-RKS-${Date.now()}`, charSpace = 2, logoData } = options
+  const {
+    documentId = `RKS-${Date.now()}`,
+    charSpace = 2,
+    logoData,
+    institutionName = "Polytechnic University of the Philippines",
+    campusName = "San Juan City Campus",
+    officeName = "ADMISSION AND REGISTRATION OFFICE",
+    brandColor = "#7A1E28",
+  } = options
 
-  // 1. Centered Logo (Using provided Base64 PNG data if available)
+  const [brandR, brandG, brandB] = hexToRgb(brandColor)
+
+  // 1. Centered Logo (48x48)
   try {
     if (logoData) {
-      doc.addImage(logoData, "PNG", pageWidth / 2 - 30, 30, 60, 60, undefined, 'FAST')
+      doc.addImage(logoData, "PNG", pageWidth / 2 - 24, 20, 48, 48, undefined, 'FAST')
     } else {
-      // Fallback if logo loading fails
-      doc.addImage("/assets/pup-logo.webp", "WEBP", pageWidth / 2 - 30, 30, 60, 60, undefined, 'FAST')
+      doc.addImage(OFFICIAL_FALLBACK_LOGO, "PNG", pageWidth / 2 - 24, 20, 48, 48, undefined, 'FAST')
     }
   } catch (e) {
     console.error("Logo failed to load", e)
   }
 
-  // 2. University Name (Maroon, Centered)
-  doc.setTextColor(122, 30, 40)
-  doc.setFontSize(16)
+  // 2. School Name (Brand Color, Centered, Bold)
+  doc.setTextColor(brandR, brandG, brandB)
+  doc.setFontSize(14.5)
   doc.setFont("helvetica", "bold")
-  doc.text("Polytechnic University of the Philippines - San Juan City Campus", pageWidth / 2, 105, { align: "center" })
+  const fullTitle = campusName
+    ? `${institutionName} · ${campusName}`
+    : institutionName
+  doc.text(fullTitle, pageWidth / 2, 92, { align: "center" })
 
-  // 3. Office Name (Gray, Centered, tracking-widest style)
-  doc.setTextColor(150, 150, 150)
-  doc.setFontSize(9)
-  doc.text("ADMISSION AND REGISTRATION OFFICE", pageWidth / 2, 120, { align: "center", charSpace })
+  // 3. Office / Tagline (Gray, Centered, tracking-widest style)
+  doc.setTextColor(130, 130, 130)
+  doc.setFontSize(8.5)
+  doc.setFont("helvetica", "bold")
+  doc.text(officeName, pageWidth / 2, 108, { align: "center", charSpace })
 
-  // 4. Report Title (Black, Centered)
+  // 4. Report Title (Black, Centered, Bold)
   doc.setTextColor(0, 0, 0)
-  doc.setFontSize(14)
-  doc.text(reportTitle, pageWidth / 2, 150, { align: "center" })
+  doc.setFontSize(13.5)
+  doc.setFont("helvetica", "bold")
+  doc.text(reportTitle, pageWidth / 2, 138, { align: "center" })
 
   // 5. Document ID (Italic, Gray, Centered)
-  doc.setTextColor(100, 100, 100)
-  doc.setFontSize(9)
+  doc.setTextColor(110, 110, 110)
+  doc.setFontSize(8.5)
   doc.setFont("helvetica", "italic")
-  doc.text(`Document ID: ${documentId}`, pageWidth / 2, 165, { align: "center" })
+  doc.text(`Document ID: ${documentId}`, pageWidth / 2, 153, { align: "center" })
 
-  // 6. Master Divider Line (Maroon)
-  doc.setDrawColor(122, 30, 40)
-  doc.setLineWidth(2)
-  doc.line(40, 185, pageWidth - 40, 185)
+  // 6. Master Divider Line (Brand Color)
+  doc.setDrawColor(brandR, brandG, brandB)
+  doc.setLineWidth(1.8)
+  doc.line(40, 168, pageWidth - 40, 168)
 }
 
 /**
@@ -106,10 +220,18 @@ const addSignatures = (doc, startY) => {
  */
 export const generateAuditLogsPdf = async (logs, options = {}) => {
   const doc = new jsPDF("l", "pt", "a4")
-  const logoData = await getLogoAsPng()
+  const branding = options.branding || await getInstitutionalBranding()
+  const logoData = await getLogoAsPng(branding.logoBase64 || branding.logoUrl)
   
-  const docId = `PUP-RKS-LOG-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`
-  addPUPReportHeader(doc, "Audit Logs Summary Report", { documentId: docId, logoData })
+  const docId = `RKS-LOG-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`
+  addPUPReportHeader(doc, "Audit Logs Summary Report", {
+    documentId: docId,
+    logoData,
+    institutionName: branding.institutionName,
+    campusName: branding.campusName,
+    brandColor: branding.brandColor,
+    officeName: branding.tagline || "OFFICIAL ACADEMIC ARCHIVES & RECORDS",
+  })
 
   let y = 215
   doc.setFont("helvetica", "bold")
@@ -187,10 +309,18 @@ export const generateAuditLogsPdf = async (logs, options = {}) => {
  */
 export const generateDigitizationCompliancePdf = async (data, summary, meta, byCourse) => {
   const doc = new jsPDF("p", "pt", "a4")
-  const logoData = await getLogoAsPng()
+  const branding = meta?.branding || await getInstitutionalBranding()
+  const logoData = await getLogoAsPng(branding.logoBase64 || branding.logoUrl)
   
-  const docId = `PUP-RKS-ANL-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`
-  addPUPReportHeader(doc, "Digitization Compliance Report", { documentId: docId, logoData })
+  const docId = `RKS-ANL-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`
+  addPUPReportHeader(doc, "Digitization Compliance Report", {
+    documentId: docId,
+    logoData,
+    institutionName: branding.institutionName,
+    campusName: branding.campusName,
+    brandColor: branding.brandColor,
+    officeName: branding.tagline || "OFFICIAL ACADEMIC ARCHIVES & RECORDS",
+  })
 
   let y = 215
   doc.setFont("helvetica", "bold")
@@ -307,10 +437,19 @@ export const generateDigitizationCompliancePdf = async (data, summary, meta, byC
  */
 export const generateOrganizationCompliancePdf = async (data, summary, meta, organizations, byCategory) => {
   const doc = new jsPDF("p", "pt", "a4")
-  const logoData = await getLogoAsPng()
+  const branding = meta?.branding || await getInstitutionalBranding()
+  const logoData = await getLogoAsPng(branding.logoBase64 || branding.logoUrl)
+  const [brandR, brandG, brandB] = hexToRgb(branding.brandColor)
 
-  const docId = `PUPSJ-OSAS-CMP-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`
-  addPUPReportHeader(doc, "Student Organization Compliance Report", { documentId: docId, logoData })
+  const docId = `OSAS-CMP-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`
+  addPUPReportHeader(doc, "Student Organization Compliance Report", {
+    documentId: docId,
+    logoData,
+    institutionName: branding.institutionName,
+    campusName: branding.campusName,
+    brandColor: branding.brandColor,
+    officeName: "OFFICE OF STUDENT AFFAIRS AND SERVICES",
+  })
 
   let y = 215
   doc.setFont("helvetica", "bold")
@@ -329,17 +468,18 @@ export const generateOrganizationCompliancePdf = async (data, summary, meta, org
   y += 35
   doc.setFontSize(12)
   doc.setFont("helvetica", "bold")
-  doc.setTextColor(122, 30, 40) // PUP Maroon
+  doc.setTextColor(brandR, brandG, brandB)
   doc.text("I. Executive Accreditation Summary", 40, y)
   doc.setLineWidth(1.5)
-  doc.setDrawColor(122, 30, 40)
+  doc.setDrawColor(brandR, brandG, brandB)
   doc.line(40, y + 5, doc.internal.pageSize.getWidth() - 40, y + 5)
 
   y += 25
   doc.setFontSize(10)
   doc.setFont("helvetica", "normal")
   doc.setTextColor(60, 60, 60)
-  const intro = "This document presents the official compliance and accreditation assessment of recognized student organizations under the jurisdiction of the Office of Student Affairs and Services (OSAS) at the Polytechnic University of the Philippines - San Juan City Campus. Organizations are audited across institutional pillars: Constitution & By-Laws (CBL) archival, accredited officer roster, designated faculty adviser, and active accreditation standing."
+  const institutionFull = branding.campusName ? `${branding.institutionName} - ${branding.campusName}` : branding.institutionName
+  const intro = `This document presents the official compliance and accreditation assessment of recognized student organizations under the jurisdiction of the Office of Student Affairs and Services (OSAS) at ${institutionFull}. Organizations are audited across institutional pillars: Constitution & By-Laws (CBL) archival, accredited officer roster, designated faculty adviser, and active accreditation standing.`
   const splitIntro = doc.splitTextToSize(intro, doc.internal.pageSize.getWidth() - 80)
   doc.text(splitIntro, 40, y)
   y += splitIntro.length * 14 + 15
@@ -473,10 +613,18 @@ export const generateOrganizationCompliancePdf = async (data, summary, meta, org
  */
 export const generateSLAAnalyticsPdf = async (data, total, completionRate, options = {}) => {
   const doc = new jsPDF("p", "pt", "a4")
-  const logoData = await getLogoAsPng()
+  const branding = options?.branding || await getInstitutionalBranding()
+  const logoData = await getLogoAsPng(branding.logoBase64 || branding.logoUrl)
   
-  const docId = `PUP-RKS-SLA-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`
-  addPUPReportHeader(doc, "Fulfillment SLA Analytics Report", { documentId: docId, logoData })
+  const docId = `RKS-SLA-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`
+  addPUPReportHeader(doc, "Fulfillment SLA Analytics Report", {
+    documentId: docId,
+    logoData,
+    institutionName: branding.institutionName,
+    campusName: branding.campusName,
+    brandColor: branding.brandColor,
+    officeName: branding.tagline || "OFFICIAL ACADEMIC ARCHIVES & RECORDS",
+  })
 
   let y = 215
   doc.setFont("helvetica", "bold")
@@ -633,3 +781,82 @@ export const generateSLAAnalyticsPdf = async (data, total, completionRate, optio
 
   return doc.output("blob")
 }
+
+/**
+ * Generates a Sample Branding Verification PDF Report
+ */
+export const generateSampleBrandingPdf = async (branding) => {
+  const doc = new jsPDF("p", "pt", "a4")
+  const activeBranding = branding || await getInstitutionalBranding()
+  const logoData = await getLogoAsPng(activeBranding.logoBase64 || activeBranding.logoUrl)
+  
+  const docId = `SAMPLE-SPEC-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`
+  addPUPReportHeader(doc, "Official Document Header Specification", {
+    documentId: docId,
+    logoData,
+    institutionName: activeBranding.institutionName,
+    campusName: activeBranding.campusName,
+    brandColor: activeBranding.brandColor,
+    officeName: activeBranding.tagline || "OFFICIAL ACADEMIC ARCHIVES & RECORDS",
+  })
+
+  let y = 205
+  doc.setFont("helvetica", "bold")
+  doc.setFontSize(9)
+  doc.setTextColor(150, 150, 150)
+  doc.text("GENERATED ON:", 40, y)
+  doc.setTextColor(0, 0, 0)
+  doc.text(formatPHDateTime(new Date().toISOString()), 135, y)
+
+  y += 18
+  doc.setTextColor(150, 150, 150)
+  doc.text("INSTITUTION:", 40, y)
+  doc.setTextColor(0, 0, 0)
+  doc.text(`${activeBranding.institutionName} (${activeBranding.campusName})`, 135, y)
+
+  y += 18
+  doc.setTextColor(150, 150, 150)
+  doc.text("ACCENT COLOR:", 40, y)
+  doc.setTextColor(0, 0, 0)
+  doc.text(activeBranding.brandColor, 135, y)
+
+  y += 35
+  doc.setFontSize(12)
+  doc.setFont("helvetica", "bold")
+  const [brandR, brandG, brandB] = hexToRgb(activeBranding.brandColor)
+  doc.setTextColor(brandR, brandG, brandB)
+  doc.text("I. Institutional Branding Verification", 40, y)
+  doc.setLineWidth(1.5)
+  doc.setDrawColor(brandR, brandG, brandB)
+  doc.line(40, y + 5, doc.internal.pageSize.getWidth() - 40, y + 5)
+
+  y += 25
+  doc.setFontSize(10)
+  doc.setFont("helvetica", "normal")
+  doc.setTextColor(60, 60, 60)
+  const intro = "This sample document verifies that your custom university seal, institution name, and official brand accent color render with high fidelity across all official PDF transcripts, audit logs, and compliance records generated by the eManage Records Management System."
+  const splitIntro = doc.splitTextToSize(intro, doc.internal.pageSize.getWidth() - 80)
+  doc.text(splitIntro, 40, y)
+  y += splitIntro.length * 14 + 20
+
+  autoTable(doc, {
+    startY: y,
+    head: [["Configuration Key", "Configured Value", "Status"]],
+    body: [
+      ["School / University Name", activeBranding.institutionName, "Active"],
+      ["Campus / Branch", activeBranding.campusName, "Active"],
+      ["Header Classification", activeBranding.tagline, "Active"],
+      ["Primary Brand Color", activeBranding.brandColor, "Applied"],
+      ["Institutional Logo", activeBranding.logoBase64 ? "Custom High-Res Image Uploaded" : "Default PUP Seal (eManage Fallback)", "Verified"],
+    ],
+    theme: "striped",
+    headStyles: { fillColor: [brandR, brandG, brandB], textColor: 255 },
+    styles: { fontSize: 9 },
+  })
+
+  y = doc.lastAutoTable.finalY + 40
+  addSignatures(doc, y)
+
+  return doc.output("blob")
+}
+

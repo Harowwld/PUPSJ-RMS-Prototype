@@ -17,16 +17,9 @@ export const MAX_FAQ_ITEMS = 16
 export const MIN_FAQ_ITEMS = 2
 
 const DEFAULT_FAQ_CONTENT = {
-  eyebrow: "Clear & Direct University Guidelines",
   heading: "Frequently Asked Questions",
   description:
     "Quick answers on requesting, tracking, and claiming your official school records.",
-  supportCardEnabled: false,
-  supportTitle: "",
-  supportDescription: "",
-  supportButtonText: "",
-  supportButtonLink: "#",
-  supportLocation: "",
   faqs: [
     {
       id: "how-to-request",
@@ -80,7 +73,7 @@ const STANDARD_CATEGORIES = [
 export default function LandingFaqCmsView({ showToast }) {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const [activeTab, setActiveTab] = useState("faqs") // 'faqs' | 'narrative' | 'preview'
+  const [activeTab, setActiveTab] = useState("content") // 'content' | 'preview'
   const [faqData, setFaqData] = useState(DEFAULT_FAQ_CONTENT)
 
   // Item Editor State
@@ -345,7 +338,7 @@ export default function LandingFaqCmsView({ showToast }) {
               </span>
             </div>
           }
-          description="Manage frequently asked questions, detailed answers, category tags, and registrar support desk assistance."
+          description="Manage frequently asked questions, detailed answers, and category tags."
           showBorder={false}
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
           descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
@@ -392,28 +385,15 @@ export default function LandingFaqCmsView({ showToast }) {
         <div className="flex items-center gap-6 shrink-0 h-10 px-6 border-b border-gray-100 dark:border-white/10 bg-white dark:bg-card select-none overflow-x-auto">
           <button
             type="button"
-            onClick={() => setActiveTab("faqs")}
+            onClick={() => setActiveTab("content")}
             className={cn(
               "relative h-full flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent shrink-0",
-              activeTab === "faqs"
+              activeTab === "content"
                 ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
                 : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
             )}
           >
-            Questions &amp; Answers ({faqData.faqs.length})
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveTab("narrative")}
-            className={cn(
-              "relative h-full flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent shrink-0",
-              activeTab === "narrative"
-                ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
-                : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
-            )}
-          >
-            Section Header &amp; Subtitle
+            FAQ Content ({faqData.faqs.length})
           </button>
 
           <button
@@ -432,9 +412,68 @@ export default function LandingFaqCmsView({ showToast }) {
 
         {/* Content Body */}
         <CardContent className="font-jakarta bg-white p-[24px] dark:bg-card/50 backdrop-blur-md flex flex-col gap-6">
-          {/* TAB 1: Questions & Answers Management */}
-          {activeTab === "faqs" && (
+          {/* TAB 1: FAQ Content Management */}
+          {activeTab === "content" && (
             <div className="space-y-5">
+              {/* Section Header & Subtitle Card */}
+              <div className="w-full rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/30 p-4 sm:p-5 space-y-4">
+                <div>
+                  <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">
+                    Section Header &amp; Description
+                  </h3>
+                  <p className="text-[12px] font-normal text-gray-500 dark:text-zinc-400 mt-0.5">
+                    Main heading and explanatory copy displayed at the top of the public FAQ section.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <div className="flex justify-between items-center mb-1.5">
+                      <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
+                        Section Heading
+                      </label>
+                      <span className="text-[11px] text-gray-400 font-mono">
+                        {(faqData.heading || "").length}/60
+                      </span>
+                    </div>
+                    <Input
+                      value={faqData.heading}
+                      onChange={(e) =>
+                        setFaqData((prev) => ({
+                          ...prev,
+                          heading: e.target.value,
+                        }))
+                      }
+                      placeholder="Frequently Asked Questions"
+                      maxLength={60}
+                      className="h-10 w-full rounded-xl border border-gray-200 bg-white px-3 text-xs font-semibold dark:border-white/10 dark:bg-card focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5"
+                    />
+                  </div>
+
+                  <div>
+                    <div className="flex justify-between items-center mb-1.5">
+                      <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
+                        Section Subtitle Description
+                      </label>
+                      <span className="text-[11px] text-gray-400 font-mono">
+                        {(faqData.description || "").length}/200
+                      </span>
+                    </div>
+                    <Input
+                      value={faqData.description || ""}
+                      onChange={(e) =>
+                        setFaqData((prev) => ({
+                          ...prev,
+                          description: e.target.value,
+                        }))
+                      }
+                      placeholder="Quick answers on requesting, tracking, and claiming your official school records."
+                      maxLength={200}
+                      className="h-10 w-full rounded-xl border border-gray-200 bg-white px-3 text-xs dark:border-white/10 dark:bg-card focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5"
+                    />
+                  </div>
+                </div>
+              </div>
               {/* Header Action Bar */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/30">
                 <div>
@@ -735,98 +774,7 @@ export default function LandingFaqCmsView({ showToast }) {
             </div>
           )}
 
-          {/* TAB 2: Section Header & Subtitle */}
-          {activeTab === "narrative" && (
-            <div className="w-full space-y-6">
-              {/* Section Header Card */}
-              <div className="w-full rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/30 p-5 sm:p-6 space-y-5">
-                <div>
-                  <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">
-                    Section Title &amp; Description
-                  </h3>
-                  <p className="text-[12px] font-normal text-gray-500 dark:text-zinc-400 mt-0.5">
-                    Main heading and explanatory copy displayed above the FAQ accordion.
-                  </p>
-                </div>
-
-                <div className="space-y-4">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <div className="flex justify-between items-center mb-1.5">
-                        <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
-                          Eyebrow / Sub-badge Text
-                        </label>
-                        <span className="text-[11px] text-gray-400 font-mono">
-                          {(faqData.eyebrow || "").length}/50
-                        </span>
-                      </div>
-                      <Input
-                        value={faqData.eyebrow}
-                        onChange={(e) =>
-                          setFaqData((prev) => ({
-                            ...prev,
-                            eyebrow: e.target.value,
-                          }))
-                        }
-                        placeholder="e.g. Clear & Direct University Guidelines"
-                        maxLength={50}
-                        className="h-10 w-full rounded-xl border border-gray-200 bg-white px-3 text-xs dark:border-white/10 dark:bg-card focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5"
-                      />
-                    </div>
-
-                    <div>
-                      <div className="flex justify-between items-center mb-1.5">
-                        <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
-                          Main Section Heading
-                        </label>
-                        <span className="text-[11px] text-gray-400 font-mono">
-                          {faqData.heading.length}/60
-                        </span>
-                      </div>
-                      <Input
-                        value={faqData.heading}
-                        onChange={(e) =>
-                          setFaqData((prev) => ({
-                            ...prev,
-                            heading: e.target.value,
-                          }))
-                        }
-                        placeholder="Frequently Asked Questions"
-                        maxLength={60}
-                        className="h-10 w-full rounded-xl border border-gray-200 bg-white px-3 text-xs font-semibold dark:border-white/10 dark:bg-card focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <div className="flex justify-between items-center mb-1.5">
-                      <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
-                        Section Subtitle Description
-                      </label>
-                      <span className="text-[11px] text-gray-400 font-mono">
-                        {faqData.description.length}/200
-                      </span>
-                    </div>
-                    <textarea
-                      value={faqData.description}
-                      onChange={(e) =>
-                        setFaqData((prev) => ({
-                          ...prev,
-                          description: e.target.value,
-                        }))
-                      }
-                      rows={3}
-                      maxLength={200}
-                      placeholder="Quick answers on requesting, tracking, and claiming your official school records."
-                      className="w-full rounded-xl border border-gray-200 bg-white p-3 text-xs leading-relaxed dark:border-white/10 dark:bg-card focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 focus:outline-hidden"
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* TAB 3: Interactive Live Preview */}
+          {/* TAB 2: Interactive Live Preview */}
           {activeTab === "preview" && (
             <div className="space-y-4">
               <div className="flex items-center justify-between rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/30 p-4">
@@ -835,7 +783,7 @@ export default function LandingFaqCmsView({ showToast }) {
                     Simulated Public FAQ Section
                   </h3>
                   <p className="text-[12px] font-normal text-gray-500 dark:text-zinc-400">
-                    Live interactive preview showing exact layout, accordion animations, category filters, and liquid glass styling.
+                    Live interactive preview showing exact layout, accordion animations, category filters, and styling.
                   </p>
                 </div>
 
@@ -848,10 +796,15 @@ export default function LandingFaqCmsView({ showToast }) {
               <div className="rounded-[2.5rem] bg-[#dadddf] dark:bg-zinc-900/60 p-4 sm:p-8 select-none">
                 <div className="max-w-4xl mx-auto bg-white dark:bg-zinc-950 rounded-[2rem] p-6 sm:p-10 shadow-xs">
                   {/* Section Header */}
-                  <div className="text-center mb-6 sm:mb-8">
+                  <div className="text-center mb-6 sm:mb-8 max-w-xl mx-auto">
                     <h2 className="text-2xl sm:text-3xl lg:text-4xl font-medium text-black dark:text-white tracking-tight">
                       {faqData.heading || "Frequently Asked Questions"}
                     </h2>
+                    {faqData.description && (
+                      <p className="mt-2 text-xs sm:text-sm text-gray-500 dark:text-zinc-400">
+                        {faqData.description}
+                      </p>
+                    )}
                   </div>
 
                   {/* Preview Category Filter Pills Matching FAQSection.js */}

@@ -1,10 +1,9 @@
 "use client";
 import HugeIcon from "@/components/shared/HugeIcon";
-import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 
-const DEFAULT_BENTO_CONTENT = {
+const BENTO_CONTENT = {
   eyebrow: "Student & Alumni Services",
   headingLine1: "Request, track, and",
   headingLine2: "claim your documents",
@@ -33,9 +32,9 @@ const DEFAULT_BENTO_CONTENT = {
   card3: {
     title: "Direct from Campus Archives",
     description:
-      "Your online request connects directly to Room 1 archive cabinets, so staff can retrieve your folder faster.",
+      "Your online request connects directly to campus physical archives, allowing staff to locate and retrieve your folder faster.",
     step1Label: "Request",
-    step2Label: "Room 1",
+    step2Label: "Archives",
     step3Label: "Staff",
   },
   card4: {
@@ -47,39 +46,19 @@ const DEFAULT_BENTO_CONTENT = {
     item3: "Campus Clearance",
   },
   card5: {
-    title: "Protected by Law (RA 11032)",
+    title: "Protected by Law (RA 10173)",
     description:
-      "Backed by the Ease of Doing Business Act. Transparent tracking with zero hidden delays.",
-    badgeLabel: "RA 11032",
-    item1: "Zero Red Tape",
-    item2: "No Hidden Delays",
+      "Compliant with the Data Privacy Act of 2012. Tamper-proof audit logs and transparent tracking with zero unauthorized access.",
+    badgeLabel: "RA 10173",
+    item1: "Data Privacy Protected",
+    item2: "Tamper-Proof Audit Trail",
     item3: "Transparent Tracking",
   },
 };
 
-
-
 export default function LandingBento() {
   const router = useRouter();
-  const [bento, setBento] = useState(DEFAULT_BENTO_CONTENT);
-
-  // Fetch dynamic bento configuration
-  useEffect(() => {
-    let isMounted = true;
-    fetch("/api/landing/bento", { cache: "no-store" })
-      .then((r) => r.json())
-      .then((json) => {
-        if (isMounted && json.ok && json.data) {
-          setBento(json.data);
-        }
-      })
-      .catch((err) => {
-        console.warn("[LandingBento] Failed to fetch bento config:", err);
-      });
-    return () => {
-      isMounted = false;
-    };
-  }, []);
+  const bento = BENTO_CONTENT;
 
   return (
     <section id="about" className="scroll-mt-24 max-w-7xl mx-auto px-4 sm:px-6 pt-10 sm:pt-12 pb-20 w-full font-jakarta select-none">
@@ -290,12 +269,12 @@ export default function LandingBento() {
                    <div className="absolute top-[-2px] left-0 h-0 border-t-2 border-solid border-blue-500" style={{ animation: 'lineFill1 6s infinite 2s', width: '0%' }}></div>
                  </div>
 
-                 {/* Room 1 */}
+                 {/* Archives Node */}
                  <div className="flex flex-col items-center gap-2">
                    <div className="w-12 h-12 rounded-full bg-[#800000] shadow-md flex items-center justify-center text-white relative transition-all" style={{ animation: 'objInteract3 6s infinite 2s, room1CircleReveal 6s infinite 2s' }}>
                      <HugeIcon  className="ph-bold ph-archive text-xl relative z-10" />
                    </div>
-                   <span className="text-[9px] font-bold text-[#800000] uppercase tracking-wider" style={{ animation: 'room1TextReveal 6s infinite 2s' }}>{bento.card3?.step2Label || "Room 1"}</span>
+                   <span className="text-[9px] font-bold text-[#800000] uppercase tracking-wider" style={{ animation: 'room1TextReveal 6s infinite 2s' }}>{bento.card3?.step2Label || "Archives"}</span>
                  </div>
                  
                  {/* Dashed line 2 */}
@@ -319,7 +298,7 @@ export default function LandingBento() {
                 {bento.card3?.title || "Direct from Campus Archives"}
               </h3>
               <p className="text-xs text-zinc-500  mt-1.5 leading-relaxed font-normal">
-                {bento.card3?.description || "Your online request connects directly to Room 1 archive cabinets, so staff can retrieve your folder faster."}
+                {bento.card3?.description || "Your online request connects directly to campus physical archives, allowing staff to locate and retrieve your folder faster."}
               </p>
             </div>
           </motion.div>
@@ -373,7 +352,7 @@ export default function LandingBento() {
             </div>
           </motion.div>
 
-          {/* CARD 5: Protected by Law (RA 11032) */}
+          {/* CARD 5: Protected by Law (RA 10173) */}
           <motion.div 
             initial={{ opacity: 0, y: 36, scale: 0.96, filter: "blur(6px)" }}
             whileInView={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
@@ -387,7 +366,7 @@ export default function LandingBento() {
             <div className="rounded-2xl bg-[#f5f5f7] p-4 border-none min-h-[180px] flex items-center justify-center relative overflow-hidden gap-6">
               <div className="w-16 h-16 rounded-2xl bg-white shadow-sm flex flex-col items-center justify-center text-[#800000] border border-black/5 shrink-0 relative">
                  <HugeIcon  className="ph-bold ph-shield-check text-3xl" />
-                 <span className="absolute -bottom-2.5 bg-[#800000] text-white text-[8px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">{bento.card5?.badgeLabel || "RA 11032"}</span>
+                 <span className="absolute -bottom-2.5 bg-[#800000] text-white text-[8px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">{bento.card5?.badgeLabel || "RA 10173"}</span>
               </div>
               
               <div className="flex flex-col gap-4 relative">
@@ -396,13 +375,13 @@ export default function LandingBento() {
                    <div className="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center text-emerald-600 border border-black/5 shrink-0 transition-all" style={{ animation: 'objInteract1 6s infinite 4s' }}>
                      <HugeIcon  className="ph-bold ph-check text-[14px] opacity-0" style={{ animation: 'checkReveal1 6s infinite 4s' }} />
                    </div>
-                   <span className="text-xs font-semibold text-zinc-700">{bento.card5?.item1 || "Zero Red Tape"}</span>
+                   <span className="text-xs font-semibold text-zinc-700">{bento.card5?.item1 || "Data Privacy Protected"}</span>
                  </div>
                  <div className="flex items-center gap-4">
                    <div className="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center text-emerald-600 border border-black/5 shrink-0 transition-all" style={{ animation: 'objInteract2 6s infinite 4s' }}>
                      <HugeIcon  className="ph-bold ph-check text-[14px] opacity-0" style={{ animation: 'checkReveal2 6s infinite 4s' }} />
                    </div>
-                   <span className="text-xs font-semibold text-zinc-700">{bento.card5?.item2 || "No Hidden Delays"}</span>
+                   <span className="text-xs font-semibold text-zinc-700">{bento.card5?.item2 || "Tamper-Proof Audit Trail"}</span>
                  </div>
                  <div className="flex items-center gap-4">
                    <div className="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center text-emerald-600 border border-black/5 shrink-0 transition-all" style={{ animation: 'objInteract3 6s infinite 4s' }}>
@@ -416,10 +395,10 @@ export default function LandingBento() {
             {/* Typography Section */}
             <div className="mt-5">
               <h3 className="text-base sm:text-lg font-bold text-[#1d1d1f]  tracking-tight group-hover:text-[#800000] :text-red-400 transition-colors">
-                {bento.card5?.title || "Protected by Law (RA 11032)"}
+                {bento.card5?.title || "Protected by Law (RA 10173)"}
               </h3>
               <p className="text-xs text-zinc-500  mt-1.5 leading-relaxed font-normal">
-                {bento.card5?.description || "Backed by the Ease of Doing Business Act. Transparent tracking with zero hidden delays."}
+                {bento.card5?.description || "Compliant with the Data Privacy Act of 2012. Tamper-proof audit logs and transparent tracking with zero unauthorized access."}
               </p>
             </div>
           </motion.div>

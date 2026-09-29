@@ -19,7 +19,7 @@ export default function LandingFaqSkeleton() {
               </span>
             </div>
           }
-          description="Manage frequently asked questions, detailed answers, category tags, and registrar support desk assistance."
+          description="Manage frequently asked questions, detailed answers, and category tags."
           showBorder={false}
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
           descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
@@ -35,10 +35,7 @@ export default function LandingFaqSkeleton() {
         {/* Standardized SuperAdmin Underline Navigation Tabs */}
         <div className="flex items-center gap-6 shrink-0 h-10 px-6 border-b border-gray-100 dark:border-white/10 bg-white dark:bg-card select-none overflow-x-auto">
           <div className="relative h-full flex items-center text-[13px] font-semibold text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50">
-            Questions &amp; Answers (8)
-          </div>
-          <div className="relative h-full flex items-center text-[13px] text-[#8E8E93] font-normal">
-            Section Header &amp; Subtitle
+            FAQ Content (8)
           </div>
           <div className="relative h-full flex items-center text-[13px] text-[#8E8E93] font-normal">
             Interactive Live Preview
@@ -48,6 +45,23 @@ export default function LandingFaqSkeleton() {
         {/* Content Body */}
         <CardContent className="font-jakarta bg-white p-[24px] dark:bg-card/50 backdrop-blur-md flex flex-col gap-6">
           <div className="space-y-5">
+            {/* Section Header & Subtitle Skeleton */}
+            <div className="w-full rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/30 p-4 sm:p-5 space-y-4">
+              <div className="space-y-1.5">
+                <Skeleton className="h-4 w-52 rounded dark:bg-muted" />
+                <Skeleton className="h-3 w-80 rounded dark:bg-muted" />
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <Skeleton className="h-3 w-28 rounded dark:bg-muted" />
+                  <Skeleton className="h-10 w-full rounded-xl dark:bg-muted" />
+                </div>
+                <div className="space-y-1.5">
+                  <Skeleton className="h-3 w-36 rounded dark:bg-muted" />
+                  <Skeleton className="h-10 w-full rounded-xl dark:bg-muted" />
+                </div>
+              </div>
+            </div>
             {/* Header Action Bar */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/30">
               <div>

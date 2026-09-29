@@ -23,12 +23,10 @@ const DEFAULT_FOOTER_CONTENT = {
   locationAddress:
     "223 Ortega Street, cor. A. Mabini Street, Barangay Addition Hills, San Juan City, Metro Manila 1500",
   mapsEnabled: true,
-  mapsLabel: "Google Maps Directions",
   mapsUrl:
     "https://maps.google.com/?q=Polytechnic+University+of+the+Philippines+San+Juan+Campus",
 
   scheduleEyebrow: "Registrar Schedule",
-  scheduleHeading: "Regular Office Hours",
   scheduleItems: [
     { label: "Monday – Friday", value: "8:00 AM – 5:00 PM", status: "open" },
     { label: "Noon Break Shift", value: "12:00 PM – 1:00 PM", status: "break" },
@@ -36,7 +34,6 @@ const DEFAULT_FOOTER_CONTENT = {
   ],
 
   contactsEyebrow: "Official Desk",
-  contactsHeading: "Direct Contact Channels",
   contactItems: [
     {
       label: "Registrar Inquiries",
@@ -85,7 +82,7 @@ const CONTACT_TYPE_OPTIONS = [
 export default function LandingFooterCmsView({ showToast }) {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const [activeTab, setActiveTab] = useState("identity") // 'identity' | 'schedule' | 'preview'
+  const [activeTab, setActiveTab] = useState("content") // 'content' | 'preview'
   const [footerData, setFooterData] = useState(DEFAULT_FOOTER_CONTENT)
 
   // Modals
@@ -333,7 +330,7 @@ export default function LandingFooterCmsView({ showToast }) {
               </span>
             </div>
           }
-          description="Manage campus archive location, registrar office schedules, inquiry channels, and giant watermark."
+          description="Customize campus archive location, registrar window schedules, contacts, ambient watermark, and copyright."
           showBorder={false}
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
           descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
@@ -380,28 +377,15 @@ export default function LandingFooterCmsView({ showToast }) {
         <div className="flex items-center gap-6 shrink-0 h-10 px-6 border-b border-gray-100 dark:border-white/10 bg-white dark:bg-card select-none">
           <button
             type="button"
-            onClick={() => setActiveTab("identity")}
+            onClick={() => setActiveTab("content")}
             className={cn(
               "relative h-full flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent",
-              activeTab === "identity"
+              activeTab === "content"
                 ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
                 : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
             )}
           >
-            Identity &amp; Watermark
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveTab("schedule")}
-            className={cn(
-              "relative h-full flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent",
-              activeTab === "schedule"
-                ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
-                : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
-            )}
-          >
-            Schedule &amp; Inquiries ({footerData.scheduleItems.length + footerData.contactItems.length})
+            Footer Content
           </button>
 
           <button
@@ -420,11 +404,11 @@ export default function LandingFooterCmsView({ showToast }) {
 
         {/* Content Body */}
         <CardContent className="font-jakarta bg-white p-[24px] dark:bg-card/50 backdrop-blur-md flex flex-col gap-6">
-          {/* TAB 1: Campus Identity, Watermark & Sub-Footer */}
-          {activeTab === "identity" && (
+          {/* TAB 1: Unified Footer Content */}
+          {activeTab === "content" && (
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-              {/* Left Column (lg:col-span-7): Location, Mission & Maps */}
-              <div className="lg:col-span-7 space-y-5">
+              {/* Left Column (lg:col-span-6): Location, Maps, Watermark & Copyright */}
+              <div className="lg:col-span-6 space-y-5">
                 {/* Physical Archive Location & Mission */}
                 <div className="rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/30 p-5 space-y-5">
                   <div>
@@ -514,7 +498,7 @@ export default function LandingFooterCmsView({ showToast }) {
 
                 {/* Google Maps Configuration */}
                 <div className="rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/30 p-5 space-y-4">
-                  <div className="flex items-center justify-between gap-3 mb-2">
+                  <div className="flex items-center justify-between gap-3">
                     <div>
                       <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">
                         Map Directions Link
@@ -540,51 +524,28 @@ export default function LandingFooterCmsView({ showToast }) {
                     </label>
                   </div>
 
-                  <div className="space-y-4 pt-1">
-                    <div>
-                      <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300 mb-1.5">
-                        Button Label
-                      </label>
+                  <div>
+                    <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300 mb-1.5">
+                      Google Maps Destination URL
+                    </label>
+                    <div className="relative">
+                      <HugeIcon  className="ph-bold ph-link absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
                       <Input
-                        value={footerData.mapsLabel}
+                        value={footerData.mapsUrl}
                         disabled={!footerData.mapsEnabled}
                         onChange={(e) =>
                           setFooterData((prev) => ({
                             ...prev,
-                            mapsLabel: e.target.value,
+                            mapsUrl: e.target.value,
                           }))
                         }
-                        placeholder="Google Maps Directions"
-                        className="h-10 w-full rounded-xl border border-gray-200 bg-white px-3 text-xs font-normal dark:border-white/10 dark:bg-card disabled:opacity-50"
+                        placeholder="https://maps.google.com/?q=..."
+                        className="h-10 w-full rounded-xl border border-gray-200 bg-white pl-9 pr-3 text-xs font-mono dark:border-white/10 dark:bg-card disabled:opacity-50"
                       />
-                    </div>
-
-                    <div>
-                      <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300 mb-1.5">
-                        Google Maps Destination URL
-                      </label>
-                      <div className="relative">
-                        <HugeIcon  className="ph-bold ph-link absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
-                        <Input
-                          value={footerData.mapsUrl}
-                          disabled={!footerData.mapsEnabled}
-                          onChange={(e) =>
-                            setFooterData((prev) => ({
-                              ...prev,
-                              mapsUrl: e.target.value,
-                            }))
-                          }
-                          placeholder="https://maps.google.com/?q=..."
-                          className="h-10 w-full rounded-xl border border-gray-200 bg-white pl-9 pr-3 text-xs font-mono dark:border-white/10 dark:bg-card disabled:opacity-50"
-                        />
-                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Right Column (lg:col-span-5): Giant Brand Watermark & Sub-Footer */}
-              <div className="lg:col-span-5 space-y-5">
                 {/* Giant Brand Watermark */}
                 <div className="rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/30 p-5 space-y-4">
                   <div className="flex items-center justify-between gap-3">
@@ -670,13 +631,8 @@ export default function LandingFooterCmsView({ showToast }) {
                   </div>
                 </div>
               </div>
-            </div>
-          )}
 
-          {/* TAB 2: Office Hours, Inquiries & Personnel Desk */}
-          {activeTab === "schedule" && (
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-              {/* LEFT COLUMN (6 cols): Schedule & Hours */}
+              {/* RIGHT COLUMN (6 cols): Registrar Schedule & Direct Contact Channels */}
               <div className="lg:col-span-6 space-y-5">
                 <div className="rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/30 p-5 space-y-4">
                   <div className="flex items-center justify-between gap-3">
@@ -700,41 +656,22 @@ export default function LandingFooterCmsView({ showToast }) {
                     </Button>
                   </div>
 
-                  {/* Section Eyebrow & Heading */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                    <div>
-                      <label className="block text-[10px] font-semibold uppercase tracking-wider text-gray-600 dark:text-zinc-400 mb-1">
-                        Eyebrow Label
-                      </label>
-                      <Input
-                        value={footerData.scheduleEyebrow}
-                        onChange={(e) =>
-                          setFooterData((prev) => ({
-                            ...prev,
-                            scheduleEyebrow: e.target.value,
-                          }))
-                        }
-                        placeholder="Registrar Schedule"
-                        className="h-9 rounded-xl border border-gray-200 bg-white px-3 text-xs dark:border-white/10 dark:bg-card"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-[10px] font-semibold uppercase tracking-wider text-gray-600 dark:text-zinc-400 mb-1">
-                        Section Heading
-                      </label>
-                      <Input
-                        value={footerData.scheduleHeading}
-                        onChange={(e) =>
-                          setFooterData((prev) => ({
-                            ...prev,
-                            scheduleHeading: e.target.value,
-                          }))
-                        }
-                        placeholder="Regular Office Hours"
-                        className="h-9 rounded-xl border border-gray-200 bg-white px-3 text-xs dark:border-white/10 dark:bg-card"
-                      />
-                    </div>
+                  {/* Section Title */}
+                  <div>
+                    <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300 mb-1.5">
+                      Section Title
+                    </label>
+                    <Input
+                      value={footerData.scheduleEyebrow}
+                      onChange={(e) =>
+                        setFooterData((prev) => ({
+                          ...prev,
+                          scheduleEyebrow: e.target.value,
+                        }))
+                      }
+                      placeholder="Registrar Schedule"
+                      className="h-10 w-full rounded-xl border border-gray-200 bg-white px-3 text-xs dark:border-white/10 dark:bg-card"
+                    />
                   </div>
 
                   {/* Schedule Items List */}
@@ -836,10 +773,8 @@ export default function LandingFooterCmsView({ showToast }) {
                     ))}
                   </div>
                 </div>
-              </div>
 
-              {/* RIGHT COLUMN (6 cols): Direct Contact Channels & Personnel Sign-In */}
-              <div className="lg:col-span-6 space-y-5">
+                {/* Direct Inquiry Channels Card */}
                 <div className="rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/30 p-5 space-y-4">
                   <div className="flex items-center justify-between gap-3">
                     <div>
@@ -862,41 +797,22 @@ export default function LandingFooterCmsView({ showToast }) {
                     </Button>
                   </div>
 
-                  {/* Section Eyebrow & Heading */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                    <div>
-                      <label className="block text-[10px] font-semibold uppercase tracking-wider text-gray-600 dark:text-zinc-400 mb-1">
-                        Eyebrow Label
-                      </label>
-                      <Input
-                        value={footerData.contactsEyebrow}
-                        onChange={(e) =>
-                          setFooterData((prev) => ({
-                            ...prev,
-                            contactsEyebrow: e.target.value,
-                          }))
-                        }
-                        placeholder="Official Desk"
-                        className="h-9 rounded-xl border border-gray-200 bg-white px-3 text-xs dark:border-white/10 dark:bg-card"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-[10px] font-semibold uppercase tracking-wider text-gray-600 dark:text-zinc-400 mb-1">
-                        Section Heading
-                      </label>
-                      <Input
-                        value={footerData.contactsHeading}
-                        onChange={(e) =>
-                          setFooterData((prev) => ({
-                            ...prev,
-                            contactsHeading: e.target.value,
-                          }))
-                        }
-                        placeholder="Direct Contact Channels"
-                        className="h-9 rounded-xl border border-gray-200 bg-white px-3 text-xs dark:border-white/10 dark:bg-card"
-                      />
-                    </div>
+                  {/* Section Title */}
+                  <div>
+                    <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300 mb-1.5">
+                      Section Title
+                    </label>
+                    <Input
+                      value={footerData.contactsEyebrow}
+                      onChange={(e) =>
+                        setFooterData((prev) => ({
+                          ...prev,
+                          contactsEyebrow: e.target.value,
+                        }))
+                      }
+                      placeholder="Official Desk"
+                      className="h-10 w-full rounded-xl border border-gray-200 bg-white px-3 text-xs dark:border-white/10 dark:bg-card"
+                    />
                   </div>
 
                   {/* Contacts List */}
@@ -1002,7 +918,7 @@ export default function LandingFooterCmsView({ showToast }) {
             </div>
           )}
 
-          {/* TAB 3: Interactive Live Preview */}
+          {/* TAB 2: Interactive Live Preview */}
           {activeTab === "preview" && (
             <div className="space-y-4">
               <div className="flex items-center justify-between rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/30 p-4">

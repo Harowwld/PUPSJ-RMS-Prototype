@@ -5,12 +5,8 @@ export const DEFAULT_HERO_CONTENT = {
   headlineLine2: "Dambana ng Kagitingan.",
   description:
     "Official institutional records keeping, archive retrieval, and document verification system for Polytechnic University of the Philippines San Juan Campus.",
-  ctaText: "Request Document",
+  ctaText: "Request",
   ctaLink: "/login",
-  campusAddress:
-    "223 Ortega St. cor. A. Mabini St., Addition Hills, San Juan City",
-  registrarHours: "REGISTRAR: 8:00 AM – 5:00 PM",
-  operatingDays: "MON – FRI",
   autoRotateInterval: 5500,
   slides: [
     {
@@ -63,21 +59,12 @@ function sanitizeHeroContent(raw) {
     description: typeof raw.description === "string" && raw.description.trim() !== ""
       ? raw.description.trim()
       : DEFAULT_HERO_CONTENT.description,
-    ctaText: typeof raw.ctaText === "string" && raw.ctaText.trim() !== ""
+    ctaText: typeof raw.ctaText === "string" && raw.ctaText.trim() !== "" && raw.ctaText.trim() !== "Request Document"
       ? raw.ctaText.trim()
       : DEFAULT_HERO_CONTENT.ctaText,
     ctaLink: typeof raw.ctaLink === "string" && raw.ctaLink.trim() !== ""
       ? raw.ctaLink.trim()
       : DEFAULT_HERO_CONTENT.ctaLink,
-    campusAddress: typeof raw.campusAddress === "string" && raw.campusAddress.trim() !== ""
-      ? raw.campusAddress.trim()
-      : DEFAULT_HERO_CONTENT.campusAddress,
-    registrarHours: typeof raw.registrarHours === "string" && raw.registrarHours.trim() !== ""
-      ? raw.registrarHours.trim()
-      : DEFAULT_HERO_CONTENT.registrarHours,
-    operatingDays: typeof raw.operatingDays === "string" && raw.operatingDays.trim() !== ""
-      ? raw.operatingDays.trim()
-      : DEFAULT_HERO_CONTENT.operatingDays,
     autoRotateInterval: !isNaN(autoRotateInterval) && autoRotateInterval >= 2000 && autoRotateInterval <= 30000
       ? autoRotateInterval
       : DEFAULT_HERO_CONTENT.autoRotateInterval,
@@ -146,12 +133,12 @@ export const DEFAULT_BENTO_CONTENT = {
   card3: {
     title: "Direct from Campus Archives",
     description:
-      "Your online request connects directly to Room 1 archive cabinets, so staff can retrieve your folder faster.",
+      "Your online request connects directly to campus physical archives, allowing staff to locate and retrieve your folder faster.",
     step1Label: "Request",
-    step2Label: "Room 1",
+    step2Label: "Archives",
     step3Label: "Staff",
     // Legacy fields
-    roomCode: "R1",
+    roomCode: "ARCHIVES",
     cabinetCode: "C-A",
     drawerCode: "D-2",
   },
@@ -173,14 +160,14 @@ export const DEFAULT_BENTO_CONTENT = {
     footerNote: "Bring a valid ID when picking up",
   },
 
-  // Card 5: Legal Safeguards (RA 11032)
+  // Card 5: Legal Safeguards (RA 10173 Data Privacy)
   card5: {
-    title: "Protected by Law (RA 11032)",
+    title: "Protected by Law (RA 10173)",
     description:
-      "Backed by the Ease of Doing Business Act. Transparent tracking with zero hidden delays.",
-    badgeLabel: "RA 11032",
-    item1: "Zero Red Tape",
-    item2: "No Hidden Delays",
+      "Compliant with the Data Privacy Act of 2012. Tamper-proof audit logs and transparent tracking with zero unauthorized access.",
+    badgeLabel: "RA 10173",
+    item1: "Data Privacy Protected",
+    item2: "Tamper-Proof Audit Trail",
     item3: "Transparent Tracking",
     // Legacy fields
     tab1Label: "Promise",
@@ -346,7 +333,6 @@ export const DEFAULT_WORKFLOW_CONTENT = {
     {
       num: "01",
       title: "Sign In to Portal",
-      summary: "Log in with your official Student Number",
       desc: "Log in to the eManage portal using your official Student Number (format: YYYY-XXXXX-SJ-0). Both currently enrolled students and alumni can access the request system directly.",
       tags: ["Student Portal", "Student Number Login", "Current & Alumni"],
       actionLabel: "Open Portal",
@@ -357,7 +343,6 @@ export const DEFAULT_WORKFLOW_CONTENT = {
     {
       num: "02",
       title: "Select Your Document",
-      summary: "Choose from official academic credentials",
       desc: "Browse the available documents and select what you need—such as a Transcript of Records (TOR), Certificate of Grades, Certificate of Registration, or Diploma.",
       tags: ["8 Document Types", "Official Records", "Clear Requirements"],
       actionLabel: "View Catalog",
@@ -368,7 +353,6 @@ export const DEFAULT_WORKFLOW_CONTENT = {
     {
       num: "03",
       title: "Submit Your Request",
-      summary: "State your purpose and submit online",
       desc: "Indicate why you need the document (for employment, scholarship, transfer, or board exams) and submit your request form right from your phone or computer.",
       tags: ["Online Submission", "Purpose of Request", "No Paper Forms"],
       actionLabel: "",
@@ -379,7 +363,6 @@ export const DEFAULT_WORKFLOW_CONTENT = {
     {
       num: "04",
       title: "Digital Record Retrieval",
-      summary: "Staff pull your records from the system",
       desc: "Registrar personnel retrieve your digitized student files directly from the system. Your grades, earned units, and credentials are authenticated without having to search physical folders.",
       tags: ["Digitized Database", "Fast System Pull", "Staff Authentication"],
       actionLabel: "",
@@ -390,7 +373,6 @@ export const DEFAULT_WORKFLOW_CONTENT = {
     {
       num: "05",
       title: "Pick Up at Registrar Counter",
-      summary: "Claim your official stamped document",
       desc: "Once your document is printed and stamped with the university's official dry seal, you'll be notified that it's ready for pick-up at the Ground Floor Registrar counter.",
       tags: ["Official Dry Seal", "Registrar Counter", "Campus Pick-Up"],
       actionLabel: "",
@@ -432,13 +414,10 @@ function sanitizeWorkflowContent(raw) {
   const steps = rawStepsArray.length >= MIN_WORKFLOW_STEPS
     ? rawStepsArray.map((s, idx) => {
         const defaultStep = def.steps[idx] || {};
-        const stepNum = typeof s?.num === "string" && s.num.trim() !== ""
-          ? s.num.trim()
-          : String(idx + 1).padStart(2, "0");
+        const stepNum = String(idx + 1).padStart(2, "0");
         const title = typeof s?.title === "string" && s.title.trim() !== ""
           ? s.title.trim()
           : defaultStep.title || `Step ${idx + 1}`;
-        const summary = typeof s?.summary === "string" ? s.summary.trim() : (defaultStep.summary || "");
         const desc = typeof s?.desc === "string" ? s.desc.trim() : (defaultStep.desc || "");
         
         let tags = [];
@@ -460,7 +439,6 @@ function sanitizeWorkflowContent(raw) {
         return {
           num: stepNum,
           title,
-          summary,
           desc,
           tags,
           actionLabel,
@@ -643,21 +621,13 @@ export const landingContentRepo = {
 const CATALOG_SETTINGS_KEY = "landing_catalog_content";
 
 export const DEFAULT_CATALOG_CONTENT = {
-  eyebrow: "Official University Credentials",
   heading: "Academic Document Catalog",
   description:
     "Explore authentic credentials, university clearance protocols, and official registrar records issued by the University.",
-  badgeText: "Official Credential",
-  primaryButtonText: "Request Credential",
-  primaryButtonLink: "/login",
-  primaryButtonEnabled: true,
-  dragHint: "Drag or click document to inspect",
   items: [
     {
       id: "tor",
-      code: "TOR",
       title: "Transcript of Records",
-      category: "transcripts",
       client: "Student & Alumni",
       description:
         "Official comprehensive academic transcript for employment, PRC board examinations, and graduate studies.",
@@ -666,14 +636,10 @@ export const DEFAULT_CATALOG_CONTENT = {
         "University Clearance Form (Fully Signed)",
         "Documentary Stamp (BIR Compliant)",
       ],
-      previewStyle: "tor",
-      sealTag: "REGISTRAR SEAL VERIFIED",
     },
     {
       id: "cog",
-      code: "COG",
       title: "Certificate of Grades",
-      category: "transcripts",
       client: "Enrolled Students",
       description:
         "Certified summary of semester grades requested for scholarships, employer tuition subsidies, and academic evaluation.",
@@ -681,14 +647,10 @@ export const DEFAULT_CATALOG_CONTENT = {
         "Current Student ID or SIS Portal Profile Printout",
         "Specific Academic Year & Semester Identification",
       ],
-      previewStyle: "cog",
-      sealTag: "Registrar Certified",
     },
     {
       id: "cor",
-      code: "COR",
       title: "Certificate of Registration",
-      category: "certs",
       client: "Enrolled Students",
       description:
         "Official certification of enrollment status for student discounts, government aid, and passport/visa requirements.",
@@ -696,14 +658,10 @@ export const DEFAULT_CATALOG_CONTENT = {
         "Validated Assessment Form / Enrollment Proof",
         "Current Semester Course Load Details",
       ],
-      previewStyle: "cor",
-      sealTag: "Assessed & Cleared",
     },
     {
       id: "ctc",
-      code: "HD",
       title: "Honorable Dismissal",
-      category: "clearances",
       client: "Transferees",
       description:
         "Formal Certificate of Transfer Credential certifying official release from PUP to transfer to another institution.",
@@ -712,14 +670,10 @@ export const DEFAULT_CATALOG_CONTENT = {
         "Surrender of PUP Student ID Card",
         "Parent / Guardian Consent Form (If Minor)",
       ],
-      previewStyle: "ctc",
-      sealTag: "Release Approved",
     },
     {
       id: "moral",
-      code: "GMC",
       title: "Good Moral Character",
-      category: "certs",
       client: "Student & Alumni",
       description:
         "Issued in coordination with OSAS certifying zero pending disciplinary infractions during university residency.",
@@ -727,14 +681,10 @@ export const DEFAULT_CATALOG_CONTENT = {
         "OSAS Disciplinary Clearance Slip",
         "Valid Student ID or Government ID Card",
       ],
-      previewStyle: "moral",
-      sealTag: "Cleared",
     },
     {
       id: "diploma",
-      code: "DIP-2",
       title: "Second Copy of Diploma",
-      category: "clearances",
       client: "Alumni Only",
       description:
         "Official replacement graduation diploma reissued after verified destruction or loss of the original parchment.",
@@ -743,14 +693,10 @@ export const DEFAULT_CATALOG_CONTENT = {
         "Copy of Official Certificate of Graduation",
         "Board of Regents Formal Verification",
       ],
-      previewStyle: "diploma",
-      sealTag: "Gold Seal Certified",
     },
     {
       id: "cav",
-      code: "CAV",
       title: "CAV (DFA Apostille / Abroad)",
-      category: "certs",
       client: "Graduates & Alumni",
       description:
         "Certification, Authentication, and Verification endorsed directly to DFA and CHED for international credential recognition.",
@@ -759,14 +705,10 @@ export const DEFAULT_CATALOG_CONTENT = {
         "Passport Identification Copy (Full Legal Name)",
         "CHED / Red Ribbon Endorsement Checklist",
       ],
-      previewStyle: "cav",
-      sealTag: "Apostille Cleared",
     },
     {
       id: "certified_copy",
-      code: "CTC",
       title: "Certified True Copy",
-      category: "transcripts",
       client: "Student & Alumni",
       description:
         "Official Registrar dry seal and verification stamp placed on original photocopies of university academic records.",
@@ -774,8 +716,6 @@ export const DEFAULT_CATALOG_CONTENT = {
         "Original Document for Verification Presentation",
         "Clear Photocopy for Dry Seal Stamping",
       ],
-      previewStyle: "certified_copy",
-      sealTag: "CERTIFIED TRUE COPY",
     },
   ],
 };
@@ -790,15 +730,8 @@ function sanitizeCatalogContent(raw) {
 
   const def = DEFAULT_CATALOG_CONTENT;
 
-  const eyebrow = typeof raw.eyebrow === "string" ? raw.eyebrow.trim() : def.eyebrow;
   const heading = typeof raw.heading === "string" && raw.heading.trim() !== "" ? raw.heading.trim() : def.heading;
   const description = typeof raw.description === "string" && raw.description.trim() !== "" ? raw.description.trim() : def.description;
-  const badgeText = typeof raw.badgeText === "string" && raw.badgeText.trim() !== "" ? raw.badgeText.trim() : def.badgeText;
-
-  const primaryButtonText = typeof raw.primaryButtonText === "string" && raw.primaryButtonText.trim() !== "" ? raw.primaryButtonText.trim() : def.primaryButtonText;
-  const primaryButtonLink = typeof raw.primaryButtonLink === "string" && raw.primaryButtonLink.trim() !== "" ? raw.primaryButtonLink.trim() : def.primaryButtonLink;
-  const primaryButtonEnabled = raw.primaryButtonEnabled !== false;
-  const dragHint = typeof raw.dragHint === "string" && raw.dragHint.trim() !== "" ? raw.dragHint.trim() : def.dragHint;
 
   const rawItemsArray = Array.isArray(raw.items) ? raw.items.slice(0, MAX_CATALOG_ITEMS) : [];
 
@@ -808,15 +741,9 @@ function sanitizeCatalogContent(raw) {
         const id = typeof item?.id === "string" && item.id.trim() !== ""
           ? item.id.trim().toLowerCase().replace(/[^a-z0-9_-]/g, "_")
           : defaultItem.id || `doc_${idx + 1}`;
-        const code = typeof item?.code === "string" && item.code.trim() !== ""
-          ? item.code.trim().toUpperCase()
-          : defaultItem.code || `DOC-${idx + 1}`;
         const title = typeof item?.title === "string" && item.title.trim() !== ""
           ? item.title.trim()
           : defaultItem.title || `Document ${idx + 1}`;
-        const category = typeof item?.category === "string" && item.category.trim() !== ""
-          ? item.category.trim()
-          : defaultItem.category || "transcripts";
         const client = typeof item?.client === "string" && item.client.trim() !== ""
           ? item.client.trim()
           : defaultItem.client || "Student & Alumni";
@@ -838,36 +765,19 @@ function sanitizeCatalogContent(raw) {
           requirements = ["Valid Student ID or Government Issued ID"];
         }
 
-        const previewStyle = typeof item?.previewStyle === "string" && item.previewStyle.trim() !== ""
-          ? item.previewStyle.trim()
-          : defaultItem.previewStyle || id;
-        const sealTag = typeof item?.sealTag === "string" && item.sealTag.trim() !== ""
-          ? item.sealTag.trim()
-          : defaultItem.sealTag || "REGISTRAR SEAL VERIFIED";
-
         return {
           id,
-          code,
           title,
-          category,
           client,
           description: desc,
           requirements,
-          previewStyle,
-          sealTag,
         };
       })
     : def.items;
 
   return {
-    eyebrow,
     heading,
     description,
-    badgeText,
-    primaryButtonText,
-    primaryButtonLink,
-    primaryButtonEnabled,
-    dragHint,
     items,
   };
 }
@@ -875,16 +785,9 @@ function sanitizeCatalogContent(raw) {
 export const FAQ_SETTINGS_KEY = "landing_faq_content";
 
 export const DEFAULT_FAQ_CONTENT = {
-  eyebrow: "Clear & Direct University Guidelines",
   heading: "Frequently Asked Questions",
   description:
     "Quick answers on requesting, tracking, and claiming your official school records.",
-  supportCardEnabled: false,
-  supportTitle: "",
-  supportDescription: "",
-  supportButtonText: "",
-  supportButtonLink: "#",
-  supportLocation: "",
   faqs: [
     {
       id: "how-to-request",
@@ -935,7 +838,6 @@ function sanitizeFaqContent(raw) {
 
   const def = DEFAULT_FAQ_CONTENT;
 
-  const eyebrow = typeof raw.eyebrow === "string" ? raw.eyebrow.trim() : def.eyebrow;
   const heading =
     typeof raw.heading === "string" && raw.heading.trim() !== ""
       ? raw.heading.trim()
@@ -944,28 +846,6 @@ function sanitizeFaqContent(raw) {
     typeof raw.description === "string" && raw.description.trim() !== ""
       ? raw.description.trim()
       : def.description;
-
-  const supportCardEnabled = false;
-  const supportTitle =
-    typeof raw.supportTitle === "string" && raw.supportTitle.trim() !== ""
-      ? raw.supportTitle.trim()
-      : def.supportTitle;
-  const supportDescription =
-    typeof raw.supportDescription === "string" && raw.supportDescription.trim() !== ""
-      ? raw.supportDescription.trim()
-      : def.supportDescription;
-  const supportButtonText =
-    typeof raw.supportButtonText === "string" && raw.supportButtonText.trim() !== ""
-      ? raw.supportButtonText.trim()
-      : def.supportButtonText;
-  const supportButtonLink =
-    typeof raw.supportButtonLink === "string" && raw.supportButtonLink.trim() !== ""
-      ? raw.supportButtonLink.trim()
-      : def.supportButtonLink;
-  const supportLocation =
-    typeof raw.supportLocation === "string" && raw.supportLocation.trim() !== ""
-      ? raw.supportLocation.trim()
-      : def.supportLocation;
 
   const rawFaqsArray = Array.isArray(raw.faqs) ? raw.faqs.slice(0, MAX_FAQ_ITEMS) : [];
 
@@ -1000,15 +880,8 @@ function sanitizeFaqContent(raw) {
       : def.faqs;
 
   return {
-    eyebrow,
     heading,
     description,
-    supportCardEnabled,
-    supportTitle,
-    supportDescription,
-    supportButtonText,
-    supportButtonLink,
-    supportLocation,
     faqs,
   };
 }
@@ -1039,7 +912,6 @@ export const DEFAULT_FOOTER_CONTENT = {
 
   // Column 3: Contact Channels & Personnel Desk
   contactsEyebrow: "Official Desk",
-  contactsHeading: "Direct Contact Channels",
   contactItems: [
     {
       label: "Registrar Inquiries",
@@ -1064,14 +936,6 @@ export const DEFAULT_FOOTER_CONTENT = {
 
   // Bottom Sub-Footer
   copyrightText: "© 2026 PUP San Juan Campus · All rights reserved.",
-  navServicesEnabled: true,
-  navServicesLabel: "Services",
-  navWorkflowEnabled: true,
-  navWorkflowLabel: "Workflow",
-  navFaqEnabled: true,
-  navFaqLabel: "FAQ",
-  navBackToTopEnabled: true,
-  navBackToTopLabel: "Back to Top",
 };
 
 export const MAX_SCHEDULE_ITEMS = 3;
@@ -1100,10 +964,6 @@ function sanitizeFooterContent(raw) {
       : def.locationAddress;
   const mapsEnabled =
     typeof raw.mapsEnabled === "boolean" ? raw.mapsEnabled : def.mapsEnabled;
-  const mapsLabel =
-    typeof raw.mapsLabel === "string" && raw.mapsLabel.trim() !== ""
-      ? raw.mapsLabel.trim()
-      : def.mapsLabel;
   const mapsUrl =
     typeof raw.mapsUrl === "string" && raw.mapsUrl.trim() !== ""
       ? raw.mapsUrl.trim()
@@ -1114,10 +974,6 @@ function sanitizeFooterContent(raw) {
     typeof raw.scheduleEyebrow === "string" && raw.scheduleEyebrow.trim() !== ""
       ? raw.scheduleEyebrow.trim()
       : def.scheduleEyebrow;
-  const scheduleHeading =
-    typeof raw.scheduleHeading === "string" && raw.scheduleHeading.trim() !== ""
-      ? raw.scheduleHeading.trim()
-      : def.scheduleHeading;
 
   const rawScheduleArray = Array.isArray(raw.scheduleItems)
     ? raw.scheduleItems.slice(0, MAX_SCHEDULE_ITEMS)
@@ -1153,10 +1009,6 @@ function sanitizeFooterContent(raw) {
     typeof raw.contactsEyebrow === "string" && raw.contactsEyebrow.trim() !== ""
       ? raw.contactsEyebrow.trim()
       : def.contactsEyebrow;
-  const contactsHeading =
-    typeof raw.contactsHeading === "string" && raw.contactsHeading.trim() !== ""
-      ? raw.contactsHeading.trim()
-      : def.contactsHeading;
 
   const rawContactsArray = Array.isArray(raw.contactItems)
     ? raw.contactItems.slice(0, MAX_CONTACT_ITEMS)
@@ -1203,67 +1055,20 @@ function sanitizeFooterContent(raw) {
       ? raw.copyrightText.trim()
       : def.copyrightText;
 
-  const navServicesEnabled =
-    typeof raw.navServicesEnabled === "boolean"
-      ? raw.navServicesEnabled
-      : def.navServicesEnabled;
-  const navServicesLabel =
-    typeof raw.navServicesLabel === "string" && raw.navServicesLabel.trim() !== ""
-      ? raw.navServicesLabel.trim()
-      : def.navServicesLabel;
-
-  const navWorkflowEnabled =
-    typeof raw.navWorkflowEnabled === "boolean"
-      ? raw.navWorkflowEnabled
-      : def.navWorkflowEnabled;
-  const navWorkflowLabel =
-    typeof raw.navWorkflowLabel === "string" && raw.navWorkflowLabel.trim() !== ""
-      ? raw.navWorkflowLabel.trim()
-      : def.navWorkflowLabel;
-
-  const navFaqEnabled =
-    typeof raw.navFaqEnabled === "boolean"
-      ? raw.navFaqEnabled
-      : def.navFaqEnabled;
-  const navFaqLabel =
-    typeof raw.navFaqLabel === "string" && raw.navFaqLabel.trim() !== ""
-      ? raw.navFaqLabel.trim()
-      : def.navFaqLabel;
-
-  const navBackToTopEnabled =
-    typeof raw.navBackToTopEnabled === "boolean"
-      ? raw.navBackToTopEnabled
-      : def.navBackToTopEnabled;
-  const navBackToTopLabel =
-    typeof raw.navBackToTopLabel === "string" && raw.navBackToTopLabel.trim() !== ""
-      ? raw.navBackToTopLabel.trim()
-      : def.navBackToTopLabel;
-
   return {
     brandName,
     brandSubtitle,
     locationHall,
     locationAddress,
     mapsEnabled,
-    mapsLabel,
     mapsUrl,
     scheduleEyebrow,
-    scheduleHeading,
     scheduleItems,
     contactsEyebrow,
-    contactsHeading,
     contactItems,
     watermarkEnabled,
     watermarkText,
     copyrightText,
-    navServicesEnabled,
-    navServicesLabel,
-    navWorkflowEnabled,
-    navWorkflowLabel,
-    navFaqEnabled,
-    navFaqLabel,
-    navBackToTopEnabled,
-    navBackToTopLabel,
   };
 }
 

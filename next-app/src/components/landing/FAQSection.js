@@ -42,15 +42,8 @@ export default function FAQSection() {
   const [openIndex, setOpenIndex] = useState(0);
   const [activeCategory, setActiveCategory] = useState("all");
   const [faqData, setFaqData] = useState({
-    eyebrow: "Clear & Direct University Guidelines",
     heading: "Frequently Asked Questions",
     description: "Quick answers on requesting, tracking, and claiming your official school records.",
-    supportCardEnabled: true,
-    supportTitle: "Still have questions about your records?",
-    supportDescription: "Our Registrar records desk is available Monday to Friday from 8:00 AM to 5:00 PM for verification and assistance.",
-    supportButtonText: "Visit Registrar Counter",
-    supportButtonLink: "#",
-    supportLocation: "Ground Floor, Registrar Window",
     faqs: DEFAULT_FAQS,
   });
 
@@ -78,10 +71,15 @@ export default function FAQSection() {
     <section id="faq" className="w-full bg-[#dadddf] py-16 px-4 sm:px-6 font-jakarta select-none scroll-mt-24">
       <div className="max-w-[1100px] mx-auto bg-white rounded-[2.5rem] p-8 sm:p-12 lg:p-16 shadow-sm overflow-hidden">
         
-        <div className="text-center mb-10">
+        <div className="text-center mb-10 max-w-2xl mx-auto">
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-medium text-black tracking-tight">
             {faqData.heading || "Frequently Asked Questions"}
           </h2>
+          {faqData.description && (
+            <p className="mt-3 text-sm sm:text-base text-gray-500 max-w-xl mx-auto">
+              {faqData.description}
+            </p>
+          )}
         </div>
 
         {categories.length > 1 && (
@@ -140,17 +138,15 @@ export default function FAQSection() {
                     <motion.div key="content" initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }} className="overflow-hidden">
                       <div className="px-5 sm:px-6 pb-6 pt-0 text-[13px] sm:text-[14px] text-gray-300 leading-relaxed font-normal">
                         <p>{faq.a}</p>
-              </div>
+                      </div>
                     </motion.div>
                   )}
                 </AnimatePresence>
-      </div>
+              </div>
             );
           })}
         </div>
-
-
-              </div>
+      </div>
     </section>
   );
 }

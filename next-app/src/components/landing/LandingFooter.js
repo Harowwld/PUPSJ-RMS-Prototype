@@ -13,12 +13,10 @@ const DEFAULT_FOOTER = {
   locationAddress:
     "223 Ortega Street, cor. A. Mabini Street, Barangay Addition Hills, San Juan City, Metro Manila 1500",
   mapsEnabled: true,
-  mapsLabel: "Google Maps Directions",
   mapsUrl:
     "https://maps.google.com/?q=Polytechnic+University+of+the+Philippines+San+Juan+Campus",
 
   scheduleEyebrow: "Registrar Schedule",
-  scheduleHeading: "Regular Office Hours",
   scheduleItems: [
     { label: "Monday – Friday", value: "8:00 AM – 5:00 PM", status: "open" },
     { label: "Noon Break Shift", value: "12:00 PM – 1:00 PM", status: "break" },
@@ -26,7 +24,6 @@ const DEFAULT_FOOTER = {
   ],
 
   contactsEyebrow: "Official Desk",
-  contactsHeading: "Direct Contact Channels",
   contactItems: [
     {
       label: "Registrar Inquiries",

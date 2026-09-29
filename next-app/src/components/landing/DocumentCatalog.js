@@ -7,9 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 export const CATALOG_ITEMS = [
   {
     id: "tor",
-    code: "TOR",
     title: "Transcript of Records",
-    category: "transcripts",
     description: "Official comprehensive academic transcript for employment, PRC board examinations, and graduate studies.",
     requirements: [
       "2x2 Formal Photo (White Background, Nametag)",
@@ -20,9 +18,7 @@ export const CATALOG_ITEMS = [
   },
   {
     id: "cog",
-    code: "COG",
     title: "Certificate of Grades",
-    category: "transcripts",
     description: "Certified summary of semester grades requested for scholarships, employer tuition subsidies, and academic evaluation.",
     requirements: [
       "Current Student ID or SIS Portal Profile Printout",
@@ -32,9 +28,7 @@ export const CATALOG_ITEMS = [
   },
   {
     id: "cor",
-    code: "COR",
     title: "Certificate of Registration",
-    category: "certs",
     description: "Official certification of enrollment status for student discounts, government aid, and passport/visa requirements.",
     requirements: [
       "Validated Assessment Form / Enrollment Proof",
@@ -44,9 +38,7 @@ export const CATALOG_ITEMS = [
   },
   {
     id: "ctc",
-    code: "HD",
     title: "Honorable Dismissal",
-    category: "clearances",
     description: "Formal Certificate of Transfer Credential certifying official release from PUP to transfer to another institution.",
     requirements: [
       "Comprehensive Campus University Clearance",
@@ -57,9 +49,7 @@ export const CATALOG_ITEMS = [
   },
   {
     id: "moral",
-    code: "GMC",
     title: "Good Moral Character",
-    category: "certs",
     description: "Issued in coordination with OSAS certifying zero pending disciplinary infractions during university residency.",
     requirements: [
       "OSAS Disciplinary Clearance Slip",
@@ -69,9 +59,7 @@ export const CATALOG_ITEMS = [
   },
   {
     id: "diploma",
-    code: "DIP-2",
     title: "Second Copy of Diploma",
-    category: "clearances",
     description: "Official replacement graduation diploma reissued after verified destruction or loss of the original parchment.",
     requirements: [
       "Notarized Affidavit of Loss / Damage",
@@ -82,9 +70,7 @@ export const CATALOG_ITEMS = [
   },
   {
     id: "cav",
-    code: "CAV",
     title: "CAV (DFA Apostille / Abroad)",
-    category: "certs",
     description: "Certification, Authentication, and Verification endorsed directly to DFA and CHED for international credential recognition.",
     requirements: [
       "Certified True Copies of TOR and Diploma",
@@ -95,9 +81,7 @@ export const CATALOG_ITEMS = [
   },
   {
     id: "certified_copy",
-    code: "CTC",
     title: "Certified True Copy",
-    category: "transcripts",
     description: "Official Registrar dry seal and verification stamp placed on original photocopies of university academic records.",
     requirements: [
       "Original Document for Verification Presentation",
@@ -112,15 +96,9 @@ export default function DocumentCatalog() {
   const [activeIndex, setActiveIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
   const [catalogData, setCatalogData] = useState({
-    eyebrow: "Official University Credentials",
     heading: "Academic Document Catalog",
     description:
       "Explore authentic credentials, university clearance protocols, and official registrar records issued by the University.",
-    badgeText: "Official Credential",
-    primaryButtonText: "Request Credential",
-    primaryButtonLink: "/login",
-    primaryButtonEnabled: true,
-    dragHint: "Drag or click document to inspect",
     items: CATALOG_ITEMS,
   });
 
@@ -388,11 +366,11 @@ export default function DocumentCatalog() {
                   }`}
                 >
                   <div className="flex items-center justify-between mb-5">
-                    <span className="px-3 py-1 rounded-full text-[10px] font-bold font-mono tracking-wider bg-zinc-100 text-zinc-600 border border-black/5">
-                      {doc.code}
-                    </span>
                     <span className="text-[10px] font-mono font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-100">
-                      {doc.client}
+                      {doc.client || "Student & Alumni"}
+                    </span>
+                    <span className="text-[10px] font-mono text-zinc-400 font-medium tracking-wide">
+                      Official Document
                     </span>
                   </div>
                   
