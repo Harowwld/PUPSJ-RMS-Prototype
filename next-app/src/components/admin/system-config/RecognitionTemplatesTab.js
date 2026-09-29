@@ -32,6 +32,7 @@ const FIELDS = [
 ]
 const WHOLE_FIELD = ["wholeName", "Whole name"]
 const COLORS = { firstName: "#2563eb", middleName: "#9333ea", lastName: "#dc2626" }
+const TEMPLATE_EXPORT_FORMAT = "pupsj-rms-recognition-templates"
 const EMPTY_REGIONS = {
   mode: "",
   wholeName: { x: 0, y: 0, width: 0, height: 0 },
@@ -69,8 +70,10 @@ export default function RecognitionTemplatesTab({ showToast }) {
   const [templateFilter, setTemplateFilter] = useState("Active")
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [importing, setImporting] = useState(false)
   const imageRef = useRef(null)
   const sampleInputRef = useRef(null)
+  const importInputRef = useRef(null)
 
   const load = async (showNotification = false) => {
     setLoading(true)
@@ -176,6 +179,140 @@ export default function RecognitionTemplatesTab({ showToast }) {
 
   function chooseSampleFile() {
     sampleInputRef.current?.click()
+  }
+
+  function exportTemplates() {
+    const payload = {
+      format: TEMPLATE_EXPORT_FORMAT,
+      schemaVersion: 1,
+      exportedAt: new Date().toISOString(),
+      templates: templates.map((template) => ({
+        documentType: template.document_type,
+        name: template.name,
+        version: Number(template.version) || 1,
+        pageIndex: Number(template.page_index) || 0,
+        rotation: Number(template.rotation) || 0,
+        regions: template.regions,
+        status: template.status === "Archived" ? "Archived" : "Active",
+      })),
+    }
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement("a")
+    link.href = url
+    link.download = `pupsj-ocr-templates-${new Date().toISOString().slice(0, 10)}.json`
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000)
+    showToast?.({
+      title: "OCR templates exported",
+      description: `${templates.length} template configuration(s) downloaded as JSON.`,
+    })
+  }
+
+  async function importTemplates(file) {
+    if (!file) return
+    if (file.size > 2 * 1024 * 1024) {
+      showToast?.({ title: "Import failed", description: "Choose a JSON file smaller than 2 MB." }, true)
+      return
+    }
+
+    setImporting(true)
+    try {
+      const payload = JSON.parse(await file.text())
+      if (payload?.format !== TEMPLATE_EXPORT_FORMAT || payload?.schemaVersion !== 1 || !Array.isArray(payload.templates)) {
+        throw new Error("This file is not a supported PUP-SJ OCR template export.")
+      }
+      if (payload.templates.length === 0 || payload.templates.length > 200) {
+        throw new Error("The file must contain between 1 and 200 template configurations.")
+      }
+
+      const prepared = payload.templates.map((template, index) => {
+        const documentType = String(template?.documentType || "").trim()
+        const docType = docTypes.find((type) => type.name.trim().toLowerCase() === documentType.toLowerCase())
+        if (!docType) throw new Error(`Template ${index + 1}: document type "${documentType || "(missing)"}" is not available in this office.`)
+
+        const name = String(template?.name || "").trim()
+        const version = Number(template?.version)
+        const pageIndex = Number(template?.pageIndex)
+        const rotation = Number(template?.rotation)
+        if (!name || name.length > 120) throw new Error(`Template ${index + 1}: name must contain 1–120 characters.`)
+        if (!Number.isInteger(version) || version < 1) throw new Error(`Template ${index + 1}: version must be a positive integer.`)
+        if (!Number.isInteger(pageIndex) || pageIndex < 0) throw new Error(`Template ${index + 1}: page index must be zero or greater.`)
+        if (!Number.isInteger(rotation) || rotation < 0 || rotation >= 360 || rotation % 90 !== 0) {
+          throw new Error(`Template ${index + 1}: rotation must be 0, 90, 180, or 270 degrees.`)
+        }
+
+        const regions = template?.regions
+        if (!regions || typeof regions !== "object") throw new Error(`Template ${index + 1}: recognition regions are missing.`)
+        const keys = regions.mode === "whole" || regions.mode === "wholeName"
+          ? ["wholeName"]
+          : ["firstName", "middleName", "lastName"]
+        for (const key of keys) {
+          const region = regions[key]
+          if (!region || !["x", "y", "width", "height"].every((field) => Number.isFinite(Number(region[field])))) {
+            throw new Error(`Template ${index + 1}: ${key} region is missing or invalid.`)
+          }
+          const { x, y, width, height } = Object.fromEntries(
+            ["x", "y", "width", "height"].map((field) => [field, Number(region[field])])
+          )
+          if ([x, y, width, height].some((value) => value < 0 || value > 1)
+            || width === 0 || height === 0 || x + width > 1 || y + height > 1) {
+            throw new Error(`Template ${index + 1}: ${key} region must stay within the page.`)
+          }
+        }
+
+        return {
+          documentTypeId: String(docType.id),
+          name,
+          version,
+          pageIndex,
+          rotation,
+          regions,
+          status: template.status === "Archived" ? "Archived" : "Active",
+        }
+      })
+      prepared.sort((a, b) => a.documentTypeId.localeCompare(b.documentTypeId)
+        || a.name.localeCompare(b.name)
+        || a.version - b.version)
+
+      let importedCount = 0
+      const failures = []
+      for (const template of prepared) {
+        try {
+          const response = await fetch("/api/recognition/templates", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(template),
+          })
+          const data = await response.json()
+          if (!response.ok || !data.ok) throw new Error(data.error || "Template save failed.")
+
+          if (template.status === "Archived") {
+            const archiveResponse = await fetch(`/api/recognition/templates/${data.data.id}`, { method: "DELETE" })
+            const archiveData = await archiveResponse.json()
+            if (!archiveResponse.ok || !archiveData.ok) throw new Error(archiveData.error || "Template was imported but could not be archived.")
+          }
+          importedCount += 1
+        } catch (error) {
+          failures.push(`${template.name}: ${error.message}`)
+        }
+      }
+
+      await load()
+      showToast?.({
+        title: failures.length ? "Import partially completed" : "OCR templates imported",
+        description: failures.length
+          ? `${importedCount} imported; ${failures.length} failed. ${failures[0]}`
+          : `${importedCount} template configuration(s) imported. Existing versions were preserved.`,
+      }, failures.length > 0)
+    } catch (error) {
+      showToast?.({ title: "Import failed", description: error.message }, true)
+    } finally {
+      setImporting(false)
+      if (importInputRef.current) importInputRef.current.value = ""
+    }
   }
 
   async function handlePageChange(value) {
@@ -348,11 +485,38 @@ export default function RecognitionTemplatesTab({ showToast }) {
           description="Select a document type, upload a representative sample, and calibrate field bounding boxes for automated OCR extraction."
           className="p-0"
           actions={
-            <RefreshButton
-              onRefresh={() => load(true)}
-              isLoading={loading}
-              title="Refresh Templates"
-            />
+            <div className="flex flex-wrap items-center gap-2">
+              <input
+                ref={importInputRef}
+                type="file"
+                accept="application/json,.json"
+                className="sr-only"
+                onChange={(event) => importTemplates(event.target.files?.[0])}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                className="h-10 rounded-xl border border-gray-200 bg-white px-4 text-xs font-semibold text-gray-700 shadow-xs transition-all hover:bg-gray-50 active:scale-95 dark:border-white/10 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700"
+                onClick={() => importInputRef.current?.click()}
+                disabled={importing || loading}
+              >
+                {importing ? "Importing..." : "Import JSON"}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                className="h-10 rounded-xl border border-gray-200 bg-white px-4 text-xs font-semibold text-gray-700 shadow-xs transition-all hover:bg-gray-50 active:scale-95 dark:border-white/10 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700"
+                onClick={exportTemplates}
+                disabled={templates.length === 0 || importing || loading}
+              >
+                Export JSON
+              </Button>
+              <RefreshButton
+                onRefresh={() => load(true)}
+                isLoading={loading}
+                title="Refresh Templates"
+              />
+            </div>
           }
         />
 
