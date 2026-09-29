@@ -21,25 +21,36 @@ export async function GET(req) {
   await client.query(`LISTEN ${INGEST_EVENT_CHANNEL}`);
 
   let closed = false;
+  let canceled = false;
   let heartbeatTimer;
-  let closeConnection;
+  let streamController;
+  let cleanupConnection;
+  let cleanupPromise;
   const stream = new ReadableStream({
     start(controller) {
+      streamController = controller;
       const send = (eventName, payload) => {
         if (closed) return;
         controller.enqueue(new TextEncoder().encode(encodeEvent(eventName, payload)));
       };
 
-      const close = async () => {
-        if (closed) return;
+      const cleanup = ({ closeStream = false } = {}) => {
+        if (cleanupPromise) return cleanupPromise;
         closed = true;
         clearInterval(heartbeatTimer);
-        client.removeAllListeners("notification");
-        await client.query(`UNLISTEN ${INGEST_EVENT_CHANNEL}`).catch(() => {});
-        await client.end().catch(() => {});
-        controller.close();
+        req.signal.removeEventListener("abort", onAbort);
+        cleanupPromise = (async () => {
+          client.removeAllListeners("notification");
+          await client.query(`UNLISTEN ${INGEST_EVENT_CHANNEL}`).catch(() => {});
+          await client.end().catch(() => {});
+          if (closeStream && !canceled && !req.signal.aborted) {
+            streamController.close();
+          }
+        })();
+        return cleanupPromise;
       };
-      closeConnection = close;
+      cleanupConnection = cleanup;
+      const onAbort = () => cleanup();
 
       client.on("notification", (message) => {
         let payload;
@@ -54,15 +65,16 @@ export async function GET(req) {
 
       client.on("error", (connectionError) => {
         if (!closed) console.warn(`[ingest-events] SSE listener error: ${connectionError.message}`);
-        close();
+        cleanup({ closeStream: true });
       });
 
       send("ready", { officeId, occurredAt: new Date().toISOString() });
       heartbeatTimer = setInterval(() => send("heartbeat", { occurredAt: new Date().toISOString() }), 20000);
-      req.signal.addEventListener("abort", close, { once: true });
+      req.signal.addEventListener("abort", onAbort, { once: true });
     },
     cancel() {
-      return closeConnection?.();
+      canceled = true;
+      return cleanupConnection?.();
     },
   });
 
