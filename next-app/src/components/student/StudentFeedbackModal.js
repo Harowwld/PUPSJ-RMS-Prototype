@@ -121,9 +121,6 @@ export default function StudentFeedbackModal({
       <DialogContent className="overflow-hidden rounded-2xl border border-gray-200 bg-white p-0 shadow-2xl sm:max-w-md dark:border-white/10 dark:bg-card gap-0 font-jakarta">
         <DialogHeader className="bg-white p-6 pb-0 dark:bg-card border-none text-left">
           <div className="flex items-start gap-4">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-amber-100 bg-amber-50 text-amber-600 dark:text-amber-400 shadow-sm dark:bg-amber-950/30 dark:border-amber-900/30">
-              <HugeIcon className="ph-duotone ph-star text-xl" />
-            </div>
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
                 <DialogTitle className="text-[16px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
@@ -251,7 +248,7 @@ export default function StudentFeedbackModal({
               disabled={submitting}
               className="h-10 px-4 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
             >
-              Skip for Now
+              Cancel
             </Button>
             <Button
               type="submit"
@@ -265,9 +262,9 @@ export default function StudentFeedbackModal({
                   Submitting...
                 </span>
               ) : request?.feedback ? (
-                "Update Feedback"
+                "Update"
               ) : (
-                "Submit Feedback"
+                "Submit"
               )}
             </Button>
           </DialogFooter>

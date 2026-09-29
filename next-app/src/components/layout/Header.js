@@ -272,6 +272,7 @@ export default function Header({ authUser, onLogout, children }) {
   useEffect(() => {
     if (typeof window !== "undefined") {
       const v = new URLSearchParams(window.location.search).get("view");
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       if (v) setCurrentTab(v);
     }
   }, [pathname, commandOpen]);
@@ -307,14 +308,21 @@ export default function Header({ authUser, onLogout, children }) {
               view: "offices",
               icon: "ph-bold ph-buildings",
               breadcrumb: "Institutional Governance • View",
-              keywords: "offices departments stations campus registry osas admissions library accounting admin governance units colleges",
+              keywords: "offices departments stations campus registry osas admissions library accounting admin governance units colleges add department new office",
             },
             {
               label: "Department Features",
               view: "modules",
               icon: "ph-bold ph-squares-four",
               breadcrumb: "Institutional Governance • View",
-              keywords: "features matrix permissions feature flags modules config toggle access roles",
+              keywords: "features matrix permissions feature flags modules config toggle access roles supervisor staff tools category registrar osas",
+            },
+            {
+              label: "Service Standards & SLA",
+              view: "standards",
+              icon: "ph-bold ph-clock-countdown",
+              breadcrumb: "Institutional Governance • View",
+              keywords: "service standards sla citizen charter arta ra 11032 turnaround time processing benchmark deadlines commitments fast-track university standard",
             },
           ],
         },
@@ -328,21 +336,21 @@ export default function Header({ authUser, onLogout, children }) {
               view: "staff",
               icon: "ph-bold ph-users",
               breadcrumb: "Access & Audit • View",
-              keywords: "directory personnel users accounts staff global roles administrators employees",
+              keywords: "directory personnel users accounts staff global roles administrators employees add user invite staff",
             },
             {
               label: "Security Questions",
               view: "security",
               icon: "ph-bold ph-shield-check",
               breadcrumb: "Access & Audit • View",
-              keywords: "security questions password reset recovery verification questions authentication",
+              keywords: "security questions password reset recovery verification questions authentication default security questions",
             },
             {
               label: "Platform Audit Trail",
               view: "logs",
               icon: "ph-bold ph-history",
               breadcrumb: "Access & Audit • View",
-              keywords: "audit logs security platform activity history transactions compliance events logs",
+              keywords: "audit logs security platform activity history transactions compliance events logs export audit trail",
             },
           ],
         },
@@ -356,14 +364,14 @@ export default function Header({ authUser, onLogout, children }) {
               view: "health",
               icon: "ph-bold ph-activity",
               breadcrumb: "Operations & Reliability • View",
-              keywords: "campus operations system health telemetry status memory database ping metrics activity monitoring",
+              keywords: "campus operations system health telemetry status memory database ping metrics activity monitoring registrar queue osas proposals transactions live operations",
             },
             {
               label: "Platform Backups",
               view: "backups",
               icon: "ph-bold ph-cloud-arrow-up",
               breadcrumb: "Operations & Reliability • View",
-              keywords: "platform backups database snapshots postgres dump restore export recovery archive maintenance automated schedule cloud",
+              keywords: "platform backups database snapshots postgres dump restore export recovery archive maintenance automated schedule cloud backup restore download",
             },
           ],
         },
@@ -543,7 +551,7 @@ export default function Header({ authUser, onLogout, children }) {
             {
               label: "OSAS Monitoring",
               view: "osas_monitoring",
-              icon: "ti ti-school",
+              icon: "ph-bold ph-student",
               module: "osas_monitoring",
               breadcrumb: "Operations • View",
               keywords: "osas student affairs proposals events monitoring activities organizations student submissions",
@@ -1259,8 +1267,7 @@ export default function Header({ authUser, onLogout, children }) {
       <Dialog open={showSessionExpired} onOpenChange={setShowSessionExpired}>
         <DialogContent className="max-w-md rounded-2xl border-gray-200 bg-white dark:bg-zinc-900 dark:border-white/10">
           <DialogHeader>
-            <DialogTitle className="text-xl font-black text-gray-900 flex items-center gap-2 dark:text-zinc-50">
-              <HugeIcon  className="ph-fill ph-warning-circle text-amber-500"></HugeIcon>
+            <DialogTitle className="text-xl font-bold text-gray-900 dark:text-zinc-50">
               Session Expired
             </DialogTitle>
             <DialogDescription className="font-medium text-gray-500 pt-2 dark:text-zinc-400">

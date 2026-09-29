@@ -43,7 +43,7 @@ export default function ConfirmModal({
   isRegistrationModal = false,
   isUnsavedChangesModal = false,
   isDeleteModal = false,
-  isAppleStyled: isAppleStyledProp = false,
+  isAppleStyled: isAppleStyledProp = true,
 }) {
   const inputRefs = [useRef(), useRef(), useRef(), useRef()];
 
@@ -208,21 +208,14 @@ export default function ConfirmModal({
           (!selectedItems.length && !isVerificationEnabled) && "pb-5 border-b-0"
         )}>
           <div className="flex items-start gap-4 w-full">
-            {!isAppleStyled && (
-              <div className={`w-12 h-12 rounded-xl border flex items-center justify-center shrink-0 ${v.iconWrap}`}>
-                <HugeIcon  className={`${displayIcon} text-xl`}></HugeIcon>
-              </div>
-            )}
             <div className="min-w-0 flex-1">
               <DialogTitle className={cn(
-                `text-lg font-semibold tracking-tight ${v.title} truncate`,
-                isAppleStyled && "text-[16px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
+                "text-[16px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50 truncate"
               )}>
                 {title}
               </DialogTitle>
               <DialogDescription className={cn(
-                `text-sm font-medium mt-1.5 ${v.description}`,
-                isAppleStyled && "text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-1"
+                "text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-1"
               )}>
                 {displayMessage}
               </DialogDescription>

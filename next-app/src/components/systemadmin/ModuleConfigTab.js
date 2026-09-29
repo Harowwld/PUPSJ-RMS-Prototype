@@ -559,7 +559,7 @@ export default function ModuleConfigTab({ showToast }) {
               )}
             </div>
           }
-          description="Turn system features on or off for each department. Tools are organized by who uses them: supervisors or frontline staff."
+          description="Turn system features on or off for each department."
           showBorder={false}
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
           descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
@@ -601,37 +601,6 @@ export default function ModuleConfigTab({ showToast }) {
                 isLoading={isManualLoading}
                 title="Refresh Module Configuration"
               />
-
-              
-
-              <div className="flex items-center gap-2 bg-gray-100 dark:bg-zinc-800/70 p-1 rounded-xl border border-gray-200/60 dark:border-white/5">
-                <button
-                  type="button"
-                  onClick={() => setViewMode("office")}
-                  className={cn(
-                    "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer border-0",
-                    viewMode === "office"
-                      ? "bg-white dark:bg-zinc-900 text-gray-900 dark:text-zinc-50 shadow-xs"
-                      : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 bg-transparent"
-                  )}
-                >
-                  <HugeIcon  className="ph-bold ph-buildings text-sm"></HugeIcon>
-                  By Department
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setViewMode("matrix")}
-                  className={cn(
-                    "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer border-0",
-                    viewMode === "matrix"
-                      ? "bg-white dark:bg-zinc-900 text-gray-900 dark:text-zinc-50 shadow-xs"
-                      : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 bg-transparent"
-                  )}
-                >
-                  <HugeIcon  className="ph-bold ph-table text-sm"></HugeIcon>
-                  Summary Table
-                </button>
-              </div>
             </div>
           }
         />

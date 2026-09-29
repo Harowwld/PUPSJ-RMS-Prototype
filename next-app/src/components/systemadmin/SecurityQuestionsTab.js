@@ -228,8 +228,6 @@ export default function SecurityQuestionsTab({ showToast }) {
                 title="Refresh Security Questions"
               />
 
-              <div className="h-6 w-px bg-gray-200 dark:bg-zinc-800" />
-
               <Button
                 onClick={() => handleSave()}
                 disabled={saving || loading}

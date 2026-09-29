@@ -12,14 +12,17 @@ export default function ModuleConfigSkeleton({ viewMode = "office" }) {
         <PageHeader
           icon="ph-bold ph-squares-four"
           title="Department Features & Permissions"
-          description="Turn system features on or off for each department. Tools are organized by who uses them: supervisors or frontline staff."
+          description="Turn system features on or off for each department."
           showBorder={false}
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
           descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
           actions={
-            <div className="flex items-center gap-2 bg-gray-100 dark:bg-zinc-800/70 p-1 rounded-xl border border-gray-200/60 dark:border-white/5">
-              <Skeleton className="h-7 w-28 rounded-lg dark:bg-muted" />
-              <Skeleton className="h-7 w-28 rounded-lg dark:bg-muted" />
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-gray-200/60 dark:border-white/5">
+                <Skeleton className="h-7 w-28 rounded-lg dark:bg-muted" />
+                <Skeleton className="h-7 w-28 rounded-lg dark:bg-muted" />
+              </div>
+              <Skeleton className="h-10 w-10 rounded-xl dark:bg-muted" />
             </div>
           }
         />

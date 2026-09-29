@@ -21,13 +21,16 @@ export default function DocumentRequestsTableSkeleton({ rowCount = 7, embedded =
               <th className="p-4 min-w-[180px]">
                 <Skeleton className="h-3.5 w-24 dark:bg-muted" />
               </th>
-              <th className="p-4 min-w-[160px]">
+              <th className="p-4 min-w-[180px]">
                 <Skeleton className="h-3.5 w-28 dark:bg-muted" />
               </th>
-              <th className="p-4 min-w-[120px]">
+              <th className="p-4 min-w-[140px]">
                 <Skeleton className="h-3.5 w-16 dark:bg-muted" />
               </th>
-              <th className="p-4 min-w-[140px]">
+              <th className="p-4 min-w-[260px]">
+                <Skeleton className="h-3.5 w-32 dark:bg-muted" />
+              </th>
+              <th className="p-4 min-w-[170px]">
                 <Skeleton className="h-3.5 w-24 dark:bg-muted" />
               </th>
               <th className="p-4 text-right min-w-[100px]">
@@ -46,7 +49,7 @@ export default function DocumentRequestsTableSkeleton({ rowCount = 7, embedded =
                   <Skeleton className="h-3.5 w-10 dark:bg-muted" />
                 </td>
 
-                {/* Student */}
+                {/* Student / Requester */}
                 <td className="p-4 align-middle">
                   <div className="flex items-center gap-3">
                     <Skeleton className="h-8 w-8 rounded-full dark:bg-muted shrink-0" />
@@ -72,7 +75,18 @@ export default function DocumentRequestsTableSkeleton({ rowCount = 7, embedded =
                   <Skeleton className="h-6 w-20 rounded-full dark:bg-muted" />
                 </td>
 
-                {/* Requested At */}
+                {/* Service Standard (SLA) */}
+                <td className="p-4 align-middle">
+                  <div className="space-y-1.5">
+                    <div className="flex items-center gap-2">
+                      <Skeleton className="h-5 w-20 rounded-full dark:bg-muted" />
+                      <Skeleton className="h-5 w-16 rounded-full dark:bg-muted" />
+                    </div>
+                    <Skeleton className="h-2.5 w-32 rounded dark:bg-muted" />
+                  </div>
+                </td>
+
+                {/* Created At */}
                 <td className="p-4 align-middle">
                   <div className="space-y-1">
                     <Skeleton className="h-3.5 w-24 rounded dark:bg-muted" />

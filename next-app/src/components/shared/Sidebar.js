@@ -22,8 +22,10 @@ const ICON_MAP = {
   modules: { icon: "ti ti-layout-grid" },
   standards: { icon: "ph-bold ph-clock-countdown" },
   staff: { icon: "ti ti-users" },
+  security: { icon: "ph-bold ph-shield-check" },
   health: { icon: "ti ti-activity-heartbeat" },
   backups: { icon: "ti ti-database-backup" },
+  landing: { icon: "ph-bold ph-layout" },
 
   // Staff views
   requests: { icon: "ti ti-arrow-up-right" },

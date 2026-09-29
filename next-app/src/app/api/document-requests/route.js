@@ -140,6 +140,9 @@ export async function POST(req) {
         : null;
   }
 
+  const requesterRelationship = String(body.requesterRelationship || "").trim() || null;
+  const requesterContact = String(body.requesterContact || "").trim() || null;
+
   const row = await createDocumentRequest({
     officeId,
     studentNo,
@@ -150,6 +153,8 @@ export async function POST(req) {
     clientType,
     courseCode: courseCode || student?.course_code || null,
     requesterName: requesterName || student?.name || null,
+    requesterRelationship,
+    requesterContact,
   });
 
   if (!row) {

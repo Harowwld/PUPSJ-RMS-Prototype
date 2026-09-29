@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/sheet";
 import { getDocAvailabilityForType } from "@/lib/docAvailability";
 import { formatPHDateTime } from "@/lib/timeFormat";
+import PDFPreviewModal from "@/components/shared/PDFPreviewModal";
 import {
   Empty,
   EmptyHeader,
@@ -108,6 +109,7 @@ export default function DocumentRequestsTab({
   const [clientTypeFilters, setClientTypeFilters] = useState([]);
   const [docTypeFilters, setDocTypeFilters] = useState([]);
   const [charterFilters, setCharterFilters] = useState([]);
+  const [slaStandards, setSlaStandards] = useState(null);
   const [page, setPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [sortBy, setSortBy] = useState("created_at");
@@ -130,6 +132,8 @@ export default function DocumentRequestsTab({
   const [detailLoading, setDetailLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [fileWarningOpen, setFileWarningOpen] = useState(false);
+  const [pdfPreviewOpen, setPdfPreviewOpen] = useState(false);
+  const [pdfPreviewData, setPdfPreviewData] = useState(null);
 
   // Local edit state for the detail Sheet
   const [editStatus, setEditStatus] = useState("");
@@ -138,6 +142,25 @@ export default function DocumentRequestsTab({
 
   const debouncedPageResetSkip = useRef(true);
   const autoLinkAttempted = useRef(new Set());
+
+  const loadSlaStandards = useCallback(async () => {
+    try {
+      const res = await fetch("/api/system/sla-settings", { cache: "no-store" });
+      const json = await res.json().catch(() => null);
+      if (res.ok && json?.ok && json.data) {
+        setSlaStandards(json.data);
+      }
+    } catch {
+      // Use defaults if fetch fails
+    }
+  }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      loadSlaStandards();
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [loadSlaStandards]);
 
   // Reset creation state on modal open/close
   useEffect(() => {
@@ -217,6 +240,7 @@ export default function DocumentRequestsTab({
         if (!res.ok || !json?.ok) throw new Error(json?.error || "Failed to load");
 
         if (isManual) {
+          loadSlaStandards();
           const elapsed = Date.now() - startTime;
           if (elapsed < 600) {
             await new Promise((resolve) => setTimeout(resolve, 600 - elapsed));
@@ -236,7 +260,7 @@ export default function DocumentRequestsTab({
         setIsManualLoading(false);
       }
     },
-    [page, itemsPerPage, debouncedQ, statusFilters, clientTypeFilters, docTypeFilters, sortBy, sortOrder, showToast]
+    [page, itemsPerPage, debouncedQ, statusFilters, clientTypeFilters, docTypeFilters, sortBy, sortOrder, showToast, loadSlaStandards]
   );
 
   const handleSort = (column) => {
@@ -463,10 +487,10 @@ export default function DocumentRequestsTab({
   const displayedRows = useMemo(() => {
     if (charterFilters.length === 0) return rows;
     return rows.filter((r) => {
-      const charter = getRequestCharterStatus(r);
+      const charter = getRequestCharterStatus(r, slaStandards);
       return charterFilters.includes(charter.status);
     });
-  }, [rows, charterFilters]);
+  }, [rows, charterFilters, slaStandards]);
 
   const filterGroups = useMemo(() => [
     {
@@ -487,6 +511,7 @@ export default function DocumentRequestsTab({
       options: [
         { value: "Student", label: "Students" },
         { value: "Alumni", label: "Alumni" },
+        { value: "Parent", label: "Parent / Guardian" },
       ],
     },
     {
@@ -496,11 +521,11 @@ export default function DocumentRequestsTab({
     },
     {
       id: "charter",
-      label: "Citizen's Charter SLA",
+      label: "Service Standard (SLA)",
       options: [
         { value: "OnTrack", label: "On Schedule", indicatorColor: "bg-emerald-500" },
         { value: "DueSoon", label: "Due Today", indicatorColor: "bg-amber-500" },
-        { value: "Overdue", label: "Overdue (RA 11032)", indicatorColor: "bg-rose-500" },
+        { value: "Overdue", label: "Overdue (SLA)", indicatorColor: "bg-rose-500" },
         { value: "Compliant", label: "Met SLA", indicatorColor: "bg-emerald-600" },
         { value: "Delayed", label: "Delayed", indicatorColor: "bg-rose-400" },
       ],
@@ -565,7 +590,7 @@ export default function DocumentRequestsTab({
       const label = cf === "OnTrack" ? "On Schedule" : cf === "DueSoon" ? "Due Today" : cf === "Overdue" ? "Overdue" : cf === "Compliant" ? "Met SLA" : cf;
       chips.push({
         id: `charter-${cf}`,
-        label: `Charter: ${label}`,
+        label: `SLA: ${label}`,
         onRemove: () => { setCharterFilters((prev) => prev.filter((c) => c !== cf)); setPage(1); },
       });
     });
@@ -770,9 +795,9 @@ export default function DocumentRequestsTab({
                           <SortIndicator column="status" sortBy={sortBy} sortOrder={sortOrder} />
                         </button>
                       </th>
-                      <th className="p-4 min-w-[190px]">
+                      <th className="p-4 min-w-[260px]">
                         <span className="flex items-center text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">
-                          Turnaround (RA 11032)
+                          Service Standard (SLA)
                         </span>
                       </th>
                       <th className="p-4 min-w-[170px]">
@@ -822,7 +847,8 @@ export default function DocumentRequestsTab({
                         const student = studentMap.get(String(r.student_no || "").toUpperCase());
                         const loc = student || (r.room ? { room: r.room, cabinet: r.cabinet, drawer: r.drawer, studentNo: r.student_no, name: r.student_name } : null);
                         const isAlumni = r.client_type === "Alumni";
-                        const charter = getRequestCharterStatus(r);
+                        const isParent = r.client_type === "Parent";
+                        const charter = getRequestCharterStatus(r, slaStandards);
 
                         return (
                           <tr
@@ -844,13 +870,24 @@ export default function DocumentRequestsTab({
                                 <span
                                   className={cn(
                                     "inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium",
-                                    isAlumni
+                                    isParent
+                                      ? "bg-amber-50 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300 border border-amber-200/60 dark:border-amber-900/40"
+                                      : isAlumni
                                       ? "bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-300 border border-purple-200/50 dark:border-purple-800/30"
                                       : "bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-200/50 dark:border-blue-800/30"
                                   )}
                                 >
-                                  {isAlumni ? "Alumni" : "Student"}
+                                  {isParent ? "Parent/Guardian" : isAlumni ? "Alumni" : "Student"}
                                 </span>
+                                {Number(r.attachment_count) > 0 && (
+                                  <span
+                                    className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-medium bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-zinc-400"
+                                    title={`${r.attachment_count} attachment(s)`}
+                                  >
+                                    <HugeIcon className="ph-bold ph-paperclip text-[11px]" />
+                                    {r.attachment_count}
+                                  </span>
+                                )}
                               </div>
                               <div className="flex flex-wrap items-center gap-2 mt-[2px] truncate text-[12px] font-normal text-[#8E8E93] dark:text-zinc-500">
                                 {r.student_no ? (
@@ -1057,17 +1094,26 @@ export default function DocumentRequestsTab({
                             <span
                               className={cn(
                                 "inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium shrink-0",
-                                detail.client_type === "Alumni"
+                                detail.client_type === "Parent"
+                                  ? "bg-amber-50 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300 border border-amber-200/60 dark:border-amber-900/40"
+                                  : detail.client_type === "Alumni"
                                   ? "bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-300 border border-purple-200/50 dark:border-purple-800/30"
                                   : "bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-200/50 dark:border-blue-800/30"
                               )}
                             >
-                              {detail.client_type === "Alumni" ? "Alumni" : "Student"}
+                              {detail.client_type === "Parent" ? "Parent/Guardian" : detail.client_type === "Alumni" ? "Alumni" : "Student"}
                             </span>
                           </div>
                           <div className="text-xs text-[#8E8E93] dark:text-zinc-400 font-normal">
                             {detail.student_no ? detail.student_no : <span className="italic text-amber-600 dark:text-amber-400">No Student ID</span>}
                           </div>
+                          {detail.client_type === "Parent" && (
+                            <div className="text-xs text-gray-600 dark:text-zinc-300 font-normal space-y-0.5 pt-1 border-t border-gray-200/60 dark:border-white/5">
+                              <div>Parent/Guardian: <strong className="text-gray-900 dark:text-zinc-100">{detail.requester_name || "—"}</strong></div>
+                              <div>Relationship: <strong className="text-gray-900 dark:text-zinc-100">{detail.requester_relationship || "Legal Guardian"}</strong></div>
+                              {detail.requester_contact && <div>Contact: <span className="font-mono">{detail.requester_contact}</span></div>}
+                            </div>
+                          )}
                           {(detail.course_code || studentForRequest?.courseCode) && (
                             <div className="text-xs text-gray-600 dark:text-zinc-300 font-normal">
                               Program: <span className="font-semibold text-gray-900 dark:text-zinc-100">{detail.course_code || studentForRequest?.courseCode}</span>
@@ -1144,6 +1190,52 @@ export default function DocumentRequestsTab({
                     </div>
                   </div>
 
+                  {/* SPA Verification Card for Parent / Legal Guardian */}
+                  {detail.client_type === "Parent" && (
+                    <div className="rounded-xl border border-amber-200/90 bg-amber-50/60 dark:border-amber-900/40 dark:bg-amber-950/20 p-4 space-y-2.5">
+                      <div className="flex items-center justify-between gap-2 flex-wrap">
+                        <div className="flex items-center gap-2">
+                          <HugeIcon className="ph-bold ph-shield-check text-amber-700 dark:text-amber-400 text-base" />
+                          <span className="text-xs font-bold uppercase tracking-wider text-amber-950 dark:text-amber-200">
+                            Special Power of Attorney (SPA) Verification
+                          </span>
+                        </div>
+                        {detail.spa_verified ? (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 dark:bg-emerald-950/60 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
+                            <HugeIcon className="ph-fill ph-check-circle text-xs" />
+                            SPA Verified
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 dark:bg-amber-950/60 px-2.5 py-0.5 text-[11px] font-semibold text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800">
+                            <HugeIcon className="ph-fill ph-clock text-xs" />
+                            Verification Pending
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-gray-700 dark:text-zinc-300 leading-relaxed">
+                        {detail.spa_verified
+                          ? `SPA and valid ID verified by ${detail.spa_verified_by || "Registrar Staff"} ${detail.spa_verified_at ? `on ${formatPHDateTime(detail.spa_verified_at)}` : ""}. Authorized to release student records under RA 10173.`
+                          : "Under RA 10173 (Data Privacy Act), third-party parent/guardian releases strictly require verifying the attached Special Power of Attorney and valid government ID before issuing official documents."}
+                      </p>
+                      <div className="pt-1 flex items-center justify-end">
+                        <Button
+                          type="button"
+                          size="sm"
+                          disabled={saving}
+                          onClick={() => patchDetail({ spaVerified: !detail.spa_verified })}
+                          className={cn(
+                            "h-8 px-4 text-xs font-semibold rounded-xl shadow-xs transition-all cursor-pointer active:scale-95",
+                            detail.spa_verified
+                              ? "border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50"
+                              : "bg-emerald-600 hover:bg-emerald-700 text-white border-0"
+                          )}
+                        >
+                          {detail.spa_verified ? "Revoke Verification" : "Verify SPA & Identity"}
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Document Requested & Purpose (Grid on sm+ screens) */}
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     {/* Document Requested Card */}
@@ -1173,15 +1265,104 @@ export default function DocumentRequestsTab({
                     </div>
                   </div>
 
-                  {/* Citizen's Charter (RA 11032) Turnaround Standard Card */}
+                  {/* Attached Supporting Documents */}
+                  {Array.isArray(detail.attachments) && detail.attachments.length > 0 && (
+                    <div className="flex flex-col">
+                      <span className="text-[11px] font-semibold uppercase tracking-wider text-[#8E8E93] dark:text-zinc-400 mb-1.5 flex items-center justify-between">
+                        <span>Supporting Attachments ({detail.attachments.length})</span>
+                        <span className="text-[10px] font-normal text-gray-400">Official student / parent uploads</span>
+                      </span>
+                      <div className="space-y-2">
+                        {detail.attachments.map((att) => {
+                          const isPdf = att.original_filename?.toLowerCase().endsWith(".pdf") || att.mime_type === "application/pdf";
+                          const fileUrl = att.url || `/api/document-requests/${detail.id}/attachments/${att.id}`;
+                          const typeLabel =
+                            att.attachment_type === "spa"
+                              ? "Special Power of Attorney (SPA)"
+                              : att.attachment_type === "valid_id"
+                              ? "Valid Government ID"
+                              : att.attachment_type === "receipt"
+                              ? "Proof of Payment"
+                              : att.attachment_type === "clearance"
+                              ? "Clearance Slip"
+                              : "Supporting Evidence";
+
+                          return (
+                            <div
+                              key={att.id}
+                              className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 rounded-xl border border-[#E5E5EA] dark:border-white/10 bg-[#F5F5F7] dark:bg-zinc-800/40"
+                            >
+                              <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white dark:bg-zinc-700 text-gray-600 dark:text-zinc-300 border border-gray-200/60 dark:border-white/5">
+                                  <HugeIcon className={isPdf ? "ph-fill ph-file-pdf text-red-500 text-base" : "ph-fill ph-file-image text-blue-500 text-base"} />
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                  <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100 truncate block">
+                                    {att.original_filename}
+                                  </span>
+                                  <div className="flex items-center gap-2 mt-0.5">
+                                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-white dark:bg-zinc-700 text-gray-700 dark:text-zinc-300 border border-gray-200/60 dark:border-white/5">
+                                      {typeLabel}
+                                    </span>
+                                    {att.size_bytes && (
+                                      <span className="text-[10px] text-gray-400 dark:text-zinc-500">
+                                        {(att.size_bytes / 1024).toFixed(1)} KB
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
+                                {isPdf && (
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => {
+                                      setPdfPreviewData({
+                                        url: fileUrl,
+                                        title: att.original_filename,
+                                        subtitle: `${typeLabel} for Request #${detail.id}`,
+                                        studentName: detail.student_name || "Requester",
+                                        docType: typeLabel,
+                                        originalFilename: att.original_filename,
+                                      });
+                                      setPdfPreviewOpen(true);
+                                    }}
+                                    className="h-7 px-2.5 text-[11px] font-semibold rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 shadow-xs cursor-pointer active:scale-95 transition-all"
+                                  >
+                                    Preview
+                                  </Button>
+                                )}
+                                <a
+                                  href={fileUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  download={att.original_filename}
+                                  className="inline-flex items-center justify-center h-7 px-2.5 text-[11px] font-semibold rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs active:scale-95 transition-all cursor-pointer"
+                                >
+                                  Download
+                                </a>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Service Standard (SLA) Turnaround Card */}
                   {(() => {
-                    const charter = getRequestCharterStatus(detail);
+                    const charter = getRequestCharterStatus(detail, slaStandards);
+                    const frameworkTitle = slaStandards?.frameworkName || "Service Standard (SLA)";
+                    const isWorkingDays = slaStandards?.workingDaysOnly !== false;
                     return (
                       <div className="flex flex-col">
                         <span className="text-[11px] font-semibold uppercase tracking-wider text-[#8E8E93] dark:text-zinc-400 mb-1.5 flex items-center justify-between">
-                          <span>Citizen&apos;s Charter (RA 11032) Turnaround</span>
+                          <span>{frameworkTitle}</span>
                           <span className="text-[10px] font-normal lowercase tracking-normal text-gray-400">
-                            working days only
+                            {isWorkingDays ? "working days only" : "calendar days"}
                           </span>
                         </span>
                         <div className="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-[#F5F5F7] dark:bg-zinc-800/40 p-4 space-y-2.5">
@@ -1196,7 +1377,7 @@ export default function DocumentRequestsTab({
                               </span>
                             </div>
                             <div className="text-right text-xs">
-                              <span className="text-gray-500 dark:text-zinc-400">Statutory Deadline: </span>
+                              <span className="text-gray-500 dark:text-zinc-400">Target Deadline: </span>
                               <span className="font-semibold text-gray-900 dark:text-zinc-100">{charter.deadlineFormatted}</span>
                             </div>
                           </div>
@@ -1736,6 +1917,16 @@ export default function DocumentRequestsTab({
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        {/* PDF Document Preview Modal */}
+        <PDFPreviewModal
+          open={pdfPreviewOpen}
+          onClose={() => {
+            setPdfPreviewOpen(false);
+            setPdfPreviewData(null);
+          }}
+          preview={pdfPreviewData}
+        />
       </div>
     </TooltipProvider>
   );

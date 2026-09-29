@@ -55,19 +55,14 @@ export default function OCRPromptModal({
       }}
     >
       <DialogContent className="max-h-[90vh] overflow-hidden border border-gray-200 bg-white p-0 shadow-2xl sm:max-w-lg dark:border-white/10 dark:bg-card gap-0">
-        <DialogHeader className="border-b border-gray-100 bg-gray-50 p-6 dark:border-white/10 dark:bg-white/5">
+        <DialogHeader className="bg-white p-6 pb-0 dark:bg-card border-none text-left">
           <div className="flex items-start gap-4">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-amber-100/30 bg-amber-50 text-amber-600 shadow-sm dark:bg-amber-950/30 dark:text-amber-400 dark:shadow-none">
-              <HugeIcon  className="ph-duotone ph-scan text-xl"></HugeIcon>
-            </div>
             <div className="min-w-0">
-              <DialogTitle className="text-lg font-semibold tracking-tight text-gray-900 dark:text-zinc-50">
-                OCR match resolution required
+              <DialogTitle className="text-[16px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
+                OCR Match Resolution Required
               </DialogTitle>
-              <DialogDescription className="mt-1 text-sm font-medium text-gray-600 dark:text-zinc-300">
-                The optical character recognition system found a possible
-                student match. Please confirm the correct student number to
-                ensure accurate document association.
+              <DialogDescription className="mt-1 text-[13px] font-normal text-gray-500 dark:text-zinc-400">
+                The optical character recognition system found a possible student match. Select the correct record to continue.
               </DialogDescription>
             </div>
           </div>

@@ -54,16 +54,13 @@ export function TOTPChallengeModal({
       }}
     >
       <DialogContent className="overflow-hidden rounded-2xl border border-gray-200 bg-white p-0 shadow-2xl sm:max-w-md dark:border-white/10 dark:bg-card gap-0">
-        <DialogHeader className="border-b border-gray-100 bg-transparent p-6 text-left dark:border-white/10 dark:bg-transparent">
+        <DialogHeader className="bg-white p-6 pb-0 dark:bg-card border-none text-left">
           <div className="flex items-start gap-4">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-red-100 bg-red-50 text-pup-maroon dark:text-primary shadow-sm dark:bg-red-950/30">
-              <HugeIcon  className="ph-duotone ph-shield-check text-xl"></HugeIcon>
-            </div>
             <div className="min-w-0">
-              <DialogTitle className="text-lg font-semibold tracking-tight text-gray-900 dark:text-zinc-50">
+              <DialogTitle className="text-[16px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
                 {title}
               </DialogTitle>
-              <DialogDescription className="mt-1.5 text-sm font-medium text-gray-600 dark:text-zinc-300">
+              <DialogDescription className="mt-1 text-[13px] font-normal text-gray-500 dark:text-zinc-400">
                 {description}
               </DialogDescription>
             </div>

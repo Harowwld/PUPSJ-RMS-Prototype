@@ -8,6 +8,7 @@ import { RefreshButton } from "@/components/shared/RefreshButton";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Select } from "@/components/ui/select";
 import RegistrarODRSSkeleton from "@/components/staff/skeletons/RegistrarODRSSkeleton";
+import PDFPreviewModal from "@/components/shared/PDFPreviewModal";
 import {
   ALLOWED_STATUS_TRANSITIONS,
   TERMINAL_REQUEST_STATUSES,
@@ -22,6 +23,9 @@ export default function RegistrarODRSTab({ showToast }) {
   const [message, setMessage] = useState("");
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [pdfPreviewOpen, setPdfPreviewOpen] = useState(false);
+  const [pdfPreviewData, setPdfPreviewData] = useState(null);
+  const [spaSaving, setSpaSaving] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -52,6 +56,34 @@ export default function RegistrarODRSTab({ showToast }) {
     setMessage("");
     setSelected(json.data);
     await load();
+  };
+
+  const toggleSpaVerified = async () => {
+    if (!selected?.id) return;
+    setSpaSaving(true);
+    try {
+      const res = await fetch(`/api/registrar/document-requests/${selected.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ spaVerified: !selected.spa_verified }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.ok) {
+        return showToast?.({ title: "Update failed", description: json?.error || "Unable to update SPA status." }, true);
+      }
+      setSelected(json.data);
+      await load();
+      showToast?.({
+        title: "SPA Verification Updated",
+        description: json.data.spa_verified
+          ? "Special Power of Attorney has been marked as verified."
+          : "Special Power of Attorney verification was revoked.",
+      });
+    } catch {
+      showToast?.({ title: "Update failed", description: "Unable to update SPA status." }, true);
+    } finally {
+      setSpaSaving(false);
+    }
   };
 
   const getStatusBadgeClass = (s) => {
@@ -149,11 +181,19 @@ export default function RegistrarODRSTab({ showToast }) {
                         <span>{item.student_no || "No Student ID"}</span>
                         {item.client_type && (
                           <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold border ${
-                            item.client_type === "Alumni"
+                            item.client_type === "Parent"
+                              ? "bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-950/30 dark:text-amber-300 dark:border-amber-800/40"
+                              : item.client_type === "Alumni"
                               ? "bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/30 dark:text-purple-300 dark:border-purple-800/40"
                               : "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/30 dark:text-blue-300 dark:border-blue-800/40"
                           }`}>
-                            {item.client_type}
+                            {item.client_type === "Parent" ? "Parent/Guardian" : item.client_type}
+                          </span>
+                        )}
+                        {(Number(item.attachment_count) > 0 || (Array.isArray(item.attachments) && item.attachments.length > 0)) && (
+                          <span className="inline-flex items-center gap-1 text-[11px] font-medium text-gray-500 dark:text-zinc-400" title={`${item.attachment_count || item.attachments?.length} attachment(s)`}>
+                            <HugeIcon className="ph-bold ph-paperclip text-[11px]" />
+                            {item.attachment_count || item.attachments?.length}
                           </span>
                         )}
                       </div>
@@ -179,15 +219,116 @@ export default function RegistrarODRSTab({ showToast }) {
                     <span>Requester: <strong className="text-gray-800 dark:text-zinc-200">{selected.student_name}</strong> {selected.student_no ? `(${selected.student_no})` : <span className="italic text-gray-400">(No Student ID)</span>}</span>
                     {selected.client_type && (
                       <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold border ${
-                        selected.client_type === "Alumni"
+                        selected.client_type === "Parent"
+                          ? "bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-950/30 dark:text-amber-300 dark:border-amber-800/40"
+                          : selected.client_type === "Alumni"
                           ? "bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/30 dark:text-purple-300 dark:border-purple-800/40"
                           : "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/30 dark:text-blue-300 dark:border-blue-800/40"
                       }`}>
-                        {selected.client_type}
+                        {selected.client_type === "Parent" ? "Parent/Guardian" : selected.client_type}
                       </span>
                     )}
                   </div>
                 </div>
+
+                {/* Parent / Guardian Information and SPA Verification */}
+                {selected.client_type === "Parent" && (
+                  <div className="rounded-xl bg-amber-50/70 dark:bg-amber-950/30 p-3.5 border border-amber-200/70 dark:border-amber-900/40 space-y-2 mb-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-amber-900 dark:text-amber-300 flex items-center gap-1.5">
+                        <HugeIcon className="ph-bold ph-shield-check text-xs text-amber-600 dark:text-amber-400" />
+                        Parent / Legal Guardian
+                      </span>
+                      {selected.spa_verified ? (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 dark:bg-emerald-950/60 px-2 py-0.5 text-[10px] font-semibold text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
+                          <HugeIcon className="ph-fill ph-check-circle text-[10px]" />
+                          SPA Verified
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 dark:bg-amber-950/60 px-2 py-0.5 text-[10px] font-semibold text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800">
+                          <HugeIcon className="ph-fill ph-clock text-[10px]" />
+                          SPA Pending
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-xs text-gray-700 dark:text-zinc-300 space-y-0.5">
+                      <div>Name: <strong>{selected.requester_name || "—"}</strong> ({selected.requester_relationship || "Legal Guardian"})</div>
+                      {selected.requester_contact && <div>Contact: <span className="font-mono">{selected.requester_contact}</span></div>}
+                    </div>
+                    <div className="pt-1 border-t border-amber-200/50 dark:border-amber-900/30 flex justify-end">
+                      <Button
+                        type="button"
+                        size="sm"
+                        disabled={spaSaving}
+                        onClick={toggleSpaVerified}
+                        className={`h-7 px-3 text-xs font-semibold rounded-lg ${
+                          selected.spa_verified
+                            ? "border border-gray-200 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50"
+                            : "bg-emerald-600 hover:bg-emerald-700 text-white"
+                        }`}
+                      >
+                        {selected.spa_verified ? "Revoke SPA" : "Verify SPA"}
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Supporting Attachments */}
+                {Array.isArray(selected.attachments) && selected.attachments.length > 0 && (
+                  <div className="rounded-xl bg-gray-50/70 dark:bg-zinc-800/40 p-3.5 border border-gray-200 dark:border-white/10 space-y-2 mb-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-gray-700 dark:text-zinc-300 flex items-center gap-1.5">
+                        <HugeIcon className="ph-bold ph-paperclip text-xs" />
+                        Attachments ({selected.attachments.length})
+                      </span>
+                    </div>
+                    <div className="space-y-1.5 max-h-36 overflow-y-auto">
+                      {selected.attachments.map((att) => {
+                        const isPdf = att.original_filename?.toLowerCase().endsWith(".pdf") || att.mime_type === "application/pdf";
+                        const fileUrl = att.url || `/api/document-requests/${selected.id}/attachments/${att.id}`;
+                        return (
+                          <div key={att.id} className="flex items-center justify-between p-2 rounded-lg bg-white dark:bg-zinc-900 border border-gray-200/60 dark:border-white/5 text-xs">
+                            <span className="truncate flex-1 font-medium text-gray-800 dark:text-zinc-200 pr-2" title={att.original_filename}>
+                              {att.original_filename}
+                            </span>
+                            <div className="flex items-center gap-1 shrink-0">
+                              {isPdf && (
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => {
+                                    setPdfPreviewData({
+                                      url: fileUrl,
+                                      title: att.original_filename,
+                                      subtitle: `Attachment for Request #${selected.id}`,
+                                      studentName: selected.student_name || "Requester",
+                                      docType: att.attachment_type || "Supporting Document",
+                                      originalFilename: att.original_filename,
+                                    });
+                                    setPdfPreviewOpen(true);
+                                  }}
+                                  className="h-6 px-2 text-[10px] font-semibold rounded-md border"
+                                >
+                                  Preview
+                                </Button>
+                              )}
+                              <a
+                                href={fileUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                download={att.original_filename}
+                                className="h-6 px-2 inline-flex items-center text-[10px] font-semibold rounded-md border border-gray-200 dark:border-white/10 hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-700 dark:text-zinc-300"
+                              >
+                                Download
+                              </a>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
 
                 {selected.feedback && (
                   <div className="rounded-xl bg-amber-50/70 dark:bg-amber-950/30 p-3.5 border border-amber-200/70 dark:border-amber-900/40 space-y-1.5 mb-3">
@@ -274,6 +415,16 @@ export default function RegistrarODRSTab({ showToast }) {
           </aside>
         </div>
       </div>
+
+      {/* PDF Document Preview Modal */}
+      <PDFPreviewModal
+        open={pdfPreviewOpen}
+        onClose={() => {
+          setPdfPreviewOpen(false);
+          setPdfPreviewData(null);
+        }}
+        preview={pdfPreviewData}
+      />
     </TooltipProvider>
   );
 }

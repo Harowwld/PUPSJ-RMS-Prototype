@@ -911,18 +911,13 @@ export default function OSASOrganizationComplianceView({
         >
           <DialogContent className="max-w-md rounded-2xl border border-gray-200 bg-white p-6 shadow-xl dark:border-white/10 dark:bg-zinc-900 font-jakarta">
             <DialogHeader>
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400">
-                  <HugeIcon className="ph-bold ph-users-three text-lg" />
-                </div>
-                <div>
-                  <DialogTitle className="text-sm font-bold text-gray-900 dark:text-white">
-                    {selectedOrgForOfficers?.name}
-                  </DialogTitle>
-                  <DialogDescription className="text-xs text-gray-500 dark:text-zinc-400">
-                    Whitelisted Student Officers ({selectedOrgForOfficers?.activeOfficerCount || 0})
-                  </DialogDescription>
-                </div>
+              <div className="min-w-0">
+                <DialogTitle className="text-base font-semibold tracking-[-0.01em] text-gray-900 dark:text-white">
+                  {selectedOrgForOfficers?.name}
+                </DialogTitle>
+                <DialogDescription className="mt-1 text-xs text-gray-500 dark:text-zinc-400">
+                  Whitelisted Student Officers ({selectedOrgForOfficers?.activeOfficerCount || 0})
+                </DialogDescription>
               </div>
             </DialogHeader>
 
@@ -985,18 +980,13 @@ export default function OSASOrganizationComplianceView({
               : "w-[90vw] max-w-4xl h-[85vh] max-h-[85vh] rounded-2xl"
           )}>
             <DialogHeader className="flex shrink-0 flex-row items-center justify-between border-b border-gray-100 bg-white px-6 py-4 dark:border-white/10 dark:bg-card">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-pup-maroon/10 text-pup-maroon dark:bg-primary/20 dark:text-primary">
-                  <HugeIcon className="ph-bold ph-file-pdf text-xl" />
-                </div>
-                <div>
-                  <DialogTitle className="text-sm font-bold text-gray-900 dark:text-white">
-                    Official OSAS Student Organization Compliance Report
-                  </DialogTitle>
-                  <DialogDescription className="text-xs text-gray-500 dark:text-zinc-400">
-                    Accreditation and institutional audit report — PUP San Juan OSAS
-                  </DialogDescription>
-                </div>
+              <div>
+                <DialogTitle className="text-sm font-bold text-gray-900 dark:text-white">
+                  Official OSAS Student Organization Compliance Report
+                </DialogTitle>
+                <DialogDescription className="text-xs text-gray-500 dark:text-zinc-400">
+                  Accreditation and institutional audit report — PUP San Juan OSAS
+                </DialogDescription>
               </div>
             </DialogHeader>
 

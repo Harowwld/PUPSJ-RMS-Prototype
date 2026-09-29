@@ -1,6 +1,6 @@
 "use client";
 import HugeIcon from "@/components/shared/HugeIcon";
-import { useCallback, useEffect, useState, useMemo } from "react";
+import { useCallback, useEffect, useState, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -77,7 +77,17 @@ export default function StudentDashboard() {
   const [courses, setCourses] = useState([]);
   const [authMode, setAuthMode] = useState("login");
   const [auth, setAuth] = useState({ studentNo: "", name: "", password: "" });
-  const [requestForm, setRequestForm] = useState({ studentNo: "", docType: "", notes: "", clientType: "Student", courseCode: "" });
+  const [requestForm, setRequestForm] = useState({
+    studentNo: "",
+    docType: "",
+    notes: "",
+    clientType: "Student",
+    courseCode: "",
+    requesterName: "",
+    requesterRelationship: "Mother",
+    requesterContact: "",
+    attachments: [],
+  });
   const [proposalForm, setProposalForm] = useState({ title: "", organizationId: "", organizationName: "", eventDate: "", file: null });
   const [myOrganizations, setMyOrganizations] = useState([]);
   const [message, setMessage] = useState("");
@@ -91,6 +101,7 @@ export default function StudentDashboard() {
   const [studentNameFocused, setStudentNameFocused] = useState(false);
   const [studentPasswordFocused, setStudentPasswordFocused] = useState(false);
   const [showStudentPassword, setShowStudentPassword] = useState(false);
+  const attachmentInputRef = useRef(null);
 
   // Table state for Request History
   const [requestSearch, setRequestSearch] = useState("");
@@ -521,11 +532,45 @@ export default function StudentDashboard() {
       const notes = String(requestForm.notes || "").trim();
       const clientType = String(requestForm.clientType || me?.client_type || "Student").trim();
       const courseCode = String(requestForm.courseCode || "").trim().toUpperCase() || null;
+      const requesterName = String(requestForm.requesterName || "").trim() || null;
+      const requesterRelationship = String(requestForm.requesterRelationship || "").trim() || null;
+      const requesterContact = String(requestForm.requesterContact || "").trim() || null;
+      const attachments = Array.isArray(requestForm.attachments) ? requestForm.attachments : [];
 
       if (!clientType) {
         setMessage("Client type is required.");
-        showToast("Client type required", "Please select whether you are a Student or Alumni.", true);
+        showToast("Client type required", "Please select whether you are a Student, Alumni, or Parent/Guardian.", true);
         return;
+      }
+      if (clientType === "Parent") {
+        if (!studentNo) {
+          setMessage("Student number is required for Parent / Legal Guardian requests.");
+          showToast("Student number required", "Please enter the student number of your child / ward.", true);
+          return;
+        }
+        if (!requesterName) {
+          setMessage("Parent / Legal Guardian name is required.");
+          showToast("Name required", "Please enter your full legal name.", true);
+          return;
+        }
+        if (!requesterRelationship) {
+          setMessage("Relationship to student is required.");
+          showToast("Relationship required", "Please select your relationship to the student.", true);
+          return;
+        }
+        const hasSpa = attachments.some(
+          (a) =>
+            a.attachmentType === "spa" ||
+            a.attachmentType === "valid_id" ||
+            a.file?.name?.toLowerCase().includes("spa") ||
+            a.file?.name?.toLowerCase().includes("power") ||
+            a.file?.name?.toLowerCase().includes("auth")
+        );
+        if (attachments.length === 0 || !hasSpa) {
+          setMessage("Special Power of Attorney (SPA) or Authorization Letter is required for parent/guardian requests.");
+          showToast("SPA document required", "Under RA 10173, please attach a signed SPA or Authorization Letter and a valid government ID.", true);
+          return;
+        }
       }
       if (clientType === "Alumni" && !studentNo && !courseCode) {
         setMessage("Academic program is required for alumni without a student number.");
@@ -543,16 +588,26 @@ export default function StudentDashboard() {
         return;
       }
 
+      const formData = new FormData();
+      if (studentNo) formData.append("studentNo", studentNo);
+      formData.append("docType", docType);
+      formData.append("notes", notes);
+      formData.append("clientType", clientType);
+      if (courseCode) formData.append("courseCode", courseCode);
+      if (requesterName) formData.append("requesterName", requesterName);
+      if (requesterRelationship) formData.append("requesterRelationship", requesterRelationship);
+      if (requesterContact) formData.append("requesterContact", requesterContact);
+
+      attachments.forEach((att) => {
+        if (att.file) {
+          formData.append("files", att.file);
+          formData.append("file_types", att.attachmentType || "evidence");
+        }
+      });
+
       const res = await fetch("/api/student/document-requests", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          studentNo,
-          docType,
-          notes,
-          clientType,
-          courseCode,
-        }),
+        body: formData,
       });
       const json = await res.json();
       if (!res.ok || !json.ok) {
@@ -567,6 +622,10 @@ export default function StudentDashboard() {
         notes: "",
         courseCode: "",
         studentNo: me?.student_no || "",
+        requesterName: "",
+        requesterRelationship: "Mother",
+        requesterContact: "",
+        attachments: [],
       }));
       showToast("Request submitted", "The Registrar can now review your document request.");
       await load();
@@ -582,6 +641,52 @@ export default function StudentDashboard() {
       setRequestSubmitting(false);
     }
   }
+
+  const handleAddFiles = (e) => {
+    const selectedFiles = Array.from(e.target.files || []);
+    if (!selectedFiles.length) return;
+    const newItems = selectedFiles.map((file) => {
+      let defaultType = "evidence";
+      const nameLower = file.name.toLowerCase();
+      if (requestForm.clientType === "Parent") {
+        if (nameLower.includes("id") || nameLower.includes("valid") || nameLower.includes("passport") || nameLower.includes("license")) {
+          defaultType = "valid_id";
+        } else {
+          defaultType = "spa";
+        }
+      } else {
+        if (nameLower.includes("receipt") || nameLower.includes("pay") || nameLower.includes("proof")) {
+          defaultType = "receipt";
+        } else if (nameLower.includes("clearance")) {
+          defaultType = "clearance";
+        }
+      }
+      return {
+        id: Math.random().toString(36).slice(2, 9),
+        file,
+        attachmentType: defaultType,
+      };
+    });
+    setRequestForm((prev) => ({
+      ...prev,
+      attachments: [...prev.attachments, ...newItems].slice(0, 5),
+    }));
+    e.target.value = "";
+  };
+
+  const handleRemoveFile = (id) => {
+    setRequestForm((prev) => ({
+      ...prev,
+      attachments: prev.attachments.filter((a) => a.id !== id),
+    }));
+  };
+
+  const handleUpdateFileType = (id, type) => {
+    setRequestForm((prev) => ({
+      ...prev,
+      attachments: prev.attachments.map((a) => (a.id === id ? { ...a, attachmentType: type } : a)),
+    }));
+  };
 
   const handleFeedbackSubmitted = (newFeedback) => {
     if (!newFeedback) return;
@@ -833,6 +938,22 @@ export default function StudentDashboard() {
                         </div>
 
                         <form onSubmit={createRequest} className="flex flex-col gap-4 mt-4">
+                          {/* Parent / Legal Guardian Compliance Notice */}
+                          {requestForm.clientType === "Parent" && (
+                            <div className="rounded-xl border border-amber-200/90 bg-amber-50/70 p-3.5 dark:border-amber-900/40 dark:bg-amber-950/20 text-xs text-amber-900 dark:text-amber-200 flex items-start gap-2.5">
+                              <HugeIcon className="ph-bold ph-shield-check text-base text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
+                              <div className="space-y-1 text-[11px] leading-relaxed">
+                                <span className="font-semibold block text-amber-950 dark:text-amber-100">
+                                  Data Privacy Act (RA 10173) & Third-Party Request Policy
+                                </span>
+                                <p>
+                                  Under RA 10173 and university regulations, requests submitted by parents or guardians strictly require an attached <strong>Special Power of Attorney (SPA)</strong> or Authorization Letter along with a photocopy of a <strong>valid government ID</strong>.
+                                </p>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Top Row: Client Type, Student Number, Academic Program, Document Type */}
                           <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
                             {/* Client Type */}
                             <div className="min-w-0">
@@ -847,6 +968,7 @@ export default function StudentDashboard() {
                               >
                                 <option value="Student">Current Student</option>
                                 <option value="Alumni">Alumni / Former Student</option>
+                                <option value="Parent">Parent / Legal Guardian</option>
                               </Select>
                             </div>
 
@@ -854,7 +976,7 @@ export default function StudentDashboard() {
                             <div className="min-w-0">
                               <div className="flex items-center justify-between mb-1.5">
                                 <label htmlFor="student-id-input" className="text-xs font-semibold text-gray-700 dark:text-zinc-200">
-                                  Student Number {requestForm.clientType === "Student" && <span className="text-red-500">*</span>}
+                                  Student Number {requestForm.clientType !== "Alumni" && <span className="text-red-500">*</span>}
                                 </label>
                                 {requestForm.clientType === "Alumni" && (
                                   <span className="text-[10px] text-gray-400 font-medium">Optional</span>
@@ -863,7 +985,13 @@ export default function StudentDashboard() {
                               <Input
                                 id="student-id-input"
                                 type="text"
-                                placeholder={requestForm.clientType === "Alumni" ? "Optional if forgotten" : "YYYY-XXXXX-SJ-0"}
+                                placeholder={
+                                  requestForm.clientType === "Parent"
+                                    ? "Child/Ward ID (YYYY-XXXXX-SJ-0)"
+                                    : requestForm.clientType === "Alumni"
+                                    ? "Optional if forgotten"
+                                    : "YYYY-XXXXX-SJ-0"
+                                }
                                 value={requestForm.studentNo || ""}
                                 onChange={(e) => setRequestForm({ ...requestForm, studentNo: e.target.value })}
                                 className="h-10 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-3 text-xs text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
@@ -917,6 +1045,56 @@ export default function StudentDashboard() {
                             </div>
                           </div>
 
+                          {/* Parent / Legal Guardian Specific Identity Fields */}
+                          {requestForm.clientType === "Parent" && (
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-1">
+                              <div className="min-w-0">
+                                <label htmlFor="parent-name-input" className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-200">
+                                  Parent / Guardian Full Name <span className="text-red-500">*</span>
+                                </label>
+                                <Input
+                                  id="parent-name-input"
+                                  type="text"
+                                  placeholder="e.g. Maria Santos Dela Cruz"
+                                  value={requestForm.requesterName || ""}
+                                  onChange={(e) => setRequestForm({ ...requestForm, requesterName: e.target.value })}
+                                  className="h-10 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-3 text-xs text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
+                                />
+                              </div>
+
+                              <div className="min-w-0">
+                                <label htmlFor="parent-relationship-select" className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-200">
+                                  Relationship to Student <span className="text-red-500">*</span>
+                                </label>
+                                <Select
+                                  id="parent-relationship-select"
+                                  value={requestForm.requesterRelationship || "Mother"}
+                                  onChange={(e) => setRequestForm({ ...requestForm, requesterRelationship: e.target.value })}
+                                  className="h-10 w-full rounded-xl text-xs font-normal border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 shadow-none text-gray-800 dark:text-zinc-100 focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
+                                >
+                                  <option value="Mother">Mother</option>
+                                  <option value="Father">Father</option>
+                                  <option value="Legal Guardian">Legal Guardian</option>
+                                  <option value="Authorized Representative">Authorized Representative</option>
+                                </Select>
+                              </div>
+
+                              <div className="min-w-0">
+                                <label htmlFor="parent-contact-input" className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-200">
+                                  Contact / Mobile Number
+                                </label>
+                                <Input
+                                  id="parent-contact-input"
+                                  type="text"
+                                  placeholder="e.g. 0917-123-4567"
+                                  value={requestForm.requesterContact || ""}
+                                  onChange={(e) => setRequestForm({ ...requestForm, requesterContact: e.target.value })}
+                                  className="h-10 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-3 text-xs text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
+                                />
+                              </div>
+                            </div>
+                          )}
+
                           {/* Description / Purpose */}
                           <div>
                             <label htmlFor="student-request-description" className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-200">
@@ -931,6 +1109,118 @@ export default function StudentDashboard() {
                               value={requestForm.notes}
                               onChange={(e) => setRequestForm({ ...requestForm, notes: e.target.value })}
                             />
+                          </div>
+
+                          {/* Supporting Documents & Attachments Dropzone */}
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between">
+                              <label className="text-xs font-semibold text-gray-700 dark:text-zinc-200 flex items-center gap-1.5">
+                                <span>Supporting Documents & Attachments</span>
+                                {requestForm.clientType === "Parent" ? (
+                                  <span className="text-red-500 font-bold">* (SPA & Valid ID Required)</span>
+                                ) : (
+                                  <span className="text-[10px] text-gray-400 font-normal">(Optional proof of payment, clearance, etc.)</span>
+                                )}
+                              </label>
+                              <button
+                                type="button"
+                                onClick={() => attachmentInputRef.current?.click()}
+                                disabled={requestForm.attachments.length >= 5}
+                                className="text-[11px] font-semibold text-pup-maroon hover:underline dark:text-red-400 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                + Add File ({requestForm.attachments.length}/5)
+                              </button>
+                            </div>
+
+                            <input
+                              type="file"
+                              ref={attachmentInputRef}
+                              onChange={handleAddFiles}
+                              multiple
+                              accept=".pdf,.png,.jpg,.jpeg,.webp"
+                              className="hidden"
+                            />
+
+                            {requestForm.attachments.length === 0 ? (
+                              <div
+                                onClick={() => attachmentInputRef.current?.click()}
+                                className="flex flex-col items-center justify-center p-4 border border-dashed border-gray-200 dark:border-white/10 rounded-xl bg-white dark:bg-zinc-800/40 hover:bg-gray-50/80 dark:hover:bg-zinc-800/70 transition-colors cursor-pointer text-center group"
+                              >
+                                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-100 dark:bg-zinc-700 text-gray-500 dark:text-zinc-300 group-hover:scale-105 transition-transform mb-1.5">
+                                  <HugeIcon className="ph-bold ph-paperclip text-sm" />
+                                </div>
+                                <p className="text-xs font-medium text-gray-700 dark:text-zinc-200">
+                                  {requestForm.clientType === "Parent"
+                                    ? "Upload signed SPA / Authorization Letter & Valid ID"
+                                    : "Click to upload supporting documents or receipts"}
+                                </p>
+                                <p className="text-[11px] text-gray-400 dark:text-zinc-500 mt-0.5">
+                                  PDF, PNG, JPG up to 10MB each (max 5 files)
+                                </p>
+                              </div>
+                            ) : (
+                              <div className="space-y-2">
+                                {requestForm.attachments.map((att) => (
+                                  <div
+                                    key={att.id}
+                                    className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 p-3 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800/70 shadow-xs"
+                                  >
+                                    <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gray-100 dark:bg-zinc-700 text-gray-600 dark:text-zinc-300">
+                                        <HugeIcon
+                                          className={
+                                            att.file?.name?.toLowerCase().endsWith(".pdf")
+                                              ? "ph-fill ph-file-pdf text-red-500 text-base"
+                                              : "ph-fill ph-file-image text-blue-500 text-base"
+                                          }
+                                        />
+                                      </div>
+                                      <div className="min-w-0 flex-1">
+                                        <p className="text-xs font-medium text-gray-900 dark:text-zinc-100 truncate">
+                                          {att.file?.name}
+                                        </p>
+                                        <p className="text-[11px] text-gray-400 dark:text-zinc-500">
+                                          {(att.file?.size / 1024).toFixed(1)} KB
+                                        </p>
+                                      </div>
+                                    </div>
+
+                                    <div className="flex items-center gap-2 shrink-0">
+                                      <Select
+                                        value={att.attachmentType}
+                                        onChange={(e) => handleUpdateFileType(att.id, e.target.value)}
+                                        className="h-8 rounded-lg text-[11px] font-medium border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-zinc-900 w-48 shadow-none"
+                                      >
+                                        {requestForm.clientType === "Parent" ? (
+                                          <>
+                                            <option value="spa">Special Power of Attorney (SPA)</option>
+                                            <option value="valid_id">Valid Government ID</option>
+                                            <option value="evidence">Supporting Evidence</option>
+                                            <option value="receipt">Proof of Payment</option>
+                                            <option value="other">Other Document</option>
+                                          </>
+                                        ) : (
+                                          <>
+                                            <option value="evidence">Supporting Evidence</option>
+                                            <option value="receipt">Proof of Payment / Receipt</option>
+                                            <option value="clearance">Clearance Slip</option>
+                                            <option value="other">Other Document</option>
+                                          </>
+                                        )}
+                                      </Select>
+                                      <button
+                                        type="button"
+                                        onClick={() => handleRemoveFile(att.id)}
+                                        className="h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors cursor-pointer"
+                                        title="Remove file"
+                                      >
+                                        <HugeIcon className="ph-bold ph-x text-xs" />
+                                      </button>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
                           </div>
 
                           {/* Form Actions */}
@@ -1176,10 +1466,26 @@ export default function StudentDashboard() {
                                 <td className="py-0 px-4 align-middle text-[13px] font-medium text-gray-700 dark:text-zinc-300">
                                   #{item.id}
                                 </td>
-                                <td className="py-0 px-4 align-middle">
-                                  <span className="text-[14px] font-medium text-[#111111] dark:text-zinc-100">
-                                    {item.doc_type}
-                                  </span>
+                                <td className="py-2 px-4 align-middle">
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <span className="text-[14px] font-medium text-[#111111] dark:text-zinc-100">
+                                      {item.doc_type}
+                                    </span>
+                                    {item.client_type === "Parent" && (
+                                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-50 text-amber-800 border border-amber-200/80 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-900/40">
+                                        Parent/Guardian
+                                      </span>
+                                    )}
+                                    {(Number(item.attachment_count) > 0 || (Array.isArray(item.attachments) && item.attachments.length > 0)) && (
+                                      <span
+                                        className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-medium bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-zinc-400"
+                                        title={`${item.attachment_count || item.attachments?.length} attachment(s)`}
+                                      >
+                                        <HugeIcon className="ph-bold ph-paperclip text-[11px]" />
+                                        {item.attachment_count || item.attachments?.length}
+                                      </span>
+                                    )}
+                                  </div>
                                 </td>
 
                                 <td className="py-0 px-4 align-middle max-w-[280px]">
@@ -1831,6 +2137,142 @@ export default function StudentDashboard() {
                 >
                   Rate Experience
                 </Button>
+              </div>
+            )}
+
+            {/* Parent / Legal Guardian Profile Card */}
+            {selectedRequestForDetail?.client_type === "Parent" && (
+              <div className="rounded-xl bg-gray-50/70 dark:bg-zinc-900/50 p-4 border border-gray-200/80 dark:border-white/10 space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <HugeIcon className="ph-bold ph-shield-check text-pup-maroon dark:text-red-400 text-sm" />
+                    <h4 className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
+                      Parent / Legal Guardian Information
+                    </h4>
+                  </div>
+                  {selectedRequestForDetail.spa_verified ? (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/40">
+                      <HugeIcon className="ph-fill ph-check-circle text-xs" />
+                      SPA Verified
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-0.5 text-[11px] font-semibold text-amber-800 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-900/40">
+                      <HugeIcon className="ph-fill ph-clock text-xs" />
+                      SPA Verification Pending
+                    </span>
+                  )}
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1 text-xs">
+                  <div>
+                    <span className="text-[10px] text-gray-400 block font-medium uppercase">Requester Name</span>
+                    <span className="font-semibold text-gray-800 dark:text-zinc-200 truncate block">
+                      {selectedRequestForDetail.requester_name || "—"}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-gray-400 block font-medium uppercase">Relationship</span>
+                    <span className="font-semibold text-gray-800 dark:text-zinc-200 truncate block">
+                      {selectedRequestForDetail.requester_relationship || "Legal Guardian"}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-gray-400 block font-medium uppercase">Contact Number</span>
+                    <span className="font-semibold text-gray-800 dark:text-zinc-200 truncate block">
+                      {selectedRequestForDetail.requester_contact || "—"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Attached Supporting Documents */}
+            {Array.isArray(selectedRequestForDetail?.attachments) && selectedRequestForDetail.attachments.length > 0 && (
+              <div className="rounded-xl bg-gray-50/70 dark:bg-zinc-900/50 p-4 border border-gray-200/80 dark:border-white/10 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <HugeIcon className="ph-bold ph-paperclip text-gray-600 dark:text-zinc-400 text-sm" />
+                    <h4 className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
+                      Attached Documents ({selectedRequestForDetail.attachments.length})
+                    </h4>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  {selectedRequestForDetail.attachments.map((att) => {
+                    const isPdf = att.original_filename?.toLowerCase().endsWith(".pdf") || att.mime_type === "application/pdf";
+                    const fileUrl = att.url || `/api/document-requests/${selectedRequestForDetail.id}/attachments/${att.id}`;
+                    const typeLabel =
+                      att.attachment_type === "spa"
+                        ? "Special Power of Attorney (SPA)"
+                        : att.attachment_type === "valid_id"
+                        ? "Valid Government ID"
+                        : att.attachment_type === "receipt"
+                        ? "Proof of Payment"
+                        : att.attachment_type === "clearance"
+                        ? "Clearance Slip"
+                        : "Supporting Evidence";
+
+                    return (
+                      <div
+                        key={att.id}
+                        className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-2.5 rounded-xl border border-gray-200/80 dark:border-white/10 bg-white dark:bg-zinc-800/80 shadow-xs"
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gray-100 dark:bg-zinc-700 text-gray-600 dark:text-zinc-300">
+                            <HugeIcon className={isPdf ? "ph-fill ph-file-pdf text-red-500 text-base" : "ph-fill ph-file-image text-blue-500 text-base"} />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-xs font-medium text-gray-900 dark:text-zinc-100 truncate">
+                              {att.original_filename}
+                            </p>
+                            <div className="flex items-center gap-2 mt-0.5">
+                              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-gray-100 dark:bg-zinc-700 text-gray-700 dark:text-zinc-300">
+                                {typeLabel}
+                              </span>
+                              {att.size_bytes && (
+                                <span className="text-[10px] text-gray-400 dark:text-zinc-500">
+                                  {(att.size_bytes / 1024).toFixed(1)} KB
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-1.5 shrink-0 self-end sm:self-center">
+                          {isPdf && (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setPdfPreviewData({
+                                  url: fileUrl,
+                                  title: att.original_filename,
+                                  subtitle: `${typeLabel} for Request #${selectedRequestForDetail.id}`,
+                                  studentName: selectedRequestForDetail.student_name || "Requester",
+                                  docType: typeLabel,
+                                  originalFilename: att.original_filename,
+                                });
+                                setPdfPreviewOpen(true);
+                              }}
+                              className="h-7 px-2.5 text-[11px] font-semibold rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 shadow-xs cursor-pointer active:scale-95 transition-all"
+                            >
+                              Preview
+                            </Button>
+                          )}
+                          <a
+                            href={fileUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            download={att.original_filename}
+                            className="inline-flex items-center justify-center h-7 px-2.5 text-[11px] font-semibold rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs active:scale-95 transition-all cursor-pointer"
+                          >
+                            Download
+                          </a>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             )}
 

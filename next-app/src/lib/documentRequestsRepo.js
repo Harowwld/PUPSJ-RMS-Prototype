@@ -1,5 +1,6 @@
 import { dbAll, dbGet, dbRun } from "./postgresCompat.js";
 import { canTransitionRequestStatus, DEFAULT_REQUEST_STATUS_MESSAGES } from "./constants.js";
+import { decryptPII } from "./piiEncryption.js";
 
 const VALID_STATUSES = new Set([
   "Pending",
@@ -12,6 +13,41 @@ const VALID_STATUSES = new Set([
 
 export function isValidRequestStatus(s) {
   return VALID_STATUSES.has(String(s || ""));
+}
+
+export function decryptField(val) {
+  if (!val || typeof val !== "string") return val;
+  if (!val.includes("enc:v1:")) return val;
+  if (val.startsWith("enc:v1:") && !val.includes(" ")) {
+    return decryptPII(val);
+  }
+  return val
+    .split(/\s+/)
+    .map((part) => (part.startsWith("enc:v1:") ? decryptPII(part) : part))
+    .join(" ")
+    .trim();
+}
+
+export function formatDocumentRequestRow(row) {
+  if (!row) return row;
+  const decRequesterName = decryptField(row.raw_requester_name ?? row.requester_name);
+  const decStudentName = decryptField(row.s_name);
+  const saFirst = decryptField(row.sa_first_name);
+  const saMiddle = decryptField(row.sa_middle_name);
+  const saLast = decryptField(row.sa_last_name);
+  const saFullName = [saFirst, saMiddle, saLast].filter(Boolean).join(" ");
+  const saEmail = decryptField(row.sa_email ?? row.requester_email);
+
+  const resolvedName = decRequesterName || decStudentName || saFullName || saEmail || "Requester";
+  const resolvedEmail = saEmail || null;
+
+  return {
+    ...row,
+    requester_name: decRequesterName || resolvedName,
+    student_name: resolvedName,
+    requester_email: resolvedEmail,
+    requester_contact: decryptField(row.requester_contact),
+  };
 }
 
 export async function listDocumentRequests({
@@ -89,17 +125,22 @@ export async function listDocumentRequests({
   const sortCol = validSortCols[sortBy] || "dr.created_at";
   const order = String(sortOrder).toUpperCase() === "ASC" ? "ASC" : "DESC";
 
-  return await dbAll(
+  const rows = await dbAll(
     `
     SELECT
       dr.*,
-      COALESCE(dr.requester_name, s.name, NULLIF(TRIM(CONCAT_WS(' ', sa.first_name, sa.last_name)), ''), sa.email, 'Requester') AS student_name,
+      dr.requester_name AS raw_requester_name,
+      s.name AS s_name,
+      sa.first_name AS sa_first_name,
+      sa.middle_name AS sa_middle_name,
+      sa.last_name AS sa_last_name,
+      sa.email AS sa_email,
       COALESCE(dr.course_code, s.course_code) AS course_code,
       c.name AS course_name,
-      sa.email AS requester_email,
       s.storage_room AS room,
       s.storage_cabinet AS cabinet,
-      s.storage_drawer AS drawer
+      s.storage_drawer AS drawer,
+      (SELECT COUNT(*) FROM document_request_attachments dra WHERE dra.document_request_id = dr.id) AS attachment_count
     FROM document_requests dr
     LEFT JOIN students s ON s.student_no = dr.student_no
     LEFT JOIN student_accounts sa ON sa.id = dr.student_account_id
@@ -110,6 +151,8 @@ export async function listDocumentRequests({
     `,
     [...params, lim, off]
   );
+
+  return (rows || []).map(formatDocumentRequestRow);
 }
 
 export async function countDocumentRequests({
@@ -191,14 +234,18 @@ export async function getDocumentRequestById(id, { officeId } = {}) {
     filters.push("dr.office_id = ?");
     params.push(officeId);
   }
-  const row = await dbGet(
+  const rawRow = await dbGet(
     `
     SELECT
       dr.*,
-      COALESCE(dr.requester_name, s.name, NULLIF(TRIM(CONCAT_WS(' ', sa.first_name, sa.last_name)), ''), sa.email, 'Requester') AS student_name,
+      dr.requester_name AS raw_requester_name,
+      s.name AS s_name,
+      sa.first_name AS sa_first_name,
+      sa.middle_name AS sa_middle_name,
+      sa.last_name AS sa_last_name,
+      sa.email AS sa_email,
       COALESCE(dr.course_code, s.course_code) AS course_code,
       c.name AS course_name,
-      sa.email AS requester_email,
       s.storage_room AS room,
       s.storage_cabinet AS cabinet,
       s.storage_drawer AS drawer
@@ -210,13 +257,21 @@ export async function getDocumentRequestById(id, { officeId } = {}) {
     `,
     params
   );
-  if (!row) return null;
+  if (!rawRow) return null;
+
+  const row = formatDocumentRequestRow(rawRow);
 
   const updates = await dbAll(
     "SELECT * FROM transaction_updates WHERE document_request_id = ? ORDER BY created_at ASC",
     [id]
   );
   row.updates = updates || [];
+
+  const attachments = await dbAll(
+    "SELECT * FROM document_request_attachments WHERE document_request_id = ? ORDER BY created_at ASC",
+    [id]
+  );
+  row.attachments = attachments || [];
 
   return row;
 }
@@ -232,12 +287,16 @@ export async function createDocumentRequest({
   courseCode = null,
   requesterName = null,
   studentAccountId = null,
+  requesterRelationship = null,
+  requesterContact = null,
 }) {
   const sn = String(studentNo || "").trim().toUpperCase() || null;
   const dt = String(docType || "").trim();
   const ct = String(clientType || "Student").trim();
   const cc = String(courseCode || "").trim().toUpperCase() || null;
-  const rn = String(requesterName || "").trim() || null;
+  const rn = requesterName ? decryptField(String(requesterName).trim()) || null : null;
+  const rr = requesterRelationship ? decryptField(String(requesterRelationship).trim()) || null : null;
+  const rc = requesterContact ? decryptField(String(requesterContact).trim()) || null : null;
   if (!dt) return null;
   if (ct === "Student" && !sn) return null;
 
@@ -249,10 +308,10 @@ export async function createDocumentRequest({
   const res = await dbRun(
     `
     INSERT INTO document_requests (
-      office_id, student_no, doc_type, status, notes, linked_document_id, client_type, course_code, requester_name, student_account_id, created_by, updated_by
-    ) VALUES (?, ?, ?, 'Pending', ?, ?, ?, ?, ?, ?, ?, ?)
+      office_id, student_no, doc_type, status, notes, linked_document_id, client_type, course_code, requester_name, requester_relationship, requester_contact, student_account_id, created_by, updated_by
+    ) VALUES (?, ?, ?, 'Pending', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `,
-    [officeId, sn, dt, notes ?? null, lid, ct, cc, rn, studentAccountId || null, createdBy ?? null, createdBy ?? null]
+    [officeId, sn, dt, notes ?? null, lid, ct, cc, rn, rr, rc, studentAccountId || null, createdBy ?? null, createdBy ?? null]
   );
   const id = res.lastInsertRowid;
   if (!id) return null;
@@ -316,6 +375,21 @@ export async function updateDocumentRequest(id, fields) {
     cols.push("updated_by = ?");
     vals.push(fields.updatedBy);
   }
+  if (fields.spaVerified !== undefined) {
+    const isVerified = Boolean(fields.spaVerified);
+    cols.push("spa_verified = ?");
+    vals.push(isVerified);
+    if (isVerified) {
+      cols.push("spa_verified_by = ?");
+      vals.push(fields.spaVerifiedBy || fields.updatedBy || null);
+      cols.push("spa_verified_at = datetime('now')");
+    } else {
+      cols.push("spa_verified_by = ?");
+      vals.push(null);
+      cols.push("spa_verified_at = ?");
+      vals.push(null);
+    }
+  }
 
   if (cols.length > 0) {
     vals.push(id);
@@ -365,4 +439,56 @@ export async function updateDocumentRequest(id, fields) {
   }
 
   return await getDocumentRequestById(id, fields.officeId ? { officeId: fields.officeId } : {});
+}
+
+export async function addRequestAttachment({
+  documentRequestId,
+  originalFilename,
+  storageFilename,
+  mimeType,
+  sizeBytes,
+  attachmentType = "evidence",
+  uploadedBy = null,
+}) {
+  const res = await dbRun(
+    `INSERT INTO document_request_attachments (
+       document_request_id, original_filename, storage_filename, mime_type, size_bytes, attachment_type, uploaded_by
+     ) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    [
+      documentRequestId,
+      originalFilename,
+      storageFilename,
+      mimeType,
+      sizeBytes,
+      attachmentType || "evidence",
+      uploadedBy || null,
+    ]
+  );
+  const id = res.lastInsertRowid;
+  return await getRequestAttachmentById(id);
+}
+
+export async function getRequestAttachments(documentRequestId) {
+  return await dbAll(
+    `SELECT * FROM document_request_attachments WHERE document_request_id = ? ORDER BY created_at ASC`,
+    [documentRequestId]
+  );
+}
+
+export async function getRequestAttachmentById(id) {
+  return await dbGet(
+    `SELECT * FROM document_request_attachments WHERE id = ?`,
+    [id]
+  );
+}
+
+export async function updateSpaVerification(id, { verified, staffId = null } = {}) {
+  return await updateDocumentRequest(id, {
+    spaVerified: Boolean(verified),
+    spaVerifiedBy: staffId,
+    updatedBy: staffId,
+    message: verified
+      ? "Special Power of Attorney (SPA) and authorization documents verified by Registrar Staff."
+      : "Special Power of Attorney (SPA) verification status revoked.",
+  });
 }

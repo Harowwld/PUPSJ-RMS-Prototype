@@ -1,6 +1,10 @@
 # Standard Modal System Specification
 
-This document defines the consistent design patterns for all modals in the PUPSJ Records Keeping System Prototype.
+> [!IMPORTANT]
+> **Modern Standards Update**: The authoritative component and modal specification for the system is located in [`COMPONENT_STANDARDS.md`](file:///home/cendrink/Programming/PUPSJ-RMS-Prototype/COMPONENT_STANDARDS.md).
+> In accordance with Apple HIG, modals **must not have icons in `DialogHeader`**, and all action buttons must use **action-only words** (`Save`, `Cancel`, `Submit`, `Restore`, `Done`).
+
+This document provides historical reference and architectural guidelines for modals in the PUPSJ Records Keeping System Prototype.
 
 ---
 

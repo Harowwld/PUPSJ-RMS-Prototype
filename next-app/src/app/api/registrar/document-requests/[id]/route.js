@@ -16,24 +16,39 @@ export async function PATCH(req, ctx) {
   const body = await req.json().catch(() => null);
   const status = String(body?.status || "").trim();
   const rawMessage = String(body?.message || "").trim();
-  if (!statuses.has(status)) return NextResponse.json({ ok: false, error: "A valid status is required." }, { status: 400 });
+  const hasSpaVerified = body?.spaVerified !== undefined;
+  const spaVerified = Boolean(body?.spaVerified);
+
+  if (!statuses.has(status) && !hasSpaVerified) return NextResponse.json({ ok: false, error: "A valid status or update is required." }, { status: 400 });
   const existing = await queryOne("SELECT * FROM document_requests WHERE id = $1 AND office_id = 'registrar'", [id]);
   if (!existing || !canAccessResource(access, "request", existing)) return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
 
-  if (existing.status && existing.status !== status && !canTransitionRequestStatus(existing.status, status)) {
-    return NextResponse.json({ ok: false, error: `Cannot change status from "${existing.status}" to "${status}". Completed and finalized requests cannot be reverted.` }, { status: 400 });
+  const nextStatus = statuses.has(status) ? status : existing.status;
+  if (existing.status && existing.status !== nextStatus && !canTransitionRequestStatus(existing.status, nextStatus)) {
+    return NextResponse.json({ ok: false, error: `Cannot change status from "${existing.status}" to "${nextStatus}". Completed and finalized requests cannot be reverted.` }, { status: 400 });
   }
 
-  const statusChanged = existing.status !== status;
-  const finalMessage = rawMessage || (statusChanged ? (DEFAULT_REQUEST_STATUS_MESSAGES[status] || `Status updated to ${status}.`) : "");
+  const statusChanged = existing.status !== nextStatus;
+  const defaultMsg = hasSpaVerified
+    ? (spaVerified ? "Special Power of Attorney (SPA) and identity verified by Registrar." : "Special Power of Attorney (SPA) verification revoked.")
+    : (statusChanged ? (DEFAULT_REQUEST_STATUS_MESSAGES[nextStatus] || `Status updated to ${nextStatus}.`) : "");
+  const finalMessage = rawMessage || defaultMsg;
 
-  if (!statusChanged && !rawMessage) {
+  if (!statusChanged && !rawMessage && !hasSpaVerified) {
     return NextResponse.json({ ok: true, data: existing });
   }
 
   const updated = await queryOne(
-    "UPDATE document_requests SET status = $1, notes = COALESCE(NULLIF($2, ''), notes), updated_at = NOW(), updated_by = $3 WHERE id = $4 AND office_id = 'registrar' RETURNING *",
-    [status, rawMessage || null, access.userId || null, id]
+    `UPDATE document_requests
+     SET status = $1,
+         notes = COALESCE(NULLIF($2, ''), notes),
+         spa_verified = CASE WHEN $3::boolean IS NOT NULL THEN $3 ELSE spa_verified END,
+         spa_verified_by = CASE WHEN $3::boolean IS NOT NULL THEN (CASE WHEN $3 THEN $4 ELSE NULL END) ELSE spa_verified_by END,
+         spa_verified_at = CASE WHEN $3::boolean IS NOT NULL THEN (CASE WHEN $3 THEN NOW() ELSE NULL END) ELSE spa_verified_at END,
+         updated_at = NOW(),
+         updated_by = $4
+     WHERE id = $5 AND office_id = 'registrar' RETURNING *`,
+    [nextStatus, rawMessage || null, hasSpaVerified ? spaVerified : null, access.userId || null, id]
   );
   if (!updated) return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
   if (!canAccessResource(access, "request", updated)) return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });

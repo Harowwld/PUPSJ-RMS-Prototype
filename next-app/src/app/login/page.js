@@ -1244,8 +1244,7 @@ export default function Home() {
         }}>
           <DialogContent className="max-w-md rounded-[20px] border-gray-100 bg-white dark:border-zinc-800 dark:bg-zinc-900">
             <DialogHeader>
-              <DialogTitle className="text-xl font-semibold text-gray-900 flex items-center gap-2 dark:text-zinc-50">
-                <HugeIcon  className="ph-fill ph-shield-check text-[#E5484D]"></HugeIcon>
+              <DialogTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
                 Two-Factor Authentication
               </DialogTitle>
               <DialogDescription className="font-medium text-gray-500 dark:text-zinc-400">

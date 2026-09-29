@@ -249,8 +249,6 @@ export default function ServiceStandardsTab({ showToast }) {
                 title="Refresh Standards"
               />
 
-              <div className="h-6 w-px bg-gray-200 dark:bg-zinc-800" />
-
               <Button
                 type="button"
                 variant="outline"

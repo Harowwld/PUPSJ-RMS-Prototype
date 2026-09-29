@@ -1,11 +1,36 @@
+import crypto from "node:crypto";
+import fs from "node:fs";
+import path from "node:path";
 import { NextResponse } from "next/server";
 import { getStudentSession } from "@/lib/studentAuth";
 import { query, queryOne } from "@/lib/postgres";
 import { writeGlobalAuditLog } from "@/lib/auditLogRequest";
 import { requireStudent, createAuthErrorResponse } from "@/lib/authHelpers";
 import { canAccessResource } from "@/lib/resourceAuthorization";
+import { addRequestAttachment } from "@/lib/documentRequestsRepo";
+import { decryptPII, encryptPII } from "@/lib/piiEncryption";
 
 export const runtime = "nodejs";
+
+function decryptField(val) {
+  if (!val || typeof val !== "string") return val;
+  if (!val.includes("enc:v1:")) return val;
+  if (val.startsWith("enc:v1:") && !val.includes(" ")) {
+    return decryptPII(val);
+  }
+  return val
+    .split(/\s+/)
+    .map((part) => (part.startsWith("enc:v1:") ? decryptPII(part) : part))
+    .join(" ")
+    .trim();
+}
+
+function requestAttachmentsDir() {
+  const localDir = process.env.LOCAL_DATA_DIR || path.join(process.cwd(), ".local");
+  const dir = path.join(localDir, "storage", "registrar", "request_attachments");
+  fs.mkdirSync(dir, { recursive: true });
+  return dir;
+}
 
 export async function GET(req) {
   const access = await requireStudent(req);
@@ -74,8 +99,26 @@ export async function GET(req) {
     (grouped[key] ||= []).push(item);
     return grouped;
   }, {});
+
+  const attachmentRows = ids.length
+    ? await query(
+        "SELECT * FROM document_request_attachments WHERE document_request_id = ANY($1::bigint[]) ORDER BY created_at ASC",
+        [ids]
+      )
+    : [];
+  const attachmentsByRequest = attachmentRows.reduce((grouped, item) => {
+    const key = String(item.document_request_id);
+    (grouped[key] ||= []).push({
+      ...item,
+      url: `/api/document-requests/${item.document_request_id}/attachments/${item.id}`,
+    });
+    return grouped;
+  }, {});
+
   authorizedRequests.forEach((item) => {
+    item.requester_name = decryptField(item.requester_name);
     item.updates = updatesByRequest[String(item.id)] || [];
+    item.attachments = attachmentsByRequest[String(item.id)] || [];
     item.feedback = item.feedback_id
       ? {
           id: item.feedback_id,
@@ -95,13 +138,45 @@ export async function POST(req) {
   if (access.error || !access.user) return createAuthErrorResponse(access.error || "Student authentication required", access.error?.startsWith("Access denied") ? 403 : 401);
   const session = { accountId: access.user.accountId, studentNo: access.user.studentNo, email: access.user.email };
 
-  const body = await req.json().catch(() => null);
+  let body = {};
+  const uploadedFiles = [];
+  const contentType = req.headers.get("content-type") || "";
+
+  if (contentType.includes("multipart/form-data")) {
+    const form = await req.formData().catch(() => null);
+    if (form) {
+      body.studentNo = form.get("studentNo");
+      body.docType = form.get("docType");
+      body.notes = form.get("notes") || form.get("description");
+      body.clientType = form.get("clientType");
+      body.courseCode = form.get("courseCode");
+      body.requesterName = form.get("requesterName");
+      body.requesterRelationship = form.get("requesterRelationship");
+      body.requesterContact = form.get("requesterContact");
+
+      const files = form.getAll("files");
+      const fileTypes = form.getAll("file_types");
+
+      files.forEach((file, idx) => {
+        if (file && typeof file === "object" && typeof file.arrayBuffer === "function" && file.size > 0) {
+          uploadedFiles.push({
+            file,
+            attachmentType: String(fileTypes[idx] || "evidence").trim(),
+          });
+        }
+      });
+    }
+  } else {
+    body = (await req.json().catch(() => null)) || {};
+  }
+
+  const requestedClientType = String(body?.clientType || "").trim();
   const requestedStudentNo = String(body?.studentNo || "").trim().toUpperCase() || null;
-  const studentNo = session.studentNo || null;
   const docType = String(body?.docType || "").trim();
   const notes = String(body?.notes || body?.description || "").trim();
-  const requestedClientType = String(body?.clientType || "").trim();
   const courseCode = String(body?.courseCode || "").trim().toUpperCase() || null;
+  const requesterRelationship = String(body?.requesterRelationship || "").trim() || null;
+  const requesterContact = String(body?.requesterContact || "").trim() || null;
 
   let accountId = session.accountId;
   let acc = null;
@@ -118,17 +193,48 @@ export async function POST(req) {
     if (acc) accountId = acc.id;
   }
 
-  const clientType = acc?.client_type || (studentNo && studentNo.startsWith("ALUM-") ? "Alumni" : "Student");
-
-  if (requestedStudentNo && requestedStudentNo !== studentNo) {
-    return NextResponse.json({ ok: false, error: "Student identity is taken from the authenticated account." }, { status: 403 });
-  }
+  const clientType = requestedClientType || acc?.client_type || (session.studentNo && session.studentNo.startsWith("ALUM-") ? "Alumni" : "Student");
 
   if (!clientType) {
     return NextResponse.json({ ok: false, error: "Client type is required." }, { status: 400 });
   }
 
-  if (clientType === "Alumni" && !studentNo && !courseCode) {
+  // Determine effective student number based on client type
+  const effectiveStudentNo = (clientType === "Parent" && requestedStudentNo) ? requestedStudentNo : (session.studentNo || requestedStudentNo);
+
+  if (clientType !== "Parent" && requestedStudentNo && session.studentNo && requestedStudentNo !== session.studentNo) {
+    return NextResponse.json({ ok: false, error: "Student identity is taken from the authenticated account." }, { status: 403 });
+  }
+
+  if (clientType === "Parent") {
+    if (!effectiveStudentNo) {
+      return NextResponse.json(
+        { ok: false, error: "Student Number of the student whose records are being requested is required." },
+        { status: 400 }
+      );
+    }
+    if (!requesterRelationship) {
+      return NextResponse.json(
+        { ok: false, error: "Relationship to student (e.g. Mother, Father, Legal Guardian) is required for parent/guardian requests." },
+        { status: 400 }
+      );
+    }
+    // Mandatory Special Power of Attorney / Authorization document check
+    const hasSpaAttachment = uploadedFiles.some(
+      (f) => f.attachmentType === "spa" || f.attachmentType === "valid_id" || f.file.name.toLowerCase().includes("spa") || f.file.name.toLowerCase().includes("power") || f.file.name.toLowerCase().includes("auth")
+    );
+    if (uploadedFiles.length === 0 || !hasSpaAttachment) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: "Under RA 10173 (Data Privacy Act) and University Policy, third-party requests submitted by parents or guardians strictly require an attached Special Power of Attorney (SPA) / Authorization Letter and valid government ID.",
+        },
+        { status: 400 }
+      );
+    }
+  }
+
+  if (clientType === "Alumni" && !effectiveStudentNo && !courseCode) {
     return NextResponse.json(
       { ok: false, error: "Degree / academic program is required for alumni without a student number." },
       { status: 400 }
@@ -154,44 +260,94 @@ export async function POST(req) {
     return NextResponse.json({ ok: false, error: "Invalid document type." }, { status: 400 });
   }
 
+  const accFirst = acc?.first_name ? decryptPII(acc.first_name) : "";
+  const accMiddle = acc?.middle_name ? decryptPII(acc.middle_name) : "";
+  const accLast = acc?.last_name ? decryptPII(acc.last_name) : "";
+  const accEmail = acc?.email ? decryptPII(acc.email) : session.email || "";
+  const accFullName = [accFirst, accMiddle, accLast].filter(Boolean).join(" ");
+  const defaultRequesterName = accFullName || accEmail || null;
+  const rawBodyName = body?.requesterName ? decryptField(String(body.requesterName).trim()) : null;
+  const finalRequesterName = rawBodyName || defaultRequesterName;
+
   // If a student number is provided, ensure the student record exists in students table
-  if (studentNo) {
-    const existingStudent = await queryOne("SELECT student_no, course_code FROM students WHERE upper(student_no) = upper($1)", [studentNo]);
+  if (effectiveStudentNo) {
+    const existingStudent = await queryOne(
+      "SELECT student_no, course_code FROM students WHERE upper(student_no) = upper($1)",
+      [effectiveStudentNo]
+    );
     if (!existingStudent) {
-      const studentName = [acc?.first_name, acc?.middle_name, acc?.last_name].filter(Boolean).join(" ") || acc?.email || studentNo;
+      const studentDisplayName = finalRequesterName || effectiveStudentNo;
       await query(
         `INSERT INTO students (student_no, name, status, course_code)
          VALUES ($1, $2, 'Active', $3)
          ON CONFLICT (student_no) DO NOTHING`,
-        [studentNo, studentName, courseCode || null]
+        [effectiveStudentNo, encryptPII(studentDisplayName), courseCode || null]
       );
     }
   }
 
-  const requesterName = [acc?.first_name, acc?.middle_name, acc?.last_name].filter(Boolean).join(" ") || acc?.email || null;
   const request = await queryOne(
-    `INSERT INTO document_requests (office_id, student_no, doc_type, status, notes, client_type, student_account_id, course_code, requester_name)
-     VALUES ('registrar', $1, $2, 'Pending', $3, $4, $5, $6, $7) RETURNING *`,
-    [studentNo, docType, notes, clientType, accountId || null, courseCode, requesterName]
+    `INSERT INTO document_requests (
+       office_id, student_no, doc_type, status, notes, client_type, student_account_id, course_code, requester_name, requester_relationship, requester_contact
+     ) VALUES ('registrar', $1, $2, 'Pending', $3, $4, $5, $6, $7, $8, $9) RETURNING *`,
+    [
+      effectiveStudentNo,
+      docType,
+      notes,
+      clientType,
+      accountId || null,
+      courseCode,
+      finalRequesterName,
+      requesterRelationship,
+      requesterContact,
+    ]
   );
+
   if (!request || !canAccessResource(access.user, "request", request)) {
     return NextResponse.json({ ok: false, error: "Request could not be completed" }, { status: 500 });
   }
 
+  // Save attachments
+  const savedAttachments = [];
+  for (const item of uploadedFiles) {
+    const bytes = await item.file.arrayBuffer();
+    const buffer = Buffer.from(bytes);
+    const ext = path.extname(item.file.name) || ".pdf";
+    const storageFilename = `${crypto.randomUUID()}${ext}`;
+    const destPath = path.join(requestAttachmentsDir(), storageFilename);
+    fs.writeFileSync(destPath, buffer);
+
+    const saved = await addRequestAttachment({
+      documentRequestId: request.id,
+      originalFilename: item.file.name,
+      storageFilename,
+      mimeType: item.file.type || "application/octet-stream",
+      sizeBytes: item.file.size,
+      attachmentType: item.attachmentType || "evidence",
+      uploadedBy: finalRequesterName || access.user.email || "Requester",
+    });
+    savedAttachments.push(saved);
+  }
+
+  const initialMessage = savedAttachments.length > 0
+    ? `Request submitted with ${savedAttachments.length} supporting attachment(s)${clientType === "Parent" ? " including Special Power of Attorney (SPA)" : ""}.`
+    : "Request submitted.";
+
   await query(
     `INSERT INTO transaction_updates (document_request_id, status, message)
-     VALUES ($1, 'Pending', 'Request submitted.')`,
-    [request.id]
+     VALUES ($1, 'Pending', $2)`,
+    [request.id, initialMessage]
   );
 
   await writeGlobalAuditLog(req, "Student document request created", {
-    actor: acc?.email || session.email || studentNo || "Student",
+    actor: acc?.email || session.email || effectiveStudentNo || "Requester",
     role: "Student",
     officeId: "registrar",
-    details: `Requested ${docType} (${clientType})${studentNo ? ` for ${studentNo}` : ""}${courseCode ? ` - Program: ${courseCode}` : ""}`,
+    details: `Requested ${docType} (${clientType})${effectiveStudentNo ? ` for ${effectiveStudentNo}` : ""}${savedAttachments.length > 0 ? ` with ${savedAttachments.length} attachment(s)` : ""}`,
     entity_type: "document_request",
     entity_id: String(request.id),
   });
 
+  request.attachments = savedAttachments;
   return NextResponse.json({ ok: true, data: request }, { status: 201 });
 }

@@ -6,6 +6,19 @@ import { decryptPII } from "@/lib/piiEncryption";
 
 export const runtime = "nodejs";
 
+function decryptField(val) {
+  if (!val || typeof val !== "string") return val;
+  if (!val.includes("enc:v1:")) return val;
+  if (val.startsWith("enc:v1:") && !val.includes(" ")) {
+    return decryptPII(val);
+  }
+  return val
+    .split(/\s+/)
+    .map((part) => (part.startsWith("enc:v1:") ? decryptPII(part) : part))
+    .join(" ")
+    .trim();
+}
+
 export async function GET(req) {
   const access = await requireOfficeModule("document_requests", { officeId: "registrar" }, req);
   if (access === null) return NextResponse.json({ ok: false, error: "Authentication required" }, { status: 401 });
@@ -23,7 +36,8 @@ export async function GET(req) {
       rf.rating AS feedback_rating,
       rf.aspect_tags AS feedback_aspect_tags,
       rf.comments AS feedback_comments,
-      rf.created_at AS feedback_created_at
+      rf.created_at AS feedback_created_at,
+      (SELECT COUNT(*)::int FROM document_request_attachments dra WHERE dra.document_request_id = dr.id) AS attachment_count
     FROM document_requests dr
     LEFT JOIN students s ON s.student_no = dr.student_no
     LEFT JOIN student_accounts sa ON sa.id = dr.student_account_id
@@ -32,19 +46,45 @@ export async function GET(req) {
     WHERE dr.office_id = 'registrar'
     ORDER BY dr.created_at DESC
   `);
+
+  const requestIds = rows.map((r) => r.id);
+  const attachmentRows = requestIds.length
+    ? await query(
+        `SELECT id, document_request_id, original_filename, mime_type, size_bytes, attachment_type, created_at
+         FROM document_request_attachments
+         WHERE document_request_id = ANY($1::bigint[])
+         ORDER BY created_at ASC`,
+        [requestIds]
+      )
+    : [];
+
+  const attachmentsByRequest = attachmentRows.reduce((grouped, item) => {
+    const key = String(item.document_request_id);
+    (grouped[key] ||= []).push({
+      ...item,
+      url: `/api/document-requests/${item.document_request_id}/attachments/${item.id}`,
+    });
+    return grouped;
+  }, {});
+
   const processedRows = rows
     .filter((row) => canAccessResource(access, "request", row))
     .map((row) => {
-      const sName = row.s_name ? decryptPII(row.s_name) : null;
-      const saFirst = row.sa_first_name ? decryptPII(row.sa_first_name) : "";
-      const saLast = row.sa_last_name ? decryptPII(row.sa_last_name) : "";
-      const saEmail = row.sa_email ? decryptPII(row.sa_email) : "";
+      const reqName = row.requester_name ? decryptField(row.requester_name) : null;
+      const sName = row.s_name ? decryptField(row.s_name) : null;
+      const saFirst = row.sa_first_name ? decryptField(row.sa_first_name) : "";
+      const saLast = row.sa_last_name ? decryptField(row.sa_last_name) : "";
+      const saEmail = row.sa_email ? decryptField(row.sa_email) : "";
       const saFullName = [saFirst, saLast].filter(Boolean).join(" ");
-      const resolvedName = sName || saFullName || saEmail || "Requester";
+      const resolvedName = reqName || sName || saFullName || saEmail || "Requester";
       return {
         ...row,
+        requester_name: reqName || resolvedName,
         student_name: resolvedName,
         requester_email: saEmail || null,
+        requester_contact: decryptField(row.requester_contact),
+        attachment_count: Number(row.attachment_count || 0),
+        attachments: attachmentsByRequest[String(row.id)] || [],
         feedback: row.feedback_id
           ? {
               id: row.feedback_id,

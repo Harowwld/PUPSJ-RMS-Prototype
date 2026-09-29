@@ -130,12 +130,23 @@ export async function PATCH(req, ctx) {
     }
   }
 
+  if (body.spaVerified !== undefined) {
+    patch.spaVerified = Boolean(body.spaVerified);
+    patch.spaVerifiedBy = staff.id;
+    if (!patch.message) {
+      patch.message = patch.spaVerified
+        ? "Special Power of Attorney (SPA) and authorization documents verified by Registrar Staff."
+        : "Special Power of Attorney (SPA) verification status revoked.";
+    }
+  }
+
   const hasFieldUpdates =
     patch.status !== undefined ||
     patch.notes !== undefined ||
     patch.linkedDocumentId !== undefined ||
     patch.message !== undefined ||
-    patch.courseCode !== undefined;
+    patch.courseCode !== undefined ||
+    patch.spaVerified !== undefined;
 
   if (!hasFieldUpdates) {
     return NextResponse.json({ ok: true, data: existing });

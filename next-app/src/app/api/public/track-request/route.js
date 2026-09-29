@@ -1,7 +1,21 @@
 import { NextResponse } from "next/server";
 import { dbGet, dbAll } from "@/lib/postgresCompat.js";
+import { decryptPII } from "@/lib/piiEncryption.js";
 
 export const runtime = "nodejs";
+
+function decryptField(val) {
+  if (!val || typeof val !== "string") return val;
+  if (!val.includes("enc:v1:")) return val;
+  if (val.startsWith("enc:v1:") && !val.includes(" ")) {
+    return decryptPII(val);
+  }
+  return val
+    .split(/\s+/)
+    .map((part) => (part.startsWith("enc:v1:") ? decryptPII(part) : part))
+    .join(" ")
+    .trim();
+}
 
 function maskStudentNo(sn) {
   if (!sn) return "Record";
@@ -49,7 +63,11 @@ export async function GET(req) {
         dr.status, 
         dr.created_at, 
         dr.client_type,
-        COALESCE(s.name, NULLIF(TRIM(CONCAT_WS(' ', sa.first_name, sa.last_name)), ''), 'Student / Alumnus') as requester_name
+        dr.requester_name,
+        s.name AS s_name,
+        sa.first_name AS sa_first_name,
+        sa.last_name AS sa_last_name,
+        sa.email AS sa_email
       FROM document_requests dr
       LEFT JOIN students s ON s.student_no = dr.student_no
       LEFT JOIN student_accounts sa ON sa.id = dr.student_account_id
@@ -75,6 +93,14 @@ export async function GET(req) {
       [ticketId]
     );
 
+    const reqName = row.requester_name ? decryptField(row.requester_name) : null;
+    const sName = row.s_name ? decryptField(row.s_name) : null;
+    const saFirst = row.sa_first_name ? decryptField(row.sa_first_name) : "";
+    const saLast = row.sa_last_name ? decryptField(row.sa_last_name) : "";
+    const saEmail = row.sa_email ? decryptField(row.sa_email) : "";
+    const saFullName = [saFirst, saLast].filter(Boolean).join(" ");
+    const resolvedName = reqName || sName || saFullName || saEmail || "Student / Alumnus";
+
     return NextResponse.json({
       ok: true,
       data: {
@@ -84,7 +110,7 @@ export async function GET(req) {
         created_at: row.created_at,
         client_type: row.client_type || "Student",
         masked_student_no: maskStudentNo(row.student_no),
-        masked_name: maskName(row.requester_name),
+        masked_name: maskName(resolvedName),
         updates: updates || []
       }
     });

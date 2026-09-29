@@ -30,9 +30,28 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import StudentComplianceSkeleton from "./skeletons/StudentComplianceSkeleton";
+import StudentComplianceKpiCards from "./StudentComplianceKpiCards";
 import { Skeleton } from "@/components/ui/skeleton";
 
 
+
+// Icon categorization helper for document requirements
+function getRequirementCategoryIcon(category, isSubmitted) {
+  const cat = String(category || "").toLowerCase();
+  if (cat.includes("admission") || cat.includes("identity") || cat.includes("birth")) {
+    return "ph-identification-card";
+  }
+  if (cat.includes("academic") || cat.includes("record") || cat.includes("137") || cat.includes("grade")) {
+    return "ph-graduation-cap";
+  }
+  if (cat.includes("graduation") || cat.includes("exit") || cat.includes("diploma") || cat.includes("transcript")) {
+    return "ph-certificate";
+  }
+  if (cat.includes("certificate") || cat.includes("clearance") || cat.includes("moral")) {
+    return "ph-shield-check";
+  }
+  return isSubmitted ? "ph-file-check" : "ph-file-arrow-up";
+}
 
 export default function StudentComplianceTab({ authUser }) {
   const [data, setData] = useState(null);
@@ -492,98 +511,9 @@ export default function StudentComplianceTab({ authUser }) {
           }
         />
 
-        {/* B. KPI Stat Cards Row (Standard 3-Card Grid) */}
+        {/* B. KPI Stat Cards Row (Standard 3-Card Reorderable Grid) */}
         <div className="px-6 pb-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 relative z-20">
-            {/* Card 1: Overall Compliance Rate */}
-            <div className="relative overflow-hidden rounded-xl border p-4 select-none transition-all border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-zinc-900/30 hover:border-gray-200 dark:hover:border-white/10">
-              <div className="relative z-10">
-                <div className="mb-1 flex items-center justify-between">
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
-                    Compliance Rate
-                  </span>
-                  <span
-                    className={cn(
-                      "text-[10px] font-semibold px-2 py-0.5 rounded-full border",
-                      summary.isCompliant
-                        ? "bg-emerald-50 text-emerald-700 border-emerald-200/80 dark:bg-emerald-950/30 dark:text-emerald-300"
-                        : "bg-amber-50 text-amber-700 border-amber-200/80 dark:bg-amber-950/30 dark:text-amber-300"
-                    )}
-                  >
-                    {summary.overallStatus}
-                  </span>
-                </div>
-                <div className="flex items-baseline gap-2">
-                  <span className="text-2xl font-black text-gray-900 dark:text-zinc-50 tracking-tight">
-                    {summary.complianceRate}%
-                  </span>
-                  <span className="text-xs font-medium text-gray-500 dark:text-zinc-400">
-                    ({summary.submittedCount || summary.approvedCount} of {summary.totalRequired} submitted)
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Card 2: Submitted Documents */}
-            <div className="relative overflow-hidden rounded-xl border p-4 select-none transition-all border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-zinc-900/30 hover:border-gray-200 dark:hover:border-white/10">
-              <div className="relative z-10">
-                <div className="mb-1 flex items-center justify-between">
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
-                    Submitted Documents
-                  </span>
-                  <span className="text-[10px] font-medium text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
-                    Archived
-                  </span>
-                </div>
-                <div className="flex items-baseline gap-2">
-                  <span className="text-2xl font-black text-gray-900 dark:text-zinc-50 tracking-tight">
-                    {summary.submittedCount || summary.approvedCount}
-                  </span>
-                  <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">
-                    Archived in records
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Card 3: Not Submitted */}
-            <div className="relative overflow-hidden rounded-xl border p-4 select-none transition-all border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-zinc-900/30 hover:border-gray-200 dark:hover:border-white/10">
-              <div className="relative z-10">
-                <div className="mb-1 flex items-center justify-between">
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
-                    Not Submitted
-                  </span>
-                  <span
-                    className={cn(
-                      "text-[10px] font-medium uppercase tracking-wider",
-                      summary.missingCount === 0
-                        ? "text-emerald-600 dark:text-emerald-400"
-                        : "text-amber-600 dark:text-amber-400"
-                    )}
-                  >
-                    {summary.missingCount === 0 ? "Complete" : "Pending"}
-                  </span>
-                </div>
-                <div className="flex items-baseline gap-2">
-                  <span className="text-2xl font-black text-gray-900 dark:text-zinc-50 tracking-tight">
-                    {summary.missingCount}
-                  </span>
-                  <span
-                    className={cn(
-                      "text-xs font-medium",
-                      summary.missingCount === 0
-                        ? "text-emerald-600 dark:text-emerald-400"
-                        : "text-amber-600 dark:text-amber-400"
-                    )}
-                  >
-                    {summary.missingCount === 0
-                      ? "All requirements submitted"
-                      : "Pending submission"}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
+          <StudentComplianceKpiCards summary={summary} />
         </div>
 
         {/* C. Toolbar & Section Header */}
@@ -1102,120 +1032,249 @@ export default function StudentComplianceTab({ authUser }) {
             </div>
           ) : (
             /* Cards View */
-            <div className="space-y-3">
-              <div className="flex items-center justify-between text-xs text-gray-500 px-1 select-none">
+            <div className="space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-gray-500 px-1 select-none">
                 <span className="text-xs text-gray-500 dark:text-zinc-400">
                   Showing <strong className="text-gray-900 dark:text-zinc-200">{sortedRequirements.length}</strong> requirements
                 </span>
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[11px] text-gray-400 dark:text-zinc-500">Sort:</span>
+                <div className="flex items-center gap-1.5 self-start sm:self-auto">
+                  <span className="text-[11px] text-gray-400 dark:text-zinc-500">Sort by:</span>
                   <button
                     type="button"
                     onClick={() => handleSort("docType")}
                     className={cn(
-                      "px-2.5 py-1 rounded-lg text-xs font-medium cursor-pointer transition-colors border",
+                      "px-2.5 py-1 rounded-lg text-xs font-medium cursor-pointer transition-colors border flex items-center gap-1.5 shadow-none",
                       sortConfig.column === "docType"
                         ? "bg-pup-maroon/10 text-pup-maroon border-pup-maroon/30 dark:bg-red-500/20 dark:text-red-400 dark:border-red-500/30 font-semibold"
                         : "bg-gray-50 dark:bg-zinc-800/80 border-gray-200 dark:border-white/5 text-gray-600 dark:text-zinc-400 hover:bg-gray-100 dark:hover:bg-zinc-800"
                     )}
                   >
-                    Name {sortConfig.column === "docType" && (sortConfig.direction === "asc" ? "↑" : "↓")}
+                    <span>Name</span>
+                    {sortConfig.column === "docType" && (
+                      <HugeIcon
+                        className={cn(
+                          "text-[10px] ph-bold",
+                          sortConfig.direction === "asc" ? "ph-caret-up" : "ph-caret-down"
+                        )}
+                      />
+                    )}
                   </button>
                   <button
                     type="button"
                     onClick={() => handleSort("status")}
                     className={cn(
-                      "px-2.5 py-1 rounded-lg text-xs font-medium cursor-pointer transition-colors border",
+                      "px-2.5 py-1 rounded-lg text-xs font-medium cursor-pointer transition-colors border flex items-center gap-1.5 shadow-none",
                       sortConfig.column === "status"
                         ? "bg-pup-maroon/10 text-pup-maroon border-pup-maroon/30 dark:bg-red-500/20 dark:text-red-400 dark:border-red-500/30 font-semibold"
                         : "bg-gray-50 dark:bg-zinc-800/80 border-gray-200 dark:border-white/5 text-gray-600 dark:text-zinc-400 hover:bg-gray-100 dark:hover:bg-zinc-800"
                     )}
                   >
-                    Status {sortConfig.column === "status" && (sortConfig.direction === "asc" ? "↑" : "↓")}
+                    <span>Status</span>
+                    {sortConfig.column === "status" && (
+                      <HugeIcon
+                        className={cn(
+                          "text-[10px] ph-bold",
+                          sortConfig.direction === "asc" ? "ph-caret-up" : "ph-caret-down"
+                        )}
+                      />
+                    )}
                   </button>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {sortedRequirements.map((item) => {
-                const isSubmitted = item.status === "Submitted";
+              {/* 3-Column Responsive Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4.5 items-stretch">
+                {sortedRequirements.map((item) => {
+                  const isSubmitted = item.status === "Submitted";
+                  const categoryIcon = getRequirementCategoryIcon(item.category, isSubmitted);
 
-                return (
-                  <div
-                    key={item.id}
-                    className={cn(
-                      "rounded-2xl border p-5 flex flex-col justify-between transition-all duration-200",
-                      isSubmitted
-                        ? "border-emerald-200/60 bg-emerald-50/20 hover:border-emerald-300 dark:border-emerald-900/30 dark:bg-emerald-950/10"
-                        : "border-amber-200/80 bg-white hover:border-amber-300 dark:border-amber-900/30 dark:bg-zinc-900/40"
-                    )}
-                  >
-                    <div>
-                      {/* Top Header */}
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex items-center gap-3">
+                  return (
+                    <div
+                      key={item.id}
+                      className={cn(
+                        "group relative flex flex-col justify-between rounded-[18px] border bg-white dark:bg-zinc-900/60 p-5 shadow-xs transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md active:scale-[0.99]",
+                        isSubmitted
+                          ? "border-gray-200/80 hover:border-emerald-500/40 dark:border-white/10 dark:hover:border-emerald-500/40"
+                          : "border-gray-200/80 hover:border-amber-500/40 dark:border-white/10 dark:hover:border-amber-500/40"
+                      )}
+                    >
+                      <div>
+                        {/* Top Metadata Row: Category & Status */}
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="inline-flex items-center text-[10px] font-semibold uppercase tracking-wider text-gray-500 dark:text-zinc-400 bg-gray-100/90 dark:bg-zinc-800/80 px-2 py-0.5 rounded-md border border-gray-200/50 dark:border-white/5 truncate max-w-[170px]">
+                            {item.category}
+                          </span>
+
+                          {/* Status Badge */}
+                          {isSubmitted ? (
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/80 dark:bg-emerald-950/40 dark:border-emerald-800/60 dark:text-emerald-300 shrink-0">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                              Completed
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-800 border border-amber-200/80 dark:bg-amber-950/40 dark:border-amber-800/60 dark:text-amber-300 shrink-0">
+                              <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                              Pending
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Title & Category Icon Tile */}
+                        <div className="mt-3.5 flex items-start gap-3">
                           <div
                             className={cn(
-                              "w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-xs",
+                              "w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border transition-transform duration-200 group-hover:scale-105",
                               isSubmitted
-                                ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300"
-                                : "bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300"
+                                ? "bg-emerald-50 text-emerald-600 border-emerald-200/80 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800/60"
+                                : "bg-amber-50 text-amber-600 border-amber-200/80 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800/60"
                             )}
                           >
-                            <HugeIcon 
-                              className={cn(
-                                "text-xl",
-                                isSubmitted ? "ph-bold ph-seal-check" : "ph-bold ph-warning"
-                              )}
-                            />
+                            <HugeIcon className={cn("text-base ph-bold", categoryIcon)} />
                           </div>
-                          <div>
-                            <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500 block">
-                              {item.category}
-                            </span>
-                            <h3 className="text-sm font-bold text-gray-900 dark:text-zinc-100 tracking-tight leading-snug mt-0.5">
+                          <div className="min-w-0 flex-1">
+                            <h4
+                              className="text-[13.5px] font-semibold text-gray-900 dark:text-zinc-100 tracking-tight leading-snug line-clamp-1 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors"
+                              title={item.docType}
+                            >
                               {item.docType}
-                            </h3>
+                            </h4>
+                            <p className="mt-1 text-[11.5px] text-gray-500 dark:text-zinc-400 line-clamp-2 leading-relaxed min-h-[34px]">
+                              {item.description}
+                            </p>
                           </div>
                         </div>
 
-                        {/* Status Badge */}
-                        <span
-                          className={cn(
-                            "inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold shrink-0",
-                            isSubmitted
-                              ? "bg-emerald-50 text-emerald-800 border-emerald-200/80 dark:bg-emerald-950/30 dark:text-emerald-300"
-                              : "bg-amber-50 text-amber-800 border-amber-200/80 dark:bg-amber-950/30 dark:text-amber-300"
-                          )}
-                        >
-                          <HugeIcon  className={cn("text-xs ph-bold", isSubmitted ? "ph-check" : "ph-clock")} />
-                          {isSubmitted ? "Completed" : "Pending Submission"}
-                        </span>
-                      </div>
-
-                      {/* Description */}
-                      <p className="mt-3 text-xs text-gray-600 dark:text-zinc-400 leading-relaxed">
-                        {item.description}
-                      </p>
-                    </div>
-
-                    {/* Bottom Status Bar */}
-                    <div className="mt-4 pt-3 border-t border-gray-100 dark:border-white/5 flex items-center justify-between gap-2">
-                      <div className="text-[11px]">
+                        {/* Info Callout / Micro-Banner */}
                         {isSubmitted ? (
-                          <span className="text-emerald-700 dark:text-emerald-400 font-medium flex items-center gap-1">
-                            <HugeIcon  className="ph-bold ph-check-circle" /> Archived in university records
-                          </span>
+                          <div className="mt-3.5 flex items-center gap-2 rounded-xl bg-gray-50/90 dark:bg-zinc-800/50 p-2.5 border border-gray-100 dark:border-white/5 text-[11px]">
+                            <HugeIcon className="ph-bold ph-shield-check text-emerald-600 dark:text-emerald-400 text-xs shrink-0" />
+                            <div className="min-w-0 flex-1 truncate text-gray-600 dark:text-zinc-300">
+                              {item.document?.originalFilename ? (
+                                <span className="font-mono text-[10.5px] truncate block" title={item.document.originalFilename}>
+                                  {item.document.originalFilename}
+                                </span>
+                              ) : (
+                                <span className="truncate block font-medium">Physical archive registered</span>
+                              )}
+                            </div>
+                            {item.document?.createdAt && (
+                              <span className="text-[10px] text-gray-400 dark:text-zinc-500 font-mono shrink-0">
+                                {formatPHDateTime(item.document.createdAt, { dateOnly: true })}
+                              </span>
+                            )}
+                          </div>
                         ) : (
-                          <span className="text-amber-700 dark:text-amber-400 font-medium flex items-center gap-1">
-                            <HugeIcon  className="ph-bold ph-clock" /> Pending face-to-face submission
-                          </span>
+                          <div className="mt-3.5 flex items-start gap-2 rounded-xl bg-amber-50/50 dark:bg-amber-950/20 p-2.5 border border-amber-200/50 dark:border-amber-900/30 text-[11px]">
+                            <HugeIcon className="ph-bold ph-info text-amber-600 dark:text-amber-400 text-xs shrink-0 mt-0.5" />
+                            <span className="text-amber-800 dark:text-amber-300/90 leading-snug line-clamp-2">
+                              {item.instructions || "Must be submitted in person at Room 102."}
+                            </span>
+                          </div>
                         )}
                       </div>
+
+                      {/* Bottom Metadata Footer & Details Popover */}
+                      <div className="mt-4 pt-3 border-t border-gray-100 dark:border-white/5 flex items-center justify-between gap-2 text-[11px]">
+                        <div className="flex items-center gap-1.5 text-gray-500 dark:text-zinc-400 min-w-0">
+                          {isSubmitted ? (
+                            <>
+                              <HugeIcon className="ph-bold ph-archive text-gray-400 dark:text-zinc-500 text-xs shrink-0" />
+                              <span className="truncate">Registrar Vault (Rm 102)</span>
+                            </>
+                          ) : (
+                            <>
+                              <HugeIcon className="ph-bold ph-map-pin text-amber-500 text-xs shrink-0" />
+                              <span className="truncate">Window Counter (Rm 102)</span>
+                            </>
+                          )}
+                        </div>
+
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <button
+                              type="button"
+                              className="inline-flex items-center gap-1 text-[11px] font-semibold text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 transition-colors cursor-pointer shrink-0"
+                            >
+                              <span>Details</span>
+                              <HugeIcon className="ph-bold ph-caret-right text-[10px]" />
+                            </button>
+                          </PopoverTrigger>
+                          <PopoverContent
+                            side="top"
+                            align="end"
+                            className="w-80 rounded-2xl p-4 border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-900 shadow-xl font-jakarta space-y-3"
+                          >
+                            <div>
+                              <div className="flex items-center justify-between">
+                                <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
+                                  {item.category}
+                                </span>
+                                <span
+                                  className={cn(
+                                    "text-[10px] font-bold px-2 py-0.5 rounded-full border",
+                                    isSubmitted
+                                      ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300"
+                                      : "bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300"
+                                  )}
+                                >
+                                  {isSubmitted ? "Submitted" : "Pending Submission"}
+                                </span>
+                              </div>
+                              <h5 className="text-xs font-bold text-gray-900 dark:text-zinc-100 mt-1">
+                                {item.docType}
+                              </h5>
+                              <p className="text-[11px] text-gray-500 dark:text-zinc-400 mt-1 leading-relaxed">
+                                {item.description}
+                              </p>
+                            </div>
+
+                            <div className="rounded-xl p-2.5 bg-gray-50 dark:bg-zinc-800/60 border border-gray-100 dark:border-white/5 space-y-1 text-[11px]">
+                              <div className="font-semibold text-gray-700 dark:text-zinc-300 flex items-center gap-1.5">
+                                <HugeIcon className="ph-bold ph-info text-pup-maroon dark:text-red-400" />
+                                Submission Guidelines
+                              </div>
+                              <p className="text-gray-600 dark:text-zinc-400 text-[10.5px] leading-relaxed">
+                                {item.instructions || "Please submit original physical copies directly to Room 102."}
+                              </p>
+                            </div>
+
+                            {item.document ? (
+                              <div className="space-y-1.5 text-[11px] border-t border-gray-100 dark:border-white/5 pt-2">
+                                <div className="flex justify-between text-gray-500 dark:text-zinc-400">
+                                  <span>Archival Status:</span>
+                                  <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                                    {item.document.approvalStatus || "Approved"}
+                                  </span>
+                                </div>
+                                {item.document.createdAt && (
+                                  <div className="flex justify-between text-gray-500 dark:text-zinc-400">
+                                    <span>Archived On:</span>
+                                    <span className="font-mono text-gray-900 dark:text-zinc-200">
+                                      {formatPHDateTime(item.document.createdAt, { dateOnly: true })}
+                                    </span>
+                                  </div>
+                                )}
+                                {item.document.originalFilename && (
+                                  <div className="flex justify-between text-gray-500 dark:text-zinc-400 gap-2">
+                                    <span className="shrink-0">Digital Copy:</span>
+                                    <span className="font-mono text-[10px] text-gray-900 dark:text-zinc-200 truncate">
+                                      {item.document.originalFilename}
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+                            ) : (
+                              <div className="text-[10.5px] text-gray-500 dark:text-zinc-400 border-t border-gray-100 dark:border-white/5 pt-2 flex items-center gap-1.5">
+                                <HugeIcon className="ph-bold ph-buildings text-pup-maroon dark:text-red-400 text-xs shrink-0" />
+                                <span>Registrar Archives &bull; Room 102, Main Admin Building</span>
+                              </div>
+                            )}
+                          </PopoverContent>
+                        </Popover>
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
               </div>
             </div>
           )}

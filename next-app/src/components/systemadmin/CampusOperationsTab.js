@@ -8,7 +8,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import KpiStatCardsSkeleton from "@/components/systemadmin/skeletons/KpiStatCardsSkeleton"
 import TransactionsTableSkeleton from "@/components/systemadmin/skeletons/TransactionsTableSkeleton"
-import { Select } from "@/components/ui/select"
+import MultiCriteriaFilter from "@/components/shared/MultiCriteriaFilter"
+import ActiveFilterChips from "@/components/shared/ActiveFilterChips"
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip"
 import {
   Empty,
@@ -18,13 +19,13 @@ import {
   EmptyDescription,
 } from "@/components/ui/empty"
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog"
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetFooter,
+} from "@/components/ui/sheet"
 import PageHeader from "@/components/shared/PageHeader"
 import { RefreshButton } from "@/components/shared/RefreshButton"
 import PDFPreviewModal from "@/components/shared/PDFPreviewModal"
@@ -75,12 +76,14 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
     const [health, setHealth] = useState(null)
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
-  const [activeTab, setActiveTab] = useState("all") // "all" | "registrar" | "osas"
   const [autoRefreshSecs] = useState(15)
 
   // Filters & Sorting
   const [search, setSearch] = useState("")
-  const [statusFilter, setStatusFilter] = useState("All")
+  const [operationFilters, setOperationFilters] = useState({
+    department: [],
+    status: [],
+  })
   const [sortBy, setSortBy] = useState("createdAt")
   const [sortOrder, setSortOrder] = useState("DESC")
   const [page, setPage] = useState(1)
@@ -90,8 +93,15 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
   const [selectedKpi, setSelectedKpi] = useState(null)
   const statCardsRef = useRef(null)
 
-  // Request Details Modal
+  // Request Details Sheet
   const [selectedItem, setSelectedItem] = useState(null)
+  const [sheetItem, setSheetItem] = useState(null)
+
+  const handleOpenDetails = useCallback((item) => {
+    setSheetItem(item)
+    setSelectedItem(item)
+  }, [])
+
   const [pdfPreviewOpen, setPdfPreviewOpen] = useState(false)
   const [pdfPreviewData, setPdfPreviewData] = useState(null)
 
@@ -152,6 +162,7 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
   }, [])
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchHealth()
   }, [fetchHealth])
 
@@ -174,21 +185,132 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
   }
 
   const transactions = health?.transactions
+
+  // Multi-criteria filter groups for department and operation status
+  const operationFilterGroups = useMemo(() => {
+    const list = transactions || []
+
+    const deptCounts = { registrar: 0, osas: 0 }
+    const statusCounts = {
+      action_needed: 0,
+      in_progress: 0,
+      ready: 0,
+      completed: 0,
+      needs_revision: 0,
+      declined: 0,
+    }
+
+    list.forEach((tx) => {
+      const office = String(tx.officeId || "").toLowerCase()
+      if (office === "registrar") deptCounts.registrar++
+      else if (office === "osas") deptCounts.osas++
+
+      const s = String(tx.status || "").trim().toLowerCase()
+      if (s === "pending" || s === "submitted") {
+        statusCounts.action_needed++
+      } else if (s === "inprogress" || s === "in progress" || s === "under review" || s === "processing") {
+        statusCounts.in_progress++
+      } else if (s === "ready") {
+        statusCounts.ready++
+      } else if (s === "approved" || s === "completed" || s === "done") {
+        statusCounts.completed++
+      } else if (s === "needs revision" || s === "revision") {
+        statusCounts.needs_revision++
+      } else if (s === "declined" || s === "cancelled" || s === "shredded") {
+        statusCounts.declined++
+      }
+    })
+
+    return [
+      {
+        id: "department",
+        label: "Campus Department",
+        options: [
+          {
+            value: "registrar",
+            label: "Registrar Requests",
+            indicatorColor: "bg-blue-500",
+            count: deptCounts.registrar,
+          },
+          {
+            value: "osas",
+            label: "OSAS Proposals",
+            indicatorColor: "bg-emerald-500",
+            count: deptCounts.osas,
+          },
+        ],
+      },
+      {
+        id: "status",
+        label: "Operation Status",
+        options: [
+          {
+            value: "action_needed",
+            label: "Action Needed",
+            indicatorColor: "bg-amber-500",
+            count: statusCounts.action_needed,
+          },
+          {
+            value: "in_progress",
+            label: "In Progress / Review",
+            indicatorColor: "bg-blue-500",
+            count: statusCounts.in_progress,
+          },
+          {
+            value: "ready",
+            label: "Ready for Pickup",
+            indicatorColor: "bg-emerald-500",
+            count: statusCounts.ready,
+          },
+          {
+            value: "completed",
+            label: "Completed / Approved",
+            indicatorColor: "bg-emerald-600",
+            count: statusCounts.completed,
+          },
+          {
+            value: "needs_revision",
+            label: "Needs Revision",
+            indicatorColor: "bg-amber-600",
+            count: statusCounts.needs_revision,
+          },
+          {
+            value: "declined",
+            label: "Declined / Cancelled",
+            indicatorColor: "bg-rose-500",
+            count: statusCounts.declined,
+          },
+        ],
+      },
+    ]
+  }, [transactions])
+
   // Filtered transactions for cross-department activity stream
   const filteredTransactions = useMemo(() => {
     if (!transactions) return []
-    return transactions.filter((tx) => {
-      // Channel tab filter
-      if (activeTab === "registrar" && tx.officeId !== "registrar") return false
-      if (activeTab === "osas" && tx.officeId !== "osas") return false
+    const selectedDepts = operationFilters.department || []
+    const selectedStatuses = operationFilters.status || []
 
-      // Status dropdown filter
-      if (statusFilter === "ActionRequired") {
-        const actionStatuses = ["Pending", "InProgress", "Submitted", "Under Review", "Needs Revision"]
-        if (!actionStatuses.includes(tx.status)) return false
-      } else if (statusFilter === "Completed") {
-        const completedStatuses = ["Approved", "Completed", "Ready"]
-        if (!completedStatuses.includes(tx.status)) return false
+    return transactions.filter((tx) => {
+      // Department filter
+      if (selectedDepts.length > 0) {
+        const txDept = String(tx.officeId || "").toLowerCase()
+        if (!selectedDepts.includes(txDept)) return false
+      }
+
+      // Status filter
+      if (selectedStatuses.length > 0) {
+        const s = String(tx.status || "").trim().toLowerCase()
+        const matchesStatus = selectedStatuses.some((val) => {
+          if (val === "action_needed") return s === "pending" || s === "submitted"
+          if (val === "in_progress") return s === "inprogress" || s === "in progress" || s === "under review" || s === "processing"
+          if (val === "ready") return s === "ready"
+          if (val === "completed") return s === "approved" || s === "completed" || s === "done"
+          if (val === "needs_revision") return s === "needs revision" || s === "revision"
+          if (val === "declined") return s === "declined" || s === "cancelled" || s === "shredded"
+          return s === val.toLowerCase()
+        })
+        if (!matchesStatus) return false
       }
 
       // Keyword search
@@ -207,7 +329,7 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
 
       return true
     })
-  }, [transactions, activeTab, statusFilter, search])
+  }, [transactions, operationFilters, search])
 
   // Sorted transactions
   const sortedTransactions = useMemo(() => {
@@ -216,14 +338,8 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
       let bVal = b[sortBy] ?? ""
 
       if (sortBy === "studentName") {
-        aVal = formatStudentRequester(a.studentName, a.studentNo).toLowerCase()
-        bVal = formatStudentRequester(b.studentName, b.studentNo).toLowerCase()
-      } else if (sortBy === "createdAt") {
-        aVal = new Date(aVal).getTime() || 0
-        bVal = new Date(bVal).getTime() || 0
-      } else {
-        aVal = String(aVal).toLowerCase()
-        bVal = String(bVal).toLowerCase()
+        aVal = formatStudentRequester(a.studentName, a.studentNo)
+        bVal = formatStudentRequester(b.studentName, b.studentNo)
       }
 
       if (aVal < bVal) return sortOrder === "ASC" ? -1 : 1
@@ -242,8 +358,20 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
 
   // Reset page when filters change
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setPage(1)
-  }, [search, statusFilter, activeTab, pageSize])
+  }, [search, operationFilters, pageSize])
+
+  const handleClearFilters = useCallback(() => {
+    setSearch("")
+    setOperationFilters({ department: [], status: [] })
+    setPage(1)
+  }, [])
+
+  const hasActiveFilters =
+    Boolean(search?.trim()) ||
+    Boolean(operationFilters.department?.length > 0) ||
+    Boolean(operationFilters.status?.length > 0)
 
   // Non-tech friendly Top 2 Stat Cards (Focused on University Operations)
   const statCardsData = useMemo(() => [
@@ -408,78 +536,74 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
         )}
 
         {/* Navigation Toolbar */}
-        <div className="border-t border-gray-100 dark:border-white/10 p-5 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
-          {/* View Filter Line Tabs */}
-          <div className="flex items-center gap-6 shrink-0 select-none overflow-x-auto">
-            <button
-              onClick={() => setActiveTab("all")}
-              className={cn(
-                "relative h-9 flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent whitespace-nowrap",
-                activeTab === "all"
-                  ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
-                  : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
+        <div className="border-t border-gray-100 dark:border-white/10 p-5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
+          {/* Search Input with Clear Button & Record Count */}
+          <div className="w-full sm:w-[280px] lg:w-[340px] relative group shrink-0">
+            <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+              <HugeIcon className="ph-bold ph-magnifying-glass text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm" />
+            </div>
+            <Input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search student, document, or org..."
+              className="h-9 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 pl-8 pr-16 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
+            />
+            <div className="absolute inset-y-0 right-3 flex items-center gap-1.5">
+              {search && (
+                <button
+                  type="button"
+                  onClick={() => setSearch("")}
+                  className="text-gray-400 hover:text-gray-600 dark:hover:text-zinc-300 cursor-pointer p-0.5 transition-colors border-0 bg-transparent flex items-center justify-center"
+                  title="Clear search"
+                >
+                  <HugeIcon className="ph-bold ph-x-circle text-[13px]" />
+                </button>
               )}
-            >
-              All Campus Activity ({health?.transactions?.length || 0})
-            </button>
-
-            <button
-              onClick={() => setActiveTab("registrar")}
-              className={cn(
-                "relative h-9 flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent whitespace-nowrap",
-                activeTab === "registrar"
-                  ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
-                  : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
-              )}
-            >
-              Registrar Requests ({health?.odrs?.total || 0})
-            </button>
-
-            <button
-              onClick={() => setActiveTab("osas")}
-              className={cn(
-                "relative h-9 flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent whitespace-nowrap",
-                activeTab === "osas"
-                  ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
-                  : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
-              )}
-            >
-              OSAS Proposals ({health?.osas?.total || 0})
-            </button>
+              <span className="text-[11px] text-gray-400 dark:text-zinc-500 font-mono pointer-events-none">
+                {filteredTransactions.length}
+              </span>
+            </div>
           </div>
 
-          {/* Search & Status Filter */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0">
-            <div className="w-full sm:w-[280px] relative group shrink-0">
-              <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                <HugeIcon  className="ph-bold ph-magnifying-glass text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm"></HugeIcon>
-              </div>
-              <Input
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search student, document, or org..."
-                className="h-9 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 pl-8 pr-16 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
-              />
-              <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] text-gray-400 dark:text-zinc-500 font-mono">
-                {sortedTransactions.length}
-              </div>
-            </div>
-
-            <div className="w-full sm:w-[160px] shrink-0">
-              <Select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="h-9 rounded-xl border border-gray-200 dark:border-white/10 text-xs font-normal text-[#111111] dark:text-zinc-200 cursor-pointer shadow-none"
-                menuClassName="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-900 shadow-2xl p-1.5"
-                optionClassName="rounded-lg text-xs font-normal py-1.5 px-2.5 hover:bg-gray-100 dark:hover:bg-zinc-800"
-              >
-                <option value="All">All Stages</option>
-                <option value="ActionRequired">Action Needed</option>
-                <option value="Completed">Completed / Approved</option>
-              </Select>
-            </div>
+          {/* Smart Multi-Criteria Filter Dropdown */}
+          <div className="w-full sm:w-auto shrink-0">
+            <MultiCriteriaFilter
+              title="Filter Operations"
+              groups={operationFilterGroups}
+              selected={operationFilters}
+              onChange={(newFilters) => {
+                setOperationFilters(newFilters)
+                setPage(1)
+              }}
+              totalCount={transactions?.length || 0}
+              matchingCount={filteredTransactions.length}
+              onReset={() => {
+                setOperationFilters({ department: [], status: [] })
+                setPage(1)
+              }}
+            />
           </div>
         </div>
+
+        {/* Active Filter Chips Row */}
+        <ActiveFilterChips
+          groups={operationFilterGroups}
+          selected={operationFilters}
+          onRemove={(groupId, val) => {
+            setOperationFilters((prev) => ({
+              ...prev,
+              [groupId]: (prev[groupId] || []).filter((v) => v !== val),
+            }))
+            setPage(1)
+          }}
+          searchQuery={search}
+          onClearSearch={() => {
+            setSearch("")
+            setPage(1)
+          }}
+          onClearAll={handleClearFilters}
+          className="border-t border-gray-100 dark:border-white/10 bg-white dark:bg-card px-6 py-2.5"
+        />
 
         {/* Cross-Department Activity Stream Table */}
         <div className="overflow-hidden rounded-b-2xl border-t border-gray-200 dark:border-white/10 bg-white dark:bg-card flex flex-col flex-1">
@@ -492,24 +616,21 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
                     <div className="relative mb-6">
                       <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
                       <EmptyMedia className="relative z-10 flex h-20 w-20 items-center justify-center rounded-2xl border border-gray-100 bg-white shadow-md dark:border-white/10 dark:bg-card">
-                        <HugeIcon  className="ph-bold ph-tray text-3xl text-gray-400 dark:text-zinc-500"></HugeIcon>
+                        <HugeIcon className="ph-bold ph-tray text-3xl text-gray-400 dark:text-zinc-500" />
                       </EmptyMedia>
                     </div>
                     <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">
                       No Records Found
                     </EmptyTitle>
                     <EmptyDescription className="max-w-xs text-xs font-normal text-gray-500 dark:text-zinc-400 mt-1">
-                      {search || statusFilter !== "All"
-                        ? "No student requests or proposals match your search or stage filter."
+                      {hasActiveFilters
+                        ? "No student requests or proposals match your search or filter settings."
                         : "There are currently no active document requests or event proposals recorded."}
                     </EmptyDescription>
-                    {(search || statusFilter !== "All") && (
+                    {hasActiveFilters && (
                       <Button
                         variant="outline"
-                        onClick={() => {
-                          setSearch("")
-                          setStatusFilter("All")
-                        }}
+                        onClick={handleClearFilters}
                         className="mt-6 flex h-10 items-center justify-center gap-2 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                       >
                         <HugeIcon className="ph-bold ph-arrow-counter-clockwise text-[14px] shrink-0" />
@@ -604,7 +725,7 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
                       return (
                         <tr
                           key={tx.id}
-                          onClick={() => setSelectedItem(tx)}
+                          onClick={() => handleOpenDetails(tx)}
                           className="group h-[52px] border-b-[0.5px] border-gray-100 dark:border-white/10 last:border-b-0 transition-all duration-200 hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 cursor-pointer select-none"
                         >
                           {/* Department Badge */}
@@ -682,7 +803,7 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
                               <Tooltip>
                                 <TooltipTrigger asChild>
                                   <button
-                                    onClick={() => setSelectedItem(tx)}
+                                    onClick={() => handleOpenDetails(tx)}
                                     aria-label="View Details"
                                     className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
                                   >
@@ -761,147 +882,148 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
           </div>
         </Card>
 
-      {/* Human-Friendly Details Modal */}
-      {selectedItem && (
-        <Dialog open={!!selectedItem} onOpenChange={() => setSelectedItem(null)}>
-          <DialogContent className="sm:max-w-xl w-full rounded-2xl bg-white border border-gray-200 dark:bg-zinc-900 dark:border-white/10 p-0 shadow-2xl overflow-hidden flex flex-col gap-0">
-            <DialogHeader className="p-6 pb-4 bg-white dark:bg-card border-b border-gray-100 dark:border-white/10 text-left">
-              <div className="flex items-start justify-between gap-4">
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-                    {selectedItem?.officeId === "registrar" ? (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-[#800000]/10 text-pup-maroon dark:bg-pup-maroon/20 dark:text-rose-300">
-                        <HugeIcon  className="ph-bold ph-certificate text-xs"></HugeIcon>
-                        Registrar Document Request
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300">
-                        <HugeIcon  className="ph-bold ph-student text-xs"></HugeIcon>
-                        OSAS Event Proposal
-                      </span>
-                    )}
-                  </div>
-                  <DialogTitle className="text-[16px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50 truncate">
-                    {selectedItem?.title}
-                  </DialogTitle>
-                  <DialogDescription className="text-[12px] font-normal text-gray-500 dark:text-zinc-400 mt-1">
-                    Submitted on {selectedItem?.createdAt ? formatPHDateTime(selectedItem.createdAt) : "—"}
-                  </DialogDescription>
-                </div>
-              </div>
-            </DialogHeader>
-
-            <div className="p-6 space-y-4 max-h-[65vh] overflow-y-auto">
-              {/* Requester & Stage */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/70 dark:bg-zinc-800/40 p-3">
-                  <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">
-                    Student Requester
-                  </span>
-                  <div
-                    className="font-semibold text-xs text-gray-900 dark:text-zinc-50 truncate max-w-full"
-                    title={formatStudentRequester(selectedItem?.studentName, selectedItem?.studentNo)}
-                  >
-                    {formatStudentRequester(selectedItem?.studentName, selectedItem?.studentNo)}
-                  </div>
-                  <div className="text-[11px] font-mono text-gray-400 mt-0.5">
-                    {selectedItem?.studentNo}
-                  </div>
-                </div>
-
-                <div className="rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/70 dark:bg-zinc-800/40 p-3">
-                  <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">
-                    Current Stage
-                  </span>
-                  <div className="flex items-center justify-between mt-1">
-                    <span className={cn(
-                      "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold",
-                      statusBadgeClass(selectedItem?.status)
-                    )}>
-                      {selectedItem?.status === "InProgress" ? "In Progress" : selectedItem?.status}
+      {/* Human-Friendly Details Sheet */}
+      <Sheet open={Boolean(selectedItem)} onOpenChange={(open) => !open && setSelectedItem(null)}>
+        <SheetContent
+          side="right"
+          className="w-full sm:max-w-xl md:max-w-2xl flex flex-col h-full bg-white dark:bg-card border-l border-gray-200 dark:border-white/10 p-0 shadow-2xl font-jakarta overflow-hidden"
+        >
+          <SheetHeader className="shrink-0 p-6 pb-4 pr-14 border-b border-gray-100 dark:border-white/10 bg-white dark:bg-card text-left">
+            <div className="flex items-start justify-between gap-4">
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                  {sheetItem?.officeId === "registrar" ? (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-[#800000]/10 text-pup-maroon dark:bg-pup-maroon/20 dark:text-rose-300">
+                      <HugeIcon className="ph-bold ph-certificate text-xs" />
+                      Registrar Document Request
                     </span>
-                    <span className="text-[11px] font-mono text-gray-400">
-                      {formatRelativeTime(selectedItem?.createdAt).relative}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Organization (if OSAS) */}
-              {selectedItem?.organizationName && (
-                <div className="rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/70 dark:bg-zinc-800/40 p-3">
-                  <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">
-                    Student Organization Chapter
-                  </span>
-                  <div className="text-xs font-semibold text-blue-600 dark:text-blue-400">
-                    {selectedItem.organizationName}
-                  </div>
-                  {selectedItem.eventDate && (
-                    <span className="text-[11px] font-mono text-gray-400 mt-1 block">
-                      Scheduled Event Date: {selectedItem.eventDate.substring(0, 10)}
+                  ) : (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300">
+                      <HugeIcon className="ph-bold ph-student text-xs" />
+                      OSAS Event Proposal
                     </span>
                   )}
                 </div>
-              )}
+                <SheetTitle className="text-[17px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50 truncate">
+                  {sheetItem?.title}
+                </SheetTitle>
+                <SheetDescription className="text-xs font-normal text-gray-500 dark:text-zinc-400 mt-1">
+                  Submitted on {sheetItem?.createdAt ? formatPHDateTime(sheetItem.createdAt) : "—"}
+                </SheetDescription>
+              </div>
+            </div>
+          </SheetHeader>
 
-              {/* Notes / Purpose */}
-              <div className="rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/70 dark:bg-zinc-800/40 p-3">
+          <div className="flex-1 overflow-y-auto p-6 space-y-4">
+            {/* Requester & Stage */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/70 dark:bg-zinc-800/40 p-3.5">
                 <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">
-                  Purpose / Remarks
+                  Student Requester
                 </span>
-                <p className="text-xs text-gray-700 dark:text-zinc-300 leading-relaxed">
-                  {selectedItem?.notes || "No special remarks provided by the applicant."}
-                </p>
+                <div
+                  className="font-semibold text-xs text-gray-900 dark:text-zinc-50 truncate max-w-full"
+                  title={formatStudentRequester(sheetItem?.studentName, sheetItem?.studentNo)}
+                >
+                  {formatStudentRequester(sheetItem?.studentName, sheetItem?.studentNo)}
+                </div>
+                <div className="text-[11px] font-mono text-gray-400 mt-0.5">
+                  {sheetItem?.studentNo}
+                </div>
               </div>
 
-              {/* Attached Document File */}
-              {selectedItem?.originalFilename && (
-                <div className="p-3 rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/70 dark:bg-zinc-800/40 flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <div className="w-8 h-8 rounded-lg bg-red-100 text-red-700 dark:bg-red-950/50 dark:text-red-400 flex items-center justify-center shrink-0">
-                      <HugeIcon  className="ph-bold ph-file-pdf text-base"></HugeIcon>
-                    </div>
-                    <div className="min-w-0">
-                      <span className="font-semibold text-gray-900 dark:text-zinc-100 text-xs block truncate">
-                        {selectedItem.originalFilename}
-                      </span>
-                      {selectedItem.sizeBytes && (
-                        <span className="text-[10px] text-gray-400 font-mono">
-                          {(selectedItem.sizeBytes / 1024).toFixed(1)} KB · PDF Document
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleOpenPdfPreview(selectedItem)}
-                    className="text-xs font-semibold text-blue-600 dark:text-blue-400 bg-white dark:bg-zinc-800 border border-blue-200 dark:border-blue-900/40 hover:bg-blue-50 dark:hover:bg-blue-950/40 shrink-0 h-8 px-2.5 rounded-lg cursor-pointer shadow-xs active:scale-95 transition-all"
-                  >
-                    <HugeIcon  className="ph-bold ph-eye text-sm mr-1"></HugeIcon> Preview
-                  </Button>
+              <div className="rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/70 dark:bg-zinc-800/40 p-3.5">
+                <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">
+                  Current Stage
+                </span>
+                <div className="flex items-center justify-between mt-1">
+                  <span className={cn(
+                    "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-semibold",
+                    statusBadgeClass(sheetItem?.status)
+                  )}>
+                    {sheetItem?.status === "InProgress" ? "In Progress" : sheetItem?.status}
+                  </span>
+                  <span className="text-[11px] font-mono text-gray-400">
+                    {formatRelativeTime(sheetItem?.createdAt).relative}
+                  </span>
                 </div>
-              )}
+              </div>
             </div>
 
-            <DialogFooter className="m-0 p-6 pt-0 bg-white dark:bg-card border-none flex flex-row items-center justify-between sm:justify-between w-full">
-              <span className="text-xs text-gray-500 dark:text-zinc-400">
-                Department: <strong className="text-gray-700 dark:text-zinc-200 uppercase font-semibold">{selectedItem?.officeId}</strong>
+            {/* Organization (if OSAS) */}
+            {sheetItem?.organizationName && (
+              <div className="rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/70 dark:bg-zinc-800/40 p-3.5">
+                <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">
+                  Student Organization Chapter
+                </span>
+                <div className="text-xs font-semibold text-blue-600 dark:text-blue-400">
+                  {sheetItem.organizationName}
+                </div>
+                {sheetItem.eventDate && (
+                  <span className="text-[11px] font-mono text-gray-400 mt-1 block">
+                    Scheduled Event Date: {sheetItem.eventDate.substring(0, 10)}
+                  </span>
+                )}
+              </div>
+            )}
+
+            {/* Notes / Purpose */}
+            <div className="rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/70 dark:bg-zinc-800/40 p-3.5">
+              <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">
+                Purpose / Remarks
               </span>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setSelectedItem(null)}
-                className="h-10 px-4 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
-              >
-                Close
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      )}
+              <p className="text-xs text-gray-700 dark:text-zinc-300 leading-relaxed whitespace-pre-wrap">
+                {sheetItem?.notes || "No special remarks provided by the applicant."}
+              </p>
+            </div>
+
+            {/* Attached Document File */}
+            {sheetItem?.originalFilename && (
+              <div className="p-3.5 rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/70 dark:bg-zinc-800/40 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="w-8 h-8 rounded-lg bg-red-100 text-red-700 dark:bg-red-950/50 dark:text-red-400 flex items-center justify-center shrink-0">
+                    <HugeIcon className="ph-bold ph-file-pdf text-base" />
+                  </div>
+                  <div className="min-w-0">
+                    <span className="font-semibold text-gray-900 dark:text-zinc-100 text-xs block truncate">
+                      {sheetItem.originalFilename}
+                    </span>
+                    {sheetItem.sizeBytes && (
+                      <span className="text-[10px] text-gray-400 font-mono">
+                        {(sheetItem.sizeBytes / 1024).toFixed(1)} KB · PDF Document
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleOpenPdfPreview(sheetItem)}
+                  className="text-xs font-semibold text-blue-600 dark:text-blue-400 bg-white dark:bg-zinc-800 border border-blue-200 dark:border-blue-900/40 hover:bg-blue-50 dark:hover:bg-blue-950/40 shrink-0 h-8 px-2.5 rounded-lg cursor-pointer shadow-xs active:scale-95 transition-all"
+                >
+                  <HugeIcon className="ph-bold ph-eye text-sm mr-1" /> Preview
+                </Button>
+              </div>
+            )}
+          </div>
+
+          <SheetFooter className="p-4 px-6 border-t border-gray-100 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/40 flex flex-row items-center justify-between shrink-0 gap-0">
+            <span className="text-xs text-gray-500 dark:text-zinc-400">
+              Department: <strong className="text-gray-700 dark:text-zinc-200 uppercase font-semibold">{sheetItem?.officeId}</strong>
+            </span>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setSelectedItem(null)}
+              className="h-9 px-4 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+            >
+              Close
+            </Button>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
 
       {/* PDF Document Preview Modal */}
       <PDFPreviewModal

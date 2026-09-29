@@ -561,6 +561,14 @@ Buttons follow clean Apple Human Interface Guidelines (HIG) with standardized di
   </div>
   ```
 
+### 8.8 Modals & Component Standards (`COMPONENT_STANDARDS.md`)
+
+For complete copy-paste patterns and blueprints, refer to [`COMPONENT_STANDARDS.md`](file:///home/cendrink/Programming/PUPSJ-RMS-Prototype/COMPONENT_STANDARDS.md).
+
+- **CRITICAL RULE ON MODAL HEADERS**: Dialog headers (`DialogHeader`) **MUST NOT** have decorative icon boxes or leading icons. Keep them strictly typographic (`DialogTitle` at `text-[16px] font-semibold tracking-[-0.01em]` and `DialogDescription` at `text-[13px] font-normal text-gray-500 mt-1`).
+- **ACTION-ONLY BUTTON WORDS**: Action buttons in modals and toolbars must use single, unambiguous action words (`Save`, `Submit`, `Update`, `Restore`, `Cancel`, `Close`, `Done`). Avoid verbose phrases like `"Skip for Now"` or `"Submit Feedback"`.
+- **OUTLINED DISMISSAL BUTTONS**: Always use `variant="outline"` with `rounded-xl` for cancel/close buttons.
+
 ---
 
 ## 9. Component Architecture
