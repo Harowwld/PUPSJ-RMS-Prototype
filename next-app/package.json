@@ -7,7 +7,7 @@
     "dev": "node scripts/start-local-dev.mjs",
     "dev:next": "next dev",
     "build": "next build",
-    "start": "pnpm build && next start",
+    "start": "pnpm build && node scripts/start-local-prod.mjs",
     "lint": "eslint",
     "audit:buttons": "node scripts/audit-button-theme.mjs",
     "audit:empty-states": "node scripts/audit-empty-states.mjs",
