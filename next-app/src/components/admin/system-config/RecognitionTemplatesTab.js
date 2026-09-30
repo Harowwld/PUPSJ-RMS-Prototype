@@ -500,7 +500,7 @@ export default function RecognitionTemplatesTab({ showToast }) {
                 onClick={() => importInputRef.current?.click()}
                 disabled={importing || loading}
               >
-                {importing ? "Importing..." : "Import JSON"}
+                {importing ? "Importing..." : "Import"}
               </Button>
               <Button
                 type="button"
@@ -509,7 +509,7 @@ export default function RecognitionTemplatesTab({ showToast }) {
                 onClick={exportTemplates}
                 disabled={templates.length === 0 || importing || loading}
               >
-                Export JSON
+                Export
               </Button>
               <RefreshButton
                 onRefresh={() => load(true)}
@@ -557,7 +557,7 @@ export default function RecognitionTemplatesTab({ showToast }) {
                 className="w-full h-10 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 text-xs font-semibold active:scale-95 transition-all shadow-xs cursor-pointer"
                 onClick={chooseSampleFile}
               >
-                {sampleFile ? "Replace Sample File" : "Upload Sample File"}
+                {sampleFile ? "Replace" : "Upload"}
               </Button>
               {sampleFile ? (
                 <div className="flex items-center justify-between gap-2 p-2.5 rounded-xl border border-gray-100 bg-gray-50 dark:border-white/5 dark:bg-zinc-800/50">
@@ -594,7 +594,7 @@ export default function RecognitionTemplatesTab({ showToast }) {
                     }}
                     className="text-[11px] text-gray-400 hover:text-red-600 dark:hover:text-red-400 cursor-pointer border-0 bg-transparent p-0 transition-colors"
                   >
-                    Reset Mode
+                    Reset
                   </button>
                 )}
               </div>
@@ -701,7 +701,7 @@ export default function RecognitionTemplatesTab({ showToast }) {
                 onClick={saveTemplate}
                 disabled={saving || loading}
               >
-                {saving ? "Saving..." : "Save Template"}
+                {saving ? "Saving..." : "Save"}
               </Button>
             </div>
           </div>
@@ -723,7 +723,7 @@ export default function RecognitionTemplatesTab({ showToast }) {
                     onClick={() => setDraftRegion(null)}
                     className="text-xs text-gray-400 hover:text-red-600 dark:hover:text-red-400 cursor-pointer border-0 bg-transparent p-0 transition-colors"
                   >
-                    Clear Draft
+                    Clear
                   </button>
                 )}
               </div>
@@ -812,7 +812,7 @@ export default function RecognitionTemplatesTab({ showToast }) {
                       className="h-10 px-5 text-xs font-semibold rounded-xl btn-brand-red text-white shadow-xs active:scale-95 transition-all cursor-pointer border-0"
                       onClick={chooseSampleFile}
                     >
-                      Upload Sample
+                      Upload
                     </Button>
                     {!documentTypeId && (
                       <span className="text-[11px] text-gray-400 dark:text-zinc-500">

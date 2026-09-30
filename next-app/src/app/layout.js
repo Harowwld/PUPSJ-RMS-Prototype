@@ -3,10 +3,10 @@ import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/shared/ThemeProvider";
 import DynamicFavicon from "@/components/shared/DynamicFavicon";
-import { Plus_Jakarta_Sans } from "next/font/google";
+import localFont from "next/font/local";
 
-const jakarta = Plus_Jakarta_Sans({
-  subsets: ["latin"],
+const jakarta = localFont({
+  src: "../../public/assets/fonts/jakarta/PlusJakartaSans-Variable.woff2",
   variable: "--font-jakarta",
   display: "swap",
 });

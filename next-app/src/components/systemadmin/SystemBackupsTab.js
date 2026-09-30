@@ -93,6 +93,91 @@ export default function SystemBackupsTab({ showToast }) {
   // TOTP Challenge Modal state
   const [totpModalOpen, setTotpModalOpen] = useState(false)
   const [totpModalLoading, setTotpModalLoading] = useState(false)
+
+  // External drive state
+  const [externalDrive, setExternalDrive] = useState(null)
+  const [isRescanning, setIsRescanning] = useState(false)
+
+  const rescanExternalDrive = useCallback(async () => {
+    setIsRescanning(true)
+    try {
+      const res = await fetch(`/api/system/external-drive?t=${Date.now()}`, { cache: "no-store" })
+      const json = await res.json().catch(() => null)
+      if (res.ok && json?.ok && json.data) {
+        setExternalDrive(json.data)
+        if (json.data.connected) {
+          showToast?.({
+            title: "External Storage Connected",
+            description: `Detected volume "${json.data.label || "External Storage"}" (${json.data.freeFormatted ? `${json.data.freeFormatted} free` : "Ready"}).`,
+          })
+        } else {
+          showToast?.({
+            title: "No External Storage Detected",
+            description: "No physical USB storage drive was found. Connect a drive or activate demo simulation.",
+            variant: "warning",
+          })
+        }
+        return json.data
+      }
+    } catch (err) {
+      console.error("Failed to rescan external drive:", err)
+      showToast?.({
+        title: "Scan Failed",
+        description: "Unable to complete storage device scan.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsRescanning(false)
+    }
+    return null
+  }, [showToast])
+
+  const toggleExternalDriveSimulation = useCallback(async () => {
+    try {
+      const nextSimulate = !externalDrive?.connected
+      const res = await fetch("/api/system/external-drive", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ simulate: nextSimulate }),
+      })
+      const json = await res.json().catch(() => null)
+      if (res.ok && json?.ok && json.data) {
+        setExternalDrive(json.data)
+        showToast?.({
+          title: nextSimulate ? "Demo Mode Enabled" : "Demo Mode Disabled",
+          description: nextSimulate
+            ? "Simulated external storage volume is now active for demonstration."
+            : "Switched back to real physical hardware detection.",
+        })
+        return json.data
+      }
+    } catch (err) {
+      console.error("Failed to toggle external drive simulation:", err)
+      showToast?.({
+        title: "Toggle Failed",
+        description: "Could not update demo simulation state.",
+        variant: "destructive",
+      })
+    }
+    return null
+  }, [externalDrive, showToast])
+
+  useEffect(() => {
+    let cancelled = false
+    const checkDrive = async () => {
+      try {
+        const res = await fetch(`/api/system/external-drive?t=${Date.now()}`, { cache: "no-store" })
+        const json = await res.json().catch(() => null)
+        if (!cancelled && res.ok && json?.ok && json.data) {
+          setExternalDrive(json.data)
+        }
+      } catch {}
+    }
+    checkDrive()
+    return () => {
+      cancelled = true
+    }
+  }, [])
   const [totpActionLabel, setTotpActionLabel] = useState("Confirm")
   const [totpModalDescription, setTotpModalDescription] = useState(
     "Enter the 6-digit code from your authenticator app to confirm this action."
@@ -812,6 +897,10 @@ export default function SystemBackupsTab({ showToast }) {
             lastBackupTime={lastBackupTime}
             isLoading={isLoading}
             isManualLoading={isManualLoading}
+            externalDrive={externalDrive}
+            onRescanDrive={rescanExternalDrive}
+            onToggleSimulation={toggleExternalDriveSimulation}
+            isRescanning={isRescanning}
             scopeInfo={{
               title: "Platform Governance Scope",
               items: [

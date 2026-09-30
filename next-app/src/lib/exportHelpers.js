@@ -1,4 +1,4 @@
-import { formatPHDateTime } from "./timeFormat"
+import { formatPHDateTime } from "./timeFormat.js"
 
 /**
  * Generates a standardized export filename
@@ -94,21 +94,30 @@ export const downloadSlaCsv = (data, total, completionRate, onLogAction, fileNam
  * @param {Function} onLogAction - Callback to log the action
  * @param {string} fileName - Optional custom filename
  */
-export const downloadOrganizationComplianceCsv = (data, onLogAction, fileName) => {
+export const downloadOrganizationComplianceCsv = (data, onLogAction, fileName, options = {}) => {
   if (!data) return
   
   const finalFileName = fileName || generateExportFilename("OSAS-ORG-COMPLIANCE", "REPORT", "csv");
   const q = (cell) => `"${String(cell ?? "").replace(/"/g, '""')}"`
   const row = (cells) => cells.map(q).join(",")
 
-  const summary = data.summary || {}
+  const summary = options.summary || data.summary || {}
+  const targetOrgs = options.organizations || data.organizations || []
+
   const lines = [
     row(["OSAS Student Organization Compliance & Accreditation Report", ""]),
     row(["Generated (Local)", formatPHDateTime(new Date().toISOString())]),
+  ]
+
+  if (options.scopeNote) {
+    lines.push(row(["Report Scope", options.scopeNote]))
+  }
+
+  lines.push(
     "",
     row(["Summary Metrics", "Value"]),
     row(["Total Recognized Organizations", summary.totalOrganizations || 0]),
-    row(["Active Organizations", summary.activeOrganizations || 0]),
+    row(["Active Organizations", summary.activeOrganizations ?? (summary.statusDistribution?.Active || 0)]),
     row(["Fully Compliant Organizations", summary.fullyCompliantCount || 0]),
     row(["Overall Institutional Compliance Rate", `${summary.overallComplianceRate || 0}%`]),
     row(["Constitution & By-Laws (CBL) Archival Rate", `${summary.cblArchivedRate || 0}% (${summary.cblArchivedCount || 0} archived)`]),
@@ -128,10 +137,10 @@ export const downloadOrganizationComplianceCsv = (data, onLogAction, fileName) =
       "Compliance Score (%)",
       "Compliance Status",
       "Missing Requirements",
-    ]),
-  ]
+    ])
+  )
 
-  for (const org of data.organizations || []) {
+  for (const org of targetOrgs) {
     lines.push(
       row([
         org.id,
@@ -162,7 +171,9 @@ export const downloadOrganizationComplianceCsv = (data, onLogAction, fileName) =
 
   onLogAction?.({
     action: "Export CSV",
-    details: `exported student organization compliance dataset (${finalFileName}) to local CSV storage volume`,
+    details: options.scopeNote
+      ? `exported filtered student organization compliance dataset (${finalFileName}) to local CSV storage volume`
+      : `exported student organization compliance dataset (${finalFileName}) to local CSV storage volume`,
     entityType: "Report",
   })
 }

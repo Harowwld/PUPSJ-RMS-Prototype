@@ -68,18 +68,22 @@ export async function getOrganizationComplianceSummary({
 
   // 2. Fetch all active officers grouped by organization_id
   const officers = await query(
-    `SELECT id, organization_id, email, student_name, student_no, position, status, created_at
-     FROM organization_officers
+    `SELECT oo.id, oo.organization_id, oo.email, oo.student_name,
+            coalesce(oo.student_no, sa.student_no) AS student_no,
+            oo.position, oo.status, oo.created_at,
+            sa.avatar_filename, sa.id AS student_account_id
+     FROM organization_officers oo
+     LEFT JOIN student_accounts sa ON lower(sa.email) = lower(oo.email)
      ORDER BY
        CASE
-         WHEN lower(position) = 'president' THEN 1
-         WHEN lower(position) LIKE '%vice%' THEN 2
-         WHEN lower(position) LIKE '%secretary%' THEN 3
-         WHEN lower(position) LIKE '%treasurer%' THEN 4
-         WHEN lower(position) LIKE '%auditor%' THEN 5
+         WHEN lower(oo.position) = 'president' THEN 1
+         WHEN lower(oo.position) LIKE '%vice%' THEN 2
+         WHEN lower(oo.position) LIKE '%secretary%' THEN 3
+         WHEN lower(oo.position) LIKE '%treasurer%' THEN 4
+         WHEN lower(oo.position) LIKE '%auditor%' THEN 5
          ELSE 6
        END,
-       created_at ASC`
+       oo.created_at ASC`
   );
 
   const officersByOrg = new Map();
@@ -203,6 +207,9 @@ export async function getOrganizationComplianceSummary({
         name: o.student_name || "Authorized Officer",
         email: o.email,
         studentNo: o.student_no,
+        avatarFilename: o.avatar_filename || null,
+        studentAccountId: o.student_account_id || null,
+        createdAt: o.created_at,
       })),
       proposalCount: pInfo.total,
       approvedProposalCount: pInfo.approved,

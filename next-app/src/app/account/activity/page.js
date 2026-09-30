@@ -11,7 +11,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Select } from "@/components/ui/select";
+import MultiCriteriaFilter from "@/components/shared/MultiCriteriaFilter";
+import ActiveFilterChips from "@/components/shared/ActiveFilterChips";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
@@ -272,14 +273,16 @@ function parseDateLocal(str) {
 function LogFilters({
   localSearch,
   handleSearchChange,
-  logSeverityFilter,
-  handleSeverityChange,
-  logStartDate,
-  setLogStartDate,
-  logEndDate,
-  setLogEndDate,
-  setLogPage,
-  logTotal = 0,
+  setLocalSearch,
+  setSearch,
+  filterCriteriaGroups,
+  onResetFilters,
+  startDate,
+  setStartDate,
+  endDate,
+  setEndDate,
+  setPage,
+  total = 0,
   isLoading = false,
 }) {
   const handleQuickRange = (range) => {
@@ -308,101 +311,85 @@ function LogFilters({
         break;
     }
 
-    setLogStartDate(format(start, "yyyy-MM-dd"));
-    setLogEndDate(format(end, "yyyy-MM-dd"));
-    setLogPage(1);
+    setStartDate(format(start, "yyyy-MM-dd"));
+    setEndDate(format(end, "yyyy-MM-dd"));
+    setPage(1);
   };
 
   const activeShortcut = (() => {
-    if (!logStartDate || !logEndDate) return null;
+    if (!startDate || !endDate) return null;
     const todayStr = format(new Date(), "yyyy-MM-dd");
 
-    if (logStartDate === todayStr && logEndDate === todayStr) return "today";
+    if (startDate === todayStr && endDate === todayStr) return "today";
 
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
     const yestStr = format(yesterday, "yyyy-MM-dd");
-    if (logStartDate === yestStr && logEndDate === yestStr) return "yesterday";
+    if (startDate === yestStr && endDate === yestStr) return "yesterday";
 
     const last7 = new Date();
     last7.setDate(last7.getDate() - 6);
-    if (logStartDate === format(last7, "yyyy-MM-dd") && logEndDate === todayStr) return "last7";
+    if (startDate === format(last7, "yyyy-MM-dd") && endDate === todayStr) return "last7";
 
     const last30 = new Date();
     last30.setDate(last30.getDate() - 29);
-    if (logStartDate === format(last30, "yyyy-MM-dd") && logEndDate === todayStr) return "last30";
+    if (startDate === format(last30, "yyyy-MM-dd") && endDate === todayStr) return "last30";
 
     return null;
   })();
 
   return (
-    <div className={cn(
-      "border-t border-gray-100 dark:border-white/10 p-5 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30 transition-all duration-slow",
-      isLoading ? "opacity-40 blur-[1px] grayscale-[0.1]" : "opacity-100"
-    )}>
-      {/* Left: Severity Filter Line Tabs */}
-      <div className="flex items-center gap-6 shrink-0 select-none overflow-x-auto">
-        {[
-          { key: "All", label: `All Events (${logTotal > 0 ? logTotal.toLocaleString() : 0})` },
-          { key: "INFO", label: "Information" },
-          { key: "WARNING", label: "Warnings" },
-          { key: "CRITICAL", label: "Critical" },
-        ].map((tab) => {
-          const isActive = logSeverityFilter === tab.key;
-          return (
+    <div
+      className={cn(
+        "border-t border-gray-100 dark:border-white/10 p-5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-gray-50/40 dark:bg-zinc-900/30 flex-wrap transition-all duration-slow",
+        isLoading ? "opacity-40 blur-[1px] grayscale-[0.1]" : "opacity-100"
+      )}
+    >
+      {/* Search Input with Pure Number Count (Left side) */}
+      <div className="relative flex-1 sm:w-64 min-w-[200px] max-w-sm group">
+        <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+          <HugeIcon className="ph-bold ph-magnifying-glass text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm" />
+        </div>
+        <Input
+          type="text"
+          placeholder="Search action, details, IP..."
+          className="h-9 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 pl-8 pr-16 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
+          value={localSearch}
+          onChange={handleSearchChange}
+          disabled={isLoading}
+        />
+        <div className="absolute inset-y-0 right-3 flex items-center gap-1.5">
+          {localSearch && (
             <button
-              key={tab.key}
               type="button"
               onClick={() => {
-                handleSeverityChange({ target: { value: tab.key } });
-                setLogPage(1);
+                setLocalSearch("");
+                setSearch("");
+                setPage(1);
               }}
-              className={cn(
-                "relative h-9 flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent whitespace-nowrap",
-                isActive
-                  ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
-                  : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
-              )}
+              className="text-gray-400 hover:text-gray-600 dark:hover:text-zinc-300 cursor-pointer p-0.5 transition-colors border-0 bg-transparent flex items-center justify-center"
+              title="Clear search"
             >
-              {tab.label}
+              <HugeIcon className="ph-bold ph-x-circle text-[13px]" />
             </button>
-          );
-        })}
+          )}
+          <span className="text-[11px] text-gray-400 dark:text-zinc-500 font-mono pointer-events-none">
+            {total.toLocaleString()}
+          </span>
+        </div>
       </div>
 
-      {/* Right: Search, Severity Select, Time Shortcuts, and Date Range Controls */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 flex-wrap">
-        {/* Search */}
-        <div className="relative flex-1 sm:w-64 min-w-[200px] group">
-          <HugeIcon  className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-xs pointer-events-none" />
-          <Input
-            type="text"
-            placeholder="Search action, details, IP..."
-            className="pl-8 pr-16 h-9 text-xs w-full bg-white dark:bg-zinc-800 border border-gray-200 dark:border-white/10 rounded-xl placeholder:text-gray-400 dark:placeholder:text-zinc-500 text-gray-900 dark:text-zinc-100 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
-            value={localSearch}
-            onChange={handleSearchChange}
-            disabled={isLoading}
+      {/* Filter controls (Right side) */}
+      <div className="flex flex-wrap items-center gap-3">
+        {/* Multi-Criteria Popover Filter */}
+        <div className="w-full sm:w-auto shrink-0">
+          <MultiCriteriaFilter
+            title="Filter Logs"
+            buttonLabel="Filter"
+            groups={filterCriteriaGroups}
+            align="end"
+            onReset={onResetFilters}
           />
-          <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-[11px] text-gray-400 dark:text-zinc-500">
-            {logTotal > 0 ? `${logTotal.toLocaleString()} results` : "0 results"}
-          </div>
-        </div>
-
-        {/* Severity Select Dropdown */}
-        <div className="w-[140px] shrink-0">
-          <Select
-            value={logSeverityFilter}
-            onChange={handleSeverityChange}
-            disabled={isLoading}
-            className="h-9 rounded-xl border border-gray-200 text-xs font-normal text-[#111111] dark:text-zinc-200 bg-white dark:bg-zinc-800 dark:border-white/10 cursor-pointer shadow-none"
-            menuClassName="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-900 shadow-2xl p-1.5"
-            optionClassName="rounded-lg text-xs font-normal py-1.5 px-2.5 hover:bg-gray-100 dark:hover:bg-zinc-800"
-          >
-            <option value="All">All Severities</option>
-            <option value="INFO">Information</option>
-            <option value="WARNING">Warning</option>
-            <option value="CRITICAL">Critical</option>
-          </Select>
         </div>
 
         {/* Time Shortcuts */}
@@ -422,7 +409,7 @@ function LogFilters({
                 className={cn(
                   "px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all cursor-pointer whitespace-nowrap",
                   isActive
-                    ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
+                    ? "bg-slate-900 text-zinc-100 dark:bg-zinc-700 dark:text-zinc-100 shadow-xs"
                     : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
                 )}
               >
@@ -441,19 +428,19 @@ function LogFilters({
                   variant="outline"
                   className={cn(
                     "h-9 w-full justify-start rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-left text-xs font-normal shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 px-2.5 cursor-pointer",
-                    !logStartDate ? "text-gray-400 dark:text-zinc-500" : "text-gray-700 dark:text-zinc-200"
+                    !startDate ? "text-gray-400 dark:text-zinc-500" : "text-gray-700 dark:text-zinc-200"
                   )}
                 >
-                  {logStartDate ? format(parseDateLocal(logStartDate), "MMM d") : "Start"}
+                  {startDate ? format(parseDateLocal(startDate), "MMM d") : "Start"}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto rounded-2xl border border-gray-200 bg-white p-0 shadow-2xl dark:border-white/10 dark:bg-card" align="start">
                 <Calendar
                   mode="single"
-                  selected={logStartDate ? parseDateLocal(logStartDate) : undefined}
+                  selected={startDate ? parseDateLocal(startDate) : undefined}
                   onSelect={(date) => {
-                    setLogStartDate(date ? format(date, "yyyy-MM-dd") : "");
-                    setLogPage(1);
+                    setStartDate(date ? format(date, "yyyy-MM-dd") : "");
+                    setPage(1);
                   }}
                   initialFocus
                 />
@@ -468,19 +455,19 @@ function LogFilters({
                   variant="outline"
                   className={cn(
                     "h-9 w-full justify-start rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-left text-xs font-normal shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 px-2.5 cursor-pointer",
-                    !logEndDate ? "text-gray-400 dark:text-zinc-500" : "text-gray-700 dark:text-zinc-200"
+                    !endDate ? "text-gray-400 dark:text-zinc-500" : "text-gray-700 dark:text-zinc-200"
                   )}
                 >
-                  {logEndDate ? format(parseDateLocal(logEndDate), "MMM d") : "End"}
+                  {endDate ? format(parseDateLocal(endDate), "MMM d") : "End"}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto rounded-2xl border border-gray-200 bg-white p-0 shadow-2xl dark:border-white/10 dark:bg-card" align="start">
                 <Calendar
                   mode="single"
-                  selected={logEndDate ? parseDateLocal(logEndDate) : undefined}
+                  selected={endDate ? parseDateLocal(endDate) : undefined}
                   onSelect={(date) => {
-                    setLogEndDate(date ? format(date, "yyyy-MM-dd") : "");
-                    setLogPage(1);
+                    setEndDate(date ? format(date, "yyyy-MM-dd") : "");
+                    setPage(1);
                   }}
                   initialFocus
                 />
@@ -831,7 +818,6 @@ function LogTable({
               onClick={() => window.location.reload()}
               className="mt-6 h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
             >
-              <HugeIcon  className="ph-bold ph-arrows-clockwise mr-2 animate-spin"></HugeIcon>
               Retry
             </Button>
           </EmptyHeader>
@@ -915,10 +901,14 @@ function LogTable({
                           </EmptyMedia>
                         </div>
                         <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
-                          No Activity Found
+                          {Boolean(localSearch !== "" || logSeverityFilter !== "All" || logStartDate !== "" || logEndDate !== "")
+                            ? "No Activity Found"
+                            : "No Activity Recorded Yet"}
                         </EmptyTitle>
                         <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400">
-                          Try adjusting your search filters to find what you&apos;re looking for.
+                          {Boolean(localSearch !== "" || logSeverityFilter !== "All" || logStartDate !== "" || logEndDate !== "")
+                            ? "Try adjusting your search filters to find what you're looking for."
+                            : "Your sign-ins, security changes, and account actions will automatically appear here."}
                         </EmptyDescription>
                         {(localSearch !== "" ||
                           logSeverityFilter !== "All" ||
@@ -934,10 +924,9 @@ function LogTable({
                               setLogEndDate("");
                               setLogPage(1);
                             }}
-                            className="mt-6 flex h-10 items-center justify-center gap-2 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
+                            className="mt-6 h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                           >
-                            <HugeIcon className="ph-bold ph-arrow-counter-clockwise text-[14px] shrink-0" />
-                            <span>Clear Filters</span>
+                            Clear Filters
                           </Button>
                         )}
                       </EmptyHeader>
@@ -994,6 +983,28 @@ export default function AccountActivityPage() {
   const [severityFilter, setSeverityFilter] = useState("All");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+
+  const selectedSeverities = useMemo(() => {
+    if (!severityFilter || severityFilter === "All") return [];
+    return severityFilter.split(",").map((s) => s.trim()).filter(Boolean);
+  }, [severityFilter]);
+
+  const filterCriteriaGroups = useMemo(() => [
+    {
+      id: "severity",
+      label: "Severity",
+      options: [
+        { id: "INFO", label: "Information", dotColor: "bg-blue-500" },
+        { id: "WARNING", label: "Warnings", dotColor: "bg-amber-500" },
+        { id: "CRITICAL", label: "Critical", dotColor: "bg-rose-500" },
+      ],
+      selected: selectedSeverities,
+      onChange: (vals) => {
+        setSeverityFilter(vals.length === 0 ? "All" : vals.join(","));
+        setPage(1);
+      },
+    },
+  ], [selectedSeverities]);
 
   // Pagination & Sorting State
   const [page, setPage] = useState(1);
@@ -1246,7 +1257,7 @@ export default function AccountActivityPage() {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-background">
         <div className="h-16 bg-white border-b border-gray-200 dark:bg-card dark:border-white/10" />
-        <main className="max-w-[1200px] mx-auto p-8 space-y-8">
+        <main className="w-full max-w-[1600px] 2xl:max-w-[1760px] mx-auto py-6 px-4 sm:px-8 space-y-8">
           <div className="flex flex-col gap-2">
             <Skeleton className="w-64 h-8 dark:bg-muted" />
             <Skeleton className="w-96 h-4 dark:bg-muted" />
@@ -1267,7 +1278,7 @@ export default function AccountActivityPage() {
       <Header authUser={authUser} onLogout={handleLogout} />
 
       <PageTransition className="flex-1 min-h-0 overflow-y-auto w-full">
-        <div className="max-w-[1400px] mx-auto py-10 px-6">
+        <div className="w-full max-w-[1600px] 2xl:max-w-[1760px] mx-auto py-6 px-4 sm:px-8">
           <TooltipProvider delayDuration={200}>
           {/* ONE Single Card Container encapsulating Header, Metrics, Toolbar, Table & Pagination */}
           <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none isolate font-jakarta mb-4 min-h-0 flex-1">
@@ -1280,57 +1291,41 @@ export default function AccountActivityPage() {
               titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
               descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
               actions={
-                <div className="flex items-center gap-6">
+                <div className="flex items-center gap-3">
                   <RefreshButton
                     onRefresh={handleRefresh}
                     isLoading={loading}
                     title="Refresh Activity"
                   />
 
-                  
+                  <Button
+                    variant="outline"
+                    onClick={handleDownloadCSV}
+                    disabled={total === 0 || isExporting || isGeneratingPdf}
+                    className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                  >
+                    {isExporting ? "Exporting..." : "Export"}
+                  </Button>
 
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      onClick={handleDownloadCSV}
-                      disabled={total === 0 || isExporting || isGeneratingPdf}
-                      className="flex h-10 items-center justify-center rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-5 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
-                    >
-                      {isExporting ? (
-                        <HugeIcon  className="ph-bold ph-spinner animate-spin text-sm"></HugeIcon>
-                      ) : (
-                        "Export"
-                      )}
-                    </Button>
-                    <Button
-                      type="button"
-                      onClick={handlePreviewPDF}
-                      disabled={total === 0 || isExporting || isGeneratingPdf}
-                      className="flex h-10 items-center justify-center gap-2 rounded-xl! btn-brand-red text-white font-semibold text-xs active:scale-95 disabled:opacity-50 transition-all cursor-pointer px-5 shadow-xs border-0"
-                    >
-                      {isGeneratingPdf ? (
-                        <HugeIcon  className="ph-bold ph-spinner animate-spin text-sm"></HugeIcon>
-                      ) : (
-                        "Get Report"
-                      )}
-                    </Button>
-                  </div>
+                  <Button
+                    type="button"
+                    onClick={handlePreviewPDF}
+                    disabled={total === 0 || isExporting || isGeneratingPdf}
+                    className="h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 disabled:opacity-50 transition-all border-0"
+                  >
+                    {isGeneratingPdf ? "Generating..." : "Report"}
+                  </Button>
 
-                  
-
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      onClick={() => {
-                        const path = getDefaultDashboardPath(authUser?.role);
-                        router.push(path);
-                      }}
-                      className="flex h-10 items-center justify-center gap-2 rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
-                    >
-                      <HugeIcon  className="ph-bold ph-arrow-left text-sm"></HugeIcon>
-                      Dashboard
-                    </Button>
-                  </div>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      const path = getDefaultDashboardPath(authUser?.role);
+                      router.push(path);
+                    }}
+                    className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                  >
+                    Return to Dashboard
+                  </Button>
                 </div>
               }
             />
@@ -1344,86 +1339,61 @@ export default function AccountActivityPage() {
             <LogFilters
               localSearch={localSearch}
               handleSearchChange={handleSearchChange}
-              logSeverityFilter={severityFilter}
-              handleSeverityChange={handleSeverityChange}
-              logStartDate={startDate}
-              setLogStartDate={setStartDate}
-              logEndDate={endDate}
-              setLogEndDate={setEndDate}
-              setLogPage={setPage}
-              logTotal={total}
+              setLocalSearch={setLocalSearch}
+              setSearch={setSearch}
+              filterCriteriaGroups={filterCriteriaGroups}
+              onResetFilters={() => {
+                setSeverityFilter("All");
+                setPage(1);
+              }}
+              startDate={startDate}
+              setStartDate={setStartDate}
+              endDate={endDate}
+              setEndDate={setEndDate}
+              setPage={setPage}
+              total={total}
               isLoading={loading}
             />
 
             {/* Active Filter Chips Row */}
-            {hasActiveFilters && (() => {
-              const formatChipDate = (dateStr) => {
-                if (!dateStr) return "..."
-                try {
-                  return format(new Date(dateStr), "MMM d, yyyy")
-                } catch (e) {
-                  return dateStr
-                }
-              }
-              return (
-                <div className={cn(
-                  "flex-none border-t border-gray-100 bg-white px-6 py-3 transition-all duration-slow animate-in fade-in slide-in-from-top-1 dark:border-white/10 dark:bg-card",
-                  loading ? "opacity-40 blur-[1px] grayscale-[0.1]" : "opacity-100"
-                )}>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="mr-1 text-[11px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500">Active filters:</span>
-                    {localSearch && (
-                      <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
-                        Search: {localSearch}
-                        <button
-                          onClick={() => { setLocalSearch(""); setSearch(""); setPage(1); }}
-                          className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
-                        >
-                          ×
-                        </button>
-                      </div>
-                    )}
-                    {severityFilter !== "All" && (
-                      <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
-                        Severity: {severityFilter}
-                        <button
-                          onClick={() => { setSeverityFilter("All"); setPage(1); }}
-                          className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
-                        >
-                          ×
-                        </button>
-                      </div>
-                    )}
-                    {(startDate || endDate) && (
-                      <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
-                        {formatChipDate(startDate)} – {formatChipDate(endDate)}
-                        <button
-                          onClick={() => { setStartDate(""); setEndDate(""); setPage(1); }}
-                          className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
-                        >
-                          ×
-                        </button>
-                      </div>
-                    )}
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        setLocalSearch("");
-                        setSearch("");
-                        setSeverityFilter("All");
-                        setStartDate("");
-                        setEndDate("");
-                        setPage(1);
-                      }}
-                      className="h-auto text-[12px] font-medium text-gray-400 dark:text-zinc-500 border-0 bg-transparent hover:bg-transparent shadow-none p-0 hover:text-red-600 dark:hover:text-red-500 transition-colors cursor-pointer"
-                    >
-                      Clear
-                    </Button>
-                  </div>
-                </div>
-              )
-            })()}
+            <ActiveFilterChips
+              groups={filterCriteriaGroups}
+              selected={{ severity: selectedSeverities }}
+              onRemove={(groupId, val) => {
+                const next = selectedSeverities.filter((v) => v !== val);
+                setSeverityFilter(next.length === 0 ? "All" : next.join(","));
+                setPage(1);
+              }}
+              searchQuery={localSearch}
+              onClearSearch={() => {
+                setLocalSearch("");
+                setSearch("");
+                setPage(1);
+              }}
+              extraChips={[
+                ...(startDate || endDate
+                  ? [
+                      {
+                        groupLabel: "Date Range",
+                        label: `${startDate ? format(parseDateLocal(startDate), "MMM d, yyyy") : "Start"} → ${endDate ? format(parseDateLocal(endDate), "MMM d, yyyy") : "End"}`,
+                        onClear: () => {
+                          setStartDate("");
+                          setEndDate("");
+                          setPage(1);
+                        },
+                      },
+                    ]
+                  : []),
+              ]}
+              onClearAll={() => {
+                setLocalSearch("");
+                setSearch("");
+                setSeverityFilter("All");
+                setStartDate("");
+                setEndDate("");
+                setPage(1);
+              }}
+            />
 
             {/* Table */}
             <LogTable

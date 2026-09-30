@@ -25,11 +25,20 @@ async function resolveActor(req) {
     const id = String(payload?.sub || "").trim();
     if (!id) return { actor: "System", role: "System", officeId: null };
 
+    const role = payload?.role || "";
+    if (String(role).toLowerCase() === "student" || payload?.principal_type === "student" || payload?.student_no) {
+      return {
+        actor: payload?.student_no || payload?.username || id,
+        role: "Student",
+        officeId: null,
+      };
+    }
+
     const staff = await getStaffById(id);
     return {
       actor: getStaffDisplayName(staff) || id,
-      role: staff?.role || "Unknown",
-      officeId: staff?.office_id || null,
+      role: staff?.role || role || "Unknown",
+      officeId: staff?.office_id || payload?.office_id || null,
     };
   } catch {
     return { actor: "System", role: "System", officeId: null };

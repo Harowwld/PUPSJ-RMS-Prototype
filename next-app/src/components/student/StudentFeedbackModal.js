@@ -37,6 +37,7 @@ export default function StudentFeedbackModal({
   onClose,
   onOpenChange,
   request,
+  initialRating = 0,
   onFeedbackSubmitted,
 }) {
   const isModalOpen = open ?? isOpen ?? false;
@@ -45,7 +46,7 @@ export default function StudentFeedbackModal({
     onOpenChange?.(false);
   };
 
-  const [rating, setRating] = useState(0);
+  const [rating, setRating] = useState(initialRating || 0);
   const [hoverRating, setHoverRating] = useState(0);
   const [selectedAspects, setSelectedAspects] = useState([]);
   const [comments, setComments] = useState("");
@@ -58,12 +59,12 @@ export default function StudentFeedbackModal({
       setSelectedAspects(Array.isArray(request.feedback.aspect_tags) ? request.feedback.aspect_tags : []);
       setComments(request.feedback.comments || "");
     } else {
-      setRating(0);
+      setRating(initialRating || 0);
       setSelectedAspects([]);
       setComments("");
     }
     setHoverRating(0);
-  }, [request]);
+  }, [request, initialRating]);
 
   const toggleAspect = (aspect) => {
     setSelectedAspects((prev) =>

@@ -21,13 +21,19 @@ import { warmRegistrarIngestQueueOnLogin } from "@/lib/ingestEventProcessor";
 
 export const runtime = "nodejs";
 
-async function audit(req, action, details, severity = "INFO") {
+async function audit(req, action, details, severity = "INFO", actorMeta = {}) {
+  const actor = actorMeta.actor || "System";
+  const role = actorMeta.role || "System";
+  const officeId = actorMeta.officeId || actorMeta.office_id || null;
+  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || req.headers.get("x-real-ip") || null;
+  const userAgent = req.headers.get("user-agent") || null;
+
   if (!process.env.DATABASE_URL) {
-    return writeAuditLog(req, action, { details, severity });
+    return writeAuditLog(req, action, { details, severity, actor, role, officeId });
   }
   return query(
-    "INSERT INTO global_audit_logs (actor, role, action, details, severity, ip, user_agent) VALUES ($1, $2, $3, $4, $5, $6, $7)",
-    ["System", "System", action, details || "", severity, req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || req.headers.get("x-real-ip") || null, req.headers.get("user-agent") || null]
+    "INSERT INTO global_audit_logs (actor, role, office_id, action, details, severity, ip, user_agent) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)",
+    [actor, role, officeId, action, details || "", severity, ip, userAgent]
   );
 }
 
@@ -119,7 +125,13 @@ async function _POST(req) {
     const student = await authenticateStudent({ studentNo: cleanUsername, password });
     if (student) {
       const token = await createStudentSession(student);
-      await audit(req, "Student Login", `student '${student.student_no}' authenticated via main portal`);
+      await audit(
+        req,
+        "Student Login",
+        `student '${student.student_no}' authenticated via main portal`,
+        "INFO",
+        { actor: student.student_no, role: "Student" }
+      );
       const studentRes = NextResponse.json({
         ok: true,
         data: {
@@ -134,13 +146,25 @@ async function _POST(req) {
     }
 
     authDebug("login.account_missing", { identifierLength: cleanUsername.length });
-    await audit(req, "Login Attempt", `authentication failure: identifier '${cleanUsername}' not recognized by the system repository`, "WARNING");
+    await audit(
+      req,
+      "Login Attempt",
+      `authentication failure: identifier '${cleanUsername}' not recognized by the system repository`,
+      "WARNING",
+      { actor: cleanUsername || "System", role: "System" }
+    );
     return addSecurityHeaders(NextResponse.json({ ok: false, error: "Invalid credentials" }, { status: 401 }));
   }
 
   if (staff.status === "Archived" || staff.status === "Inactive") {
     authDebug("login.account_archived", { staffId: staff.id });
-    await audit(req, "Login Attempt", `authentication failure: attempt to access personnel account '${username}' which is currently archived and disabled`, "CRITICAL");
+    await audit(
+      req,
+      "Login Attempt",
+      `authentication failure: attempt to access personnel account '${username}' which is currently archived and disabled`,
+      "CRITICAL",
+      { actor: getStaffDisplayName(staff) || username, role: staff.role || "Staff", officeId: staff.office_id }
+    );
     return addSecurityHeaders(NextResponse.json(
       { ok: false, error: "This account has been archived. Please contact an administrator." },
       { status: 403 }
@@ -156,7 +180,13 @@ async function _POST(req) {
   const passwordVerification = verifyPasswordHash(password, stored);
   if (!passwordVerification.valid) {
     authDebug("login.password_rejected", { staffId: staff.id, status: staff.status });
-    await audit(req, "Login Attempt", `authentication failure: invalid credentials provided for recognized account '${username}'`, "WARNING");
+    await audit(
+      req,
+      "Login Attempt",
+      `authentication failure: invalid credentials provided for recognized account '${username}'`,
+      "WARNING",
+      { actor: getStaffDisplayName(staff) || username, role: staff.role || "Staff", officeId: staff.office_id }
+    );
     return addSecurityHeaders(NextResponse.json({ ok: false, error: "Invalid credentials" }, { status: 401 }));
   }
 
@@ -236,7 +266,17 @@ async function _POST(req) {
   // Reset login rate limit on full successful login
   await resetAuthLoginRateLimit(ipAddress, rateLimitIdentifier);
 
-  await audit(req, "User Login", `personnel '${getStaffDisplayName(touched)}' successfully authenticated into the system repository`);
+  await audit(
+    req,
+    "User Login",
+    `personnel '${getStaffDisplayName(touched)}' successfully authenticated into the system repository`,
+    "INFO",
+    {
+      actor: getStaffDisplayName(touched),
+      role: touched.role || "Staff",
+      officeId: touched.office_id,
+    }
+  );
 
   const res = NextResponse.json({
     ok: true,

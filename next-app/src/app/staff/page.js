@@ -217,24 +217,42 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
     const groups = [
       {
         type: "group",
-        label: "Operations",
+        label: "Service & Requests",
         children: [
           { key: "requests", label: "Document Requests", iconClass: "ph-bold ph-tray-arrow-up" },
           { key: "osas_monitoring", label: "OSAS Monitoring", iconClass: "ph-bold ph-student" },
-          { key: "upload", label: "Scan & Upload", iconClass: "ph-bold ph-scan" },
-          { key: "batch_review", label: "Batch Review", iconClass: "ph-bold ph-check-square" },
-          { key: "documents", label: "Documents", iconClass: "ph-bold ph-file-text" },
-          { key: "notifications", label: "Notifications", iconClass: "ph-bold ph-bell", badge: notificationsUnread },
         ]
       },
       {
         type: "group",
-        label: "Records Archive",
+        label: "Digitization & Ingestion",
+        children: [
+          { key: "upload", label: "Scan & Upload", iconClass: "ph-bold ph-scan" },
+          { key: "batch_review", label: "Batch Review", iconClass: "ph-bold ph-check-square" },
+        ]
+      },
+      {
+        type: "group",
+        label: "Student & Organization Roster",
         children: [
           { key: "students", label: "Student Directory", iconClass: "ph-bold ph-users" },
           { key: "organizations", label: "Student Organizations", iconClass: "ph-bold ph-buildings" },
+        ]
+      },
+      {
+        type: "group",
+        label: "Archive & Storage",
+        children: [
           { key: "search", label: "Records & Archive", iconClass: "ph-bold ph-archive-box" },
           { key: "storage", label: "Storage Explorer", iconClass: "ph-bold ph-folder-open" },
+        ]
+      },
+      {
+        type: "group",
+        label: "Records & Communications",
+        children: [
+          { key: "documents", label: "Documents Matrix", iconClass: "ph-bold ph-file-text" },
+          { key: "notifications", label: "Notifications", iconClass: "ph-bold ph-bell", badge: notificationsUnread },
         ]
       }
     ]

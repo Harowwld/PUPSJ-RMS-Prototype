@@ -652,9 +652,137 @@ export function restorePostgresSql(sqlContent) {
   }
 }
 
+export function countRowsFromDump(sqlContent) {
+  const lines = sqlContent.split("\n");
+  const tableCounts = {};
+  let currentTable = null;
+  let count = 0;
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (trimmed.startsWith("COPY ") && trimmed.includes("FROM stdin;")) {
+      const match = trimmed.match(/COPY\s+(?:public\.)?([a-zA-Z0-9_]+)\b/i);
+      if (match) {
+        currentTable = match[1];
+        count = 0;
+      }
+      continue;
+    }
+    if (currentTable) {
+      if (trimmed === "\\.") {
+        tableCounts[currentTable] = count;
+        currentTable = null;
+        count = 0;
+      } else if (trimmed.length > 0) {
+        count++;
+      }
+    }
+  }
+  return tableCounts;
+}
+
+export async function getBackupBufferById(id) {
+  const backup = await getBackupById(id);
+  if (!backup) {
+    throw new Error(`Backup record with ID ${id} not found.`);
+  }
+  const backupsDir = getBackupsDir();
+  const filePath = getBackupFilePath(backup.filename, backupsDir);
+  if (!fs.existsSync(filePath)) {
+    throw new Error(`Backup file '${backup.filename}' not found on storage.`);
+  }
+  return {
+    buffer: fs.readFileSync(filePath),
+    backup,
+  };
+}
+
+export async function inspectBackupBuffer(
+  fileBuffer,
+  { userRole = "Admin", userOffice = null } = {}
+) {
+  if (!fileBuffer || !Buffer.isBuffer(fileBuffer)) {
+    throw new Error("Backup inspection requires a valid file buffer.");
+  }
+
+  const plainZipBuffer = decryptBackupBuffer(fileBuffer);
+  let zip;
+  try {
+    zip = new AdmZip(plainZipBuffer);
+  } catch (err) {
+    throw new Error("Invalid backup file: Not a valid ZIP archive or failed to decrypt.");
+  }
+
+  const entries = zip.getEntries();
+  if (!entries || entries.length === 0) {
+    throw new Error("Backup archive is empty.");
+  }
+
+  const dbEntry = entries.find(
+    (e) => !e.isDirectory && (e.entryName === "db.sql" || e.entryName.endsWith("/db.sql"))
+  );
+  if (!dbEntry) {
+    throw new Error("Invalid backup archive: missing 'db.sql'.");
+  }
+
+  const rawSql = dbEntry.getData().toString("utf8");
+  const dataSql = extractDataSql(rawSql);
+  const targetTables = parseTablesFromDump(dataSql.length > 0 ? dataSql : rawSql);
+  const backupCounts = countRowsFromDump(dataSql.length > 0 ? dataSql : rawSql);
+
+  const isGovernanceBackup = targetTables.some((t) =>
+    ["staff", "offices", "modules", "office_modules", "global_audit_logs"].includes(t)
+  );
+
+  // Count files in archive
+  let archiveFileCount = 0;
+  for (const entry of entries) {
+    if (!entry.isDirectory && entry.entryName !== "db.sql" && !entry.entryName.endsWith("/db.sql")) {
+      archiveFileCount++;
+    }
+  }
+
+  // Query live DB row counts for each target table
+  const tableDiffs = [];
+  for (const tbl of targetTables) {
+    let liveRows = 0;
+    try {
+      const liveRes = await dbGet(`SELECT count(*)::int as count FROM ${tbl}`);
+      liveRows = Number(liveRes?.count || 0);
+    } catch (e) {
+      console.warn(`[INSPECT] Could not query live count for table ${tbl}:`, e.message);
+    }
+
+    const backupRows = Number(backupCounts[tbl] || 0);
+    const delta = backupRows - liveRows;
+
+    tableDiffs.push({
+      name: tbl,
+      backupRows,
+      liveRows,
+      delta,
+    });
+  }
+
+  return {
+    ok: true,
+    isGovernanceBackup,
+    targetTables,
+    tables: tableDiffs,
+    totalArchiveFiles: archiveFileCount,
+    hasDataSql: dataSql.length > 0,
+  };
+}
+
 export async function executeRestoreBackup(
   fileBuffer,
-  { actorId = null, userRole = "Admin", userOffice = null } = {}
+  {
+    actorId = null,
+    userRole = "Admin",
+    userOffice = null,
+    mode = "overwrite",
+    createSafetySnapshot = true,
+  } = {}
 ) {
   if (!fileBuffer || !Buffer.isBuffer(fileBuffer)) {
     throw new Error("Backup restoration requires a valid file buffer.");
@@ -724,7 +852,29 @@ export async function executeRestoreBackup(
     }
   }
 
-  // 5. Restore filesystem assets (storage/ and uploads/)
+  // 5. Zero-Loss Pre-Restore Safety Snapshot
+  let safetySnapshotRecord = null;
+  if (createSafetySnapshot) {
+    try {
+      console.log(`[RESTORE] Taking automated Pre-Restore Safety Snapshot before '${mode}' restore...`);
+      if (isSuper || isGovernanceBackup) {
+        safetySnapshotRecord = await executeSystemBackup({ actorId });
+      } else {
+        safetySnapshotRecord = await executeOfficeBackup({
+          officeId: normUserOffice || "registrar",
+          actorId,
+        });
+      }
+      if (safetySnapshotRecord) {
+        await updateBackupStatus(safetySnapshotRecord.id, "backup_type", "Pre-Restore Safety");
+        console.log(`[RESTORE] ✓ Safety snapshot saved: ${safetySnapshotRecord.filename}`);
+      }
+    } catch (snapErr) {
+      console.warn("[RESTORE] Warning: Could not create safety snapshot:", snapErr.message);
+    }
+  }
+
+  // 6. Restore filesystem assets (storage/ and uploads/)
   const localDir = getLocalDir();
   let extractedFileCount = 0;
 
@@ -752,18 +902,53 @@ export async function executeRestoreBackup(
       }
     }
 
+    // In merge mode: do not overwrite existing files if already present
+    if (mode === "merge" && fs.existsSync(safeDestPath)) {
+      continue;
+    }
+
     fs.mkdirSync(path.dirname(safeDestPath), { recursive: true });
     fs.writeFileSync(safeDestPath, entry.getData());
     extractedFileCount++;
   }
 
-  // 6. Execute SQL restoration inside a replica session role transaction
-  const deleteStatements = targetTables
-    .map((tbl) => `DELETE FROM ${tbl};`)
-    .reverse()
-    .join("\n");
+  // 7. Execute SQL restoration
+  let restoreTransactionSql = "";
 
-  const restoreTransactionSql = `
+  if (mode === "merge") {
+    // SAFE MERGE / RECONCILIATION:
+    // Create temp staging tables, route COPY into staging, then INSERT ... ON CONFLICT DO NOTHING
+    const stagingCreates = targetTables
+      .map((tbl) => `CREATE TEMP TABLE staging_${tbl} (LIKE public.${tbl} INCLUDING DEFAULTS) ON COMMIT DROP;`)
+      .join("\n");
+
+    let modifiedDataSql = dataSql;
+    for (const tbl of targetTables) {
+      const copyRegex = new RegExp(`COPY\\s+(?:public\\.)?(${tbl})\\b`, "gi");
+      modifiedDataSql = modifiedDataSql.replace(copyRegex, `COPY staging_${tbl}`);
+    }
+
+    const mergeInserts = targetTables
+      .map((tbl) => `INSERT INTO public.${tbl} SELECT * FROM staging_${tbl} ON CONFLICT DO NOTHING;`)
+      .join("\n");
+
+    restoreTransactionSql = `
+BEGIN;
+SET session_replication_role = 'replica';
+${stagingCreates}
+${modifiedDataSql}
+${mergeInserts}
+SET session_replication_role = 'origin';
+COMMIT;
+`;
+  } else {
+    // FULL OVERWRITE (Disaster Recovery):
+    const deleteStatements = targetTables
+      .map((tbl) => `DELETE FROM ${tbl};`)
+      .reverse()
+      .join("\n");
+
+    restoreTransactionSql = `
 BEGIN;
 SET session_replication_role = 'replica';
 ${deleteStatements}
@@ -771,10 +956,11 @@ ${dataSql}
 SET session_replication_role = 'origin';
 COMMIT;
 `;
+  }
 
   restorePostgresSql(restoreTransactionSql);
 
-  // 7. Update last restoration timestamp & clear health telemetry cache
+  // 8. Update last restoration timestamp & clear health telemetry cache
   const now = new Date().toISOString();
   await dbRun(
     `INSERT INTO settings (key, value, updated_at)
@@ -786,8 +972,10 @@ COMMIT;
 
   return {
     ok: true,
+    mode,
     tablesRestored: targetTables,
     filesRestored: extractedFileCount,
+    safetySnapshot: safetySnapshotRecord?.filename || null,
     restoredAt: now,
   };
 }

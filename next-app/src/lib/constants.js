@@ -156,3 +156,23 @@ export const FOLDER_COLORS = {
     bubble: "bg-gray-500",
   },
 };
+
+export const PROPOSAL_STATUSES = [
+  "Submitted",
+  "Under Review",
+  "Needs Revision",
+  "Approved",
+  "Declined",
+];
+
+export function normalizeProposalStatus(status) {
+  const s = String(status || "").toLowerCase().trim();
+  if (s === "submitted" || s === "pending") return "Submitted";
+  if (s === "under review" || s === "underreview" || s === "inprogress" || s === "processing") return "Under Review";
+  if (s === "needs revision" || s === "revisionsrequested" || s === "revision") return "Needs Revision";
+  if (s === "approved" || s === "completed" || s === "ready") return "Approved";
+  if (s === "declined" || s === "rejected" || s === "cancelled") return "Declined";
+  if (s === "archived") return "Archived";
+  return status || "";
+}
+

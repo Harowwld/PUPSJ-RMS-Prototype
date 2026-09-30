@@ -33,7 +33,7 @@ export async function countAuditLogs(options) {
   const startDate = opt.startDate || "";
   const endDate = opt.endDate || "";
 
-  let query = "SELECT COUNT(*) as count FROM global_audit_logs";
+  let query = "SELECT COUNT(*)::int as count FROM global_audit_logs";
   let params = [];
   let whereClauses = [];
 
@@ -43,8 +43,16 @@ export async function countAuditLogs(options) {
   }
 
   if (actorExact) {
-    whereClauses.push("actor = ?");
-    params.push(actorExact);
+    const actorList = (Array.isArray(actorExact) ? actorExact : [actorExact])
+      .map((a) => String(a || "").trim())
+      .filter(Boolean);
+    if (actorList.length === 1) {
+      whereClauses.push("LOWER(TRIM(actor)) = LOWER(TRIM(?))");
+      params.push(actorList[0]);
+    } else if (actorList.length > 1) {
+      whereClauses.push(`LOWER(TRIM(actor)) IN (${actorList.map(() => "LOWER(TRIM(?))").join(", ")})`);
+      params.push(...actorList);
+    }
   }
 
   if (role && role !== "All") {
@@ -98,7 +106,7 @@ export async function countAuditLogs(options) {
   }
 
   const row = await dbGet(query, params);
-  return row ? (row.count || 0) : 0;
+  return row ? (Number(row.count) || 0) : 0;
 }
 
 export async function listAuditLogs(options) {
@@ -128,8 +136,16 @@ export async function listAuditLogs(options) {
   }
 
   if (actorExact) {
-    whereClauses.push("actor = ?");
-    params.push(actorExact);
+    const actorList = (Array.isArray(actorExact) ? actorExact : [actorExact])
+      .map((a) => String(a || "").trim())
+      .filter(Boolean);
+    if (actorList.length === 1) {
+      whereClauses.push("LOWER(TRIM(actor)) = LOWER(TRIM(?))");
+      params.push(actorList[0]);
+    } else if (actorList.length > 1) {
+      whereClauses.push(`LOWER(TRIM(actor)) IN (${actorList.map(() => "LOWER(TRIM(?))").join(", ")})`);
+      params.push(...actorList);
+    }
   }
 
   if (role && role !== "All") {
@@ -199,27 +215,36 @@ export async function listAuditLogs(options) {
 }
 
 export async function getAuditLogStats(actor = "", officeId = "") {
+  const actorList = (Array.isArray(actor) ? actor : [actor])
+    .map((a) => String(a || "").trim())
+    .filter(Boolean);
+
   // Main stats
   let mainQuery = "SELECT " +
     'COUNT(*)::int as "totalLogs", ' +
-    'COALESCE(SUM(CASE WHEN created_at::date = CURRENT_DATE THEN 1 ELSE 0 END), 0)::int as "logsToday", ' +
+    'COALESCE(SUM(CASE WHEN (created_at AT TIME ZONE \'Asia/Manila\')::date = (CURRENT_TIMESTAMP AT TIME ZONE \'Asia/Manila\')::date THEN 1 ELSE 0 END), 0)::int as "logsToday", ' +
     'COALESCE(SUM(CASE WHEN LOWER(action) LIKE \'%login%\' OR LOWER(action) LIKE \'%logout%\' THEN 1 ELSE 0 END), 0)::int as "authEvents", ' +
     'COALESCE(SUM(CASE WHEN LOWER(action) LIKE \'%delete%\' OR LOWER(action) LIKE \'%remove%\' OR LOWER(action) LIKE \'%archive%\' OR LOWER(action) LIKE \'%update%\' OR LOWER(action) LIKE \'%edit%\' OR LOWER(action) LIKE \'%modify%\' THEN 1 ELSE 0 END), 0)::int as "systemChanges", ' +
     'COALESCE(SUM(CASE WHEN severity = \'CRITICAL\' THEN 1 ELSE 0 END), 0)::int as "criticalEvents", ' +
     'COALESCE(COUNT(DISTINCT actor), 0)::int as "activeActorsCount" ' +
     "FROM global_audit_logs";
   
-  let params = [];
+  let mainParams = [];
   if (officeId) {
     mainQuery += " WHERE office_id = ?";
-    params.push(officeId);
+    mainParams.push(officeId);
   }
-  if (actor) {
-    mainQuery += params.length ? " AND actor = ?" : " WHERE actor = ?";
-    params.push(actor);
+  if (actorList.length === 1) {
+    mainQuery += mainParams.length ? " AND LOWER(TRIM(actor)) = LOWER(TRIM(?))" : " WHERE LOWER(TRIM(actor)) = LOWER(TRIM(?))";
+    mainParams.push(actorList[0]);
+  } else if (actorList.length > 1) {
+    mainQuery += mainParams.length
+      ? ` AND LOWER(TRIM(actor)) IN (${actorList.map(() => "LOWER(TRIM(?))").join(", ")})`
+      : ` WHERE LOWER(TRIM(actor)) IN (${actorList.map(() => "LOWER(TRIM(?))").join(", ")})`;
+    mainParams.push(...actorList);
   }
 
-  const mainRows = await dbAll(mainQuery, params);
+  const mainRows = await dbAll(mainQuery, mainParams);
   const row = (mainRows && mainRows.length > 0) ? mainRows[0] : {};
   const totalLogs = Number(row?.totalLogs ?? row?.totallogs ?? 0);
   const logsToday = Number(row?.logsToday ?? row?.logstoday ?? 0);
@@ -230,30 +255,36 @@ export async function getAuditLogStats(actor = "", officeId = "") {
 
   // 7-day trend data
   let trendQuery = "SELECT " +
-    'created_at::date as "day", ' +
+    '(created_at AT TIME ZONE \'Asia/Manila\')::date as "day", ' +
     'COUNT(*)::int as "count", ' +
     'COALESCE(SUM(CASE WHEN LOWER(action) LIKE \'%login%\' OR LOWER(action) LIKE \'%logout%\' THEN 1 ELSE 0 END), 0)::int as "authCount", ' +
     'COALESCE(SUM(CASE WHEN severity = \'CRITICAL\' THEN 1 ELSE 0 END), 0)::int as "criticalCount" ' +
     "FROM global_audit_logs " +
-    "WHERE created_at::date >= CURRENT_DATE - INTERVAL '6 days' ";
+    "WHERE (created_at AT TIME ZONE 'Asia/Manila')::date >= (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Manila')::date - INTERVAL '6 days' ";
   
+  let trendParams = [];
   if (officeId) {
     trendQuery += " AND office_id = ? ";
+    trendParams.push(officeId);
   }
-  if (actor) {
-    trendQuery += " AND actor = ? ";
+  if (actorList.length === 1) {
+    trendQuery += " AND LOWER(TRIM(actor)) = LOWER(TRIM(?)) ";
+    trendParams.push(actorList[0]);
+  } else if (actorList.length > 1) {
+    trendQuery += ` AND LOWER(TRIM(actor)) IN (${actorList.map(() => "LOWER(TRIM(?))").join(", ")}) `;
+    trendParams.push(...actorList);
   }
   
   trendQuery += "GROUP BY day ORDER BY day ASC";
   
-  const trendRows = await dbAll(trendQuery, params);
+  const trendRows = await dbAll(trendQuery, trendParams);
   
-  // Fill in missing days with zeros
+  const phFormatter = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Manila" });
   const trends = [];
   for (let i = 6; i >= 0; i--) {
     const d = new Date();
     d.setDate(d.getDate() - i);
-    const dayStr = d.toISOString().split('T')[0];
+    const dayStr = phFormatter.format(d);
     const match = trendRows.find(r => String(r.day).slice(0, 10) === dayStr);
     trends.push({
       day: dayStr,

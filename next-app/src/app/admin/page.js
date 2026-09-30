@@ -296,7 +296,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
     const groups = [
       {
         type: "group",
-        label: "Operations & Analytics",
+        label: "Records & Verification",
         children: [
           {
             key: "review",
@@ -306,50 +306,56 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
           },
           {
             key: "digitization",
-            label: "Compliance",
+            label: "Compliance Analytics",
             iconClass: "ph-bold ph-chart-bar",
-          },
-          {
-            key: "request_analytics",
-            label: "Requests",
-            iconClass: "ph-bold ph-trend-up",
           },
         ]
       },
       {
         type: "group",
-        label: "User Management",
+        label: "Operations & Fulfillment",
+        children: [
+          {
+            key: "request_analytics",
+            label: "Request SLA Analytics",
+            iconClass: "ph-bold ph-trend-up",
+          },
+          {
+            key: "storage_layout",
+            label: "Storage Room Layout",
+            iconClass: "ph-bold ph-warehouse",
+          },
+        ]
+      },
+      {
+        type: "group",
+        label: "Personnel & Governance",
         children: [
           {
             key: "directory",
-            label: "Directory",
+            label: "Staff Directory",
             iconClass: "ph-bold ph-users",
+          },
+          {
+            key: "logs",
+            label: "Activity Audit Trail",
+            iconClass: "ph-bold ph-history",
           },
         ]
       },
       {
         type: "group",
-        label: "System Configuration",
+        label: "System & Maintenance",
         children: [
           {
-            key: "storage_layout",
-            label: "Storage",
-            iconClass: "ph-bold ph-warehouse",
-          },
-          {
             key: "system_data",
-            label: "Data",
+            label: "System Configuration",
             iconClass: "ph-bold ph-gear",
           },
           {
             key: "system",
-            label: "Backup",
-            iconClass: "ph-bold ph-database-backup",
-          },
-          {
-            key: "logs",
-            label: "Audit Log",
-            iconClass: "ti ti-history",
+            label: "Backup & Recovery",
+            iconClass: "ph-bold ph-cloud-arrow-up",
           },
         ]
       }

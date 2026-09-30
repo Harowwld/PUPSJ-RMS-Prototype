@@ -12,6 +12,7 @@ import {
 import PageHeader from "@/components/shared/PageHeader";
 import { RefreshButton } from "@/components/shared/RefreshButton";
 import { formatPHDateTime } from "@/lib/timeFormat";
+import { generateExportFilename } from "@/lib/exportHelpers";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import {
@@ -32,6 +33,12 @@ import {
 import StudentComplianceSkeleton from "./skeletons/StudentComplianceSkeleton";
 import StudentComplianceKpiCards from "./StudentComplianceKpiCards";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  getInstitutionalBranding,
+  DEFAULT_BRANDING_LOGO,
+  OFFICIAL_FALLBACK_LOGO,
+  generateStudentComplianceSlipPdf,
+} from "@/lib/pdfGenerator";
 
 
 
@@ -63,21 +70,43 @@ export default function StudentComplianceTab({ authUser }) {
   const [viewMode, setViewMode] = useState("table"); // "table" | "cards"
   const [sortConfig, setSortConfig] = useState({ column: "priority", direction: "asc" }); // column: "priority" | "docType" | "category" | "status"
 
-  // Modals
+  // Modals & Print Branding
   const [printModalOpen, setPrintModalOpen] = useState(false);
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
+  const [branding, setBranding] = useState({
+    institutionName: "Polytechnic University of the Philippines",
+    campusName: "San Juan City Campus",
+    tagline: "OFFICE OF THE CAMPUS REGISTRAR",
+    brandColor: "#800000",
+    logoUrl: DEFAULT_BRANDING_LOGO,
+    fallbackLogoUrl: OFFICIAL_FALLBACK_LOGO,
+    logoBase64: null,
+  });
 
   // Fetch compliance data
   const loadComplianceData = useCallback(async (isManualRefresh = false) => {
-    if (isManualRefresh) setRefreshing(true);
-    else setLoading(true);
+    if (isManualRefresh) {
+      setRefreshing(true);
+    }
 
     try {
-      const res = await fetch("/api/student/compliance", { cache: "no-store" });
+      const [res, brandData] = await Promise.all([
+        fetch("/api/student/compliance", { cache: "no-store" }),
+        getInstitutionalBranding().catch(() => null),
+      ]);
       const json = await res.json();
       if (!res.ok || !json.ok) {
         throw new Error(json.error || "Failed to load document compliance records.");
       }
       setData(json.data);
+      if (brandData) {
+        setBranding((prev) => ({
+          ...prev,
+          ...brandData,
+          tagline: brandData.tagline || prev.tagline,
+          brandColor: brandData.brandColor || prev.brandColor,
+        }));
+      }
     } catch (err) {
       toast.error("Error Loading Compliance", {
         description: err.message || "Could not retrieve document checklist.",
@@ -89,26 +118,31 @@ export default function StudentComplianceTab({ authUser }) {
   }, []);
 
   useEffect(() => {
-    loadComplianceData();
+    const timer = setTimeout(() => {
+      loadComplianceData();
+    }, 0);
+    return () => clearTimeout(timer);
   }, [loadComplianceData]);
+
+  const requirements = data?.requirements;
 
   // Category counts and list
   const availableCategories = useMemo(() => {
-    if (!data?.requirements) return [];
-    const set = new Set(data.requirements.map((r) => r.category).filter(Boolean));
+    if (!requirements) return [];
+    const set = new Set(requirements.map((r) => r.category).filter(Boolean));
     return Array.from(set);
-  }, [data?.requirements]);
+  }, [requirements]);
 
   const categoryCounts = useMemo(() => {
-    if (!data?.requirements) return {};
+    if (!requirements) return {};
     const counts = {};
-    data.requirements.forEach((r) => {
+    requirements.forEach((r) => {
       if (r.category) {
         counts[r.category] = (counts[r.category] || 0) + 1;
       }
     });
     return counts;
-  }, [data?.requirements]);
+  }, [requirements]);
 
   // Toggle filter helpers
   const toggleStatusFilter = (statusKey) => {
@@ -151,10 +185,10 @@ export default function StudentComplianceTab({ authUser }) {
 
   // Filtered Requirements (Combined Criteria)
   const filteredRequirements = useMemo(() => {
-    if (!data?.requirements) return [];
+    if (!requirements) return [];
     const q = searchQuery.trim().toLowerCase();
 
-    return data.requirements.filter((item) => {
+    return requirements.filter((item) => {
       const matchesSearch =
         !q ||
         item.docType.toLowerCase().includes(q) ||
@@ -177,7 +211,7 @@ export default function StudentComplianceTab({ authUser }) {
 
       return matchesSearch && matchesStatus && matchesCategory;
     });
-  }, [data?.requirements, searchQuery, statusFilters, categoryFilters]);
+  }, [requirements, searchQuery, statusFilters, categoryFilters]);
 
   // Sorted Requirements
   const sortedRequirements = useMemo(() => {
@@ -239,6 +273,41 @@ export default function StudentComplianceTab({ authUser }) {
     section: "1-1",
   };
 
+  // Download PDF Handler (Direct Vector PDF Download)
+  const handleDownloadPdf = async () => {
+    setDownloadingPdf(true);
+    try {
+      const blob = await generateStudentComplianceSlipPdf(
+        student,
+        sortedRequirements,
+        summary,
+        { branding }
+      );
+      const safeStudentNo = student.studentNo
+        ? String(student.studentNo).replace(/[^0-9A-Za-z-]/g, "")
+        : "SUMMARY";
+      const fileName = generateExportFilename("STUDENT-COMPLIANCE", safeStudentNo, "pdf");
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      toast.success("Checklist PDF Downloaded", {
+        description: `Saved as ${fileName}`,
+      });
+    } catch (err) {
+      console.error("PDF download failed:", err);
+      toast.error("Download Failed", {
+        description: "Could not generate PDF download.",
+      });
+    } finally {
+      setDownloadingPdf(false);
+    }
+  };
+
   // Dedicated Print Handler (Uses isolated iframe to guarantee top-of-paper placement)
   const handlePrintSlip = () => {
     const printFrame = document.createElement("iframe");
@@ -266,12 +335,25 @@ export default function StudentComplianceTab({ authUser }) {
         .replace(/"/g, "&quot;")
         .replace(/'/g, "&#39;");
 
+    const safeStudentNo = student.studentNo
+      ? String(student.studentNo).replace(/[^0-9A-Za-z-]/g, "")
+      : "SUMMARY";
+    const printDocTitle = generateExportFilename("STUDENT-COMPLIANCE", safeStudentNo, "pdf").replace(/\.pdf$/, "");
+    const docId = `RKS-CMP-${student.studentNo ? String(student.studentNo).replace(/[^0-9A-Za-z]/g, "") : "STD"}-${new Date().getFullYear()}`;
+    const campusTitle = branding.campusName
+      ? `${branding.institutionName} · ${branding.campusName}`
+      : branding.institutionName;
+    const brandColor = branding.brandColor || "#800000";
+    const logoSrc = branding.logoBase64 || branding.logoUrl || DEFAULT_BRANDING_LOGO;
+    const fallbackLogoSrc = branding.fallbackLogoUrl || OFFICIAL_FALLBACK_LOGO;
+
     const rowsHtml = sortedRequirements
-      .map((r) => {
+      .map((r, idx) => {
         const isSubmitted = r.status === "Submitted";
 
         return `
           <tr>
+            <td style="padding: 7px 8px; border-bottom: 1px solid #e5e7eb; font-size: 10px; color: #6b7280; text-align: center; width: 34px;">${idx + 1}</td>
             <td style="padding: 7px 10px; border-bottom: 1px solid #e5e7eb; font-size: 11px; font-weight: 600; color: #111827;">${escapeHtml(r.docType)}</td>
             <td style="padding: 7px 10px; border-bottom: 1px solid #e5e7eb; font-size: 10px; color: #6b7280; white-space: nowrap;">${escapeHtml(r.category)}</td>
             <td style="padding: 7px 10px; border-bottom: 1px solid #e5e7eb; white-space: nowrap;">
@@ -290,11 +372,11 @@ export default function StudentComplianceTab({ authUser }) {
       <html>
         <head>
           <meta charset="utf-8" />
-          <title>Student Document Compliance Slip - ${escapeHtml(student.studentNo)}</title>
+          <title>${escapeHtml(printDocTitle)}</title>
           <style>
             @page {
               size: A4 portrait;
-              margin: 12mm 15mm 12mm 15mm;
+              margin: 14mm 16mm 14mm 16mm;
             }
             * {
               box-sizing: border-box;
@@ -312,39 +394,64 @@ export default function StudentComplianceTab({ authUser }) {
               padding: 0;
               margin: 0;
             }
-            .header {
+            .report-header {
               text-align: center;
-              padding-bottom: 12px;
-              border-bottom: 2px solid #800000;
-              margin-bottom: 14px;
+              margin-bottom: 10px;
             }
-            .header h1 {
+            .logo-wrap {
+              display: flex;
+              justify-content: center;
+              margin-bottom: 8px;
+            }
+            .logo-wrap img {
+              width: 52px;
+              height: 52px;
+              object-fit: contain;
+            }
+            .institution-title {
+              font-size: 14.5px;
+              font-weight: 800;
+              color: ${brandColor};
+              letter-spacing: -0.01em;
+              line-height: 1.25;
+            }
+            .office-subtitle {
+              font-size: 8.5px;
+              font-weight: 700;
+              color: #6b7280;
+              letter-spacing: 2px;
+              text-transform: uppercase;
+              margin-top: 3px;
+            }
+            .report-title {
               font-size: 13.5px;
               font-weight: 800;
-              color: #800000;
-              letter-spacing: 0.2px;
+              color: #111827;
+              letter-spacing: -0.01em;
+              margin-top: 9px;
               margin-bottom: 2px;
             }
-            .header h2 {
-              font-size: 10px;
-              font-weight: 700;
-              color: #4b5563;
-              letter-spacing: 0.6px;
-              margin-bottom: 3px;
-            }
-            .header p {
-              font-size: 9px;
+            .doc-id {
+              font-size: 8.5px;
+              font-style: italic;
               font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
               color: #6b7280;
+              margin-bottom: 10px;
+            }
+            .master-divider {
+              width: 100%;
+              height: 2px;
+              background-color: ${brandColor};
+              margin-bottom: 14px;
             }
             .meta-grid {
               display: grid;
-              grid-template-columns: repeat(4, 1fr);
-              gap: 10px;
+              grid-template-columns: repeat(3, 1fr);
+              gap: 12px;
               background: #f9fafb;
               border: 1px solid #e5e7eb;
               border-radius: 8px;
-              padding: 10px 12px;
+              padding: 10px 14px;
               margin-bottom: 14px;
             }
             .meta-item {
@@ -353,7 +460,7 @@ export default function StudentComplianceTab({ authUser }) {
               gap: 2px;
             }
             .meta-label {
-              font-size: 8.5px;
+              font-size: 8px;
               font-weight: 700;
               text-transform: uppercase;
               letter-spacing: 0.5px;
@@ -369,7 +476,7 @@ export default function StudentComplianceTab({ authUser }) {
               font-size: 11px;
               font-weight: 700;
               font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-              color: #800000;
+              color: ${brandColor};
             }
             table {
               width: 100%;
@@ -382,28 +489,56 @@ export default function StudentComplianceTab({ authUser }) {
             th {
               background-color: #f3f4f6;
               color: #374151;
-              font-size: 9.5px;
+              font-size: 9px;
               font-weight: 700;
               text-transform: uppercase;
               letter-spacing: 0.5px;
-              padding: 7px 10px;
+              padding: 8px 10px;
               text-align: left;
               border-bottom: 1.5px solid #e5e7eb;
             }
+            .badge-approved {
+              display: inline-block;
+              padding: 2px 7px;
+              border-radius: 9999px;
+              font-size: 9.5px;
+              font-weight: 700;
+              color: #065f46;
+              background: #ecfdf5;
+              border: 1px solid #a7f3d0;
+            }
+            .badge-missing {
+              display: inline-block;
+              padding: 2px 7px;
+              border-radius: 9999px;
+              font-size: 9.5px;
+              font-weight: 700;
+              color: #92400e;
+              background: #fffbeb;
+              border: 1px solid #fde68a;
+            }
             .footer-note {
               text-align: center;
-              font-size: 9px;
+              font-size: 8.5px;
               color: #9ca3af;
               font-style: italic;
-              margin-top: 10px;
+              margin-top: 18px;
+              border-top: 1px dashed #e5e7eb;
+              padding-top: 10px;
+              page-break-inside: avoid;
             }
           </style>
         </head>
         <body>
-          <div class="header">
-            <h1>POLYTECHNIC UNIVERSITY OF THE PHILIPPINES</h1>
-            <h2>SAN JUAN CAMPUS &nbsp;|&nbsp; OFFICE OF THE CAMPUS REGISTRAR</h2>
-            <p>STUDENT REQUIREMENTS COMPLIANCE SUMMARY &bull; ${escapeHtml(printDate)}</p>
+          <div class="report-header">
+            <div class="logo-wrap">
+              <img src="${escapeHtml(logoSrc)}" onerror="this.src='${escapeHtml(fallbackLogoSrc)}'" alt="PUP Logo" />
+            </div>
+            <h1 class="institution-title">${escapeHtml(campusTitle)}</h1>
+            <p class="office-subtitle">${escapeHtml(branding.tagline || "OFFICE OF THE CAMPUS REGISTRAR")}</p>
+            <h2 class="report-title">STUDENT REQUIREMENTS COMPLIANCE SUMMARY</h2>
+            <p class="doc-id">Document ID: ${escapeHtml(docId)} &bull; Issued on ${escapeHtml(printDate)}</p>
+            <div class="master-divider"></div>
           </div>
 
           <div class="meta-grid">
@@ -416,19 +551,16 @@ export default function StudentComplianceTab({ authUser }) {
               <span class="meta-val-maroon">${escapeHtml(student.studentNo || "—")}</span>
             </div>
             <div class="meta-item">
-              <span class="meta-label">Degree Program</span>
-              <span class="meta-val">${escapeHtml(student.courseCode || "")} — ${escapeHtml(student.courseName || "")}</span>
-            </div>
-            <div class="meta-item">
               <span class="meta-label">Compliance Status</span>
-              <span class="meta-val">${summary.complianceRate}% (${summary.submittedCount || summary.approvedCount}/${summary.totalRequired} Submitted)</span>
+              <span class="meta-val">${summary.complianceRate}% (${summary.submittedCount || summary.approvedCount || 0}/${summary.totalRequired} Submitted)</span>
             </div>
           </div>
 
           <table>
             <thead>
               <tr>
-                <th>Requirement</th>
+                <th style="width: 34px; text-align: center;">#</th>
+                <th>Requirement / Credential</th>
                 <th>Category</th>
                 <th>Status</th>
               </tr>
@@ -439,7 +571,7 @@ export default function StudentComplianceTab({ authUser }) {
           </table>
 
           <div class="footer-note">
-            Note: This is an official system-generated student compliance summary for institutional records verification.
+            Note: This is an official system-generated student compliance summary from the PUPSJ Records Keeping System for institutional verification. Alteration or unauthorized reproduction is strictly prohibited.
           </div>
         </body>
       </html>
@@ -481,12 +613,12 @@ export default function StudentComplianceTab({ authUser }) {
           actions={
             <div className="flex items-center gap-2">
               <span className="hidden md:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-700 border border-gray-200 dark:bg-zinc-800 dark:border-white/10 dark:text-zinc-300">
-                <HugeIcon  className="ph-bold ph-eye text-[12px]"></HugeIcon>
+                <HugeIcon className="ph-bold ph-eye text-[12px]"></HugeIcon>
                 Viewer Only
               </span>
               {student.studentNo && (
                 <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-red-50 text-pup-maroon border border-red-100 dark:bg-red-950/30 dark:border-red-900/30">
-                  <HugeIcon  className="ph-fill ph-student text-[13px]"></HugeIcon>
+                  <HugeIcon className="ph-fill ph-student text-[13px]"></HugeIcon>
                   {student.studentNo}
                 </span>
               )}
@@ -498,6 +630,23 @@ export default function StudentComplianceTab({ authUser }) {
               />
 
               <div className="h-6 w-px bg-gray-200 dark:bg-zinc-800" />
+
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleDownloadPdf}
+                disabled={downloadingPdf || loading}
+                className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-50"
+              >
+                {downloadingPdf ? (
+                  <span className="flex items-center gap-1.5">
+                    <HugeIcon className="ph-bold ph-spinner animate-spin text-sm"></HugeIcon>
+                    Downloading...
+                  </span>
+                ) : (
+                  "Download"
+                )}
+              </Button>
 
               <Button
                 type="button"
@@ -541,7 +690,7 @@ export default function StudentComplianceTab({ authUser }) {
           <div className="flex flex-wrap items-center gap-2.5 flex-1 lg:justify-end">
             {/* Search Input */}
             <div className="relative w-full sm:w-60 lg:w-64 group">
-              <HugeIcon  className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-xs pointer-events-none" />
+              <HugeIcon className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-xs pointer-events-none" />
               <Input
                 type="text"
                 placeholder="Search requirements..."
@@ -583,8 +732,8 @@ export default function StudentComplianceTab({ authUser }) {
                         {activeFilterCount === 0
                           ? "Filter Requirements"
                           : activeFilterCount === 1
-                          ? activeFilterSummary
-                          : `Filters (${activeFilterCount})`}
+                            ? activeFilterSummary
+                            : `Filters (${activeFilterCount})`}
                       </span>
                       {activeFilterCount > 0 && (
                         <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-pup-maroon px-1 text-[10px] font-bold text-white dark:bg-red-500">
@@ -617,48 +766,6 @@ export default function StudentComplianceTab({ authUser }) {
                         Reset all
                       </button>
                     )}
-                  </div>
-
-                  {/* Quick Presets Bar */}
-                  <div className="p-3 pb-0">
-                    <div className="flex items-center gap-1 p-1 bg-gray-100/80 dark:bg-zinc-800/60 rounded-xl border border-gray-200/50 dark:border-white/5">
-                      <button
-                        type="button"
-                        onClick={() => setStatusFilters([])}
-                        className={cn(
-                          "flex-1 py-1 px-2 text-[11px] font-medium rounded-lg transition-all cursor-pointer text-center",
-                          statusFilters.length === 0
-                            ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs font-semibold"
-                            : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
-                        )}
-                      >
-                        All
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setStatusFilters(["missing"])}
-                        className={cn(
-                          "flex-1 py-1 px-2 text-[11px] font-medium rounded-lg transition-all cursor-pointer text-center",
-                          statusFilters.length === 1 && statusFilters.includes("missing")
-                            ? "bg-white dark:bg-zinc-700 text-amber-700 dark:text-amber-300 shadow-xs font-semibold"
-                            : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
-                        )}
-                      >
-                        Pending ({summary.missingCount})
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setStatusFilters(["submitted"])}
-                        className={cn(
-                          "flex-1 py-1 px-2 text-[11px] font-medium rounded-lg transition-all cursor-pointer text-center",
-                          statusFilters.length === 1 && statusFilters.includes("submitted")
-                            ? "bg-white dark:bg-zinc-700 text-emerald-700 dark:text-emerald-300 shadow-xs font-semibold"
-                            : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
-                        )}
-                      >
-                        Completed ({summary.submittedCount || summary.approvedCount})
-                      </button>
-                    </div>
                   </div>
 
                   {/* Filter Options List */}
@@ -817,7 +924,7 @@ export default function StudentComplianceTab({ authUser }) {
                     : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
                 )}
               >
-                <HugeIcon  className="ph-bold ph-table text-sm block" />
+                <HugeIcon className="ph-bold ph-table text-sm block" />
               </button>
               <button
                 type="button"
@@ -830,7 +937,7 @@ export default function StudentComplianceTab({ authUser }) {
                     : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
                 )}
               >
-                <HugeIcon  className="ph-bold ph-squares-four text-sm block" />
+                <HugeIcon className="ph-bold ph-squares-four text-sm block" />
               </button>
             </div>
           </div>
@@ -854,7 +961,7 @@ export default function StudentComplianceTab({ authUser }) {
                     onClick={() => toggleStatusFilter(s)}
                     className="hover:text-red-500 cursor-pointer"
                   >
-                    <HugeIcon  className="ph-bold ph-x text-[10px]" />
+                    <HugeIcon className="ph-bold ph-x text-[10px]" />
                   </button>
                 </div>
               ))}
@@ -869,7 +976,7 @@ export default function StudentComplianceTab({ authUser }) {
                     onClick={() => toggleCategoryFilter(cat)}
                     className="hover:text-red-500 cursor-pointer"
                   >
-                    <HugeIcon  className="ph-bold ph-x text-[10px]" />
+                    <HugeIcon className="ph-bold ph-x text-[10px]" />
                   </button>
                 </div>
               ))}
@@ -882,7 +989,7 @@ export default function StudentComplianceTab({ authUser }) {
                     className="hover:text-red-500 cursor-pointer"
                     title="Reset to priority sort"
                   >
-                    <HugeIcon  className="ph-bold ph-x text-[10px]" />
+                    <HugeIcon className="ph-bold ph-x text-[10px]" />
                   </button>
                 </div>
               )}
@@ -894,7 +1001,7 @@ export default function StudentComplianceTab({ authUser }) {
                     onClick={() => setSearchQuery("")}
                     className="hover:text-red-500 cursor-pointer"
                   >
-                    <HugeIcon  className="ph-bold ph-x text-[10px]" />
+                    <HugeIcon className="ph-bold ph-x text-[10px]" />
                   </button>
                 </div>
               )}
@@ -916,7 +1023,7 @@ export default function StudentComplianceTab({ authUser }) {
               <Empty>
                 <EmptyMedia>
                   <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gray-100 text-gray-400 dark:bg-zinc-800 dark:text-zinc-500 mx-auto">
-                    <HugeIcon  className="ph-duotone ph-files text-3xl" />
+                    <HugeIcon className="ph-duotone ph-files text-3xl" />
                   </div>
                 </EmptyMedia>
                 <EmptyHeader>
@@ -1016,11 +1123,11 @@ export default function StudentComplianceTab({ authUser }) {
                         <td className="p-4 whitespace-nowrap">
                           {isSubmitted ? (
                             <span className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold bg-emerald-50 text-emerald-800 border-emerald-200/80 dark:bg-emerald-950/30 dark:text-emerald-300">
-                              <HugeIcon  className="ph-bold ph-check text-xs" /> Completed
+                              <HugeIcon className="ph-bold ph-check text-xs" /> Completed
                             </span>
                           ) : (
                             <span className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold bg-amber-50 text-amber-800 border-amber-200/80 dark:bg-amber-950/30 dark:text-amber-300">
-                              <HugeIcon  className="ph-bold ph-clock text-xs" /> Pending Submission
+                              <HugeIcon className="ph-bold ph-clock text-xs" /> Pending Submission
                             </span>
                           )}
                         </td>
@@ -1298,21 +1405,57 @@ export default function StudentComplianceTab({ authUser }) {
             className="p-8 py-6 space-y-6 text-xs text-gray-800 dark:text-zinc-200 flex-1 overflow-y-auto print:overflow-visible print:p-0 print:m-0 print:space-y-4"
             id="compliance-printable-slip"
           >
-            {/* Institution Header */}
-            <div className="text-center pb-5 border-b border-gray-200 dark:border-white/10 space-y-1 print:pb-4">
-              <h2 className="font-bold text-base text-pup-maroon tracking-tight">
-                POLYTECHNIC UNIVERSITY OF THE PHILIPPINES
+            {/* Institution Header matching Admin Reports */}
+            <div className="text-center pb-2 print:pb-2">
+              {/* Centered Logo */}
+              <div className="flex justify-center mb-2">
+                <div className="w-14 h-14 flex items-center justify-center p-0.5">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={branding.logoBase64 || branding.logoUrl || DEFAULT_BRANDING_LOGO}
+                    onError={(e) => {
+                      e.currentTarget.src = branding.fallbackLogoUrl || OFFICIAL_FALLBACK_LOGO;
+                    }}
+                    alt="PUP Logo"
+                    className="max-w-full max-h-full object-contain"
+                  />
+                </div>
+              </div>
+
+              {/* School & Campus Name */}
+              <h2
+                className="font-bold text-[15px] sm:text-[16px] tracking-tight transition-colors text-center"
+                style={{ color: branding.brandColor || "#800000" }}
+              >
+                {branding.campusName
+                  ? `${branding.institutionName} · ${branding.campusName}`
+                  : branding.institutionName}
               </h2>
-              <h3 className="font-semibold text-xs text-gray-600 dark:text-zinc-400 tracking-wider">
-                SAN JUAN CAMPUS  |  OFFICE OF THE CAMPUS REGISTRAR
-              </h3>
-              <p className="text-[11px] text-gray-400 font-mono pt-0.5">
-                STUDENT REQUIREMENTS COMPLIANCE SUMMARY • {new Date().toLocaleDateString("en-PH", { year: "numeric", month: "long", day: "numeric" })}
+
+              {/* Tagline / Subtitle */}
+              <p className="text-[9px] uppercase tracking-[0.2em] font-semibold text-gray-500 dark:text-zinc-400 text-center mt-1">
+                {branding.tagline || "OFFICE OF THE CAMPUS REGISTRAR"}
               </p>
+
+              {/* Report Title */}
+              <h3 className="text-[13px] sm:text-[14px] font-bold text-gray-900 dark:text-zinc-100 text-center mt-2.5">
+                Student Requirements Compliance Summary
+              </h3>
+
+              {/* Document ID & Timestamp */}
+              <p className="text-[9px] italic text-gray-500 dark:text-zinc-400 text-center font-mono mt-0.5">
+                Document ID: RKS-CMP-{student.studentNo ? String(student.studentNo).replace(/[^0-9A-Za-z]/g, "") : "STD"}-{new Date().getFullYear()} · Issued on {new Date().toLocaleDateString("en-PH", { year: "numeric", month: "long", day: "numeric" })}
+              </p>
+
+              {/* Master Divider Line */}
+              <div
+                className="w-full h-[2px] mt-3 mb-5 transition-colors"
+                style={{ backgroundColor: branding.brandColor || "#800000" }}
+              />
             </div>
 
             {/* Student Meta Details Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 p-5 rounded-2xl bg-gray-50/80 dark:bg-zinc-900/50 border border-gray-200/80 dark:border-white/10 print:bg-gray-50 print:border-gray-200">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 p-5 rounded-2xl bg-gray-50/80 dark:bg-zinc-900/50 border border-gray-200/80 dark:border-white/10 print:bg-gray-50 print:border-gray-200">
               <div className="space-y-1">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-400 block">Student Name</span>
                 <span className="text-xs font-bold text-gray-900 dark:text-zinc-100 block truncate" title={student.name}>{student.name}</span>
@@ -1322,13 +1465,9 @@ export default function StudentComplianceTab({ authUser }) {
                 <span className="font-mono text-xs font-bold text-pup-maroon dark:text-red-400 block">{student.studentNo}</span>
               </div>
               <div className="space-y-1">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-400 block">Degree Program</span>
-                <span className="text-xs text-gray-700 dark:text-zinc-300 block truncate" title={`${student.courseCode} — ${student.courseName}`}>{student.courseCode} — {student.courseName}</span>
-              </div>
-              <div className="space-y-1">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-400 block">Compliance Status</span>
                 <span className="text-xs font-bold text-gray-900 dark:text-zinc-100 block">
-                  {summary.complianceRate}% ({summary.submittedCount || summary.approvedCount}/{summary.totalRequired} Submitted)
+                  {summary.complianceRate}% ({summary.submittedCount || summary.approvedCount || 0}/${summary.totalRequired} Submitted)
                 </span>
               </div>
             </div>
@@ -1338,14 +1477,16 @@ export default function StudentComplianceTab({ authUser }) {
               <table className="w-full text-left text-xs">
                 <thead className="bg-gray-100/80 dark:bg-zinc-800/70 font-bold text-[11px] uppercase tracking-wider text-gray-600 dark:text-zinc-400 border-b border-gray-200 dark:border-white/10 print:bg-gray-100">
                   <tr>
-                    <th className="py-3 px-4">Requirement</th>
+                    <th className="py-3 px-3 text-center w-9">#</th>
+                    <th className="py-3 px-4">Requirement / Credential</th>
                     <th className="py-3 px-4">Category</th>
                     <th className="py-3 px-4">Status</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 dark:divide-white/5 print:divide-gray-200">
-                  {sortedRequirements.map((r) => (
+                  {sortedRequirements.map((r, idx) => (
                     <tr key={r.id} className="hover:bg-gray-50/50 dark:hover:bg-zinc-800/30 transition-colors print:border-b print:border-gray-100">
+                      <td className="py-3 px-3 text-center text-gray-400 dark:text-zinc-500 font-mono text-[11px]">{idx + 1}</td>
                       <td className="py-3 px-4 font-semibold text-gray-900 dark:text-zinc-100 leading-normal">{r.docType}</td>
                       <td className="py-3 px-4 text-gray-500 dark:text-zinc-400 text-xs whitespace-nowrap">{r.category}</td>
                       <td className="py-3 px-4 whitespace-nowrap">
@@ -1366,8 +1507,8 @@ export default function StudentComplianceTab({ authUser }) {
               </table>
             </div>
 
-            <div className="text-xs text-gray-400 dark:text-zinc-400 text-center italic pt-2">
-              Note: This is an official system-generated student compliance summary for institutional records verification.
+            <div className="text-[10px] text-gray-400 dark:text-zinc-400 text-center italic pt-2">
+              Note: This is an official system-generated student compliance summary from the PUPSJ Records Keeping System for institutional verification. Alteration or unauthorized reproduction is strictly prohibited.
             </div>
           </div>
 
@@ -1379,6 +1520,22 @@ export default function StudentComplianceTab({ authUser }) {
               className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
             >
               Close
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleDownloadPdf}
+              disabled={downloadingPdf}
+              className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-50"
+            >
+              {downloadingPdf ? (
+                <span className="flex items-center gap-1.5">
+                  <HugeIcon className="ph-bold ph-spinner animate-spin text-sm"></HugeIcon>
+                  Generating...
+                </span>
+              ) : (
+                "Download"
+              )}
             </Button>
             <Button
               type="button"

@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Reorder } from "framer-motion";
 import HugeIcon from "@/components/shared/HugeIcon";
 import PageHeader from "@/components/shared/PageHeader";
 import { RefreshButton } from "@/components/shared/RefreshButton";
@@ -19,7 +20,17 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
+  DialogClose,
 } from "@/components/ui/dialog";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+  SheetFooter,
+} from "@/components/ui/sheet";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import {
   Empty,
   EmptyHeader,
@@ -27,12 +38,69 @@ import {
   EmptyDescription,
   EmptyMedia,
 } from "@/components/ui/empty";
-import { TooltipProvider } from "@/components/ui/tooltip";
+import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { generateOrganizationCompliancePdf } from "@/lib/pdfGenerator";
 import { downloadOrganizationComplianceCsv, generateExportFilename } from "@/lib/exportHelpers";
 import { cn } from "@/lib/utils";
 
 const CATEGORIES = ["All", "Academic", "Non-Academic"];
+
+function getOfficerRoleStyle(position = "") {
+  const pos = position.toLowerCase();
+  if (pos.includes("president") && !pos.includes("vice")) {
+    return {
+      gradient: "from-[#800000] via-[#991b1b] to-[#b91c1c] text-white",
+      ring: "ring-red-500/30 dark:ring-red-400/30",
+      badge: "bg-red-50 text-pup-maroon border-red-200 dark:bg-red-950/50 dark:text-red-300 dark:border-red-900/50",
+      icon: "ph-fill ph-crown",
+    };
+  }
+  if (pos.includes("vice")) {
+    return {
+      gradient: "from-indigo-800 via-indigo-600 to-blue-600 text-white",
+      ring: "ring-indigo-500/30 dark:ring-indigo-400/30",
+      badge: "bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-950/50 dark:text-indigo-300 dark:border-indigo-900/50",
+      icon: "ph-bold ph-shield-check",
+    };
+  }
+  if (pos.includes("secretary")) {
+    return {
+      gradient: "from-emerald-800 via-emerald-600 to-teal-600 text-white",
+      ring: "ring-emerald-500/30 dark:ring-emerald-400/30",
+      badge: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-900/50",
+      icon: "ph-bold ph-notepad",
+    };
+  }
+  if (pos.includes("treasurer") || pos.includes("finance")) {
+    return {
+      gradient: "from-amber-700 via-amber-600 to-yellow-600 text-white",
+      ring: "ring-amber-500/30 dark:ring-amber-400/30",
+      badge: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-900/50",
+      icon: "ph-bold ph-coins",
+    };
+  }
+  if (pos.includes("auditor")) {
+    return {
+      gradient: "from-purple-800 via-purple-600 to-violet-600 text-white",
+      ring: "ring-purple-500/30 dark:ring-purple-400/30",
+      badge: "bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/50 dark:text-purple-300 dark:border-purple-900/50",
+      icon: "ph-bold ph-scales",
+    };
+  }
+  return {
+    gradient: "from-slate-700 via-slate-600 to-zinc-700 text-white",
+    ring: "ring-gray-300/30 dark:ring-white/10",
+    badge: "bg-gray-100 text-gray-700 border-gray-200 dark:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-700",
+    icon: "ph-bold ph-user-check",
+  };
+}
+
+function getInitials(name = "") {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "SO";
+  if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
 
 function SortIndicator({ column, sortBy, sortOrder }) {
   if (sortBy !== column) {
@@ -69,8 +137,34 @@ export default function OSASOrganizationComplianceView({
   const [sortBy, setSortBy] = useState("complianceScore");
   const [sortOrder, setSortOrder] = useState("desc");
 
+  // Draggable KPI Stat Cards
+  const [kpiOrder, setKpiOrder] = useState(["accreditation", "organizations", "cbl"]);
+  const [selectedKpi, setSelectedKpi] = useState(null);
+  const statCardsRef = useRef(null);
+
+  // Pagination
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
+  // Click outside to close selected KPI popover
+  useEffect(() => {
+    if (!selectedKpi) return;
+    const handleClickOutside = (e) => {
+      if (statCardsRef.current && !statCardsRef.current.contains(e.target)) {
+        setSelectedKpi(null);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("touchstart", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+    };
+  }, [selectedKpi]);
+
   // Modals
   const [selectedOrgForOfficers, setSelectedOrgForOfficers] = useState(null);
+  const [officerSearch, setOfficerSearch] = useState("");
   const [previewCbl, setPreviewCbl] = useState(null);
   const [reportOpen, setReportOpen] = useState(false);
   const [pdfBlobUrl, setPdfBlobUrl] = useState(null);
@@ -146,10 +240,15 @@ export default function OSASOrganizationComplianceView({
       officersEmpty: 0,
     };
     organizations.forEach((org) => {
-      if (c[org.compliance_status] !== undefined) c[org.compliance_status] += 1;
+      const compStatus = org.complianceStatus || org.compliance_status;
+      if (c[compStatus] !== undefined) c[compStatus] += 1;
       if (c[org.status] !== undefined) c[org.status] += 1;
-      if (org.checklist?.has_cbl) c.cblArchived += 1; else c.cblPending += 1;
-      if (org.checklist?.has_officers) c.officersPresent += 1; else c.officersEmpty += 1;
+
+      const hasCbl = Boolean(org.hasCbl ?? org.checklist?.cbl ?? org.checklist?.has_cbl);
+      if (hasCbl) c.cblArchived += 1; else c.cblPending += 1;
+
+      const hasOfficers = Boolean((org.activeOfficerCount > 0) || org.checklist?.officers || org.checklist?.has_officers);
+      if (hasOfficers) c.officersPresent += 1; else c.officersEmpty += 1;
     });
     return c;
   }, [organizations]);
@@ -211,6 +310,7 @@ export default function OSASOrganizationComplianceView({
     else if (groupId === "standing") setStandingFilters(values);
     else if (groupId === "cbl") setCblFilters(values);
     else if (groupId === "officers") setOfficerFilters(values);
+    setPage(1);
   }, []);
 
   const handleResetFilters = useCallback(() => {
@@ -220,6 +320,7 @@ export default function OSASOrganizationComplianceView({
     setStandingFilters([]);
     setCblFilters([]);
     setOfficerFilters([]);
+    setPage(1);
   }, []);
 
   // Filter Organizations
@@ -230,8 +331,9 @@ export default function OSASOrganizationComplianceView({
         const q = search.toLowerCase().trim();
         const matchName = (org.name || "").toLowerCase().includes(q);
         const matchAcronym = (org.acronym || "").toLowerCase().includes(q);
-        const matchAdviser = (org.adviser_name || "").toLowerCase().includes(q);
-        if (!matchName && !matchAcronym && !matchAdviser) return false;
+        const matchAdviser = (org.adviserName || org.adviser_name || "").toLowerCase().includes(q);
+        const matchAdviserEmail = (org.adviserEmail || org.adviser_email || "").toLowerCase().includes(q);
+        if (!matchName && !matchAcronym && !matchAdviser && !matchAdviserEmail) return false;
       }
 
       // 2. Category filter
@@ -243,27 +345,28 @@ export default function OSASOrganizationComplianceView({
 
       // 3. Compliance status filter
       if (complianceFilters.length > 0) {
-        if (!complianceFilters.includes(org.compliance_status)) return false;
+        const compStatus = org.complianceStatus || org.compliance_status;
+        if (!complianceFilters.includes(compStatus)) return false;
       }
 
       // 4. Standing filter
       if (standingFilters.length > 0) {
         if (!standingFilters.includes(org.status)) return false;
       } else {
-        // By default, exclude archived orgs
+        // By default, exclude archived orgs unless Archived is explicitly selected
         if (org.status === "Archived") return false;
       }
 
       // 5. CBL filter
       if (cblFilters.length > 0) {
-        const hasCbl = Boolean(org.checklist?.has_cbl);
+        const hasCbl = Boolean(org.hasCbl ?? org.checklist?.cbl ?? org.checklist?.has_cbl);
         if (cblFilters.includes("archived") && !cblFilters.includes("pending") && !hasCbl) return false;
         if (cblFilters.includes("pending") && !cblFilters.includes("archived") && hasCbl) return false;
       }
 
       // 6. Officers filter
       if (officerFilters.length > 0) {
-        const hasOfficers = Boolean(org.checklist?.has_officers);
+        const hasOfficers = Boolean((org.activeOfficerCount > 0) || org.checklist?.officers || org.checklist?.has_officers);
         if (officerFilters.includes("roster") && !officerFilters.includes("empty") && !hasOfficers) return false;
         if (officerFilters.includes("empty") && !officerFilters.includes("roster") && hasOfficers) return false;
       }
@@ -280,11 +383,142 @@ export default function OSASOrganizationComplianceView({
     officerFilters,
   ]);
 
+  // Active Filter Detection
+  const isFiltered = useMemo(() => {
+    return (
+      Boolean(search.trim()) ||
+      categoryFilter !== "All" ||
+      complianceFilters.length > 0 ||
+      standingFilters.length > 0 ||
+      cblFilters.length > 0 ||
+      officerFilters.length > 0
+    );
+  }, [search, categoryFilter, complianceFilters, standingFilters, cblFilters, officerFilters]);
+
+  // Dynamic KPIs derived from filteredOrganizations (with division-by-zero guards)
+  const filteredSummary = useMemo(() => {
+    const total = filteredOrganizations.length;
+    if (total === 0) {
+      return {
+        totalOrganizations: 0,
+        overallComplianceRate: 0,
+        fullyCompliantCount: 0,
+        fullyCompliantRate: 0,
+        partiallyCompliantCount: 0,
+        actionRequiredCount: 0,
+        cblArchivedCount: 0,
+        cblArchivedRate: 0,
+        cblPendingCount: 0,
+        withOfficersCount: 0,
+        withOfficersRate: 0,
+        totalActiveOfficers: 0,
+        withAdvisersCount: 0,
+        withAdviserRate: 0,
+        academicCount: 0,
+        nonAcademicCount: 0,
+        statusDistribution: {
+          Active: 0,
+          Probationary: 0,
+          Inactive: 0,
+          Archived: 0,
+        },
+        categoryBreakdown: [],
+      };
+    }
+
+    let fullyCompliantCount = 0;
+    let partiallyCompliantCount = 0;
+    let actionRequiredCount = 0;
+    let cblArchivedCount = 0;
+    let withOfficersCount = 0;
+    let totalActiveOfficers = 0;
+    let withAdvisersCount = 0;
+    let academicCount = 0;
+    let nonAcademicCount = 0;
+    const statusDistribution = {
+      Active: 0,
+      Probationary: 0,
+      Inactive: 0,
+      Archived: 0,
+    };
+    const catMap = {};
+
+    filteredOrganizations.forEach((org) => {
+      const compStatus = org.complianceStatus || org.compliance_status;
+      if (compStatus === "Compliant") fullyCompliantCount += 1;
+      else if (compStatus === "Partially Compliant") partiallyCompliantCount += 1;
+      else actionRequiredCount += 1;
+
+      const st = org.status || "Active";
+      if (statusDistribution[st] !== undefined) statusDistribution[st] += 1;
+      else statusDistribution[st] = 1;
+
+      const hasCbl = Boolean(org.hasCbl ?? org.checklist?.cbl ?? org.checklist?.has_cbl);
+      if (hasCbl) cblArchivedCount += 1;
+
+      const hasOfficers = Boolean(
+        (org.activeOfficerCount > 0) || org.checklist?.officers || org.checklist?.has_officers
+      );
+      if (hasOfficers) withOfficersCount += 1;
+      totalActiveOfficers += Number(org.activeOfficerCount || 0);
+
+      const hasAdviser = Boolean(
+        (org.adviserName || org.adviser_name) &&
+        (org.adviserEmail || org.adviser_email)
+      );
+      if (hasAdviser) withAdvisersCount += 1;
+
+      const cat = (org.category || "Uncategorized").trim();
+      if (cat.toLowerCase() === "academic") academicCount += 1;
+      else nonAcademicCount += 1;
+
+      if (!catMap[cat]) {
+        catMap[cat] = { category: cat, totalOrgs: 0, compliantCount: 0 };
+      }
+      catMap[cat].totalOrgs += 1;
+      if (compStatus === "Compliant") {
+        catMap[cat].compliantCount += 1;
+      }
+    });
+
+    const categoryBreakdown = Object.values(catMap).map((c) => ({
+      category: c.category,
+      totalOrgs: c.totalOrgs,
+      compliantCount: c.compliantCount,
+      complianceRate: c.totalOrgs > 0 ? Math.round((c.compliantCount / c.totalOrgs) * 100) : 0,
+      totalOrganizations: c.totalOrgs,
+    }));
+
+    return {
+      totalOrganizations: total,
+      overallComplianceRate: Math.round((fullyCompliantCount / total) * 100),
+      fullyCompliantCount,
+      fullyCompliantRate: Math.round((fullyCompliantCount / total) * 100),
+      partiallyCompliantCount,
+      actionRequiredCount,
+      cblArchivedCount,
+      cblArchivedRate: Math.round((cblArchivedCount / total) * 100),
+      cblPendingCount: total - cblArchivedCount,
+      withOfficersCount,
+      withOfficersRate: Math.round((withOfficersCount / total) * 100),
+      totalActiveOfficers,
+      withAdvisersCount,
+      withAdviserRate: Math.round((withAdvisersCount / total) * 100),
+      academicCount,
+      nonAcademicCount,
+      statusDistribution,
+      categoryBreakdown,
+    };
+  }, [filteredOrganizations]);
+
   // Sort Organizations
   const sortedOrganizations = useMemo(() => {
     return [...filteredOrganizations].sort((a, b) => {
       let valA = a[sortBy];
       let valB = b[sortBy];
+
+      if (typeof valA === "boolean") valA = valA ? 1 : 0;
+      if (typeof valB === "boolean") valB = valB ? 1 : 0;
 
       if (typeof valA === "string") valA = valA.toLowerCase();
       if (typeof valB === "string") valB = valB.toLowerCase();
@@ -295,6 +529,13 @@ export default function OSASOrganizationComplianceView({
     });
   }, [filteredOrganizations, sortBy, sortOrder]);
 
+  // Total pages and paginated organizations
+  const totalPages = Math.max(1, Math.ceil(sortedOrganizations.length / pageSize));
+  const paginatedOrganizations = useMemo(() => {
+    const startIndex = (page - 1) * pageSize;
+    return sortedOrganizations.slice(startIndex, startIndex + pageSize);
+  }, [sortedOrganizations, page, pageSize]);
+
   const handleSort = (column) => {
     if (sortBy === column) {
       setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
@@ -302,6 +543,7 @@ export default function OSASOrganizationComplianceView({
       setSortBy(column);
       setSortOrder("desc");
     }
+    setPage(1);
   };
 
   // Active filter chips
@@ -311,7 +553,7 @@ export default function OSASOrganizationComplianceView({
       chips.push({
         id: "search",
         label: `Search: "${search.trim()}"`,
-        onRemove: () => setSearch(""),
+        onRemove: () => { setSearch(""); setPage(1); },
       });
     }
     if (categoryFilter !== "All") {
@@ -319,7 +561,7 @@ export default function OSASOrganizationComplianceView({
         id: "category",
         groupLabel: "Category",
         label: `${categoryFilter} Orgs`,
-        onRemove: () => setCategoryFilter("All"),
+        onRemove: () => { setCategoryFilter("All"); setPage(1); },
       });
     }
     complianceFilters.forEach((cf) => {
@@ -327,7 +569,7 @@ export default function OSASOrganizationComplianceView({
         id: `compliance-${cf}`,
         groupLabel: "Compliance",
         label: cf,
-        onRemove: () => setComplianceFilters((prev) => prev.filter((v) => v !== cf)),
+        onRemove: () => { setComplianceFilters((prev) => prev.filter((v) => v !== cf)); setPage(1); },
       });
     });
     standingFilters.forEach((sf) => {
@@ -335,23 +577,23 @@ export default function OSASOrganizationComplianceView({
         id: `standing-${sf}`,
         groupLabel: "Standing",
         label: sf,
-        onRemove: () => setStandingFilters((prev) => prev.filter((v) => v !== sf)),
+        onRemove: () => { setStandingFilters((prev) => prev.filter((v) => v !== sf)); setPage(1); },
       });
     });
     cblFilters.forEach((cbl) => {
       chips.push({
         id: `cbl-${cbl}`,
         groupLabel: "CBL",
-        label: cbl === "archived" ? "Archived (PDF)" : "Pending PDF",
-        onRemove: () => setCblFilters((prev) => prev.filter((v) => v !== cbl)),
+        label: cbl === "archived" ? "CBL Archived" : "CBL Pending",
+        onRemove: () => { setCblFilters((prev) => prev.filter((v) => v !== cbl)); setPage(1); },
       });
     });
     officerFilters.forEach((of) => {
       chips.push({
         id: `officers-${of}`,
         groupLabel: "Officers",
-        label: of === "roster" ? "Officers Whitelisted" : "No Officers",
-        onRemove: () => setOfficerFilters((prev) => prev.filter((v) => v !== of)),
+        label: of === "roster" ? "Officers Whitelisted" : "No Officers Recorded",
+        onRemove: () => { setOfficerFilters((prev) => prev.filter((v) => v !== of)); setPage(1); },
       });
     });
     return chips;
@@ -364,19 +606,26 @@ export default function OSASOrganizationComplianceView({
       setPreviewFrameReady(false);
       setReportOpen(true);
 
+      const scopeNote = isFiltered
+        ? `Filtered View (${filteredOrganizations.length} of ${organizations.length} Organizations)`
+        : undefined;
+
       const blob = await generateOrganizationCompliancePdf(
         data,
-        summary,
+        filteredSummary,
         meta,
         sortedOrganizations,
-        byCategory
+        filteredSummary.categoryBreakdown.length > 0 ? filteredSummary.categoryBreakdown : byCategory,
+        { scopeNote }
       );
       const url = URL.createObjectURL(blob);
       setPdfBlobUrl(url);
 
       onLogAction?.({
         action: "Generate OSAS Compliance PDF",
-        details: "generated official student organization compliance report PDF",
+        details: isFiltered
+          ? `generated filtered compliance report PDF (${filteredOrganizations.length} orgs)`
+          : "generated official student organization compliance report PDF",
         entityType: "Report",
       });
     } catch (err) {
@@ -404,10 +653,21 @@ export default function OSASOrganizationComplianceView({
   const handleExportCsv = () => {
     try {
       setIsExportingCsv(true);
-      downloadOrganizationComplianceCsv(data, onLogAction);
+      const scopeNote = isFiltered
+        ? `Filtered Dataset: ${filteredOrganizations.length} of ${organizations.length} Organizations`
+        : undefined;
+
+      downloadOrganizationComplianceCsv(data, onLogAction, undefined, {
+        organizations: sortedOrganizations,
+        summary: filteredSummary,
+        scopeNote,
+      });
+
       showToast?.({
         title: "CSV Export Complete",
-        description: "Student organization compliance dataset downloaded successfully.",
+        description: isFiltered
+          ? `Filtered dataset (${filteredOrganizations.length} organizations) downloaded successfully.`
+          : "Student organization compliance dataset downloaded successfully.",
       });
     } catch (err) {
       showToast?.({
@@ -419,15 +679,9 @@ export default function OSASOrganizationComplianceView({
     }
   };
 
-  // Category counts
-  const academicCount = useMemo(
-    () => organizations.filter((o) => (o.category || "").toLowerCase() === "academic").length,
-    [organizations]
-  );
-  const nonAcademicCount = useMemo(
-    () => organizations.filter((o) => (o.category || "").toLowerCase() !== "academic").length,
-    [organizations]
-  );
+  // Category counts derived from active filtered view
+  const academicCount = filteredSummary.academicCount;
+  const nonAcademicCount = filteredSummary.nonAcademicCount;
 
   return (
     <TooltipProvider delayDuration={200}>
@@ -455,7 +709,7 @@ export default function OSASOrganizationComplianceView({
                 {/* Separator */}
                 <div className="h-6 w-px bg-gray-200 dark:bg-zinc-800" />
 
-                {/* Secondary Action: Export CSV */}
+                {/* Secondary Action: Export */}
                 <Button
                   type="button"
                   variant="outline"
@@ -466,7 +720,7 @@ export default function OSASOrganizationComplianceView({
                   {isExportingCsv ? (
                     <HugeIcon className="ph-bold ph-spinner animate-spin text-[16px]" />
                   ) : (
-                    "Export CSV"
+                    "Export"
                   )}
                 </Button>
 
@@ -500,73 +754,338 @@ export default function OSASOrganizationComplianceView({
                   loading && !manualLoading ? "opacity-40 blur-[1px] grayscale-[0.1]" : "opacity-100"
                 )}
               >
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 relative z-20">
-                  {/* Stat Card 1: Accreditation Rate */}
-                  <div className="relative overflow-hidden rounded-[18px] border select-none transition-all shadow-[0_2px_10px_rgb(0,0,0,0.04)] hover:shadow-[0_4px_15px_rgb(0,0,0,0.06)] flex flex-col justify-between min-h-[110px] bg-gray-50 dark:bg-zinc-900 border-gray-100 dark:border-white/5">
-                    <div className="flex justify-between items-start p-4 pb-0">
-                      <span className="text-[13px] font-medium text-gray-500 dark:text-zinc-400 capitalize">
-                        Accreditation Rate
-                      </span>
-                      <div className="w-8 h-8 rounded-[10px] flex items-center justify-center text-white shadow-sm shrink-0 bg-[#22c55e]">
-                        <HugeIcon className="ph-bold text-[15px] ph-seal-check" />
-                      </div>
-                    </div>
-                    <div className="flex justify-between items-end p-4 pt-1">
-                      <div className="flex items-baseline gap-2">
-                        <span className="text-[28px] font-bold text-gray-900 dark:text-white leading-none tracking-tight">
-                          {summary?.overallComplianceRate ?? 0}%
-                        </span>
-                        <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400 mb-1">
-                          {summary?.fullyCompliantCount || 0} of {summary?.totalOrganizations || 0} Accredited
-                        </span>
-                      </div>
-                    </div>
-                  </div>
+                <Reorder.Group
+                  as="div"
+                  axis="x"
+                  values={kpiOrder}
+                  onReorder={setKpiOrder}
+                  ref={statCardsRef}
+                  className="grid grid-cols-1 md:grid-cols-3 gap-4 relative z-20"
+                >
+                  {kpiOrder.map((key) => {
+                    if (key === "accreditation") {
+                      return (
+                        <Reorder.Item
+                          as="div"
+                          value="accreditation"
+                          key="accreditation"
+                          className={cn(selectedKpi === "accreditation" ? "z-30" : "z-10")}
+                        >
+                          <div className={cn("relative group rounded-xl cursor-grab active:cursor-grabbing", selectedKpi === "accreditation" ? "z-30" : "z-10")}>
+                            <div
+                              onClick={() => setSelectedKpi(selectedKpi === "accreditation" ? null : "accreditation")}
+                              className={cn(
+                                "relative overflow-hidden rounded-[18px] border cursor-pointer select-none transition-all shadow-none flex flex-col justify-between min-h-[110px] bg-gray-50 dark:bg-zinc-900",
+                                selectedKpi === "accreditation"
+                                  ? "border-emerald-500/50 ring-1 ring-emerald-500/20"
+                                  : "border-gray-100 dark:border-white/5 hover:border-gray-200 dark:hover:border-white/10"
+                              )}
+                            >
+                              <div className="flex justify-between items-start p-4 pb-0">
+                                <div className="flex items-center gap-1.5">
+                                  <span className="text-[13px] font-medium text-gray-500 dark:text-zinc-400 capitalize">
+                                    Accreditation Rate
+                                  </span>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <HugeIcon className="ph-bold ph-info cursor-help text-xs text-gray-400 hover:text-gray-600 dark:hover:text-zinc-300 transition-colors" />
+                                    </TooltipTrigger>
+                                    <TooltipContent
+                                      side="right"
+                                      className="max-w-[280px] bg-white dark:bg-zinc-900 text-gray-900 dark:text-zinc-100 p-3 rounded-xl shadow-xl border border-gray-200 dark:border-white/10 text-xs font-normal"
+                                    >
+                                      <p className="font-semibold text-pup-maroon dark:text-red-400 mb-1">Accreditation Formula</p>
+                                      <p className="leading-relaxed text-gray-600 dark:text-zinc-300 mb-2">
+                                        Percentage of recognized student organizations with 100% completed compliance requirements.
+                                      </p>
+                                      <div className="p-2 bg-gray-50 dark:bg-zinc-800/60 rounded-lg text-[11px] font-mono border border-gray-200/60 dark:border-white/5">
+                                        (Compliant Orgs / Total Orgs) × 100
+                                      </div>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </div>
+                                <div className="w-8 h-8 rounded-[10px] flex items-center justify-center text-white shadow-sm shrink-0 bg-[#22c55e]">
+                                  <HugeIcon className="ph-bold text-[15px] ph-seal-check" />
+                                </div>
+                              </div>
+                              <div className="flex justify-between items-end p-4 pt-1">
+                                <div className="flex items-baseline gap-2">
+                                  <span className="text-[28px] font-bold text-gray-900 dark:text-white leading-none tracking-tight">
+                                    {filteredSummary.overallComplianceRate}%
+                                  </span>
+                                  <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400 mb-1">
+                                    {filteredSummary.fullyCompliantCount} of {filteredSummary.totalOrganizations} Accredited
+                                    {isFiltered && (
+                                      <span className="text-gray-400 dark:text-zinc-500 font-normal ml-1">
+                                        · Campus: {summary?.overallComplianceRate ?? 0}%
+                                      </span>
+                                    )}
+                                  </span>
+                                </div>
+                                <HugeIcon className="ph-bold ph-dots-six-vertical cursor-grab active:cursor-grabbing hover:text-gray-400 dark:hover:text-zinc-500 text-gray-300 dark:text-zinc-700 text-lg mb-0.5" />
+                              </div>
+                            </div>
 
-                  {/* Stat Card 2: Recognized Organizations */}
-                  <div className="relative overflow-hidden rounded-[18px] border select-none transition-all shadow-[0_2px_10px_rgb(0,0,0,0.04)] hover:shadow-[0_4px_15px_rgb(0,0,0,0.06)] flex flex-col justify-between min-h-[110px] bg-gray-50 dark:bg-zinc-900 border-gray-100 dark:border-white/5">
-                    <div className="flex justify-between items-start p-4 pb-0">
-                      <span className="text-[13px] font-medium text-gray-500 dark:text-zinc-400 capitalize">
-                        Recognized Orgs
-                      </span>
-                      <div className="w-8 h-8 rounded-[10px] flex items-center justify-center text-white shadow-sm shrink-0 bg-[#3b82f6]">
-                        <HugeIcon className="ph-bold text-[15px] ph-buildings" />
-                      </div>
-                    </div>
-                    <div className="flex justify-between items-end p-4 pt-1">
-                      <div className="flex items-baseline gap-2">
-                        <span className="text-[28px] font-bold text-gray-900 dark:text-white leading-none tracking-tight">
-                          {(summary?.totalOrganizations ?? 0).toLocaleString()}
-                        </span>
-                        <span className="text-xs font-medium text-blue-600 dark:text-blue-400 mb-1">
-                          {academicCount} Academic · {nonAcademicCount} Non-Academic
-                        </span>
-                      </div>
-                    </div>
-                  </div>
+                            {/* Absolute details popover */}
+                            <div
+                              className={cn(
+                                "absolute top-full left-0 right-0 z-[100] mt-2 rounded-xl border border-gray-200 bg-white p-4 shadow-xl dark:border-white/10 dark:bg-zinc-900 transition-all duration-300 ease-in-out origin-top",
+                                selectedKpi === "accreditation"
+                                  ? "scale-y-100 opacity-100 translate-y-0"
+                                  : "scale-y-95 opacity-0 -translate-y-2 pointer-events-none"
+                              )}
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <div className="space-y-3">
+                                <div className="grid grid-cols-2 gap-2">
+                                  <div className="bg-emerald-50 dark:bg-emerald-950/30 p-2.5 rounded-lg border border-emerald-100 dark:border-emerald-900/30">
+                                    <span className="block text-[9px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Fully Compliant</span>
+                                    <span className="text-lg font-black text-emerald-700 dark:text-emerald-400">{filteredSummary.fullyCompliantCount}</span>
+                                  </div>
+                                  <div className="bg-amber-50 dark:bg-amber-950/30 p-2.5 rounded-lg border border-amber-100 dark:border-amber-900/30">
+                                    <span className="block text-[9px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider">Partially Compliant</span>
+                                    <span className="text-lg font-black text-amber-700 dark:text-amber-400">{filteredSummary.partiallyCompliantCount}</span>
+                                  </div>
+                                </div>
 
-                  {/* Stat Card 3: CBL Archival Rate */}
-                  <div className="relative overflow-hidden rounded-[18px] border select-none transition-all shadow-[0_2px_10px_rgb(0,0,0,0.04)] hover:shadow-[0_4px_15px_rgb(0,0,0,0.06)] flex flex-col justify-between min-h-[110px] bg-gray-50 dark:bg-zinc-900 border-gray-100 dark:border-white/5">
-                    <div className="flex justify-between items-start p-4 pb-0">
-                      <span className="text-[13px] font-medium text-gray-500 dark:text-zinc-400 capitalize">
-                        CBL Archival Rate
-                      </span>
-                      <div className="w-8 h-8 rounded-[10px] flex items-center justify-center text-white shadow-sm shrink-0 bg-[#f59e0b]">
-                        <HugeIcon className="ph-bold text-[15px] ph-file-pdf" />
-                      </div>
-                    </div>
-                    <div className="flex justify-between items-end p-4 pt-1">
-                      <div className="flex items-baseline gap-2">
-                        <span className="text-[28px] font-bold text-gray-900 dark:text-white leading-none tracking-tight">
-                          {summary?.cblArchivedRate ?? 0}%
-                        </span>
-                        <span className="text-xs font-medium text-amber-600 dark:text-amber-400 mb-1">
-                          {summary?.cblArchivedCount || 0} of {summary?.totalOrganizations || 0} Digitized
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                                <div className="bg-rose-50 dark:bg-rose-950/30 p-2.5 rounded-lg border border-rose-100 dark:border-rose-900/30 flex justify-between items-center text-xs">
+                                  <span className="font-semibold text-rose-700 dark:text-rose-400">Action Required (&lt;50%)</span>
+                                  <span className="font-bold text-rose-800 dark:text-rose-300">{filteredSummary.actionRequiredCount} orgs</span>
+                                </div>
+
+                                {filteredSummary.categoryBreakdown.length > 0 && (
+                                  <div>
+                                    <h4 className="text-[10px] font-bold text-gray-400 dark:text-zinc-500 mb-1.5 uppercase tracking-wide">Category Performance</h4>
+                                    <div className="space-y-1">
+                                      {filteredSummary.categoryBreakdown.map((cat) => (
+                                        <div key={cat.category} className="flex justify-between items-center text-[11px] py-1 border-b border-gray-100 dark:border-white/5 text-gray-700 dark:text-zinc-300">
+                                          <span className="truncate max-w-[150px] font-medium">{cat.category}</span>
+                                          <span className="font-bold text-gray-900 dark:text-zinc-50">{cat.complianceRate}% ({cat.compliantCount}/{cat.totalOrgs})</span>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </Reorder.Item>
+                      );
+                    }
+
+                    if (key === "organizations") {
+                      return (
+                        <Reorder.Item
+                          as="div"
+                          value="organizations"
+                          key="organizations"
+                          className={cn(selectedKpi === "organizations" ? "z-30" : "z-10")}
+                        >
+                          <div className={cn("relative group rounded-xl cursor-grab active:cursor-grabbing", selectedKpi === "organizations" ? "z-30" : "z-10")}>
+                            <div
+                              onClick={() => setSelectedKpi(selectedKpi === "organizations" ? null : "organizations")}
+                              className={cn(
+                                "relative overflow-hidden rounded-[18px] border cursor-pointer select-none transition-all shadow-none flex flex-col justify-between min-h-[110px] bg-gray-50 dark:bg-zinc-900",
+                                selectedKpi === "organizations"
+                                  ? "border-blue-500/50 ring-1 ring-blue-500/20"
+                                  : "border-gray-100 dark:border-white/5 hover:border-gray-200 dark:hover:border-white/10"
+                              )}
+                            >
+                              <div className="flex justify-between items-start p-4 pb-0">
+                                <div className="flex items-center gap-1.5">
+                                  <span className="text-[13px] font-medium text-gray-500 dark:text-zinc-400 capitalize">
+                                    Recognized Orgs
+                                  </span>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <HugeIcon className="ph-bold ph-info cursor-help text-xs text-gray-400 hover:text-gray-600 dark:hover:text-zinc-300 transition-colors" />
+                                    </TooltipTrigger>
+                                    <TooltipContent
+                                      side="right"
+                                      className="max-w-[280px] bg-white dark:bg-zinc-900 text-gray-900 dark:text-zinc-100 p-3 rounded-xl shadow-xl border border-gray-200 dark:border-white/10 text-xs font-normal"
+                                    >
+                                      <p className="font-semibold text-pup-maroon dark:text-red-400 mb-1">Recognized Organizations</p>
+                                      <p className="leading-relaxed text-gray-600 dark:text-zinc-300">
+                                        All student organizations officially chartered and accredited under OSAS for the active academic cycle.
+                                      </p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </div>
+                                <div className="w-8 h-8 rounded-[10px] flex items-center justify-center text-white shadow-sm shrink-0 bg-[#3b82f6]">
+                                  <HugeIcon className="ph-bold text-[15px] ph-buildings" />
+                                </div>
+                              </div>
+                              <div className="flex justify-between items-end p-4 pt-1">
+                                <div className="flex items-baseline gap-2">
+                                  <span className="text-[28px] font-bold text-gray-900 dark:text-white leading-none tracking-tight">
+                                    {filteredSummary.totalOrganizations.toLocaleString()}
+                                  </span>
+                                  <span className="text-xs font-medium text-blue-600 dark:text-blue-400 mb-1">
+                                    {filteredSummary.academicCount} Academic · {filteredSummary.nonAcademicCount} Non-Academic
+                                    {isFiltered && (
+                                      <span className="text-gray-400 dark:text-zinc-500 font-normal ml-1">
+                                        (of {organizations.length})
+                                      </span>
+                                    )}
+                                  </span>
+                                </div>
+                                <HugeIcon className="ph-bold ph-dots-six-vertical cursor-grab active:cursor-grabbing hover:text-gray-400 dark:hover:text-zinc-500 text-gray-300 dark:text-zinc-700 text-lg mb-0.5" />
+                              </div>
+                            </div>
+
+                            {/* Absolute details popover */}
+                            <div
+                              className={cn(
+                                "absolute top-full left-0 right-0 z-[100] mt-2 rounded-xl border border-gray-200 bg-white p-4 shadow-xl dark:border-white/10 dark:bg-zinc-900 transition-all duration-300 ease-in-out origin-top",
+                                selectedKpi === "organizations"
+                                  ? "scale-y-100 opacity-100 translate-y-0"
+                                  : "scale-y-95 opacity-0 -translate-y-2 pointer-events-none"
+                              )}
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <div className="space-y-3">
+                                <div className="grid grid-cols-2 gap-2">
+                                  <div className="bg-blue-50 dark:bg-blue-950/30 p-2.5 rounded-lg border border-blue-100 dark:border-blue-900/30">
+                                    <span className="block text-[9px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider">Academic</span>
+                                    <span className="text-lg font-black text-blue-700 dark:text-blue-400">{filteredSummary.academicCount}</span>
+                                  </div>
+                                  <div className="bg-indigo-50 dark:bg-indigo-950/30 p-2.5 rounded-lg border border-indigo-100 dark:border-indigo-900/30">
+                                    <span className="block text-[9px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">Non-Academic</span>
+                                    <span className="text-lg font-black text-indigo-700 dark:text-indigo-400">{filteredSummary.nonAcademicCount}</span>
+                                  </div>
+                                </div>
+
+                                <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-gray-100 dark:border-white/5 space-y-1.5 text-xs">
+                                  <div className="flex justify-between items-center">
+                                    <span className="font-medium text-gray-600 dark:text-zinc-400">With Whitelisted Officers</span>
+                                    <span className="font-bold text-gray-900 dark:text-zinc-100">{filteredSummary.withOfficersCount} orgs</span>
+                                  </div>
+                                  <div className="flex justify-between items-center">
+                                    <span className="font-medium text-gray-600 dark:text-zinc-400">With Assigned Adviser</span>
+                                    <span className="font-bold text-gray-900 dark:text-zinc-100">{filteredSummary.withAdvisersCount} orgs</span>
+                                  </div>
+                                </div>
+
+                                <div>
+                                  <h4 className="text-[10px] font-bold text-gray-400 dark:text-zinc-500 mb-1 uppercase tracking-wide">Status Distribution</h4>
+                                  <div className="flex items-center gap-2 text-[11px] text-gray-600 dark:text-zinc-300">
+                                    <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" /> Active: {filteredSummary.statusDistribution.Active || 0}</span>
+                                    <span>·</span>
+                                    <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-amber-500 inline-block" /> Probationary: {filteredSummary.statusDistribution.Probationary || 0}</span>
+                                    <span>·</span>
+                                    <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-zinc-400 inline-block" /> Inactive: {filteredSummary.statusDistribution.Inactive || 0}</span>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </Reorder.Item>
+                      );
+                    }
+
+                    if (key === "cbl") {
+                      return (
+                        <Reorder.Item
+                          as="div"
+                          value="cbl"
+                          key="cbl"
+                          className={cn(selectedKpi === "cbl" ? "z-30" : "z-10")}
+                        >
+                          <div className={cn("relative group rounded-xl cursor-grab active:cursor-grabbing", selectedKpi === "cbl" ? "z-30" : "z-10")}>
+                            <div
+                              onClick={() => setSelectedKpi(selectedKpi === "cbl" ? null : "cbl")}
+                              className={cn(
+                                "relative overflow-hidden rounded-[18px] border cursor-pointer select-none transition-all shadow-none flex flex-col justify-between min-h-[110px] bg-gray-50 dark:bg-zinc-900",
+                                selectedKpi === "cbl"
+                                  ? "border-amber-500/50 ring-1 ring-amber-500/20"
+                                  : "border-gray-100 dark:border-white/5 hover:border-gray-200 dark:hover:border-white/10"
+                              )}
+                            >
+                              <div className="flex justify-between items-start p-4 pb-0">
+                                <div className="flex items-center gap-1.5">
+                                  <span className="text-[13px] font-medium text-gray-500 dark:text-zinc-400 capitalize">
+                                    CBL Archival Rate
+                                  </span>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <HugeIcon className="ph-bold ph-info cursor-help text-xs text-gray-400 hover:text-gray-600 dark:hover:text-zinc-300 transition-colors" />
+                                    </TooltipTrigger>
+                                    <TooltipContent
+                                      side="right"
+                                      className="max-w-[280px] bg-white dark:bg-zinc-900 text-gray-900 dark:text-zinc-100 p-3 rounded-xl shadow-xl border border-gray-200 dark:border-white/10 text-xs font-normal"
+                                    >
+                                      <p className="font-semibold text-pup-maroon dark:text-red-400 mb-1">CBL Archival Formula</p>
+                                      <p className="leading-relaxed text-gray-600 dark:text-zinc-300 mb-2">
+                                        Constitution & By-Laws (CBL) digitization and verification completion across all registered organizations.
+                                      </p>
+                                      <div className="p-2 bg-gray-50 dark:bg-zinc-800/60 rounded-lg text-[11px] font-mono border border-gray-200/60 dark:border-white/5">
+                                        (Archived CBLs / Total Organizations) × 100
+                                      </div>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </div>
+                                <div className="w-8 h-8 rounded-[10px] flex items-center justify-center text-white shadow-sm shrink-0 bg-[#f59e0b]">
+                                  <HugeIcon className="ph-bold text-[15px] ph-file-pdf" />
+                                </div>
+                              </div>
+                              <div className="flex justify-between items-end p-4 pt-1">
+                                <div className="flex items-baseline gap-2">
+                                  <span className="text-[28px] font-bold text-gray-900 dark:text-white leading-none tracking-tight">
+                                    {filteredSummary.cblArchivedRate}%
+                                  </span>
+                                  <span className="text-xs font-medium text-amber-600 dark:text-amber-400 mb-1">
+                                    {filteredSummary.cblArchivedCount} of {filteredSummary.totalOrganizations} Digitized
+                                    {isFiltered && (
+                                      <span className="text-gray-400 dark:text-zinc-500 font-normal ml-1">
+                                        · Campus: {summary?.cblArchivedRate ?? 0}%
+                                      </span>
+                                    )}
+                                  </span>
+                                </div>
+                                <HugeIcon className="ph-bold ph-dots-six-vertical cursor-grab active:cursor-grabbing hover:text-gray-400 dark:hover:text-zinc-500 text-gray-300 dark:text-zinc-700 text-lg mb-0.5" />
+                              </div>
+                            </div>
+
+                            {/* Absolute details popover */}
+                            <div
+                              className={cn(
+                                "absolute top-full left-0 right-0 z-[100] mt-2 rounded-xl border border-gray-200 bg-white p-4 shadow-xl dark:border-white/10 dark:bg-zinc-900 transition-all duration-300 ease-in-out origin-top",
+                                selectedKpi === "cbl"
+                                  ? "scale-y-100 opacity-100 translate-y-0"
+                                  : "scale-y-95 opacity-0 -translate-y-2 pointer-events-none"
+                              )}
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <div className="space-y-3">
+                                <div className="grid grid-cols-2 gap-2">
+                                  <div className="bg-emerald-50 dark:bg-emerald-950/30 p-2.5 rounded-lg border border-emerald-100 dark:border-emerald-900/30">
+                                    <span className="block text-[9px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Archived & Verified</span>
+                                    <span className="text-lg font-black text-emerald-700 dark:text-emerald-400">{filteredSummary.cblArchivedCount}</span>
+                                  </div>
+                                  <div className="bg-amber-50 dark:bg-amber-950/30 p-2.5 rounded-lg border border-amber-100 dark:border-amber-900/30">
+                                    <span className="block text-[9px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider">Pending Submission</span>
+                                    <span className="text-lg font-black text-amber-700 dark:text-amber-400">{filteredSummary.cblPendingCount}</span>
+                                  </div>
+                                </div>
+
+                                <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-gray-100 dark:border-white/5 flex justify-between items-center text-xs">
+                                  <span className="font-semibold text-gray-600 dark:text-zinc-400">Digitization Progress</span>
+                                  <span className="font-bold text-amber-600 dark:text-amber-400">{filteredSummary.cblArchivedRate}% completed</span>
+                                </div>
+
+                                <p className="text-[11px] leading-relaxed text-gray-500 dark:text-zinc-400 italic">
+                                  Ratified Constitution & By-Laws must be formally uploaded to the repository for legal compliance and university recognition.
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        </Reorder.Item>
+                      );
+                    }
+
+                    return null;
+                  })}
+                </Reorder.Group>
               </div>
             </div>
           ) : null}
@@ -581,7 +1100,7 @@ export default function OSASOrganizationComplianceView({
                   <button
                     key={cat}
                     type="button"
-                    onClick={() => setCategoryFilter(cat)}
+                    onClick={() => { setCategoryFilter(cat); setPage(1); }}
                     className={cn(
                       "relative h-9 flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent whitespace-nowrap",
                       isActive
@@ -604,7 +1123,7 @@ export default function OSASOrganizationComplianceView({
                 </div>
                 <Input
                   value={search}
-                  onChange={(e) => setSearch(e.target.value)}
+                  onChange={(e) => { setSearch(e.target.value); setPage(1); }}
                   placeholder="Search org, acronym, adviser..."
                   className="h-9 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 pl-8 pr-16 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
                 />
@@ -612,7 +1131,7 @@ export default function OSASOrganizationComplianceView({
                   {search && (
                     <button
                       type="button"
-                      onClick={() => setSearch("")}
+                      onClick={() => { setSearch(""); setPage(1); }}
                       className="text-gray-400 hover:text-gray-600 dark:hover:text-zinc-300 cursor-pointer"
                     >
                       <HugeIcon className="ph-bold ph-x-circle text-[13px]" />
@@ -646,17 +1165,6 @@ export default function OSASOrganizationComplianceView({
 
           {/* 5. Main Content Area: Organizations Compliance Table (5 Clean Columns) */}
           <div className="flex flex-1 flex-col min-h-0 overflow-hidden border-t border-gray-100 dark:border-white/10 bg-white dark:bg-card">
-            <div className="flex items-center justify-between gap-6 px-6 py-3.5 bg-gray-50/40 dark:bg-zinc-900/30 border-b border-gray-100 dark:border-white/10">
-              <div className="flex items-center gap-2.5">
-                <h4 className="text-xs font-semibold text-gray-900 dark:text-zinc-100 tracking-[-0.01em] m-0">
-                  Organization Compliance Roster
-                </h4>
-                <span className="text-[11px] font-mono text-gray-400 dark:text-zinc-500">
-                  ({sortedOrganizations.length} {sortedOrganizations.length === 1 ? "organization" : "organizations"})
-                </span>
-              </div>
-            </div>
-
             <div className="flex-1 overflow-x-auto">
               {sortedOrganizations.length > 0 ? (
                 <table className="min-w-full text-sm">
@@ -716,7 +1224,7 @@ export default function OSASOrganizationComplianceView({
                   </thead>
 
                   <tbody>
-                    {sortedOrganizations.map((org) => {
+                    {paginatedOrganizations.map((org) => {
                       const isFullyCompliant = org.complianceScore === 100;
                       const isPartiallyCompliant = org.complianceScore >= 50 && org.complianceScore < 100;
 
@@ -803,8 +1311,11 @@ export default function OSASOrganizationComplianceView({
                             {org.activeOfficerCount > 0 ? (
                               <button
                                 type="button"
-                                onClick={() => setSelectedOrgForOfficers(org)}
-                                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-100 dark:border-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors cursor-pointer"
+                                onClick={() => {
+                                  setSelectedOrgForOfficers(org);
+                                  setOfficerSearch("");
+                                }}
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-100 dark:border-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors cursor-pointer active:scale-95"
                                 title="View Whitelisted Officers"
                               >
                                 <HugeIcon className="ph-bold ph-shield-check text-xs" />
@@ -813,9 +1324,18 @@ export default function OSASOrganizationComplianceView({
                                 </span>
                               </button>
                             ) : (
-                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-amber-700 bg-amber-50 border border-amber-200 rounded-lg dark:bg-amber-950/30 dark:text-amber-300 dark:border-amber-800/40">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setSelectedOrgForOfficers(org);
+                                  setOfficerSearch("");
+                                }}
+                                className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-amber-700 bg-amber-50 border border-amber-200 rounded-lg dark:bg-amber-950/30 dark:text-amber-300 dark:border-amber-800/40 hover:bg-amber-100/80 dark:hover:bg-amber-900/50 transition-colors cursor-pointer active:scale-95"
+                                title="View Whitelist Status"
+                              >
+                                <HugeIcon className="ph-bold ph-warning-circle text-xs" />
                                 <span>No Officers</span>
-                              </span>
+                              </button>
                             )}
                           </td>
 
@@ -891,108 +1411,392 @@ export default function OSASOrganizationComplianceView({
             </div>
           </div>
 
-          {/* 6. Card Footer with Count */}
-          <div className="border-t border-gray-100 dark:border-white/10 px-6 py-4 flex items-center justify-between text-xs text-gray-500 dark:text-zinc-400 bg-white dark:bg-card rounded-b-2xl">
-            <span>
-              Showing <strong className="text-gray-900 dark:text-white">{sortedOrganizations.length}</strong> of{" "}
-              <strong className="text-gray-900 dark:text-white">{summary.totalOrganizations || 0}</strong> recognized{" "}
-              {summary.totalOrganizations === 1 ? "organization" : "organizations"}
-            </span>
-            <span className="text-[11px] text-gray-400 dark:text-zinc-500">
-              PUP San Juan · Office of Student Affairs and Services
-            </span>
-          </div>
+          {/* 6. Standard Table Pagination Footer */}
+          {sortedOrganizations.length > 0 && (
+            <div className="flex items-center justify-between border-t border-[#e5e5ea] dark:border-[#3a3a3c] bg-white dark:bg-[#1c1c1e] p-4 px-6 rounded-b-2xl mt-auto select-none">
+              <div className="flex items-center gap-6 text-xs text-gray-500 dark:text-zinc-400 select-none">
+                <span>
+                  Showing {paginatedOrganizations.length} of {sortedOrganizations.length.toLocaleString()}
+                </span>
+                <div className="flex items-center gap-2">
+                  <span>Rows:</span>
+                  {[10, 20, 50, 100].map((size) => (
+                    <button
+                      key={size}
+                      type="button"
+                      onClick={() => {
+                        setPageSize(size);
+                        setPage(1);
+                      }}
+                      className={cn(
+                        "px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer border-0",
+                        pageSize === size
+                          ? "bg-gray-100 dark:bg-zinc-800 text-gray-900 dark:text-zinc-100"
+                          : "bg-transparent text-gray-400 hover:text-gray-600 dark:hover:text-zinc-200"
+                      )}
+                    >
+                      {size}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 select-none">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  disabled={page <= 1}
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  className="text-xs text-gray-500 dark:text-zinc-400 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
+                >
+                  Prev
+                </Button>
+
+                <div className="h-8 w-8 rounded-xl border border-[#e5e5ea] dark:border-zinc-800 flex items-center justify-center text-xs font-bold text-gray-800 dark:text-zinc-200 bg-white dark:bg-zinc-900">
+                  {page}
+                </div>
+
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  disabled={page >= totalPages}
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  className="text-xs text-gray-500 dark:text-zinc-400 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
+          )}
         </Card>
 
-        {/* Officers Whitelist Dialog */}
-        <Dialog
+        {/* Officers Whitelist Slide-Over Sheet */}
+        <Sheet
           open={Boolean(selectedOrgForOfficers)}
-          onOpenChange={(open) => !open && setSelectedOrgForOfficers(null)}
+          onOpenChange={(open) => {
+            if (!open) {
+              setSelectedOrgForOfficers(null);
+              setOfficerSearch("");
+            }
+          }}
         >
-          <DialogContent className="max-w-md rounded-2xl border border-gray-200 bg-white p-6 shadow-xl dark:border-white/10 dark:bg-zinc-900 font-jakarta">
-            <DialogHeader>
-              <div className="min-w-0">
-                <DialogTitle className="text-base font-semibold tracking-[-0.01em] text-gray-900 dark:text-white">
-                  {selectedOrgForOfficers?.name}
-                </DialogTitle>
-                <DialogDescription className="mt-1 text-xs text-gray-500 dark:text-zinc-400">
-                  Whitelisted Student Officers ({selectedOrgForOfficers?.activeOfficerCount || 0})
-                </DialogDescription>
+          <SheetContent
+            side="right"
+            className="w-full sm:max-w-xl md:max-w-2xl data-[side=right]:w-full data-[side=right]:sm:max-w-xl data-[side=right]:md:max-w-2xl flex flex-col h-full bg-white dark:bg-card border-l border-gray-200 dark:border-white/10 p-0 shadow-2xl font-jakarta overflow-hidden"
+          >
+            {/* Sheet Header */}
+            <SheetHeader className="shrink-0 p-6 pb-4 border-b border-gray-100 dark:border-white/10 bg-gradient-to-r from-gray-50/90 via-white to-gray-50/50 dark:from-zinc-900/90 dark:via-card dark:to-zinc-900/50">
+              <div className="flex items-center gap-2 mb-2 flex-wrap">
+                {selectedOrgForOfficers?.acronym && (
+                  <span className="px-2.5 py-0.5 text-[11px] font-bold rounded-lg bg-red-50 text-pup-maroon dark:bg-red-950/40 dark:text-red-400 border border-red-100 dark:border-red-900/30">
+                    {selectedOrgForOfficers.acronym}
+                  </span>
+                )}
+                <span className="px-2.5 py-0.5 text-[11px] font-medium rounded-lg bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-zinc-300">
+                  {selectedOrgForOfficers?.category || "Student Org"}
+                </span>
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg text-[11px] font-medium bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200/50 dark:border-emerald-800/40">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                  {selectedOrgForOfficers?.status || "Active"}
+                </span>
               </div>
-            </DialogHeader>
 
-            <div className="mt-4 flex flex-col gap-2 max-h-72 overflow-y-auto pr-1">
-              {selectedOrgForOfficers?.officers && selectedOrgForOfficers.officers.length > 0 ? (
-                selectedOrgForOfficers.officers.map((officer) => (
-                  <div
-                    key={officer.id || officer.email}
-                    className="flex items-center justify-between p-3 rounded-xl border border-gray-100 bg-gray-50/60 dark:border-white/5 dark:bg-zinc-800/40"
-                  >
-                    <div className="flex flex-col">
-                      <span className="text-xs font-bold text-gray-900 dark:text-white">
-                        {officer.name}
-                      </span>
-                      <span className="text-[11px] text-gray-500 dark:text-zinc-400">
-                        {officer.email}
-                      </span>
-                    </div>
-                    <Badge variant="outline" className="text-[10px] font-semibold rounded-lg px-2 py-0.5">
-                      {officer.position}
-                    </Badge>
+              <SheetTitle className="text-xl font-bold text-gray-900 dark:text-zinc-50 leading-snug">
+                {selectedOrgForOfficers?.name}
+              </SheetTitle>
+              <SheetDescription className="text-xs text-gray-500 dark:text-zinc-400 mt-1">
+                Accredited Student Leadership Roster & Authorized Event Signatories.
+              </SheetDescription>
+
+              {/* Organization Summary Strip */}
+              <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-3 border-t border-gray-100 dark:border-white/5">
+                {/* Officer Count Badge */}
+                <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-white dark:bg-zinc-800/60 border border-gray-200/70 dark:border-white/5">
+                  <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
+                    <HugeIcon className="ph-bold ph-shield-check text-[15px]" />
                   </div>
-                ))
-              ) : (
-                <div className="py-6 text-center text-xs text-gray-500 dark:text-zinc-400">
-                  No active officers registered for this organization.
+                  <div className="min-w-0">
+                    <span className="text-[10px] uppercase font-bold tracking-wider text-gray-400 dark:text-zinc-500 block">
+                      Accredited Leadership
+                    </span>
+                    <span className="text-xs font-bold text-gray-900 dark:text-white">
+                      {selectedOrgForOfficers?.activeOfficerCount || 0} Whitelisted {selectedOrgForOfficers?.activeOfficerCount === 1 ? "Officer" : "Officers"}
+                    </span>
+                  </div>
                 </div>
-              )}
+
+                {/* Faculty Adviser Snippet */}
+                <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-white dark:bg-zinc-800/60 border border-gray-200/70 dark:border-white/5">
+                  <div className="w-8 h-8 rounded-lg bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+                    <HugeIcon className="ph-bold ph-chalkboard-teacher text-[15px]" />
+                  </div>
+                  <div className="min-w-0">
+                    <span className="text-[10px] uppercase font-bold tracking-wider text-gray-400 dark:text-zinc-500 block">
+                      Faculty Adviser
+                    </span>
+                    <span className="text-xs font-bold text-gray-900 dark:text-white truncate block">
+                      {selectedOrgForOfficers?.adviserName || "Not assigned"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </SheetHeader>
+
+            {/* In-Sheet Search Filter */}
+            {selectedOrgForOfficers?.officers && selectedOrgForOfficers.officers.length > 2 && (
+              <div className="px-6 py-3 border-b border-gray-100 dark:border-white/5 bg-gray-50/40 dark:bg-zinc-900/30">
+                <div className="relative">
+                  <HugeIcon className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs" />
+                  <Input
+                    value={officerSearch}
+                    onChange={(e) => setOfficerSearch(e.target.value)}
+                    placeholder="Search by name, position, or email..."
+                    className="h-8.5 pl-8 pr-8 text-xs rounded-xl bg-white dark:bg-zinc-800 border-gray-200 dark:border-white/10 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500 dark:focus-visible:ring-red-500"
+                  />
+                  {officerSearch && (
+                    <button
+                      type="button"
+                      onClick={() => setOfficerSearch("")}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-zinc-200 cursor-pointer"
+                    >
+                      <HugeIcon className="ph-bold ph-x text-xs" />
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Scrollable Officers Roster */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-3">
+              {(() => {
+                const list = selectedOrgForOfficers?.officers || [];
+                const filtered = officerSearch.trim()
+                  ? list.filter((o) => {
+                      const q = officerSearch.toLowerCase().trim();
+                      return (
+                        (o.name || "").toLowerCase().includes(q) ||
+                        (o.position || "").toLowerCase().includes(q) ||
+                        (o.email || "").toLowerCase().includes(q) ||
+                        (o.studentNo || "").toLowerCase().includes(q)
+                      );
+                    })
+                  : list;
+
+                if (filtered.length === 0) {
+                  return (
+                    <div className="py-12 px-6 rounded-2xl border border-dashed border-gray-200 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/40 text-center">
+                      <div className="w-12 h-12 rounded-2xl bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 border border-amber-200/60 dark:border-amber-800/40 flex items-center justify-center mx-auto mb-3 shadow-xs">
+                        <HugeIcon className="ph-duotone ph-users-three text-2xl" />
+                      </div>
+                      <h4 className="text-sm font-bold text-gray-900 dark:text-white">
+                        No Whitelisted Officers Found
+                      </h4>
+                      <p className="text-xs text-gray-500 dark:text-zinc-400 mt-1 max-w-sm mx-auto">
+                        {officerSearch.trim()
+                          ? "No student officers match your search query inside this organization roster."
+                          : "This student organization currently has no active student officers recorded on the OSAS accreditation whitelist."}
+                      </p>
+                      <div className="mt-4 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium text-gray-600 dark:text-zinc-300 bg-white dark:bg-zinc-800 border border-gray-200 dark:border-white/10 shadow-xs">
+                        <HugeIcon className="ph-bold ph-info text-pup-maroon dark:text-red-400" />
+                        <span>Student officers can be whitelisted by OSAS personnel in the Student Organizations tab</span>
+                      </div>
+                    </div>
+                  );
+                }
+
+                return filtered.map((officer) => {
+                  const roleStyle = getOfficerRoleStyle(officer.position);
+                  const initials = getInitials(officer.name);
+                  const avatarSrc = officer.avatarFilename
+                    ? `/api/account/avatar?id=${officer.studentAccountId || officer.studentNo || officer.id}&t=${officer.avatarFilename}`
+                    : null;
+
+                  return (
+                    <div
+                      key={officer.id || officer.email}
+                      className="flex flex-col sm:flex-row sm:items-center justify-between gap-3.5 p-4 rounded-2xl border border-gray-200/80 dark:border-white/10 bg-white dark:bg-zinc-900/80 hover:border-gray-300 dark:hover:border-white/20 transition-all shadow-xs group"
+                    >
+                      {/* Left: Modern Avatar + Details */}
+                      <div className="flex items-center gap-3.5 min-w-0">
+                        {/* Avatar with Role Gradient & Status Dot */}
+                        <div className="relative shrink-0">
+                          <Avatar className={cn("size-12 rounded-xl ring-2 shadow-sm font-jakarta", roleStyle.ring)}>
+                            {avatarSrc && (
+                              <AvatarImage
+                                src={avatarSrc}
+                                alt={officer.name}
+                                className="rounded-xl object-cover"
+                              />
+                            )}
+                            <AvatarFallback
+                              className={cn(
+                                "rounded-xl font-bold text-sm tracking-wider bg-gradient-to-br select-none",
+                                roleStyle.gradient
+                              )}
+                            >
+                              {initials}
+                            </AvatarFallback>
+                          </Avatar>
+                          {/* Active Presence Dot */}
+                          <span
+                            className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-zinc-900 flex items-center justify-center"
+                            title="Active Verified Status"
+                          />
+                        </div>
+
+                        {/* Officer Identity & Badges */}
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h5 className="text-sm font-bold text-gray-900 dark:text-zinc-50 tracking-[-0.01em] truncate">
+                              {officer.name}
+                            </h5>
+                            <Badge
+                              variant="outline"
+                              className={cn(
+                                "text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md border",
+                                roleStyle.badge
+                              )}
+                            >
+                              <HugeIcon className={cn("mr-1 text-[11px]", roleStyle.icon)} />
+                              {officer.position}
+                            </Badge>
+                          </div>
+
+                          <div className="mt-1 flex items-center gap-2 flex-wrap text-xs text-gray-500 dark:text-zinc-400">
+                            {officer.studentNo && (
+                              <span className="font-mono text-[11px] font-medium text-gray-600 dark:text-zinc-400 bg-gray-100 dark:bg-zinc-800/80 px-2 py-0.5 rounded-md border border-gray-200/50 dark:border-white/5">
+                                {officer.studentNo}
+                              </span>
+                            )}
+                            {officer.studentNo && <span className="text-gray-300 dark:text-zinc-600">·</span>}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (!officer.email) return;
+                                navigator.clipboard.writeText(officer.email);
+                                showToast?.({
+                                  title: "Email Copied",
+                                  description: `${officer.name || "Officer"}'s email copied to clipboard.`,
+                                });
+                              }}
+                              className="group/btn inline-flex items-center gap-1 font-mono text-[11px] text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 transition-colors cursor-pointer"
+                              title="Click to copy institutional email"
+                            >
+                              <HugeIcon className="ph-bold ph-envelope-simple text-[12px] text-gray-400 group-hover/btn:text-pup-maroon dark:group-hover/btn:text-red-400" />
+                              <span className="truncate max-w-[200px]">{officer.email}</span>
+                              <HugeIcon className="ph-bold ph-copy text-[11px] opacity-0 group-hover/btn:opacity-100 transition-opacity ml-0.5" />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Right: Authorization Status Pill */}
+                      <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-center gap-1 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-gray-100 dark:border-white/5">
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/40">
+                          <HugeIcon className="ph-bold ph-shield-check text-xs text-emerald-600 dark:text-emerald-400" />
+                          <span>Authorized Signatory</span>
+                        </span>
+                        <span className="text-[10px] text-gray-400 dark:text-zinc-500 font-mono">
+                          OSAS Whitelist
+                        </span>
+                      </div>
+                    </div>
+                  );
+                });
+              })()}
             </div>
 
-            <div className="mt-4 flex justify-end">
+            {/* Sheet Footer */}
+            <SheetFooter className="shrink-0 p-4 border-t border-gray-100 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/30 flex flex-row items-center justify-between gap-3">
+              <span className="text-[11px] text-gray-400 dark:text-zinc-500 hidden sm:inline">
+                PUP San Juan OSAS · Student Governance
+              </span>
               <Button
+                type="button"
                 variant="outline"
-                onClick={() => setSelectedOrgForOfficers(null)}
-                className="h-9 px-4 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10"
+                onClick={() => {
+                  setSelectedOrgForOfficers(null);
+                  setOfficerSearch("");
+                }}
+                className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all ml-auto"
               >
                 Close
               </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+            </SheetFooter>
+          </SheetContent>
+        </Sheet>
 
         {/* CBL PDF Preview Modal */}
         {previewCbl && (
           <PDFPreviewModal
-            pdfUrl={previewCbl.url}
-            title={previewCbl.title}
-            filename={previewCbl.filename}
-            isOpen={Boolean(previewCbl)}
+            open={Boolean(previewCbl)}
+            preview={{
+              url: previewCbl.url,
+              title: previewCbl.title,
+              filename: previewCbl.filename,
+            }}
             onClose={() => setPreviewCbl(null)}
           />
         )}
 
         {/* Official OSAS Compliance PDF Report Modal */}
-        <Dialog open={reportOpen} onOpenChange={setReportOpen}>
-          <DialogContent className={cn(
-            "fixed inset-auto top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col p-0 overflow-hidden bg-white shadow-2xl dark:bg-card border border-gray-200 dark:border-white/10 z-50 transition-all duration-200",
-            isFullscreenPreview
-              ? "w-[96vw] h-[94vh] max-w-[96vw] max-h-[94vh] rounded-2xl"
-              : "w-[90vw] max-w-4xl h-[85vh] max-h-[85vh] rounded-2xl"
-          )}>
-            <DialogHeader className="flex shrink-0 flex-row items-center justify-between border-b border-gray-100 bg-white px-6 py-4 dark:border-white/10 dark:bg-card">
-              <div>
-                <DialogTitle className="text-sm font-bold text-gray-900 dark:text-white">
+        <Dialog
+          open={reportOpen}
+          onOpenChange={(open) => {
+            if (!open) {
+              if (pdfBlobUrl) URL.revokeObjectURL(pdfBlobUrl);
+              setPdfBlobUrl(null);
+              setPreviewFrameReady(false);
+              setIsFullscreenPreview(false);
+            }
+            setReportOpen(open);
+          }}
+        >
+          <DialogContent
+            hideClose={true}
+            className={cn(
+              "flex flex-col overflow-hidden border border-gray-200 bg-gray-100 p-0 shadow-2xl transition-all duration-normal ease-standard rounded-2xl dark:border-white/10 dark:bg-muted z-[70] gap-0",
+              isFullscreenPreview
+                ? "h-[96vh] w-[98vw] max-w-[98vw] sm:max-w-[98vw]"
+                : "h-[90vh] w-[96vw] max-w-[96vw] sm:max-w-[96vw] xl:max-w-[1400px]"
+            )}
+          >
+            <DialogHeader className="shrink-0 bg-gray-50 dark:bg-white/5 border-b border-gray-100 dark:border-white/10 px-6 py-4 flex flex-row items-center justify-between gap-4">
+              <div className="min-w-0">
+                <DialogTitle className="text-left font-semibold text-gray-900 dark:text-zinc-50 text-[15px] tracking-[-0.01em]">
                   Official OSAS Student Organization Compliance Report
                 </DialogTitle>
-                <DialogDescription className="text-xs text-gray-500 dark:text-zinc-400">
+                <DialogDescription className="text-left font-normal text-gray-500 dark:text-zinc-400 text-xs mt-0.5">
                   Accreditation and institutional audit report — PUP San Juan OSAS
                 </DialogDescription>
               </div>
+
+              <DialogClose asChild>
+                <button
+                  type="button"
+                  onClick={() => setReportOpen(false)}
+                  className="text-gray-400 hover:text-gray-600 dark:hover:text-white transition-colors focus:outline-none flex items-center justify-center p-1 rounded-lg cursor-pointer"
+                >
+                  <HugeIcon className="ph-bold ph-x text-[16px]" />
+                </button>
+              </DialogClose>
             </DialogHeader>
 
-            <div className="flex flex-1 min-h-0 flex-col bg-gray-50 p-4 dark:bg-zinc-900/30">
+            <div className="relative flex flex-1 flex-col overflow-hidden bg-gray-100 p-0 dark:bg-muted">
               {pdfBlobUrl ? (
-                <div className="relative h-full w-full overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xs dark:border-white/10 dark:bg-card">
+                <div className={cn("relative min-h-0 min-w-0 flex-1 transition-all duration-normal", isFullscreenPreview ? "fixed inset-0 z-[9999] bg-white dark:bg-card" : "")}>
+                  {isFullscreenPreview && (
+                    <div className="absolute top-4 right-4 z-[10000]">
+                      <Button
+                        variant="default"
+                        size="icon"
+                        onClick={() => setIsFullscreenPreview(false)}
+                        className="h-10 w-10 rounded-full bg-black/50 text-white hover:bg-black/70 backdrop-blur-md border-0 cursor-pointer"
+                      >
+                        <HugeIcon className="ph-bold ph-x text-lg" />
+                      </Button>
+                    </div>
+                  )}
                   {!previewFrameReady && (
                     <div className="absolute inset-0 z-10 bg-white p-6 dark:bg-card">
                       <div className="space-y-4">
@@ -1023,30 +1827,37 @@ export default function OSASOrganizationComplianceView({
               )}
             </div>
 
-            <div className="flex shrink-0 items-center bg-white dark:bg-card px-6 py-4 border-t border-gray-100 dark:border-white/10">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setIsFullscreenPreview(!isFullscreenPreview)}
-                className="text-[#8E8E93] hover:text-[#111] dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/10 transition-colors rounded-xl shadow-none border-0 p-0 h-10 w-10 cursor-pointer"
-              >
-                <HugeIcon className="ti ti-arrows-vertical text-[16px]" />
-              </Button>
+            <div className="flex shrink-0 items-center justify-between bg-white dark:bg-card px-6 py-4 border-t border-gray-100 dark:border-white/10">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setIsFullscreenPreview(!isFullscreenPreview)}
+                    className="text-[#8E8E93] hover:text-[#111] dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/10 transition-colors rounded-xl shadow-none border-0 p-0 h-10 w-10 cursor-pointer"
+                  >
+                    <HugeIcon className={isFullscreenPreview ? "ph-bold ph-arrows-in text-[16px]" : "ph-bold ph-arrows-out text-[16px]"} />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="top">
+                  {isFullscreenPreview ? "Exit Fullscreen" : "Fullscreen"}
+                </TooltipContent>
+              </Tooltip>
 
               <div className="flex items-center gap-2.5 ml-auto">
                 <Button
                   variant="outline"
                   onClick={() => setReportOpen(false)}
-                  className="flex h-10 items-center justify-center rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-5 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
+                  className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                 >
                   Close
                 </Button>
                 <Button
                   onClick={handleDownloadPdf}
                   disabled={!pdfBlobUrl}
-                  className="h-10 px-5 rounded-xl! text-xs font-semibold text-white btn-brand-red active:scale-95 disabled:opacity-50 transition-all cursor-pointer shadow-xs"
+                  className="h-10 px-5 text-xs font-semibold rounded-xl btn-brand-red text-white active:scale-95 disabled:opacity-50 transition-all cursor-pointer shadow-xs"
                 >
-                  Download PDF
+                  Download
                 </Button>
               </div>
             </div>

@@ -546,16 +546,6 @@ export default function InstitutionalBrandingTab({ showToast }) {
                       Pixel-accurate representation of your A4 print headers.
                     </p>
                   </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={handleDownloadSamplePdf}
-                    disabled={generatingPdf}
-                    className="h-8 px-3 rounded-lg text-xs font-semibold border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
-                  >
-                    {generatingPdf ? "Rendering..." : "Download"}
-                  </Button>
                 </div>
 
                 {/* Simulated A4 Paper Header */}

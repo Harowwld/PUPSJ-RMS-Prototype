@@ -21,6 +21,17 @@ import PDFPreviewModal from "@/components/shared/PDFPreviewModal";
 import MultiCriteriaFilter from "@/components/shared/MultiCriteriaFilter";
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips";
 
+export function normalizeProposalStatus(status) {
+  const s = String(status || "").toLowerCase().trim();
+  if (s === "submitted" || s === "pending") return "Submitted";
+  if (s === "under review" || s === "underreview" || s === "inprogress" || s === "processing") return "Under Review";
+  if (s === "needs revision" || s === "revisionsrequested" || s === "revision") return "Needs Revision";
+  if (s === "approved" || s === "completed" || s === "ready") return "Approved";
+  if (s === "declined" || s === "rejected" || s === "cancelled") return "Declined";
+  if (s === "archived") return "Archived";
+  return status || "";
+}
+
 const STATUS_OPTIONS = [
   "Submitted",
   "Under Review",
@@ -399,8 +410,9 @@ export default function OsasMonitoringTab({ showToast }) {
       Declined: 0,
     };
     for (const r of rows) {
-      if (c[r.status] !== undefined) {
-        c[r.status] += 1;
+      const norm = normalizeProposalStatus(r.status);
+      if (c[norm] !== undefined) {
+        c[norm] += 1;
       }
     }
     return c;
@@ -428,7 +440,7 @@ export default function OsasMonitoringTab({ showToast }) {
   const filterGroups = useMemo(() => [
     {
       id: "status",
-      label: "Proposal Status",
+      label: "Review Status",
       options: [
         { value: "Submitted", label: "Submitted", indicatorColor: "bg-blue-500", count: counts.Submitted },
         { value: "Under Review", label: "Under Review", indicatorColor: "bg-amber-500", count: counts["Under Review"] },
@@ -499,7 +511,15 @@ export default function OsasMonitoringTab({ showToast }) {
 
   const filteredRows = useMemo(() => {
     return rows.filter((item) => {
-      if (statusFilters.length > 0 && !statusFilters.includes(item.status)) return false;
+      if (statusFilters.length > 0) {
+        const itemStatusNorm = normalizeProposalStatus(item.status);
+        const matchesStatus = statusFilters.some(
+          (sf) =>
+            normalizeProposalStatus(sf) === itemStatusNorm ||
+            String(sf).toLowerCase() === String(item.status || "").toLowerCase()
+        );
+        if (!matchesStatus) return false;
+      }
       if (orgFilters.length > 0 && !orgFilters.includes(item.organization_name)) return false;
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase().trim();
@@ -523,8 +543,9 @@ export default function OsasMonitoringTab({ showToast }) {
   }, [filteredRows, safePage, itemsPerPage]);
 
   const getProposalsForColumn = (columnKey) => {
+    const normCol = normalizeProposalStatus(columnKey);
     return rows.filter((item) => {
-      if (item.status !== columnKey) return false;
+      if (normalizeProposalStatus(item.status) !== normCol) return false;
       if (orgFilters.length > 0 && !orgFilters.includes(item.organization_name)) return false;
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase().trim();

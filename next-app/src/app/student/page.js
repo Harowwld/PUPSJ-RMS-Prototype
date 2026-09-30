@@ -43,6 +43,7 @@ import {
 } from "@/components/student/skeletons";
 import StudentComplianceTab from "@/components/student/StudentComplianceTab";
 import StudentFeedbackModal from "@/components/student/StudentFeedbackModal";
+import StudentSidebarFeedbackCard from "@/components/student/StudentSidebarFeedbackCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import MultiCriteriaFilter from "@/components/shared/MultiCriteriaFilter";
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips";
@@ -67,6 +68,17 @@ const RATING_LABELS = {
   4: "Very Good",
   5: "Excellent",
 };
+
+export function normalizeProposalStatus(status) {
+  const s = String(status || "").toLowerCase().trim();
+  if (s === "submitted" || s === "pending") return "Submitted";
+  if (s === "under review" || s === "underreview" || s === "inprogress" || s === "processing") return "Under Review";
+  if (s === "needs revision" || s === "revisionsrequested" || s === "revision") return "Needs Revision";
+  if (s === "approved" || s === "completed" || s === "ready") return "Approved";
+  if (s === "declined" || s === "rejected" || s === "cancelled") return "Declined";
+  if (s === "archived") return "Archived";
+  return status || "";
+}
 
 export default function StudentDashboard() {
   const router = useRouter();
@@ -120,6 +132,7 @@ export default function StudentDashboard() {
   const [pdfPreviewData, setPdfPreviewData] = useState(null);
   const [feedbackModalOpen, setFeedbackModalOpen] = useState(false);
   const [feedbackRequest, setFeedbackRequest] = useState(null);
+  const [feedbackInitialRating, setFeedbackInitialRating] = useState(0);
 
   // Filter state for OSAS Event Proposals
   const [proposalSearch, setProposalSearch] = useState("");
@@ -237,12 +250,47 @@ export default function StudentDashboard() {
     const props = data.proposals || [];
 
     const statusOptions = [
-      { value: "Pending", label: "Pending", dotColor: "bg-amber-500", count: props.filter((p) => p.status === "Pending").length },
-      { value: "UnderReview", label: "Under Review", dotColor: "bg-blue-500", count: props.filter((p) => p.status === "UnderReview").length },
-      { value: "Approved", label: "Approved", dotColor: "bg-emerald-500", count: props.filter((p) => p.status === "Approved").length },
-      { value: "RevisionsRequested", label: "Revisions Requested", dotColor: "bg-purple-500", count: props.filter((p) => p.status === "RevisionsRequested").length },
-      { value: "Rejected", label: "Rejected", dotColor: "bg-rose-500", count: props.filter((p) => p.status === "Rejected").length },
+      {
+        value: "Submitted",
+        label: "Submitted",
+        dotColor: "bg-blue-500",
+        count: props.filter((p) => normalizeProposalStatus(p.status) === "Submitted").length,
+      },
+      {
+        value: "Under Review",
+        label: "Under Review",
+        dotColor: "bg-amber-500",
+        count: props.filter((p) => normalizeProposalStatus(p.status) === "Under Review").length,
+      },
+      {
+        value: "Needs Revision",
+        label: "Needs Revision",
+        dotColor: "bg-purple-500",
+        count: props.filter((p) => normalizeProposalStatus(p.status) === "Needs Revision").length,
+      },
+      {
+        value: "Approved",
+        label: "Approved",
+        dotColor: "bg-emerald-500",
+        count: props.filter((p) => normalizeProposalStatus(p.status) === "Approved").length,
+      },
+      {
+        value: "Declined",
+        label: "Declined",
+        dotColor: "bg-rose-500",
+        count: props.filter((p) => normalizeProposalStatus(p.status) === "Declined").length,
+      },
     ];
+
+    const archivedCount = props.filter((p) => normalizeProposalStatus(p.status) === "Archived").length;
+    if (archivedCount > 0) {
+      statusOptions.push({
+        value: "Archived",
+        label: "Archived",
+        dotColor: "bg-zinc-500",
+        count: archivedCount,
+      });
+    }
 
     const orgMap = {};
     props.forEach((p) => {
@@ -328,8 +376,14 @@ export default function StudentDashboard() {
         (item.organization_name || "").toLowerCase().includes(q) ||
         (item.status || "").toLowerCase().includes(q);
 
+      const itemStatusNorm = normalizeProposalStatus(item.status);
       const matchesStatus =
-        selectedStatuses.length === 0 || selectedStatuses.includes(item.status);
+        selectedStatuses.length === 0 ||
+        selectedStatuses.some(
+          (st) =>
+            normalizeProposalStatus(st) === itemStatusNorm ||
+            String(st).toLowerCase() === String(item.status || "").toLowerCase()
+        );
 
       const matchesOrg =
         selectedOrgs.length === 0 || selectedOrgs.includes(item.organization_name || "General");
@@ -404,9 +458,7 @@ export default function StudentDashboard() {
   useEffect(() => {
     const handleSwitch = (e) => {
       const { view: targetView } = e.detail || {};
-      if (targetView === "activity") {
-        router.push("/account/activity");
-      } else if (targetView === "odrs" || targetView === "osas" || targetView === "compliance") {
+      if (targetView === "odrs" || targetView === "osas" || targetView === "compliance" || targetView === "activity") {
         setView(targetView);
         const params = new URLSearchParams(window.location.search);
         params.set("view", targetView);
@@ -421,7 +473,7 @@ export default function StudentDashboard() {
   useEffect(() => {
     if (typeof window !== "undefined") {
       const tab = new URLSearchParams(window.location.search).get("view");
-      if (tab === "odrs" || tab === "osas" || tab === "compliance") {
+      if (tab === "odrs" || tab === "osas" || tab === "compliance" || tab === "activity") {
         setView(tab);
       }
     }
@@ -631,6 +683,7 @@ export default function StudentDashboard() {
       await load();
       if (json.data) {
         setFeedbackRequest(json.data);
+        setFeedbackInitialRating(0);
         setFeedbackModalOpen(true);
       }
     } catch (error) {
@@ -735,10 +788,13 @@ export default function StudentDashboard() {
   }
 
   const sidebarItems = [
-    { type: "header", label: "Student Services" },
-    { key: "odrs", label: "Document Requests", iconClass: "ti ti-file-text" },
-    { key: "compliance", label: "Document Checklist", iconClass: "ti ti-clipboard-check" },
-    { key: "osas", label: "OSAS Submissions", iconClass: "ti ti-school" },
+    { type: "header", label: "Academic Records" },
+    { key: "odrs", label: "Document Requests", iconClass: "ph-bold ph-tray-arrow-up" },
+    { key: "compliance", label: "Document Checklist", iconClass: "ph-bold ph-clipboard-text" },
+
+    { type: "header", label: "Student Affairs & History" },
+    { key: "osas", label: "OSAS Submissions", iconClass: "ph-bold ph-student" },
+    { key: "activity", label: "Activity History", iconClass: "ph-bold ph-clock-counter-clockwise" },
   ];
 
   async function handleLogout() {
@@ -778,13 +834,24 @@ export default function StudentDashboard() {
           open={sidebarOpen}
           items={sidebarItems}
           activeKey={view}
-          onSelect={(key) => key === "activity" ? router.push("/account/activity") : setView(key)}
+          onSelect={(key) => setView(key)}
           onLogout={handleLogout}
           zoomNode={zoomNode}
           setZoomNode={setZoomNode}
           handleZoomMouseDown={handleZoomMouseDown}
           accentColor="#800000"
           officeName="Student Portal"
+          bottomContent={
+            <StudentSidebarFeedbackCard
+              open={sidebarOpen}
+              requests={data.requests}
+              onRateRequest={(req, prefillRating) => {
+                setFeedbackRequest(req);
+                setFeedbackInitialRating(prefillRating || 0);
+                setFeedbackModalOpen(true);
+              }}
+            />
+          }
         />
           <main className="relative w-full min-w-0 min-h-0 flex-1 overflow-y-auto bg-white/25 dark:bg-zinc-950/25 backdrop-blur-xs">
             <div
@@ -1506,6 +1573,7 @@ export default function StudentDashboard() {
                                         type="button"
                                         onClick={() => {
                                           setFeedbackRequest(item);
+                                          setFeedbackInitialRating(item.feedback.rating || 0);
                                           setFeedbackModalOpen(true);
                                         }}
                                         title={`Rated ${item.feedback.rating}/5 stars. Click to edit feedback.`}
@@ -1519,6 +1587,7 @@ export default function StudentDashboard() {
                                         type="button"
                                         onClick={() => {
                                           setFeedbackRequest(item);
+                                          setFeedbackInitialRating(0);
                                           setFeedbackModalOpen(true);
                                         }}
                                         title="Rate your experience with this request"
@@ -2058,6 +2127,7 @@ export default function StudentDashboard() {
                     type="button"
                     onClick={() => {
                       setFeedbackRequest(selectedRequestForDetail);
+                      setFeedbackInitialRating(selectedRequestForDetail.feedback?.rating || 0);
                       setFeedbackModalOpen(true);
                     }}
                     className="text-[11px] font-semibold text-pup-maroon hover:underline dark:text-red-400 cursor-pointer"
@@ -2131,6 +2201,7 @@ export default function StudentDashboard() {
                   size="sm"
                   onClick={() => {
                     setFeedbackRequest(selectedRequestForDetail);
+                    setFeedbackInitialRating(0);
                     setFeedbackModalOpen(true);
                   }}
                   className="h-8 px-3 text-xs font-semibold rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all shrink-0"
@@ -2560,8 +2631,10 @@ export default function StudentDashboard() {
         onClose={() => {
           setFeedbackModalOpen(false);
           setFeedbackRequest(null);
+          setFeedbackInitialRating(0);
         }}
         request={feedbackRequest}
+        initialRating={feedbackInitialRating}
         onFeedbackSubmitted={handleFeedbackSubmitted}
       />
     </TooltipProvider>

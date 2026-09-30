@@ -21,20 +21,59 @@ export async function GET(req) {
   const mine = searchParams.get("mine") === "1";
   const isStudent = auth.user.principalType === "student";
   const isGlobalAdmin = isSystemAdminRole(auth.user.role);
-  const officeId = isGlobalAdmin || isStudent ? "" : getPrincipalOfficeId(auth.user);
-  if (!mine && !isAdmin(auth.user)) return createAuthErrorResponse("Access denied", 403);
-  if (!isStudent && !isGlobalAdmin && !officeId) return createAuthErrorResponse("Office scope is required", 403);
-  const resolvedActor = mine
-    ? (auth.user.studentNo || `${auth.user.fname || ""} ${auth.user.lname || ""}`.trim())
-    : "";
+  const officeId = isGlobalAdmin || isStudent || mine ? "" : getPrincipalOfficeId(auth.user);
 
-  if (mine && !resolvedActor) {
-    return NextResponse.json({ ok: true, data: [], total: 0 });
+  if (!mine) {
+    if (!isAdmin(auth.user)) return createAuthErrorResponse("Access denied", 403);
+    if (!isStudent && !isGlobalAdmin && !officeId) return createAuthErrorResponse("Office scope is required", 403);
+  }
+
+  let resolvedActors = [];
+  if (mine) {
+    if (isStudent) {
+      resolvedActors = [
+        auth.user.studentNo,
+        auth.user.email,
+        `${auth.user.fname || ""} ${auth.user.lname || ""}`.trim(),
+      ].filter(Boolean);
+    } else {
+      const displayName = `${auth.user.fname || ""} ${auth.user.lname || ""}`.trim();
+      resolvedActors = [
+        displayName,
+        auth.user.email,
+        auth.user.id,
+        auth.user.username,
+      ].filter(Boolean);
+    }
+
+    if (resolvedActors.length === 0) {
+      return NextResponse.json({ ok: true, data: [], total: 0 });
+    }
   }
 
   const [rows, total] = await Promise.all([
-    listAuditLogs({ limit, offset, search, actorExact: resolvedActor, officeId, role: isStudent ? "Student" : role, severity, startDate, endDate, sortBy, sortOrder }),
-    countAuditLogs({ search, actorExact: resolvedActor, officeId, role: isStudent ? "Student" : role, severity, startDate, endDate }),
+    listAuditLogs({
+      limit,
+      offset,
+      search,
+      actorExact: mine ? resolvedActors : "",
+      officeId,
+      role: isStudent ? "Student" : role,
+      severity,
+      startDate,
+      endDate,
+      sortBy,
+      sortOrder,
+    }),
+    countAuditLogs({
+      search,
+      actorExact: mine ? resolvedActors : "",
+      officeId,
+      role: isStudent ? "Student" : role,
+      severity,
+      startDate,
+      endDate,
+    }),
   ]);
 
   return NextResponse.json({ ok: true, data: rows, total });

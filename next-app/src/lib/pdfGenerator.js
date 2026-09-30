@@ -1,6 +1,9 @@
-import jsPDF from "jspdf"
-import autoTable from "jspdf-autotable"
-import { formatPHDateTime } from "./timeFormat"
+import jsPDFRaw from "jspdf"
+import autoTableRaw from "jspdf-autotable"
+import { formatPHDateTime } from "./timeFormat.js"
+
+const jsPDF = typeof jsPDFRaw === "function" ? jsPDFRaw : (jsPDFRaw?.jsPDF || jsPDFRaw?.default || jsPDFRaw)
+const autoTable = typeof autoTableRaw === "function" ? autoTableRaw : (autoTableRaw?.default || autoTableRaw)
 
 /**
  * Institutional Branding Defaults:
@@ -85,6 +88,10 @@ function hexToRgb(hex) {
  */
 export const getLogoAsPng = (customSrc = null) => {
   return new Promise((resolve) => {
+    if (typeof window === "undefined" || typeof Image === "undefined") {
+      return resolve(OFFICIAL_FALLBACK_LOGO)
+    }
+
     if (customSrc && typeof customSrc === "string" && customSrc.startsWith("data:image/")) {
       return resolve(customSrc)
     }
@@ -435,7 +442,7 @@ export const generateDigitizationCompliancePdf = async (data, summary, meta, byC
 /**
  * Generates an OSAS Student Organization Compliance & Accreditation PDF Report
  */
-export const generateOrganizationCompliancePdf = async (data, summary, meta, organizations, byCategory) => {
+export const generateOrganizationCompliancePdf = async (data, summary, meta, organizations, byCategory, options = {}) => {
   const doc = new jsPDF("p", "pt", "a4")
   const branding = meta?.branding || await getInstitutionalBranding()
   const logoData = await getLogoAsPng(branding.logoBase64 || branding.logoUrl)
@@ -464,6 +471,14 @@ export const generateOrganizationCompliancePdf = async (data, summary, meta, org
   doc.text("OFFICE:", 40, y)
   doc.setTextColor(0, 0, 0)
   doc.text("Office of Student Affairs and Services (OSAS)", 150, y)
+
+  if (options?.scopeNote) {
+    y += 16
+    doc.setTextColor(150, 150, 150)
+    doc.text("REPORT SCOPE:", 40, y)
+    doc.setTextColor(122, 30, 40)
+    doc.text(options.scopeNote, 150, y)
+  }
 
   y += 35
   doc.setFontSize(12)
@@ -856,6 +871,122 @@ export const generateSampleBrandingPdf = async (branding) => {
 
   y = doc.lastAutoTable.finalY + 40
   addSignatures(doc, y)
+
+  return doc.output("blob")
+}
+
+/**
+ * Generates an Official Student Requirements Compliance Summary PDF
+ * (Matches Admin header standard, clean 4-column table, 3-column student meta, no signatures, official footer note)
+ */
+export const generateStudentComplianceSlipPdf = async (student = {}, requirements = [], summary = {}, options = {}) => {
+  const doc = new jsPDF("p", "pt", "a4")
+  const branding = options.branding || (await getInstitutionalBranding())
+  const logoData = await getLogoAsPng(branding.logoBase64 || branding.logoUrl)
+  const pageWidth = doc.internal.pageSize.getWidth()
+  const pageHeight = doc.internal.pageSize.getHeight()
+
+  const docId = `RKS-CMP-${student.studentNo ? String(student.studentNo).replace(/[^0-9A-Za-z]/g, "") : "STD"}-${new Date().getFullYear()}`
+  const [brandR, brandG, brandB] = hexToRgb(branding.brandColor || "#800000")
+
+  addPUPReportHeader(doc, "Student Requirements Compliance Summary", {
+    documentId: docId,
+    logoData,
+    institutionName: branding.institutionName,
+    campusName: branding.campusName,
+    brandColor: branding.brandColor || "#800000",
+    officeName: branding.tagline || "OFFICE OF THE CAMPUS REGISTRAR",
+  })
+
+  let y = 188
+
+  // Student Meta Details Box (3 columns: Student Name, Student Number, Compliance Status)
+  doc.setFillColor(249, 250, 251)
+  doc.setDrawColor(229, 231, 235)
+  doc.roundedRect(40, y, pageWidth - 80, 48, 6, 6, "FD")
+
+  const colWidth = (pageWidth - 80) / 3
+
+  // Col 1: Student Name
+  doc.setFont("helvetica", "bold")
+  doc.setFontSize(7.5)
+  doc.setTextColor(107, 114, 128)
+  doc.text("STUDENT NAME", 52, y + 18)
+  doc.setFontSize(9.5)
+  doc.setTextColor(17, 24, 39)
+  doc.text(String(student.name || "—"), 52, y + 34)
+
+  // Col 2: Student Number
+  doc.setFont("helvetica", "bold")
+  doc.setFontSize(7.5)
+  doc.setTextColor(107, 114, 128)
+  doc.text("STUDENT NUMBER", 52 + colWidth, y + 18)
+  doc.setFontSize(9.5)
+  doc.setTextColor(brandR, brandG, brandB)
+  doc.text(String(student.studentNo || "—"), 52 + colWidth, y + 34)
+
+  // Col 3: Compliance Status
+  doc.setFont("helvetica", "bold")
+  doc.setFontSize(7.5)
+  doc.setTextColor(107, 114, 128)
+  doc.text("COMPLIANCE STATUS", 52 + colWidth * 2, y + 18)
+  doc.setFontSize(9.5)
+  doc.setTextColor(17, 24, 39)
+  const statusStr = `${summary.complianceRate || 0}% (${summary.submittedCount || summary.approvedCount || 0}/${summary.totalRequired || requirements.length} Submitted)`
+  doc.text(statusStr, 52 + colWidth * 2, y + 34)
+
+  // Submissions Checklist Table (4 columns: #, Requirement / Credential, Category, Status)
+  const head = [["#", "Requirement / Credential", "Category", "Status"]]
+  const tableData = requirements.map((r, idx) => [
+    idx + 1,
+    r.docType || "—",
+    r.category || "—",
+    r.status === "Submitted" ? "Submitted" : "Not Submitted",
+  ])
+
+  autoTable(doc, {
+    startY: y + 60,
+    head: head,
+    body: tableData,
+    theme: "striped",
+    headStyles: {
+      fillColor: [brandR, brandG, brandB],
+      textColor: [255, 255, 255],
+      fontStyle: "bold",
+      fontSize: 8.5,
+    },
+    styles: {
+      fontSize: 8.5,
+      cellPadding: 6,
+      overflow: "linebreak",
+    },
+    columnStyles: {
+      0: { cellWidth: 32, halign: "center", textColor: [107, 114, 128] },
+      1: { cellWidth: 260, fontStyle: "bold", textColor: [17, 24, 39] },
+      2: { cellWidth: 125, textColor: [75, 85, 99] },
+      3: { cellWidth: "auto", halign: "center", fontStyle: "bold" },
+    },
+    didParseCell: (data) => {
+      if (data.section === "body" && data.column.index === 3) {
+        if (data.cell.raw === "Submitted") {
+          data.cell.styles.textColor = [6, 95, 70]
+        } else {
+          data.cell.styles.textColor = [180, 83, 9]
+        }
+      }
+    },
+    margin: { left: 40, right: 40 },
+  })
+
+  const finalY = doc.lastAutoTable.finalY + 25
+  const noteY = Math.min(finalY, pageHeight - 40)
+
+  doc.setFont("helvetica", "italic")
+  doc.setFontSize(8)
+  doc.setTextColor(156, 163, 175)
+  const noteText =
+    "Note: This is an official system-generated student compliance summary from the PUPSJ Records Keeping System for institutional verification. Alteration or unauthorized reproduction is strictly prohibited."
+  doc.text(noteText, pageWidth / 2, noteY, { align: "center", maxWidth: pageWidth - 80 })
 
   return doc.output("blob")
 }

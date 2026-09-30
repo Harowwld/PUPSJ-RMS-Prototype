@@ -6,6 +6,7 @@ import {
 } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import PageHeader from "@/components/shared/PageHeader"
+import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
 function formatLastSync(val) {
@@ -59,6 +60,9 @@ export default function HealthSidebar({
   isManualLoading = false,
   scopeInfo = null,
   externalDrive = null,
+  onRescanDrive = null,
+  onToggleSimulation = null,
+  isRescanning = false,
 }) {
   if (isLoading && !isManualLoading) {
     return (
@@ -120,12 +124,105 @@ export default function HealthSidebar({
             </div>
           </div>
 
+          {/* External Storage Status Tile */}
+          <div
+            className={cn(
+              "rounded-xl border p-3.5 transition-all duration-200",
+              externalDrive?.connected
+                ? "bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-200/60 dark:border-emerald-900/40"
+                : "bg-amber-50/50 dark:bg-amber-950/20 border-amber-200/60 dark:border-amber-900/40"
+            )}
+          >
+            <div className="flex items-start gap-3">
+              <div
+                className={cn(
+                  "w-8 h-8 rounded-lg flex items-center justify-center shrink-0 border shadow-2xs",
+                  externalDrive?.connected
+                    ? "bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 border-emerald-300/50"
+                    : "bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 border-amber-300/50"
+                )}
+              >
+                <HugeIcon className="ph-bold ph-hard-drives text-[16px]" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100 block leading-tight">
+                  {externalDrive?.connected ? "External Hard Drive Connected" : "External Storage Disconnected"}
+                </span>
+                <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+                  <span
+                    className={cn(
+                      "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold",
+                      externalDrive?.connected
+                        ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300"
+                        : "bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300"
+                    )}
+                  >
+                    <span
+                      className={cn(
+                        "w-1.5 h-1.5 rounded-full",
+                        externalDrive?.connected ? "bg-emerald-500" : "bg-amber-500"
+                      )}
+                    />
+                    {externalDrive?.connected ? "Ready to Copy" : "Waiting for Drive"}
+                  </span>
+                  {externalDrive?.isEmulated && (
+                    <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300">
+                      Demo Mode
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <p className="text-[11px] text-gray-500 dark:text-zinc-400 mt-2 leading-relaxed">
+              {externalDrive?.connected
+                ? `Volume: ${externalDrive.label || "External Storage"}${externalDrive.freeFormatted ? ` · ${externalDrive.freeFormatted} free` : ""} · Path: ${externalDrive.path || "Mounted"}`
+                : "Connect an external USB drive to copy backups for safekeeping."}
+            </p>
+
+            {(onRescanDrive || onToggleSimulation) && (
+              <div className="flex items-center gap-2 mt-3 pt-2.5 border-t border-black/5 dark:border-white/5">
+                {onRescanDrive && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={isRescanning}
+                    onClick={onRescanDrive}
+                    className="h-7 px-2.5 text-[11px] font-semibold rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-2xs cursor-pointer active:scale-95 transition-all inline-flex items-center gap-1.5 flex-1 justify-center"
+                    title="Rescan USB ports and mount points"
+                  >
+                    {isRescanning && <HugeIcon className="ph-bold ph-arrows-clockwise text-xs animate-spin" />}
+                    <span>{isRescanning ? "Scanning..." : "Detect"}</span>
+                  </Button>
+                )}
+
+                {onToggleSimulation && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={onToggleSimulation}
+                    className={cn(
+                      "h-7 px-2.5 text-[11px] font-semibold rounded-lg border shadow-2xs cursor-pointer active:scale-95 transition-all inline-flex items-center gap-1.5 flex-1 justify-center",
+                      externalDrive?.isEmulated
+                        ? "border-blue-300 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 hover:bg-blue-100"
+                        : "border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700"
+                    )}
+                    title={externalDrive?.isEmulated ? "Disable simulated demo drive" : "Simulate an external storage drive for demonstration"}
+                  >
+                    <span>{externalDrive?.isEmulated ? "Exit Demo" : "Simulate"}</span>
+                  </Button>
+                )}
+              </div>
+            )}
+          </div>
+
           {/* Unified iCloud-style list of resources and info */}
           <div className="flex flex-col border-t border-black/5 dark:border-white/5 pt-1">
             {/* RAM Row */}
             <div className="flex items-center justify-between h-[44px] border-b border-black/5 dark:border-white/5">
               <div className="flex items-center gap-3">
-                
                 <span className="text-[13px] font-medium text-[#111111] dark:text-zinc-50">RAM</span>
                 <span className="text-[13px] font-normal text-[#8E8E93]">{ramPercent}% usage</span>
               </div>
@@ -137,7 +234,6 @@ export default function HealthSidebar({
             {/* CPU Row */}
             <div className="flex items-center justify-between h-[44px] border-b border-black/5 dark:border-white/5">
               <div className="flex items-center gap-3">
-                
                 <span className="text-[13px] font-medium text-[#111111] dark:text-zinc-50">CPU</span>
                 <span className="text-[13px] font-normal text-[#8E8E93]">{cpuPercent}% usage</span>
               </div>
@@ -149,35 +245,13 @@ export default function HealthSidebar({
             {/* Data Protection Row */}
             <div className="flex items-center justify-between h-[44px] border-b border-black/5 dark:border-white/5">
               <div className="flex items-center gap-3">
-                
                 <span className="text-[13px] font-medium text-[#111111] dark:text-zinc-50">Data Protection</span>
                 <span className="text-[13px] font-normal text-[#8E8E93]">Protected</span>
               </div>
               <div className="flex items-center">
                 <span className="text-[13px] font-normal text-[#111111] dark:text-zinc-50">Active</span>
-                
               </div>
             </div>
-
-            {/* External Volume Row */}
-            {externalDrive && (
-              <div className="flex items-center justify-between h-[44px] border-b border-black/5 dark:border-white/5">
-                <div className="flex items-center gap-3">
-                  
-                  <div className="flex flex-col">
-                    <span className="text-[13px] font-medium text-[#111111] dark:text-zinc-50">External Drive</span>
-                    <span className="text-[11px] font-normal text-[#8E8E93] truncate max-w-[130px]" title={externalDrive.label || "External Storage"}>
-                      {externalDrive.label || "Not Connected"}
-                    </span>
-                  </div>
-                </div>
-                <div className="flex items-center">
-                  <span className="text-[12px] font-medium text-[#111111] dark:text-zinc-50">
-                    {externalDrive.connected ? "Connected" : "Disconnected"}
-                  </span>
-                </div>
-              </div>
-            )}
 
             {/* Last Synced Row */}
             <div className="flex items-center justify-between h-[44px] border-b border-black/5 dark:border-white/5">

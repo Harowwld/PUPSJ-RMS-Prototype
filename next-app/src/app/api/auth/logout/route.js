@@ -36,12 +36,25 @@ export async function POST(req) {
         await revokeSession(payload.jti, { principalId: userId, reason: "logout" });
       }
 
-      if (userId && userId !== "admin") {
+      const isStudent = String(payload?.role || "").toLowerCase() === "student" || payload?.principal_type === "student";
+
+      if (isStudent) {
+        const studentIdentifier = payload?.student_no || username || userId;
+        await writeAuditLog(req, `Student Logout`, {
+          details: `student '${studentIdentifier}' successfully terminated system session and secure credentials`,
+          actor: studentIdentifier,
+          role: "Student",
+          entity_type: "student_account",
+          entity_id: studentIdentifier,
+        });
+      } else if (userId && userId !== "admin") {
         authDebug("logout.session_ended", { staffId: userId });
         await writeAuditLog(req, `User Logout`, { 
           details: `personnel '${username || userId}' successfully terminated system session and secure credentials`,
+          role: payload?.role || "Staff",
+          officeId: payload?.office_id || null,
           entity_type: "User",
-          entity_id: userId
+          entity_id: userId,
         });
       } else if (userId === "admin") {
         await writeAuditLog(req, `User Logout`, { 
@@ -49,7 +62,7 @@ export async function POST(req) {
           actor: username || "admin",
           role: "Admin",
           entity_type: "User",
-          entity_id: "admin"
+          entity_id: "admin",
         });
       }
     } catch {

@@ -156,7 +156,13 @@ const triggerCustomToast = (message, options = {}, type = "default") => {
     stage = (matchesStage2 || !!descContent || type === "success" || type === "info" || type === "loading") ? 2 : 1;
   }
 
-  const duration = (isDismissable || type === "loading") ? Infinity : (safeOptions.duration || 3000);
+  const duration = safeOptions.duration !== undefined
+    ? safeOptions.duration
+    : type === "loading"
+      ? Infinity
+      : isDismissable
+        ? 4500
+        : 3000;
 
   return hotToast.custom(
     (t) => {

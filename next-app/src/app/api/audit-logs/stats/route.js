@@ -14,19 +14,40 @@ export async function GET(req) {
     const mine = searchParams.get("mine") === "1";
     const isStudent = auth.user.principalType === "student";
     const isGlobalAdmin = isSystemAdminRole(auth.user.role);
-    const officeId = isGlobalAdmin || isStudent ? "" : getPrincipalOfficeId(auth.user);
-    if (!mine && !isAdmin(auth.user)) return createAuthErrorResponse("Access denied", 403);
-    if (!isStudent && !isGlobalAdmin && !officeId) return createAuthErrorResponse("Office scope is required", 403);
-    let actor = "";
-    
+    const officeId = isGlobalAdmin || isStudent || mine ? "" : getPrincipalOfficeId(auth.user);
+
+    if (!mine) {
+      if (!isAdmin(auth.user)) return createAuthErrorResponse("Access denied", 403);
+      if (!isStudent && !isGlobalAdmin && !officeId) return createAuthErrorResponse("Office scope is required", 403);
+    }
+
+    let resolvedActors = [];
     if (mine) {
-      actor = auth.user.studentNo || `${auth.user.fname || ""} ${auth.user.lname || ""}`.trim();
-      if (!actor) {
-        return NextResponse.json({ ok: true, data: { totalLogs: 0, logsToday: 0, authEvents: 0, systemChanges: 0, criticalEvents: 0 } });
+      if (isStudent) {
+        resolvedActors = [
+          auth.user.studentNo,
+          auth.user.email,
+          `${auth.user.fname || ""} ${auth.user.lname || ""}`.trim(),
+        ].filter(Boolean);
+      } else {
+        const displayName = `${auth.user.fname || ""} ${auth.user.lname || ""}`.trim();
+        resolvedActors = [
+          displayName,
+          auth.user.email,
+          auth.user.id,
+          auth.user.username,
+        ].filter(Boolean);
+      }
+
+      if (resolvedActors.length === 0) {
+        return NextResponse.json({
+          ok: true,
+          data: { totalLogs: 0, logsToday: 0, authEvents: 0, systemChanges: 0, criticalEvents: 0, trends: [] },
+        });
       }
     }
 
-    const stats = await getAuditLogStats(actor, officeId);
+    const stats = await getAuditLogStats(mine ? resolvedActors : "", mine ? "" : officeId);
     return NextResponse.json({ ok: true, data: stats });
   } catch (err) {
     return NextResponse.json(

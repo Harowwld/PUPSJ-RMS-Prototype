@@ -669,7 +669,7 @@ function AccountPageContent() {
       <div className="h-screen overflow-hidden flex flex-col bg-gray-50 dark:bg-background font-jakarta">
         <Header authUser={authUser} onLogout={handleLogout} />
         <main className="flex-1 min-h-0 overflow-y-auto w-full">
-          <div className="max-w-[1280px] mx-auto py-10 px-6">
+          <div className="w-full max-w-[1600px] 2xl:max-w-[1760px] mx-auto py-6 px-4 sm:px-8">
             <Card className="flex flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none min-h-[600px]">
               <div className="p-6 border-b border-gray-100 dark:border-white/10 flex items-center justify-between">
                 <div className="space-y-2">
@@ -718,7 +718,7 @@ function AccountPageContent() {
       <Header authUser={authUser} onLogout={handleLogout} />
 
       <PageTransition className="flex-1 min-h-0 overflow-y-auto w-full">
-        <div className="max-w-[1280px] mx-auto py-10 px-6">
+        <div className="w-full max-w-[1600px] 2xl:max-w-[1760px] mx-auto py-6 px-4 sm:px-8">
           {/* ONE Single Card Container encapsulating Header, Sidebar & Tab Content */}
           <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none isolate font-jakarta mb-4 min-h-0 flex-1">
             <PageHeader
@@ -736,9 +736,8 @@ function AccountPageContent() {
                     const path = getDefaultDashboardPath(authUser?.role);
                     router.push(path);
                   }}
-                  className="flex h-10 items-center justify-center gap-2 rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
+                  className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                 >
-                  <HugeIcon  className="ph-bold ph-arrow-left text-sm"></HugeIcon>
                   Dashboard
                 </Button>
               }
@@ -1026,10 +1025,10 @@ function AccountPageContent() {
                       <Button
                         type="submit"
                         disabled={profileLoading}
-                        className="flex h-10 items-center justify-center gap-2 rounded-full text-xs font-semibold text-white bg-gray-900 hover:bg-black dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100 active:scale-95 disabled:opacity-50 transition-all cursor-pointer px-6 shadow-xs border-0"
+                        className="h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                       >
                         {profileLoading && (
-                          <HugeIcon  className="ph-bold ph-spinner animate-spin text-sm"></HugeIcon>
+                          <HugeIcon className="ph-bold ph-spinner animate-spin text-sm" />
                         )}
                         {profileLoading ? "Saving..." : "Save"}
                       </Button>
@@ -1138,10 +1137,10 @@ function AccountPageContent() {
                         <Button
                           type="submit"
                           disabled={pwLoading}
-                          className="flex h-10 items-center justify-center gap-2 rounded-full text-xs font-semibold text-white bg-gray-900 hover:bg-black dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100 active:scale-95 disabled:opacity-50 transition-all cursor-pointer px-6 shadow-xs border-0"
+                          className="h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                         >
                           {pwLoading && (
-                            <HugeIcon  className="ph-bold ph-spinner animate-spin text-sm"></HugeIcon>
+                            <HugeIcon className="ph-bold ph-spinner animate-spin text-sm" />
                           )}
                           {pwLoading ? "Updating..." : "Update"}
                         </Button>
@@ -1243,10 +1242,10 @@ function AccountPageContent() {
                         <Button
                           type="submit"
                           disabled={secLoading || globalQuestions.length === 0}
-                          className="flex h-10 items-center justify-center gap-2 rounded-full text-xs font-semibold text-white bg-gray-900 hover:bg-black dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100 active:scale-95 disabled:opacity-50 transition-all cursor-pointer px-6 shadow-xs border-0"
+                          className="h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                         >
                           {secLoading && (
-                            <HugeIcon  className="ph-bold ph-spinner animate-spin text-sm"></HugeIcon>
+                            <HugeIcon className="ph-bold ph-spinner animate-spin text-sm" />
                           )}
                           {secLoading ? "Saving..." : "Save"}
                         </Button>
@@ -1326,7 +1325,7 @@ function AccountPageContent() {
                             onClick={cancelTOTPSetup}
                             disabled={totpLoading}
                             variant="outline"
-                            className="flex h-10 items-center justify-center rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
+                            className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                           >
                             Cancel
                           </Button>
@@ -1334,12 +1333,12 @@ function AccountPageContent() {
                             type="button"
                             onClick={verifyTOTP}
                             disabled={totpLoading || totpToken.length !== 6}
-                            className="flex h-10 items-center justify-center gap-2 rounded-full text-xs font-semibold text-white bg-gray-900 hover:bg-black dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100 active:scale-95 disabled:opacity-50 transition-all cursor-pointer px-6 shadow-xs border-0"
+                            className="h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                           >
                             {totpLoading && (
-                              <HugeIcon  className="ph-bold ph-spinner animate-spin text-sm"></HugeIcon>
+                              <HugeIcon className="ph-bold ph-spinner animate-spin text-sm" />
                             )}
-                            Activate 2FA
+                            Activate
                           </Button>
                         </div>
                       </div>
@@ -1371,7 +1370,7 @@ function AccountPageContent() {
                                  type="button"
                                  onClick={() => setTotpStep("disable-flow")}
                                  variant="outline"
-                                 className="flex h-10 items-center justify-center rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
+                                 className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                                >
                                  Disable
                                </Button>
@@ -1380,12 +1379,12 @@ function AccountPageContent() {
                                  type="button"
                                  onClick={startTOTPSetup}
                                  disabled={totpSetupLoading}
-                                 className="flex h-10 items-center justify-center gap-2 rounded-full text-xs font-semibold text-white bg-gray-900 hover:bg-black dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100 active:scale-95 disabled:opacity-50 transition-all cursor-pointer px-6 shadow-xs border-0"
+                                 className="h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                                >
                                  {totpSetupLoading && (
-                                   <HugeIcon  className="ph-bold ph-spinner animate-spin text-sm"></HugeIcon>
+                                   <HugeIcon className="ph-bold ph-spinner animate-spin text-sm" />
                                  )}
-                                 Set Up
+                                 Configure
                                </Button>
                              )}
                            </div>
@@ -1421,7 +1420,7 @@ function AccountPageContent() {
                                   type="button"
                                   onClick={() => { setTotpStep("idle"); setTotpToken(""); setTotpError(""); }}
                                   variant="outline"
-                                  className="flex h-10 items-center justify-center rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
+                                  className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                                 >
                                   Cancel
                                 </Button>
@@ -1432,12 +1431,12 @@ function AccountPageContent() {
                                     setTotpStep("idle");
                                   }}
                                   disabled={totpLoading || totpToken.length !== 6}
-                                  className="flex h-10 items-center justify-center gap-2 rounded-full text-xs font-semibold text-white bg-gray-900 hover:bg-black dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100 active:scale-95 disabled:opacity-50 transition-all cursor-pointer px-6 shadow-xs border-0"
+                                  className="h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                                 >
                                   {totpLoading && (
-                                    <HugeIcon  className="ph-bold ph-spinner animate-spin text-sm"></HugeIcon>
+                                    <HugeIcon className="ph-bold ph-spinner animate-spin text-sm" />
                                   )}
-                                  Confirm Disable
+                                  Disable
                                 </Button>
                              </div>
                           </div>
@@ -1496,7 +1495,7 @@ function AccountPageContent() {
                                 }}
                                 disabled={recoveryCodesLoading}
                                 variant="outline"
-                                className="flex h-10 items-center justify-center rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
+                                className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                               >
                                 Disable
                               </Button>
@@ -1505,10 +1504,10 @@ function AccountPageContent() {
                               type="button"
                               onClick={generateNewRecoveryCodes}
                               disabled={recoveryCodesLoading}
-                              className="flex h-10 items-center justify-center gap-2 rounded-full text-xs font-semibold text-white bg-gray-900 hover:bg-black dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100 active:scale-95 disabled:opacity-50 transition-all cursor-pointer px-6 shadow-xs border-0"
+                              className="h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                             >
                               {recoveryCodesLoading && (
-                                <HugeIcon  className="ph-bold ph-spinner animate-spin text-sm"></HugeIcon>
+                                <HugeIcon className="ph-bold ph-spinner animate-spin text-sm" />
                               )}
                               {recoveryCodesCount > 0 ? "Regenerate" : "Generate"}
                             </Button>
@@ -1563,23 +1562,23 @@ function AccountPageContent() {
                     type="button"
                     onClick={copyRecoveryCodes}
                     variant="outline" 
-                    className="flex-1 flex h-10 items-center justify-center gap-2 rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
+                    className="flex-1 h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                   >
-                    <HugeIcon  className="ph-bold ph-copy text-sm"></HugeIcon> Copy
+                    Copy
                   </Button>
                   <Button 
                     type="button"
                     onClick={downloadRecoveryCodes}
                     variant="outline" 
-                    className="flex-1 flex h-10 items-center justify-center gap-2 rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
+                    className="flex-1 h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                   >
-                    <HugeIcon  className="ph-bold ph-download-simple text-sm"></HugeIcon> Save
+                    Save
                   </Button>
                 </div>
                 <Button 
                   type="button"
                   onClick={() => setShowRecoveryCodesDialog(false)}
-                  className="w-full flex h-10 items-center justify-center rounded-full text-xs font-semibold text-white bg-gray-900 hover:bg-black dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100 active:scale-95 transition-all cursor-pointer px-5 shadow-xs border-0"
+                  className="w-full h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all"
                 >
                   Done
                 </Button>

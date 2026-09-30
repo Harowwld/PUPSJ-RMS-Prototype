@@ -51,39 +51,41 @@ function PDFFrame({ docId, url }) {
   )
 }
 
-export default function PDFPreviewModal({ open, onClose, preview }) {
+export default function PDFPreviewModal({ open, isOpen, onClose, preview, pdfUrl, title, filename }) {
+  const isModalOpen = Boolean(open ?? isOpen)
+  const effectivePreview = preview || (pdfUrl || title || filename ? { url: pdfUrl, title, filename } : null)
   const [isFullscreen, setIsFullscreen] = useState(false)
 
-  const docId = preview?.docId
-  const fileUrl = preview?.url || preview?.fileUrl || (docId ? `/api/documents/${docId}` : null)
+  const docId = effectivePreview?.docId
+  const fileUrl = effectivePreview?.url || effectivePreview?.fileUrl || (docId ? `/api/documents/${docId}` : null)
   const hasFile = !!fileUrl || !!docId
 
-  if (!open && isFullscreen) {
+  if (!isModalOpen && isFullscreen) {
     setIsFullscreen(false)
   }
 
   useEffect(() => {
-    if (!open) {
+    if (!isModalOpen) {
       if (typeof document !== "undefined") {
         document.body.style.pointerEvents = ""
         document.body.style.overflow = ""
       }
     }
-  }, [open])
+  }, [isModalOpen])
 
   return (
     <Dialog 
-      open={open} 
-      onOpenChange={(isOpen) => {
-        if (!isOpen) {
+      open={isModalOpen} 
+      onOpenChange={(isOpenState) => {
+        if (!isOpenState) {
           setIsFullscreen(false)
-          onClose()
+          onClose?.()
         }
       }}
     >
       <DialogContent 
         hideClose={true}
-        className="flex h-[90vh] w-[96vw] max-w-[96vw] flex-col overflow-hidden border border-gray-200 bg-gray-100 p-0 shadow-2xl transition-all duration-normal ease-standard xl:max-w-[1400px] rounded-2xl dark:border-white/10 dark:bg-muted z-[70] gap-0"
+        className="flex h-[90vh] w-[96vw] max-w-[96vw] sm:max-w-[96vw] flex-col overflow-hidden border border-gray-200 bg-gray-100 p-0 shadow-2xl transition-all duration-normal ease-standard xl:max-w-[1400px] rounded-2xl dark:border-white/10 dark:bg-muted z-[70] gap-0"
       >
         <DialogHeader className="shrink-0 border-b border-gray-100 dark:border-white/10 bg-gray-50 dark:bg-white/5 px-6 py-4">
           <div className="flex items-center justify-between w-full gap-4">

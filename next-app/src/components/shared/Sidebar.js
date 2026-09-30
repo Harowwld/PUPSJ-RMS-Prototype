@@ -40,7 +40,7 @@ const ICON_MAP = {
   storage: { icon: "ti ti-folder-open" },
 }
 
-export default function Sidebar({ open = true, items, activeKey, onSelect, onLogout, zoomNode, setZoomNode, handleZoomMouseDown, accentColor, officeName, authUser }) {
+export default function Sidebar({ open = true, items, activeKey, onSelect, onLogout, zoomNode, setZoomNode, handleZoomMouseDown, accentColor, officeName, authUser, bottomContent, children }) {
   const pathname = usePathname()
   const isStaff = pathname?.startsWith("/staff") || items.some(item => 
     ["requests", "upload", "documents", "notifications", "search"].includes(item.key)
@@ -435,6 +435,17 @@ export default function Sidebar({ open = true, items, activeKey, onSelect, onLog
             </a>
           )
         })}
+
+        {(bottomContent || children) && (
+          <div className="mt-auto pt-2 w-full shrink-0">
+            {typeof bottomContent === "function"
+              ? bottomContent({ open })
+              : bottomContent}
+            {typeof children === "function"
+              ? children({ open })
+              : children}
+          </div>
+        )}
       </div>
     </aside>
   )

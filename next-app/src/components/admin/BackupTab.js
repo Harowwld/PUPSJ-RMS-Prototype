@@ -361,77 +361,6 @@ export default function BackupTab({
                 }
               />
 
-              {/* External Storage Status Banner */}
-              <div className="border-t border-gray-100 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/30 px-5 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                <div className="flex items-center gap-3.5">
-                  <div className={cn(
-                    "w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border shadow-xs transition-all duration-200",
-                    externalDrive?.connected
-                      ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border-emerald-200/60 dark:border-emerald-900/40"
-                      : "bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border-amber-200/60 dark:border-amber-900/40"
-                  )}>
-                    <HugeIcon  className="ph-bold ph-hard-drives text-[18px]" />
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
-                        {externalDrive?.connected ? "External Hard Drive Connected" : "External Storage Disconnected"}
-                      </span>
-                      <span className={cn(
-                        "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold",
-                        externalDrive?.connected
-                          ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300"
-                          : "bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300"
-                      )}>
-                        <span className={cn("w-1.5 h-1.5 rounded-full", externalDrive?.connected ? "bg-emerald-500" : "bg-amber-500")} />
-                        {externalDrive?.connected ? "Ready to Copy" : "Waiting for Drive"}
-                      </span>
-                      {externalDrive?.isEmulated && (
-                        <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300">
-                          Demo Mode
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-[11px] text-gray-500 dark:text-zinc-400 mt-0.5">
-                      {externalDrive?.connected
-                        ? `Volume: ${externalDrive.label || "External Storage"}${externalDrive.freeFormatted ? ` · ${externalDrive.freeFormatted} free` : ""} · Path: ${externalDrive.path || "Mounted"}`
-                        : "Connect an external USB drive to copy backups for safekeeping."}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    disabled={isRescanning}
-                    onClick={handleRescanDrive}
-                    className="h-8 px-3 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all inline-flex items-center gap-1.5"
-                    title="Rescan USB ports and mount points for connected storage"
-                  >
-                    {isRescanning && <HugeIcon  className="ph-bold ph-arrows-clockwise text-xs animate-spin" />}
-                    <span>{isRescanning ? "Scanning..." : "Detect"}</span>
-                  </Button>
-
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={handleToggleSimulationLocal}
-                    className={cn(
-                      "h-8 px-3 text-xs font-semibold rounded-xl border shadow-xs cursor-pointer active:scale-95 transition-all inline-flex items-center gap-1.5",
-                      externalDrive?.isEmulated
-                        ? "border-blue-300 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 hover:bg-blue-100"
-                        : "border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700"
-                    )}
-                    title={externalDrive?.isEmulated ? "Disable simulated demo drive" : "Simulate an external storage drive for demonstration"}
-                  >
-                    <span>{externalDrive?.isEmulated ? "Exit" : "Simulate"}</span>
-                  </Button>
-                </div>
-              </div>
-
               {/* Automatic Backup Configuration Section */}
               <AutoBackupSchedule showToast={showToast} scope="office" embedded={true} />
 
@@ -553,15 +482,9 @@ export default function BackupTab({
             isLoading={isLoading}
             isManualLoading={isManualLoading}
             externalDrive={externalDrive}
-            scopeInfo={{
-              title: "Backup Coverage",
-              items: [
-                "Student Records & Data",
-                "Documents Vault",
-                "Physical Archive Layout",
-                "External Drive Copy",
-              ],
-            }}
+            onRescanDrive={handleRescanDrive}
+            onToggleSimulation={handleToggleSimulationLocal}
+            isRescanning={isRescanning}
           />
         </div>
 
