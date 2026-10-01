@@ -1022,7 +1022,7 @@ export default function StudentDirectoryTab({
           />
 
           {/* 4. Main Data Table */}
-          <div className={cn("flex-1 bg-white dark:bg-card overflow-hidden", filteredStudents.length === 0 && "rounded-b-2xl")}>
+          <div className={cn("flex-1 border-t border-gray-100 dark:border-white/10 bg-white dark:bg-card overflow-hidden", filteredStudents.length === 0 && "rounded-b-2xl")}>
             {loading ? (
               <div className="p-6 space-y-3 rounded-b-2xl">
                 {[1, 2, 3, 4, 5].map((i) => (
@@ -1217,7 +1217,7 @@ export default function StudentDirectoryTab({
                             <Badge
                               variant="outline"
                               className={cn(
-                                "text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full border",
+                                "text-[10px] font-semibold px-2.5 py-0.5 rounded-full border",
                                 isStudentArchived
                                   ? "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20"
                                   : "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20"

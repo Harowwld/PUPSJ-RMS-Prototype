@@ -20,6 +20,18 @@ import OsasMonitoringSkeleton from "@/components/staff/skeletons/OsasMonitoringS
 import PDFPreviewModal from "@/components/shared/PDFPreviewModal";
 import MultiCriteriaFilter from "@/components/shared/MultiCriteriaFilter";
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips";
+import {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+} from "@/components/ui/tooltip";
+import {
+  Empty,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+  EmptyDescription,
+} from "@/components/ui/empty";
 
 export function normalizeProposalStatus(status) {
   const s = String(status || "").toLowerCase().trim();
@@ -37,6 +49,13 @@ const STATUS_OPTIONS = [
   "Under Review",
   "Needs Revision",
   "Approved",
+  "Declined",
+];
+
+const POST_EVENT_STATUS_OPTIONS = [
+  "Under Review",
+  "Needs Revision",
+  "Cleared",
   "Declined",
 ];
 
@@ -81,18 +100,46 @@ export function getProposalStatusDotClass(status) {
   return "bg-zinc-400";
 }
 
-function FirstPagePreview({ proposalId, title, onOpenPreview }) {
+export function getPostEventStatusBadgeClass(status) {
+  const s = String(status || "").toLowerCase().trim();
+  if (s === "cleared") {
+    return "bg-emerald-50 text-emerald-800 border-emerald-200/80 dark:bg-emerald-950/30 dark:text-emerald-300 dark:border-emerald-800/40";
+  }
+  if (s === "under review" || s === "underreview" || s === "processing") {
+    return "bg-sky-50/70 text-slate-800 border-sky-200/60 dark:bg-sky-950/20 dark:text-zinc-200 dark:border-sky-900/30";
+  }
+  if (s === "needs revision" || s === "revision") {
+    return "bg-amber-50 text-amber-800 border-amber-200/80 dark:bg-amber-950/30 dark:text-amber-300 dark:border-amber-800/40";
+  }
+  if (s === "declined" || s === "rejected") {
+    return "bg-rose-50 text-rose-800 border-rose-200/80 dark:bg-rose-950/30 dark:text-rose-300 dark:border-rose-800/40";
+  }
+  return "bg-slate-100 text-slate-700 border-slate-200 dark:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-700";
+}
+
+export function getPostEventStatusDotClass(status) {
+  const s = String(status || "").toLowerCase().trim();
+  if (s === "cleared") return "bg-emerald-500";
+  if (s === "under review") return "bg-sky-500";
+  if (s === "needs revision") return "bg-amber-500";
+  if (s === "declined") return "bg-rose-500";
+  return "bg-slate-400 dark:bg-zinc-400";
+}
+
+function FirstPagePreview({ proposalId, fileUrl, title, onOpenPreview, subtext = "Page 1 of official submission" }) {
   const containerRef = useRef(null);
   const canvasRef = useRef(null);
   const [loading, setLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
+
+  const previewUrl = fileUrl || (proposalId ? `/api/osas/event-proposals/${proposalId}?file=1` : null);
 
   useEffect(() => {
     let active = true;
     let page = null;
     let observer = null;
 
-    if (!proposalId) {
+    if (!previewUrl) {
       setLoading(false);
       return;
     }
@@ -117,9 +164,9 @@ function FirstPagePreview({ proposalId, title, onOpenPreview }) {
       try {
         setLoading(true);
         setHasError(false);
-        const response = await fetch(`/api/osas/event-proposals/${proposalId}?file=1`);
+        const response = await fetch(previewUrl);
         if (!response.ok) {
-          console.warn(`OSAS proposal preview returned status ${response.status}`);
+          console.warn(`PDF preview returned status ${response.status}`);
           if (active) {
             setLoading(false);
             setHasError(true);
@@ -138,7 +185,7 @@ function FirstPagePreview({ proposalId, title, onOpenPreview }) {
         });
         observer.observe(containerRef.current);
       } catch (error) {
-        console.warn("Could not render OSAS proposal canvas preview:", error);
+        console.warn("Could not render canvas preview:", error);
         if (active) {
           setLoading(false);
           setHasError(true);
@@ -151,7 +198,7 @@ function FirstPagePreview({ proposalId, title, onOpenPreview }) {
       active = false;
       observer?.disconnect();
     };
-  }, [proposalId]);
+  }, [previewUrl]);
 
   if (hasError) {
     return (
@@ -162,21 +209,21 @@ function FirstPagePreview({ proposalId, title, onOpenPreview }) {
           aria-label={`Preview fallback for ${title}`}
         >
           <div className="w-10 h-10 rounded-xl bg-red-50 dark:bg-red-950/40 text-pup-maroon dark:text-red-400 flex items-center justify-center text-xl mb-2">
-            <HugeIcon  className="ph-duotone ph-file-pdf"></HugeIcon>
+            <HugeIcon className="ph-duotone ph-file-pdf"></HugeIcon>
           </div>
           <p className="text-xs font-semibold text-gray-800 dark:text-zinc-200">Official Document On File</p>
           <p className="text-[11px] text-gray-400 dark:text-zinc-500 max-w-xs mt-0.5 mb-3">
-            Canvas preview could not be rendered inline. You can preview or download the complete proposal PDF.
+            Canvas preview could not be rendered inline. You can preview or download the complete PDF document.
           </p>
           <Button
             type="button"
             variant="outline"
             size="sm"
-            onClick={onOpenPreview || (() => window.open(`/api/osas/event-proposals/${proposalId}?file=1`, "_blank"))}
+            onClick={onOpenPreview || (() => previewUrl && window.open(previewUrl, "_blank"))}
             className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-white dark:bg-zinc-800 border border-gray-200 dark:border-white/10 text-pup-maroon dark:text-red-400 hover:bg-gray-50 shadow-2xs cursor-pointer active:scale-95 transition-all"
           >
             <span>Preview PDF Document</span>
-            <HugeIcon  className="ph-bold ph-eye text-xs"></HugeIcon>
+            <HugeIcon className="ph-bold ph-eye text-xs"></HugeIcon>
           </Button>
         </div>
       </div>
@@ -196,27 +243,27 @@ function FirstPagePreview({ proposalId, title, onOpenPreview }) {
       >
         {loading && (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-50/80 dark:bg-zinc-900/80 text-gray-400 dark:text-zinc-500">
-            <HugeIcon  className="ph-bold ph-spinner animate-spin text-2xl mb-1.5 text-pup-maroon"></HugeIcon>
+            <HugeIcon className="ph-bold ph-spinner animate-spin text-2xl mb-1.5 text-pup-maroon"></HugeIcon>
             <span className="text-xs font-medium">Rendering document preview...</span>
           </div>
         )}
         <canvas ref={canvasRef} className="rounded shadow-xs max-h-[360px] object-contain group-hover:opacity-95 transition-opacity" />
         {onOpenPreview && !loading && (
           <div className="absolute bottom-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity bg-black/60 text-white text-[11px] font-medium px-2.5 py-1 rounded-lg backdrop-blur-xs flex items-center gap-1 shadow-sm">
-            <HugeIcon  className="ph-bold ph-magnifying-glass-plus"></HugeIcon>
+            <HugeIcon className="ph-bold ph-magnifying-glass-plus"></HugeIcon>
             <span>Click to Preview</span>
           </div>
         )}
       </div>
       <div className="flex items-center justify-between">
-        <span className="text-[11px] text-gray-400 dark:text-zinc-500">Page 1 of official proposal submission</span>
+        <span className="text-[11px] text-gray-400 dark:text-zinc-500">{subtext}</span>
         <button
           type="button"
-          onClick={onOpenPreview || (() => window.open(`/api/osas/event-proposals/${proposalId}?file=1`, "_blank"))}
+          onClick={onOpenPreview || (() => previewUrl && window.open(previewUrl, "_blank"))}
           className="inline-flex items-center gap-1 text-xs font-semibold text-pup-maroon hover:underline dark:text-red-400 cursor-pointer"
         >
           <span>Preview Full PDF</span>
-          <HugeIcon  className="ph-bold ph-eye text-xs"></HugeIcon>
+          <HugeIcon className="ph-bold ph-eye text-xs"></HugeIcon>
         </button>
       </div>
     </div>
@@ -230,19 +277,22 @@ export default function OsasMonitoringTab({ showToast }) {
   const [pdfPreviewOpen, setPdfPreviewOpen] = useState(false);
   const [pdfPreviewData, setPdfPreviewData] = useState(null);
 
-  const handleOpenPdfPreview = useCallback((proposal) => {
-    if (!proposal?.id) return;
+  const handleOpenPdfPreview = useCallback((item) => {
+    if (!item) return;
     setPdfPreviewData({
-      url: `/api/osas/event-proposals/${proposal.id}?file=1`,
-      title: proposal.title || "Event Proposal",
-      subtitle: `Viewing official event proposal submitted by ${proposal.organization_name || proposal.student_name || "Organization"}.`,
-      studentName: proposal.student_name,
-      docType: "Event Proposal",
-      originalFilename: proposal.original_filename || "Proposal.pdf",
+      url: item.url || (item.id ? `/api/osas/event-proposals/${item.id}?file=1` : ""),
+      title: item.title || "Document",
+      subtitle:
+        item.subtitle ||
+        `Viewing official document submitted by ${item.organization_name || item.student_name || "Organization"}.`,
+      studentName: item.student_name || item.submitted_by_name,
+      docType: item.docType || "Event Proposal",
+      originalFilename: item.original_filename || "Document.pdf",
     });
     setPdfPreviewOpen(true);
   }, []);
 
+  const [activeStream, setActiveStream] = useState("proposals"); // "proposals" | "post_events"
   const [viewMode, setViewMode] = useState("list"); // "list" | "kanban"
   const [status, setStatus] = useState("Submitted");
   const [note, setNote] = useState("");
@@ -256,6 +306,14 @@ export default function OsasMonitoringTab({ showToast }) {
   const [draggingProposal, setDraggingProposal] = useState(null);
   const [dragOverColumn, setDragOverColumn] = useState(null);
   const isDraggingRef = useRef(false);
+
+  // Post-Event Reports Stream state
+  const [postEventReports, setPostEventReports] = useState([]);
+  const [selectedPostEvent, setSelectedPostEvent] = useState(null);
+  const [postEventSheetOpen, setPostEventSheetOpen] = useState(false);
+  const [postEventStatus, setPostEventStatus] = useState("Cleared");
+  const [postEventNote, setPostEventNote] = useState("");
+  const [isSavingPostEvent, setIsSavingPostEvent] = useState(false);
 
   useEffect(() => {
     try {
@@ -274,15 +332,19 @@ export default function OsasMonitoringTab({ showToast }) {
 
   const load = useCallback(async () => {
     try {
-      const res = await fetch("/api/osas/event-proposals", { cache: "no-store" });
-      const json = await res.json();
-      if (res.ok && json.ok) {
-        setRows(json.data || []);
-      } else {
-        showToast?.(
-          { title: "Load failed", description: json?.error || "Unable to load OSAS submissions." },
-          true
-        );
+      setLoading(true);
+      const [proposalsRes, postEventsRes] = await Promise.allSettled([
+        fetch("/api/osas/event-proposals", { cache: "no-store" }),
+        fetch("/api/osas/post-event-reports", { cache: "no-store" }),
+      ]);
+
+      if (proposalsRes.status === "fulfilled") {
+        const json = await proposalsRes.value.json().catch(() => null);
+        if (proposalsRes.value.ok && json?.ok) setRows(json.data || []);
+      }
+      if (postEventsRes.status === "fulfilled") {
+        const json = await postEventsRes.value.json().catch(() => null);
+        if (postEventsRes.value.ok && json?.ok) setPostEventReports(json.data || []);
       }
     } catch {
       showToast?.({ title: "Load failed", description: "Unable to load OSAS submissions." }, true);
@@ -340,6 +402,47 @@ export default function OsasMonitoringTab({ showToast }) {
       showToast?.({ title: "Update failed", description: "Network error while updating proposal." }, true);
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const selectPostEvent = async (report) => {
+    setSelectedPostEvent(report);
+    setPostEventStatus(report.status === "Submitted" ? "Under Review" : report.status);
+    setPostEventNote(report.review_notes || "");
+    setPostEventSheetOpen(true);
+    try {
+      const res = await fetch(`/api/osas/post-event-reports/${report.id}`, { cache: "no-store" });
+      const json = await res.json();
+      if (res.ok && json.ok) {
+        setSelectedPostEvent((prev) => (prev?.id === report.id ? { ...prev, ...json.data } : prev));
+      }
+    } catch (err) {
+      console.error("Failed to fetch post-event report details", err);
+    }
+  };
+
+  const savePostEvent = async (overrideStatus) => {
+    if (!selectedPostEvent) return;
+    const targetStatus = overrideStatus || postEventStatus;
+    const finalNote = postEventNote.trim() || `Status updated to ${targetStatus} by OSAS clearance review.`;
+    setIsSavingPostEvent(true);
+    try {
+      const res = await fetch(`/api/osas/post-event-reports/${selectedPostEvent.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: targetStatus, note: finalNote }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.ok) {
+        return showToast?.({ title: "Update failed", description: json?.error || "Unable to save clearance." }, true);
+      }
+      showToast?.({ title: "Post-Event Clearance Updated", description: `Report marked as ${targetStatus}.` });
+      setPostEventSheetOpen(false);
+      await load();
+    } catch {
+      showToast?.({ title: "Update failed", description: "Network error while updating post-event report." }, true);
+    } finally {
+      setIsSavingPostEvent(false);
     }
   };
 
@@ -418,6 +521,22 @@ export default function OsasMonitoringTab({ showToast }) {
     return c;
   }, [rows]);
 
+  const postEventCounts = useMemo(() => {
+    const c = {
+      All: postEventReports.length,
+      Submitted: 0,
+      "Under Review": 0,
+      "Needs Revision": 0,
+      Cleared: 0,
+      Declined: 0,
+    };
+    for (const r of postEventReports) {
+      const s = r.status || "Submitted";
+      if (c[s] !== undefined) c[s] += 1;
+    }
+    return c;
+  }, [postEventReports]);
+
   const filterTabs = useMemo(() => {
     return [
       { key: "All", label: "All", count: counts.All },
@@ -429,13 +548,30 @@ export default function OsasMonitoringTab({ showToast }) {
     ];
   }, [counts]);
 
+  const postEventFilterTabs = useMemo(() => [
+    { key: "All", label: "All", count: postEventCounts.All },
+    { key: "Submitted", label: "Submitted", count: postEventCounts.Submitted },
+    { key: "Under Review", label: "Under Review", count: postEventCounts["Under Review"] },
+    { key: "Needs Revision", label: "Needs Revision", count: postEventCounts["Needs Revision"] },
+    { key: "Cleared", label: "Cleared", count: postEventCounts.Cleared },
+    { key: "Declined", label: "Declined", count: postEventCounts.Declined },
+  ], [postEventCounts]);
+
+  const currentFilterTabs = useMemo(() => {
+    if (activeStream === "post_events") return postEventFilterTabs;
+    return filterTabs;
+  }, [activeStream, postEventFilterTabs, filterTabs]);
+
   const availableOrgs = useMemo(() => {
     const orgs = new Set();
     rows.forEach((r) => {
       if (r.organization_name) orgs.add(r.organization_name);
     });
+    postEventReports.forEach((r) => {
+      if (r.organization_name) orgs.add(r.organization_name);
+    });
     return Array.from(orgs).sort();
-  }, [rows]);
+  }, [rows, postEventReports]);
 
   const filterGroups = useMemo(() => [
     {
@@ -477,7 +613,6 @@ export default function OsasMonitoringTab({ showToast }) {
     setOrgFilters([]);
     setPage(1);
   }, []);
-
 
   const activeChips = useMemo(() => {
     const chips = [];
@@ -534,13 +669,43 @@ export default function OsasMonitoringTab({ showToast }) {
     });
   }, [rows, statusFilters, orgFilters, searchQuery]);
 
-  const totalPages = Math.max(1, Math.ceil(filteredRows.length / itemsPerPage));
+  const filteredPostEvents = useMemo(() => {
+    return postEventReports.filter((item) => {
+      if (statusFilters.length > 0) {
+        const matches = statusFilters.some((sf) => String(sf).toLowerCase() === String(item.status || "").toLowerCase());
+        if (!matches) return false;
+      }
+      if (orgFilters.length > 0 && !orgFilters.includes(item.organization_name)) return false;
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase().trim();
+        const matchTitle = (item.event_title || "").toLowerCase().includes(q);
+        const matchOrg = (item.organization_name || "").toLowerCase().includes(q);
+        const matchStudent =
+          (item.student_name || "").toLowerCase().includes(q) ||
+          (item.student_no || "").toLowerCase().includes(q);
+        if (!matchTitle && !matchOrg && !matchStudent) return false;
+      }
+      return true;
+    });
+  }, [postEventReports, statusFilters, orgFilters, searchQuery]);
+
+  const activeFilteredList = useMemo(() => {
+    if (activeStream === "post_events") return filteredPostEvents;
+    return filteredRows;
+  }, [activeStream, filteredPostEvents, filteredRows]);
+
+  const totalPages = Math.max(1, Math.ceil(activeFilteredList.length / itemsPerPage));
   const safePage = Math.min(Math.max(1, page), totalPages);
 
   const paginatedRows = useMemo(() => {
     const start = (safePage - 1) * itemsPerPage;
     return filteredRows.slice(start, start + itemsPerPage);
   }, [filteredRows, safePage, itemsPerPage]);
+
+  const paginatedPostEvents = useMemo(() => {
+    const start = (safePage - 1) * itemsPerPage;
+    return filteredPostEvents.slice(start, start + itemsPerPage);
+  }, [filteredPostEvents, safePage, itemsPerPage]);
 
   const getProposalsForColumn = (columnKey) => {
     const normCol = normalizeProposalStatus(columnKey);
@@ -572,58 +737,121 @@ export default function OsasMonitoringTab({ showToast }) {
         <PageHeader
           icon="ph-calendar-check"
           title="OSAS Monitoring"
-          description="Review student organization event proposals, evaluate compliance, and publish live status updates."
+          description="Review student organization event proposals and post-event liquidation reports."
           showBorder={false}
           className="p-6"
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
           descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
           actions={
             <div className="flex items-center gap-2">
-              {/* Segmented View Mode Toggle */}
-              <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-gray-200/60 dark:border-white/5 shrink-0">
-                <button
-                  type="button"
-                  onClick={() => handleViewModeChange("list")}
-                  className={cn(
-                    "inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer",
-                    viewMode === "list"
-                      ? "bg-pup-maroon text-white shadow-xs"
-                      : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
-                  )}
-                  title="Table List View"
-                >
-                  <HugeIcon  className="ph-bold ph-list-dashes text-sm"></HugeIcon>
-                  <span>List</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleViewModeChange("kanban")}
-                  className={cn(
-                    "inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer",
-                    viewMode === "kanban"
-                      ? "bg-pup-maroon text-white shadow-xs"
-                      : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
-                  )}
-                  title="Kanban Pipeline Board"
-                >
-                  <HugeIcon  className="ph-bold ph-kanban text-sm"></HugeIcon>
-                  <span>Kanban</span>
-                </button>
-              </div>
+              {/* Segmented View Mode Toggle (Only for proposals stream) */}
+              {activeStream === "proposals" && (
+                <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-gray-200/60 dark:border-white/5 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => handleViewModeChange("list")}
+                    className={cn(
+                      "inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer",
+                      viewMode === "list"
+                        ? "bg-pup-maroon text-white shadow-xs"
+                        : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
+                    )}
+                    title="Table List View"
+                  >
+                    <HugeIcon className="ph-bold ph-list-dashes text-sm" />
+                    <span>List</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleViewModeChange("kanban")}
+                    className={cn(
+                      "inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer",
+                      viewMode === "kanban"
+                        ? "bg-pup-maroon text-white shadow-xs"
+                        : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
+                    )}
+                    title="Kanban Pipeline Board"
+                  >
+                    <HugeIcon className="ph-bold ph-kanban text-sm" />
+                    <span>Kanban</span>
+                  </button>
+                </div>
+              )}
 
-              
-
-              <RefreshButton onRefresh={load} isLoading={loading} title="Refresh Proposals" />
+              <RefreshButton onRefresh={load} isLoading={loading} title="Refresh OSAS Queue" />
             </div>
           }
         />
 
-        {/* 2. Embedded Navigation & Filter Toolbar */}
+        {/* 2. Stream Navigation Switcher */}
+        <div className="px-6 py-3 border-t border-gray-100 dark:border-white/10 bg-gray-50/70 dark:bg-zinc-900/50 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-1.5 p-1 bg-gray-200/60 dark:bg-zinc-800/80 rounded-xl border border-gray-200/80 dark:border-white/10 w-full sm:w-fit overflow-x-auto scrollbar-none">
+            <button
+              type="button"
+              onClick={() => {
+                setActiveStream("proposals");
+                setStatusFilters([]);
+                setSearchQuery("");
+                setPage(1);
+              }}
+              className={cn(
+                "inline-flex items-center gap-2 px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer shrink-0",
+                activeStream === "proposals"
+                  ? "bg-pup-maroon text-white shadow-xs"
+                  : "text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
+              )}
+            >
+              <HugeIcon className="ph-bold ph-calendar-check text-sm" />
+              <span>Pre-Event Proposals</span>
+              <span
+                className={cn(
+                  "px-1.5 py-0.2 rounded-full text-[10px] font-bold min-w-4.5 text-center",
+                  activeStream === "proposals"
+                    ? "bg-white/20 text-white"
+                    : "bg-gray-200 dark:bg-zinc-700 text-gray-700 dark:text-zinc-300"
+                )}
+              >
+                {rows.length}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setActiveStream("post_events");
+                setStatusFilters([]);
+                setSearchQuery("");
+                setPage(1);
+              }}
+              className={cn(
+                "inline-flex items-center gap-2 px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer shrink-0",
+                activeStream === "post_events"
+                  ? "bg-pup-maroon text-white shadow-xs"
+                  : "text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
+              )}
+            >
+              <HugeIcon className="ph-bold ph-clipboard-text text-sm" />
+              <span>Post-Event & Liquidation</span>
+              <span
+                className={cn(
+                  "px-1.5 py-0.2 rounded-full text-[10px] font-bold min-w-4.5 text-center",
+                  activeStream === "post_events"
+                    ? "bg-white/20 text-white"
+                    : "bg-gray-200 dark:bg-zinc-700 text-gray-700 dark:text-zinc-300"
+                )}
+              >
+                {postEventReports.length}
+              </span>
+            </button>
+          </div>
+        </div>
+
+        {/* 3. Embedded Filter Toolbar */}
         <div className="border-t border-gray-100 dark:border-white/10 p-5 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
-          {/* Left: Status Filter Tabs (in List view) or Pipeline Count (in Kanban view) */}
-          {viewMode === "list" ? (
+          {/* Status Filter Tabs */}
+          {activeStream !== "proposals" || viewMode === "list" ? (
             <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0 scrollbar-none">
-              {filterTabs.map((tab) => {
+              {currentFilterTabs.map((tab) => {
                 const isActive =
                   tab.key === "All"
                     ? statusFilters.length === 0
@@ -662,18 +890,26 @@ export default function OsasMonitoringTab({ showToast }) {
             <div className="text-xs text-gray-500 dark:text-zinc-400 flex items-center gap-2">
               <span className="inline-flex items-center gap-1.5 font-medium">
                 <HugeIcon className="ph-bold ph-kanban text-sm text-pup-maroon dark:text-red-400" />
-                <span>Pipeline: <strong className="text-gray-900 dark:text-zinc-100">{rows.length}</strong> total proposals across stages</span>
+                <span>
+                  Pipeline: <strong className="text-gray-900 dark:text-zinc-100">{rows.length}</strong> total proposals across stages
+                </span>
               </span>
             </div>
           )}
 
-          {/* Right: Search Input + Multi-Criteria Filter */}
+          {/* Search Input + Multi-Criteria Filter */}
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 shrink-0">
             <div className="relative w-full sm:w-64 md:w-72 shrink-0 group">
               <HugeIcon className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-500 text-xs pointer-events-none transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400" />
               <Input
                 type="text"
-                placeholder="Search proposals, students, orgs..."
+                placeholder={
+                  activeStream === "proposals"
+                    ? "Search proposals, students, orgs..."
+                    : activeStream === "post_events"
+                    ? "Search event reports, orgs..."
+                    : "Search CBL revisions, orgs..."
+                }
                 value={searchQuery}
                 onChange={(e) => {
                   setSearchQuery(e.target.value);
@@ -696,49 +932,366 @@ export default function OsasMonitoringTab({ showToast }) {
               )}
             </div>
 
-            <MultiCriteriaFilter
-              title="Filter Proposals"
-              groups={filterGroups}
-              selectedValues={filterValues}
-              onChange={handleFilterChange}
-              onClearAll={handleClearFilters}
-              totalCount={rows.length}
-              filteredCount={filteredRows.length}
-            />
+            {activeStream === "proposals" && (
+              <MultiCriteriaFilter
+                title="Filter Proposals"
+                groups={filterGroups}
+                selectedValues={filterValues}
+                onChange={handleFilterChange}
+                onClearAll={handleClearFilters}
+                totalCount={rows.length}
+                filteredCount={filteredRows.length}
+              />
+            )}
           </div>
         </div>
 
-        {/* 3. Active Filter Chips */}
+        {/* 4. Active Filter Chips */}
         <ActiveFilterChips
           chips={activeChips}
           onClearAll={handleClearFilters}
           className="border-t border-gray-100 dark:border-white/10 px-6 py-2.5"
         />
 
-        {/* 4. Full-Width Seamless Content: Table List View OR Kanban Board */}
-        {viewMode === "list" && (
-          <div className={cn("w-full flex flex-col flex-1 min-h-0 border-t border-gray-100 dark:border-white/10", filteredRows.length === 0 && "rounded-b-2xl overflow-hidden")}>
+        {/* 5. Stream Content */}
+        {/* STREAM 1: Pre-Event Proposals */}
+        {activeStream === "proposals" && (
+          <>
+            {viewMode === "list" ? (
+              <div className={cn("w-full flex flex-col flex-1 min-h-0 border-t border-gray-100 dark:border-white/10", filteredRows.length === 0 && "rounded-b-2xl overflow-hidden")}>
+                <div className="overflow-x-auto flex-1">
+                  <table className="w-full text-left text-xs">
+                    <thead className="sticky top-0 z-10 border-b border-gray-100 dark:border-white/10 bg-white dark:bg-card">
+                      <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">
+                        <th className="py-3.5 px-6 w-full min-w-[280px]">Event Proposal & Organization</th>
+                        <th className="py-3.5 px-6 min-w-[180px] whitespace-nowrap">Proponent</th>
+                        <th className="py-3.5 px-6 min-w-[130px] whitespace-nowrap">Status</th>
+                        <th className="py-3.5 px-6 min-w-[120px] whitespace-nowrap hidden sm:table-cell">Submitted</th>
+                        <th className="py-3.5 px-6 text-right w-28 whitespace-nowrap">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100 dark:divide-white/5 bg-white dark:bg-card">
+                      {paginatedRows.map((item) => (
+                        <tr
+                          key={item.id}
+                          onClick={() => select(item)}
+                          className="hover:bg-gray-50/80 dark:hover:bg-zinc-800/40 transition-colors cursor-pointer group"
+                        >
+                          <td className="py-3.5 px-6">
+                            <div className="font-semibold text-gray-900 dark:text-zinc-100 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors line-clamp-1">
+                              {item.title}
+                            </div>
+                            <div className="flex items-center gap-1.5 text-[11px] text-gray-500 dark:text-zinc-400 mt-0.5 truncate flex-wrap">
+                              {item.org_acronym && (
+                                <span className="px-1.5 py-0.2 text-[10px] font-bold rounded bg-red-50 text-pup-maroon dark:bg-red-950/40 dark:text-red-400 border border-red-100 dark:border-red-900/30 shrink-0">
+                                  {item.org_acronym}
+                                </span>
+                              )}
+                              <span>{item.verified_org_name || item.organization_name}</span>
+                              {item.has_bylaws ? (
+                                <span className="ml-1 px-1.5 py-0.2 text-[9px] font-semibold rounded bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-100 dark:border-emerald-900/30 shrink-0">
+                                  CBL Active
+                                </span>
+                              ) : (
+                                <span className="ml-1 px-1.5 py-0.2 text-[9px] font-semibold rounded bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300 border border-amber-100 dark:border-amber-900/30 shrink-0">
+                                  No CBL
+                                </span>
+                              )}
+                              {item.post_event_status && item.status === "Approved" && (
+                                <span className={cn(
+                                  "ml-1 px-1.5 py-0.2 text-[9px] font-semibold rounded border shrink-0",
+                                  getPostEventStatusBadgeClass(item.post_event_status)
+                                )}>
+                                  Post-Event: {item.post_event_status}
+                                </span>
+                              )}
+                            </div>
+                          </td>
+                          <td className="py-3.5 px-6 whitespace-nowrap">
+                            <div className="font-medium text-gray-800 dark:text-zinc-200 flex items-center gap-1.5">
+                              <span>{item.student_name}</span>
+                              {item.officer_position && (
+                                <span className="text-[10px] px-1.5 py-0.2 rounded bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 font-normal">
+                                  {item.officer_position}
+                                </span>
+                              )}
+                            </div>
+                            <div className="font-mono text-[11px] text-gray-400 dark:text-zinc-500">
+                              {item.submitted_by_email || item.student_no}
+                            </div>
+                          </td>
+                          <td className="py-3.5 px-6 whitespace-nowrap">
+                            <span
+                              className={cn(
+                                "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold",
+                                getProposalStatusBadgeClass(item.status)
+                              )}
+                            >
+                              <span className={cn("w-1.5 h-1.5 rounded-full", getProposalStatusDotClass(item.status))} />
+                              {item.status}
+                            </span>
+                          </td>
+                          <td className="py-3.5 px-6 whitespace-nowrap hidden sm:table-cell text-gray-500 dark:text-zinc-400 text-[11px]">
+                            {item.created_at
+                              ? new Date(item.created_at).toLocaleDateString(undefined, {
+                                  month: "short",
+                                  day: "numeric",
+                                  year: "numeric",
+                                })
+                              : "—"}
+                          </td>
+                          <td className="py-3.5 px-6 text-right whitespace-nowrap w-16">
+                            <div className="flex items-center justify-end" onClick={(e) => e.stopPropagation()}>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <button
+                                    type="button"
+                                    onClick={() => select(item)}
+                                    aria-label="Review Proposal"
+                                    className="w-7 h-7 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/30 text-gray-500 hover:text-pup-maroon dark:text-zinc-400 dark:hover:text-red-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
+                                  >
+                                    <HugeIcon className="ph-bold ph-clipboard-text text-[16px]" />
+                                  </button>
+                                </TooltipTrigger>
+                                <TooltipContent>Review Proposal</TooltipContent>
+                              </Tooltip>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                      {!filteredRows.length && (
+                        <tr className="border-0 hover:bg-transparent">
+                          <td colSpan={5} className="py-16 px-6 text-center border-0">
+                            <Empty className="flex h-full flex-col items-center justify-center border-0 bg-transparent text-center text-gray-500 dark:text-zinc-400">
+                              <EmptyHeader className="flex flex-col items-center gap-0">
+                                <div className="relative mb-6">
+                                  <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card" />
+                                  <EmptyMedia className="relative z-10 flex h-20 w-20 items-center justify-center rounded-2xl border border-gray-100 bg-white shadow-md rotate-2 dark:border-white/10 dark:bg-card dark:shadow-none">
+                                    <HugeIcon className="ph-duotone ph-calendar-check text-3xl text-pup-maroon dark:text-red-400" />
+                                  </EmptyMedia>
+                                </div>
+                                <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">
+                                  No Event Proposals Found
+                                </EmptyTitle>
+                                <EmptyDescription className="max-w-xs text-xs font-medium text-gray-500 dark:text-zinc-400 mt-1">
+                                  {hasActiveFilters
+                                    ? "Try adjusting your search criteria or resetting active filters."
+                                    : "Student organizations have not submitted any event proposals yet."}
+                                </EmptyDescription>
+                                {hasActiveFilters && (
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={handleClearFilters}
+                                    className="mt-4 h-9 px-4 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 cursor-pointer active:scale-95 transition-all shadow-xs"
+                                  >
+                                    Clear Filters
+                                  </Button>
+                                )}
+                              </EmptyHeader>
+                            </Empty>
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            ) : filteredRows.length === 0 ? (
+              <div className="w-full flex-1 flex items-center justify-center border-t border-gray-100 dark:border-white/10 p-16 bg-gray-50/20 dark:bg-zinc-900/10 min-h-[360px]">
+                <Empty className="flex h-full flex-col items-center justify-center border-0 bg-transparent text-center text-gray-500 dark:text-zinc-400">
+                  <EmptyHeader className="flex flex-col items-center gap-0">
+                    <div className="relative mb-6">
+                      <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card" />
+                      <EmptyMedia className="relative z-10 flex h-20 w-20 items-center justify-center rounded-2xl border border-gray-100 bg-white shadow-md rotate-2 dark:border-white/10 dark:bg-card dark:shadow-none">
+                        <HugeIcon className="ph-duotone ph-kanban text-3xl text-pup-maroon dark:text-red-400" />
+                      </EmptyMedia>
+                    </div>
+                    <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">
+                      No Proposals in Pipeline
+                    </EmptyTitle>
+                    <EmptyDescription className="max-w-xs text-xs font-medium text-gray-500 dark:text-zinc-400 mt-1">
+                      {hasActiveFilters
+                        ? "No proposals match your active search terms or filters."
+                        : "There are currently no event proposals in the pipeline."}
+                    </EmptyDescription>
+                    {hasActiveFilters && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={handleClearFilters}
+                        className="mt-4 h-9 px-4 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 cursor-pointer active:scale-95 transition-all shadow-xs"
+                      >
+                        Clear Filters
+                      </Button>
+                    )}
+                  </EmptyHeader>
+                </Empty>
+              </div>
+            ) : (
+              /* Kanban Pipeline Board */
+              <div className="w-full flex-1 min-h-0 border-t border-gray-100 dark:border-white/10 p-6 overflow-x-auto bg-gray-50/20 dark:bg-zinc-900/10">
+                <div className="flex gap-4 min-w-max items-start">
+                  {KANBAN_COLUMNS.map((col) => {
+                    const columnItems = getProposalsForColumn(col.key);
+                    return (
+                      <div
+                        key={col.key}
+                        onDragOver={(e) => {
+                          e.preventDefault();
+                          e.dataTransfer.dropEffect = "move";
+                          if (dragOverColumn !== col.key) setDragOverColumn(col.key);
+                        }}
+                        onDragLeave={(e) => {
+                          if (!e.currentTarget.contains(e.relatedTarget)) {
+                            setDragOverColumn(null);
+                          }
+                        }}
+                        onDrop={(e) => handleDrop(e, col.key)}
+                        className={cn(
+                          "w-72 sm:w-80 shrink-0 flex flex-col rounded-2xl bg-gray-50/80 dark:bg-zinc-900/50 border border-gray-200/80 dark:border-white/10 p-3.5 shadow-2xs transition-all duration-200",
+                          dragOverColumn === col.key && draggingProposal?.status !== col.key && "ring-2 ring-pup-maroon/60 border-pup-maroon/70 bg-red-50/30 dark:bg-red-950/20 shadow-sm"
+                        )}
+                      >
+                        <div className="flex items-center justify-between pb-2.5 mb-2.5 border-b border-gray-200/80 dark:border-white/10 select-none">
+                          <div className="flex items-center gap-2">
+                            <span className={cn("w-2 h-2 rounded-full", getProposalStatusDotClass(col.key))} />
+                            <h3 className="text-xs font-bold text-gray-900 dark:text-zinc-100">
+                              {col.label}
+                            </h3>
+                          </div>
+                          <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[10px] font-bold min-w-5 bg-gray-200/70 text-gray-700 dark:bg-zinc-800 dark:text-zinc-300">
+                            {columnItems.length}
+                          </span>
+                        </div>
+
+                        {dragOverColumn === col.key && draggingProposal?.status !== col.key && (
+                          <div className="mb-2.5 rounded-xl border-2 border-dashed border-pup-maroon/50 dark:border-red-500/50 p-2.5 bg-red-50/40 dark:bg-red-950/20 text-center text-xs font-semibold text-pup-maroon dark:text-red-400 animate-pulse select-none">
+                            Drop to move to {col.label}
+                          </div>
+                        )}
+
+                        <div className="space-y-2.5 overflow-y-auto max-h-[calc(100vh-340px)] p-0.5 scrollbar-thin">
+                          {columnItems.map((item) => (
+                            <div
+                              key={item.id}
+                              draggable={true}
+                              onDragStart={(e) => {
+                                isDraggingRef.current = true;
+                                setDraggingProposal(item);
+                                e.dataTransfer.setData("text/plain", String(item.id));
+                                e.dataTransfer.effectAllowed = "move";
+                              }}
+                              onDragEnd={() => {
+                                setDraggingProposal(null);
+                                setDragOverColumn(null);
+                                setTimeout(() => {
+                                  isDraggingRef.current = false;
+                                }, 120);
+                              }}
+                              onClick={() => {
+                                if (isDraggingRef.current) return;
+                                select(item);
+                              }}
+                              className={cn(
+                                "group relative rounded-xl border border-gray-200 bg-white p-3.5 shadow-2xs hover:shadow-md hover:border-pup-maroon/40 dark:border-white/10 dark:bg-card dark:hover:border-red-800/40 transition-all cursor-grab active:cursor-grabbing flex flex-col gap-2.5 active:scale-[0.99] select-none",
+                                draggingProposal?.id === item.id && "opacity-35 scale-[0.97] border-dashed border-pup-maroon/60"
+                              )}
+                            >
+                              <div className="flex items-center justify-between gap-2">
+                                <div className="flex items-center gap-1.5 truncate max-w-[190px]">
+                                  {item.org_acronym && (
+                                    <span className="px-1.5 py-0.5 text-[9px] font-bold rounded bg-red-50 text-pup-maroon dark:bg-red-950/40 dark:text-red-400 border border-red-100 dark:border-red-900/30 shrink-0">
+                                      {item.org_acronym}
+                                    </span>
+                                  )}
+                                  <span className="text-[10px] font-bold uppercase tracking-wider text-pup-maroon dark:text-red-400 truncate">
+                                    {item.verified_org_name || item.organization_name}
+                                  </span>
+                                </div>
+                                <HugeIcon
+                                  className="ph-bold ph-dots-six-vertical text-gray-300 dark:text-zinc-600 group-hover:text-gray-500 dark:group-hover:text-zinc-400 text-sm transition-colors shrink-0"
+                                  title="Drag to change stage"
+                                />
+                              </div>
+
+                              <h4 className="text-xs font-bold text-gray-900 dark:text-zinc-100 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors line-clamp-2 leading-snug">
+                                {item.title}
+                              </h4>
+
+                              <div className="flex items-center gap-1.5 text-[11px] text-gray-500 dark:text-zinc-400">
+                                <HugeIcon className="ph-bold ph-user-check text-emerald-600 dark:text-emerald-400 text-xs shrink-0" />
+                                <span className="truncate font-medium text-gray-700 dark:text-zinc-300">
+                                  {item.student_name}
+                                </span>
+                              </div>
+
+                              <div className="pt-2 border-t border-gray-100 dark:border-white/5 flex items-center justify-between text-[11px] text-gray-500 dark:text-zinc-400">
+                                <span className="inline-flex items-center gap-1.5 text-[11px] text-gray-400 dark:text-zinc-500 font-normal">
+                                  <HugeIcon className="ph ph-clock text-xs text-gray-400 dark:text-zinc-500" />
+                                  {item.created_at
+                                    ? new Date(item.created_at).toLocaleDateString(undefined, {
+                                        month: "short",
+                                        day: "numeric",
+                                        year: "numeric",
+                                      })
+                                    : "—"}
+                                </span>
+                                <span className="text-xs font-semibold text-pup-maroon dark:text-red-400 group-hover:underline">
+                                  Review
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+
+                          {!columnItems.length && (
+                            <div className="rounded-xl border border-dashed border-gray-200 dark:border-zinc-800 bg-white/40 dark:bg-zinc-900/20 py-8 px-3 text-center flex flex-col items-center justify-center gap-1.5">
+                              <HugeIcon className="ph-duotone ph-tray text-xl text-gray-400/80 dark:text-zinc-600" />
+                              <p className="text-xs text-gray-400 dark:text-zinc-500 font-medium">
+                                No proposals in this stage
+                              </p>
+                              <span className="text-[10px] text-gray-400/70 dark:text-zinc-600">
+                                Drag proposals here to update status
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </>
+        )}
+
+        {/* STREAM 2: Post-Event & Liquidation Reports */}
+        {activeStream === "post_events" && (
+          <div className={cn("w-full flex flex-col flex-1 min-h-0 border-t border-gray-100 dark:border-white/10", filteredPostEvents.length === 0 && "rounded-b-2xl overflow-hidden")}>
             <div className="overflow-x-auto flex-1">
               <table className="w-full text-left text-xs">
                 <thead className="sticky top-0 z-10 border-b border-gray-100 dark:border-white/10 bg-white dark:bg-card">
                   <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">
                     <th className="py-3.5 px-6 w-full min-w-[280px]">Event Proposal & Organization</th>
-                    <th className="py-3.5 px-6 min-w-[180px] whitespace-nowrap">Proponent</th>
-                    <th className="py-3.5 px-6 min-w-[130px] whitespace-nowrap">Status</th>
-                    <th className="py-3.5 px-6 min-w-[120px] whitespace-nowrap hidden sm:table-cell">Submitted</th>
-                    <th className="py-3.5 px-6 text-right w-28 whitespace-nowrap">Action</th>
+                    <th className="py-3.5 px-6 min-w-[170px] whitespace-nowrap">Proponent</th>
+                    <th className="py-3.5 px-6 min-w-[180px] whitespace-nowrap">Attendance & Spend</th>
+                    <th className="py-3.5 px-6 min-w-[130px] whitespace-nowrap">Clearance Status</th>
+                    <th className="py-3.5 px-6 min-w-[110px] whitespace-nowrap hidden sm:table-cell">Submitted</th>
+                    <th className="py-3.5 px-6 text-right w-24 whitespace-nowrap">Action</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 dark:divide-white/5 bg-white dark:bg-card">
-                  {paginatedRows.map((item) => (
+                  {paginatedPostEvents.map((item) => (
                     <tr
                       key={item.id}
-                      onClick={() => select(item)}
+                      onClick={() => selectPostEvent(item)}
                       className="hover:bg-gray-50/80 dark:hover:bg-zinc-800/40 transition-colors cursor-pointer group"
                     >
                       <td className="py-3.5 px-6">
                         <div className="font-semibold text-gray-900 dark:text-zinc-100 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors line-clamp-1">
-                          {item.title}
+                          {item.event_title}
                         </div>
                         <div className="flex items-center gap-1.5 text-[11px] text-gray-500 dark:text-zinc-400 mt-0.5 truncate">
                           {item.org_acronym && (
@@ -746,30 +1299,33 @@ export default function OsasMonitoringTab({ showToast }) {
                               {item.org_acronym}
                             </span>
                           )}
-                          <span>{item.verified_org_name || item.organization_name}</span>
+                          <span>{item.organization_name}</span>
                         </div>
                       </td>
                       <td className="py-3.5 px-6 whitespace-nowrap">
-                        <div className="font-medium text-gray-800 dark:text-zinc-200 flex items-center gap-1.5">
-                          <span>{item.student_name}</span>
-                          {item.officer_position && (
-                            <span className="text-[10px] px-1.5 py-0.2 rounded bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 font-normal">
-                              {item.officer_position}
-                            </span>
-                          )}
+                        <div className="font-medium text-gray-800 dark:text-zinc-200">
+                          {item.student_name}
                         </div>
                         <div className="font-mono text-[11px] text-gray-400 dark:text-zinc-500">
                           {item.submitted_by_email || item.student_no}
                         </div>
                       </td>
                       <td className="py-3.5 px-6 whitespace-nowrap">
+                        <div className="font-semibold text-gray-900 dark:text-zinc-100">
+                          {item.total_attendance != null ? `${item.total_attendance.toLocaleString()} attendees` : "—"}
+                        </div>
+                        <div className="text-[11px] text-emerald-700 dark:text-emerald-400 font-medium">
+                          ₱{Number(item.total_expenses || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })} liquidated
+                        </div>
+                      </td>
+                      <td className="py-3.5 px-6 whitespace-nowrap">
                         <span
                           className={cn(
                             "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold",
-                            getProposalStatusBadgeClass(item.status)
+                            getPostEventStatusBadgeClass(item.status)
                           )}
                         >
-                          <span className={cn("w-1.5 h-1.5 rounded-full", getProposalStatusDotClass(item.status))} />
+                          <span className={cn("w-1.5 h-1.5 rounded-full", getPostEventStatusDotClass(item.status))} />
                           {item.status}
                         </span>
                       </td>
@@ -782,49 +1338,57 @@ export default function OsasMonitoringTab({ showToast }) {
                             })
                           : "—"}
                       </td>
-                      <td className="py-3.5 px-6 text-right whitespace-nowrap w-28">
-                        <Button
-                          size="sm"
-                          className="h-8 px-4 text-xs font-semibold rounded-lg btn-brand-red text-white! bg-pup-maroon hover:bg-pup-darkMaroon shadow-xs cursor-pointer active:scale-95 transition-all"
-                          style={{ color: "#ffffff" }}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            select(item);
-                          }}
-                        >
-                          Review
-                        </Button>
+                      <td className="py-3.5 px-6 text-right whitespace-nowrap w-16">
+                        <div className="flex items-center justify-end" onClick={(e) => e.stopPropagation()}>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <button
+                                type="button"
+                                onClick={() => selectPostEvent(item)}
+                                aria-label="Review Clearance"
+                                className="w-7 h-7 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/30 text-gray-500 hover:text-pup-maroon dark:text-zinc-400 dark:hover:text-red-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
+                              >
+                                <HugeIcon className="ph-bold ph-clipboard-text text-[16px]" />
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent>Review Clearance</TooltipContent>
+                          </Tooltip>
+                        </div>
                       </td>
                     </tr>
                   ))}
-                  {!filteredRows.length && (
-                    <tr>
-                      <td colSpan={5} className="py-16 px-6 text-center">
-                        <div className="flex flex-col items-center justify-center">
-                          <div className="w-16 h-16 rounded-full bg-gray-50 dark:bg-zinc-800/60 border border-gray-200 dark:border-white/10 flex items-center justify-center mb-3">
-                            <HugeIcon  className="ph-duotone ph-tray text-2xl text-gray-400 dark:text-zinc-500"></HugeIcon>
-                          </div>
-                          <p className="text-base font-semibold text-gray-900 dark:text-zinc-100">
-                            {searchQuery ? "No event proposals match your search." : "No event proposals in this view."}
-                          </p>
-                          <p className="text-xs text-gray-500 dark:text-zinc-400 mt-1 max-w-sm">
-                            {searchQuery
-                              ? `No proposals found matching "${searchQuery}". Try searching with a different term.`
-                              : "There are currently no proposals in this category."}
-                          </p>
-                          {searchQuery && (
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setSearchQuery("");
-                                setPage(1);
-                              }}
-                              className="mt-3 text-xs font-semibold text-pup-maroon hover:underline dark:text-red-400 cursor-pointer"
-                            >
-                              Clear search query
-                            </button>
-                          )}
-                        </div>
+                  {!filteredPostEvents.length && (
+                    <tr className="border-0 hover:bg-transparent">
+                      <td colSpan={6} className="py-16 px-6 text-center border-0">
+                        <Empty className="flex h-full flex-col items-center justify-center border-0 bg-transparent text-center text-gray-500 dark:text-zinc-400">
+                          <EmptyHeader className="flex flex-col items-center gap-0">
+                            <div className="relative mb-6">
+                              <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card" />
+                              <EmptyMedia className="relative z-10 flex h-20 w-20 items-center justify-center rounded-2xl border border-gray-100 bg-white shadow-md -rotate-2 dark:border-white/10 dark:bg-card dark:shadow-none">
+                                <HugeIcon className="ph-duotone ph-clipboard-text text-3xl text-pup-maroon dark:text-red-400" />
+                              </EmptyMedia>
+                            </div>
+                            <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">
+                              No Post-Event Reports Found
+                            </EmptyTitle>
+                            <EmptyDescription className="max-w-xs text-xs font-medium text-gray-500 dark:text-zinc-400 mt-1">
+                              {hasActiveFilters
+                                ? "No reports match your active search or filter criteria."
+                                : "Student organizations will submit narrative and liquidation reports after their approved events conclude."}
+                            </EmptyDescription>
+                            {hasActiveFilters && (
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={handleClearFilters}
+                                className="mt-4 h-9 px-4 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 cursor-pointer active:scale-95 transition-all shadow-xs"
+                              >
+                                Clear Filters
+                              </Button>
+                            )}
+                          </EmptyHeader>
+                        </Empty>
                       </td>
                     </tr>
                   )}
@@ -834,215 +1398,61 @@ export default function OsasMonitoringTab({ showToast }) {
           </div>
         )}
 
-        {/* VIEW MODE 2: Kanban Pipeline Board */}
-        {viewMode === "kanban" && (
-          <div className="w-full flex-1 min-h-0 border-t border-gray-100 dark:border-white/10 p-6 overflow-x-auto bg-gray-50/20 dark:bg-zinc-900/10">
-            <div className="flex gap-4 min-w-max items-start">
-              {KANBAN_COLUMNS.map((col) => {
-                const columnItems = getProposalsForColumn(col.key);
-                return (
-                  <div
-                    key={col.key}
-                    onDragOver={(e) => {
-                      e.preventDefault();
-                      e.dataTransfer.dropEffect = "move";
-                      if (dragOverColumn !== col.key) setDragOverColumn(col.key);
+        {/* 6. Apple HIG Pagination Footer (Unified for all streams) */}
+        {activeFilteredList.length > 0 && (
+          <div className="flex items-center justify-between border-t border-[#e5e5ea] dark:border-[#3a3a3c] bg-white dark:bg-[#1c1c1e] p-4 px-6 rounded-b-2xl mt-auto select-none">
+            <div className="flex items-center gap-6 text-xs text-gray-500 dark:text-zinc-400 select-none">
+              <span>
+                Showing {Math.min(itemsPerPage, activeFilteredList.length - (safePage - 1) * itemsPerPage)} of {activeFilteredList.length.toLocaleString()}
+              </span>
+              <div className="flex items-center gap-2">
+                <span>Rows:</span>
+                {[10, 20, 50, 100].map((size) => (
+                  <button
+                    key={size}
+                    type="button"
+                    onClick={() => {
+                      setItemsPerPage(size);
+                      setPage(1);
                     }}
-                    onDragLeave={(e) => {
-                      if (!e.currentTarget.contains(e.relatedTarget)) {
-                        setDragOverColumn(null);
-                      }
-                    }}
-                    onDrop={(e) => handleDrop(e, col.key)}
                     className={cn(
-                      "w-72 sm:w-80 shrink-0 flex flex-col rounded-2xl bg-gray-50/80 dark:bg-zinc-900/50 border border-gray-200/80 dark:border-white/10 p-3.5 shadow-2xs transition-all duration-200",
-                      dragOverColumn === col.key && draggingProposal?.status !== col.key && "ring-2 ring-pup-maroon/60 border-pup-maroon/70 bg-red-50/30 dark:bg-red-950/20 shadow-sm"
+                      "px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer border-0",
+                      itemsPerPage === size
+                        ? "bg-gray-100 dark:bg-zinc-800 text-gray-900 dark:text-zinc-100"
+                        : "bg-transparent text-gray-400 hover:text-gray-600 dark:hover:text-zinc-200"
                     )}
                   >
-                    {/* Column Header */}
-                    <div className="flex items-center justify-between pb-2.5 mb-2.5 border-b border-gray-200/80 dark:border-white/10 select-none">
-                      <div className="flex items-center gap-2">
-                        <span className={cn("w-2 h-2 rounded-full", getProposalStatusDotClass(col.key))} />
-                        <h3 className="text-xs font-bold text-gray-900 dark:text-zinc-100">
-                          {col.label}
-                        </h3>
-                      </div>
-                      <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[10px] font-bold min-w-5 bg-gray-200/70 text-gray-700 dark:bg-zinc-800 dark:text-zinc-300">
-                        {columnItems.length}
-                      </span>
-                    </div>
-
-                    {/* Drop Target Indicator */}
-                    {dragOverColumn === col.key && draggingProposal?.status !== col.key && (
-                      <div className="mb-2.5 rounded-xl border-2 border-dashed border-pup-maroon/50 dark:border-red-500/50 p-2.5 bg-red-50/40 dark:bg-red-950/20 text-center text-xs font-semibold text-pup-maroon dark:text-red-400 animate-pulse select-none">
-                        Drop to move to {col.label}
-                      </div>
-                    )}
-
-                    {/* Column Cards Container */}
-                    <div className="space-y-2.5 overflow-y-auto max-h-[calc(100vh-340px)] p-0.5 scrollbar-thin">
-                      {columnItems.map((item) => (
-                        <div
-                          key={item.id}
-                          draggable={true}
-                          onDragStart={(e) => {
-                            isDraggingRef.current = true;
-                            setDraggingProposal(item);
-                            e.dataTransfer.setData("text/plain", String(item.id));
-                            e.dataTransfer.effectAllowed = "move";
-                          }}
-                          onDragEnd={() => {
-                            setDraggingProposal(null);
-                            setDragOverColumn(null);
-                            setTimeout(() => {
-                              isDraggingRef.current = false;
-                            }, 120);
-                          }}
-                          onClick={() => {
-                            if (isDraggingRef.current) return;
-                            select(item);
-                          }}
-                          className={cn(
-                            "group relative rounded-xl border border-gray-200 bg-white p-3.5 shadow-2xs hover:shadow-md hover:border-pup-maroon/40 dark:border-white/10 dark:bg-card dark:hover:border-red-800/40 transition-all cursor-grab active:cursor-grabbing flex flex-col gap-2.5 active:scale-[0.99] select-none",
-                            draggingProposal?.id === item.id && "opacity-35 scale-[0.97] border-dashed border-pup-maroon/60"
-                          )}
-                        >
-                          {/* Card Header: Org Tag & Drag Handle */}
-                          <div className="flex items-center justify-between gap-2">
-                            <div className="flex items-center gap-1.5 truncate max-w-[190px]">
-                              {item.org_acronym && (
-                                <span className="px-1.5 py-0.5 text-[9px] font-bold rounded bg-red-50 text-pup-maroon dark:bg-red-950/40 dark:text-red-400 border border-red-100 dark:border-red-900/30 shrink-0">
-                                  {item.org_acronym}
-                                </span>
-                              )}
-                              <span className="text-[10px] font-bold uppercase tracking-wider text-pup-maroon dark:text-red-400 truncate">
-                                {item.verified_org_name || item.organization_name}
-                              </span>
-                            </div>
-                            <HugeIcon 
-                              className="ph-bold ph-dots-six-vertical text-gray-300 dark:text-zinc-600 group-hover:text-gray-500 dark:group-hover:text-zinc-400 text-sm transition-colors shrink-0"
-                              title="Drag to change stage"
-                            />
-                          </div>
-
-                          {/* Proposal Title */}
-                          <h4 className="text-xs font-bold text-gray-900 dark:text-zinc-100 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors line-clamp-2 leading-snug">
-                            {item.title}
-                          </h4>
-
-                          {/* Proponent info */}
-                          <div className="flex items-center gap-1.5 text-[11px] text-gray-500 dark:text-zinc-400">
-                            <HugeIcon className="ph-bold ph-user-check text-emerald-600 dark:text-emerald-400 text-xs shrink-0" />
-                            <span className="truncate font-medium text-gray-700 dark:text-zinc-300">
-                              {item.student_name}
-                              {item.officer_position ? ` (${item.officer_position})` : ""}
-                            </span>
-                            <span className="text-gray-300 dark:text-zinc-600">·</span>
-                            <span className="font-mono text-[10px] shrink-0 truncate max-w-[100px]">
-                              {item.submitted_by_email || item.student_no}
-                            </span>
-                          </div>
-
-                          {/* Card Footer: Submitted Date & Review */}
-                          <div className="pt-2 border-t border-gray-100 dark:border-white/5 flex items-center justify-between text-[11px] text-gray-500 dark:text-zinc-400">
-                            <span className="inline-flex items-center gap-1.5 text-[11px] text-gray-400 dark:text-zinc-500 font-normal">
-                              <HugeIcon  className="ph ph-clock text-xs text-gray-400 dark:text-zinc-500"></HugeIcon>
-                              {item.created_at
-                                ? new Date(item.created_at).toLocaleDateString(undefined, {
-                                    month: "short",
-                                    day: "numeric",
-                                    year: "numeric",
-                                  })
-                                : "—"}
-                            </span>
-                            <span className="text-xs font-semibold text-pup-maroon dark:text-red-400 group-hover:underline">
-                              Review
-                            </span>
-                          </div>
-                        </div>
-                      ))}
-
-                      {!columnItems.length && (
-                        <div className="rounded-xl border border-dashed border-gray-200 dark:border-zinc-800 bg-white/40 dark:bg-zinc-900/20 py-8 px-3 text-center">
-                          <p className="text-xs text-gray-400 dark:text-zinc-500 font-medium">
-                            No proposals in this stage
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* 5. Apple HIG Pagination Footer */}
-        {viewMode === "list" ? (
-          filteredRows.length > 0 && (
-            <div className="flex items-center justify-between border-t border-[#e5e5ea] dark:border-[#3a3a3c] bg-white dark:bg-[#1c1c1e] p-4 px-6 rounded-b-2xl mt-auto select-none">
-              <div className="flex items-center gap-6 text-xs text-gray-500 dark:text-zinc-400 select-none">
-                <span>
-                  Showing {paginatedRows.length} of {filteredRows.length.toLocaleString()}
-                </span>
-                <div className="flex items-center gap-2">
-                  <span>Rows:</span>
-                  {[10, 20, 50, 100].map((size) => (
-                    <button
-                      key={size}
-                      type="button"
-                      onClick={() => {
-                        setItemsPerPage(size);
-                        setPage(1);
-                      }}
-                      className={cn(
-                        "px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer border-0",
-                        itemsPerPage === size
-                          ? "bg-gray-100 dark:bg-zinc-800 text-gray-900 dark:text-zinc-100"
-                          : "bg-transparent text-gray-400 hover:text-gray-600 dark:hover:text-zinc-200"
-                      )}
-                    >
-                      {size}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2 select-none">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  disabled={safePage <= 1}
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
-                  className="text-xs text-gray-500 dark:text-zinc-400 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
-                >
-                  Prev
-                </Button>
-
-                <div className="h-8 w-8 rounded-xl border border-[#e5e5ea] dark:border-zinc-800 flex items-center justify-center text-xs font-bold text-gray-800 dark:text-zinc-200 bg-white dark:bg-zinc-900">
-                  {safePage}
-                </div>
-
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  disabled={safePage >= totalPages}
-                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                  className="text-xs text-gray-500 dark:text-zinc-400 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
-                >
-                  Next
-                </Button>
+                    {size}
+                  </button>
+                ))}
               </div>
             </div>
-          )
-        ) : (
-          <div className="flex items-center justify-between border-t border-gray-100 dark:border-white/10 bg-white dark:bg-card px-6 py-3.5 rounded-b-2xl mt-auto text-xs text-gray-500 dark:text-zinc-400 select-none">
-            <span>
-              Showing {filteredRows.length} of {rows.length} {rows.length === 1 ? "proposal" : "proposals"}
-            </span>
-            <span className="text-[11px] text-gray-400 dark:text-zinc-500">
-              Drag cards between stages to update status, or click to review
-            </span>
+
+            <div className="flex items-center gap-2 select-none">
+              <Button
+                variant="ghost"
+                size="sm"
+                disabled={safePage <= 1}
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                className="text-xs text-gray-500 dark:text-zinc-400 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
+              >
+                Prev
+              </Button>
+
+              <div className="h-8 w-8 rounded-xl border border-[#e5e5ea] dark:border-zinc-800 flex items-center justify-center text-xs font-bold text-gray-800 dark:text-zinc-200 bg-white dark:bg-zinc-900">
+                {safePage}
+              </div>
+
+              <Button
+                variant="ghost"
+                size="sm"
+                disabled={safePage >= totalPages}
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                className="text-xs text-gray-500 dark:text-zinc-400 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
+              >
+                Next
+              </Button>
+            </div>
           </div>
         )}
       </Card>
@@ -1108,6 +1518,114 @@ export default function OsasMonitoringTab({ showToast }) {
 
               {/* Sheet Body (Scrollable) */}
               <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                {/* Proponent Org Constitution & By-Laws Status */}
+                {selected.bylaws_filename ? (
+                  <div className="flex items-center justify-between rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/60 dark:bg-zinc-900/40 p-3">
+                    <div className="flex items-center gap-2.5">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400">
+                        <HugeIcon className="ph-bold ph-scales text-base" />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
+                            Organization Charter (CBL)
+                          </span>
+                          <span className="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.2 text-[10px] font-semibold text-emerald-700 dark:border-emerald-800/60 dark:bg-emerald-950/40 dark:text-emerald-300">
+                            Active Charter
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-gray-500 dark:text-zinc-400 truncate max-w-[240px]">
+                          {selected.bylaws_original_filename || selected.bylaws_filename}
+                        </p>
+                      </div>
+                    </div>
+                    {selected.organization_id && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="h-7 px-2.5 text-[11px] font-semibold rounded-lg border-gray-200 dark:border-white/10 hover:bg-gray-100 dark:hover:bg-zinc-800 cursor-pointer"
+                        onClick={() => {
+                          setPdfPreviewData({
+                            url: `/api/osas/organizations/${selected.organization_id}/bylaws?file=1`,
+                            title: `${selected.organization_name || "Organization"} — Constitution & By-Laws`,
+                            subtitle: "Active ratified charter for this student organization.",
+                            docType: "Constitution & By-Laws",
+                            originalFilename: selected.bylaws_original_filename || "CBL.pdf",
+                          });
+                          setPdfPreviewOpen(true);
+                        }}
+                      >
+                        Preview CBL
+                      </Button>
+                    )}
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-between rounded-xl border border-amber-200/80 dark:border-amber-900/30 bg-amber-50/50 dark:bg-amber-950/20 p-3">
+                    <div className="flex items-center gap-2.5">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">
+                        <HugeIcon className="ph-bold ph-warning text-base" />
+                      </div>
+                      <div>
+                        <span className="text-xs font-semibold text-amber-900 dark:text-amber-200">
+                          No Active Charter On File
+                        </span>
+                        <p className="text-[11px] text-amber-700 dark:text-amber-400">
+                          This organization has not ratified a Constitution & By-Laws yet.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Post-Event Clearance Tracker (Visible for Approved Proposals) */}
+                {selected.status === "Approved" && (
+                  <div className="rounded-xl border border-purple-200 dark:border-purple-900/40 bg-purple-50/50 dark:bg-purple-950/20 p-3.5 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <HugeIcon className="ph-bold ph-clock-countdown text-purple-700 dark:text-purple-400" />
+                        <span className="text-xs font-bold uppercase tracking-wider text-purple-900 dark:text-purple-200">
+                          Post-Event Clearance Tracker
+                        </span>
+                      </div>
+                      <span
+                        className={cn(
+                          "inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold",
+                          getPostEventStatusBadgeClass(selected.post_event_status || "Pending Submission")
+                        )}
+                      >
+                        {selected.post_event_status || "Pending Submission"}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-[11px] text-purple-800 dark:text-purple-300">
+                      <span>
+                        Due Date:{" "}
+                        <strong className="font-mono">
+                          {selected.post_event_due_date
+                            ? new Date(selected.post_event_due_date).toLocaleDateString(undefined, {
+                                month: "short",
+                                day: "numeric",
+                                year: "numeric",
+                              })
+                            : "N/A"}
+                        </strong>
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSheetOpen(false);
+                          setActiveStream("post_events");
+                          setSearchQuery(selected.tracking_number || selected.title);
+                        }}
+                        className="text-[11px] font-semibold text-purple-700 dark:text-purple-300 hover:underline cursor-pointer flex items-center gap-1"
+                      >
+                        <span>Open in Post-Event Queue</span>
+                        <HugeIcon className="ph-bold ph-arrow-right text-[10px]" />
+                      </button>
+                    </div>
+                  </div>
+                )}
+
                 {/* Document Preview Section */}
                 <div className="space-y-2">
                   <h4 className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-400">
@@ -1233,6 +1751,250 @@ export default function OsasMonitoringTab({ showToast }) {
                 <Button
                   variant="outline"
                   onClick={() => setSheetOpen(false)}
+                  className="h-9 px-4 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                >
+                  Close
+                </Button>
+              </SheetFooter>
+            </>
+          )}
+        </SheetContent>
+      </Sheet>
+
+      {/* Slide-Over Review Sheet for Post-Event Reports */}
+      <Sheet open={postEventSheetOpen} onOpenChange={setPostEventSheetOpen}>
+        <SheetContent
+          side="right"
+          className="w-full sm:max-w-xl md:max-w-2xl p-0 flex flex-col bg-white dark:bg-zinc-950 border-l border-gray-200 dark:border-white/10 z-50 overflow-hidden"
+        >
+          {selectedPostEvent && (
+            <>
+              {/* Sheet Header */}
+              <SheetHeader className="shrink-0 p-6 border-b border-gray-100 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/30">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="space-y-1.5 flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-mono text-xs font-semibold px-2 py-0.5 rounded-md bg-purple-50 text-purple-700 dark:bg-purple-950/50 dark:text-purple-300 border border-purple-200 dark:border-purple-800/60">
+                        {selectedPostEvent.event_tracking_number || `EVT-${selectedPostEvent.event_proposal_id}`}
+                      </span>
+                      <span
+                        className={cn(
+                          "inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold",
+                          getPostEventStatusBadgeClass(selectedPostEvent.status)
+                        )}
+                      >
+                        {selectedPostEvent.status}
+                      </span>
+                    </div>
+                    <SheetTitle className="text-lg font-bold tracking-tight text-gray-900 dark:text-zinc-50 leading-snug">
+                      {selectedPostEvent.event_title}
+                    </SheetTitle>
+                    <SheetDescription className="mt-1 text-xs text-gray-500 dark:text-zinc-400 flex items-center gap-2 flex-wrap">
+                      <span>Org: <strong className="text-gray-700 dark:text-zinc-300">{selectedPostEvent.organization_name}</strong></span>
+                      {selectedPostEvent.organization_acronym && (
+                        <span className="px-1.5 py-0.2 rounded bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-zinc-300 text-[10px] font-semibold">
+                          {selectedPostEvent.organization_acronym}
+                        </span>
+                      )}
+                      <span>·</span>
+                      <span>Proponent: <strong className="text-gray-700 dark:text-zinc-300">{selectedPostEvent.student_name || selectedPostEvent.submitted_by_name || "Authorized Officer"}</strong></span>
+                    </SheetDescription>
+                  </div>
+                </div>
+              </SheetHeader>
+
+              {/* Sheet Body (Scrollable) */}
+              <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                {/* Metrics summary banner */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  <div className="rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/40 p-3">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">Actual Attendees</span>
+                    <p className="mt-1 text-base font-bold text-gray-900 dark:text-zinc-100 font-mono">
+                      {Number(selectedPostEvent.actual_attendees || 0).toLocaleString()}
+                    </p>
+                  </div>
+                  <div className="rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/40 p-3">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">Total Liquidated</span>
+                    <p className="mt-1 text-base font-bold text-gray-900 dark:text-zinc-100 font-mono">
+                      ₱{Number(selectedPostEvent.actual_expenses || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                    </p>
+                  </div>
+                  <div className="col-span-2 sm:col-span-1 rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/40 p-3">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">Submission Date</span>
+                    <p className="mt-1 text-xs font-semibold text-gray-700 dark:text-zinc-300 font-mono">
+                      {selectedPostEvent.created_at ? new Date(selectedPostEvent.created_at).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }) : "N/A"}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Narrative Summary card */}
+                {selectedPostEvent.narrative_summary && (
+                  <div className="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-900/50 p-4 space-y-1.5">
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-400">
+                      Executive Accomplishment Summary
+                    </h4>
+                    <p className="text-xs text-gray-700 dark:text-zinc-300 leading-relaxed whitespace-pre-wrap">
+                      {selectedPostEvent.narrative_summary}
+                    </p>
+                  </div>
+                )}
+
+                {/* Dual Document Cards (Narrative + Liquidation) */}
+                <div className="space-y-3">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-400">
+                    Submitted Compliance Documents
+                  </h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {/* Narrative PDF Card */}
+                    <div className="rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/30 p-3.5 flex flex-col justify-between space-y-3">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-1.5 text-xs font-semibold text-gray-900 dark:text-zinc-100">
+                          <HugeIcon className="ph-bold ph-file-text text-base text-pup-maroon dark:text-red-400" />
+                          <span>Narrative Report</span>
+                        </div>
+                        <p className="text-[11px] text-gray-500 dark:text-zinc-400 truncate">
+                          {selectedPostEvent.narrative_original_filename || "Narrative-Report.pdf"}
+                        </p>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="w-full h-8 text-xs font-semibold rounded-lg border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-pup-maroon dark:text-red-400 hover:bg-gray-50 cursor-pointer"
+                        onClick={() => {
+                          handleOpenPdfPreview({
+                            url: `/api/osas/post-event-reports/${selectedPostEvent.id}?file=narrative`,
+                            title: `${selectedPostEvent.event_title} — Narrative Report`,
+                            subtitle: "Official post-event narrative & accomplishment report.",
+                            docType: "Post-Event Narrative",
+                            originalFilename: selectedPostEvent.narrative_original_filename || "Narrative.pdf",
+                          });
+                        }}
+                      >
+                        <HugeIcon className="ph-bold ph-eye mr-1.5" />
+                        Preview Narrative
+                      </Button>
+                    </div>
+
+                    {/* Liquidation PDF Card */}
+                    <div className="rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/30 p-3.5 flex flex-col justify-between space-y-3">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-1.5 text-xs font-semibold text-gray-900 dark:text-zinc-100">
+                          <HugeIcon className="ph-bold ph-receipt text-base text-emerald-600 dark:text-emerald-400" />
+                          <span>Financial Liquidation</span>
+                        </div>
+                        <p className="text-[11px] text-gray-500 dark:text-zinc-400 truncate">
+                          {selectedPostEvent.liquidation_original_filename || "Liquidation-Report.pdf"}
+                        </p>
+                      </div>
+                      {selectedPostEvent.liquidation_storage_filename ? (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="w-full h-8 text-xs font-semibold rounded-lg border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-emerald-600 dark:text-emerald-400 hover:bg-gray-50 cursor-pointer"
+                          onClick={() => {
+                            handleOpenPdfPreview({
+                              url: `/api/osas/post-event-reports/${selectedPostEvent.id}?file=liquidation`,
+                              title: `${selectedPostEvent.event_title} — Financial Liquidation`,
+                              subtitle: "Official receipts, disbursement summary, and vouchers.",
+                              docType: "Financial Liquidation",
+                              originalFilename: selectedPostEvent.liquidation_original_filename || "Liquidation.pdf",
+                            });
+                          }}
+                        >
+                          <HugeIcon className="ph-bold ph-eye mr-1.5" />
+                          Preview Liquidation
+                        </Button>
+                      ) : (
+                        <span className="text-[11px] text-gray-400 italic text-center py-1">No liquidation file</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Action Form: Update Status & Clearance Note */}
+                <div className="rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/30 p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
+                      Clearance Evaluation & Action
+                    </label>
+                    <span className="text-[11px] text-gray-400 dark:text-zinc-500">
+                      Current: <strong className="text-gray-700 dark:text-zinc-300">{selectedPostEvent.status}</strong>
+                    </span>
+                  </div>
+
+                  <Select
+                    value={postEventStatus}
+                    onValueChange={(val) => {
+                      setPostEventStatus(val);
+                      if (!postEventNote.trim()) {
+                        setPostEventNote(`Status updated to ${val} by OSAS clearance review.`);
+                      }
+                    }}
+                    onChange={(e) => {
+                      const val = e?.target?.value || e;
+                      setPostEventStatus(val);
+                      if (!postEventNote.trim()) {
+                        setPostEventNote(`Status updated to ${val} by OSAS clearance review.`);
+                      }
+                    }}
+                    usePortal={false}
+                    className="h-10 text-xs font-semibold rounded-xl bg-white dark:bg-zinc-800 border-gray-200 dark:border-white/10 text-gray-900 dark:text-zinc-100 shadow-none cursor-pointer"
+                    buttonClassName="h-10 text-xs font-semibold rounded-xl bg-white dark:bg-zinc-800 border-gray-200 dark:border-white/10 text-gray-900 dark:text-zinc-100"
+                  >
+                    {POST_EVENT_STATUS_OPTIONS.map((opt) => (
+                      <option key={opt} value={opt}>
+                        {opt}
+                      </option>
+                    ))}
+                  </Select>
+
+                  <textarea
+                    className="min-h-24 w-full rounded-xl border border-gray-200 bg-white p-3 text-xs text-gray-900 placeholder:text-gray-400 outline-none focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon dark:border-white/10 dark:bg-zinc-900 dark:text-zinc-100"
+                    placeholder="Enter feedback or clearance remarks for student officers..."
+                    value={postEventNote}
+                    onChange={(e) => setPostEventNote(e.target.value)}
+                  />
+
+                  <Button
+                    className="h-10 w-full text-xs font-semibold rounded-xl btn-brand-red text-white! bg-pup-maroon hover:bg-pup-darkMaroon shadow-xs cursor-pointer active:scale-95 transition-all"
+                    style={{ color: "#ffffff" }}
+                    onClick={() => savePostEvent()}
+                    disabled={isSavingPostEvent}
+                  >
+                    {isSavingPostEvent ? (
+                      <>
+                        <HugeIcon className="ph-bold ph-spinner animate-spin mr-2" />
+                        Saving Decision...
+                      </>
+                    ) : (
+                      `Publish Clearance Decision as ${postEventStatus}`
+                    )}
+                  </Button>
+                </div>
+
+                {/* Past Review Remarks if present */}
+                {selectedPostEvent.review_notes && (
+                  <div className="rounded-xl border border-gray-100 dark:border-white/5 bg-white dark:bg-zinc-900/60 p-3.5 space-y-1">
+                    <div className="flex items-center justify-between text-[11px] text-gray-400 dark:text-zinc-500">
+                      <span>Last Evaluation by: <strong className="text-gray-700 dark:text-zinc-300">{selectedPostEvent.reviewer_name || "OSAS Officer"}</strong></span>
+                      {selectedPostEvent.reviewed_at && (
+                        <span className="font-mono">{new Date(selectedPostEvent.reviewed_at).toLocaleDateString()}</span>
+                      )}
+                    </div>
+                    <p className="text-xs text-gray-700 dark:text-zinc-300 leading-relaxed pt-1">
+                      {selectedPostEvent.review_notes}
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Sheet Footer */}
+              <SheetFooter className="shrink-0 p-4 border-t border-gray-100 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/30 flex justify-end">
+                <Button
+                  variant="outline"
+                  onClick={() => setPostEventSheetOpen(false)}
                   className="h-9 px-4 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                 >
                   Close

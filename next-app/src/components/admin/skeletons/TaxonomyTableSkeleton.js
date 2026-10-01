@@ -7,12 +7,21 @@ export default function TaxonomyTableSkeleton({
   rowCount = 6,
   secondaryColumnName = "Status",
   showSubtext = true,
+  embedded = false,
+  showPagination = true,
 }) {
   return (
-    <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card flex flex-col flex-1 isolate select-none animate-fade-up">
+    <div
+      className={cn(
+        "flex flex-col flex-1 isolate select-none animate-fade-up",
+        embedded
+          ? "w-full"
+          : "overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card"
+      )}
+    >
       <div className="overflow-x-auto">
         <table className="min-w-full text-sm">
-          <thead className="sticky top-0 z-10 border-b border-gray-200 bg-white dark:bg-card dark:border-white/10">
+          <thead className="sticky top-0 z-10 border-b border-gray-100 dark:border-white/10 bg-white dark:bg-card">
             <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500 h-11">
               <th className="w-12 p-4 text-center">
                 <Skeleton className="h-4 w-4 rounded mx-auto dark:bg-muted" />
@@ -73,13 +82,15 @@ export default function TaxonomyTableSkeleton({
       </div>
 
       {/* Pagination Footer */}
-      <div className="flex items-center justify-between border-t border-[#e5e5ea] dark:border-[#3a3a3c] bg-white dark:bg-card p-4 px-6 rounded-b-2xl mt-auto">
-        <Skeleton className="h-3.5 w-32 rounded dark:bg-muted" />
-        <div className="flex items-center gap-2">
-          <Skeleton className="h-8 w-16 rounded-xl dark:bg-muted" />
-          <Skeleton className="h-8 w-16 rounded-xl dark:bg-muted" />
+      {showPagination && (
+        <div className="flex items-center justify-between border-t border-gray-100 dark:border-white/10 bg-white dark:bg-card p-4 px-6 rounded-b-2xl mt-auto">
+          <Skeleton className="h-3.5 w-32 rounded dark:bg-muted" />
+          <div className="flex items-center gap-2">
+            <Skeleton className="h-8 w-16 rounded-xl dark:bg-muted" />
+            <Skeleton className="h-8 w-16 rounded-xl dark:bg-muted" />
+          </div>
         </div>
-      </div>
+      )}
     </div>
   )
 }

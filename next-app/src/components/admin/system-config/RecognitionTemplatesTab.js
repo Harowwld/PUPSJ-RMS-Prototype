@@ -476,14 +476,14 @@ export default function RecognitionTemplatesTab({ showToast }) {
 
   return (
     <TooltipProvider delay={200}>
-      <div className="space-y-6 p-7 select-none animate-fade-up">
+      <div className="flex flex-col flex-1 w-full min-h-0 select-none animate-fade-up">
         <PageHeader
           showBorder={false}
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
           descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
           title="OCR Configuration"
           description="Select a document type, upload a representative sample, and calibrate field bounding boxes for automated OCR extraction."
-          className="p-0"
+          className="p-6"
           actions={
             <div className="flex flex-wrap items-center gap-2">
               <input
@@ -496,7 +496,7 @@ export default function RecognitionTemplatesTab({ showToast }) {
               <Button
                 type="button"
                 variant="outline"
-                className="h-10 rounded-xl border border-gray-200 bg-white px-4 text-xs font-semibold text-gray-700 shadow-xs transition-all hover:bg-gray-50 active:scale-95 dark:border-white/10 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700"
+                className="h-10 rounded-xl border border-gray-200 bg-white px-4 text-xs font-semibold text-gray-700 shadow-xs transition-all hover:bg-gray-50 active:scale-95 dark:border-white/10 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700 cursor-pointer"
                 onClick={() => importInputRef.current?.click()}
                 disabled={importing || loading}
               >
@@ -505,7 +505,7 @@ export default function RecognitionTemplatesTab({ showToast }) {
               <Button
                 type="button"
                 variant="outline"
-                className="h-10 rounded-xl border border-gray-200 bg-white px-4 text-xs font-semibold text-gray-700 shadow-xs transition-all hover:bg-gray-50 active:scale-95 dark:border-white/10 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700"
+                className="h-10 rounded-xl border border-gray-200 bg-white px-4 text-xs font-semibold text-gray-700 shadow-xs transition-all hover:bg-gray-50 active:scale-95 dark:border-white/10 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700 cursor-pointer"
                 onClick={exportTemplates}
                 disabled={templates.length === 0 || importing || loading}
               >
@@ -520,7 +520,8 @@ export default function RecognitionTemplatesTab({ showToast }) {
           }
         />
 
-        <div className="grid gap-6 xl:grid-cols-[300px_minmax(0,1fr)_300px]">
+        <div className="border-t border-gray-100 dark:border-white/10 p-6 flex-1 min-h-0">
+          <div className="grid gap-6 xl:grid-cols-[300px_minmax(0,1fr)_300px]">
           {/* Left Panel: Calibration Controls */}
           <div className="space-y-4 rounded-2xl border border-gray-200 bg-white p-5 dark:border-white/10 dark:bg-card shadow-xs">
             <div className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
@@ -1022,6 +1023,7 @@ export default function RecognitionTemplatesTab({ showToast }) {
             </div>
           </div>
         </div>
+      </div>
 
         {/* Delete Confirmation Modal */}
         <ConfirmModal

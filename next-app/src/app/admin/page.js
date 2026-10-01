@@ -18,6 +18,7 @@ import Header from "@/components/layout/Header"
 import Footer from "@/components/layout/Footer"
 import Sidebar from "@/components/shared/Sidebar"
 import ConfirmModal from "@/components/shared/ConfirmModal"
+import RestoreModal from "@/components/shared/RestoreModal"
 import PromptModal from "@/components/shared/PromptModal"
 import PDFPreviewModal from "@/components/shared/PDFPreviewModal"
 import { TOTPChallengeModal } from "@/components/shared/TOTPChallengeModal"
@@ -251,6 +252,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
   const [restoreConfirmOpen, setRestoreConfirmOpen] = useState(false)
   const [restoreFile, setRestoreFile] = useState(null)
   const [restoreLoading, setRestoreLoading] = useState(false)
+  const [restoreMode, setRestoreMode] = useState("merge")
 
   // External drive detection state
   const [extDriveModalOpen, setExtDriveModalOpen] = useState(false)
@@ -604,6 +606,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
           cache: "no-store",
         }),
         fetch("/api/system/external-drive", { cache: "no-store" }).catch(() => null),
+        refreshSystemHealth(),
         isManual ? new Promise((resolve) => setTimeout(resolve, 600)) : Promise.resolve(),
       ])
       const json = await res.json()
@@ -623,7 +626,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
     } finally {
       if (isManual) setViewLoading((prev) => ({ ...prev, system: false, backup: false }))
     }
-  }, [backupSearch, backupStartDate, backupEndDate])
+  }, [backupSearch, backupStartDate, backupEndDate, authUser?.office_id, refreshSystemHealth])
 
   const rescanExternalDrive = useCallback(async () => {
     try {
@@ -1645,17 +1648,21 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
     }
   }
 
-  const confirmRestore = async (tokenOrEvent = null) => {
+  const confirmRestore = async (tokenOrEvent = null, targetMode = null) => {
     const totpToken = typeof tokenOrEvent === "string" ? tokenOrEvent : null
+    const effectiveMode = targetMode || restoreMode || "merge"
     if (!restoreFile || restoreLoading) return
     setRestoreLoading(true)
 
     const formData = new FormData()
     formData.append("file", restoreFile)
+    formData.append("mode", effectiveMode)
     const headers = {}
     if (totpToken) {
       headers["x-totp-token"] = totpToken
     }
+
+    const modeLabel = effectiveMode === "merge" ? "Safe Merge" : "Full Overwrite"
 
     const promise = (async () => {
       const res = await fetch("/api/system/backup/restore", {
@@ -1673,8 +1680,8 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
           }
           setRestoreLoading(false)
           await executeWithTOTP(
-            (token) => confirmRestore(token),
-            "Restore Office Partition",
+            (token) => confirmRestore(token, effectiveMode),
+            effectiveMode === "merge" ? "Safe Merge" : "Overwrite Records",
             true
           )
           throw new Error("TOTP_REQUIRED")
@@ -1685,16 +1692,18 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
       if (!res.ok || !json?.ok)
         throw new Error(json?.error || "Failed to restore office partition")
 
+      setRestoreConfirmOpen(false)
+      setRestoreFile(null)
       setTimeout(() => location.reload(), 3000)
       return json
     })()
 
     toast.promise(promise, {
-      loading: "Restoring office records from encrypted archive...",
+      loading: `Restoring office records via ${modeLabel}...`,
       success: {
         title: "Office Records Restored",
         description:
-          "Partition database recovered successfully. Reloading workspace in 3s...",
+          `${modeLabel} completed successfully. Reloading workspace in 3s...`,
       },
       error: (err) => {
         setRestoreLoading(false)
@@ -1802,14 +1811,21 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
                 className={cn(
                   "px-3 py-1.5 text-xs font-semibold rounded-xl flex items-center gap-2 transition-colors duration-300 whitespace-nowrap outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon/20 cursor-pointer shrink-0",
                   active
-                    ? "bg-red-50 text-pup-maroon dark:bg-red-500/10 dark:text-primary shadow-xs"
+                    ? "shadow-xs"
                     : "text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-zinc-400 dark:hover:bg-white/5 dark:hover:text-zinc-50"
                 )}
+                style={active ? { 
+                  backgroundColor: "color-mix(in srgb, var(--brand-accent) 12%, transparent)",
+                  color: "var(--brand-accent)"
+                } : undefined}
               >
                 <HugeIcon  className={cn(item.iconClass, "text-sm")}></HugeIcon>
                 {item.label}
                 {item.badge > 0 && (
-                  <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[9px] font-semibold text-white bg-pup-maroon dark:bg-red-500/20 dark:text-red-400">
+                  <span 
+                    className="inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[9px] font-semibold"
+                    style={{ backgroundColor: "var(--brand-accent)", color: "var(--brand-foreground)" }}
+                  >
                     {item.badge}
                   </span>
                 )}
@@ -1830,8 +1846,9 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
             zoomNode={zoomNode}
             setZoomNode={setZoomNode}
             handleZoomMouseDown={handleZoomMouseDown}
-            accentColor={authUser?.accent_color}
+            accentColor={brandAccent}
             officeName={authUser?.office_name}
+            authUser={authUser}
           />
         )}
         <main className="relative w-full min-w-0 min-h-0 flex-1 bg-white/25 dark:bg-zinc-950/25 overflow-y-auto backdrop-blur-xs">
@@ -2132,19 +2149,21 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
         isDeleteBackup={true}
       />
 
-      <ConfirmModal
+      <RestoreModal
         open={restoreConfirmOpen}
+        onOpenChange={setRestoreConfirmOpen}
+        restoreFile={restoreFile}
         title="Restore Office Partition"
-        variant="success"
-        message="Overwrite office repository data with the selected partition backup archive? This will restore documents, student records, and office configurations from this snapshot."
-        selectedItems={[restoreFile?.name]}
-        confirmLabel="Restore"
-        icon="ph-duotone ph-arrow-counter-clockwise"
-        buttonIcon="ph-bold ph-arrow-counter-clockwise"
-        onConfirm={() => confirmRestore()}
-        onCancel={() => setRestoreConfirmOpen(false)}
+        description="Inspect snapshot contents and choose how data merges with live office records."
+        onConfirm={(mode) => {
+          setRestoreMode(mode)
+          confirmRestore(null, mode)
+        }}
+        onCancel={() => {
+          setRestoreConfirmOpen(false)
+          setRestoreFile(null)
+        }}
         isLoading={restoreLoading}
-        isRestoreModal={true}
       />
 
       <PromptModal

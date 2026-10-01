@@ -684,7 +684,7 @@ export default function ModuleConfigTab({ showToast }) {
         />
 
         {/* Content Section: By Office or Matrix inside the single Card */}
-        <div className="overflow-hidden rounded-b-2xl border-t border-gray-200 dark:border-white/10 bg-white dark:bg-card flex flex-col flex-1">
+        <div className="overflow-hidden rounded-b-2xl border-t border-gray-100 dark:border-white/10 bg-white dark:bg-card flex flex-col flex-1">
           {/* VIEW 1: BY OFFICE */}
           {viewMode === "office" && (
             <div className="flex flex-col flex-1">
@@ -1336,14 +1336,14 @@ function ModuleCard({ m, office, assignments, toggling, onToggle, isOfficeArchiv
           </div>
 
           {isSystem ? (
-            <Badge className="bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400 text-[9px] font-bold border-0 tracking-wider uppercase">
+            <Badge className="bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400 text-[9px] font-semibold border-0 rounded-full px-2 py-0.5">
               Required
             </Badge>
           ) : (
             <Badge
               variant="outline"
               className={cn(
-                "text-[9px] font-semibold border-0",
+                "text-[9px] font-semibold border-0 rounded-full px-2 py-0.5",
                 isEnabled
                   ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400"
                   : "bg-gray-100 text-gray-500 dark:bg-zinc-800 dark:text-zinc-400"
@@ -1418,7 +1418,7 @@ function MatrixTableRow({ m, offices, assignments, toggling, onToggle }) {
                 {m.name}
               </span>
               {isSystem && (
-                <span className="bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400 text-[9px] font-bold uppercase px-1.5 py-0.2 rounded-sm">
+                <span className="bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400 text-[9px] font-semibold px-2 py-0.5 rounded-full">
                   Required
                 </span>
               )}

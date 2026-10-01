@@ -470,24 +470,35 @@ export async function seed({ force: forceOverride } = {}) {
       const existing = await runOne(`SELECT id FROM event_proposals WHERE title = $1 AND organization_name = $2`, [title, orgName]);
       let propId = existing?.id;
       const reviewedAt = reviewNote ? (archivedAt || new Date().toISOString()) : null;
+
+      const orgRow = await runOne(
+        `SELECT id FROM student_organizations 
+         WHERE name ILIKE $1 OR acronym ILIKE $1 
+            OR $2 ILIKE '%' || acronym || '%' 
+            OR $2 ILIKE '%' || name || '%'
+         LIMIT 1`,
+        [`%${orgName}%`, orgName]
+      );
+      const orgId = orgRow?.id || null;
+
       if (!propId) {
         const propRow = await runOne(
           `INSERT INTO event_proposals (
-             office_id, student_no, title, organization_name, event_date, venue,
+             office_id, student_no, organization_id, title, organization_name, event_date, venue,
              description, storage_filename, original_filename, mime_type, size_bytes,
              status, review_note, reviewed_at, archived_at
            )
-           VALUES ('osas', $1, $2, $3, $4, $5, $6, $7, $8, 'application/pdf', $9, $10, $11, $12, $13)
+           VALUES ('osas', $1, $2, $3, $4, $5, $6, $7, $8, $9, 'application/pdf', $10, $11, $12, $13, $14)
            RETURNING id`,
-          [studentNo, title, orgName, eventDate, venue, desc, storageFilename, filename, pdfBytes.length, status, reviewNote, reviewedAt, archivedAt || null],
+          [studentNo, orgId, title, orgName, eventDate, venue, desc, storageFilename, filename, pdfBytes.length, status, reviewNote, reviewedAt, archivedAt || null],
         );
         propId = propRow?.id;
       } else {
         await run(
           `UPDATE event_proposals
-           SET student_no=$1, event_date=$2, venue=$3, description=$4, status=$5, review_note=$6, reviewed_at=$7, archived_at=$8, size_bytes=$9, updated_at=NOW()
-           WHERE id=$10`,
-          [studentNo, eventDate, venue, desc, status, reviewNote, reviewedAt, archivedAt || null, pdfBytes.length, propId],
+           SET student_no=$1, organization_id=$2, event_date=$3, venue=$4, description=$5, status=$6, review_note=$7, reviewed_at=$8, archived_at=$9, size_bytes=$10, updated_at=NOW()
+           WHERE id=$11`,
+          [studentNo, orgId, eventDate, venue, desc, status, reviewNote, reviewedAt, archivedAt || null, pdfBytes.length, propId],
         );
       }
       if (propId && Array.isArray(updates)) {

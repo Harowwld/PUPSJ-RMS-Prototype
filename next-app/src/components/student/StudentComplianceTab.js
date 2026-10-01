@@ -629,8 +629,6 @@ export default function StudentComplianceTab({ authUser }) {
                 title="Refresh Checklist"
               />
 
-              <div className="h-6 w-px bg-gray-200 dark:bg-zinc-800" />
-
               <Button
                 type="button"
                 variant="outline"
@@ -1017,7 +1015,7 @@ export default function StudentComplianceTab({ authUser }) {
         )}
 
         {/* E. Requirements Content (Cards or Table) */}
-        <div className="p-6 pt-2">
+        <div className="p-6 border-t border-gray-100 dark:border-white/10">
           {sortedRequirements.length === 0 ? (
             <div className="p-12 text-center rounded-2xl border border-dashed border-gray-200 dark:border-white/10">
               <Empty>
@@ -1208,7 +1206,7 @@ export default function StudentComplianceTab({ authUser }) {
                       <div>
                         {/* Top Metadata Row: Category & Status */}
                         <div className="flex items-center justify-between gap-2">
-                          <span className="inline-flex items-center text-[10px] font-semibold uppercase tracking-wider text-gray-500 dark:text-zinc-400 bg-gray-100/90 dark:bg-zinc-800/80 px-2 py-0.5 rounded-md border border-gray-200/50 dark:border-white/5 truncate max-w-[170px]">
+                          <span className="inline-flex items-center text-[10px] font-medium text-gray-600 dark:text-zinc-400 bg-gray-100/90 dark:bg-zinc-800/80 px-2.5 py-0.5 rounded-full border border-gray-200/50 dark:border-white/5 truncate max-w-[170px]">
                             {item.category}
                           </span>
 

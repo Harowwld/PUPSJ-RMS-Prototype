@@ -29,7 +29,6 @@ import CabinetCanvas from "./storage-layout/CabinetCanvas"
 import CabinetSidebar from "./storage-layout/CabinetSidebar"
 import ConflictResolutionModals from "./storage-layout/ConflictResolutionModals"
 import { Select } from "@/components/ui/select"
-import { Separator } from "@/components/ui/separator"
 import { cn } from "@/lib/utils"
 import {
   Dialog,
@@ -1499,13 +1498,12 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
         titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
         descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
         actions={
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <RefreshButton
               onRefresh={() => handleRefresh(true)}
               isLoading={loading}
               title="Refresh Storage Layout"
             />
-            <div className="h-5 w-px bg-gray-200 dark:bg-white/10" />
             <Button
               onClick={saveLayout}
               disabled={saving || hasAnyCollisions}

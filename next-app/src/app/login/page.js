@@ -180,6 +180,13 @@ export default function Home() {
     // Clear logout sync flag when on login page
     localStorage.removeItem("pup-logout");
 
+    if (typeof window !== "undefined") {
+      document.documentElement.style.setProperty("--brand-accent", "#800000");
+      document.documentElement.style.setProperty("--brand-foreground", "#ffffff");
+      document.documentElement.removeAttribute("data-brand-accent");
+      document.documentElement.removeAttribute("data-brand-foreground");
+    }
+
     // Dynamic favicon swap for login page
     const link = document.querySelector("link[rel*='icon']") || document.createElement('link');
     link.type = 'image/png';

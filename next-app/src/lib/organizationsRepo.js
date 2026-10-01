@@ -91,7 +91,7 @@ export async function getOrganizationById(id) {
      FROM student_organizations so
      LEFT JOIN organization_officers oo ON oo.organization_id = so.id
      LEFT JOIN event_proposals ep ON ep.organization_id = so.id
-     WHERE so.id = $1
+     WHERE so.id = $1 OR lower(so.id) = lower($1) OR lower(coalesce(so.acronym, '')) = lower($1)
      GROUP BY so.id`,
     [id]
   );
@@ -150,6 +150,9 @@ export async function createOrganization({
   adviserName,
   adviserEmail,
   description,
+  storageRoom = 1,
+  storageCabinet,
+  storageDrawer = "1",
 }) {
   const cleanName = String(name || "").trim();
   if (!cleanName) {
@@ -158,11 +161,13 @@ export async function createOrganization({
 
   const generatedId = (id && String(id).trim()) || slugify(acronym || cleanName);
   const cleanId = generatedId || `org-${Date.now()}`;
+  const defaultCabinet = category === "Academic" ? "ACADEMIC ORGANIZATIONS" : "NON-ACADEMIC ORGANIZATIONS";
 
   const row = await queryOne(
     `INSERT INTO student_organizations (
-      id, name, acronym, category, status, adviser_name, adviser_email, description, created_at, updated_at
-    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW())
+      id, name, acronym, category, status, adviser_name, adviser_email, description,
+      storage_room, storage_cabinet, storage_drawer, created_at, updated_at
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW(), NOW())
     RETURNING *`,
     [
       cleanId,
@@ -173,6 +178,9 @@ export async function createOrganization({
       adviserName ? String(adviserName).trim() : null,
       adviserEmail ? String(adviserEmail).trim().toLowerCase() : null,
       description ? String(description).trim() : null,
+      storageRoom ? Number(storageRoom) : 1,
+      storageCabinet ? String(storageCabinet).trim() : defaultCabinet,
+      storageDrawer ? String(storageDrawer).trim() : "1",
     ]
   );
 
@@ -185,8 +193,12 @@ export async function createOrganization({
 export async function updateOrganization(id, data) {
   if (!id) throw new Error("Organization ID is required.");
 
+  const existingOrg = await getOrganizationById(id);
+  if (!existingOrg) throw new Error("Organization not found.");
+  const targetId = existingOrg.id;
+
   const fields = [];
-  const params = [id];
+  const params = [targetId];
 
   const allowed = [
     ["name", (v) => String(v || "").trim()],
@@ -196,6 +208,9 @@ export async function updateOrganization(id, data) {
     ["adviser_name", (v) => (v ? String(v).trim() : null)],
     ["adviser_email", (v) => (v ? String(v).trim().toLowerCase() : null)],
     ["description", (v) => (v ? String(v).trim() : null)],
+    ["storage_room", (v) => (v != null ? Number(v) : null)],
+    ["storage_cabinet", (v) => (v != null ? String(v).trim() : null)],
+    ["storage_drawer", (v) => (v != null ? String(v).trim() : null)],
   ];
 
   for (const [col, transform] of allowed) {
@@ -207,8 +222,13 @@ export async function updateOrganization(id, data) {
     }
   }
 
+  const requestedStatus = data.status || data.status;
+  if (requestedStatus === "Active") {
+    fields.push("archived_at = NULL");
+  }
+
   if (fields.length === 0) {
-    return getOrganizationById(id);
+    return getOrganizationById(targetId);
   }
 
   fields.push("updated_at = NOW()");
@@ -222,12 +242,30 @@ export async function updateOrganization(id, data) {
  */
 export async function archiveOrganization(id) {
   if (!id) return null;
+  const existing = await getOrganizationById(id);
+  if (!existing) return null;
   return queryOne(
     `UPDATE student_organizations
      SET status = 'Archived', archived_at = NOW(), updated_at = NOW()
      WHERE id = $1
      RETURNING *`,
-    [id]
+    [existing.id]
+  );
+}
+
+/**
+ * Restore an archived organization
+ */
+export async function restoreOrganization(id) {
+  if (!id) return null;
+  const existing = await getOrganizationById(id);
+  if (!existing) return null;
+  return queryOne(
+    `UPDATE student_organizations
+     SET status = 'Active', archived_at = NULL, updated_at = NOW()
+     WHERE id = $1
+     RETURNING *`,
+    [existing.id]
   );
 }
 
@@ -263,24 +301,33 @@ export async function updateOrganizationBylaws(id, {
 export async function getOfficersByOrganizationId(orgId) {
   if (!orgId) return [];
   const rows = await query(
-    `SELECT * FROM organization_officers
-     WHERE organization_id = $1
+    `SELECT oo.*,
+            coalesce(oo.student_no, sa.student_no) AS student_no,
+            sa.avatar_filename,
+            sa.id AS student_account_id
+     FROM organization_officers oo
+     LEFT JOIN student_accounts sa ON lower(sa.email) = lower(oo.email)
+     WHERE oo.organization_id = $1
      ORDER BY
        CASE
-         WHEN lower(position) = 'president' THEN 1
-         WHEN lower(position) LIKE '%vice%' THEN 2
-         WHEN lower(position) LIKE '%secretary%' THEN 3
-         WHEN lower(position) LIKE '%treasurer%' THEN 4
-         WHEN lower(position) LIKE '%auditor%' THEN 5
+         WHEN lower(oo.position) = 'president' THEN 1
+         WHEN lower(oo.position) LIKE '%vice%' THEN 2
+         WHEN lower(oo.position) LIKE '%secretary%' THEN 3
+         WHEN lower(oo.position) LIKE '%treasurer%' THEN 4
+         WHEN lower(oo.position) LIKE '%auditor%' THEN 5
          ELSE 6
        END,
-       created_at ASC`,
+       oo.created_at ASC`,
     [orgId]
   );
   return rows.map((r) => ({
     ...r,
     student_name: r.student_name ? decryptPII(r.student_name) : r.student_name,
     email: r.email ? decryptPII(r.email) : r.email,
+    avatarFilename: r.avatar_filename || null,
+    avatar_filename: r.avatar_filename || null,
+    studentAccountId: r.student_account_id || null,
+    student_account_id: r.student_account_id || null,
   }));
 }
 

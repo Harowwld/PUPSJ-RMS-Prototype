@@ -17,6 +17,9 @@ import {
 } from "@/components/ui/empty"
 import {
   TooltipProvider,
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
 } from "@/components/ui/tooltip"
 import { formatPHDateTime } from "@/lib/timeFormat"
 import { format } from "date-fns"
@@ -35,7 +38,6 @@ import BackupFilters from "./backup/BackupFilters"
 import BackupTableSkeleton from "./backup/BackupTableSkeleton"
 import PageHeader from "@/components/shared/PageHeader"
 import FloatingActionBar from "@/components/shared/FloatingActionBar"
-import { RefreshButton } from "@/components/shared/RefreshButton"
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips"
 import { cn } from "@/lib/utils"
 
@@ -73,6 +75,44 @@ export default function BackupTab({
   })
 
   const [isRescanning, setIsRescanning] = useState(false)
+  const [isRefreshing, setIsRefreshing] = useState(false)
+
+  const [statusSidebarOpen, setStatusSidebarOpen] = useState(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("pupsj_backup_status_sidebar")
+      if (saved !== null) return saved === "true"
+    }
+    return true
+  })
+
+  const handleToggleStatusSidebar = (forcedState) => {
+    setStatusSidebarOpen((prev) => {
+      const next = typeof forcedState === "boolean" ? forcedState : !prev
+      if (typeof window !== "undefined") {
+        localStorage.setItem("pupsj_backup_status_sidebar", String(next))
+      }
+      return next
+    })
+  }
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true)
+    try {
+      await onRefresh?.(true)
+      showToast?.({
+        title: "Backup Records Refreshed",
+        description: "Loaded latest backup records and storage status.",
+      })
+    } catch {
+      showToast?.({
+        title: "Refresh Failed",
+        description: "Failed to reload backup records.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsRefreshing(false)
+    }
+  }
 
   const handleRescanDrive = async () => {
     setIsRescanning(true)
@@ -313,50 +353,69 @@ export default function BackupTab({
                 descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
                 actions={
                   <div className="flex items-center gap-2">
-                    <RefreshButton 
-                      onRefresh={onRefresh} 
-                      isLoading={isLoading} 
-                      title="Refresh Backup & Maintenance"
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => handleToggleStatusSidebar()}
+                      title={statusSidebarOpen ? "Collapse System Status" : "Expand System Status"}
+                      className={cn(
+                        "flex h-10 items-center justify-center rounded-xl! border font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs",
+                        statusSidebarOpen
+                          ? "border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700"
+                          : "border-gray-300 dark:border-white/20 bg-gray-100/90 dark:bg-zinc-800/90 text-gray-900 dark:text-white hover:bg-white dark:hover:bg-zinc-700"
+                      )}
+                    >
+                      Status
+                    </Button>
+
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handleRefresh}
+                      disabled={isLoading || isManualLoading || isRefreshing}
+                      className="flex h-10 items-center justify-center rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-5 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700 disabled:opacity-50"
+                    >
+                      {isLoading || isManualLoading || isRefreshing ? (
+                        <HugeIcon className="ph-bold ph-spinner animate-spin text-[16px]" />
+                      ) : (
+                        "Refresh"
+                      )}
+                    </Button>
+
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() =>
+                        restoreFileRef.current &&
+                        restoreFileRef.current.click()
+                      }
+                      disabled={localLoading.uploading}
+                      className="flex h-10 items-center justify-center rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-5 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
+                    >
+                      {localLoading.uploading ? (
+                        <HugeIcon  className="ph-bold ph-spinner animate-spin text-[16px]"></HugeIcon>
+                      ) : (
+                        "Restore"
+                      )}
+                    </Button>
+                    <Button
+                      onClick={handleGenerateBackup}
+                      disabled={localLoading.generating}
+                      className="flex h-10 items-center justify-center rounded-xl! btn-brand-red px-5 active:scale-95 transition-all text-xs font-semibold text-white shadow-xs cursor-pointer border-0"
+                    >
+                      {localLoading.generating ? (
+                        <HugeIcon  className="ph-bold ph-spinner animate-spin text-[16px]"></HugeIcon>
+                      ) : (
+                        "Create"
+                      )}
+                    </Button>
+                    <input
+                      ref={restoreFileRef}
+                      type="file"
+                      className="hidden"
+                      accept=".zip,.enc,.bak,.backup,.pupbak,application/zip,application/octet-stream"
+                      onChange={handleRestoreFileChangeLocal}
                     />
-
-                    
-
-                    <div className="flex items-center gap-2">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() =>
-                          restoreFileRef.current &&
-                          restoreFileRef.current.click()
-                        }
-                        disabled={localLoading.uploading}
-                        className="flex h-10 items-center justify-center rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-5 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
-                      >
-                        {localLoading.uploading ? (
-                          <HugeIcon  className="ph-bold ph-spinner animate-spin text-[16px]"></HugeIcon>
-                        ) : (
-                          "Restore"
-                        )}
-                      </Button>
-                      <Button
-                        onClick={handleGenerateBackup}
-                        disabled={localLoading.generating}
-                        className="flex h-10 items-center justify-center rounded-xl! btn-brand-red px-5 active:scale-95 transition-all text-xs font-semibold text-white shadow-xs cursor-pointer border-0"
-                      >
-                        {localLoading.generating ? (
-                          <HugeIcon  className="ph-bold ph-spinner animate-spin text-[16px]"></HugeIcon>
-                        ) : (
-                          "Create"
-                        )}
-                      </Button>
-                      <input
-                        ref={restoreFileRef}
-                        type="file"
-                        className="hidden"
-                        accept=".zip,.enc,.bak,.backup,.pupbak,application/zip,application/octet-stream"
-                        onChange={handleRestoreFileChangeLocal}
-                      />
-                    </div>
                   </div>
                 }
               />
@@ -439,7 +498,7 @@ export default function BackupTab({
                     />
                   )}
 
-                  <div className="flex-1 flex flex-col min-h-0 rounded-b-2xl overflow-hidden">
+                  <div className="flex-1 flex flex-col min-h-0 border-t border-gray-100 dark:border-white/10 rounded-b-2xl overflow-hidden">
                     <BackupTable
                       backups={backups}
                       sortedAndPaginatedBackups={sortedAndPaginatedBackups}
@@ -476,16 +535,31 @@ export default function BackupTab({
             </Card>
           </div>
 
-          <HealthSidebar
-            systemHealth={systemHealth}
-            lastBackupTime={lastBackupTime}
-            isLoading={isLoading}
-            isManualLoading={isManualLoading}
-            externalDrive={externalDrive}
-            onRescanDrive={handleRescanDrive}
-            onToggleSimulation={handleToggleSimulationLocal}
-            isRescanning={isRescanning}
-          />
+          {statusSidebarOpen ? (
+            <HealthSidebar
+              systemHealth={systemHealth}
+              lastBackupTime={lastBackupTime}
+              isLoading={isLoading}
+              isManualLoading={isManualLoading}
+              externalDrive={externalDrive}
+              onRescanDrive={handleRescanDrive}
+              onToggleSimulation={handleToggleSimulationLocal}
+              isRescanning={isRescanning}
+              onToggleCollapse={() => handleToggleStatusSidebar(false)}
+            />
+          ) : (
+            <button
+              type="button"
+              onClick={() => handleToggleStatusSidebar(true)}
+              title="Expand System Status"
+              className="hidden md:flex flex-col items-center justify-center gap-2 w-8 self-stretch rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-card hover:bg-gray-50 dark:hover:bg-zinc-800/80 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white shadow-2xs transition-all cursor-pointer group py-4 select-none shrink-0"
+            >
+              <HugeIcon className="ph-bold ph-caret-left text-[14px] group-hover:-translate-x-0.5 transition-transform" />
+              <span className="text-[10px] font-semibold tracking-wider uppercase text-gray-400 dark:text-zinc-500 [writing-mode:vertical-lr] rotate-180">
+                Status
+              </span>
+            </button>
+          )}
         </div>
 
         <FloatingActionBar

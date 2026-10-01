@@ -19,7 +19,7 @@ import {
   TabsContent,
 } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
-import { canonicalizeCabinetId } from "@/lib/storageLayoutUtils";
+import { canonicalizeCabinetId, findMatchingCabinet, areCabinetsEqual } from "@/lib/storageLayoutUtils";
 import { cn } from "@/lib/utils";
 import { getRoleBranding } from "@/lib/roleBranding";
 import { PageTransition } from "@/components/ui/motion";
@@ -274,6 +274,9 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
 
   const [students, setStudents] = useState([]);
   const [archivedStudents, setArchivedStudents] = useState([]);
+  const [organizations, setOrganizations] = useState([]);
+  const [archivedOrganizations, setArchivedOrganizations] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState(null);
   const [docTypes, setDocTypes] = useState([]);
   const [courses, setCourses] = useState([]);
   const [sections, setSections] = useState([]);
@@ -294,12 +297,15 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
   const [bulkRestoreOpen, setBulkRestoreOpen] = useState(false);
   const [bulkRestoreLoading, setBulkRestoreLoading] = useState(false);
 
-  // Prune any stale selectedStudentIds when students datasets update
+  // Prune any stale selectedStudentIds when students or organizations datasets update
   useEffect(() => {
     setSelectedStudentIds((prev) => {
       if (prev.size === 0) return prev;
-      const allAvailable = [...students, ...archivedStudents];
-      const validIds = new Set(allAvailable.map((s) => s.studentNo));
+      const isOsas = authUser?.office_id === "osas";
+      const allAvailable = isOsas
+        ? [...organizations, ...archivedOrganizations].map((o) => o.id)
+        : [...students, ...archivedStudents].map((s) => s.studentNo);
+      const validIds = new Set(allAvailable);
       let needsPruning = false;
       for (const id of prev) {
         if (!validIds.has(id)) {
@@ -314,7 +320,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
       }
       return next;
     });
-  }, [students, archivedStudents]);
+  }, [students, archivedStudents, organizations, archivedOrganizations, authUser?.office_id]);
 
   const [currentLocatorLevel, setCurrentLocatorLevel] = useState("rooms");
   const [selectedRoom, setSelectedRoom] = useState(null);
@@ -406,21 +412,23 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
 
   const fetchData = useCallback(async () => {
     try {
-      const [sRes, aRes, dRes, cRes, secRes, layoutRes] = await Promise.all([
+      const [sRes, aRes, dRes, cRes, secRes, layoutRes, orgsRes] = await Promise.all([
         fetch("/api/students"),
         fetch("/api/students?includeArchived=true"),
         fetch("/api/doc-types"),
         fetch("/api/courses"),
         fetch("/api/sections"),
         fetch("/api/storage-layout"),
+        fetch("/api/osas/organizations?status=Active,Inactive,Archived"),
       ]);
-      const [sData, aData, dData, cData, secData, layoutData] = await Promise.all([
+      const [sData, aData, dData, cData, secData, layoutData, orgsData] = await Promise.all([
         sRes.json(),
         aRes.json(),
         dRes.json(),
         cRes.json(),
         secRes.json(),
         layoutRes.json(),
+        orgsRes.json().catch(() => ({ ok: false, data: [] })),
       ]);
       
       setStudents((Array.isArray(sData.data) ? sData.data : []).map(normalizeStudentRow));
@@ -431,6 +439,10 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
           .filter(s => s.status !== "Active")
           .map(normalizeStudentRow)
       );
+
+      const allOrgs = Array.isArray(orgsData?.data) ? orgsData.data : [];
+      setOrganizations(allOrgs.filter(o => o.status !== "Archived"));
+      setArchivedOrganizations(allOrgs.filter(o => o.status === "Archived"));
 
       setDocTypes(dData.data || []);
       setCourses(cData.data || []);
@@ -466,6 +478,9 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
             id: `event-proposal-${proposal.id}`,
             student_no: proposal.student_no,
             student_name: proposal.student_name,
+            organization_id: proposal.organization_id,
+            organization_name: proposal.organization_name || proposal.verified_org_name,
+            org_acronym: proposal.org_acronym,
             doc_type: "Event Proposal",
             original_filename: proposal.original_filename,
             storage_filename: proposal.storage_filename,
@@ -594,7 +609,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
     }
 
     if (selectedRoom != null) {
-      const roomDef = rooms.find((r) => r.id === selectedRoom);
+      const roomDef = rooms.find((r) => String(r.id) === String(selectedRoom));
       if (!roomDef) {
         // Selected room removed -> fallback.
         setSelectedRoom(rooms[0].id);
@@ -603,10 +618,14 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
         return;
       }
 
-      // If cabinet selected but removed, fallback to first cabinet (or null).
+      // If cabinet selected, validate with robust matching and normalize ID.
       if (selectedCabinet) {
-        const exists = roomDef.cabinets?.some((c) => c.id === selectedCabinet);
-        if (!exists) {
+        const matchedCab = findMatchingCabinet(roomDef.cabinets, selectedCabinet);
+        if (matchedCab) {
+          if (String(selectedCabinet) !== String(matchedCab.id)) {
+            setSelectedCabinet(matchedCab.id);
+          }
+        } else {
           setSelectedCabinet(roomDef.cabinets?.[0]?.id || null);
         }
       }
@@ -621,16 +640,37 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
     setIsQuickSearching(true);
     const timer = setTimeout(() => {
       const q = quickQuery.toLowerCase();
-      const results = students.filter(
-        (s) =>
-          s.studentNo.toLowerCase().includes(q) ||
-          s.name.toLowerCase().includes(q),
-      );
-      setQuickResults(results.slice(0, 10));
+      if (authUser?.office_id === "osas") {
+        const results = organizations.filter(
+          (o) =>
+            (o.name || "").toLowerCase().includes(q) ||
+            (o.acronym || "").toLowerCase().includes(q) ||
+            (o.category || "").toLowerCase().includes(q) ||
+            (o.adviser_name || "").toLowerCase().includes(q)
+        ).map((o) => ({
+          studentNo: o.id,
+          acronym: o.acronym || o.id,
+          name: o.name,
+          category: o.category,
+          room: o.storage_room || 1,
+          cabinet: o.storage_cabinet || (o.category === "Academic" ? "ACADEMIC ORGANIZATIONS" : "NON-ACADEMIC ORGANIZATIONS"),
+          drawer: o.storage_drawer || "1",
+          isOrg: true,
+          rawOrg: o,
+        }));
+        setQuickResults(results.slice(0, 10));
+      } else {
+        const results = students.filter(
+          (s) =>
+            s.studentNo.toLowerCase().includes(q) ||
+            s.name.toLowerCase().includes(q),
+        );
+        setQuickResults(results.slice(0, 10));
+      }
       setIsQuickSearching(false);
     }, 300);
     return () => clearTimeout(timer);
-  }, [quickQuery, students]);
+  }, [quickQuery, students, organizations, authUser?.office_id]);
 
   const handleLogout = async () => {
     try {
@@ -664,14 +704,70 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
   }, [students, archivedStudents]);
 
   const breadcrumbs = useMemo(() => {
+    if (authUser?.office_id === "osas") {
+      const list = [{ level: "categories", label: "Categories" }];
+      if (selectedCategory) {
+        list.push({ level: "organizations", label: `${selectedCategory} Organizations` });
+      }
+      return list;
+    }
     const list = [{ level: "years", label: "Years" }];
     if (selectedYear) {
       list.push({ level: "students", label: `Year ${selectedYear}` });
     }
     return list;
-  }, [selectedYear]);
+  }, [authUser?.office_id, selectedCategory, selectedYear]);
 
   const explorerItems = useMemo(() => {
+    if (authUser?.office_id === "osas") {
+      if (currentLevel === "categories" || currentLevel === "years") {
+        const allOrgs = [...organizations, ...archivedOrganizations];
+        const categories = Array.from(new Set(allOrgs.map((o) => o.category || "Academic")));
+        if (categories.length === 0) {
+          categories.push("Academic", "Non-Academic");
+        }
+        return categories.map((cat) => {
+          const activeCount = organizations.filter((o) => (o.category || "Academic") === cat).length;
+          const archCount = archivedOrganizations.filter((o) => (o.category || "Academic") === cat).length;
+          return {
+            key: cat,
+            title: cat,
+            subtitle: `${activeCount} Active · ${archCount} Archived`,
+            icon: "ph-buildings",
+            onClick: () => {
+              setSelectedCategory(cat);
+              setCurrentLevel("organizations");
+            },
+          };
+        });
+      }
+      if (currentLevel === "organizations" || currentLevel === "students") {
+        return organizations
+          .filter((o) => (o.category || "Academic") === selectedCategory)
+          .map((o) => ({
+            key: o.id,
+            org: o,
+            student: {
+              studentNo: o.id,
+              acronym: o.acronym || o.id,
+              name: o.name,
+              room: o.storage_room || 1,
+              cabinet: o.storage_cabinet || (o.category === "Academic" ? "ACADEMIC ORGANIZATIONS" : "NON-ACADEMIC ORGANIZATIONS"),
+              drawer: o.storage_drawer || "1",
+              status: o.status,
+              category: o.category,
+              adviser: o.adviser_name,
+              activeOfficerCount: o.active_officer_count,
+              proposalCount: o.proposal_count,
+              hasCbl: Boolean(o.bylaws_storage_filename),
+              bylawsStorageFilename: o.bylaws_storage_filename,
+              rawOrg: o,
+            },
+          }));
+      }
+      return [];
+    }
+
     if (currentLevel === "years") {
       const years = [...academicYearOptions].sort((a, b) => b - a);
       return years.map((y) => {
@@ -695,7 +791,17 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
         .map((s) => ({ key: s.studentNo, student: s }));
     }
     return [];
-  }, [currentLevel, students, archivedStudents, selectedYear, academicYearOptions]);
+  }, [
+    authUser?.office_id,
+    currentLevel,
+    organizations,
+    archivedOrganizations,
+    selectedCategory,
+    students,
+    archivedStudents,
+    selectedYear,
+    academicYearOptions,
+  ]);
 
   const staffDocs = useMemo(
     () =>
@@ -706,14 +812,18 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
   const locatorModel = useMemo(() => {
     if (!storageLayout?.rooms?.length) return { kind: "none" };
 
+    const isOsas = authUser?.office_id === "osas";
+
     if (currentLocatorLevel === "rooms") {
       return {
         kind: "rooms",
-        title: "PUP Storage Rooms",
+        title: isOsas ? "OSAS Physical Archive Rooms" : "PUP Storage Rooms",
         rooms: storageLayout.rooms.map((r) => ({
           room: r.id,
           name: r.name || `Room ${r.id}`,
-          occupiedCount: students.filter((s) => String(s.room) === String(r.id)).length,
+          occupiedCount: isOsas
+            ? organizations.filter((o) => String(o.storage_room || 1) === String(r.id)).length
+            : students.filter((s) => String(s.room) === String(r.id)).length,
           cabinetsCount: r.cabinets?.length || 0,
           isTarget: String(activeStudent?.room) === String(r.id),
         })),
@@ -729,14 +839,19 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
         roomDoor: roomDef.door || null,
         cabinets: roomDef.cabinets.map((c) => {
           const normCab = String(c.id);
+          const occupiedCount = isOsas
+            ? organizations.filter(
+                (o) => String(o.storage_room || 1) === String(selectedRoom) && String(o.storage_cabinet) === normCab,
+              ).length
+            : students.filter(
+                (s) => String(s.room) === String(selectedRoom) && String(s.cabinet) === normCab,
+              ).length;
           return {
             cab: normCab,
-            occupiedCount: students.filter(
-              (s) => String(s.room) === String(selectedRoom) && String(s.cabinet) === normCab,
-            ).length,
+            occupiedCount,
             isTarget:
               String(activeStudent?.room) === String(selectedRoom) &&
-              String(activeStudent?.cabinet) === normCab,
+              areCabinetsEqual(activeStudent?.cabinet, normCab, roomDef.cabinets),
             rect: c.rect,
             rotation: c.rotation || 0,
             drawerIds: c.drawerIds,
@@ -747,7 +862,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
     if (currentLocatorLevel === "drawers") {
       const roomDef = storageLayout.rooms.find((r) => String(r.id) === String(selectedRoom));
       const cabinetDef = roomDef?.cabinets?.find(
-        (c) => String(c.id) === String(selectedCabinet)
+        (c) => areCabinetsEqual(c.id, selectedCabinet, roomDef.cabinets)
       );
       if (!cabinetDef)
         return {
@@ -765,20 +880,78 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
         cabinetRect: cabinetDef.rect,
         cabinets: roomDef.cabinets.map((c) => {
           const normCab = String(c.id);
+          const occupiedCount = isOsas
+            ? organizations.filter(
+                (o) => String(o.storage_room || 1) === String(selectedRoom) && String(o.storage_cabinet) === normCab,
+              ).length
+            : students.filter(
+                (s) => String(s.room) === String(selectedRoom) && String(s.cabinet) === normCab,
+              ).length;
           return {
             cab: normCab,
-            occupiedCount: students.filter(
-              (s) => String(s.room) === String(selectedRoom) && String(s.cabinet) === normCab,
-            ).length,
+            occupiedCount,
             isTarget:
               String(activeStudent?.room) === String(selectedRoom) &&
-              String(activeStudent?.cabinet) === normCab,
+              areCabinetsEqual(activeStudent?.cabinet, normCab, roomDef.cabinets),
             rect: c.rect,
             rotation: c.rotation || 0,
             drawerIds: c.drawerIds,
           };
         }),
         drawers: (cabinetDef.drawerIds || []).map((d) => {
+          if (isOsas) {
+            const drawerOrgs = organizations.filter(
+              (o) =>
+                String(o.storage_room || 1) === String(selectedRoom) &&
+                String(o.storage_cabinet) === String(selectedCabinet) &&
+                String(o.storage_drawer) === String(d)
+            );
+            return {
+              drawer: d,
+              count: drawerOrgs.length,
+              students: drawerOrgs.map((o) => {
+                const docs = [];
+                if (o.bylaws_storage_filename) {
+                  docs.push({
+                    id: `cbl-${o.id}`,
+                    docType: "Constitution & By-Laws (CBL)",
+                    filename: o.bylaws_original_filename || `${o.acronym || o.id}-Official-CBL-2026.pdf`,
+                    approvalStatus: "Approved",
+                    file_url: `/api/osas/organizations/${encodeURIComponent(o.id)}/bylaws?file=1`,
+                  });
+                }
+                const propDocs = staffDocs
+                  .filter((doc) =>
+                    doc.source_id && (
+                      doc.organization_id === o.id ||
+                      doc.student_no === o.id ||
+                      (doc.org_acronym && o.acronym && doc.org_acronym.toLowerCase() === o.acronym.toLowerCase()) ||
+                      (doc.organization_name && o.name && doc.organization_name.toLowerCase().includes(o.name.toLowerCase())) ||
+                      (doc.original_filename && doc.original_filename.toLowerCase().includes(o.id.toLowerCase())) ||
+                      (o.acronym && doc.original_filename && doc.original_filename.toLowerCase().includes(o.acronym.toLowerCase()))
+                    )
+                  )
+                  .map((doc) => ({
+                    id: doc.id,
+                    docType: doc.doc_type,
+                    filename: doc.original_filename,
+                    approvalStatus: doc.approval_status,
+                    file_url: doc.file_url,
+                  }));
+                return {
+                  studentNo: o.acronym || o.id,
+                  name: o.name,
+                  category: o.category,
+                  documents: [...docs, ...propDocs],
+                };
+              }),
+              isTarget:
+                String(activeStudent?.room) === String(selectedRoom) &&
+                areCabinetsEqual(activeStudent?.cabinet, selectedCabinet, roomDef.cabinets) &&
+                String(activeStudent?.drawer) === String(d),
+            };
+          }
+
           const drawerStudents = students.filter(
             (s) =>
               String(s.room) === String(selectedRoom) &&
@@ -801,9 +974,9 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
                 })),
             })),
             isTarget:
-              activeStudent?.room === selectedRoom &&
-              activeStudent?.cabinet === selectedCabinet &&
-              activeStudent?.drawer === d,
+              String(activeStudent?.room) === String(selectedRoom) &&
+              areCabinetsEqual(activeStudent?.cabinet, selectedCabinet, roomDef.cabinets) &&
+              String(activeStudent?.drawer) === String(d),
           };
         }),
       };
@@ -814,9 +987,11 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
     selectedRoom,
     selectedCabinet,
     students,
+    organizations,
     activeStudent,
     storageLayout,
     staffDocs,
+    authUser?.office_id,
   ]);
 
   const availableSectionsForNewRecord = useMemo(() => {
@@ -831,40 +1006,137 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
   }, [sections, newRec.course]);
 
   const activeStudentDocs = useMemo(
-    () =>
-      activeStudent
-        ? staffDocs.filter((d) => d.student_no === activeStudent.studentNo)
-        : [],
-    [activeStudent, staffDocs],
+    () => {
+      if (!activeStudent) return [];
+      const orgId = activeStudent.rawOrg?.id || activeStudent.id || activeStudent.studentNo;
+      const isOsas = authUser?.office_id === "osas";
+
+      if (isOsas) {
+        const docs = [];
+        const bylawsFilename = activeStudent.bylawsStorageFilename || activeStudent.rawOrg?.bylaws_storage_filename;
+        if (bylawsFilename) {
+          docs.push({
+            id: `cbl-${orgId}`,
+            student_no: activeStudent.studentNo,
+            student_name: activeStudent.name,
+            doc_type: "Constitution & By-Laws (CBL)",
+            original_filename: activeStudent.rawOrg?.bylaws_original_filename || "CBL.pdf",
+            storage_filename: bylawsFilename,
+            approval_status: "Approved",
+            source_type: "bylaws",
+            file_url: `/api/osas/organizations/${encodeURIComponent(orgId)}/bylaws?file=1`,
+          });
+        }
+        const propDocs = staffDocs.filter((d) =>
+          d.organization_id === orgId ||
+          d.student_no === orgId ||
+          d.student_no === activeStudent.studentNo ||
+          (activeStudent.acronym && (d.student_no === activeStudent.acronym || d.org_acronym === activeStudent.acronym)) ||
+          (d.organization_name && activeStudent.name && d.organization_name.toLowerCase().includes(activeStudent.name.toLowerCase()))
+        );
+        return [...docs, ...propDocs];
+      }
+
+      return staffDocs.filter((d) => d.student_no === activeStudent.studentNo);
+    },
+    [activeStudent, staffDocs, authUser?.office_id],
   );
 
-  const locateStudent = useCallback((s) => {
-    const derivedYear = getStudentNoYear(s.studentNo);
-    const yearFromDb = Number(s.yearLevel);
-    const nextYear =
-      derivedYear != null
-        ? derivedYear
-        : Number.isFinite(yearFromDb)
-          ? yearFromDb
-          : null;
+  const locateStudent = useCallback(
+    (s) => {
+      if (!s) return;
+      const isOsas = authUser?.office_id === "osas";
+      if (isOsas) {
+        setSelectedCategory(s.category || s.rawOrg?.category || null);
+        setCurrentLevel("organizations");
+      } else {
+        const derivedYear = getStudentNoYear(s.studentNo);
+        const yearFromDb = Number(s.yearLevel);
+        const nextYear =
+          derivedYear != null
+            ? derivedYear
+            : Number.isFinite(yearFromDb)
+              ? yearFromDb
+              : null;
 
-    setSelectedYear(nextYear);
-    setCurrentLevel("students");
-    setActiveStudent(s);
-    setSelectedRoom(s.room);
-    setSelectedCabinet(s.cabinet);
-    setCurrentLocatorLevel("rooms");
-    switchView("storage");
+        setSelectedYear(nextYear);
+        setCurrentLevel("students");
+      }
 
+      // Canonicalize target room (fallback to 1)
+      const rawRoom = s.room ?? s.rawOrg?.storage_room ?? 1;
+      const targetRoom = Number.isFinite(Number(rawRoom)) ? Number(rawRoom) : rawRoom;
+
+      // Canonicalize target cabinet using layout if available
+      const rawCab = s.cabinet ?? s.rawOrg?.storage_cabinet;
+      const rooms = storageLayout?.rooms || [];
+      const roomDef = rooms.find((r) => String(r.id) === String(targetRoom));
+      const matchedCab = findMatchingCabinet(roomDef?.cabinets, rawCab);
+      const targetCab = matchedCab?.id || rawCab || (isOsas ? "ACADEMIC ORGANIZATIONS" : "A");
+
+      if (locateTimeoutRef.current) {
+        clearTimeout(locateTimeoutRef.current);
+        locateTimeoutRef.current = null;
+      }
+
+      setActiveStudent({
+        ...s,
+        room: targetRoom,
+        cabinet: targetCab,
+      });
+      setSelectedRoom(targetRoom);
+      setSelectedCabinet(targetCab);
+      setCurrentLocatorLevel("drawers");
+      switchView("storage");
+    },
+    [switchView, authUser?.office_id, storageLayout],
+  );
+
+  const handleUnfocusStudent = useCallback(() => {
+    setActiveStudent(null);
     if (locateTimeoutRef.current) {
       clearTimeout(locateTimeoutRef.current);
-    }
-
-    locateTimeoutRef.current = setTimeout(() => {
-      setCurrentLocatorLevel("drawers");
       locateTimeoutRef.current = null;
-    }, 1500);
-  }, [switchView]);
+    }
+  }, []);
+
+  const handlePreviewDocument = useCallback(
+    (docType, name, no, id, customUrl) => {
+      let fileUrl = customUrl || null;
+      const strId = String(id || "");
+      if (!fileUrl) {
+        if (strId.startsWith("cbl-")) {
+          const orgId = strId.replace(/^cbl-/, "");
+          fileUrl = `/api/osas/organizations/${encodeURIComponent(orgId)}/bylaws?file=1`;
+        } else if (strId.startsWith("event-proposal-")) {
+          const propId = strId.replace(/^event-proposal-/, "");
+          fileUrl = `/api/osas/event-proposals/${encodeURIComponent(propId)}?file=1`;
+        } else if (docType === "Constitution and By-Laws" || docType === "Constitution & By-Laws (CBL)") {
+          const org = organizations.find((o) => o.id === no || o.acronym === no || o.name === name);
+          if (org) {
+            fileUrl = `/api/osas/organizations/${encodeURIComponent(org.id)}/bylaws?file=1`;
+          }
+        } else if (id) {
+          const matchedDoc = allDocs.find((d) => String(d.id) === strId);
+          if (matchedDoc?.file_url) {
+            fileUrl = matchedDoc.file_url;
+          }
+        }
+      }
+
+      setPreview({
+        docType,
+        studentName: name,
+        studentNo: no,
+        docId: id,
+        fileUrl,
+        url: fileUrl,
+        refId: `DOC-${Date.now()}`,
+      });
+      setPreviewOpen(true);
+    },
+    [organizations, allDocs],
+  );
 
   const goToStorageMapFromRequest = useCallback(
     (studentRow) => {
@@ -1532,9 +1804,13 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
       let successCount = 0;
       let failCount = 0;
       const idsToArchive = Array.from(selectedStudentIds);
+      const isOsas = authUser?.office_id === "osas";
 
-      for (const studentNo of idsToArchive) {
-        const res = await fetch(`/api/students/${encodeURIComponent(studentNo)}`, {
+      for (const id of idsToArchive) {
+        const url = isOsas
+          ? `/api/osas/organizations/${encodeURIComponent(id)}`
+          : `/api/students/${encodeURIComponent(id)}`;
+        const res = await fetch(url, {
           method: "DELETE",
         });
         const json = await res.json().catch(() => null);
@@ -1548,7 +1824,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
 
       showToast({
         title: "Bulk Archival Complete",
-        description: `Successfully moved ${successCount} student record(s) to the archive. ${failCount > 0 ? `${failCount} records could not be archived.` : ""}`,
+        description: `Successfully moved ${successCount} ${isOsas ? "organization(s)" : "student record(s)"} to the archive. ${failCount > 0 ? `${failCount} records could not be archived.` : ""}`,
       });
       setBulkArchiveOpen(false);
       setSelectedStudentIds(new Set());
@@ -1568,9 +1844,13 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
       let successCount = 0;
       let failCount = 0;
       const idsToRestore = Array.from(selectedStudentIds);
+      const isOsas = authUser?.office_id === "osas";
 
-      for (const studentNo of idsToRestore) {
-        const res = await fetch(`/api/students/${encodeURIComponent(studentNo)}`, {
+      for (const id of idsToRestore) {
+        const url = isOsas
+          ? `/api/osas/organizations/${encodeURIComponent(id)}`
+          : `/api/students/${encodeURIComponent(id)}`;
+        const res = await fetch(url, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ status: "Active" }),
@@ -1586,7 +1866,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
 
       showToast({
         title: "Bulk Restoration Complete",
-        description: `Successfully restored ${successCount} student record(s) to active status. ${failCount > 0 ? `${failCount} records could not be restored.` : ""}`,
+        description: `Successfully restored ${successCount} ${isOsas ? "organization(s)" : "student record(s)"} to active status. ${failCount > 0 ? `${failCount} records could not be restored.` : ""}`,
       });
       setBulkRestoreOpen(false);
       setSelectedStudentIds(new Set());
@@ -1655,15 +1935,21 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
                   className={cn(
                     "px-3 py-1.5 text-xs font-semibold rounded-xl flex items-center gap-2 transition-colors duration-300 whitespace-nowrap outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon/20 cursor-pointer shrink-0",
                     active
-                      ? "text-pup-maroon shadow-xs"
+                      ? "shadow-xs"
                       : "text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-zinc-400 dark:hover:bg-white/5 dark:hover:text-zinc-50"
                   )}
-                  style={active ? { backgroundColor: "color-mix(in srgb, var(--brand-accent) 12%, transparent)" } : undefined}
+                  style={active ? { 
+                    backgroundColor: "color-mix(in srgb, var(--brand-accent) 15%, transparent)",
+                    color: "var(--brand-accent)"
+                  } : undefined}
                 >
                   <HugeIcon  className={cn(item.iconClass, "text-sm")}></HugeIcon>
                   {item.label}
                   {item.badge > 0 && (
-                    <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[9px] font-semibold text-white bg-pup-maroon dark:bg-red-500/20 dark:text-red-400">
+                    <span 
+                      className="inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[9px] font-semibold"
+                      style={{ backgroundColor: "var(--brand-accent)", color: "var(--brand-foreground)" }}
+                    >
                       {item.badge}
                     </span>
                   )}
@@ -1681,7 +1967,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
             zoomNode={zoomNode}
             setZoomNode={setZoomNode}
             handleZoomMouseDown={handleZoomMouseDown}
-            accentColor={authUser?.accent_color}
+            accentColor={brandAccent}
             officeName={authUser?.office_name}
             authUser={authUser}
           />
@@ -1702,16 +1988,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
               storageLayout={storageLayout}
               allDocs={allDocs}
               onLocateStudent={locateStudent}
-              onPreviewDocument={(docType, name, no, id) => {
-                setPreview({
-                  docType,
-                  studentName: name,
-                  studentNo: no,
-                  docId: id,
-                  refId: `DOC-${Date.now()}`,
-                });
-                setPreviewOpen(true);
-              }}
+              onPreviewDocument={handlePreviewDocument}
               fetchData={fetchData}
               showToast={showToast}
             />
@@ -1728,49 +2005,76 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
               breadcrumbs={breadcrumbs}
               currentLevel={currentLevel}
               onBreadcrumbClick={(b) => {
-                if (b.level === "years") {
-                  setCurrentLevel("years");
+                if (b.level === "years" || b.level === "categories") {
+                  setCurrentLevel(authUser?.office_id === "osas" ? "categories" : "years");
                   setSelectedYear(null);
+                  setSelectedCategory(null);
                   setActiveStudent(null);
                   setCurrentLocatorLevel("rooms");
-                } else if (b.level === "students") {
-                  setCurrentLevel("students");
+                } else if (b.level === "students" || b.level === "organizations") {
+                  setCurrentLevel(authUser?.office_id === "osas" ? "organizations" : "students");
                 }
               }}
-              students={students}
-              archivedStudents={archivedStudents}
+              students={authUser?.office_id === "osas" ? organizations.map((o) => ({
+                studentNo: o.id,
+                acronym: o.acronym || o.id,
+                name: o.name,
+                room: o.storage_room || 1,
+                cabinet: o.storage_cabinet || (o.category === "Academic" ? "ACADEMIC ORGANIZATIONS" : "NON-ACADEMIC ORGANIZATIONS"),
+                drawer: o.storage_drawer || "1",
+                category: o.category,
+                adviser: o.adviser_name,
+                activeOfficerCount: o.active_officer_count,
+                proposalCount: o.proposal_count,
+                hasCbl: Boolean(o.bylaws_storage_filename),
+                bylawsStorageFilename: o.bylaws_storage_filename,
+                rawOrg: o,
+              })) : students}
+              archivedStudents={authUser?.office_id === "osas" ? archivedOrganizations.map((o) => ({
+                studentNo: o.id,
+                acronym: o.acronym || o.id,
+                name: o.name,
+                room: o.storage_room || 1,
+                cabinet: o.storage_cabinet || (o.category === "Academic" ? "ACADEMIC ORGANIZATIONS" : "NON-ACADEMIC ORGANIZATIONS"),
+                drawer: o.storage_drawer || "1",
+                category: o.category,
+                adviser: o.adviser_name,
+                activeOfficerCount: o.active_officer_count,
+                proposalCount: o.proposal_count,
+                hasCbl: Boolean(o.bylaws_storage_filename),
+                bylawsStorageFilename: o.bylaws_storage_filename,
+                rawOrg: o,
+              })) : archivedStudents}
               staffDocs={authUser?.office_id === "osas" ? staffDocs : staffDocs.filter((doc) => doc.source_type !== "event_proposal")}
               officeLabel={authUser?.office_id === "osas" ? "OSAS" : "Registrar"}
               explorerItems={explorerItems}
               onSwitchView={setView}
-              onPreviewDocument={(docType, name, no, id) => {
-                setPreview({
-                  docType,
-                  studentName: name,
-                  studentNo: no,
-                  docId: id,
-                  refId: `DOC-${Date.now()}`,
-                });
-                setPreviewOpen(true);
-              }}
-              onRestoreStudent={async (studentNo) => {
+              onPreviewDocument={handlePreviewDocument}
+              onRestoreStudent={async (targetId) => {
                 try {
-                  const res = await fetch(`/api/students/${encodeURIComponent(studentNo)}`, {
+                  const isOsas = authUser?.office_id === "osas";
+                  const url = isOsas
+                    ? `/api/osas/organizations/${encodeURIComponent(targetId)}`
+                    : `/api/students/${encodeURIComponent(targetId)}`;
+                  const res = await fetch(url, {
                     method: "PATCH",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ status: "Active" }),
                   });
                   const json = await res.json().catch(() => null);
                   if (!res.ok || !json?.ok) {
-                    throw new Error(json?.error || "Failed to restore student record");
+                    throw new Error(json?.error || `Failed to restore ${isOsas ? "organization" : "student"} record`);
                   }
                   setSelectedStudentIds((prev) => {
-                    if (!prev.has(studentNo)) return prev;
+                    if (!prev.has(targetId)) return prev;
                     const next = new Set(prev);
-                    next.delete(studentNo);
+                    next.delete(targetId);
                     return next;
                   });
-                  showToast({ title: "Record Restored", description: `Student ${studentNo} is now active.` });
+                  showToast({
+                    title: "Record Restored",
+                    description: isOsas ? `Organization record is now active.` : `Student ${targetId} is now active.`,
+                  });
                   fetchData();
                 } catch (err) {
                   showToast({ title: "Restore Failed", description: err.message }, true);
@@ -1794,18 +2098,11 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
               selectedCabinet={selectedCabinet}
               currentLocatorLevel={currentLocatorLevel}
               activeStudent={activeStudent}
-              onUnfocusStudent={() => setActiveStudent(null)}
-              onPreviewDocument={(docType, name, no, id) => {
-                setPreview({
-                  docType,
-                  studentName: name,
-                  studentNo: no,
-                  docId: id,
-                  refId: `DOC-${Date.now()}`,
-                });
-                setPreviewOpen(true);
-              }}
+              onUnfocusStudent={handleUnfocusStudent}
+              onLocateStudent={locateStudent}
+              onPreviewDocument={handlePreviewDocument}
               onSwitchView={setView}
+              officeLabel={authUser?.office_id === "osas" ? "OSAS" : "Registrar"}
             />
           </TabsContent>
 
@@ -2165,16 +2462,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
           <TabsContent value="notifications" className="h-full m-0 border-0 focus-visible:ring-0">
             <NotificationsTab
               onUnreadChange={(n) => setNotificationsUnread(Number(n || 0))}
-              onPreviewDocument={(docType, name, no, id) => {
-                setPreview({
-                  docType,
-                  studentName: name,
-                  studentNo: no,
-                  docId: id,
-                  refId: `DOC-${Date.now()}`,
-                });
-                setPreviewOpen(true);
-              }}
+              onPreviewDocument={handlePreviewDocument}
               onRescan={handleRescan}
             />
           </TabsContent>
@@ -2234,7 +2522,9 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
       <ConfirmModal
         open={bulkArchiveOpen}
         title="Confirm Bulk Archival"
-        message={`You are about to move ${selectedStudentIds.size} student record(s) to the system archive. This will disable associated processing for these records.`}
+        message={authUser?.office_id === "osas"
+          ? `You are about to move ${selectedStudentIds.size} student organization(s) to the system archive.`
+          : `You are about to move ${selectedStudentIds.size} student record(s) to the system archive. This will disable associated processing for these records.`}
         confirmLabel="Archive"
         selectedItems={Array.from(selectedStudentIds)}
         onConfirm={confirmBulkArchive}
@@ -2246,7 +2536,9 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
       <ConfirmModal
         open={bulkRestoreOpen}
         title="Confirm Bulk Restoration"
-        message={`You are about to restore ${selectedStudentIds.size} student record(s) to active status.`}
+        message={authUser?.office_id === "osas"
+          ? `You are about to restore ${selectedStudentIds.size} student organization(s) to active status.`
+          : `You are about to restore ${selectedStudentIds.size} student record(s) to active status.`}
         confirmLabel="Restore"
         selectedItems={Array.from(selectedStudentIds)}
         onConfirm={confirmBulkRestore}

@@ -874,7 +874,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
               </Empty>
             </div>
           ) : (
-            <div className="overflow-hidden rounded-b-2xl border-t border-gray-200 dark:border-white/10 bg-white dark:bg-card flex flex-col flex-1">
+            <div className="overflow-hidden rounded-b-2xl border-t border-gray-100 dark:border-white/10 bg-white dark:bg-card flex flex-col flex-1">
               <div className="overflow-x-auto">
                 <table className="min-w-full text-sm">
               <thead className="sticky top-0 z-10 border-b-[0.5px] border-black/10 dark:border-white/10 bg-white dark:bg-card">
@@ -1030,7 +1030,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
                                 {log.scope}
                               </span>
                             ) : (
-                              <span className="text-blue-600 dark:text-blue-400 font-semibold uppercase text-[10px] tracking-wider">
+                              <span className="inline-flex items-center justify-center rounded-full bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400 px-2.5 py-0.5 text-[10px] font-semibold">
                                 Global
                               </span>
                             )}

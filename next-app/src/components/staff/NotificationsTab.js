@@ -497,23 +497,27 @@ export default function NotificationsTab({
 
           {/* 4. Table / Skeleton / Empty State */}
           {isLoading && !isRefreshing ? (
-            <NotificationsTableSkeleton embedded={true} />
+            <div className="flex-1 flex flex-col min-h-0 border-t border-gray-100 dark:border-white/10">
+              <NotificationsTableSkeleton embedded={true} />
+            </div>
           ) : error ? (
-            <Empty className="flex h-[360px] flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400">
-              <EmptyHeader className="flex flex-col items-center gap-0">
-                <EmptyMedia className="mb-4 flex h-16 w-16 rotate-3 items-center justify-center rounded-2xl border border-gray-200/80 bg-white shadow-sm dark:border-white/10 dark:bg-zinc-800">
-                  <HugeIcon  className="ph-duotone ph-warning-circle text-3xl text-pup-maroon dark:text-primary" />
-                </EmptyMedia>
-                <EmptyTitle className="text-base font-semibold text-gray-900 dark:text-zinc-50">
-                  Could not load notifications
-                </EmptyTitle>
-                <EmptyDescription className="mt-1 max-w-md text-xs font-normal text-gray-600 dark:text-zinc-300">
-                  {error}
-                </EmptyDescription>
-              </EmptyHeader>
-            </Empty>
+            <div className="flex-1 flex min-h-[360px] flex-col items-center justify-center p-6 border-t border-gray-100 dark:border-white/10 rounded-b-2xl">
+              <Empty className="flex h-[360px] flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400">
+                <EmptyHeader className="flex flex-col items-center gap-0">
+                  <EmptyMedia className="mb-4 flex h-16 w-16 rotate-3 items-center justify-center rounded-2xl border border-gray-200/80 bg-white shadow-sm dark:border-white/10 dark:bg-zinc-800">
+                    <HugeIcon  className="ph-duotone ph-warning-circle text-3xl text-pup-maroon dark:text-primary" />
+                  </EmptyMedia>
+                  <EmptyTitle className="text-base font-semibold text-gray-900 dark:text-zinc-50">
+                    Could not load notifications
+                  </EmptyTitle>
+                  <EmptyDescription className="mt-1 max-w-md text-xs font-normal text-gray-600 dark:text-zinc-300">
+                    {error}
+                  </EmptyDescription>
+                </EmptyHeader>
+              </Empty>
+            </div>
           ) : (
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto border-t border-gray-100 dark:border-white/10 flex-1">
               <table className="min-w-full table-fixed text-sm">
                 <thead className="sticky top-0 z-10 border-b-[0.5px] border-black/10 dark:border-white/10 bg-white dark:bg-card">
                   <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">

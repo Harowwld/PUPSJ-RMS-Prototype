@@ -1244,7 +1244,7 @@ export default function DigitalRecordsReviewTab({
             </Empty>
           </div>
         ) : (
-          <div className="overflow-hidden rounded-b-2xl border-t border-gray-200 dark:border-white/10 bg-white dark:bg-card flex flex-col flex-1">
+          <div className="overflow-hidden rounded-b-2xl border-t border-gray-100 dark:border-white/10 bg-white dark:bg-card flex flex-col flex-1">
             <div className="overflow-x-auto">
               <table className="min-w-full text-sm">
                 <thead className="sticky top-0 z-10 border-b border-gray-200 bg-white dark:bg-card dark:border-white/10">
@@ -1410,7 +1410,7 @@ export default function DigitalRecordsReviewTab({
                             <div className="flex items-center gap-3">
                               <span
                                 className={cn(
-                                  "inline-flex w-fit items-center justify-center rounded-full px-[10px] py-[2.5px] text-[11px] font-medium uppercase tracking-[0.04em] shadow-none transition-all",
+                                  "inline-flex w-fit items-center justify-center rounded-full px-[10px] py-[2.5px] text-[11px] font-medium tracking-[0.04em] shadow-none transition-all",
                                   getStatusBadge(r.approval_status)
                                 )}
                               >

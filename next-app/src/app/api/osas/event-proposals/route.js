@@ -18,7 +18,10 @@ export async function GET(req) {
             COALESCE(s.name, sa_student.name, ep.student_no, 'Student Officer') AS student_name,
             so.name AS verified_org_name,
             so.acronym AS org_acronym,
-            so.category AS org_category
+            so.category AS org_category,
+            so.bylaws_original_filename AS bylaws_filename,
+            CASE WHEN so.bylaws_storage_filename IS NOT NULL THEN 'Active' ELSE 'Missing' END AS bylaws_status,
+            CASE WHEN so.bylaws_storage_filename IS NOT NULL THEN true ELSE false END AS has_bylaws
      FROM event_proposals ep
      LEFT JOIN students s ON s.student_no = ep.student_no
      LEFT JOIN student_accounts sa ON sa.id = ep.student_account_id

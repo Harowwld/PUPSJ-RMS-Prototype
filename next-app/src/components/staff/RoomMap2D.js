@@ -4,6 +4,7 @@ import HugeIcon from "@/components/shared/HugeIcon";
 import { useEffect, useRef, useState, useMemo } from "react"
 import { cn } from "@/lib/utils"
 import { FOLDER_COLORS } from "@/lib/constants"
+import { areCabinetsEqual } from "@/lib/storageLayoutUtils"
 const getEffectiveRect = (c) => {
   const rot = Number(c?.rotation) === 90 ? 90 : 0
   if (rot !== 90) return c.rect
@@ -39,14 +40,14 @@ export default function RoomMap2D({
   useEffect(() => {
     const timer = setTimeout(() => {
       setInspectorPos(null)
-      if (activeStudent && String(activeStudent.cabinet) === String(selectedCabinetId)) {
+      if (activeStudent && areCabinetsEqual(activeStudent.cabinet, selectedCabinetId, cabinetRects)) {
         setExpandedDrawer(activeStudent.drawer)
       } else {
         setExpandedDrawer(null)
       }
     }, 0)
     return () => clearTimeout(timer)
-  }, [selectedCabinetId, activeStudent])
+  }, [selectedCabinetId, activeStudent, cabinetRects])
 
   // Wayfinder path generation logic
   const pathCoordinates = useMemo(() => {
@@ -54,7 +55,7 @@ export default function RoomMap2D({
       return []
     }
 
-    const selectedCab = cabinetRects.find((c) => c.cab === selectedCabinetId)
+    const selectedCab = cabinetRects.find((c) => areCabinetsEqual(c.cab, selectedCabinetId, cabinetRects))
     if (!selectedCab) {
       return []
     }
@@ -94,7 +95,7 @@ export default function RoomMap2D({
 
     // 3. Mark obstacles (Unselected Cabinets) with +2 grid buffer
     cabinetRects.forEach((c) => {
-      const isSelected = c.cab === selectedCabinetId
+      const isSelected = areCabinetsEqual(c.cab, selectedCabinetId, cabinetRects)
       const rect = getEffectiveRect(c)
       
       let startC = Math.floor(rect.x / dx)
@@ -233,7 +234,7 @@ export default function RoomMap2D({
   // Dynamically position modal opposite of the clicked cabinet on selection
   useEffect(() => {
     if (!selectedCabinetId) return
-    const selectedCab = cabinetRects.find((c) => c.cab === selectedCabinetId)
+    const selectedCab = cabinetRects.find((c) => areCabinetsEqual(c.cab, selectedCabinetId, cabinetRects))
     if (selectedCab) {
       const timer = setTimeout(() => {
         const rect = getEffectiveRect(selectedCab)
@@ -360,7 +361,7 @@ export default function RoomMap2D({
 
       {cabinetRects.map((c) => {
         const hasActiveTarget = cabinetRects.some((cab) => cab.isTarget)
-        const isSelected = kind === "drawers" && c.cab === selectedCabinetId
+        const isSelected = kind === "drawers" && areCabinetsEqual(c.cab, selectedCabinetId, cabinetRects)
         const isTarget = Boolean(c.isTarget)
         const rect = getEffectiveRect(c)
         const isClickable = !hasActiveTarget || isTarget

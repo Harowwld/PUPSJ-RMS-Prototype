@@ -23,6 +23,13 @@ export default function ForgotPasswordPage() {
   const [confirmPassFocused, setConfirmPassFocused] = useState(false);
 
   useEffect(() => {
+    if (typeof window !== "undefined") {
+      document.documentElement.style.setProperty("--brand-accent", "#800000");
+      document.documentElement.style.setProperty("--brand-foreground", "#ffffff");
+      document.documentElement.removeAttribute("data-brand-accent");
+      document.documentElement.removeAttribute("data-brand-foreground");
+    }
+
     // Dynamic favicon swap
     const link = document.querySelector("link[rel*='icon']") || document.createElement('link');
     link.type = 'image/png';

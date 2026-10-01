@@ -783,7 +783,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
         </div>
 
         {/* Content Section inside the single card */}
-        <div className="overflow-hidden rounded-b-2xl border-t border-gray-200 dark:border-white/10 bg-white dark:bg-card flex flex-col flex-1">
+        <div className="overflow-hidden rounded-b-2xl border-t border-gray-100 dark:border-white/10 bg-white dark:bg-card flex flex-col flex-1">
           {loading ? (
             <OfficeGridSkeleton layoutView={layoutView} count={6} />
           ) : filteredOffices.length === 0 ? (
@@ -855,7 +855,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                           <HugeIcon  className="ph-bold ph-archive text-gray-400"></HugeIcon>
                           <span>Archived Department</span>
                         </span>
-                        <span className="text-[10px] uppercase tracking-wider text-gray-400 font-medium">Archived</span>
+                        <span className="text-[10px] font-medium text-gray-400">Archived</span>
                       </div>
                     )}
 
@@ -1570,7 +1570,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                                       {mod.name}
                                     </span>
                                     {isSystem && (
-                                      <span className="text-[8px] font-bold uppercase tracking-wider px-1 py-0.2 rounded bg-gray-200 dark:bg-zinc-800 text-gray-600 dark:text-zinc-400 shrink-0">
+                                      <span className="text-[9px] font-semibold px-2 py-0.5 rounded-full bg-gray-200 dark:bg-zinc-800 text-gray-600 dark:text-zinc-400 shrink-0">
                                         System
                                       </span>
                                     )}

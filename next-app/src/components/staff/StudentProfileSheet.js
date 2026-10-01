@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { formatPHDateTime } from "@/lib/timeFormat";
 import { cn } from "@/lib/utils";
 import { getRoleBranding } from "@/lib/roleBranding";
@@ -185,7 +186,7 @@ export default function StudentProfileSheet({
                 <Badge
                   variant="outline"
                   className={cn(
-                    "text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full border",
+                    "text-[10px] font-semibold px-2.5 py-0.5 rounded-full border",
                     isArchived
                       ? "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20"
                       : "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20"
@@ -432,22 +433,26 @@ export default function StudentProfileSheet({
                           {req.status === "Missing" ? "Not Submitted" : req.status}
                         </Badge>
                         {req.doc && (
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant="outline"
-                            onClick={() => {
-                              onPreviewDocument?.(
-                                req.name,
-                                student.name,
-                                student.studentNo,
-                                req.doc.id
-                              );
-                            }}
-                            className="h-7 px-2 text-xs font-semibold rounded-lg border border-gray-200 dark:border-white/10"
-                          >
-                            Preview
-                          </Button>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  onPreviewDocument?.(
+                                    req.name,
+                                    student.name,
+                                    student.studentNo,
+                                    req.doc.id
+                                  );
+                                }}
+                                aria-label="Preview Document"
+                                className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
+                              >
+                                <HugeIcon className="ph-bold ph-eye text-[15px]" />
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent>Preview Document</TooltipContent>
+                          </Tooltip>
                         )}
                       </div>
                     </div>
@@ -494,23 +499,26 @@ export default function StudentProfileSheet({
                       >
                         {doc.approval_status || "Pending"}
                       </Badge>
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="outline"
-                        onClick={() => {
-                          onPreviewDocument?.(
-                            doc.doc_type,
-                            student.name,
-                            student.studentNo,
-                            doc.id
-                          );
-                        }}
-                        className="h-8 px-2.5 text-xs font-semibold rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
-                      >
-                        <HugeIcon  className="ph-bold ph-eye mr-1 text-xs"></HugeIcon>
-                        Preview
-                      </Button>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              onPreviewDocument?.(
+                                doc.doc_type,
+                                student.name,
+                                student.studentNo,
+                                doc.id
+                              );
+                            }}
+                            aria-label="Preview Document"
+                            className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
+                          >
+                            <HugeIcon className="ph-bold ph-eye text-[15px]" />
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent>Preview Document</TooltipContent>
+                      </Tooltip>
                     </div>
                   </div>
                 ))}
@@ -542,8 +550,8 @@ export default function StudentProfileSheet({
                         Logged on {formatPHDateTime(req.created_at)}
                       </div>
                     </div>
-                    <Badge variant="outline" className="text-[10px] font-semibold uppercase px-2.5 py-0.5 rounded-full">
-                      {req.status || "Pending"}
+                    <Badge variant="outline" className="text-[10px] font-semibold px-2.5 py-0.5 rounded-full">
+                      {req.status === "InProgress" ? "In Progress" : (req.status || "Pending")}
                     </Badge>
                   </div>
                 ))}

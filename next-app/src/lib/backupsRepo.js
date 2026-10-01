@@ -960,7 +960,26 @@ COMMIT;
 
   restorePostgresSql(restoreTransactionSql);
 
-  // 8. Update last restoration timestamp & clear health telemetry cache
+  // 8. Resynchronize serial sequences for all restored tables to prevent duplicate key errors
+  for (const tbl of targetTables) {
+    try {
+      await dbRun(`
+        DO $$
+        DECLARE
+          seq_name text;
+        BEGIN
+          seq_name := pg_get_serial_sequence('${tbl}', 'id');
+          IF seq_name IS NOT NULL THEN
+            EXECUTE format('SELECT setval(%L, COALESCE((SELECT MAX(id) FROM %I), 1))', seq_name, '${tbl}');
+          END IF;
+        END $$;
+      `);
+    } catch {
+      // Table may not have an id column or serial sequence; ignore safely
+    }
+  }
+
+  // 9. Update last restoration timestamp & clear health telemetry cache
   const now = new Date().toISOString();
   await dbRun(
     `INSERT INTO settings (key, value, updated_at)

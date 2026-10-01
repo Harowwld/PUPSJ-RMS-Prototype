@@ -33,6 +33,9 @@ import {
   EmptyMedia,
 } from "@/components/ui/empty";
 import {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
   TooltipProvider,
 } from "@/components/ui/tooltip";
 import PageHeader from "@/components/shared/PageHeader";
@@ -952,17 +955,21 @@ export default function DocumentRequestsTab({
                               {formatPHDateTime(r.created_at)}
                             </td>
                             <td className="py-0 px-4 align-middle text-right">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  openDetail(r.id);
-                                }}
-                                className="h-8 px-3 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
-                              >
-                                Inspect
-                              </Button>
+                              <div className="flex items-center justify-end" onClick={(e) => e.stopPropagation()}>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <button
+                                      type="button"
+                                      onClick={() => openDetail(r.id)}
+                                      aria-label="Inspect Request Details"
+                                      className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
+                                    >
+                                      <HugeIcon className="ph-bold ph-eye text-[16px]" />
+                                    </button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>Inspect Request</TooltipContent>
+                                </Tooltip>
+                              </div>
                             </td>
                           </tr>
                         );

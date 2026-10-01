@@ -6,7 +6,10 @@ import { writeGlobalAuditLog } from "@/lib/auditLogRequest";
 export const runtime = "nodejs";
 
 export async function GET(req, ctx) {
-  const access = await requireOfficeModule("student_organizations", { officeId: "osas" }, req);
+  let access = await requireOfficeModule("student_organizations", { officeId: "osas" }, req);
+  if (!access) {
+    access = await requireOfficeModule("records_archive", { officeId: "osas" }, req);
+  }
   if (access === null) return NextResponse.json({ ok: false, error: "Authentication required" }, { status: 401 });
   if (!access) return NextResponse.json({ ok: false, error: "Forbidden" }, { status: 403 });
 
@@ -18,7 +21,10 @@ export async function GET(req, ctx) {
 }
 
 export async function PATCH(req, ctx) {
-  const access = await requireOfficeModule("student_organizations", { officeId: "osas" }, req);
+  let access = await requireOfficeModule("student_organizations", { officeId: "osas" }, req);
+  if (!access) {
+    access = await requireOfficeModule("records_archive", { officeId: "osas" }, req);
+  }
   if (access === null) return NextResponse.json({ ok: false, error: "Authentication required" }, { status: 401 });
   if (!access) return NextResponse.json({ ok: false, error: "Forbidden" }, { status: 403 });
 
@@ -31,9 +37,9 @@ export async function PATCH(req, ctx) {
 
   try {
     const updated = await updateOrganization(id, body);
-    await writeGlobalAuditLog(req, "Updated student organization", {
+    await writeGlobalAuditLog(req, body.status === "Active" && existing.status === "Archived" ? "Restored student organization" : "Updated student organization", {
       officeId: "osas",
-      details: `Updated details for ${existing.name}.`,
+      details: `${body.status === "Active" && existing.status === "Archived" ? "Restored" : "Updated details for"} ${existing.name}.`,
       entity_type: "student_organization",
       entity_id: id,
     });
@@ -44,7 +50,10 @@ export async function PATCH(req, ctx) {
 }
 
 export async function DELETE(req, ctx) {
-  const access = await requireOfficeModule("student_organizations", { officeId: "osas" }, req);
+  let access = await requireOfficeModule("student_organizations", { officeId: "osas" }, req);
+  if (!access) {
+    access = await requireOfficeModule("records_archive", { officeId: "osas" }, req);
+  }
   if (access === null) return NextResponse.json({ ok: false, error: "Authentication required" }, { status: 401 });
   if (!access) return NextResponse.json({ ok: false, error: "Forbidden" }, { status: 403 });
 

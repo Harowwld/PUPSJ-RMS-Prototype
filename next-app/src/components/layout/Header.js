@@ -22,7 +22,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import AccountSetupModal from "@/components/shared/AccountSetupModal";
-import { isAdminRole, getRoleLabel, isSystemAdminRole, hasAdminPrivileges } from "@/lib/roleUtils";
+import { isAdminRole, getRoleLabel, isSystemAdminRole, hasAdminPrivileges, isStaffRole } from "@/lib/roleUtils";
 import { getRoleBranding, ROLE_BRANDING } from "@/lib/roleBranding";
 import { cn } from "@/lib/utils";
 
@@ -242,12 +242,12 @@ export default function Header({ authUser, onLogout, children }) {
       return ROLE_BRANDING.black.color;
     }
     if (activeView === "admin") {
-      return ROLE_BRANDING.orange.color;
+      return branding.color;
     }
     if (activeView === "staff") {
-      return ROLE_BRANDING.yellow.color;
+      return isStaffRole(authUser?.role) ? ROLE_BRANDING.yellow.color : branding.color;
     }
-    return authUser?.accent_color || ROLE_BRANDING.orange.color;
+    return branding.color;
   })();
 
 
@@ -699,22 +699,15 @@ export default function Header({ authUser, onLogout, children }) {
         },
         {
           id: "stu_affairs",
-          title: "Student Affairs & History",
+          title: "Student Affairs",
           badge: "Student Portal",
           items: [
             {
               label: "OSAS Submissions",
               view: "osas",
               icon: "ph-bold ph-student",
-              breadcrumb: "Student Affairs & History • View",
+              breadcrumb: "Student Affairs • View",
               keywords: "osas submissions event proposals activity student affairs organizations clearance submit proposal",
-            },
-            {
-              label: "Activity History",
-              view: "activity",
-              icon: "ph-bold ph-clock-counter-clockwise",
-              breadcrumb: "Student Affairs & History • View",
-              keywords: "my activity timeline history logs requests actions personal student log account activity",
             },
           ],
         },
@@ -802,8 +795,7 @@ export default function Header({ authUser, onLogout, children }) {
         },
         {
           label: "My Activity",
-          url: isStudent ? undefined : "/account/activity",
-          view: isStudent ? "activity" : undefined,
+          url: "/account/activity",
           icon: "ph-bold ph-clock-counter-clockwise",
           breadcrumb: "Audit Logs • Personal",
           keywords: "my activity history personal audit logs login sessions timeline recent actions",

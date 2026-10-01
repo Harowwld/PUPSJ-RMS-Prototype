@@ -49,8 +49,14 @@ function getSeverityInfo(sev) {
       classes: "bg-[#FEF3C7] text-[#92400E] dark:bg-amber-950/40 dark:text-amber-400"
     };
   }
+  if (s === "INFO") {
+    return {
+      label: "Info",
+      classes: "bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-zinc-300"
+    };
+  }
   return {
-    label: sev || "Info",
+    label: sev ? (sev.charAt(0).toUpperCase() + sev.slice(1).toLowerCase()) : "Info",
     classes: "bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-zinc-300"
   };
 }

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
 import { FOLDER_COLORS } from "@/lib/constants"
+import { areCabinetsEqual } from "@/lib/storageLayoutUtils"
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -35,9 +36,12 @@ export default function StorageExplorerTab({
   currentLocatorLevel,
   activeStudent,
   onUnfocusStudent,
+  onLocateStudent,
   onPreviewDocument,
   onSwitchView,
+  officeLabel = "Registrar",
 }) {
+  const isOsas = officeLabel === "OSAS";
   const [folderColors, setFolderColors] = useState({})
 
   useEffect(() => {
@@ -56,11 +60,14 @@ export default function StorageExplorerTab({
 
   const activeStudentColor = useMemo(() => {
     if (!activeStudent) return "yellow"
+    if (isOsas) {
+      return activeStudent.category === "Academic" ? "blue" : "emerald"
+    }
     const derivedYear = getStudentNoYear(activeStudent.studentNo)
     const yearFromDb = Number(activeStudent.yearLevel)
     const year = derivedYear != null ? derivedYear : yearFromDb
     return folderColors[year] || "yellow"
-  }, [activeStudent, folderColors])
+  }, [activeStudent, folderColors, isOsas])
 
   const activeTheme = FOLDER_COLORS[activeStudentColor] || FOLDER_COLORS["yellow"]
 
@@ -70,14 +77,18 @@ export default function StorageExplorerTab({
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      if (activeStudent && selectedCabinet && String(activeStudent.cabinet) === String(selectedCabinet)) {
+      if (
+        activeStudent &&
+        selectedCabinet &&
+        areCabinetsEqual(activeStudent.cabinet, selectedCabinet, locatorModel?.cabinets)
+      ) {
         setExpandedDrawer(activeStudent.drawer)
       } else {
         setExpandedDrawer(null)
       }
     }, 0)
     return () => clearTimeout(timer)
-  }, [selectedCabinet, activeStudent])
+  }, [selectedCabinet, activeStudent, locatorModel?.cabinets])
 
   const totalRoomsPages = useMemo(() => {
     const rCount = (locatorModel?.rooms || []).length
@@ -98,7 +109,9 @@ export default function StorageExplorerTab({
       list.push({ level: "cabinets", label: roomLabel })
     }
     if (selectedCabinet != null) {
-      const cabLabel = String(selectedCabinet).startsWith("CAB") ? selectedCabinet : `Cab ${selectedCabinet}`
+      const cabLabel = String(selectedCabinet).startsWith("CAB") || String(selectedCabinet).includes("ORGANIZATION")
+        ? selectedCabinet
+        : `Cab ${selectedCabinet}`
       list.push({ level: "drawers", label: cabLabel })
     }
     return list
@@ -135,7 +148,11 @@ export default function StorageExplorerTab({
         <PageHeader
           icon="ph-folder-open"
           title="Storage Explorer"
-          description="Browse and explore physical storage rooms, cabinets, and drawers."
+          description={
+            isOsas
+              ? "Browse and explore physical storage archives, cabinets, and drawer organization folders."
+              : "Browse and explore physical storage rooms, cabinets, and drawers."
+          }
           showBorder={false}
           className="p-6"
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
@@ -218,6 +235,7 @@ export default function StorageExplorerTab({
                     variant="ghost"
                     size="sm"
                     onClick={() => {
+                      setExpandedDrawer(null)
                       onUnfocusStudent?.()
                     }}
                     className="h-8 px-2 font-semibold text-[13px] text-gray-500 hover:text-gray-900 hover:bg-transparent dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-transparent transition-colors flex items-center gap-1.5 rounded-brand shadow-none! border-0!"
@@ -282,7 +300,7 @@ export default function StorageExplorerTab({
                           >
                             {/* Target pulsing glow */}
                             {isTarget && (
-                              <div className="absolute top-4 right-4 flex items-center gap-1.5 bg-white/20 backdrop-blur-md px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wide text-white animate-pulse">
+                              <div className="absolute top-4 right-4 flex items-center gap-1.5 bg-white/20 backdrop-blur-md px-2.5 py-0.5 rounded-full text-[10px] font-semibold text-white animate-pulse">
                                 
                                 Target Room
                               </div>
@@ -290,7 +308,7 @@ export default function StorageExplorerTab({
                             {/* Non-target status badge */}
                             {!isTarget && (
                               <div className="absolute top-4 right-4">
-                                <Badge className={cn("border-0 text-[10px] font-bold px-2 py-0.5 rounded-full shadow-none", statusColor)}>
+                                <Badge className={cn("border-0 text-[10px] font-semibold px-2.5 py-0.5 rounded-full shadow-none", statusColor)}>
                                   {statusLabel}
                                 </Badge>
                               </div>
@@ -321,7 +339,7 @@ export default function StorageExplorerTab({
                                   isTarget ? "text-white/80" : "text-gray-550 dark:text-zinc-400"
                                 )}>
                                   <HugeIcon  className="ph-bold ph-folder-open text-sm mr-2 opacity-80" />
-                                  <span>{r.occupiedCount} Archived student folders</span>
+                                  <span>{r.occupiedCount} {isOsas ? "Archived organization folders" : "Archived student folders"}</span>
                                 </div>
                               </div>
 
@@ -475,7 +493,9 @@ export default function StorageExplorerTab({
                           )}
                           style={activeStudent ? { color: activeTheme.frontStart } : undefined}
                         >
-                          Cabinet {selectedCabinet}
+                          {String(selectedCabinet).startsWith("CAB") || String(selectedCabinet).includes("ORGANIZATION")
+                            ? selectedCabinet
+                            : `Cabinet ${selectedCabinet}`}
                         </h5>
                         {/* Close X Button */}
                         <button
@@ -512,7 +532,9 @@ export default function StorageExplorerTab({
                             if (isDrawerTarget) {
                               labelText = "Target"
                             } else if (hasOccupants) {
-                              labelText = d.count === 1 ? "1 record" : `${d.count} records`
+                              labelText = isOsas
+                                ? (d.count === 1 ? "1 organization" : `${d.count} organizations`)
+                                : (d.count === 1 ? "1 record" : `${d.count} records`)
                             }
 
                             return (
@@ -564,78 +586,125 @@ export default function StorageExplorerTab({
                                 </div>
 
                                 {/* Expanded Detail Panel */}
-                                {String(expandedDrawer) === String(d.drawer) && hasOccupants && d.students && (
+                                {String(expandedDrawer) === String(d.drawer) && (
                                   <div className="ml-2 pl-3 border-l border-[#E5E5EA] dark:border-white/10 py-1.5 space-y-3 max-h-52 overflow-y-auto">
-                                    {d.students.map((student) => {
-                                      const isTargetPerson = activeStudent && student.studentNo === activeStudent.studentNo;
-                                      return (
-                                        <div
-                                          key={student.studentNo}
-                                          className="group/item flex flex-col gap-3 rounded-[12px] p-4 bg-[#FAFAFA] border border-[#E5E5EA] dark:bg-zinc-800/60 dark:border-white/10 transition-colors font-sans"
-                                        >
-                                          <div className="min-w-0 flex-1 flex items-start justify-between gap-1">
-                                            <div className="min-w-0 flex-1">
-                                              <p className="font-bold text-[15px] text-[#1C1C1E] dark:text-zinc-50 truncate">
-                                                {student.name.toUpperCase()}
-                                              </p>
-                                              {/* Soft Tag for Student Number */}
-                                              <div className="inline-block mt-1.5 bg-[#F5F5F7] border border-[#E5E5EA] rounded-full px-2.5 py-0.5 text-[13px] font-normal text-[#8E8E93] dark:bg-zinc-850 dark:border-white/5 dark:text-zinc-400">
-                                                {student.studentNo}
-                                              </div>
-                                            </div>
-                                            {isTargetPerson && (
-                                              <HugeIcon  
-                                                className="ph-fill ph-target text-sm shrink-0 animate-pulse mt-0.5" 
-                                                style={{ color: theme.frontStart }}
-                                              />
-                                            )}
-                                          </div>
-
-                                          {/* Documents */}
-                                          {student.documents && student.documents.length > 0 ? (
-                                            <div className="mt-1 space-y-2">
-                                              <div className="flex flex-col gap-2">
-                                                {student.documents.map((doc) => {
-                                                  const isApproved = doc.approvalStatus === "Approved";
-                                                  const statusClass = isApproved
-                                                    ? "bg-[#D1FAE5] text-[#065F46] dark:bg-emerald-950/40 dark:text-emerald-400 rounded-full"
-                                                    : "bg-[#FEF3C7] text-[#92400E] dark:bg-amber-950/40 dark:text-amber-400 rounded-full";
-
-                                                  return (
-                                                    <div
-                                                      key={doc.id}
+                                    {hasOccupants && d.students && d.students.length > 0 ? (
+                                      d.students.map((student) => {
+                                        const isTargetPerson = activeStudent && student.studentNo === activeStudent.studentNo;
+                                        return (
+                                          <div
+                                            key={student.studentNo}
+                                            className="group/item flex flex-col gap-3 rounded-[12px] p-4 bg-[#FAFAFA] border border-[#E5E5EA] dark:bg-zinc-800/60 dark:border-white/10 transition-colors font-sans"
+                                          >
+                                            <div className="min-w-0 flex-1 flex items-start justify-between gap-1">
+                                              <div className="min-w-0 flex-1">
+                                                <div className="flex items-center justify-between gap-2">
+                                                  <p className="font-bold text-[15px] text-[#1C1C1E] dark:text-zinc-50 truncate">
+                                                    {student.name.toUpperCase()}
+                                                  </p>
+                                                  {!isTargetPerson && onLocateStudent && (
+                                                    <button
+                                                      type="button"
                                                       onClick={(e) => {
                                                         e.stopPropagation();
-                                                        onPreviewDocument?.(doc.docType, student.name, student.studentNo, doc.id);
+                                                        onLocateStudent({
+                                                          ...student,
+                                                          room: selectedRoom,
+                                                          cabinet: selectedCabinet,
+                                                          drawer: d.drawer,
+                                                        });
                                                       }}
-                                                      className="flex items-center justify-between gap-2 p-2 bg-white hover:bg-gray-50 dark:bg-zinc-900/50 dark:hover:bg-zinc-900 border border-[#E5E5EA] dark:border-white/10 rounded-[8px] cursor-pointer transition-colors group/doc"
+                                                      className="px-2 py-0.5 text-[11px] font-semibold text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 hover:bg-gray-200/50 dark:hover:bg-zinc-700/50 rounded-md transition-colors cursor-pointer flex items-center gap-1 shrink-0"
+                                                      title={isOsas ? "Focus organization archive" : "Focus student folder"}
                                                     >
-                                                      <div className="flex items-center gap-1.5 min-w-0">
-                                                        <HugeIcon  className="ph-bold ph-file-pdf text-[16px] text-[#FF3B30] group-hover/doc:scale-105 transition-transform"></HugeIcon>
-                                                        <span className="truncate font-bold text-[14px] text-[#1C1C1E] dark:text-zinc-300" title={doc.filename}>
-                                                          {doc.docType}
+                                                      <HugeIcon className="ph-bold ph-crosshair text-[12px]" />
+                                                      Focus
+                                                    </button>
+                                                  )}
+                                                </div>
+                                                {/* Soft Tag for Student Number / Org Acronym & Category */}
+                                                <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+                                                  <div className="inline-block bg-[#F5F5F7] border border-[#E5E5EA] rounded-full px-2.5 py-0.5 text-[12px] font-semibold text-[#8E8E93] dark:bg-zinc-850 dark:border-white/5 dark:text-zinc-400">
+                                                    {student.studentNo}
+                                                  </div>
+                                                  {student.category && (
+                                                    <span className={cn(
+                                                      "inline-block rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wide",
+                                                      student.category === "Academic"
+                                                        ? "bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400 border border-blue-200/50 dark:border-blue-800/40"
+                                                        : "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 border border-emerald-200/50 dark:border-emerald-800/40"
+                                                    )}>
+                                                      {student.category}
+                                                    </span>
+                                                  )}
+                                                </div>
+                                              </div>
+                                              {isTargetPerson && (
+                                                <HugeIcon  
+                                                  className="ph-fill ph-target text-sm shrink-0 animate-pulse mt-0.5" 
+                                                  style={{ color: theme.frontStart }}
+                                                />
+                                              )}
+                                            </div>
+
+                                            {/* Documents */}
+                                            {student.documents && student.documents.length > 0 ? (
+                                              <div className="mt-1 space-y-2">
+                                                <div className="flex flex-col gap-2">
+                                                  {student.documents.map((doc) => {
+                                                    const isApproved = doc.approvalStatus === "Approved";
+                                                    const statusClass = isApproved
+                                                      ? "bg-[#D1FAE5] text-[#065F46] dark:bg-emerald-950/40 dark:text-emerald-400 rounded-full"
+                                                      : "bg-[#FEF3C7] text-[#92400E] dark:bg-amber-950/40 dark:text-amber-400 rounded-full";
+
+                                                    return (
+                                                      <div
+                                                        key={doc.id}
+                                                        onClick={(e) => {
+                                                          e.stopPropagation();
+                                                          onPreviewDocument?.(doc.docType, student.name, student.studentNo, doc.id, doc.file_url);
+                                                        }}
+                                                        className="flex items-center justify-between gap-2 p-2 bg-white hover:bg-gray-50 dark:bg-zinc-900/50 dark:hover:bg-zinc-900 border border-[#E5E5EA] dark:border-white/10 rounded-[8px] cursor-pointer transition-colors group/doc"
+                                                      >
+                                                        <div className="flex items-center gap-1.5 min-w-0">
+                                                          <HugeIcon  className="ph-bold ph-file-pdf text-[16px] text-[#FF3B30] group-hover/doc:scale-105 transition-transform"></HugeIcon>
+                                                          <span className="truncate font-bold text-[14px] text-[#1C1C1E] dark:text-zinc-300" title={doc.filename}>
+                                                            {doc.docType}
+                                                          </span>
+                                                        </div>
+                                                        {/* Soft Status Pill */}
+                                                        <span className={cn(
+                                                          "text-[10px] font-semibold px-2 py-0.5 whitespace-nowrap tracking-wide shrink-0",
+                                                          statusClass
+                                                        )}>
+                                                          {doc.approvalStatus}
                                                         </span>
                                                       </div>
-                                                      {/* Soft Status Pill */}
-                                                      <span className={cn(
-                                                        "text-[10px] font-semibold px-2 py-0.5 whitespace-nowrap tracking-wide shrink-0",
-                                                        statusClass
-                                                      )}>
-                                                        {doc.approvalStatus}
-                                                      </span>
-                                                    </div>
-                                                  );
-                                                })}
+                                                    );
+                                                  })}
+                                                </div>
                                               </div>
-                                            </div>
-                                          ) : (
-                                            <p className="text-[12px] font-medium text-gray-400 dark:text-zinc-500 italic mt-0.5 pl-1">
-                                              No documents uploaded
-                                            </p>
-                                          )}
-                                        </div>
-                                      );
-                                    })}
+                                            ) : (
+                                              <p className="text-[12px] font-medium text-gray-400 dark:text-zinc-500 italic mt-0.5 pl-1">
+                                                {isOsas ? "No official documents or proposals filed yet" : "No documents uploaded"}
+                                              </p>
+                                            )}
+                                          </div>
+                                        );
+                                      })
+                                    ) : (
+                                      <div className="flex flex-col items-center justify-center p-4 rounded-[12px] bg-[#F5F5F7] dark:bg-zinc-800/40 border border-dashed border-gray-300 dark:border-zinc-700 text-center select-none">
+                                        <HugeIcon className="ph-duotone ph-folder-dashed text-2xl text-gray-400 dark:text-zinc-500 mb-1" />
+                                        <p className="text-xs font-semibold text-gray-700 dark:text-zinc-300">
+                                          Empty Drawer Slot
+                                        </p>
+                                        <p className="text-[11px] text-gray-500 dark:text-zinc-400 mt-0.5 max-w-[200px]">
+                                          {isOsas
+                                            ? "Available physical archive slot for organization records."
+                                            : "Available physical archive slot for student records."}
+                                        </p>
+                                      </div>
+                                    )}
                                   </div>
                                 )}
                               </div>

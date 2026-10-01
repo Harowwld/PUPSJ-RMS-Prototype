@@ -21,6 +21,8 @@ function getContextText(ctx = {}) {
     ctx.section,
     ctx.role,
     ctx.department,
+    ctx.email,
+    ctx.username,
   ].filter(Boolean).join(" ");
 }
 
@@ -48,7 +50,21 @@ export function getRoleBranding(context = {}) {
     return ROLE_BRANDING.black;
   }
 
-  // 2. Admin Level (Office-Scoped Administrator)
+  // 2. Explicit accent_color from context (e.g., office database configuration)
+  if (ctx.accent_color && !isSystemAdminRole(role)) {
+    const match = Object.values(ROLE_BRANDING).find(
+      (b) => b.color.toLowerCase() === String(ctx.accent_color).toLowerCase()
+    );
+    if (match) return match;
+    return {
+      key: "custom",
+      color: ctx.accent_color,
+      foreground: ctx.accent_foreground || "#FFFFFF",
+      iconSrc: ROLE_BRANDING.orange.iconSrc,
+    };
+  }
+
+  // 3. Admin Level (Office-Scoped Administrator)
   if (isAdminRole(role)) {
     if (isOsas(ctx)) return ROLE_BRANDING.blue;
     if (isAro(ctx)) return ROLE_BRANDING.orange;
@@ -56,16 +72,18 @@ export function getRoleBranding(context = {}) {
     return ROLE_BRANDING.orange;
   }
 
-  // 3. Staff Level (Operational Records Staff)
+  // 4. Staff Level (Operational Records Staff)
   if (isStaffRole(role)) {
     return ROLE_BRANDING.yellow;
   }
 
-  // 4. Office-based resolution when role is omitted or contextual
+  // 5. Office-based resolution when role is omitted or contextual
   if (isOsas(ctx)) return ROLE_BRANDING.blue;
   if (isAro(ctx)) return ROLE_BRANDING.orange;
   if (isSecondaryOffice(ctx)) return ROLE_BRANDING.green;
 
-  return ROLE_BRANDING.black;
+  // Default institutional fallback (PUP Maroon - prevents SuperAdmin Black leakage)
+  return ROLE_BRANDING.red;
 }
+
 

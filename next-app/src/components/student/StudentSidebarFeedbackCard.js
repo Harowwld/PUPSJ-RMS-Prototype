@@ -86,7 +86,7 @@ export default function StudentSidebarFeedbackCard({
 
       {/* Top Header Row: Category Badge + Dismiss Button */}
       <div className="flex items-center justify-between gap-1 mb-2">
-        <span className="inline-flex items-center gap-1 rounded-full bg-red-100/80 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-pup-maroon dark:bg-red-950/60 dark:text-red-300 dark:border dark:border-red-900/40">
+        <span className="inline-flex items-center gap-1 rounded-full bg-red-100/80 px-2.5 py-0.5 text-[10px] font-semibold text-pup-maroon dark:bg-red-950/60 dark:text-red-300 dark:border dark:border-red-900/40">
           <HugeIcon className="ph-fill ph-chat-circle-dots text-[11px]" />
           Feedback
         </span>

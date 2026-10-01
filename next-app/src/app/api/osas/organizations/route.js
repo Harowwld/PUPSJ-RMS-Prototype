@@ -6,7 +6,10 @@ import { writeGlobalAuditLog } from "@/lib/auditLogRequest";
 export const runtime = "nodejs";
 
 export async function GET(req) {
-  const access = await requireOfficeModule("student_organizations", { officeId: "osas" }, req);
+  let access = await requireOfficeModule("student_organizations", { officeId: "osas" }, req);
+  if (!access) {
+    access = await requireOfficeModule("records_archive", { officeId: "osas" }, req);
+  }
   if (access === null) return NextResponse.json({ ok: false, error: "Authentication required" }, { status: 401 });
   if (!access) return NextResponse.json({ ok: false, error: "Forbidden" }, { status: 403 });
 
@@ -31,6 +34,9 @@ export async function POST(req) {
   const adviserName = String(body?.adviserName || "").trim();
   const adviserEmail = String(body?.adviserEmail || "").trim();
   const description = String(body?.description || "").trim();
+  const storageRoom = body?.storageRoom || body?.storage_room || 1;
+  const storageCabinet = body?.storageCabinet || body?.storage_cabinet;
+  const storageDrawer = body?.storageDrawer || body?.storage_drawer || "1";
 
   if (!name) {
     return NextResponse.json({ ok: false, error: "Organization name is required." }, { status: 400 });
@@ -44,6 +50,9 @@ export async function POST(req) {
       adviserName,
       adviserEmail,
       description,
+      storageRoom,
+      storageCabinet,
+      storageDrawer,
     });
 
     await writeGlobalAuditLog(req, "Created student organization", {

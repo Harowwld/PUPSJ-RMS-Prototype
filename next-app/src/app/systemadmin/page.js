@@ -118,6 +118,12 @@ function SystemAdminPageContent({ authUser: propAuthUser }) {
       document.documentElement.style.setProperty("--brand-accent", "#000000")
       document.documentElement.style.setProperty("--brand-foreground", "#FFFFFF")
     }
+    return () => {
+      if (typeof window !== "undefined") {
+        document.documentElement.style.setProperty("--brand-accent", "#800000")
+        document.documentElement.style.setProperty("--brand-foreground", "#FFFFFF")
+      }
+    }
   }, [])
 
   useEffect(() => {

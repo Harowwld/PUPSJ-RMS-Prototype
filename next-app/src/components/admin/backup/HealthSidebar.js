@@ -63,6 +63,7 @@ export default function HealthSidebar({
   onRescanDrive = null,
   onToggleSimulation = null,
   isRescanning = false,
+  onToggleCollapse = null,
 }) {
   if (isLoading && !isManualLoading) {
     return (
@@ -98,6 +99,19 @@ export default function HealthSidebar({
           className="p-6"
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
           descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
+          actions={
+            onToggleCollapse && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onToggleCollapse}
+                title="Collapse Status"
+                className="h-8 px-3 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-600 dark:text-zinc-300 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-2xs active:scale-95 transition-all cursor-pointer"
+              >
+                Hide
+              </Button>
+            )
+          }
         />
 
         <div className="border-t border-gray-100 dark:border-white/10 p-6 space-y-6">

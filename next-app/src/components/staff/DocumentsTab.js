@@ -284,48 +284,63 @@ function DocumentsTable({
                 {formatPHDateTime(r.reviewDoc?.created_at)}
               </td>
               <td className="py-0 px-4 align-middle whitespace-nowrap text-right">
-                <div className="flex justify-end gap-2">
+                <div className="flex items-center justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
                   {r.doc ? (
                     <>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => onViewDetails?.(r)}
-                        className="h-8 px-3 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
-                      >
-                        View
-                      </Button>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button
+                            type="button"
+                            onClick={() => onViewDetails?.(r)}
+                            aria-label="View Details"
+                            className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
+                          >
+                            <HugeIcon className="ph-bold ph-eye text-[16px]" />
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent>View Details</TooltipContent>
+                      </Tooltip>
 
                       {!r.doc.source_type && (
-                        <Button
-                          size="sm"
-                          onClick={() =>
-                            onRescan?.(
-                              r.student_no,
-                              r.doc_type,
-                              r.doc.id,
-                              r.doc.original_filename,
-                              r.doc.mime_type
-                            )
-                          }
-                          className="h-8 px-3 text-xs font-semibold rounded-xl! btn-brand-red text-white! active:scale-95 disabled:opacity-50 transition-all cursor-pointer shadow-xs"
-                          style={{ color: "#ffffff" }}
-                        >
-                          Update
-                        </Button>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                onRescan?.(
+                                  r.student_no,
+                                  r.doc_type,
+                                  r.doc.id,
+                                  r.doc.original_filename,
+                                  r.doc.mime_type
+                                )
+                              }
+                              aria-label="Update / Rescan Document"
+                              className="w-7 h-7 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/30 text-gray-500 hover:text-pup-maroon dark:text-zinc-400 dark:hover:text-red-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
+                            >
+                              <HugeIcon className="ph-bold ph-arrows-clockwise text-[16px]" />
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent>Update / Rescan</TooltipContent>
+                        </Tooltip>
                       )}
                     </>
                   ) : (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() =>
-                        onRescan?.(r.student_no, r.doc_type)
-                      }
-                      className="h-8 px-3 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
-                    >
-                      Scan
-                    </Button>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            onRescan?.(r.student_no, r.doc_type)
+                          }
+                          aria-label="Scan Document"
+                          className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
+                        >
+                          <HugeIcon className="ph-bold ph-scan text-[16px]" />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent>Scan Document</TooltipContent>
+                    </Tooltip>
                   )}
                 </div>
               </td>
@@ -802,7 +817,7 @@ export default function DocumentsTab({
           />
 
           {/* 4. Documents Table Content */}
-          <div className="flex flex-col flex-1 w-full min-h-0">
+          <div className="flex flex-col flex-1 w-full min-h-0 border-t border-gray-100 dark:border-white/10">
               {docsLoading ? (
                 <DocumentsMatrixSkeleton rowCount={7} embedded={true} />
               ) : docsError ? (
@@ -820,7 +835,7 @@ export default function DocumentsTab({
                   </Empty>
                 </div>
               ) : (
-                <div className="flex flex-col flex-1 w-full min-h-0 border-t border-gray-100 dark:border-white/10 rounded-b-2xl overflow-hidden">
+                <div className="flex flex-col flex-1 w-full min-h-0 rounded-b-2xl overflow-hidden">
                   {isSingleStudentView && (
                     <div className="p-4 border-b border-gray-100 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/20">
                       <div className="bg-white border border-gray-200 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xs dark:bg-card dark:border-white/10">

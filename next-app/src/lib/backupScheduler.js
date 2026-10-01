@@ -2,14 +2,11 @@ import { dbAll, dbGet, dbRun } from "./postgresCompat.js";
 import { executeSystemBackup, executeOfficeBackup } from "./backupsRepo.js";
 import { createAuditLog } from "./auditLogsRepo.js";
 
-const MANDATORY_CADENCE_MS = 3 * 24 * 60 * 60 * 1000; // 3 days (72 hours)
-
 /**
  * Next.js Instrumentation Hook — Auto Backup Scheduler
  *
- * Runs a continuous background scheduler that:
- * 1. Enforces the MANDATORY autonomous 3-day backup policy (unconfigurable baseline guarantee).
- * 2. Checks and executes any configured user schedules.
+ * Runs a background scheduler that checks and executes user-defined
+ * automatic backup schedules configured by administrators.
  */
 
 export function initBackupScheduler() {
@@ -25,7 +22,7 @@ export function initBackupScheduler() {
 async function startBackupScheduler() {
   const CHECK_INTERVAL_MS = 60_000; // Check every 60 seconds
 
-  console.log("[AutoBackup] Scheduler initialized with Mandatory 3-Day Policy. Checking every 60s.");
+  console.log("[AutoBackup] Scheduler initialized for user-defined schedules. Checking every 60s.");
 
   setInterval(async () => {
     try {
@@ -36,66 +33,10 @@ async function startBackupScheduler() {
   }, CHECK_INTERVAL_MS);
 }
 
-async function checkAndRunMandatory3DayBackup(now) {
-  try {
-    let offices = [];
-    try {
-      offices = await dbAll(`SELECT id FROM offices WHERE status = 'Active'`);
-    } catch {
-      offices = [{ id: "registrar" }];
-    }
-    const officeList = (offices && offices.length > 0) ? offices.map(o => o.id) : ["registrar"];
-
-    for (const officeId of officeList) {
-      const row = await dbGet(
-        `SELECT MAX(created_at) as last_backup_at FROM backups WHERE office_id = ?`,
-        [officeId]
-      );
-
-      const lastBackupAt = row?.last_backup_at ? new Date(row.last_backup_at).getTime() : 0;
-      const isDue = (now.getTime() - lastBackupAt) >= MANDATORY_CADENCE_MS;
-
-      if (isDue) {
-        console.log(`[AutoBackup] Mandatory 3-Day backup is due for office "${officeId}". Executing...`);
-        try {
-          const record = await executeOfficeBackup({
-            officeId,
-            actorId: null,
-          });
-          if (record) {
-            await dbRun(
-              `UPDATE backups SET backup_type = 'Autonomous 3-Day' WHERE id = ?`,
-              [record.id]
-            );
-          }
-          await createAuditLog({
-            actor: "System Sentinel",
-            role: "System",
-            action: "Mandatory Backup Policy",
-            details: `Autonomous 3-day baseline backup created for office (${officeId}): ${record?.filename || "unknown"}`,
-            severity: "INFO",
-            entity_type: "Backup",
-            entity_id: String(record?.id || ""),
-            ip: "127.0.0.1",
-          });
-          console.log(`[AutoBackup] ✓ Mandatory 3-Day backup completed for "${officeId}": ${record?.filename}`);
-        } catch (err) {
-          console.error(`[AutoBackup] ✗ Failed executing mandatory 3-Day backup for "${officeId}":`, err.message);
-        }
-      }
-    }
-  } catch (err) {
-    console.error("[AutoBackup] Error checking mandatory 3-day policy:", err.message);
-  }
-}
-
 async function checkAndRunScheduledBackups() {
   const now = new Date();
 
-  // 1. Enforce Mandatory 3-Day Autonomous Baseline
-  await checkAndRunMandatory3DayBackup(now);
-
-  // 2. Find any custom auto_backup_schedule* keys
+  // Find any custom auto_backup_schedule* keys configured by administrators
   const rows = await dbAll(
     `SELECT key, value FROM settings WHERE key LIKE 'auto_backup_schedule%'`
   );

@@ -606,7 +606,7 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
         />
 
         {/* Cross-Department Activity Stream Table */}
-        <div className="overflow-hidden rounded-b-2xl border-t border-gray-200 dark:border-white/10 bg-white dark:bg-card flex flex-col flex-1">
+        <div className="overflow-hidden rounded-b-2xl border-t border-gray-100 dark:border-white/10 bg-white dark:bg-card flex flex-col flex-1">
             {loading ? (
               <TransactionsTableSkeleton rowCount={8} />
             ) : paginatedTransactions.length === 0 ? (

@@ -150,8 +150,12 @@ export default function PublicTracker() {
                     <span className="text-sm font-mono font-bold text-gray-950 ">Ticket #{result.id}</span>
                     <span className="text-gray-300 ">·</span>
                     <span className="text-sm font-semibold text-gray-900 ">{result.doc_type}</span>
-                    <span className={`inline-flex items-center px-3 py-0.5 rounded-full text-[11px] font-bold border ${getStatusBadge(result.status)}`}>
-                      {result.status}
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold border ${getStatusBadge(result.status)}`}>
+                      {result.status === "InProgress" || result.status?.toLowerCase() === "inprogress"
+                        ? "In Progress"
+                        : result.status
+                        ? result.status.charAt(0).toUpperCase() + result.status.slice(1).toLowerCase()
+                        : "Pending"}
                     </span>
                   </div>
                   <p className="text-xs text-gray-500  mt-1.5 font-normal">

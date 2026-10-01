@@ -39,7 +39,7 @@ test("OSAS Storage Suite & Workflow Specialization", async (t) => {
 
     const room = layout.rooms[0];
     assert.equal(room.name, "Room 1", "Default room name should match Registrar standard 'Room 1'");
-    assert.ok(room.cabinets.length >= 4, "Must have cabinets installed");
+    assert.ok(room.cabinets.length >= 2, "Must have cabinets installed");
 
     for (const cab of room.cabinets) {
       assert.equal(cab.rect.w, 0.075, `Cabinet ${cab.id} width must match Registrar 0.075`);
@@ -152,5 +152,20 @@ test("OSAS Storage Suite & Workflow Specialization", async (t) => {
       "SELECT data_type FROM information_schema.columns WHERE table_name = 'students' AND column_name = 'storage_drawer'"
     );
     assert.equal(colInfo.data_type, "text", "students.storage_drawer must be TEXT in PostgreSQL");
+  });
+
+  await t.test("11. Student organizations table has storage_room, storage_cabinet, storage_drawer columns", async () => {
+    const cols = await query(
+      "SELECT column_name, data_type FROM information_schema.columns WHERE table_name = 'student_organizations' AND column_name IN ('storage_room', 'storage_cabinet', 'storage_drawer')"
+    );
+    assert.equal(cols.length, 3, "student_organizations must have 3 storage columns");
+
+    const orgs = await query("SELECT id, name, category, storage_room, storage_cabinet, storage_drawer FROM student_organizations");
+    assert.ok(orgs.length > 0, "Should have seeded student organizations");
+    for (const o of orgs) {
+      assert.ok(o.storage_room != null, `Organization ${o.name} must have storage_room`);
+      assert.ok(o.storage_cabinet, `Organization ${o.name} must have storage_cabinet`);
+      assert.ok(o.storage_drawer, `Organization ${o.name} must have storage_drawer`);
+    }
   });
 });

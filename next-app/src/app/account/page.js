@@ -38,6 +38,7 @@ import {
   getRoleLabel,
   getDefaultDashboardPath,
 } from "@/lib/roleUtils";
+import { getRoleBranding } from "@/lib/roleBranding";
 import ProfileSetup, { avatars } from "@/components/kokonutui/avatar-picker";
 import { renderToStaticMarkup } from "react-dom/server";
 
@@ -46,6 +47,17 @@ function AccountPageContent() {
 
   const [authUser, setAuthUser] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  const roleBranding = getRoleBranding(authUser);
+  const brandAccent = authUser?.accent_color || roleBranding.color || "#800000";
+  const brandForeground = roleBranding.foreground || "#FFFFFF";
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && brandAccent) {
+      document.documentElement.style.setProperty("--brand-accent", brandAccent);
+      document.documentElement.style.setProperty("--brand-foreground", brandForeground);
+    }
+  }, [brandAccent, brandForeground]);
 
   // Avatar State
   const [avatarUrl, setAvatarUrl] = useState(null);
@@ -714,7 +726,13 @@ function AccountPageContent() {
 
 
   return (
-    <div className="h-screen overflow-hidden flex flex-col bg-gray-50 dark:bg-background font-jakarta selection:bg-gray-900 selection:text-white">
+    <div 
+      className="h-screen overflow-hidden flex flex-col bg-gray-50 dark:bg-background font-jakarta selection:bg-gray-900 selection:text-white"
+      style={{
+        "--brand-accent": brandAccent,
+        "--brand-foreground": brandForeground,
+      }}
+    >
       <Header authUser={authUser} onLogout={handleLogout} />
 
       <PageTransition className="flex-1 min-h-0 overflow-y-auto w-full">
@@ -813,7 +831,7 @@ function AccountPageContent() {
                       </p>
                       {authUser?.role && (
                         <div className="mt-2.5">
-                          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 dark:bg-zinc-800 dark:text-zinc-300 tracking-wider uppercase">
+                          <span className="text-[10px] font-semibold px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-600 dark:bg-zinc-800 dark:text-zinc-300">
                             {authUser.role === "Student" ? (clientType || "Student") : getRoleLabel(authUser.role)}
                           </span>
                         </div>
@@ -1354,9 +1372,9 @@ function AccountPageContent() {
                               <h4 className="text-[14px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50 flex items-center gap-2 leading-tight">
                                 Authenticator App
                                 {totpEnabled && hasTotpSecret ? (
-                                  <span className="text-[10px] font-medium px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 uppercase tracking-[0.04em]">Active</span>
+                                  <span className="text-[10px] font-medium px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">Active</span>
                                 ) : (
-                                  <span className="text-[10px] font-medium px-2 py-0.5 rounded bg-gray-100 text-gray-500 dark:bg-zinc-800 dark:text-zinc-400 uppercase tracking-[0.04em]">Inactive</span>
+                                  <span className="text-[10px] font-medium px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-500 dark:bg-zinc-800 dark:text-zinc-400">Inactive</span>
                                 )}
                               </h4>
                               <p className="text-[12px] font-normal text-gray-500 mt-1 max-w-md dark:text-zinc-400">
@@ -1452,9 +1470,9 @@ function AccountPageContent() {
                               <h4 className="text-[14px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50 flex items-center gap-2 leading-tight">
                                 Backup Recovery Codes
                                 {recoveryCodesCount > 0 ? (
-                                  <span className="text-[10px] font-medium px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 uppercase tracking-[0.04em]">Active ({recoveryCodesCount} left)</span>
+                                  <span className="text-[10px] font-medium px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">Active ({recoveryCodesCount} left)</span>
                                 ) : (
-                                  <span className="text-[10px] font-medium px-2 py-0.5 rounded bg-gray-100 text-gray-500 dark:bg-zinc-800 dark:text-zinc-400 uppercase tracking-[0.04em]">Inactive</span>
+                                  <span className="text-[10px] font-medium px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-500 dark:bg-zinc-800 dark:text-zinc-400">Inactive</span>
                                 )}
                               </h4>
                               <p className="text-[12px] font-normal text-gray-500 mt-1 max-w-md dark:text-zinc-400">

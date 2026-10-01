@@ -4,15 +4,16 @@ import { Skeleton } from "@/components/ui/skeleton"
 
 export default function RecognitionTemplateSkeleton() {
   return (
-    <div className="space-y-5 p-7 select-none animate-fade-up">
+    <div className="flex flex-col flex-1 w-full min-h-0 select-none animate-fade-up">
       {/* Header */}
-      <div className="space-y-1.5">
+      <div className="p-6 space-y-1.5">
         <Skeleton className="h-5 w-48 rounded dark:bg-muted" />
         <Skeleton className="h-3.5 w-96 max-w-full rounded dark:bg-muted" />
       </div>
 
       {/* 3-Column Grid */}
-      <div className="grid gap-5 xl:grid-cols-[280px_minmax(0,1fr)_280px]">
+      <div className="border-t border-gray-100 dark:border-white/10 p-6 flex-1 min-h-0">
+        <div className="grid gap-5 xl:grid-cols-[280px_minmax(0,1fr)_280px]">
         {/* Left Panel */}
         <div className="space-y-4 rounded-2xl border border-gray-200 bg-gray-50 p-4 dark:border-white/10 dark:bg-white/5">
           <div className="space-y-1.5">
@@ -77,5 +78,6 @@ export default function RecognitionTemplateSkeleton() {
         </div>
       </div>
     </div>
-  )
+  </div>
+)
 }

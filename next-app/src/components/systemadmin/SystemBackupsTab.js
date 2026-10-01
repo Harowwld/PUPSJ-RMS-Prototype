@@ -15,7 +15,12 @@ import {
   EmptyDescription,
   EmptyMedia,
 } from "@/components/ui/empty"
-import { TooltipProvider } from "@/components/ui/tooltip"
+import {
+  TooltipProvider,
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+} from "@/components/ui/tooltip"
 import { formatPHDateTime } from "@/lib/timeFormat"
 import { format } from "date-fns"
 
@@ -27,8 +32,8 @@ import BackupTableSkeleton from "@/components/admin/backup/BackupTableSkeleton"
 import PageHeader from "@/components/shared/PageHeader"
 import FloatingActionBar from "@/components/shared/FloatingActionBar"
 import ConfirmModal from "@/components/shared/ConfirmModal"
+import RestoreModal from "@/components/shared/RestoreModal"
 import { TOTPChallengeModal } from "@/components/shared/TOTPChallengeModal"
-import { RefreshButton } from "@/components/shared/RefreshButton"
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips"
 import { cn } from "@/lib/utils"
 import { getCachedData, setCachedData, invalidateDataCache } from "@/lib/dataCache"
@@ -89,6 +94,25 @@ export default function SystemBackupsTab({ showToast }) {
   const [restoreFile, setRestoreFile] = useState(null)
   const [restoreConfirmOpen, setRestoreConfirmOpen] = useState(false)
   const [restoreLoading, setRestoreLoading] = useState(false)
+  const [restoreMode, setRestoreMode] = useState("merge")
+
+  const [statusSidebarOpen, setStatusSidebarOpen] = useState(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("pupsj_backup_status_sidebar")
+      if (saved !== null) return saved === "true"
+    }
+    return true
+  })
+
+  const handleToggleStatusSidebar = (forcedState) => {
+    setStatusSidebarOpen((prev) => {
+      const next = typeof forcedState === "boolean" ? forcedState : !prev
+      if (typeof window !== "undefined") {
+        localStorage.setItem("pupsj_backup_status_sidebar", String(next))
+      }
+      return next
+    })
+  }
 
   // TOTP Challenge Modal state
   const [totpModalOpen, setTotpModalOpen] = useState(false)
@@ -285,6 +309,27 @@ export default function SystemBackupsTab({ showToast }) {
       if (isManual) setIsManualLoading(false)
     }
   }, [backupSearch, backupStartDate, backupEndDate])
+
+  const [isRefreshing, setIsRefreshing] = useState(false)
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true)
+    try {
+      await fetchData(true)
+      showToast?.({
+        title: "Platform Backups Refreshed",
+        description: "Loaded latest platform backup records and telemetry.",
+      })
+    } catch {
+      showToast?.({
+        title: "Refresh Failed",
+        description: "Failed to reload platform backup records.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsRefreshing(false)
+    }
+  }
 
   useEffect(() => {
     fetchData()
@@ -609,13 +654,15 @@ export default function SystemBackupsTab({ showToast }) {
   }
 
   // Confirm Restore
-  const confirmRestore = async (totpToken = "") => {
+  const confirmRestore = async (totpToken = "", targetMode = null) => {
     if (!restoreFile || restoreLoading) return
     setRestoreLoading(true)
 
+    const effectiveMode = targetMode || restoreMode || "merge"
     try {
       const formData = new FormData()
       formData.append("file", restoreFile)
+      formData.append("mode", effectiveMode)
 
       const headers = {}
       if (totpToken) {
@@ -636,8 +683,8 @@ export default function SystemBackupsTab({ showToast }) {
           throw new Error(json.error || "Invalid verification code")
         }
         executeWithTOTP(
-          (token) => confirmRestore(token),
-          "Restore System",
+          (token) => confirmRestore(token, effectiveMode),
+          effectiveMode === "merge" ? "Safe Merge" : "Overwrite System",
           "Enter your 6-digit Authenticator TOTP Code to authorize system restoration."
         )
         return
@@ -731,50 +778,69 @@ export default function SystemBackupsTab({ showToast }) {
                 descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
                 actions={
                   <div className="flex items-center gap-2">
-                    <RefreshButton 
-                      onRefresh={() => fetchData(true)} 
-                      isLoading={isLoading} 
-                      title="Refresh Backup & Maintenance"
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => handleToggleStatusSidebar()}
+                      title={statusSidebarOpen ? "Collapse System Status" : "Expand System Status"}
+                      className={cn(
+                        "flex h-10 items-center justify-center rounded-xl! border font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs",
+                        statusSidebarOpen
+                          ? "border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700"
+                          : "border-gray-300 dark:border-white/20 bg-gray-100/90 dark:bg-zinc-800/90 text-gray-900 dark:text-white hover:bg-white dark:hover:bg-zinc-700"
+                      )}
+                    >
+                      Status
+                    </Button>
+
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handleRefresh}
+                      disabled={isLoading || isManualLoading || isRefreshing}
+                      className="flex h-10 items-center justify-center rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-5 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700 disabled:opacity-50"
+                    >
+                      {isLoading || isManualLoading || isRefreshing ? (
+                        <HugeIcon className="ph-bold ph-spinner animate-spin text-[16px]" />
+                      ) : (
+                        "Refresh"
+                      )}
+                    </Button>
+
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() =>
+                        restoreFileRef.current &&
+                        restoreFileRef.current.click()
+                      }
+                      disabled={localLoading.uploading}
+                      className="flex h-10 items-center justify-center rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-5 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
+                    >
+                      {localLoading.uploading ? (
+                        <HugeIcon  className="ph-bold ph-spinner animate-spin text-[16px]"></HugeIcon>
+                      ) : (
+                        "Restore"
+                      )}
+                    </Button>
+                    <Button
+                      onClick={() => handleGenerateBackup()}
+                      disabled={localLoading.generating}
+                      className="flex h-10 items-center justify-center rounded-xl! btn-brand-red px-5 active:scale-95 transition-all text-xs font-semibold text-white shadow-xs cursor-pointer border-0"
+                    >
+                      {localLoading.generating ? (
+                        <HugeIcon  className="ph-bold ph-spinner animate-spin text-[16px]"></HugeIcon>
+                      ) : (
+                        "Create"
+                      )}
+                    </Button>
+                    <input
+                      ref={restoreFileRef}
+                      type="file"
+                      className="hidden"
+                      accept=".zip,.enc,.bak,.backup,.pupbak,application/zip,application/octet-stream"
+                      onChange={handleRestoreFileChangeLocal}
                     />
-
-                    
-
-                    <div className="flex items-center gap-2">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() =>
-                          restoreFileRef.current &&
-                          restoreFileRef.current.click()
-                        }
-                        disabled={localLoading.uploading}
-                        className="flex h-10 items-center justify-center rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-5 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
-                      >
-                        {localLoading.uploading ? (
-                          <HugeIcon  className="ph-bold ph-spinner animate-spin text-[16px]"></HugeIcon>
-                        ) : (
-                          "Restore"
-                        )}
-                      </Button>
-                      <Button
-                        onClick={() => handleGenerateBackup()}
-                        disabled={localLoading.generating}
-                        className="flex h-10 items-center justify-center rounded-xl! btn-brand-red px-5 active:scale-95 transition-all text-xs font-semibold text-white shadow-xs cursor-pointer border-0"
-                      >
-                        {localLoading.generating ? (
-                          <HugeIcon  className="ph-bold ph-spinner animate-spin text-[16px]"></HugeIcon>
-                        ) : (
-                          "Create"
-                        )}
-                      </Button>
-                      <input
-                        ref={restoreFileRef}
-                        type="file"
-                        className="hidden"
-                        accept=".zip,.enc,.bak,.backup,.pupbak,application/zip,application/octet-stream"
-                        onChange={handleRestoreFileChangeLocal}
-                      />
-                    </div>
                   </div>
                 }
               />
@@ -892,26 +958,41 @@ export default function SystemBackupsTab({ showToast }) {
           </div>
 
           {/* RIGHT SIDEBAR: System Status */}
-          <HealthSidebar
-            systemHealth={systemHealth}
-            lastBackupTime={lastBackupTime}
-            isLoading={isLoading}
-            isManualLoading={isManualLoading}
-            externalDrive={externalDrive}
-            onRescanDrive={rescanExternalDrive}
-            onToggleSimulation={toggleExternalDriveSimulation}
-            isRescanning={isRescanning}
-            scopeInfo={{
-              title: "Platform Governance Scope",
-              items: [
-                "Department Stations",
-                "Department Features",
-                "Global Directory",
-                "Platform Audit Trail",
-                "System Settings",
-              ],
-            }}
-          />
+          {statusSidebarOpen ? (
+            <HealthSidebar
+              systemHealth={systemHealth}
+              lastBackupTime={lastBackupTime}
+              isLoading={isLoading}
+              isManualLoading={isManualLoading}
+              externalDrive={externalDrive}
+              onRescanDrive={rescanExternalDrive}
+              onToggleSimulation={toggleExternalDriveSimulation}
+              isRescanning={isRescanning}
+              onToggleCollapse={() => handleToggleStatusSidebar(false)}
+              scopeInfo={{
+                title: "Platform Governance Scope",
+                items: [
+                  "Department Stations",
+                  "Department Features",
+                  "Global Directory",
+                  "Platform Audit Trail",
+                  "System Settings",
+                ],
+              }}
+            />
+          ) : (
+            <button
+              type="button"
+              onClick={() => handleToggleStatusSidebar(true)}
+              title="Expand System Status"
+              className="hidden md:flex flex-col items-center justify-center gap-2 w-8 self-stretch rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-card hover:bg-gray-50 dark:hover:bg-zinc-800/80 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white shadow-2xs transition-all cursor-pointer group py-4 select-none shrink-0"
+            >
+              <HugeIcon className="ph-bold ph-caret-left text-[14px] group-hover:-translate-x-0.5 transition-transform" />
+              <span className="text-[10px] font-semibold tracking-wider uppercase text-gray-400 dark:text-zinc-500 [writing-mode:vertical-lr] rotate-180">
+                Status
+              </span>
+            </button>
+          )}
         </div>
 
         {/* Floating Action Bar for batch deletion */}
@@ -950,17 +1031,16 @@ export default function SystemBackupsTab({ showToast }) {
         />
 
         {/* Restore System Image Confirmation Modal */}
-        <ConfirmModal
+        <RestoreModal
           open={restoreConfirmOpen}
+          onOpenChange={setRestoreConfirmOpen}
+          restoreFile={restoreFile}
           title="Restore System Image"
-          variant="success"
-          isRestoreModal={true}
-          message="Overwrite all repository data with the following backup archive? This action is irreversible."
-          selectedItems={[restoreFile?.name]}
-          confirmLabel="Restore"
-          icon="ph-duotone ph-arrow-counter-clockwise"
-          buttonIcon="ph-bold ph-arrow-counter-clockwise"
-          onConfirm={confirmRestore}
+          description="Inspect snapshot contents and choose how data merges with live records."
+          onConfirm={(mode) => {
+            setRestoreMode(mode)
+            confirmRestore("", mode)
+          }}
           onCancel={() => {
             setRestoreConfirmOpen(false)
             setRestoreFile(null)

@@ -32,6 +32,7 @@ import {
   getRoleLabel,
   getDefaultDashboardPath,
 } from "@/lib/roleUtils";
+import { getRoleBranding } from "@/lib/roleBranding";
 import PageHeader from "@/components/shared/PageHeader";
 import { RefreshButton } from "@/components/shared/RefreshButton";
 import { cn } from "@/lib/utils";
@@ -977,6 +978,17 @@ export default function AccountActivityPage() {
   const [authUser, setAuthUser] = useState(null);
   const [loadingUser, setLoadingUser] = useState(true);
 
+  const roleBranding = getRoleBranding(authUser);
+  const brandAccent = authUser?.accent_color || roleBranding.color || "#800000";
+  const brandForeground = roleBranding.foreground || "#FFFFFF";
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && brandAccent) {
+      document.documentElement.style.setProperty("--brand-accent", brandAccent);
+      document.documentElement.style.setProperty("--brand-foreground", brandForeground);
+    }
+  }, [brandAccent, brandForeground]);
+
   // Filter & Search State
   const [search, setSearch] = useState("");
   const [localSearch, setLocalSearch] = useState("");
@@ -1274,7 +1286,13 @@ export default function AccountActivityPage() {
   }
 
   return (
-    <div className="h-screen overflow-hidden flex flex-col bg-gray-50 dark:bg-background font-jakarta">
+    <div 
+      className="h-screen overflow-hidden flex flex-col bg-gray-50 dark:bg-background font-jakarta"
+      style={{
+        "--brand-accent": brandAccent,
+        "--brand-foreground": brandForeground,
+      }}
+    >
       <Header authUser={authUser} onLogout={handleLogout} />
 
       <PageTransition className="flex-1 min-h-0 overflow-y-auto w-full">

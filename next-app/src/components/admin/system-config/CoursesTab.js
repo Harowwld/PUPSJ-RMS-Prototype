@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/tooltip"
 import PageHeader from "@/components/shared/PageHeader"
 import FloatingActionBar from "@/components/shared/FloatingActionBar"
+import ActiveFilterChips from "@/components/shared/ActiveFilterChips"
 import { Card, CardContent } from "@/components/ui/card"
 import { Select } from "@/components/ui/select"
 import {
@@ -33,6 +34,17 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog"
 import { cn } from "@/lib/utils"
+
+function SortIndicator({ sortState, column }) {
+  if (sortState?.key !== column) {
+    return <HugeIcon className="ph-bold ph-caret-up-down ml-1 text-[12px] text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+  }
+  return sortState.direction === "asc" ? (
+    <HugeIcon className="ph-bold ph-caret-up ml-1 text-[12px] text-gray-400" />
+  ) : (
+    <HugeIcon className="ph-bold ph-caret-down ml-1 text-[12px] text-gray-400" />
+  )
+}
 
 export default function CoursesTab({
   loading = false,
@@ -235,17 +247,6 @@ export default function CoursesTab({
     }
   }
 
-  const SortIndicator = ({ column }) => {
-    if (sortCourse.key !== column) {
-      return <HugeIcon  className="ph-bold ph-caret-up-down ml-1 text-[12px] text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"></HugeIcon>
-    }
-    return sortCourse.direction === "asc" ? (
-      <HugeIcon  className="ph-bold ph-caret-up ml-1 text-[12px] text-gray-400"></HugeIcon>
-    ) : (
-      <HugeIcon  className="ph-bold ph-caret-down ml-1 text-[12px] text-gray-400"></HugeIcon>
-    )
-  }
-
 
   const handleExportCourses =
     handleExportProp ||
@@ -311,17 +312,9 @@ export default function CoursesTab({
     setConfirmOpen(true)
   }
 
-  if (loading && courses.length === 0) {
-    return (
-      <div className="flex h-full w-full flex-col p-6">
-        <TaxonomyTableSkeleton rowCount={6} showSubtext={true} />
-      </div>
-    )
-  }
-
   return (
-    <div className="font-jakarta flex w-full flex-col gap-6 animate-fade-up px-[28px] pb-[28px]">
-      <div className="mt-[20px]">
+    <TooltipProvider delay={200}>
+      <div className="font-jakarta flex w-full flex-1 flex-col animate-fade-up min-h-0">
         <PageHeader
           icon="ph-books"
           showBorder={false}
@@ -338,51 +331,50 @@ export default function CoursesTab({
             </div>
           }
           description="Manage academic programs and their corresponding identifiers."
-          className="p-0"
+          className="p-6"
         />
-      </div>
 
-      <div className="font-jakarta">
-        <div className="flex select-none items-center justify-between gap-3 border-b border-gray-100 dark:border-white/10 pb-4">
+        {/* Navigation Toolbar */}
+        <div className="border-t border-gray-100 dark:border-white/10 p-5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
           {/* Active / Archived Tabs */}
-            <div className="flex items-center gap-6 select-none">
-              <button
-                type="button"
-                onClick={() => {
-                  setShowArchived(false)
-                  setPageCourse(1)
-                }}
-                className={cn(
-                  "relative pb-4 -mb-[17px] text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent",
-                  !showArchived
-                    ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
-                    : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
-                )}
-              >
-                Active ({courses.filter((c) => c.status !== "Archived").length})
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setShowArchived(true)
-                  setPageCourse(1)
-                }}
-                className={cn(
-                  "relative pb-4 -mb-[17px] text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent",
-                  showArchived
-                    ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
-                    : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
-                )}
-              >
-                Archived ({courses.filter((c) => c.status === "Archived").length})
-              </button>
-            </div>
+          <div className="flex items-center gap-6 shrink-0 select-none">
+            <button
+              type="button"
+              onClick={() => {
+                setShowArchived(false)
+                setPageCourse(1)
+              }}
+              className={cn(
+                "relative h-9 flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent",
+                !showArchived
+                  ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
+                  : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
+              )}
+            >
+              Active ({courses.filter((c) => c.status !== "Archived").length})
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setShowArchived(true)
+                setPageCourse(1)
+              }}
+              className={cn(
+                "relative h-9 flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent",
+                showArchived
+                  ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
+                  : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
+              )}
+            >
+              Archived ({courses.filter((c) => c.status === "Archived").length})
+            </button>
+          </div>
 
           {/* Search Input, Matches Count, Export, Add */}
           <div className="flex flex-1 items-center justify-end gap-3 min-w-[300px] select-none">
             <div className="flex-1 max-w-md relative group">
               <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                <HugeIcon  className="ph-bold ph-magnifying-glass text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm"></HugeIcon>
+                <HugeIcon className="ph-bold ph-magnifying-glass text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm" />
               </div>
               <Input
                 type="text"
@@ -403,7 +395,7 @@ export default function CoursesTab({
                     className="text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none text-xs"
                     title="Clear search"
                   >
-                    <HugeIcon  className="ph-bold ph-x" />
+                    <HugeIcon className="ph-bold ph-x" />
                   </button>
                 )}
                 <span className="text-[12px] font-normal text-gray-400 dark:text-zinc-500 pointer-events-none">
@@ -420,7 +412,7 @@ export default function CoursesTab({
               className="flex h-10 items-center justify-center rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
             >
               {isExporting ? (
-                <HugeIcon  className="ph-bold ph-spinner animate-spin text-[16px]"></HugeIcon>
+                <HugeIcon className="ph-bold ph-spinner animate-spin text-[16px]" />
               ) : (
                 "Export"
               )}
@@ -429,55 +421,37 @@ export default function CoursesTab({
             <Button
               onClick={() => setIsAddCourseOpen(true)}
               disabled={showArchived}
-              className="flex h-10 items-center justify-center rounded-xl! btn-brand-red text-white font-semibold text-xs px-5 active:scale-95 disabled:opacity-50 transition-all cursor-pointer shadow-xs"
+              className="flex h-10 items-center justify-center rounded-xl! btn-brand-red text-white font-semibold text-xs px-5 active:scale-95 disabled:opacity-50 transition-all cursor-pointer shadow-xs border-0"
             >
               Add
             </Button>
           </div>
         </div>
-      </div>
 
-      {/* Main Table Container (No outer card background/shadow) */}
-      <div key={showArchived} className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card w-full animate-fade-up">
+        {/* Active Filter Chips */}
+        <ActiveFilterChips
+          searchQuery={localSearch}
+          onClearSearch={() => {
+            setLocalSearch("")
+            setCourseSearch("")
+            setPageCourse(1)
+          }}
+          onClearAll={() => {
+            setLocalSearch("")
+            setCourseSearch("")
+            setPageCourse(1)
+          }}
+          className="border-t border-gray-100 dark:border-white/10 bg-white dark:bg-card px-6 py-2.5"
+        />
 
-        {/* Active Filter Chips Row */}
-        {(localSearch !== "") && (
-          <div className="flex-none border-b border-gray-100 bg-white px-6 py-3 animate-in fade-in slide-in-from-top-1 duration-normal dark:border-white/10 dark:bg-card">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="mr-1 text-[11px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500">Active filters:</span>
-              {localSearch && (
-                <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
-                  Search: {localSearch}
-                  <button
-                    onClick={() => { setLocalSearch(""); setCourseSearch(""); setPageCourse(1); }}
-                    className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
-                  >
-                    ×
-                  </button>
-                </div>
-              )}
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  setLocalSearch("")
-                  setCourseSearch("")
-                  setPageCourse(1)
-                }}
-                className="h-auto text-[12px] font-medium text-gray-400 dark:text-zinc-500 border-0 bg-transparent hover:bg-transparent shadow-none p-0 hover:text-red-600 dark:hover:text-red-500 transition-colors cursor-pointer"
-              >
-                Clear
-              </Button>
-            </div>
-          </div>
-        )}
-
-          <div className="relative z-10 flex-1 overflow-x-auto overflow-y-auto select-none">
-              {loading ? (
-                <TaxonomyTableSkeleton rowCount={6} showSubtext={true} />
-              ) : (
-                <table className="min-w-full text-sm">
-                  <thead className="sticky top-0 z-10 border-b border-gray-200 bg-white dark:bg-card dark:border-white/10">
+        {/* Main Table Container (Seamless inside single card) */}
+        <div className={cn("w-full flex flex-col flex-1 min-h-0 border-t border-gray-100 dark:border-white/10 bg-white dark:bg-card", filteredCourses.length === 0 && "rounded-b-2xl overflow-hidden")}>
+          <div className="w-full overflow-x-auto flex-1 select-none">
+            {loading && courses.length === 0 ? (
+              <TaxonomyTableSkeleton rowCount={6} embedded={true} showSubtext={true} showPagination={false} />
+            ) : (
+              <table className="min-w-full text-sm">
+                <thead className="sticky top-0 z-10 border-b border-gray-100 dark:border-white/10 bg-white dark:bg-card">
                     <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">
                       <th className="w-12 p-4 text-center">
                         <input
@@ -499,7 +473,7 @@ export default function CoursesTab({
                             sortCourse.key === "code" ? "text-pup-maroon dark:text-red-500" : "text-gray-400 dark:text-zinc-500 hover:text-pup-maroon dark:hover:text-red-500"
                           )}
                         >
-                          Code <SortIndicator column="code" />
+                          Code <SortIndicator sortState={sortCourse} column="code" />
                         </button>
                       </th>
                       <th className="p-4 px-6">
@@ -510,14 +484,14 @@ export default function CoursesTab({
                             sortCourse.key === "name" ? "text-pup-maroon dark:text-red-500" : "text-gray-400 dark:text-zinc-500 hover:text-pup-maroon dark:hover:text-red-500"
                           )}
                         >
-                          Designation <SortIndicator column="name" />
+                          Designation <SortIndicator sortState={sortCourse} column="name" />
                         </button>
                       </th>
                       <th className="w-40 p-4 px-6 text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">Status</th>
                       <th className="w-32 p-4 px-6 text-right text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">Actions</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-100 dark:divide-white/10">
+                  <tbody className="divide-y divide-gray-100 dark:divide-white/5">
                     {!showArchived && (
                       <tr
                         className={cn(
@@ -819,7 +793,7 @@ export default function CoursesTab({
             </div>
 
         {filteredCoursesFull.length > 0 && (
-          <div className="flex items-center justify-between border-t border-[#e5e5ea] dark:border-[#3a3a3c] bg-white dark:bg-[#1c1c1e] p-4 px-6 rounded-b-2xl mt-auto">
+          <div className="flex items-center justify-between border-t border-gray-100 dark:border-white/10 bg-white dark:bg-card p-4 px-6 rounded-b-2xl mt-auto select-none">
             <div className="flex items-center gap-6 text-xs text-gray-500 dark:text-zinc-400 select-none">
               <span>
                 Showing {filteredCourses.length} of {filteredCoursesFull.length.toLocaleString()}
@@ -855,7 +829,7 @@ export default function CoursesTab({
                 Prev
               </Button>
 
-              <div className="h-8 w-8 rounded-xl border border-[#e5e5ea] dark:border-zinc-800 flex items-center justify-center text-xs font-bold text-gray-800 dark:text-zinc-200 bg-white dark:bg-zinc-900">
+              <div className="h-8 w-8 rounded-xl border border-gray-200 dark:border-white/10 flex items-center justify-center text-xs font-bold text-gray-800 dark:text-zinc-200 bg-white dark:bg-zinc-900">
                 {pageCourse}
               </div>
 
@@ -1150,6 +1124,7 @@ export default function CoursesTab({
           </form>
         </DialogContent>
       </Dialog>
-    </div>
+      </div>
+    </TooltipProvider>
   )
 }

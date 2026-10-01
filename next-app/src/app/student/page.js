@@ -12,7 +12,12 @@ import { formatPHDateTime } from "@/lib/timeFormat";
 import { Card } from "@/components/ui/card";
 import PageHeader from "@/components/shared/PageHeader";
 import { RefreshButton } from "@/components/shared/RefreshButton";
-import { TooltipProvider } from "@/components/ui/tooltip";
+import {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+  TooltipProvider,
+} from "@/components/ui/tooltip";
 import { Select } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { getClientSession } from "@/lib/clientAuth";
@@ -39,7 +44,6 @@ import {
   StudentRequestsTableRowsSkeleton,
   StudentRequestsPaginationSkeleton,
   StudentOsasProposalsListSkeleton,
-  StudentActivityListSkeleton,
 } from "@/components/student/skeletons";
 import StudentComplianceTab from "@/components/student/StudentComplianceTab";
 import StudentFeedbackModal from "@/components/student/StudentFeedbackModal";
@@ -80,11 +84,56 @@ export function normalizeProposalStatus(status) {
   return status || "";
 }
 
+function StatusBadge({ status }) {
+  const s = String(status || "").toLowerCase().trim();
+  let badgeClass = "bg-zinc-100 text-zinc-700 border-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-700";
+  let label = status;
+  if (s === "approved") {
+    badgeClass = "bg-emerald-50 text-emerald-800 border-emerald-200/80 dark:bg-emerald-950/30 dark:text-emerald-300 dark:border-emerald-800/40";
+    label = "Approved";
+  } else if (s === "completed") {
+    badgeClass = "bg-emerald-50 text-emerald-800 border-emerald-200/80 dark:bg-emerald-950/30 dark:text-emerald-300 dark:border-emerald-800/40";
+    label = "Completed";
+  } else if (s === "ready") {
+    badgeClass = "bg-emerald-50 text-emerald-800 border-emerald-200/80 dark:bg-emerald-950/30 dark:text-emerald-300 dark:border-emerald-800/40";
+    label = "Ready";
+  } else if (s === "under review") {
+    badgeClass = "bg-blue-50 text-blue-800 border-blue-200/80 dark:bg-blue-950/30 dark:text-blue-300 dark:border-blue-800/40";
+    label = "Under Review";
+  } else if (s === "inprogress" || s === "in progress") {
+    badgeClass = "bg-blue-50 text-blue-800 border-blue-200/80 dark:bg-blue-950/30 dark:text-blue-300 dark:border-blue-800/40";
+    label = "In Progress";
+  } else if (s === "processing") {
+    badgeClass = "bg-blue-50 text-blue-800 border-blue-200/80 dark:bg-blue-950/30 dark:text-blue-300 dark:border-blue-800/40";
+    label = "Processing";
+  } else if (s === "needs revision" || s === "revision") {
+    badgeClass = "bg-amber-50 text-amber-800 border-amber-200/80 dark:bg-amber-950/30 dark:text-amber-300 dark:border-amber-800/40";
+    label = "Needs Revision";
+  } else if (s === "submitted") {
+    badgeClass = "bg-sky-50 text-sky-800 border-sky-200/80 dark:bg-sky-950/30 dark:text-sky-300 dark:border-sky-800/40";
+    label = "Submitted";
+  } else if (s === "pending") {
+    badgeClass = "bg-sky-50 text-sky-800 border-sky-200/80 dark:bg-sky-950/30 dark:text-sky-300 dark:border-sky-800/40";
+    label = "Pending";
+  } else if (s === "declined") {
+    badgeClass = "bg-rose-50 text-rose-800 border-rose-200/80 dark:bg-rose-950/30 dark:text-rose-300 dark:border-rose-800/40";
+    label = "Declined";
+  } else if (s === "cancelled") {
+    badgeClass = "bg-rose-50 text-rose-800 border-rose-200/80 dark:bg-rose-950/30 dark:text-rose-300 dark:border-rose-800/40";
+    label = "Cancelled";
+  } else if (s === "rejected") {
+    badgeClass = "bg-rose-50 text-rose-800 border-rose-200/80 dark:bg-rose-950/30 dark:text-rose-300 dark:border-rose-800/40";
+    label = "Rejected";
+  }
+  return <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${badgeClass}`}>{label}</span>;
+}
+
+
 export default function StudentDashboard() {
   const router = useRouter();
   const [me, setMe] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [data, setData] = useState({ requests: [], documents: [], proposals: [], activity: [] });
+  const [data, setData] = useState({ requests: [], documents: [], proposals: [] });
   const [docTypes, setDocTypes] = useState([]);
   const [courses, setCourses] = useState([]);
   const [authMode, setAuthMode] = useState("login");
@@ -134,6 +183,20 @@ export default function StudentDashboard() {
   const [feedbackRequest, setFeedbackRequest] = useState(null);
   const [feedbackInitialRating, setFeedbackInitialRating] = useState(0);
 
+  // OSAS Multi-Stream Governance States
+  const [osasSubView, setOsasSubView] = useState("proposals"); // "proposals" | "post_event"
+  const [postEventReports, setPostEventReports] = useState([]);
+  const [pendingPostEvents, setPendingPostEvents] = useState([]);
+  const [postEventForm, setPostEventForm] = useState({
+    eventProposalId: "",
+    organizationId: "",
+    actualAttendance: "",
+    totalExpenses: "",
+    narrativeFile: null,
+    liquidationFile: null,
+  });
+  const [postEventSubmitting, setPostEventSubmitting] = useState(false);
+
   // Filter state for OSAS Event Proposals
   const [proposalSearch, setProposalSearch] = useState("");
   const [proposalFilters, setProposalFilters] = useState({
@@ -141,7 +204,12 @@ export default function StudentDashboard() {
     organization: [],
   });
 
-  const handleOpenPdfPreview = useCallback((proposal) => {
+  const handleOpenPdfPreview = useCallback((proposal, customOpts = null) => {
+    if (customOpts) {
+      setPdfPreviewData(customOpts);
+      setPdfPreviewOpen(true);
+      return;
+    }
     if (!proposal?.id) return;
     setPdfPreviewData({
       url: `/api/student/event-proposals/${proposal.id}?file=1`,
@@ -458,7 +526,11 @@ export default function StudentDashboard() {
   useEffect(() => {
     const handleSwitch = (e) => {
       const { view: targetView } = e.detail || {};
-      if (targetView === "odrs" || targetView === "osas" || targetView === "compliance" || targetView === "activity") {
+      if (targetView === "activity") {
+        router.push("/account/activity");
+        return;
+      }
+      if (targetView === "odrs" || targetView === "osas" || targetView === "compliance") {
         setView(targetView);
         const params = new URLSearchParams(window.location.search);
         params.set("view", targetView);
@@ -473,11 +545,15 @@ export default function StudentDashboard() {
   useEffect(() => {
     if (typeof window !== "undefined") {
       const tab = new URLSearchParams(window.location.search).get("view");
-      if (tab === "odrs" || tab === "osas" || tab === "compliance" || tab === "activity") {
+      if (tab === "activity") {
+        router.replace("/account/activity");
+        return;
+      }
+      if (tab === "odrs" || tab === "osas" || tab === "compliance") {
         setView(tab);
       }
     }
-  }, []);
+  }, [router]);
 
   // Listen for scale / zoom adjustments from Command Palette
   useEffect(() => {
@@ -509,21 +585,21 @@ export default function StudentDashboard() {
         clientType: session.data.client_type || prev.clientType || "Student",
         studentNo: prev.studentNo || session.data.student_no || "",
       }));
-      const [requestRes, proposalRes, typesRes, activityRes, coursesRes, orgsRes] = await Promise.all([
+      const [requestRes, proposalRes, typesRes, coursesRes, orgsRes, postEventRes] = await Promise.all([
         fetch("/api/student/document-requests", { cache: "no-store" }),
         fetch("/api/student/event-proposals", { cache: "no-store" }),
         fetch("/api/doc-types", { cache: "no-store" }),
-        fetch("/api/student/activity", { cache: "no-store" }),
         fetch("/api/courses", { cache: "no-store" }),
         fetch("/api/student/organizations", { cache: "no-store" }),
+        fetch("/api/student/post-event-reports", { cache: "no-store" }).catch(() => ({ ok: false, json: async () => ({}) })),
       ]);
-      const [requestJson, proposalJson, typesJson, activityJson, coursesJson, orgsJson] = await Promise.all([
+      const [requestJson, proposalJson, typesJson, coursesJson, orgsJson, postEventJson] = await Promise.all([
         requestRes.json(),
         proposalRes.json(),
         typesRes.json(),
-        activityRes.json(),
         coursesRes.json(),
         orgsRes.json(),
+        postEventRes.ok ? postEventRes.json().catch(() => ({})) : {},
       ]);
       if (!requestRes.ok || !requestJson?.ok || !proposalRes.ok || !proposalJson?.ok) {
         throw new Error(requestJson?.error || proposalJson?.error || "Unable to load student records.");
@@ -538,8 +614,14 @@ export default function StudentDashboard() {
           organizationId: prev.organizationId || loadedOrgs[0].organization_id,
           organizationName: prev.organizationName || loadedOrgs[0].organization_name,
         }));
+        setPostEventForm((prev) => ({
+          ...prev,
+          organizationId: prev.organizationId || loadedOrgs[0].organization_id,
+        }));
       }
-      setData({ requests: requestJson?.data?.requests || [], documents: requestJson?.data?.documents || [], proposals: proposalJson?.data || [], activity: activityJson?.data || [] });
+      setPostEventReports(postEventJson?.data?.reports || []);
+      setPendingPostEvents(postEventJson?.data?.pendingEvents || []);
+      setData({ requests: requestJson?.data?.requests || [], documents: requestJson?.data?.documents || [], proposals: proposalJson?.data || [] });
     } finally {
       setLoading(false);
     }
@@ -783,6 +865,58 @@ export default function StudentDashboard() {
     } finally { setProposalSubmitting(false); }
   }
 
+  async function submitPostEventReport(event) {
+    event.preventDefault();
+    setMessage("");
+    setPostEventSubmitting(true);
+    try {
+      const selectedOrg = myOrganizations.find((o) => o.organization_id === postEventForm.organizationId) || myOrganizations[0];
+      if (!selectedOrg) {
+        throw new Error("You must be an authorized officer of a recognized student organization to submit post-event reports.");
+      }
+      if (!postEventForm.eventProposalId) {
+        throw new Error("Please select an approved event proposal.");
+      }
+      if (!postEventForm.narrativeFile) {
+        throw new Error("Please upload the Post-Event Narrative Report PDF.");
+      }
+      const form = new FormData();
+      form.set("eventProposalId", postEventForm.eventProposalId);
+      form.set("organizationId", selectedOrg.organization_id);
+      form.set("actualAttendance", postEventForm.actualAttendance || "0");
+      form.set("totalExpenses", postEventForm.totalExpenses || "0.00");
+      form.set("narrativeFile", postEventForm.narrativeFile);
+      if (postEventForm.liquidationFile) {
+        form.set("liquidationFile", postEventForm.liquidationFile);
+      }
+
+      const res = await fetch("/api/student/post-event-reports", { method: "POST", body: form });
+      const json = await res.json();
+      if (!res.ok || !json.ok) {
+        const error = json.error || "Unable to submit post-event report.";
+        setMessage(error);
+        showToast("Submission failed", error, true);
+        return;
+      }
+      setPostEventForm({
+        eventProposalId: "",
+        organizationId: myOrganizations[0]?.organization_id || "",
+        actualAttendance: "",
+        totalExpenses: "",
+        narrativeFile: null,
+        liquidationFile: null,
+      });
+      showToast("Report Submitted", "Your Post-Event Narrative & Liquidation report has been submitted to OSAS.");
+      await load();
+    } catch (error) {
+      const message = error.message || "Unable to submit post-event report.";
+      setMessage(message);
+      showToast("Submission failed", message, true);
+    } finally {
+      setPostEventSubmitting(false);
+    }
+  }
+
   if (!me) {
     return <StudentDashboardSkeleton view={view} />;
   }
@@ -792,32 +926,14 @@ export default function StudentDashboard() {
     { key: "odrs", label: "Document Requests", iconClass: "ph-bold ph-tray-arrow-up" },
     { key: "compliance", label: "Document Checklist", iconClass: "ph-bold ph-clipboard-text" },
 
-    { type: "header", label: "Student Affairs & History" },
+    { type: "header", label: "Student Affairs" },
     { key: "osas", label: "OSAS Submissions", iconClass: "ph-bold ph-student" },
-    { key: "activity", label: "Activity History", iconClass: "ph-bold ph-clock-counter-clockwise" },
   ];
 
   async function handleLogout() {
     await fetch("/api/auth/logout", { method: "POST" }).catch(() => {});
     window.location.href = "/";
   }
-
-  const StatusBadge = ({ status }) => {
-    const s = String(status || "").toLowerCase().trim();
-    let badgeClass = "bg-zinc-100 text-zinc-700 border-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-700";
-    if (s === "approved" || s === "completed" || s === "ready") {
-      badgeClass = "bg-emerald-50 text-emerald-800 border-emerald-200/80 dark:bg-emerald-950/30 dark:text-emerald-300 dark:border-emerald-800/40";
-    } else if (s === "under review" || s === "inprogress" || s === "processing") {
-      badgeClass = "bg-blue-50 text-blue-800 border-blue-200/80 dark:bg-blue-950/30 dark:text-blue-300 dark:border-blue-800/40";
-    } else if (s === "needs revision" || s === "revision") {
-      badgeClass = "bg-amber-50 text-amber-800 border-amber-200/80 dark:bg-amber-950/30 dark:text-amber-300 dark:border-amber-800/40";
-    } else if (s === "submitted" || s === "pending") {
-      badgeClass = "bg-sky-50 text-sky-800 border-sky-200/80 dark:bg-sky-950/30 dark:text-sky-300 dark:border-sky-800/40";
-    } else if (s === "declined" || s === "cancelled" || s === "rejected") {
-      badgeClass = "bg-rose-50 text-rose-800 border-rose-200/80 dark:bg-rose-950/30 dark:text-rose-300 dark:border-rose-800/40";
-    }
-    return <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${badgeClass}`}>{status}</span>;
-  };
 
   return (
     <TooltipProvider delayDuration={200}>
@@ -860,70 +976,8 @@ export default function StudentDashboard() {
             >
               <div className="w-full flex-1 flex flex-col min-h-0">
 
-              {/* Standardized Card Header for Activity view */}
-              {view === "activity" && (
-                <Card className="rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none overflow-hidden mb-4">
-                  <PageHeader
-                    icon="ph-clock-counter-clockwise"
-                    title="My Activity"
-                    description="A history of actions performed on your account."
-                    showBorder={false}
-                    titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
-                    descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
-                    actions={
-                      <div className="flex items-center gap-3">
-                        {me?.student_no && (
-                          <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-red-50 text-pup-maroon border border-red-100 dark:bg-red-950/30 dark:border-red-900/30">
-                            <HugeIcon  className="ph-fill ph-student text-[13px]"></HugeIcon>
-                            {me.student_no}
-                          </span>
-                        )}
-                        <RefreshButton
-                          onRefresh={async () => {
-                            setRefreshing(true);
-                            try {
-                              await load();
-                            } finally {
-                              setRefreshing(false);
-                            }
-                          }}
-                          isLoading={refreshing}
-                          title="Refresh Records"
-                        />
-                      </div>
-                    }
-                  />
-                </Card>
-              )}
-
               {message && <p role="alert" className="rounded-brand border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 mb-4">{message}</p>}
-              {view === "activity" ? (
-                <section className="rounded-brand border border-gray-200 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-card">
-                  <h2 className="text-base font-bold text-gray-900 dark:text-zinc-50">My Activity</h2>
-                  <p className="mt-1 text-sm text-gray-500 dark:text-zinc-400">A history of actions performed on your account.</p>
-                  {loading ? (
-                    <StudentActivityListSkeleton count={4} />
-                  ) : (
-                    <div className="mt-5 space-y-3">
-                      {data.activity.length === 0 ? (
-                        <p className="rounded-brand bg-gray-50 px-4 py-8 text-center text-sm text-gray-500 dark:bg-zinc-800/40 dark:text-zinc-400">
-                          No activity recorded yet.
-                        </p>
-                      ) : (
-                        data.activity.map((item) => (
-                          <article key={item.id} className="rounded-brand border border-gray-200 p-4 dark:border-white/10">
-                            <div className="flex items-center justify-between gap-3">
-                              <p className="text-sm font-semibold text-gray-900 dark:text-zinc-50">{item.action}</p>
-                              <time className="text-xs text-gray-500 dark:text-zinc-400">{formatPHDateTime(item.created_at)}</time>
-                            </div>
-                            {item.details && <p className="mt-1 text-sm text-gray-500 dark:text-zinc-400">{item.details}</p>}
-                          </article>
-                        ))
-                      )}
-                    </div>
-                  )}
-                </section>
-              ) : view === "compliance" ? (
+              {view === "compliance" ? (
                 <StudentComplianceTab authUser={me} onLogout={handleLogout} />
               ) : view === "odrs" ? (
                 <div className="flex flex-col w-full flex-1 min-h-0">
@@ -1569,42 +1623,55 @@ export default function StudentDashboard() {
                                 <td className="py-0 px-4 align-middle text-right" onClick={(e) => e.stopPropagation()}>
                                   <div className="flex items-center justify-end gap-1.5">
                                     {item.feedback ? (
-                                      <button
-                                        type="button"
-                                        onClick={() => {
-                                          setFeedbackRequest(item);
-                                          setFeedbackInitialRating(item.feedback.rating || 0);
-                                          setFeedbackModalOpen(true);
-                                        }}
-                                        title={`Rated ${item.feedback.rating}/5 stars. Click to edit feedback.`}
-                                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[11px] font-semibold bg-amber-50 text-amber-800 border border-amber-200/80 hover:bg-amber-100 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-900/40 transition-colors cursor-pointer"
-                                      >
-                                        <HugeIcon className="ph-fill ph-star text-[12px] text-amber-500" />
-                                        <span>{item.feedback.rating}/5</span>
-                                      </button>
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <button
+                                            type="button"
+                                            onClick={() => {
+                                              setFeedbackRequest(item);
+                                              setFeedbackInitialRating(item.feedback.rating || 0);
+                                              setFeedbackModalOpen(true);
+                                            }}
+                                            aria-label={`Rated ${item.feedback.rating}/5 stars. Click to edit feedback.`}
+                                            className="w-7 h-7 rounded-lg flex items-center justify-center text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-950/30 transition-colors cursor-pointer active:scale-95"
+                                          >
+                                            <HugeIcon className="ph-fill ph-star text-[15px]" />
+                                          </button>
+                                        </TooltipTrigger>
+                                        <TooltipContent>Rated {item.feedback.rating}/5 stars. Click to edit.</TooltipContent>
+                                      </Tooltip>
                                     ) : (
-                                      <button
-                                        type="button"
-                                        onClick={() => {
-                                          setFeedbackRequest(item);
-                                          setFeedbackInitialRating(0);
-                                          setFeedbackModalOpen(true);
-                                        }}
-                                        title="Rate your experience with this request"
-                                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[11px] font-medium text-gray-500 hover:text-pup-maroon hover:bg-red-50/80 border border-dashed border-gray-200 hover:border-red-200 dark:border-white/10 dark:text-zinc-400 dark:hover:bg-red-950/30 dark:hover:text-red-300 transition-colors cursor-pointer"
-                                      >
-                                        <HugeIcon className="ph-bold ph-star text-[11px]" />
-                                        <span>Rate</span>
-                                      </button>
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <button
+                                            type="button"
+                                            onClick={() => {
+                                              setFeedbackRequest(item);
+                                              setFeedbackInitialRating(0);
+                                              setFeedbackModalOpen(true);
+                                            }}
+                                            aria-label="Rate Service"
+                                            className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-950/30 transition-colors cursor-pointer active:scale-95"
+                                          >
+                                            <HugeIcon className="ph-bold ph-star text-[15px]" />
+                                          </button>
+                                        </TooltipTrigger>
+                                        <TooltipContent>Rate Service</TooltipContent>
+                                      </Tooltip>
                                     )}
-                                    <button
-                                      type="button"
-                                      onClick={() => setSelectedRequestForDetail(item)}
-                                      title="View Request Updates Timeline"
-                                      className="inline-flex h-7 w-7 items-center justify-center rounded-[6px] text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10 hover:text-pup-maroon dark:hover:text-red-400 transition-colors cursor-pointer"
-                                    >
-                                      <HugeIcon className="ph-bold ph-clock-counter-clockwise text-[16px]" />
-                                    </button>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <button
+                                          type="button"
+                                          onClick={() => setSelectedRequestForDetail(item)}
+                                          aria-label="View Request Updates Timeline"
+                                          className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10 hover:text-pup-maroon dark:hover:text-red-400 transition-colors cursor-pointer active:scale-95"
+                                        >
+                                          <HugeIcon className="ph-bold ph-clock-counter-clockwise text-[15px]" />
+                                        </button>
+                                      </TooltipTrigger>
+                                      <TooltipContent>View Timeline</TooltipContent>
+                                    </Tooltip>
                                   </div>
                                 </td>
                               </tr>
@@ -1725,7 +1792,7 @@ export default function StudentDashboard() {
                           )}
                           style={!isFormOpen && myOrganizations.length > 0 ? { color: "#ffffff" } : undefined}
                         >
-                          {isFormOpen ? "Hide Form" : "New Proposal"}
+                          {isFormOpen ? "Hide Form" : osasSubView === "proposals" ? "New Proposal" : osasSubView === "post_event" ? "New Report" : "New Revision"}
                         </Button>
                       </div>
                     }
@@ -1763,313 +1830,566 @@ export default function StudentDashboard() {
                     </div>
                   )}
 
-                  {/* 2. Inline Proposal Form Section */}
-                  {isFormOpen && myOrganizations.length > 0 && (
-                    <div className="border-t border-gray-100 dark:border-white/10 p-5 sm:p-6 bg-gray-50/40 dark:bg-zinc-900/20 animate-in fade-in slide-in-from-top-2 duration-fast">
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-gray-100 dark:border-white/10">
-                        <div className="flex items-center gap-3">
-                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-50 text-pup-maroon dark:bg-red-950/40 dark:text-red-400">
-                            <HugeIcon  className="ph-bold ph-plus-circle text-xl" />
-                          </div>
-                          <div>
-                            <h2 className="text-[15px] font-semibold text-gray-900 dark:text-zinc-50">New Event Proposal</h2>
-                            <p className="text-xs text-gray-500 dark:text-zinc-400">Upload a PDF proposal for OSAS review and evaluation.</p>
-                          </div>
-                        </div>
-                      </div>
+                  {/* OSAS Stream Switcher */}
+                  <div className="flex items-center gap-1.5 p-1 rounded-xl bg-gray-100/80 dark:bg-zinc-800/60 border border-gray-200/60 dark:border-white/5 mx-6 mb-4">
+                    <button
+                      type="button"
+                      onClick={() => setOsasSubView("proposals")}
+                      className={cn(
+                        "flex-1 inline-flex items-center justify-center gap-2 py-2 px-3 text-xs font-semibold rounded-lg transition-all cursor-pointer",
+                        osasSubView === "proposals"
+                          ? "bg-pup-maroon text-white shadow-xs"
+                          : "text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
+                      )}
+                    >
+                      <HugeIcon className="ph-bold ph-calendar-blank text-sm" />
+                      <span>Event Proposals</span>
+                      <span className={cn(
+                        "px-1.5 py-0.2 rounded-full text-[10px] font-bold",
+                        osasSubView === "proposals" ? "bg-white/20 text-white" : "bg-gray-200/80 dark:bg-zinc-700 text-gray-700 dark:text-zinc-300"
+                      )}>
+                        {data.proposals.length}
+                      </span>
+                    </button>
 
-                      <form onSubmit={submitProposal} className="flex flex-col gap-4 mt-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                          {/* Event Title */}
-                          <div className="min-w-0">
-                            <label htmlFor="osas-event-title" className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-200">
-                              Event Title <span className="text-red-500">*</span>
-                            </label>
-                            <Input
-                              id="osas-event-title"
-                              placeholder="Enter event title"
-                              value={proposalForm.title}
-                              onChange={(e) => setProposalForm({ ...proposalForm, title: e.target.value })}
-                              required
-                              className="h-10 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-3 text-xs text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
-                            />
-                          </div>
-
-                          {/* Organization Dropdown */}
-                          <div className="min-w-0">
-                            <label htmlFor="osas-org-name" className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-200">
-                              Authorized Organization <span className="text-red-500">*</span>
-                            </label>
-                            <Select
-                              id="osas-org-name"
-                              value={proposalForm.organizationId || (myOrganizations[0]?.organization_id || "")}
-                              onChange={(e) => {
-                                const orgId = e.target.value;
-                                const org = myOrganizations.find((o) => o.organization_id === orgId);
-                                setProposalForm({
-                                  ...proposalForm,
-                                  organizationId: orgId,
-                                  organizationName: org?.organization_name || "",
-                                });
-                              }}
-                              className="h-10 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-xs text-gray-900 dark:text-zinc-100 shadow-none"
-                            >
-                              {myOrganizations.map((o) => (
-                                <option key={o.organization_id} value={o.organization_id}>
-                                  {o.organization_name} {o.acronym ? `(${o.acronym})` : ""} — {o.officer_position}
-                                </option>
-                              ))}
-                            </Select>
-                          </div>
-
-                          {/* Event Date */}
-                          <div className="min-w-0">
-                            <label htmlFor="osas-event-date" className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-200">
-                              Event Date <span className="text-red-500">*</span>
-                            </label>
-                            <Input
-                              id="osas-event-date"
-                              type="date"
-                              aria-label="Event date"
-                              value={proposalForm.eventDate}
-                              onClick={(e) => e.currentTarget.showPicker?.()}
-                              onChange={(e) => setProposalForm({ ...proposalForm, eventDate: e.target.value })}
-                              required
-                              className="h-10 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-3 text-xs text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
-                            />
-                          </div>
-                        </div>
-
-                        {/* File Upload */}
-                        <div>
-                          <label htmlFor="osas-proposal-file" className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-200">
-                            Proposal PDF <span className="text-red-500">*</span>
-                          </label>
-                          <Input
-                            id="osas-proposal-file"
-                            type="file"
-                            accept="application/pdf"
-                            onChange={(e) => setProposalForm({ ...proposalForm, file: e.target.files?.[0] || null })}
-                            required
-                            className="h-10 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-3 text-xs text-gray-900 dark:text-zinc-100 file:mr-3 file:border-0 file:bg-transparent file:text-xs file:font-medium file:text-gray-500 shadow-none outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
-                          />
-                        </div>
-
-                        {/* Form Actions */}
-                        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-1">
-                          <span className="text-xs text-gray-500 dark:text-zinc-400">
-                            Proposals are received and evaluated by the OSAS office.
-                          </span>
-                          <div className="flex items-center gap-2.5 w-full sm:w-auto">
-                            <Button
-                              type="button"
-                              variant="outline"
-                              onClick={() => setIsFormOpen(false)}
-                              className="w-full sm:w-auto h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
-                            >
-                              Hide
-                            </Button>
-                            <Button
-                              type="submit"
-                              disabled={proposalSubmitting}
-                              className="w-full sm:w-auto h-10 px-6 btn-brand-red text-white! font-semibold text-xs shadow-xs rounded-xl! gap-2 flex items-center justify-center dark:shadow-none active:scale-95 cursor-pointer border-0"
-                              style={{ color: "#ffffff" }}
-                            >
-                              {proposalSubmitting ? (
-                                <>
-                                  <HugeIcon  className="ph-bold ph-spinner animate-spin text-sm text-white!"></HugeIcon>
-                                  Submitting...
-                                </>
-                              ) : (
-                                "Submit Proposal"
-                              )}
-                            </Button>
-                          </div>
-                        </div>
-                      </form>
-                    </div>
-                  )}
-
-                  {/* 3. Submission History Header */}
-                  <div className="border-t border-gray-100 dark:border-white/10 p-5 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
-                    <div className="flex items-center gap-3 shrink-0">
-                      <div>
-                        <h3 className="text-[15px] font-semibold text-gray-900 dark:text-zinc-50">Submission History</h3>
-                        <p className="mt-0.5 text-xs text-gray-500 dark:text-zinc-400">Follow OSAS review updates and requested revisions.</p>
-                      </div>
-                      {loading ? (
-                        <Skeleton className="h-6 w-16 rounded-full dark:bg-muted" />
+                    <button
+                      type="button"
+                      onClick={() => setOsasSubView("post_event")}
+                      className={cn(
+                        "flex-1 inline-flex items-center justify-center gap-2 py-2 px-3 text-xs font-semibold rounded-lg transition-all cursor-pointer",
+                        osasSubView === "post_event"
+                          ? "bg-pup-maroon text-white shadow-xs"
+                          : "text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
+                      )}
+                    >
+                      <HugeIcon className="ph-bold ph-clipboard-text text-sm" />
+                      <span>Post-Event & Liquidation</span>
+                      {pendingPostEvents.length > 0 ? (
+                        <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-amber-500 text-white animate-pulse">
+                          {pendingPostEvents.length} Action
+                        </span>
                       ) : (
-                        <span className="self-center rounded-full bg-gray-100 px-3 py-1 text-xs font-bold text-gray-600 dark:bg-zinc-800 dark:text-zinc-300">
-                          {data.proposals.length} total
+                        <span className={cn(
+                          "px-1.5 py-0.2 rounded-full text-[10px] font-bold",
+                          osasSubView === "post_event" ? "bg-white/20 text-white" : "bg-gray-200/80 dark:bg-zinc-700 text-gray-700 dark:text-zinc-300"
+                        )}>
+                          {postEventReports.length}
                         </span>
                       )}
-                    </div>
+                    </button>
+                  </div>
 
-                    {/* Search & MultiCriteria Filter */}
-                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
-                      <div className="relative flex-1 sm:w-64 lg:w-72 min-w-[200px] group">
-                        <HugeIcon className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-xs pointer-events-none" />
-                        <Input
-                          type="text"
-                          placeholder="Search proposals..."
-                          className="h-9 pl-8 pr-16 w-full rounded-xl text-xs font-normal border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
-                          value={proposalSearch}
-                          onChange={(e) => setProposalSearch(e.target.value)}
-                        />
-                        <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-[11px] text-gray-400 dark:text-zinc-500">
+                  {/* STREAM 1: EVENT PROPOSALS */}
+                  {osasSubView === "proposals" && (
+                    <>
+                      {/* Inline Proposal Form Section */}
+                      {isFormOpen && myOrganizations.length > 0 && (
+                        <div className="border-t border-gray-100 dark:border-white/10 p-5 sm:p-6 bg-gray-50/40 dark:bg-zinc-900/20 animate-in fade-in slide-in-from-top-2 duration-fast">
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-gray-100 dark:border-white/10">
+                            <div className="flex items-center gap-3">
+                              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-50 text-pup-maroon dark:bg-red-950/40 dark:text-red-400">
+                                <HugeIcon className="ph-bold ph-plus-circle text-xl" />
+                              </div>
+                              <div>
+                                <h2 className="text-[15px] font-semibold text-gray-900 dark:text-zinc-50">New Event Proposal</h2>
+                                <p className="text-xs text-gray-500 dark:text-zinc-400">Upload a PDF proposal for OSAS review and evaluation.</p>
+                              </div>
+                            </div>
+                          </div>
+
+                          <form onSubmit={submitProposal} className="flex flex-col gap-4 mt-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                              <div className="min-w-0">
+                                <label htmlFor="osas-event-title" className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-200">
+                                  Event Title <span className="text-red-500">*</span>
+                                </label>
+                                <Input
+                                  id="osas-event-title"
+                                  placeholder="Enter event title"
+                                  value={proposalForm.title}
+                                  onChange={(e) => setProposalForm({ ...proposalForm, title: e.target.value })}
+                                  required
+                                  className="h-10 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-3 text-xs text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
+                                />
+                              </div>
+
+                              <div className="min-w-0">
+                                <label htmlFor="osas-org-name" className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-200">
+                                  Authorized Organization <span className="text-red-500">*</span>
+                                </label>
+                                <Select
+                                  id="osas-org-name"
+                                  value={proposalForm.organizationId || (myOrganizations[0]?.organization_id || "")}
+                                  onChange={(e) => {
+                                    const orgId = e.target.value;
+                                    const org = myOrganizations.find((o) => o.organization_id === orgId);
+                                    setProposalForm({
+                                      ...proposalForm,
+                                      organizationId: orgId,
+                                      organizationName: org?.organization_name || "",
+                                    });
+                                  }}
+                                  className="h-10 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-xs text-gray-900 dark:text-zinc-100 shadow-none"
+                                >
+                                  {myOrganizations.map((o) => (
+                                    <option key={o.organization_id} value={o.organization_id}>
+                                      {o.organization_name} {o.acronym ? `(${o.acronym})` : ""} — {o.officer_position}
+                                    </option>
+                                  ))}
+                                </Select>
+                              </div>
+
+                              <div className="min-w-0">
+                                <label htmlFor="osas-event-date" className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-200">
+                                  Event Date <span className="text-red-500">*</span>
+                                </label>
+                                <Input
+                                  id="osas-event-date"
+                                  type="date"
+                                  aria-label="Event date"
+                                  value={proposalForm.eventDate}
+                                  onClick={(e) => e.currentTarget.showPicker?.()}
+                                  onChange={(e) => setProposalForm({ ...proposalForm, eventDate: e.target.value })}
+                                  required
+                                  className="h-10 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-3 text-xs text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
+                                />
+                              </div>
+                            </div>
+
+                            <div>
+                              <label htmlFor="osas-proposal-file" className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-200">
+                                Proposal PDF <span className="text-red-500">*</span>
+                              </label>
+                              <Input
+                                id="osas-proposal-file"
+                                type="file"
+                                accept="application/pdf"
+                                onChange={(e) => setProposalForm({ ...proposalForm, file: e.target.files?.[0] || null })}
+                                required
+                                className="h-10 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-3 text-xs text-gray-900 dark:text-zinc-100 file:mr-3 file:border-0 file:bg-transparent file:text-xs file:font-medium file:text-gray-500 shadow-none outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
+                              />
+                            </div>
+
+                            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-1">
+                              <span className="text-xs text-gray-500 dark:text-zinc-400">
+                                Proposals are received and evaluated by the OSAS office.
+                              </span>
+                              <div className="flex items-center gap-2.5 w-full sm:w-auto">
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  onClick={() => setIsFormOpen(false)}
+                                  className="w-full sm:w-auto h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                                >
+                                  Hide
+                                </Button>
+                                <Button
+                                  type="submit"
+                                  disabled={proposalSubmitting}
+                                  className="w-full sm:w-auto h-10 px-6 btn-brand-red text-white! font-semibold text-xs shadow-xs rounded-xl! gap-2 flex items-center justify-center dark:shadow-none active:scale-95 cursor-pointer border-0"
+                                  style={{ color: "#ffffff" }}
+                                >
+                                  {proposalSubmitting ? (
+                                    <>
+                                      <HugeIcon className="ph-bold ph-spinner animate-spin text-sm text-white!"></HugeIcon>
+                                      Submitting...
+                                    </>
+                                  ) : (
+                                    "Submit Proposal"
+                                  )}
+                                </Button>
+                              </div>
+                            </div>
+                          </form>
+                        </div>
+                      )}
+
+                      {/* Proposals History Header */}
+                      <div className="border-t border-gray-100 dark:border-white/10 p-5 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
+                        <div className="flex items-center gap-3 shrink-0">
+                          <div>
+                            <h3 className="text-[15px] font-semibold text-gray-900 dark:text-zinc-50">Event Proposals History</h3>
+                            <p className="mt-0.5 text-xs text-gray-500 dark:text-zinc-400">Follow OSAS review updates, approval standing, and post-event requirements.</p>
+                          </div>
                           {loading ? (
-                            <Skeleton className="h-3.5 w-10 rounded dark:bg-muted" />
+                            <Skeleton className="h-6 w-16 rounded-full dark:bg-muted" />
                           ) : (
-                            filteredProposals.length
+                            <span className="self-center rounded-full bg-gray-100 px-3 py-1 text-xs font-bold text-gray-600 dark:bg-zinc-800 dark:text-zinc-300">
+                              {data.proposals.length} total
+                            </span>
                           )}
+                        </div>
+
+                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
+                          <div className="relative flex-1 sm:w-64 lg:w-72 min-w-[200px] group">
+                            <HugeIcon className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-xs pointer-events-none" />
+                            <Input
+                              type="text"
+                              placeholder="Search proposals..."
+                              className="h-9 pl-8 pr-16 w-full rounded-xl text-xs font-normal border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
+                              value={proposalSearch}
+                              onChange={(e) => setProposalSearch(e.target.value)}
+                            />
+                          </div>
+
+                          <div className="w-full sm:w-auto shrink-0">
+                            <MultiCriteriaFilter
+                              title="Filter Proposals"
+                              groups={proposalFilterGroups}
+                              selected={proposalFilters}
+                              onChange={setProposalFilters}
+                              totalCount={data.proposals.length}
+                              matchingCount={filteredProposals.length}
+                              onReset={() => setProposalFilters({ status: [], organization: [] })}
+                            />
+                          </div>
                         </div>
                       </div>
 
-                      <div className="w-full sm:w-auto shrink-0">
-                        <MultiCriteriaFilter
-                          title="Filter Proposals"
-                          groups={proposalFilterGroups}
-                          selected={proposalFilters}
-                          onChange={setProposalFilters}
-                          totalCount={data.proposals.length}
-                          matchingCount={filteredProposals.length}
-                          onReset={() => setProposalFilters({ status: [], organization: [] })}
-                        />
+                      {/* Proposals List */}
+                      <div className="border-t border-gray-100 dark:border-white/10 flex-1">
+                        {loading ? (
+                          <div className="p-5">
+                            <StudentOsasProposalsListSkeleton count={3} />
+                          </div>
+                        ) : data.proposals.length === 0 ? (
+                          <div className="p-12 text-center">
+                            <Empty className="flex h-[320px] flex-col items-center justify-center border-0 bg-transparent text-center">
+                              <EmptyHeader className="flex flex-col items-center gap-0">
+                                <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">
+                                  No Event Proposals Yet
+                                </EmptyTitle>
+                                <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400">
+                                  You haven&apos;t submitted any event proposals yet. Use the form above to submit your first proposal.
+                                </EmptyDescription>
+                                <Button
+                                  type="button"
+                                  onClick={() => setIsFormOpen(true)}
+                                  className="mt-5 flex h-10 px-5 text-xs font-semibold rounded-xl! btn-brand-red text-white! active:scale-95 cursor-pointer shadow-xs border-0"
+                                  style={{ color: "#ffffff" }}
+                                >
+                                  New Proposal
+                                </Button>
+                              </EmptyHeader>
+                            </Empty>
+                          </div>
+                        ) : filteredProposals.length === 0 ? (
+                          <div className="p-12 text-center">
+                            <Empty className="flex h-[240px] flex-col items-center justify-center border-0 bg-transparent text-center">
+                              <EmptyHeader className="flex flex-col items-center gap-0">
+                                <EmptyTitle className="text-base font-semibold text-gray-900 dark:text-zinc-50">
+                                  No matching proposals
+                                </EmptyTitle>
+                                <EmptyDescription className="max-w-xs text-xs font-medium text-gray-500 dark:text-zinc-400 mt-1">
+                                  No event proposals match your current search or combined filter criteria.
+                                </EmptyDescription>
+                              </EmptyHeader>
+                            </Empty>
+                          </div>
+                        ) : (
+                          <div className="p-5 space-y-3">
+                            {filteredProposals.map((item) => (
+                              <article
+                                key={item.id}
+                                onClick={() => setSelectedProposalForDetail(item)}
+                                className="group rounded-xl border border-gray-200 p-4 dark:border-white/10 hover:bg-gray-50/50 dark:hover:bg-white/2 transition-colors cursor-pointer select-none"
+                              >
+                                <div className="flex flex-wrap items-center justify-between gap-2">
+                                  <h3 className="text-[14px] font-medium text-[#111111] dark:text-zinc-100 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors">
+                                    {item.title}
+                                  </h3>
+                                  <div className="flex items-center gap-2">
+                                    <StatusBadge status={item.status} />
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleOpenPdfPreview(item);
+                                      }}
+                                      title="View Proposal Document"
+                                      className="inline-flex h-7 w-7 items-center justify-center rounded-[6px] text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10 hover:text-pup-maroon dark:hover:text-red-400 transition-colors cursor-pointer"
+                                    >
+                                      <HugeIcon className="ph-bold ph-file-pdf text-[16px]"></HugeIcon>
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setSelectedProposalForDetail(item);
+                                      }}
+                                      title="View Proposal Details & Timeline"
+                                      className="inline-flex h-7 w-7 items-center justify-center rounded-[6px] text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10 hover:text-pup-maroon dark:hover:text-red-400 transition-colors cursor-pointer"
+                                    >
+                                      <HugeIcon className="ph-bold ph-clock-counter-clockwise text-[16px]"></HugeIcon>
+                                    </button>
+                                  </div>
+                                </div>
+                                <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+                                  <p className="text-[13px] font-normal text-[#8E8E93] dark:text-zinc-400">
+                                    {item.organization_name} · {item.event_date}
+                                  </p>
+                                  {item.status === "Approved" && (
+                                    <div className="flex items-center gap-2">
+                                      {item.post_event_status === "Cleared" ? (
+                                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300">
+                                          <HugeIcon className="ph-bold ph-check text-xs" />
+                                          Post-Event Cleared
+                                        </span>
+                                      ) : item.post_event_status === "Submitted" || item.post_event_status === "Under Review" ? (
+                                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-sky-100 text-sky-800 dark:bg-sky-950/50 dark:text-sky-300">
+                                          <HugeIcon className="ph-bold ph-hourglass text-xs" />
+                                          Post-Event In Review
+                                        </span>
+                                      ) : (
+                                        <button
+                                          type="button"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            setOsasSubView("post_event");
+                                            setPostEventForm((prev) => ({
+                                              ...prev,
+                                              eventProposalId: String(item.id),
+                                              organizationId: item.organization_id || myOrganizations[0]?.organization_id || "",
+                                            }));
+                                            setIsFormOpen(true);
+                                          }}
+                                          className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-lg bg-amber-600 hover:bg-amber-700 text-white shadow-xs active:scale-95 transition-all cursor-pointer"
+                                        >
+                                          <span>Submit Post-Event Report</span>
+                                          <HugeIcon className="ph-bold ph-arrow-right text-[12px]" />
+                                        </button>
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
+                                <ol className="mt-3 space-y-2 border-l-2 border-gray-200 pl-4 text-xs text-gray-500 dark:border-white/10 dark:text-zinc-400">
+                                  {item.updates?.map((update) => (
+                                    <li key={update.id}>
+                                      <span className="font-semibold text-gray-700 dark:text-zinc-300">{update.status}</span> — {update.message || "Status updated"}
+                                    </li>
+                                  ))}
+                                </ol>
+                              </article>
+                            ))}
+                          </div>
+                        )}
                       </div>
-                    </div>
-                  </div>
+                    </>
+                  )}
 
-                  {/* Active Filter Chips for Proposals */}
-                  <ActiveFilterChips
-                    groups={proposalFilterGroups}
-                    selected={proposalFilters}
-                    onRemove={(groupId, val) => {
-                      setProposalFilters((prev) => ({
-                        ...prev,
-                        [groupId]: (prev[groupId] || []).filter((v) => v !== val),
-                      }));
-                    }}
-                    searchQuery={proposalSearch}
-                    onClearSearch={() => setProposalSearch("")}
-                    onClearAll={() => {
-                      setProposalSearch("");
-                      setProposalFilters({ status: [], organization: [] });
-                    }}
-                    className="border-t border-gray-100 dark:border-white/10 bg-white dark:bg-card px-6 py-2.5"
-                  />
+                  {/* STREAM 2: POST-EVENT & LIQUIDATION REPORTS */}
+                  {osasSubView === "post_event" && (
+                    <div className="flex flex-col flex-1 min-h-0">
+                      {pendingPostEvents.length > 0 && (
+                        <div className="mx-6 mt-2 mb-4 p-4 rounded-xl border border-amber-200 dark:border-amber-900/40 bg-amber-50/70 dark:bg-amber-950/30 flex items-start gap-3">
+                          <HugeIcon className="ph-bold ph-warning-circle text-amber-600 dark:text-amber-400 text-lg mt-0.5 shrink-0" />
+                          <div className="text-xs text-amber-900 dark:text-amber-200">
+                            <span className="font-bold">Pending Post-Event Compliance:</span> You have{" "}
+                            <strong>{pendingPostEvents.length}</strong> approved event(s) requiring accomplishment narrative reports and financial liquidation.
+                          </div>
+                        </div>
+                      )}
 
-                  {/* 4. Proposals List */}
-                  <div className="border-t border-gray-100 dark:border-white/10 flex-1">
-                    {loading ? (
-                      <div className="p-5">
-                        <StudentOsasProposalsListSkeleton count={3} />
-                      </div>
-                    ) : data.proposals.length === 0 ? (
-                      <div className="p-12 text-center">
-                        <Empty className="flex h-[320px] flex-col items-center justify-center border-0 bg-transparent text-center">
-                          <EmptyHeader className="flex flex-col items-center gap-0">
-                            <div className="relative mb-6">
-                              <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                              <EmptyMedia className="relative z-10 flex h-20 w-20 items-center justify-center rounded-2xl border border-gray-100 bg-white shadow-md dark:border-white/10 dark:bg-card dark:shadow-none">
-                                <HugeIcon  className="ph-file-text text-2xl text-pup-maroon"></HugeIcon>
-                              </EmptyMedia>
+                      {/* Post-Event Submission Form */}
+                      {isFormOpen && myOrganizations.length > 0 && (
+                        <div className="border-t border-gray-100 dark:border-white/10 p-5 sm:p-6 bg-gray-50/40 dark:bg-zinc-900/20 animate-in fade-in slide-in-from-top-2 duration-fast">
+                          <div className="flex items-center gap-3 pb-4 border-b border-gray-100 dark:border-white/10">
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-50 text-pup-maroon dark:bg-red-950/40 dark:text-red-400">
+                              <HugeIcon className="ph-bold ph-clipboard-text text-xl" />
                             </div>
-                            <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">
-                              No Event Proposals Yet
-                            </EmptyTitle>
-                            <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400">
-                              You haven&apos;t submitted any event proposals yet. Use the form above to submit your first proposal.
-                            </EmptyDescription>
-                            <Button
-                              type="button"
-                              onClick={() => setIsFormOpen(true)}
-                              className="mt-5 flex h-10 px-5 text-xs font-semibold rounded-xl! btn-brand-red text-white! active:scale-95 disabled:opacity-50 transition-all cursor-pointer shadow-xs border-0"
-                              style={{ color: "#ffffff" }}
-                            >
-                              New Proposal
-                            </Button>
-                          </EmptyHeader>
-                        </Empty>
-                      </div>
-                    ) : filteredProposals.length === 0 ? (
-                      <div className="p-12 text-center">
-                        <Empty className="flex h-[240px] flex-col items-center justify-center border-0 bg-transparent text-center">
-                          <EmptyHeader className="flex flex-col items-center gap-0">
-                            <EmptyTitle className="text-base font-semibold text-gray-900 dark:text-zinc-50">
-                              No matching proposals
-                            </EmptyTitle>
-                            <EmptyDescription className="max-w-xs text-xs font-medium text-gray-500 dark:text-zinc-400 mt-1">
-                              No event proposals match your current search or combined filter criteria.
-                            </EmptyDescription>
-                            <Button
-                              type="button"
-                              variant="outline"
-                              onClick={() => {
-                                setProposalSearch("");
-                                setProposalFilters({ status: [], organization: [] });
-                              }}
-                              className="mt-6 flex h-10 items-center justify-center gap-2 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
-                            >
-                              <HugeIcon className="ph-bold ph-arrow-counter-clockwise text-[14px] shrink-0" />
-                              <span>Clear Filters</span>
-                            </Button>
-                          </EmptyHeader>
-                        </Empty>
-                      </div>
-                    ) : (
-                      <div className="p-5 space-y-3">
-                        {filteredProposals.map((item) => (
-                          <article
-                            key={item.id}
-                            onClick={() => setSelectedProposalForDetail(item)}
-                            className="group rounded-xl border border-gray-200 p-4 dark:border-white/10 hover:bg-gray-50/50 dark:hover:bg-white/2 transition-colors cursor-pointer select-none"
-                          >
-                            <div className="flex flex-wrap items-center justify-between gap-2">
-                              <h3 className="text-[14px] font-medium text-[#111111] dark:text-zinc-100 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors">
-                                {item.title}
-                              </h3>
-                              <div className="flex items-center gap-2">
-                                <StatusBadge status={item.status} />
-                                <button
-                                  type="button"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleOpenPdfPreview(item);
+                            <div>
+                              <h2 className="text-[15px] font-semibold text-gray-900 dark:text-zinc-50">New Post-Event & Liquidation Report</h2>
+                              <p className="text-xs text-gray-500 dark:text-zinc-400">Submit accomplishment documentation, attendance figures, and liquidation receipts for an approved event.</p>
+                            </div>
+                          </div>
+
+                          <form onSubmit={submitPostEventReport} className="flex flex-col gap-4 mt-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                              <div className="min-w-0">
+                                <label className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-200">
+                                  Approved Event Proposal <span className="text-red-500">*</span>
+                                </label>
+                                <Select
+                                  value={postEventForm.eventProposalId}
+                                  onChange={(e) => {
+                                    const pId = e.target.value;
+                                    const p = (data.proposals || []).find((x) => String(x.id) === pId);
+                                    setPostEventForm((prev) => ({
+                                      ...prev,
+                                      eventProposalId: pId,
+                                      organizationId: p?.organization_id || prev.organizationId,
+                                    }));
                                   }}
-                                  title="View Proposal Document"
-                                  className="inline-flex h-7 w-7 items-center justify-center rounded-[6px] text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10 hover:text-pup-maroon dark:hover:text-red-400 transition-colors cursor-pointer"
+                                  className="h-10 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-xs text-gray-900 dark:text-zinc-100 shadow-none"
                                 >
-                                  <HugeIcon  className="ph-bold ph-file-pdf text-[16px]"></HugeIcon>
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setSelectedProposalForDetail(item);
-                                  }}
-                                  title="View Proposal Details & Timeline"
-                                  className="inline-flex h-7 w-7 items-center justify-center rounded-[6px] text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10 hover:text-pup-maroon dark:hover:text-red-400 transition-colors cursor-pointer"
-                                >
-                                  <HugeIcon  className="ph-bold ph-clock-counter-clockwise text-[16px]"></HugeIcon>
-                                </button>
+                                  <option value="">Select an approved event...</option>
+                                  {data.proposals?.filter((p) => p.status === "Approved").map((p) => (
+                                    <option key={p.id} value={p.id}>
+                                      {p.title} ({p.event_date}) — {p.organization_name}
+                                    </option>
+                                  ))}
+                                </Select>
+                              </div>
+
+                              <div className="min-w-0">
+                                <label className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-200">
+                                  Actual Attendees Count
+                                </label>
+                                <Input
+                                  type="number"
+                                  min="0"
+                                  placeholder="e.g. 150"
+                                  value={postEventForm.actualAttendance}
+                                  onChange={(e) => setPostEventForm({ ...postEventForm, actualAttendance: e.target.value })}
+                                  className="h-10 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-3 text-xs text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
+                                />
+                              </div>
+
+                              <div className="min-w-0">
+                                <label className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-200">
+                                  Total Expenses Liquidated (PHP)
+                                </label>
+                                <Input
+                                  type="number"
+                                  step="0.01"
+                                  min="0"
+                                  placeholder="e.g. 5200.00"
+                                  value={postEventForm.totalExpenses}
+                                  onChange={(e) => setPostEventForm({ ...postEventForm, totalExpenses: e.target.value })}
+                                  className="h-10 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-3 text-xs text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
+                                />
                               </div>
                             </div>
-                            <p className="mt-1.5 text-[13px] font-normal text-[#8E8E93] dark:text-zinc-400">
-                              {item.organization_name} · {item.event_date}
-                            </p>
-                            <ol className="mt-3 space-y-2 border-l-2 border-gray-200 pl-4 text-xs text-gray-500 dark:border-white/10 dark:text-zinc-400">
-                              {item.updates.map((update) => (
-                                <li key={update.id}>
-                                  <span className="font-semibold text-gray-700 dark:text-zinc-300">{update.status}</span> — {update.message || "Status updated"}
-                                </li>
-                              ))}
-                            </ol>
-                          </article>
-                        ))}
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div>
+                                <label className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-200">
+                                  Narrative Accomplishment Report (PDF) <span className="text-red-500">*</span>
+                                </label>
+                                <Input
+                                  type="file"
+                                  accept="application/pdf"
+                                  onChange={(e) => setPostEventForm({ ...postEventForm, narrativeFile: e.target.files?.[0] || null })}
+                                  required
+                                  className="h-10 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-3 text-xs text-gray-900 dark:text-zinc-100 file:mr-3 file:border-0 file:bg-transparent file:text-xs file:font-medium file:text-gray-500 shadow-none outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
+                                />
+                              </div>
+
+                              <div>
+                                <label className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-200">
+                                  Financial Liquidation & Receipts (PDF)
+                                </label>
+                                <Input
+                                  type="file"
+                                  accept="application/pdf"
+                                  onChange={(e) => setPostEventForm({ ...postEventForm, liquidationFile: e.target.files?.[0] || null })}
+                                  className="h-10 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-3 text-xs text-gray-900 dark:text-zinc-100 file:mr-3 file:border-0 file:bg-transparent file:text-xs file:font-medium file:text-gray-500 shadow-none outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
+                                />
+                              </div>
+                            </div>
+
+                            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-1">
+                              <span className="text-xs text-gray-500 dark:text-zinc-400">
+                                Post-event reports are audited by OSAS for compliance scoring and accreditation.
+                              </span>
+                              <div className="flex items-center gap-2.5 w-full sm:w-auto">
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  onClick={() => setIsFormOpen(false)}
+                                  className="w-full sm:w-auto h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                                >
+                                  Hide
+                                </Button>
+                                <Button
+                                  type="submit"
+                                  disabled={postEventSubmitting}
+                                  className="w-full sm:w-auto h-10 px-6 btn-brand-red text-white! font-semibold text-xs shadow-xs rounded-xl! gap-2 flex items-center justify-center dark:shadow-none active:scale-95 cursor-pointer border-0"
+                                  style={{ color: "#ffffff" }}
+                                >
+                                  {postEventSubmitting ? "Submitting Report..." : "Submit Post-Event Report"}
+                                </Button>
+                              </div>
+                            </div>
+                          </form>
+                        </div>
+                      )}
+
+                      {/* Post-Event Reports List */}
+                      <div className="border-t border-gray-100 dark:border-white/10 p-5 bg-gray-50/40 dark:bg-zinc-900/30 flex items-center justify-between">
+                        <div>
+                          <h3 className="text-[15px] font-semibold text-gray-900 dark:text-zinc-50">Post-Event Reports History</h3>
+                          <p className="mt-0.5 text-xs text-gray-500 dark:text-zinc-400">Official post-event accomplishment reports, liquidation audit records, and OSAS clearance.</p>
+                        </div>
+                        <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-bold text-gray-600 dark:bg-zinc-800 dark:text-zinc-300">
+                          {postEventReports.length} total
+                        </span>
                       </div>
-                    )}
-                  </div>
+
+                      <div className="border-t border-gray-100 dark:border-white/10 flex-1 p-5 space-y-3">
+                        {postEventReports.length === 0 ? (
+                          <div className="p-8 text-center text-xs text-gray-500 dark:text-zinc-400">
+                            No post-event reports submitted yet. Use the form above to submit your first report.
+                          </div>
+                        ) : (
+                          postEventReports.map((report) => (
+                            <div key={report.id} className="p-4 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-900/50 space-y-3">
+                              <div className="flex flex-wrap items-center justify-between gap-2">
+                                <div>
+                                  <h4 className="text-sm font-semibold text-gray-900 dark:text-zinc-100">{report.event_title}</h4>
+                                  <p className="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">
+                                    {report.organization_name} · Attendees: <strong>{report.actual_attendance || 0}</strong> · Expenses: <strong>₱{Number(report.total_expenses || 0).toLocaleString()}</strong>
+                                  </p>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <StatusBadge status={report.status} />
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleOpenPdfPreview(null, {
+                                      url: `/api/student/post-event-reports/${report.id}?file=narrative`,
+                                      title: `Narrative Report — ${report.event_title}`,
+                                      subtitle: `Submitted by ${report.submitted_by_email}`,
+                                      studentName: me?.name || "Student",
+                                      docType: "Post-Event Narrative Report",
+                                      originalFilename: report.narrative_original_filename,
+                                    })}
+                                    className="h-7 px-2.5 text-[11px] font-semibold rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 shadow-xs cursor-pointer active:scale-95 transition-all"
+                                  >
+                                    Preview Narrative
+                                  </Button>
+                                  {report.liquidation_storage_filename && (
+                                    <Button
+                                      type="button"
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => handleOpenPdfPreview(null, {
+                                        url: `/api/student/post-event-reports/${report.id}?file=liquidation`,
+                                        title: `Financial Liquidation — ${report.event_title}`,
+                                        subtitle: `Submitted by ${report.submitted_by_email}`,
+                                        studentName: me?.name || "Student",
+                                        docType: "Financial Liquidation Report",
+                                        originalFilename: report.liquidation_original_filename,
+                                      })}
+                                      className="h-7 px-2.5 text-[11px] font-semibold rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 shadow-xs cursor-pointer active:scale-95 transition-all"
+                                    >
+                                      Preview Liquidation
+                                    </Button>
+                                  )}
+                                </div>
+                              </div>
+                              {report.review_note && (
+                                <div className="p-2.5 rounded-lg bg-gray-50 dark:bg-zinc-800/60 border border-gray-100 dark:border-zinc-800 text-xs text-gray-600 dark:text-zinc-300">
+                                  <span className="font-semibold text-gray-800 dark:text-zinc-100">OSAS Note:</span> {report.review_note}
+                                </div>
+                              )}
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </Card>
               )}
               </div>
@@ -2181,7 +2501,7 @@ export default function StudentDashboard() {
 
                 {selectedRequestForDetail.feedback.comments && (
                   <p className="text-xs text-gray-700 dark:text-zinc-300 italic pt-1 border-t border-amber-200/40 dark:border-amber-900/30">
-                    "{selectedRequestForDetail.feedback.comments}"
+                    &ldquo;{selectedRequestForDetail.feedback.comments}&rdquo;
                   </p>
                 )}
               </div>

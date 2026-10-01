@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Empty, EmptyHeader, EmptyTitle, EmptyDescription, EmptyMedia } from "@/components/ui/empty"
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
 
 function getYear(document) {
@@ -82,8 +83,8 @@ export default function OfficeDocumentsTable({
             <table className="min-w-full text-sm">
               <thead className="border-b border-gray-100 dark:border-white/10 bg-gray-50/50 dark:bg-white/5">
                 <tr className="text-left text-[11px] font-semibold uppercase tracking-wide text-[#8E8E93] dark:text-zinc-500">
-                  <th className="px-6 py-3.5">Student No.</th>
-                  <th className="px-6 py-3.5">Student Name</th>
+                  <th className="px-6 py-3.5">{officeLabel === "OSAS" ? "Organization" : "Student No."}</th>
+                  <th className="px-6 py-3.5">{officeLabel === "OSAS" ? "Officer / Submitter" : "Student Name"}</th>
                   <th className="px-6 py-3.5">Document</th>
                   <th className="px-6 py-3.5">Year</th>
                   <th className="px-6 py-3.5">Status</th>
@@ -93,7 +94,11 @@ export default function OfficeDocumentsTable({
               <tbody className="divide-y divide-gray-100 dark:divide-white/10 bg-transparent">
                 {visibleRows.map((document) => (
                   <tr key={document.id} className="transition-colors hover:bg-gray-50/50 dark:hover:bg-white/5">
-                    <td className="px-6 py-3.5 font-mono text-xs text-gray-700 dark:text-zinc-300">{document.student_no || "—"}</td>
+                    <td className="px-6 py-3.5 font-mono text-xs text-gray-700 dark:text-zinc-300">
+                      {officeLabel === "OSAS"
+                        ? (document.organization_name || document.verified_org_name || document.org_acronym || document.student_no || "—")
+                        : (document.student_no || "—")}
+                    </td>
                     <td className="px-6 py-3.5 font-medium text-gray-900 dark:text-zinc-50">{document.student_name || "—"}</td>
                     <td className="px-6 py-3.5">
                       <div className="font-medium text-gray-800 dark:text-zinc-200">{document.doc_type}</div>
@@ -109,15 +114,21 @@ export default function OfficeDocumentsTable({
                       )}>{document.approval_status || "Pending"}</Badge>
                     </td>
                     <td className="px-6 py-3.5 text-right">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        className="h-8 rounded-xl px-3 text-xs font-semibold border border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-zinc-800 shadow-xs active:scale-95 transition-all"
-                        onClick={() => onPreviewDocument?.(document.doc_type, document.student_name, document.student_no, document.id)}
-                      >
-                        Preview
-                      </Button>
+                      <div className="flex items-center justify-end" onClick={(e) => e.stopPropagation()}>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button
+                              type="button"
+                              onClick={() => onPreviewDocument?.(document.doc_type, document.student_name, document.student_no, document.id)}
+                              aria-label="Preview Document"
+                              className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
+                            >
+                              <HugeIcon className="ph-bold ph-eye text-[16px]" />
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent>Preview Document</TooltipContent>
+                        </Tooltip>
+                      </div>
                     </td>
                   </tr>
                 ))}

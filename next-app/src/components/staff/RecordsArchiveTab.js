@@ -301,6 +301,17 @@ export default function RecordsArchiveTab({
 
 
 
+  const isOsas = officeLabel === "OSAS"
+  const isLeafLevel = isOsas
+    ? currentLevel === "organizations" || currentLevel === "students"
+    : currentLevel === "students"
+
+  const selectedCategory = useMemo(() => {
+    if (!isOsas) return null
+    const catBreadcrumb = breadcrumbs.find((b) => b.level === "organizations")
+    return catBreadcrumb?.label.replace(/ Organizations$/, "") || null
+  }, [isOsas, breadcrumbs])
+
   // Derived filtered results
   const filteredQuickResults = useMemo(() => {
     if (showArchived) {
@@ -308,8 +319,10 @@ export default function RecordsArchiveTab({
       return archivedStudents
         .filter(
           (s) =>
-            s.studentNo.toLowerCase().includes(q) ||
-            s.name.toLowerCase().includes(q)
+            (s.studentNo || "").toLowerCase().includes(q) ||
+            (s.acronym || "").toLowerCase().includes(q) ||
+            (s.name || "").toLowerCase().includes(q) ||
+            (s.category || "").toLowerCase().includes(q)
         )
         .slice(0, 10)
     }
@@ -317,7 +330,25 @@ export default function RecordsArchiveTab({
   }, [showArchived, quickResults, archivedStudents, quickQuery])
 
   const filteredExplorerItems = useMemo(() => {
-    if (currentLevel !== "students") {
+    if (!isLeafLevel) {
+      if (isOsas) {
+        return explorerItems.map((item) => {
+          const cat = item.key
+          const activeCount = students.filter(
+            (s) => (s.category || s.rawOrg?.category) === cat
+          ).length
+          const archCount = archivedStudents.filter(
+            (s) => (s.category || s.rawOrg?.category) === cat
+          ).length
+
+          return {
+            ...item,
+            title: item.title || cat,
+            subtitle: showArchived ? `${archCount} archived` : `${activeCount} active`
+          }
+        })
+      }
+
       return explorerItems.map((item) => {
         const yearStr = item.key
         const yearNum = Number(yearStr)
@@ -337,6 +368,13 @@ export default function RecordsArchiveTab({
     }
 
     if (showArchived) {
+      if (isOsas) {
+        if (!selectedCategory) return []
+        return archivedStudents
+          .filter((s) => (s.category || s.rawOrg?.category) === selectedCategory)
+          .map((s) => ({ key: s.rawOrg?.id || s.studentNo, student: s }))
+      }
+
       const year = breadcrumbs
         .find((b) => b.level === "students")
         ?.label.split(" ")[1]
@@ -349,42 +387,54 @@ export default function RecordsArchiveTab({
         .map((s) => ({ key: s.studentNo, student: s }))
     }
     return explorerItems
-  }, [showArchived, explorerItems, archivedStudents, students, currentLevel, breadcrumbs])
+  }, [showArchived, explorerItems, archivedStudents, students, isLeafLevel, isOsas, selectedCategory, breadcrumbs])
 
   const paginatedExplorerItems = useMemo(() => {
-    if (currentLevel !== "students") return filteredExplorerItems
+    if (!isLeafLevel) return filteredExplorerItems
     const start = (page - 1) * itemsPerPage
     return filteredExplorerItems.slice(start, start + itemsPerPage)
-  }, [filteredExplorerItems, currentLevel, page, itemsPerPage])
+  }, [filteredExplorerItems, isLeafLevel, page, itemsPerPage])
 
-  const totalItems = currentLevel === "students" ? filteredExplorerItems.length : 0
+  const totalItems = isLeafLevel ? filteredExplorerItems.length : 0
   const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage))
 
   const activeTabCount = useMemo(() => {
-    if (currentLevel === "students") {
-      const yearItem = breadcrumbs.find((b) => b.level === "students")
-      if (yearItem) {
-        const yearNum = Number(yearItem.label.split(" ")[1])
-        if (Number.isFinite(yearNum)) {
-          return students.filter((s) => getStudentFolderYear(s) === yearNum).length
+    if (isLeafLevel) {
+      if (isOsas) {
+        if (selectedCategory) {
+          return students.filter((s) => (s.category || s.rawOrg?.category) === selectedCategory).length
+        }
+      } else {
+        const yearItem = breadcrumbs.find((b) => b.level === "students")
+        if (yearItem) {
+          const yearNum = Number(yearItem.label.split(" ")[1])
+          if (Number.isFinite(yearNum)) {
+            return students.filter((s) => getStudentFolderYear(s) === yearNum).length
+          }
         }
       }
     }
     return students.length
-  }, [currentLevel, breadcrumbs, students])
+  }, [isLeafLevel, isOsas, selectedCategory, breadcrumbs, students])
 
   const archivedTabCount = useMemo(() => {
-    if (currentLevel === "students") {
-      const yearItem = breadcrumbs.find((b) => b.level === "students")
-      if (yearItem) {
-        const yearNum = Number(yearItem.label.split(" ")[1])
-        if (Number.isFinite(yearNum)) {
-          return archivedStudents.filter((s) => getStudentFolderYear(s) === yearNum).length
+    if (isLeafLevel) {
+      if (isOsas) {
+        if (selectedCategory) {
+          return archivedStudents.filter((s) => (s.category || s.rawOrg?.category) === selectedCategory).length
+        }
+      } else {
+        const yearItem = breadcrumbs.find((b) => b.level === "students")
+        if (yearItem) {
+          const yearNum = Number(yearItem.label.split(" ")[1])
+          if (Number.isFinite(yearNum)) {
+            return archivedStudents.filter((s) => getStudentFolderYear(s) === yearNum).length
+          }
         }
       }
     }
     return archivedStudents.length
-  }, [currentLevel, breadcrumbs, archivedStudents])
+  }, [isLeafLevel, isOsas, selectedCategory, breadcrumbs, archivedStudents])
 
 
 
@@ -399,7 +449,11 @@ export default function RecordsArchiveTab({
         <PageHeader
           icon="ph-archive"
           title="Records & Archive"
-          description="Browse, search, and locate student records and physical archives."
+          description={
+            isOsas
+              ? "Browse, search, and locate student organization records and physical archives."
+              : "Browse, search, and locate student records and physical archives."
+          }
           showBorder={false}
           className="p-6"
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
@@ -450,7 +504,7 @@ export default function RecordsArchiveTab({
               <HugeIcon  className="ph-bold ph-magnifying-glass absolute top-1/2 -translate-y-1/2 left-3 text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm pointer-events-none"></HugeIcon>
               <Input
                 type="text"
-                placeholder="Search Student"
+                placeholder={isOsas ? "Search Organization" : "Search Student"}
                 className="h-9 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 pl-9 pr-10 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
                 value={quickQuery}
                 onChange={(e) => setQuickQuery(e.target.value)}
@@ -459,7 +513,7 @@ export default function RecordsArchiveTab({
                 <button
                   type="button"
                   onClick={() => setQuickQuery("")}
-                  className="absolute top-1/2 right-3 -translate-y-1/2 text-gray-400 transition-colors hover:text-pup-maroon dark:hover:text-red-500 dark:text-zinc-500"
+                  className="absolute top-1/2 right-3 -translate-y-1/2 text-gray-400 transition-colors hover:text-pup-maroon dark:hover:text-red-500 dark:text-zinc-500 cursor-pointer"
                 >
                   <HugeIcon  className="ph-bold ph-x-circle text-[15px]"></HugeIcon>
                 </button>
@@ -477,7 +531,9 @@ export default function RecordsArchiveTab({
                   </div>
                 ) : filteredQuickResults.length === 0 ? (
                   <div className="p-4 text-center text-xs text-gray-500 dark:text-zinc-400">
-                    {showArchived ? "No archived records found." : "No records found."}
+                    {showArchived
+                      ? (isOsas ? "No archived organizations found." : "No archived records found.")
+                      : (isOsas ? "No organizations found." : "No records found.")}
                   </div>
                 ) : (
                   filteredQuickResults.map((s) => (
@@ -489,15 +545,22 @@ export default function RecordsArchiveTab({
                         setQuickQuery("")
                       }}
                     >
-                      <div>
-                        <div className="text-sm font-semibold text-gray-800 group-hover:text-pup-maroon dark:group-hover:text-red-500 dark:text-zinc-100">
-                          {s.name}
+                      <div className="min-w-0 flex-1 pr-2">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-semibold text-gray-800 group-hover:text-pup-maroon dark:group-hover:text-red-500 dark:text-zinc-100 truncate">
+                            {s.name}
+                          </span>
+                          {isOsas && s.category && (
+                            <span className="shrink-0 px-1.5 py-0.5 rounded text-[10px] font-medium bg-gray-100 text-gray-600 dark:bg-white/10 dark:text-zinc-400">
+                              {s.category}
+                            </span>
+                          )}
                         </div>
                         <div className="text-xs font-medium text-gray-500 dark:text-zinc-400">
-                          {s.studentNo}
+                          {s.acronym || s.studentNo}
                         </div>
                       </div>
-                      <HugeIcon  className="ph-bold ph-caret-right text-sm text-gray-400 group-hover:text-pup-maroon dark:group-hover:text-red-500 dark:text-zinc-500"></HugeIcon>
+                      <HugeIcon  className="ph-bold ph-caret-right text-sm text-gray-400 group-hover:text-pup-maroon dark:group-hover:text-red-500 dark:text-zinc-500 shrink-0"></HugeIcon>
                     </div>
                   ))
                 )}
@@ -509,13 +572,13 @@ export default function RecordsArchiveTab({
         {/* 3. Breadcrumb & View Toggle Sub-Header */}
         <div className="flex h-[52px] items-center justify-between gap-2 border-t border-b border-gray-100 dark:border-white/10 bg-white px-6 text-sm dark:bg-card select-none">
           <div className="flex items-center gap-3">
-                {currentLevel === "students" && (
+                {isLeafLevel && (
                   <Button
                     type="button"
                     variant="ghost"
                     size="sm"
-                    onClick={() => onBreadcrumbClick({ level: "years" })}
-                    className="h-9 px-2.5 font-semibold text-xs text-gray-600 hover:text-gray-900 hover:bg-transparent dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-transparent transition-colors flex items-center gap-1.5 rounded-xl shadow-none! border-0!"
+                    onClick={() => onBreadcrumbClick({ level: isOsas ? "categories" : "years" })}
+                    className="h-9 px-2.5 font-semibold text-xs text-gray-600 hover:text-gray-900 hover:bg-transparent dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-transparent transition-colors flex items-center gap-1.5 rounded-xl shadow-none! border-0! cursor-pointer"
                   >
                     <HugeIcon  className="ph-bold ph-arrow-left text-sm"></HugeIcon>
                     Back
@@ -560,7 +623,7 @@ export default function RecordsArchiveTab({
                 )}
               </div>
 
-              {currentLevel === "students" && (
+              {isLeafLevel && (
                 <div className="flex gap-[24px] select-none items-center h-full">
                   {listType === "card" && paginatedExplorerItems.length > 0 && (
                     <Button
@@ -601,7 +664,7 @@ export default function RecordsArchiveTab({
               )}
             </div>
 
-            <div className={cn("flex-1 bg-white dark:bg-card", currentLevel === "students" && listType === "table" && paginatedExplorerItems.length > 0 ? "p-0" : "p-6")}>
+            <div className={cn("flex-1 bg-white dark:bg-card", isLeafLevel && listType === "table" && paginatedExplorerItems.length > 0 ? "p-0" : "p-6")}>
               {loading ? (
                 <RecordsArchiveSkeleton />
               ) : students.length === 0 && !showArchived ? (
@@ -610,25 +673,28 @@ export default function RecordsArchiveTab({
                     <div className="relative mb-6">
                       <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
                       <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
-                        <HugeIcon  className="ph-duotone ph-users-three text-3xl text-gray-400 dark:text-zinc-500"></HugeIcon>
+                        <HugeIcon  className={cn(
+                          "ph-duotone text-3xl text-gray-400 dark:text-zinc-500",
+                          isOsas ? "ph-buildings" : "ph-users-three"
+                        )}></HugeIcon>
                       </EmptyMedia>
                     </div>
                     <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
-                      No Student Records Yet
+                      {isOsas ? "No Student Organization Records Yet" : "No Student Records Yet"}
                     </EmptyTitle>
                     <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400">
-                      Register your first student record in the Upload tab.
-                      After that, you can browse, search, and locate drawers
-                      here.
+                      {isOsas
+                        ? "Register recognized student organizations in the Student Organizations tab to view and manage their Constitution & By-Laws and physical archives here."
+                        : "Register your first student record in the Upload tab. After that, you can browse, search, and locate drawers here."}
                     </EmptyDescription>
                   </EmptyHeader>
                   <EmptyContent>
                     <Button
                       type="button"
-                      onClick={() => onSwitchView("upload")}
-                      className="mt-4 flex h-10 items-center justify-center rounded-xl btn-brand-red active:scale-95 transition-all dark:shadow-none px-5 text-xs font-semibold"
+                      onClick={() => onSwitchView(isOsas ? "organizations" : "upload")}
+                      className="mt-4 flex h-10 items-center justify-center rounded-xl btn-brand-red active:scale-95 transition-all dark:shadow-none px-5 text-xs font-semibold cursor-pointer"
                     >
-                      Upload
+                      {isOsas ? "Go to Student Organizations" : "Upload"}
                     </Button>
                   </EmptyContent>
                 </Empty>
@@ -642,14 +708,16 @@ export default function RecordsArchiveTab({
                       </EmptyMedia>
                     </div>
                     <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
-                      No Archived Students
+                      {isOsas ? "No Archived Organizations" : "No Archived Students"}
                     </EmptyTitle>
                     <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400">
-                      There are currently no archived records found in the system.
+                      {isOsas
+                        ? "There are currently no archived organization records found in the system."
+                        : "There are currently no archived records found in the system."}
                     </EmptyDescription>
                   </EmptyHeader>
                 </Empty>
-              ) : currentLevel !== "students" ? (
+              ) : !isLeafLevel ? (
                 <div 
                   key={`folders-${showArchived}`}
                   className="animate-fade-up grid p-1"
@@ -680,19 +748,23 @@ export default function RecordsArchiveTab({
                       <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
                         <HugeIcon  className={cn(
                           "ph-duotone text-3xl text-gray-400 dark:text-zinc-500",
-                          showArchived ? "ph-archive" : "ph-users"
+                          showArchived ? "ph-archive" : (isOsas ? "ph-buildings" : "ph-users")
                         )}></HugeIcon>
                       </EmptyMedia>
                     </div>
                     <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
                       {showArchived
-                        ? "No Archived Students"
-                        : "No Students In This Year"}
+                        ? (isOsas ? "No Archived Organizations" : "No Archived Students")
+                        : (isOsas ? "No Organizations In This Category" : "No Students In This Year")}
                     </EmptyTitle>
                     <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400">
                       {showArchived
-                        ? "There are currently no archived records found for this academic period."
-                        : "There are no student records filed under this year yet."}
+                        ? (isOsas
+                            ? "There are currently no archived organizations found for this category."
+                            : "There are currently no archived records found for this academic period.")
+                        : (isOsas
+                            ? "There are no student organizations filed under this category yet."
+                            : "There are no student records filed under this year yet.")}
                     </EmptyDescription>
                   </EmptyHeader>
                 </Empty>
@@ -704,15 +776,16 @@ export default function RecordsArchiveTab({
                   {paginatedExplorerItems.map((row, index) => {
                     const isSelected = selectedIds.has(row.student.studentNo)
                     const studentYear = getStudentFolderYear(row.student)
-                    const theme = FOLDER_COLORS[folderColors[studentYear]] || FOLDER_COLORS["yellow"]
+                    const cardColorKey = isOsas ? (row.student.category || "Academic") : studentYear
+                    const theme = FOLDER_COLORS[folderColors[cardColorKey]] || FOLDER_COLORS["yellow"]
                     const cardStyle = {
                       background: `linear-gradient(135deg, ${theme.frontStart} 0%, ${theme.frontEnd} 100%)`,
                     }
                     return (
                       <div
-                        key={index}
+                        key={row.key || index}
                         className={cn(
-                          "group relative flex cursor-pointer flex-col rounded-[14px] p-5 shadow-[0_2px_8px_rgba(0,0,0,0.08)] select-none text-white border-0",
+                          "group relative flex cursor-pointer flex-col rounded-[14px] p-5 shadow-[0_2px_8px_rgba(0,0,0,0.08)] select-none text-white border-0 transition-all",
                           isSelected 
                             ? "ring-2 ring-[#0A84FF]" 
                             : "",
@@ -731,48 +804,144 @@ export default function RecordsArchiveTab({
                              {isSelected && <HugeIcon  className="ph-bold ph-check text-[10px]" />}
                            </div>
                         </div>
-                        <div className="flex items-start w-full">
-                          <div className="min-w-0 flex-1 flex flex-col justify-center">
-                            <div className="flex items-center min-w-0 mb-1">
-                              <h4 className="truncate text-[19px] font-bold text-white transition-colors">
+
+                        {isOsas ? (
+                          <div className="flex flex-col justify-between h-full min-h-[160px]">
+                            <div>
+                              <div className="flex items-center gap-2 pr-7 flex-wrap">
+                                <span className="rounded-full border border-white/20 bg-white/15 px-2.5 py-0.5 font-mono text-[11px] font-bold text-white tracking-wider">
+                                  {row.student.acronym || row.student.studentNo}
+                                </span>
+                                <span className="rounded-full border border-white/20 bg-black/10 px-2 py-0.5 text-[10px] font-semibold text-white/90">
+                                  {row.student.category || "Academic"}
+                                </span>
+                                {showArchived && (
+                                  <Badge className="rounded-full border-white/30 bg-white/20 px-2 py-0.5 text-[9px] font-semibold text-white">
+                                    Archived
+                                  </Badge>
+                                )}
+                              </div>
+
+                              <h4 className="mt-2 text-[17px] font-bold text-white transition-colors line-clamp-2 leading-snug">
                                 {row.student.name}
                               </h4>
-                            </div>
-                            <div className="mt-2 flex items-center gap-2">
-                              <div className="rounded-full border border-white/20 bg-white/10 px-2.5 py-0.5 font-sans text-[12px] font-medium text-white/90">
-                                {row.student.studentNo}
-                              </div>
-                              {showArchived && (
-                                <Badge className="h-4 border-white/30 bg-white/20 px-1.5 text-[9px] font-semibold text-white">
-                                  Archived
-                                </Badge>
+
+                              {row.student.adviser && (
+                                <div className="mt-1.5 flex items-center gap-1.5 text-[12px] text-white/85 font-medium">
+                                  <HugeIcon className="ph-bold ph-user text-[13px] opacity-80" />
+                                  <span className="truncate">Adviser: {row.student.adviser}</span>
+                                </div>
                               )}
-                            </div>
-                            <div className="mt-2 flex items-center justify-between gap-2">
-                              <div className="flex items-center gap-1.5 text-white/80">
-                                <HugeIcon  className="ph-bold ph-map-pin text-[14px]"></HugeIcon>
-                                <span className="text-[13px] font-medium text-white/80 select-none whitespace-nowrap">
-                                  Room {row.student.room} • Cabinet {row.student.cabinet} • Drawer {row.student.drawer}
+
+                              <div className="mt-2.5 flex items-center gap-2 text-[11px] text-white/80">
+                                <span className="inline-flex items-center gap-1 bg-white/10 px-2 py-0.5 rounded-md">
+                                  <HugeIcon className="ph-bold ph-users text-[12px]" />
+                                  {row.student.activeOfficerCount ?? 0} Officers
+                                </span>
+                                <span className="inline-flex items-center gap-1 bg-white/10 px-2 py-0.5 rounded-md">
+                                  <HugeIcon className="ph-bold ph-file-text text-[12px]" />
+                                  {row.student.proposalCount ?? 0} Proposals
                                 </span>
                               </div>
-                              {showArchived && (
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={(e) => {
-                                    e.stopPropagation()
-                                    setRestoreTarget(row.student)
-                                    setRestoreStudentOpen(true)
-                                  }}
-                                  className="h-8 rounded-xl border-white/30 bg-white/10 px-2.5 text-[9px] font-semibold text-white shadow-xs hover:bg-white/20 active:scale-95 transition-all"
-                                >
-                                  <HugeIcon  className="ph-bold ph-archive-restore mr-1"></HugeIcon>
-                                  Restore
-                                </Button>
-                              )}
+                            </div>
+
+                            <div className="mt-4 pt-3 border-t border-white/15 flex flex-col gap-2">
+                              <div className="flex items-center justify-between gap-2">
+                                {row.student.hasCbl ? (
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      onPreviewDocument(
+                                        "Constitution and By-Laws",
+                                        row.student.name,
+                                        row.student.acronym || row.student.studentNo,
+                                        row.student.rawOrg?.bylaws_storage_filename || row.student.bylawsStorageFilename || ""
+                                      );
+                                    }}
+                                    className="inline-flex items-center gap-1 text-[11px] font-semibold text-white bg-white/20 hover:bg-white/30 px-2 py-0.5 rounded-md transition-colors cursor-pointer"
+                                    title="Click to preview Constitution and By-Laws"
+                                  >
+                                    <HugeIcon className="ph-bold ph-file-pdf text-[13px]" />
+                                    <span>CBL On File</span>
+                                    <HugeIcon className="ph-bold ph-eye text-[11px] opacity-75 ml-0.5" />
+                                  </button>
+                                ) : (
+                                  <span className="inline-flex items-center gap-1 text-[11px] font-medium text-white/60">
+                                    <HugeIcon className="ph-bold ph-warning-circle text-[13px]" />
+                                    <span>No CBL Filed</span>
+                                  </span>
+                                )}
+
+                                {showArchived && (
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setRestoreTarget(row.student);
+                                      setRestoreStudentOpen(true);
+                                    }}
+                                    className="h-7 rounded-lg border-white/30 bg-white/15 px-2 text-[10px] font-semibold text-white shadow-xs hover:bg-white/25 active:scale-95 transition-all cursor-pointer"
+                                  >
+                                    <HugeIcon className="ph-bold ph-archive-restore mr-1 text-[11px]" />
+                                    Restore
+                                  </Button>
+                                )}
+                              </div>
+
+                              <div className="flex items-center gap-1.5 text-white/80">
+                                <HugeIcon className="ph-bold ph-map-pin text-[13px]" />
+                                <span className="text-[12px] font-medium text-white/85 select-none truncate">
+                                  Room {row.student.room} • {row.student.cabinet} • Drawer {row.student.drawer}
+                                </span>
+                              </div>
                             </div>
                           </div>
-                        </div>
+                        ) : (
+                          <div className="flex items-start w-full">
+                            <div className="min-w-0 flex-1 flex flex-col justify-center">
+                              <div className="flex items-center min-w-0 mb-1">
+                                <h4 className="truncate text-[19px] font-bold text-white transition-colors">
+                                  {row.student.name}
+                                </h4>
+                              </div>
+                              <div className="mt-2 flex items-center gap-2">
+                                <div className="rounded-full border border-white/20 bg-white/10 px-2.5 py-0.5 font-sans text-[12px] font-medium text-white/90">
+                                  {row.student.studentNo}
+                                </div>
+                                {showArchived && (
+                                  <Badge className="rounded-full border-white/30 bg-white/20 px-2 py-0.5 text-[9px] font-semibold text-white">
+                                    Archived
+                                  </Badge>
+                                )}
+                              </div>
+                              <div className="mt-2 flex items-center justify-between gap-2">
+                                <div className="flex items-center gap-1.5 text-white/80">
+                                  <HugeIcon  className="ph-bold ph-map-pin text-[14px]"></HugeIcon>
+                                  <span className="text-[13px] font-medium text-white/80 select-none whitespace-nowrap">
+                                    Room {row.student.room} • Cabinet {row.student.cabinet} • Drawer {row.student.drawer}
+                                  </span>
+                                </div>
+                                {showArchived && (
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={(e) => {
+                                      e.stopPropagation()
+                                      setRestoreTarget(row.student)
+                                      setRestoreStudentOpen(true)
+                                    }}
+                                    className="h-8 rounded-xl border-white/30 bg-white/10 px-2.5 text-[9px] font-semibold text-white shadow-xs hover:bg-white/20 active:scale-95 transition-all cursor-pointer"
+                                  >
+                                    <HugeIcon  className="ph-bold ph-archive-restore mr-1"></HugeIcon>
+                                    Restore
+                                  </Button>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     )
                   })}
@@ -793,10 +962,11 @@ export default function RecordsArchiveTab({
                              onChange={() => toggleSelectAll(paginatedExplorerItems)}
                            />
                         </th>
-                        <th className="w-48 px-6 py-3.5 font-medium">Student No.</th>
-                        <th className="px-6 py-3.5 font-medium">Full Name</th>
+                        <th className="w-36 px-6 py-3.5 font-medium">{isOsas ? "Acronym" : "Student No."}</th>
+                        <th className="px-6 py-3.5 font-medium">{isOsas ? "Organization Name" : "Full Name"}</th>
+                        {isOsas && <th className="w-40 px-6 py-3.5 font-medium">Category</th>}
                         <th className="w-56 px-6 py-3.5 font-medium">Physical Location</th>
-                        <th className="w-32 px-6 py-3.5 text-right font-medium">Locate</th>
+                        <th className="w-32 px-6 py-3.5 text-right font-medium">{isOsas ? "Actions" : "Locate"}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100 dark:divide-white/10 bg-transparent">
@@ -806,7 +976,7 @@ export default function RecordsArchiveTab({
                           <tr
                             key={row.key}
                             className={cn(
-                              "group h-[52px] transition-all duration-fast hover:bg-gray-50/50 dark:hover:bg-white/5 select-none",
+                              "group h-[56px] transition-all duration-fast hover:bg-gray-50/50 dark:hover:bg-white/5 select-none",
                               isSelected && "bg-blue-50/60 dark:bg-blue-950/20"
                             )}
                             onClick={() => handleLocateStudentClick(row.student)}
@@ -822,16 +992,26 @@ export default function RecordsArchiveTab({
                                  onChange={() => toggleSelect(row.student.studentNo)}
                                />
                             </td>
-                            <td className="py-0 px-6 align-middle text-[13px] font-mono text-gray-700 dark:text-zinc-300">
-                              {row.student.studentNo}
+                            <td className="py-0 px-6 align-middle text-[13px] font-mono font-bold text-gray-700 dark:text-zinc-300">
+                              {row.student.acronym || row.student.studentNo}
                             </td>
                             <td className="py-0 px-6 align-middle">
                               <div className="flex flex-col min-w-0">
-                                <div className="flex items-center gap-2 text-[14px] font-medium text-gray-900 dark:text-zinc-50">
+                                <div className="flex items-center gap-2 text-[14px] font-semibold text-gray-900 dark:text-zinc-50">
                                   <span className="truncate">
                                     {row.student.name}
                                   </span>
+                                  {isOsas && row.student.hasCbl && (
+                                    <span className="shrink-0 px-1.5 py-0.5 rounded text-[10px] font-medium bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/40">
+                                      CBL
+                                    </span>
+                                  )}
                                 </div>
+                                {isOsas && row.student.adviser && (
+                                  <div className="truncate text-[12px] font-normal text-gray-500 dark:text-zinc-400 mt-[1px]">
+                                    Adviser: {row.student.adviser} · {row.student.activeOfficerCount ?? 0} Officers · {row.student.proposalCount ?? 0} Proposals
+                                  </div>
+                                )}
                                 {showArchived && (
                                   <div className="truncate text-[12px] font-normal text-red-650 dark:text-red-400 mt-[2px]">
                                     Archived Record
@@ -839,16 +1019,39 @@ export default function RecordsArchiveTab({
                                 )}
                               </div>
                             </td>
+                            {isOsas && (
+                              <td className="py-0 px-6 align-middle">
+                                <span className="inline-flex items-center rounded-md bg-gray-100 dark:bg-zinc-800 px-2 py-1 text-[11px] font-medium text-gray-700 dark:text-zinc-300">
+                                  {row.student.category || "Academic"}
+                                </span>
+                              </td>
+                            )}
                             <td className="py-0 px-6 align-middle">
                                <div className="inline-flex w-fit items-center justify-center rounded-full bg-[#E5E5EA]/60 dark:bg-zinc-800 px-2.5 py-0.5 text-[11px] font-medium tracking-[0.02em] text-gray-800 dark:text-zinc-300 whitespace-nowrap">
-                                 Room {row.student.room} • Cabinet {row.student.cabinet} • Drawer {row.student.drawer}
+                                 Room {row.student.room} • {row.student.cabinet} • Drawer {row.student.drawer}
                                </div>
                             </td>
                             <td className="py-0 px-6 align-middle text-right">
                               <div className="flex items-center justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
+                                 {isOsas && row.student.hasCbl && (
+                                   <button
+                                     onClick={() => {
+                                       onPreviewDocument(
+                                         "Constitution and By-Laws",
+                                         row.student.name,
+                                         row.student.acronym || row.student.studentNo,
+                                         row.student.rawOrg?.bylaws_storage_filename || row.student.bylawsStorageFilename || ""
+                                       );
+                                     }}
+                                     title="Preview Constitution and By-Laws"
+                                     className="w-8 h-8 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 text-gray-400 dark:text-zinc-500 transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
+                                   >
+                                     <HugeIcon className="ph-bold ph-file-pdf text-[16px]"></HugeIcon>
+                                   </button>
+                                 )}
                                  <button
                                    onClick={() => handleLocateStudentClick(row.student)}
-                                   title="Locate"
+                                   title="Locate Archive Drawer"
                                    className="w-8 h-8 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 text-gray-400 dark:text-zinc-500 transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
                                  >
                                    <HugeIcon  className="ph-bold ph-map-pin text-[16px]"></HugeIcon>
@@ -864,7 +1067,7 @@ export default function RecordsArchiveTab({
               )}
             </div>
 
-            {currentLevel === "students" && totalItems > 0 && (
+            {isLeafLevel && totalItems > 0 && (
               <div className="flex items-center justify-between border-t border-gray-100 bg-white p-4 px-6 dark:border-white/10 dark:bg-card mt-auto select-none">
                 <div className="flex items-center gap-6 text-xs text-gray-500 dark:text-zinc-400">
                   <span>
@@ -938,8 +1141,12 @@ export default function RecordsArchiveTab({
           setRestoreStudentOpen(false)
           setRestoreTarget(null)
         }}
-        title="Restore Student Record"
-        message={`Restore record for ${restoreTarget?.name} (${restoreTarget?.studentNo})? This will make the student active and visible in all modules again.`}
+        title={isOsas ? "Restore Organization Record" : "Restore Student Record"}
+        message={
+          isOsas
+            ? `Restore record for ${restoreTarget?.name} (${restoreTarget?.acronym || restoreTarget?.studentNo})? This will make the organization active and visible in all modules again.`
+            : `Restore record for ${restoreTarget?.name} (${restoreTarget?.studentNo})? This will make the student active and visible in all modules again.`
+        }
         confirmLabel="Restore"
         variant="success"
         isRestoreModal={true}

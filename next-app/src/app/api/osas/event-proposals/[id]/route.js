@@ -16,7 +16,10 @@ async function getAuthorizedProposal(id, access) {
             COALESCE(s.name, sa_student.name, ep.student_no, 'Student Officer') AS student_name,
             so.name AS verified_org_name,
             so.acronym AS org_acronym,
-            so.category AS org_category
+            so.category AS org_category,
+            so.bylaws_original_filename AS bylaws_filename,
+            CASE WHEN so.bylaws_storage_filename IS NOT NULL THEN 'Active' ELSE 'Missing' END AS bylaws_status,
+            CASE WHEN so.bylaws_storage_filename IS NOT NULL THEN true ELSE false END AS has_bylaws
      FROM event_proposals ep
      LEFT JOIN students s ON s.student_no = ep.student_no
      LEFT JOIN student_accounts sa ON sa.id = ep.student_account_id
@@ -140,7 +143,20 @@ export async function PATCH(req, ctx) {
   }
   const studentNote = note || `Status updated to ${status} by OSAS.`;
   const proposal = await queryOne(
-    "UPDATE event_proposals SET status = $1, archived_at = NULL, updated_at = NOW() WHERE id = $2 AND office_id = 'osas' RETURNING *",
+    `UPDATE event_proposals 
+     SET status = $1, 
+         archived_at = NULL, 
+         updated_at = NOW(),
+         post_event_status = CASE 
+           WHEN $1 = 'Approved' AND post_event_status = 'Not Applicable' THEN 'Pending Submission' 
+           ELSE post_event_status 
+         END,
+         post_event_due_date = CASE 
+           WHEN $1 = 'Approved' AND post_event_due_date IS NULL THEN COALESCE(event_date + INTERVAL '10 days', (NOW() + INTERVAL '10 days')::DATE)
+           ELSE post_event_due_date 
+         END
+     WHERE id = $2 AND office_id = 'osas' 
+     RETURNING *`,
     [status, id]
   );
   if (!proposal) return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });

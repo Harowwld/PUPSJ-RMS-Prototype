@@ -160,3 +160,66 @@ export function calculatePath(room, targetCabId, getDefaultDoor) {
   }
   return null
 }
+
+export function areCabinetsEqual(cab1, cab2, cabinetsList = []) {
+  if (cab1 === cab2) return true;
+  if (!cab1 || !cab2) return false;
+  const s1 = String(cab1).trim().toUpperCase();
+  const s2 = String(cab2).trim().toUpperCase();
+  if (s1 === s2) return true;
+
+  const c1 = canonicalizeCabinetId(cab1);
+  const c2 = canonicalizeCabinetId(cab2);
+  if (c1 === c2) return true;
+
+  if (Array.isArray(cabinetsList) && cabinetsList.length > 0) {
+    const ids = cabinetsList.map((c) => String(c?.id ?? c?.cab ?? c).trim().toUpperCase());
+    const idx1 = ids.findIndex((id) => id === s1 || canonicalizeCabinetId(id) === c1);
+    const idx2 = ids.findIndex((id) => id === s2 || canonicalizeCabinetId(id) === c2);
+    if (idx1 !== -1 && idx1 === idx2) return true;
+
+    if (/^[A-Z]$/.test(c1) && idx2 !== -1 && c1.charCodeAt(0) - 65 === idx2) {
+      return true;
+    }
+    if (/^[A-Z]$/.test(c2) && idx1 !== -1 && c2.charCodeAt(0) - 65 === idx1) {
+      return true;
+    }
+  }
+
+  if (/^[A-Z]$/.test(c1) && /^202\d$/.test(c2)) {
+    if (c1.charCodeAt(0) - 65 === Number(c2) - 2020) return true;
+  }
+  if (/^[A-Z]$/.test(c2) && /^202\d$/.test(c1)) {
+    if (c2.charCodeAt(0) - 65 === Number(c1) - 2020) return true;
+  }
+
+  return false;
+}
+
+export function findMatchingCabinet(cabinets, targetCab) {
+  if (!Array.isArray(cabinets) || cabinets.length === 0 || !targetCab) return null;
+  const targetStr = String(targetCab).trim().toUpperCase();
+  const targetCanon = canonicalizeCabinetId(targetCab);
+
+  // 1. Direct or case-insensitive match
+  let found = cabinets.find((c) => String(c.id ?? c.cab).trim().toUpperCase() === targetStr);
+  if (found) return found;
+
+  // 2. Canonicalized match (strip CAB-)
+  found = cabinets.find((c) => canonicalizeCabinetId(c.id ?? c.cab) === targetCanon);
+  if (found) return found;
+
+  // 3. Alphabet letter to index mapping fallback (A -> 0, B -> 1, etc.)
+  if (/^[A-Z]$/.test(targetCanon)) {
+    const idx = targetCanon.charCodeAt(0) - 65;
+    if (cabinets[idx]) return cabinets[idx];
+  }
+
+  // 4. Year to index mapping fallback (2020 -> 0, 2021 -> 1, etc.)
+  if (/^202\d$/.test(targetCanon)) {
+    const idx = Number(targetCanon) - 2020;
+    if (cabinets[idx]) return cabinets[idx];
+  }
+
+  return null;
+}
