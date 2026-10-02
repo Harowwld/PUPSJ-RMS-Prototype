@@ -55,6 +55,8 @@ import {
 
 const STATUS_OPTIONS = [
   "Pending",
+  "Deficient",
+  "PendingPayment",
   "InProgress",
   "Ready",
   "Completed",
@@ -77,6 +79,9 @@ function statusBadgeClass(status) {
   const s = String(status || "").toUpperCase();
   if (s === "PENDING") {
     return "bg-[#FEF3C7] text-[#92400E] dark:bg-amber-950/40 dark:text-amber-400";
+  }
+  if (s === "PENDINGPAYMENT" || s === "DEFICIENT") {
+    return "bg-amber-100 text-amber-900 dark:bg-amber-950/40 dark:text-amber-300";
   }
   if (s === "PROCESSING" || s === "INPROGRESS") {
     return "bg-[#DBEAFE] text-[#1E40AF] dark:bg-blue-950/40 dark:text-blue-400";
@@ -933,7 +938,7 @@ export default function DocumentRequestsTab({
                             </td>
                             <td className="py-0 px-4 align-middle">
                               <div className={cn("inline-flex w-fit items-center justify-center rounded-full px-[10px] py-[2.5px] text-[11px] font-medium tracking-[0.04em] whitespace-nowrap", statusBadgeClass(r.status))}>
-                                {r.status === "InProgress" ? "In Progress" : r.status}
+                                {r.status === "InProgress" ? "In Progress" : r.status === "PendingPayment" ? "Pending Payment" : r.status}
                               </div>
                             </td>
                             <td className="py-0 px-4 align-middle">
@@ -1067,7 +1072,7 @@ export default function DocumentRequestsTab({
                     <span>Request #{selectedId}</span>
                     {detail && (
                       <span className={cn("inline-flex px-2.5 py-0.5 rounded-full text-[10px] font-medium", statusBadgeClass(detail.status))}>
-                        {detail.status === "InProgress" ? "In Progress" : detail.status}
+                        {detail.status === "InProgress" ? "In Progress" : detail.status === "PendingPayment" ? "Pending Payment" : detail.status}
                       </span>
                     )}
                   </SheetDescription>
@@ -1420,7 +1425,7 @@ export default function DocumentRequestsTab({
                           <div className="h-9 px-3 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-zinc-800/80 flex items-center justify-between text-xs font-semibold text-gray-800 dark:text-zinc-200">
                             <span className="flex items-center gap-1.5 truncate">
                               <HugeIcon  className="ph-bold ph-lock-simple text-gray-400 text-xs"></HugeIcon>
-                              <span>{detail.status === "InProgress" ? "In Progress" : detail.status}</span>
+                              <span>{detail.status === "InProgress" ? "In Progress" : detail.status === "PendingPayment" ? "Pending Payment" : detail.status}</span>
                             </span>
                             <span className="text-[10px] font-medium text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
                               Closed

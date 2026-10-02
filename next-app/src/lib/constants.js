@@ -5,6 +5,8 @@
 export const STATUS_COLORS = {
   // Document Request Statuses
   Pending: "#800000",      // Maroon
+  Deficient: "#d97706",    // Amber
+  PendingPayment: "#d97706", // Amber
   InProgress: "#f59e0b",   // Amber/Yellow
   Ready: "#3b82f6",        // Blue
   Completed: "#059669",    // Green
@@ -24,6 +26,8 @@ export { ARTA_TIERS, getArtaClassification } from "./citizenCharter.js";
 
 export const REQUEST_STATUSES = [
   "Pending",
+  "Deficient",
+  "PendingPayment",
   "InProgress",
   "Ready",
   "Completed",
@@ -35,6 +39,8 @@ export const TERMINAL_REQUEST_STATUSES = ["Completed", "Cancelled", "Shredded"];
 
 export const DEFAULT_REQUEST_STATUS_MESSAGES = {
   Pending: "Request submitted and queued for evaluation.",
+  Deficient: "The Registrar identified missing requirements. Please review the comment and submit the missing items.",
+  PendingPayment: "Payment is required before the Registrar can continue. Upload your payment proof or receipt here.",
   InProgress: "Request evaluation in progress. Documents are being retrieved from archives.",
   Ready: "Document is prepared, dry-sealed, and ready for release/claiming.",
   Completed: "Document successfully released and claimed. Transaction completed.",
@@ -43,8 +49,10 @@ export const DEFAULT_REQUEST_STATUS_MESSAGES = {
 };
 
 export const ALLOWED_STATUS_TRANSITIONS = {
-  Pending: ["Pending", "InProgress", "Ready", "Cancelled"],
-  InProgress: ["InProgress", "Ready", "Cancelled"],
+  Pending: ["Pending", "Deficient", "PendingPayment", "InProgress", "Ready", "Cancelled"],
+  Deficient: ["Deficient", "Pending", "PendingPayment", "InProgress", "Cancelled"],
+  PendingPayment: ["PendingPayment", "InProgress", "Cancelled"],
+  InProgress: ["InProgress", "Deficient", "PendingPayment", "Ready", "Cancelled"],
   Ready: ["Ready", "Completed", "Cancelled", "Shredded"],
   Completed: ["Completed"],
   Cancelled: ["Cancelled"],
@@ -175,4 +183,3 @@ export function normalizeProposalStatus(status) {
   if (s === "archived") return "Archived";
   return status || "";
 }
-

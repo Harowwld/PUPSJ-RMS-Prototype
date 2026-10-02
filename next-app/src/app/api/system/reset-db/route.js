@@ -132,12 +132,13 @@ async function handleResetDb(req) {
       { name: "Form 137", isCompliance: true, isRequestable: false, category: "Academic Records" },
       { name: "Grade 12 Report Card", isCompliance: true, isRequestable: false, category: "Academic Records" },
       { name: "Health Information Sheet", isCompliance: true, isRequestable: false, category: "Certificates & Clearances" },
-      { name: "Certificate of Good Moral", isCompliance: false, isRequestable: true, category: "Certificates & Clearances" },
-      { name: "Copy of Grades", isCompliance: false, isRequestable: true, category: "Academic Records" },
-      { name: "Certificate of Registration", isCompliance: false, isRequestable: true, category: "Certificates & Clearances" },
+      { name: "Certified True Copy of Records", isCompliance: false, isRequestable: true, category: "Academic Records" },
+      { name: "Certificate of Transfer Credentials (Honorable Dismissal)", isCompliance: false, isRequestable: true, category: "Graduation & Exit Records" },
       { name: "Certificate of Enrollment", isCompliance: false, isRequestable: true, category: "Certificates & Clearances" },
-      { name: "Transcript of Records", isCompliance: false, isRequestable: true, category: "Graduation & Exit Records" },
+      { name: "Certification of Grades (Cross-Enrollee)", isCompliance: false, isRequestable: true, category: "Academic Records" },
+      { name: "Transcript of Records", isCompliance: false, isRequestable: true, category: "Academic Records" },
       { name: "Diploma", isCompliance: false, isRequestable: true, category: "Graduation & Exit Records" },
+      { name: "Certificate of Graduation", isCompliance: false, isRequestable: true, category: "Graduation & Exit Records" },
     ];
     for (const dt of registrarDocTypes) {
       await query(

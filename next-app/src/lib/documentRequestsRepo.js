@@ -4,6 +4,8 @@ import { decryptPII } from "./piiEncryption.js";
 
 const VALID_STATUSES = new Set([
   "Pending",
+  "Deficient",
+  "PendingPayment",
   "InProgress",
   "Ready",
   "Completed",

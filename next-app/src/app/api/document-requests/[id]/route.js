@@ -86,6 +86,9 @@ export async function PATCH(req, ctx) {
         { status: 400 }
       );
     }
+    if (s === "Deficient" && !String(body.message || "").trim()) {
+      return NextResponse.json({ ok: false, error: "Add a comment explaining what the student needs to provide." }, { status: 400 });
+    }
     patch.status = s;
   }
 
