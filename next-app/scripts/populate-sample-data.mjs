@@ -31,6 +31,7 @@ const officialStaff = [
   ["PUPREGISTRAR-003", "registrar", "Elias", "Austria", "Admin", "Administrative", "admin.registrar@pup.local"],
   ["PUPREGISTRAR-002", "registrar", "Marcus", "Reyes", "Staff", "Records", "staff.registrar@pup.local"],
   ["PUPOSAS-001", "osas", "Sandra", "Gomez", "Admin", "OSAS Admin", "admin.osas@pup.local"],
+  ["PUPOSAS-002", "osas", "Juanito", "Rizal", "Staff", "Student Affairs", "staff.osas@pup.local"],
 ];
 
 const demoStudentAccounts = [
@@ -348,8 +349,6 @@ export async function seed({ force: forceOverride } = {}) {
     await run(`UPDATE document_requests SET updated_by = 'PUPREGISTRAR-002' WHERE updated_by = 'records.marcus@pup.local' OR updated_by = 'PUPREGISTRAR-001'`);
     await run(`DELETE FROM staff_security_answers WHERE staff_id = 'PUPREGISTRAR-001'`);
     await run(`DELETE FROM staff WHERE id = 'records.marcus@pup.local' OR email = 'records.marcus@pup.local' OR id = 'PUPREGISTRAR-001' OR email = 'admin.default@pup.local'`);
-    await run(`DELETE FROM staff WHERE id = 'PUPOSAS-002' OR email = 'staff.osas@pup.local'`);
-
     // Ensure security questions and recovery answers
     const securityQuestions = [
       [1, "What is your mother's maiden name?", true],

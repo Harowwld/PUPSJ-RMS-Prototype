@@ -8,6 +8,7 @@ const DEMO_ACCOUNTS = new Set([
   "admin.registrar@pup.local",
   "staff.registrar@pup.local",
   "admin.osas@pup.local",
+  "staff.osas@pup.local",
   "student@pup.local",
   "test.student@pup.local",
 ]);

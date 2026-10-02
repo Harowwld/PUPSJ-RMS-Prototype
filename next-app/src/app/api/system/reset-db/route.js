@@ -202,7 +202,7 @@ async function handleResetDb(req) {
       );
     }
 
-    const staffIds = ["PUPSUPERADMIN-001", "PUPREGISTRAR-003", "PUPREGISTRAR-002", "PUPOSAS-001"];
+    const staffIds = ["PUPSUPERADMIN-001", "PUPREGISTRAR-003", "PUPREGISTRAR-002", "PUPOSAS-001", "PUPOSAS-002"];
     const defaultAnswers = [
       [1, "answer1"],
       [2, "answer2"],

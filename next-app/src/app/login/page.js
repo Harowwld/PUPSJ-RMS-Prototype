@@ -64,6 +64,16 @@ const DEMO_ACCOUNTS = [
     badgeColor: "bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300",
   },
   {
+    role: "OSAS Staff",
+    title: "Student Affairs Personnel",
+    department: "Event Proposals & Organization Monitoring",
+    email: "staff.osas@pup.local",
+    badge: "OSAS",
+    icon: "ph-student",
+    accent: "text-sky-800 dark:text-sky-200 bg-sky-50 dark:bg-sky-950/40 border-sky-200/80 dark:border-sky-900/60",
+    badgeColor: "bg-sky-100 dark:bg-sky-900/60 text-sky-700 dark:text-sky-300",
+  },
+  {
     role: "Student",
     title: "Undergraduate / Alumni",
     department: "ODRS Online Document Requests",
