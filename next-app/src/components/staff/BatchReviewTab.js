@@ -27,6 +27,7 @@ const STATUS_TABS = [
   { id: "Failed", label: "Failed" },
   { id: "", label: "All" },
 ];
+const PAGE_SIZE = 10;
 
 const REGION_LABELS = {
   firstName: { label: "First name", color: "#2563eb" },
@@ -70,7 +71,7 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const params = new URLSearchParams({ limit: "50", offset: String(page * 50) });
+      const params = new URLSearchParams({ limit: String(PAGE_SIZE), offset: String(page * PAGE_SIZE) });
       if (statusFilters.length > 0) params.set("status", statusFilters.join(","));
       if (docTypeFilters.length > 0) params.set("docType", docTypeFilters.join(","));
       if (query.trim()) params.set("q", query.trim());
@@ -425,13 +426,13 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
                         Previous
                       </Button>
                       <span className="text-xs text-gray-500 dark:text-zinc-400">
-                        Page {page + 1} of {Math.max(1, Math.ceil(total / 50))}
+                        Page {page + 1} of {Math.max(1, Math.ceil(total / PAGE_SIZE))}
                       </span>
                       <Button
                         size="xs"
                         variant="outline"
                         onClick={() => setPage((current) => current + 1)}
-                        disabled={(page + 1) * 50 >= total || loading}
+                        disabled={(page + 1) * PAGE_SIZE >= total || loading}
                         className="h-7 px-2.5 text-xs font-medium rounded-lg border border-gray-200 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 disabled:opacity-40"
                       >
                         Next

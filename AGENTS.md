@@ -7,7 +7,7 @@ This document provides comprehensive orientation to the **PUPSJ Records Manageme
 ## 0. AI Agent Run & Environment Guide (Linux First)
 
 > [!IMPORTANT]
-> ### Mandatory Startup Sequence on Linux
+> ### Host Development Startup Sequence on Linux
 > When AI agents or developers execute this project in a Linux environment (e.g., CachyOS, Arch, Ubuntu, Fedora), the environment **MUST** be initialized using this exact 3-step sequence:
 >
 > 1. **Activate Docker Group**:
@@ -19,13 +19,9 @@ This document provides comprehensive orientation to the **PUPSJ Records Manageme
 >
 > 2. **Start PostgreSQL via Docker Compose**:
 >    ```bash
->    cd next-app && docker compose up -d
+>    cd next-app && docker compose up -d --wait postgres
 >    ```
->    - **Why**: The application uses a local PostgreSQL 16 container (`pupsj-rms-postgres`) exposed on host port `5433` (mapped from container `5432`). Running `docker compose up -d` starts this container in detached mode.
->    - To wait until PostgreSQL passes healthchecks before proceeding:
->      ```bash
->      cd next-app && docker compose up -d --wait postgres
->      ```
+>    - **Why**: The application uses a local PostgreSQL 16 container (`pupsj-rms-postgres`) exposed on host port `5433` (mapped from container `5432`). Waiting for its healthcheck ensures it is ready before migrations run.
 >
 > 3. **Run Dev Server & Migrations**:
 >    ```bash
@@ -33,6 +29,15 @@ This document provides comprehensive orientation to the **PUPSJ Records Manageme
 >    ```
 >    - **Why**: `pnpm dev` launches `scripts/start-local-dev.mjs`, which verifies that the PostgreSQL container is running and healthy, applies pending migrations (`pnpm db:migrate`), and starts Next.js on `http://localhost:3000`.
 >    - **Next.js Only (Fast Restart)**: If Docker Compose and migrations have already been run, you can start Next.js directly with `pnpm dev:next`.
+>
+> ### Full Docker Stack
+> To run PostgreSQL, the production Next.js app, migrations, and hot-folder watcher in containers, use the Compose workflow in `next-app/README.md`:
+> ```bash
+> cd next-app
+> cp -n .env.example .env  # set private JWT_SECRET, DEFAULT_STAFF_PASSWORD, HOT_FOLDER_INGEST_TOKEN, and POSTGRES_PASSWORD values
+> docker compose up -d --build --wait
+> ```
+> This is the container-only workflow; do not also run `pnpm dev` against the same app port.
 
 ---
 
