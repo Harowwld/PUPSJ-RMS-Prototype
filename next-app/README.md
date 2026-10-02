@@ -190,13 +190,13 @@ pnpm requests:clear -- --confirm
 
 This preserves students, accounts, official documents, staff, and OSAS event-proposal updates.
 
-Resetting the database is destructive. The legacy helper requires the app to be running and should only be used for local testing:
+Resetting the database is destructive. The local helper requires the app to be running and a SuperAdmin account. It prompts for confirmation and credentials, then sends the authenticated `POST` request:
 
 ```bash
 pnpm reset-db
 ```
 
-After a reset, restart the Next.js server and run `pnpm db:seed:sample` again.
+After a reset, restart the Next.js server if needed and run `pnpm populate-sample-data` to restore sample records.
 
 ## Project structure
 
