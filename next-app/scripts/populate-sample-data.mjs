@@ -365,6 +365,34 @@ export async function seed({ force: forceOverride } = {}) {
     for (const [code, name] of [["BSA", "Bachelor of Science in Accountancy"]]) {
       await run(`INSERT INTO courses (office_id, code, name, status) VALUES ('osas', $1, $2, 'Active') ON CONFLICT (office_id, code) DO UPDATE SET name=EXCLUDED.name, status='Active'`, [code, name]);
     }
+
+    // Recognized OSAS student organizations from the campus list.
+    const organizations = [
+      ["jfinex", "Junior Financial Executives (JFINEX)", "JFINEX", "Academic"],
+      ["yes", "YES", "YES", "Non-Academic"],
+      ["jpia", "JPIA", "JPIA", "Academic"],
+      ["ceo", "CEO", "CEO", "Academic"],
+      ["hm-society", "HM Society", "HM Society", "Academic"],
+      ["glitch", "GLITCH", "GLITCH", "Non-Academic"],
+      ["psysoc", "PSYSOC", "PSYSOC", "Academic"],
+      ["pylon-esports", "PYLON E-Sports", "PYLON E-Sports", "Non-Academic"],
+      ["rotaract", "Rotaract", "Rotaract", "Non-Academic"],
+      ["hhc", "HHC", "HHC", "Non-Academic"],
+      ["adc", "ADC", "ADC", "Academic"],
+      ["paraseist", "PARASEIST", "PARASEIST", "Non-Academic"],
+      ["sa", "SA", "SA", "Non-Academic"],
+      ["lente-filikulas", "Lente Filikulas", "Lente Filikulas", "Non-Academic"],
+    ];
+    for (const [id, name, acronym, category] of organizations) {
+      await run(
+        `INSERT INTO student_organizations (id, name, acronym, category, status, description)
+         VALUES ($1, $2, $3, $4, 'Active', 'Recognized PUP San Juan student organization under OSAS.')
+         ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, acronym=EXCLUDED.acronym,
+           category=EXCLUDED.category, status='Active', updated_at=NOW()`,
+        [id, name, acronym, category],
+      );
+    }
+
     await run(`DELETE FROM sections WHERE office_id = 'osas'`);
     for (const name of [
       "Event Proposal",
