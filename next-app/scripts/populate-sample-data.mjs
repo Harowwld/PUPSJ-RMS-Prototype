@@ -24,6 +24,19 @@ if (!process.env.DATABASE_URL) {
 
 const passwordHash = hashPassword(process.env.DEFAULT_STAFF_PASSWORD || "pupstaff");
 const studentPasswordHash = hashPassword("student123");
+const staffPassword = process.env.DEFAULT_STAFF_PASSWORD || "pupstaff";
+
+const officialStaff = [
+  ["PUPSUPERADMIN-001", null, "System", "Administrator", "SuperAdmin", "System Administration", "superadmin@pup.local"],
+  ["PUPREGISTRAR-003", "registrar", "Elias", "Austria", "Admin", "Administrative", "admin.registrar@pup.local"],
+  ["PUPREGISTRAR-002", "registrar", "Marcus", "Reyes", "Staff", "Records", "staff.registrar@pup.local"],
+  ["PUPOSAS-001", "osas", "Sandra", "Gomez", "Admin", "OSAS Admin", "admin.osas@pup.local"],
+];
+
+const demoStudentAccounts = [
+  ["2023-00001-IT-1", "test.student@pup.local"],
+  ["2022-10001-MN-1", "student@pup.local"],
+];
 
 const students = [
   ["2023-00001-IT-1", "TEST STUDENT", "BSIT", 4, "BSIT-4A", 1, "2027", 1],
@@ -292,13 +305,6 @@ const minimalPdf = Buffer.from(
 export async function seed({ force: forceOverride } = {}) {
   const force = forceOverride ?? process.argv.includes("--force");
   await transaction(async ({ query: run, queryOne: runOne }) => {
-    const officialStaff = [
-      ["PUPSUPERADMIN-001", null, "System", "Administrator", "SuperAdmin", "System Administration", "superadmin@pup.local"],
-      ["PUPREGISTRAR-003", "registrar", "Elias", "Austria", "Admin", "Administrative", "admin.registrar@pup.local"],
-      ["PUPREGISTRAR-002", "registrar", "Marcus", "Reyes", "Staff", "Records", "staff.registrar@pup.local"],
-      ["PUPOSAS-001", "osas", "Sandra", "Gomez", "Admin", "OSAS Admin", "admin.osas@pup.local"],
-    ];
-
     for (const [id, office, fname, lname, role, section, email] of officialStaff) {
       await run(
         `INSERT INTO staff (id, office_id, fname, lname, role, section, status, email, password_hash, password_last_changed, updated_at)
@@ -418,10 +424,7 @@ export async function seed({ force: forceOverride } = {}) {
       );
     }
 
-    for (const [sNo, sEmail] of [
-      ["2023-00001-IT-1", "test.student@pup.local"],
-      ["2022-10001-MN-1", "student@pup.local"],
-    ]) {
+    for (const [sNo, sEmail] of demoStudentAccounts) {
       await run(
         `INSERT INTO student_accounts (student_no, email, password_hash, status, updated_at)
          VALUES ($1, $2, $3, 'Active', NOW())
@@ -574,6 +577,15 @@ export async function seed({ force: forceOverride } = {}) {
 if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1])) {
   try {
     await seed();
+    console.log("\n[populate-sample-data] Demo login credentials:");
+    console.log("Staff accounts:");
+    for (const [id, , fname, lname, role, , email] of officialStaff) {
+      console.log(`  ${role} — ${fname} ${lname} (${id}) | login: ${email} | password: ${staffPassword}`);
+    }
+    console.log("Student accounts (login with email or student number):");
+    for (const [studentNo, email] of demoStudentAccounts) {
+      console.log(`  ${studentNo} / ${email} | password: student123`);
+    }
   } catch (error) {
     console.error("[populate-sample-data] Failed:", error);
     process.exitCode = 1;

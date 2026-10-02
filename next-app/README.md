@@ -97,7 +97,7 @@ pnpm db:seed:sample
 pnpm db:verify
 ```
 
-`db:migrate` applies every numbered SQL migration once. `db:seed:sample` is safe to run again because the sample records use conflict-safe inserts. It creates sample courses, sections, document types, staff, students, documents, requests, and the default room/cabinet/drawer layout.
+`db:migrate` applies every numbered SQL migration once. `db:seed:sample` is safe to run again because the sample records use conflict-safe inserts. It creates sample courses, sections, document types, staff, students, documents, requests, and the default room/cabinet/drawer layout. When run from the terminal, it prints credentials for the staff and student demo accounts it seeds; staff passwords use `DEFAULT_STAFF_PASSWORD` or default to `pupstaff`, and student passwords are `student123`.
 
 For host-based development, use:
 
