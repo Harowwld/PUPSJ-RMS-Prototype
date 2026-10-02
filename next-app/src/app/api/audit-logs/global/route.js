@@ -6,6 +6,7 @@ import {
   createAuthErrorResponse,
 } from "@/lib/authHelpers";
 import { isSystemAdminRole } from "@/lib/roleUtils";
+import { decryptPII } from "@/lib/piiEncryption";
 
 export const runtime = "nodejs";
 
@@ -50,8 +51,29 @@ export async function GET(req) {
       countGlobalAuditLogs({ ...queryOpts, limit: undefined, offset: undefined }),
     ]);
 
-    return NextResponse.json({ ok: true, data: rows, total });
+    const rowsWithDecryption = rows.map((row) => {
+      return {
+        ...row,
+        actor: decryptField(row.actor),
+        details: decryptField(row.details),
+      };
+    });
+
+    return NextResponse.json({ ok: true, data: rowsWithDecryption, total });
   } catch (err) {
     return NextResponse.json({ ok: false, error: "Internal server error" }, { status: 500 });
   }
+}
+
+function decryptField(val) {
+  if (!val || typeof val !== "string") return val;
+  if (!val.includes("enc:v1:")) return val;
+  if (val.startsWith("enc:v1:") && !val.includes(" ")) {
+    return decryptPII(val);
+  }
+  return val
+    .split(/\s+/)
+    .map((part) => (part.startsWith("enc:v1:") ? decryptPII(part) : part))
+    .join(" ")
+    .trim();
 }

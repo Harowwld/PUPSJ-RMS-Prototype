@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { listAuditLogs, countAuditLogs } from "../../../lib/auditLogsRepo";
 import { getPrincipalOfficeId, isAdmin, requireAuth, createAuthErrorResponse } from "../../../lib/authHelpers";
 import { isSystemAdminRole } from "../../../lib/roleUtils";
+import { decryptPII } from "../../../lib/piiEncryption";
 
 export const runtime = "nodejs";
 
@@ -76,5 +77,26 @@ export async function GET(req) {
     }),
   ]);
 
-  return NextResponse.json({ ok: true, data: rows, total });
+  const rowsWithDecryption = rows.map((row) => {
+    return {
+      ...row,
+      actor: decryptField(row.actor),
+      details: decryptField(row.details),
+    };
+  });
+
+  return NextResponse.json({ ok: true, data: rowsWithDecryption, total });
+}
+
+function decryptField(val) {
+  if (!val || typeof val !== "string") return val;
+  if (!val.includes("enc:v1:")) return val;
+  if (val.startsWith("enc:v1:") && !val.includes(" ")) {
+    return decryptPII(val);
+  }
+  return val
+    .split(/\s+/)
+    .map((part) => (part.startsWith("enc:v1:") ? decryptPII(part) : part))
+    .join(" ")
+    .trim();
 }
