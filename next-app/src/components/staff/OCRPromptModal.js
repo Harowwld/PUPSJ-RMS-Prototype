@@ -14,7 +14,7 @@ import {
 import { Button } from "@/components/ui/button"
 
 function studentKey(s) {
-  return String(s?.studentNo ?? s?.student_no ?? "")
+  return String(s?.organizationId ?? s?.id ?? s?.studentNo ?? s?.student_no ?? "")
 }
 
 export default function OCRPromptModal({
@@ -62,7 +62,7 @@ export default function OCRPromptModal({
                 OCR Match Resolution Required
               </DialogTitle>
               <DialogDescription className="mt-1 text-[13px] font-normal text-gray-500 dark:text-zinc-400">
-                The optical character recognition system found a possible student match. Select the correct record to continue.
+                The optical character recognition system found possible matches. Select the correct record to continue.
               </DialogDescription>
             </div>
           </div>
@@ -90,7 +90,7 @@ export default function OCRPromptModal({
           </div>
 
           <div className="mb-2 text-[11px] font-semibold tracking-widest text-gray-500 dark:text-zinc-400">
-            Select correct student record
+            Select correct record
           </div>
           <div className="flex max-h-64 flex-col gap-2 overflow-y-auto rounded-brand border border-gray-200 p-2 dark:border-white/10">
             {nameMatches.map((s) => {
@@ -110,14 +110,17 @@ export default function OCRPromptModal({
                   />
                   <span className="flex-1">
                     <span className="text-sm font-semibold text-gray-900 dark:text-zinc-50">
-                      {id}
+                      {s.acronym ? `[${s.acronym}] ${id}` : id}
                     </span>
                     <span className="block font-medium text-gray-700 dark:text-zinc-200">
                       {s.name}
                     </span>
                     <span className="block text-xs text-gray-500 dark:text-zinc-400">
-                      {s.courseCode || s.course_code} · Year{" "}
-                      {s.yearLevel ?? s.year_level} · {s.section}
+                      {s.category ? (
+                        `${s.category}${s.adviserName ? ` · Adviser: ${s.adviserName}` : ""}`
+                      ) : (
+                        `${s.courseCode || s.course_code || ""} · Year ${s.yearLevel ?? s.year_level ?? ""} · ${s.section || ""}`
+                      )}
                     </span>
                     {s.score !== undefined && <span className="block text-xs text-gray-500 dark:text-zinc-400">Match: {Math.round(Number(s.score) * 100)}% · {s.reason || "Database match"}</span>}
                   </span>

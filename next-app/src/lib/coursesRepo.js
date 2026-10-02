@@ -18,7 +18,7 @@ export async function listCourses({ includeArchived = false, officeId } = {}) {
   return rows;
 }
 
-export async function createCourse(codeRaw, nameRaw, officeId) {
+export async function createCourse(codeRaw, nameRaw, officeId, { upsert = false } = {}) {
   const scopedOfficeId = requireOfficeId(officeId);
   const code = String(codeRaw || "").trim().toUpperCase();
   const name = String(nameRaw || "").trim();
@@ -26,7 +26,13 @@ export async function createCourse(codeRaw, nameRaw, officeId) {
   if (!code || !name) throw new Error("Missing code or name");
 
   const existing = await dbGet("SELECT id FROM courses WHERE office_id = ? AND code = ?", [scopedOfficeId, code]);
-  if (existing) throw new Error("Course code already exists");
+  if (existing) {
+    if (upsert) {
+      await dbRun("UPDATE courses SET name = ?, status = 'Active' WHERE office_id = ? AND id = ?", [name, scopedOfficeId, existing.id]);
+      return await dbGet("SELECT * FROM courses WHERE office_id = ? AND id = ?", [scopedOfficeId, existing.id]);
+    }
+    throw new Error("Course code already exists");
+  }
 
   const res = await dbRun("INSERT INTO courses (office_id, code, name, status) VALUES (?, ?, ?, 'Active')", [
     scopedOfficeId,

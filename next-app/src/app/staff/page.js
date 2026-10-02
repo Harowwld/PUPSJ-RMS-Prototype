@@ -354,6 +354,11 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
     cabinet: "",
     drawer: "",
     docType: "",
+    organizationId: "",
+    acronym: "",
+    category: "",
+    adviserName: "",
+    adviserEmail: "",
   });
   const [newRecStudentNoHint, setNewRecStudentNoHint] = useState("");
   const [newRecStudentNoTouched, setNewRecStudentNoTouched] = useState(false);
@@ -1231,6 +1236,38 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
   const clearAllUploadFieldErrors = useCallback(() => setUploadFieldErrors({}), []);
 
   const applyStudentToPdfForm = useCallback((student, docTypeFromOcr) => {
+    const isOsas = authUser?.office_id === "osas";
+    if (isOsas) {
+      const orgId = student.id || student.organizationId || student.studentNo || student.student_no || "";
+      const orgName = String(student.name || "").trim().toUpperCase();
+      const orgAcronym = student.acronym || "";
+      const orgCategory = student.category || "Non-Academic";
+      const orgCabinet = student.storage_cabinet || student.cabinet || (orgCategory === "Academic" ? "ACADEMIC ORGANIZATIONS" : "NON-ACADEMIC ORGANIZATIONS");
+      const orgDrawer = String(student.storage_drawer ?? student.drawer ?? "1");
+      const orgRoom = String(student.storage_room ?? student.room ?? "1");
+      const adviser = student.adviser_name || student.adviserName || "";
+      const adviserEmail = student.adviser_email || student.adviserEmail || "";
+
+      setNewRec((p) => ({
+        ...p,
+        organizationId: orgId,
+        studentNo: orgId,
+        name: orgName,
+        acronym: orgAcronym,
+        category: orgCategory,
+        adviserName: adviser,
+        adviserEmail: adviserEmail,
+        room: orgRoom,
+        cabinet: orgCabinet,
+        drawer: orgDrawer,
+        docType:
+          docTypeFromOcr != null && String(docTypeFromOcr).trim() !== ""
+            ? String(docTypeFromOcr).trim()
+            : p.docType,
+      }));
+      return;
+    }
+
     const s = normalizeStudentRow(student);
     const derivedYear = getStudentNoYear(s.studentNo);
     const yearStr =
@@ -1257,7 +1294,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
           ? String(docTypeFromOcr).trim()
           : p.docType,
     }));
-  }, []);
+  }, [authUser?.office_id]);
 
   const handleFileSelect = async (filesOrFile, skipOcr = false, rotationParam, skipQueue = false) => {
     if (!filesOrFile) return;
@@ -1300,10 +1337,26 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
 
       setOcrLoading(true);
       try {
+        const isOsas = authUser?.office_id === "osas";
+        const candidateEntities = isOsas
+          ? organizations.map((o) => ({
+              organizationId: o.id,
+              studentNo: o.id,
+              student_no: o.id,
+              name: o.name,
+              acronym: o.acronym,
+              category: o.category,
+              adviserName: o.adviser_name || o.adviserName,
+              room: o.storage_room,
+              cabinet: o.storage_cabinet,
+              drawer: o.storage_drawer,
+            }))
+          : students;
+
         const { scanFileForSuggestion } = await import("@/lib/ocrClient");
         const suggestion = await scanFileForSuggestion({
           file: activeFile,
-          students,
+          students: candidateEntities,
           docTypes,
           rotation: rotationParam !== undefined ? rotationParam : rotation,
         });
@@ -1314,7 +1367,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
         console.log("[OCR handleFileSelect] suggestion:", {
           name: suggestion.name,
           docType: suggestion.docType,
-          matchedStudent: suggestion.matchedStudent?.studentNo || null,
+          matchedStudent: suggestion.matchedStudent?.organizationId || suggestion.matchedStudent?.studentNo || null,
           matchCount: suggestion.nameMatchesByName?.length,
           docTypesAvailable: docTypes,
         });
@@ -1356,15 +1409,24 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
           setUploadStudentIsExisting(true);
           clearAllUploadFieldErrors();
           setOcrPromptOpen(false);
-          checkDuplicate(suggestion.matchedStudent.studentNo || suggestion.matchedStudent.student_no, suggestion.docType);
+          checkDuplicate(
+            suggestion.matchedStudent.organizationId ||
+            suggestion.matchedStudent.id ||
+            suggestion.matchedStudent.studentNo ||
+            suggestion.matchedStudent.student_no,
+            suggestion.docType
+          );
         } else {
-          console.log("[OCR] → NEW STUDENT branch, setting docType:", suggestion.docType);
+          console.log("[OCR] → NEW STUDENT / NEW ORG branch, setting docType:", suggestion.docType);
           setNewRec((p) => ({
             ...p,
             name: String(suggestion.name || p.name || "")
               .trim()
               .replace(/\s+/g, " ")
               .toUpperCase(),
+            room: p.room || (isOsas ? "1" : ""),
+            cabinet: p.cabinet || "",
+            drawer: p.drawer || (isOsas ? "1" : ""),
             docType:
               suggestion.docType != null && String(suggestion.docType).trim() !== ""
                 ? String(suggestion.docType).trim()
@@ -1464,15 +1526,16 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
     }
   }, [authUser, view, sidebarItems, switchView])
 
-  const checkDuplicate = useCallback((studentNo, docType) => {
-    if (!studentNo || !docType) return;
-    const cleanNo = String(studentNo).trim().toUpperCase();
+  const checkDuplicate = useCallback((targetId, docType) => {
+    if (!targetId || !docType) return;
+    const cleanId = String(targetId).trim().toUpperCase();
     const cleanType = String(docType).trim().toUpperCase();
 
     const hasDuplicate = staffDocs.some(
       (d) =>
-        String(d.student_no).trim().toUpperCase() === cleanNo &&
-        String(d.doc_type).trim().toUpperCase() === cleanType &&
+        (String(d.student_no || "").trim().toUpperCase() === cleanId ||
+         String(d.organization_id || "").trim().toUpperCase() === cleanId) &&
+        String(d.doc_type || "").trim().toUpperCase() === cleanType &&
         String(d.approval_status).toLowerCase() !== "declined"
     );
 
@@ -1493,29 +1556,56 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
       return;
     }
 
+    const isOsas = authUser?.office_id === "osas";
+
     // Validation first to ensure we have meaningful metadata for renaming
     const err = {};
-    if (uploadStudentIsExisting) {
-      if (!String(newRec.studentNo || "").trim()) err.studentNo = true;
-      if (!newRec.docType) err.docType = true;
+    if (isOsas) {
+      if (uploadStudentIsExisting) {
+        if (!String(newRec.organizationId || newRec.name || "").trim()) {
+          err.organization = true;
+        }
+        if (!newRec.docType) err.docType = true;
+      } else {
+        if (!String(newRec.name || "").trim()) err.name = true;
+        if (!newRec.category) err.category = true;
+        if (!newRec.room) err.room = true;
+        if (!newRec.cabinet) err.cabinet = true;
+        if (!newRec.drawer) err.drawer = true;
+        if (!newRec.docType) err.docType = true;
+      }
     } else {
-      if (!String(newRec.studentNo || "").trim()) err.studentNo = true;
-      if (!String(newRec.name || "").trim()) err.name = true;
-      if (!newRec.course) err.course = true;
-      if (!newRec.year) err.year = true;
-      if (!newRec.sectionPart) err.sectionPart = true;
-      if (!newRec.room) err.room = true;
-      if (!newRec.cabinet) err.cabinet = true;
-      if (!newRec.drawer) err.drawer = true;
-      if (!newRec.docType) err.docType = true;
+      if (uploadStudentIsExisting) {
+        if (!String(newRec.studentNo || "").trim()) err.studentNo = true;
+        if (!newRec.docType) err.docType = true;
+      } else {
+        if (!String(newRec.studentNo || "").trim()) err.studentNo = true;
+        if (!String(newRec.name || "").trim()) err.name = true;
+        if (!newRec.course) err.course = true;
+        if (!newRec.year) err.year = true;
+        if (!newRec.sectionPart) err.sectionPart = true;
+        if (!newRec.room) err.room = true;
+        if (!newRec.cabinet) err.cabinet = true;
+        if (!newRec.drawer) err.drawer = true;
+        if (!newRec.docType) err.docType = true;
+      }
     }
 
     if (Object.keys(err).length) {
       setUploadFieldErrors(err);
-      showToast({ 
-        title: uploadStudentIsExisting ? "Missing Fields" : "Incomplete Form", 
-        description: uploadStudentIsExisting ? "Provide the student number and document type." : "All student detail fields are required." 
-      }, true);
+      if (isOsas) {
+        showToast({
+          title: uploadStudentIsExisting ? "Missing Fields" : "Incomplete Form",
+          description: uploadStudentIsExisting
+            ? "Select an organization and choose a document type."
+            : "Organization name, category, storage location, and document type are required.",
+        }, true);
+      } else {
+        showToast({ 
+          title: uploadStudentIsExisting ? "Missing Fields" : "Incomplete Form", 
+          description: uploadStudentIsExisting ? "Provide the student number and document type." : "All student detail fields are required." 
+        }, true);
+      }
       return;
     }
     setUploadFieldErrors({});
@@ -1555,15 +1645,21 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
     const studentName = String(newRec.name || "").trim().toUpperCase();
     let uploadFilename = String(uploadedFile.name || "document.pdf");
 
-    // RENAME FILE for meaningful identification: [STUDENT_NO]_[DOC_TYPE].[EXT]
+    // RENAME FILE for meaningful identification
     try {
-      const studentNo = String(newRec.studentNo || "").trim().toUpperCase();
-      const docType = String(newRec.docType || "").trim();
-      const cleanStudentNo = studentNo.replace(/[^a-zA-Z0-9-]/g, "_") || "UNKNOWN";
-      const cleanDocType = docType.replace(/[^a-zA-Z0-9-]/g, "_") || "DOC";
-      const extension = "pdf";
-      const newFileName = `${cleanStudentNo}_${cleanDocType}.${extension}`;
-      uploadFilename = newFileName;
+      if (isOsas) {
+        const orgKey = String(newRec.acronym || newRec.organizationId || newRec.name || "").trim().toUpperCase();
+        const docType = String(newRec.docType || "").trim();
+        const cleanOrg = orgKey.replace(/[^a-zA-Z0-9-]/g, "_") || "ORG";
+        const cleanDocType = docType.replace(/[^a-zA-Z0-9-]/g, "_") || "DOC";
+        uploadFilename = `${cleanOrg}_${cleanDocType}.pdf`;
+      } else {
+        const studentNo = String(newRec.studentNo || "").trim().toUpperCase();
+        const docType = String(newRec.docType || "").trim();
+        const cleanStudentNo = studentNo.replace(/[^a-zA-Z0-9-]/g, "_") || "UNKNOWN";
+        const cleanDocType = docType.replace(/[^a-zA-Z0-9-]/g, "_") || "DOC";
+        uploadFilename = `${cleanStudentNo}_${cleanDocType}.pdf`;
+      }
     } catch (e) {
       console.error("[Rename Error]", e);
     }
@@ -1571,22 +1667,45 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
     const payload = new FormData();
     payload.append("file", fileToUpload, uploadFilename);
 
-    if (uploadStudentIsExisting) {
-      payload.append("studentNo", String(newRec.studentNo).trim());
-      payload.append("studentName", studentName);
+    if (isOsas) {
       payload.append("docType", newRec.docType);
+      if (uploadStudentIsExisting) {
+        payload.append("organizationId", String(newRec.organizationId || "").trim());
+        payload.append("organizationName", String(newRec.name || "").trim());
+        if (newRec.acronym) payload.append("acronym", String(newRec.acronym).trim());
+        if (newRec.room) payload.append("room", String(newRec.room));
+        if (newRec.cabinet) payload.append("cabinet", String(newRec.cabinet));
+        if (newRec.drawer) payload.append("drawer", String(newRec.drawer));
+      } else {
+        payload.append("isNewOrganization", "true");
+        payload.append("organizationName", String(newRec.name || "").trim());
+        if (newRec.acronym) payload.append("acronym", String(newRec.acronym).trim());
+        if (newRec.category) payload.append("category", String(newRec.category).trim());
+        if (newRec.adviserName) payload.append("adviserName", String(newRec.adviserName).trim());
+        if (newRec.adviserEmail) payload.append("adviserEmail", String(newRec.adviserEmail).trim());
+        payload.append("room", String(newRec.room || 1));
+        payload.append("cabinet", String(newRec.cabinet || ""));
+        payload.append("drawer", String(newRec.drawer || "1"));
+      }
     } else {
-      payload.append("studentNo", newRec.studentNo);
-      payload.append("studentName", studentName);
-      payload.append("courseCode", newRec.course);
-      payload.append("yearLevel", newRec.year);
-      payload.append("section", String(newRec.sectionPart || "").trim());
-      payload.append("room", newRec.room);
-      payload.append("cabinet", newRec.cabinet);
-      payload.append("drawer", newRec.drawer);
-      payload.append("docType", newRec.docType);
-      payload.append("isNewStudent", "true");
+      if (uploadStudentIsExisting) {
+        payload.append("studentNo", String(newRec.studentNo).trim());
+        payload.append("studentName", studentName);
+        payload.append("docType", newRec.docType);
+      } else {
+        payload.append("studentNo", newRec.studentNo);
+        payload.append("studentName", studentName);
+        payload.append("courseCode", newRec.course);
+        payload.append("yearLevel", newRec.year);
+        payload.append("section", String(newRec.sectionPart || "").trim());
+        payload.append("room", newRec.room);
+        payload.append("cabinet", newRec.cabinet);
+        payload.append("drawer", newRec.drawer);
+        payload.append("docType", newRec.docType);
+        payload.append("isNewStudent", "true");
+      }
     }
+
     try {
       const res = await fetch("/api/documents", {
         method: "POST",
@@ -1594,8 +1713,9 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Upload failed");
+
       let locationUpdateFailed = false;
-      if (uploadStudentIsExisting) {
+      if (!isOsas && uploadStudentIsExisting) {
         const sn = String(newRec.studentNo || "").trim();
         const room = parseInt(String(newRec.room || ""), 10);
         const drawer = parseInt(String(newRec.drawer || ""), 10);
@@ -1645,6 +1765,11 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
         cabinet: "",
         drawer: "",
         docType: "",
+        organizationId: "",
+        acronym: "",
+        category: "",
+        adviserName: "",
+        adviserEmail: "",
       });
       fetchData();
       fetchAllDocs();
@@ -1764,18 +1889,40 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
     refreshDocuments,
     docsForm,
     ]);
-  const handleRescan = useCallback(async (studentNo, docType, docId, filename, mimeType) => {
-    const s = students.find((x) => String(x.studentNo || x.student_no || "").trim().toUpperCase() === String(studentNo || "").trim().toUpperCase());
-    if (s) {
-      applyStudentToPdfForm(s, docType);
-      setUploadStudentIsExisting(true);
+  const handleRescan = useCallback(async (targetId, docType, docId, filename, mimeType) => {
+    const isOsas = authUser?.office_id === "osas";
+    if (isOsas) {
+      const org = organizations.find(
+        (x) =>
+          String(x.id || "").trim().toLowerCase() === String(targetId || "").trim().toLowerCase() ||
+          String(x.name || "").trim().toLowerCase() === String(targetId || "").trim().toLowerCase() ||
+          String(x.acronym || "").trim().toLowerCase() === String(targetId || "").trim().toLowerCase()
+      );
+      if (org) {
+        applyStudentToPdfForm(org, docType);
+        setUploadStudentIsExisting(true);
+      } else {
+        setNewRec((p) => ({
+          ...p,
+          organizationId: targetId || "",
+          name: targetId || "",
+          docType: docType || "",
+        }));
+        setUploadStudentIsExisting(false);
+      }
     } else {
-      setNewRec((p) => ({
-        ...p,
-        studentNo: studentNo || "",
-        docType: docType || "",
-      }));
-      setUploadStudentIsExisting(false);
+      const s = students.find((x) => String(x.studentNo || x.student_no || "").trim().toUpperCase() === String(targetId || "").trim().toUpperCase());
+      if (s) {
+        applyStudentToPdfForm(s, docType);
+        setUploadStudentIsExisting(true);
+      } else {
+        setNewRec((p) => ({
+          ...p,
+          studentNo: targetId || "",
+          docType: docType || "",
+        }));
+        setUploadStudentIsExisting(false);
+      }
     }
     clearAllUploadFieldErrors();
     setView("upload");
@@ -1794,7 +1941,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
         console.error("Failed to preload rejected document for rescan:", err);
       }
     }
-  }, [students, applyStudentToPdfForm, clearAllUploadFieldErrors]);
+  }, [students, organizations, authUser?.office_id, applyStudentToPdfForm, clearAllUploadFieldErrors]);
 
   const confirmBulkArchive = async () => {
     if (bulkArchiveLoading) return;
@@ -2156,7 +2303,10 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
               setCsvRowField={(i, f, v) => {
                 const n = [...csvRows];
                 const r = n.find((x) => x.index === i);
-                if (r) r.student[f] = v;
+                if (r) {
+                  if (r.student) r.student[f] = v;
+                  if (r.organization) r.organization[f] = v;
+                }
                 setCsvRows(n);
               }}
               courses={courses}
@@ -2196,6 +2346,58 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
                     .split(",")
                     .map((h) => h.trim().toLowerCase().replace(/\s+/g, ""));
                   
+                  if (isOsas) {
+                    const rows = lines
+                      .slice(1)
+                      .filter((l) => l.trim())
+                      .map((l, i) => {
+                        const vals = l.split(",");
+                        const row = {};
+                        headers.forEach((h, idx) => (row[h] = vals[idx]?.trim()));
+                        const name = row.organization || row.name || row.organizationname || "";
+                        const acronym = (row.acronym || "").toUpperCase();
+                        const category = row.category || "Academic";
+                        const adviserName = row.adviser || row.advisername || "";
+                        const adviserEmail = row.email || row.adviseremail || "";
+                        const room = parseInt(row.room) || 1;
+                        const defaultCab = category.toLowerCase().includes("non-academic") ? "NON-ACADEMIC ORGANIZATIONS" : "ACADEMIC ORGANIZATIONS";
+                        const cabinet = row.cabinet || defaultCab;
+                        const drawer = parseInt(row.drawer) || 1;
+                        return {
+                          index: i + 1,
+                          organization: {
+                            name,
+                            acronym,
+                            category,
+                            adviserName,
+                            adviserEmail,
+                            room,
+                            cabinet,
+                            drawer,
+                          },
+                          student: {
+                            studentNo: acronym || `ORG-${i + 1}`,
+                            name,
+                            courseCode: acronym,
+                            yearLevel: 1,
+                            section: category,
+                            room,
+                            cabinet,
+                            drawer,
+                          },
+                          error: "",
+                        };
+                      });
+                    setCsvRows(rows);
+                    const defaultSelection = {};
+                    rows.forEach((row) => {
+                      defaultSelection[row.index] = true;
+                    });
+                    setCsvSelected(defaultSelection);
+                    setCsvLoading(false);
+                    return;
+                  }
+
                   // Use first valid location from layout as fallback if CSV data is missing/invalid
                   const defaultRoomId = storageLayout?.rooms?.[0]?.id || 1;
                   const defaultCabId = storageLayout?.rooms?.[0]?.cabinets?.[0]?.id || "A";
@@ -2247,9 +2449,18 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
                 const n = [...csvRows];
                 n.forEach((r) => {
                   if (csvSelected[r.index]) {
-                    if (csvBulkRoom) r.student.room = parseInt(csvBulkRoom);
-                    if (csvBulkCabinet) r.student.cabinet = csvBulkCabinet;
-                    if (csvBulkDrawer) r.student.drawer = parseInt(csvBulkDrawer);
+                    if (csvBulkRoom) {
+                      if (r.student) r.student.room = parseInt(csvBulkRoom);
+                      if (r.organization) r.organization.room = parseInt(csvBulkRoom);
+                    }
+                    if (csvBulkCabinet) {
+                      if (r.student) r.student.cabinet = csvBulkCabinet;
+                      if (r.organization) r.organization.cabinet = csvBulkCabinet;
+                    }
+                    if (csvBulkDrawer) {
+                      if (r.student) r.student.drawer = parseInt(csvBulkDrawer);
+                      if (r.organization) r.organization.drawer = parseInt(csvBulkDrawer);
+                    }
                   }
                 });
                 setCsvRows(n);
@@ -2264,6 +2475,73 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
                 }
                 setCsvLoading(true);
                 try {
+                  if (isOsas) {
+                    const rs = await fetch("/api/osas/organizations/batch", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({
+                        rows: targets.map((t) => t.organization || t.student),
+                      }),
+                    });
+                    const json = await rs.json().catch(() => null);
+                    if (!rs.ok || !json?.ok || !Array.isArray(json?.data)) {
+                      throw new Error(json?.error || "Batch import failed");
+                    }
+
+                    const res = json.data;
+                    setCsvResults(res);
+                    const byIndex = new Map(res.map((item, idx) => [targets[idx]?.index, item]));
+                    const nextRows = csvRows.map((row) => {
+                      const result = byIndex.get(row.index);
+                      if (!result) return row;
+                      return {
+                        ...row,
+                        error: result.ok ? "" : String(result.error || "Import failed"),
+                      };
+                    });
+                    setCsvRows(nextRows);
+
+                    const orgsRes = await fetch("/api/osas/organizations").then(r => r.json()).catch(() => null);
+                    if (orgsRes?.ok && Array.isArray(orgsRes.data)) {
+                      setOrganizations(orgsRes.data);
+                    }
+
+                    const successCount = res.filter((r) => r.ok).length;
+                    const failCount = res.length - successCount;
+
+                    if (successCount === res.length) {
+                      showToast({
+                        title: "Import Successful",
+                        description: `Successfully registered all ${res.length} student organizations.`,
+                      });
+                      setCsvFile(null);
+                      setCsvRows([]);
+                      setCsvResults([]);
+                      if (csvInputRef.current) csvInputRef.current.value = "";
+                    } else if (successCount > 0) {
+                      showToast(
+                        {
+                          title: "Partial Import",
+                          description: `${successCount} organizations registered, ${failCount} skipped.`,
+                        },
+                        "warning"
+                      );
+                    } else {
+                      showToast(
+                        {
+                          title: "No Records Added",
+                          description: "All selected entries failed validation.",
+                        },
+                        "warning"
+                      );
+                    }
+
+                    setCsvError("");
+                    setCsvSelected({});
+                    fetchData();
+                    return;
+                  }
+
                   const rs = await fetch("/api/students/batch", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
@@ -2351,6 +2629,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
               csvLoading={csvLoading}
               csvResults={csvResults}
               students={students}
+              organizations={organizations}
               showToast={showToast}
               onIngestPromoted={() => {
                 fetchAllDocs();
@@ -2361,7 +2640,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
                 setUploadStudentIsExisting(true);
                 clearAllUploadFieldErrors();
                 setOcrPromptOpen(false);
-                checkDuplicate(student.studentNo || student.student_no, ocrDocType);
+                checkDuplicate(student.organizationId || student.id || student.studentNo || student.student_no, ocrDocType);
               }}
               onOpenBatchReview={() => switchView("batch_review")}
             />
@@ -2484,13 +2763,15 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
           setUploadStudentIsExisting(true);
           clearAllUploadFieldErrors();
           setOcrPromptOpen(false);
-          checkDuplicate(s.studentNo || s.student_no, ocrSuggestion?.docType);
+          checkDuplicate(s.organizationId || s.id || s.studentNo || s.student_no, ocrSuggestion?.docType);
         }}
       />
       <ConfirmModal
         open={duplicateConfirmOpen}
         title="Duplicate Document Warning"
-        message={`A document of type "${newRec.docType}" already exists for student ${newRec.studentNo}.`}
+        message={authUser?.office_id === "osas"
+          ? `A document of type "${newRec.docType}" already exists for organization ${newRec.acronym || newRec.name || newRec.organizationId}.`
+          : `A document of type "${newRec.docType}" already exists for student ${newRec.studentNo}.`}
         confirmLabel="Acknowledge"
         cancelLabel="Clear"
         onConfirm={() => {
@@ -2515,6 +2796,11 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
             cabinet: "",
             drawer: "",
             docType: "",
+            organizationId: "",
+            acronym: "",
+            category: "",
+            adviserName: "",
+            adviserEmail: "",
           });
         }}
         variant="warning"

@@ -47,16 +47,35 @@ export async function POST(req) {
     try {
       if (cat === "documenttype" || cat === "document type") {
         if (!name) throw new Error("Missing name");
-        await createDocTypeFull(name, officeId);
+        const isCompliance = row.isCompliance !== undefined
+          ? Boolean(row.isCompliance)
+          : (row.is_compliance !== undefined
+            ? Boolean(row.is_compliance)
+            : (String(row.iscompliance).toLowerCase() === "true" || row.iscompliance === "1"));
+        const isRequestable = row.isRequestable !== undefined
+          ? Boolean(row.isRequestable)
+          : (row.is_requestable !== undefined
+            ? Boolean(row.is_requestable)
+            : (String(row.isrequestable).toLowerCase() === "true" || row.isrequestable === "1"));
+        const complianceCategory = String(
+          row.complianceCategory || row.compliance_category || row.compliancecategory || "General Requirements"
+        ).trim();
+
+        await createDocTypeFull(name, officeId, {
+          isCompliance,
+          isRequestable,
+          complianceCategory,
+          upsert: true,
+        });
         successCount++;
       } else if (cat === "course") {
         if (!code || !name) throw new Error("Course requires code and name");
-        await createCourse(code, name, officeId);
+        await createCourse(code, name, officeId, { upsert: true });
         successCount++;
       } else if (cat === "section") {
         if (!name) throw new Error("Missing name");
         const safeCode = code ? code : "UNKN";
-        await createSection(name, safeCode, officeId);
+        await createSection(name, safeCode, officeId, { upsert: true });
         successCount++;
       } else {
         // Unknown category - count as failure

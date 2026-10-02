@@ -113,6 +113,7 @@ export default function ScanUploadTab({
   csvLoading,
   csvResults,
   students = [],
+  organizations = [],
   showToast = () => {},
   onIngestPromoted,
   onSelectExistingStudent,
@@ -121,6 +122,7 @@ export default function ScanUploadTab({
   setRotation,
   onOpenBatchReview,
 }) {
+  const isOsas = authUser?.office_id === "osas"
   const [clearInboxOpen, setClearInboxOpen] = useState(false)
   const [showPagesSidebar, setShowPagesSidebar] = useState(true)
   const [pendingDroppedFile, setPendingDroppedFile] = useState(null)
@@ -238,7 +240,7 @@ export default function ScanUploadTab({
   const ring = (key) =>
     fe[key] ? "ring-2 ring-orange-400 border-orange-400" : ""
 
-  const roomOptions = storageLayout?.rooms?.map((r) => r.id) || []
+  const roomOptions = storageLayout?.rooms?.map((r) => r.id) || (isOsas ? [1] : [])
   const coerceRoomId = (v) => {
     if (typeof v === "number") return v
     const n = parseInt(String(v), 10)
@@ -278,6 +280,13 @@ export default function ScanUploadTab({
     const cabId = canonicalizeCabinetId(cabIdRaw)
     const ids = getCabinetsForRoom(roomIdRaw).map((c) => canonicalizeCabinetId(c.id))
 
+    if (isOsas) {
+      const osasDefaults = ["ACADEMIC ORGANIZATIONS", "NON-ACADEMIC ORGANIZATIONS"]
+      const allCabs = Array.from(new Set([...ids, ...osasDefaults]))
+      if (cabId && !allCabs.includes(cabId)) return [cabId, ...allCabs]
+      return allCabs
+    }
+
     // If no room is selected or invalid, provide all possible cabinet IDs from the system as options
     if (ids.length === 0) {
       const allCabs = Array.from(new Set(storageLayout?.rooms?.flatMap(r => r.cabinets.map(c => canonicalizeCabinetId(c.id))) || []))
@@ -295,6 +304,7 @@ export default function ScanUploadTab({
     // If no context (room/cab) is selected, provide all possible drawer IDs from the system
     if (ids.length === 0) {
       const allDrawers = Array.from(new Set(storageLayout?.rooms?.flatMap(r => r.cabinets.flatMap(c => c.drawerIds || [])) || []))
+      if (allDrawers.length === 0) return [1, 2, 3, 4]
       allDrawers.sort((a, b) => a - b)
       if (Number.isFinite(selected) && !allDrawers.includes(selected)) return [selected, ...allDrawers]
       return allDrawers
@@ -567,7 +577,7 @@ export default function ScanUploadTab({
           <PageHeader
             icon="ph-scan"
             title="Scan & Upload"
-            description="Scan student records or import files to save them digitally."
+            description={isOsas ? "Scan organization records or import files to save them digitally." : "Scan student records or import files to save them digitally."}
             showBorder={false}
             className="p-6"
             titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
@@ -615,7 +625,7 @@ export default function ScanUploadTab({
               <span className="text-[10px] font-bold text-gray-500 dark:text-zinc-400 uppercase tracking-wider">
                 Scanner Inbound:
               </span>
-              <span
+              <span 
                 className="text-[11px] font-medium text-gray-700 dark:text-zinc-200 bg-white dark:bg-zinc-800 border border-gray-200 dark:border-white/10 px-2.5 py-0.5 rounded-lg truncate max-w-[340px]"
                 title={authUser?.inbound_path || ".local/hot-folder/INBOUND"}
               >
@@ -626,7 +636,7 @@ export default function ScanUploadTab({
 
           {uploadMode === "pdf" && <ContinuousScanningPanel onOpenReview={onOpenBatchReview} showToast={showToast} />}
 
-          {/* Mode Toggles as Sub-tabs */}
+          {/* Mode Toggles as Sub-tabs (Polymorphic: Document vs Batch CSV) */}
           <div className="flex items-center gap-6 shrink-0 h-9 px-6 border-b border-gray-100 dark:border-white/10 bg-white dark:bg-card select-none">
             <button
               type="button"
@@ -832,20 +842,36 @@ export default function ScanUploadTab({
                                       }}
                                     />
                                   </th>
-                                  <th className="p-4 whitespace-nowrap">Student No</th>
-                                  <th className="p-4 whitespace-nowrap">Name</th>
-                                  <th className="p-4 whitespace-nowrap">Course</th>
-                                  <th className="p-4 whitespace-nowrap">Year</th>
-                                  <th className="p-4 whitespace-nowrap">Section</th>
+                                  {isOsas ? (
+                                    <>
+                                      <th className="p-4 whitespace-nowrap">Organization Name</th>
+                                      <th className="p-4 whitespace-nowrap">Acronym</th>
+                                      <th className="p-4 whitespace-nowrap">Category</th>
+                                      <th className="p-4 whitespace-nowrap">Faculty Adviser</th>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <th className="p-4 whitespace-nowrap">Student No</th>
+                                      <th className="p-4 whitespace-nowrap">Name</th>
+                                      <th className="p-4 whitespace-nowrap">Course</th>
+                                      <th className="p-4 whitespace-nowrap">Year</th>
+                                      <th className="p-4 whitespace-nowrap">Section</th>
+                                    </>
+                                  )}
                                   <th className="p-4 px-2 whitespace-nowrap text-left w-[90px]">Room</th>
-                                  <th className="p-4 px-2 whitespace-nowrap text-left w-[90px]">Cabinet</th>
+                                  <th className="p-4 px-2 whitespace-nowrap text-left w-[120px]">Cabinet</th>
                                   <th className="p-4 px-2 whitespace-nowrap text-left w-[90px]">Drawer</th>
                                   <th className="p-4 text-right whitespace-nowrap">Status</th>
                                 </tr>
                               </thead>
                               <tbody className="bg-transparent">
                                 {paginatedCsvRows.map((r) => {
-                                  const isValid = isLocationValid(r.student.room, r.student.cabinet, r.student.drawer)
+                                  const room = r.organization?.room ?? r.student?.room
+                                  const cabinet = r.organization?.cabinet ?? r.student?.cabinet
+                                  const drawer = r.organization?.drawer ?? r.student?.drawer
+                                  const isValid = isOsas
+                                    ? Boolean(room && cabinet && drawer)
+                                    : isLocationValid(r.student?.room, r.student?.cabinet, r.student?.drawer)
                                   const isSelected = !!csvSelected?.[r.index]
 
                                   return (
@@ -868,27 +894,55 @@ export default function ScanUploadTab({
                                           onChange={() => toggleCsvRowSelected(r.index)}
                                         />
                                       </td>
-                                      <td className="py-0 px-4 align-middle text-[13px] font-medium tracking-[-0.01em] text-gray-900 dark:text-zinc-50 whitespace-nowrap">
-                                        {r.student.studentNo}
-                                      </td>
-                                      <td className="py-0 px-4 align-middle text-[13px] font-medium tracking-[-0.01em] text-gray-900 dark:text-zinc-50 whitespace-nowrap">
-                                        {toNormalCase(r.student.name)}
-                                      </td>
-                                      <td className="py-0 px-4 align-middle whitespace-nowrap">
-                                        <span className="inline-flex w-fit items-center justify-center rounded-lg bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-900 dark:bg-zinc-800 dark:text-zinc-100">
-                                          {r.student.courseCode}
-                                        </span>
-                                      </td>
-                                      <td className="py-0 px-4 align-middle text-[13px] font-medium tracking-[-0.01em] text-gray-700 dark:text-zinc-300 whitespace-nowrap">
-                                        {r.student.yearLevel}
-                                      </td>
-                                      <td className="py-0 px-4 align-middle text-[13px] font-medium tracking-[-0.01em] text-gray-700 dark:text-zinc-300 whitespace-nowrap">
-                                        {r.student.section}
-                                      </td>
+                                      {isOsas ? (
+                                        <>
+                                          <td className="py-0 px-4 align-middle text-[13px] font-medium tracking-[-0.01em] text-gray-900 dark:text-zinc-50 whitespace-nowrap">
+                                            {r.organization?.name || r.student?.name}
+                                          </td>
+                                          <td className="py-0 px-4 align-middle whitespace-nowrap">
+                                            <span className="inline-flex w-fit items-center justify-center rounded-lg bg-gray-100 px-2 py-0.5 text-xs font-semibold text-gray-900 dark:bg-zinc-800 dark:text-zinc-100">
+                                              {r.organization?.acronym || r.student?.courseCode || "—"}
+                                            </span>
+                                          </td>
+                                          <td className="py-0 px-4 align-middle whitespace-nowrap">
+                                            <span className={cn(
+                                              "inline-flex w-fit items-center justify-center rounded-lg px-2 py-0.5 text-xs font-medium",
+                                              (r.organization?.category || "Academic") === "Academic"
+                                                ? "bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-200 dark:border-blue-800"
+                                                : "bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-300 border border-purple-200 dark:border-purple-800"
+                                            )}>
+                                              {r.organization?.category || "Academic"}
+                                            </span>
+                                          </td>
+                                          <td className="py-0 px-4 align-middle text-[13px] font-medium tracking-[-0.01em] text-gray-700 dark:text-zinc-300 whitespace-nowrap">
+                                            {r.organization?.adviserName || "—"}
+                                          </td>
+                                        </>
+                                      ) : (
+                                        <>
+                                          <td className="py-0 px-4 align-middle text-[13px] font-medium tracking-[-0.01em] text-gray-900 dark:text-zinc-50 whitespace-nowrap">
+                                            {r.student.studentNo}
+                                          </td>
+                                          <td className="py-0 px-4 align-middle text-[13px] font-medium tracking-[-0.01em] text-gray-900 dark:text-zinc-50 whitespace-nowrap">
+                                            {toNormalCase(r.student.name)}
+                                          </td>
+                                          <td className="py-0 px-4 align-middle whitespace-nowrap">
+                                            <span className="inline-flex w-fit items-center justify-center rounded-lg bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-900 dark:bg-zinc-800 dark:text-zinc-100">
+                                              {r.student.courseCode}
+                                            </span>
+                                          </td>
+                                          <td className="py-0 px-4 align-middle text-[13px] font-medium tracking-[-0.01em] text-gray-700 dark:text-zinc-300 whitespace-nowrap">
+                                            {r.student.yearLevel}
+                                          </td>
+                                          <td className="py-0 px-4 align-middle text-[13px] font-medium tracking-[-0.01em] text-gray-700 dark:text-zinc-300 whitespace-nowrap">
+                                            {r.student.section}
+                                          </td>
+                                        </>
+                                      )}
                                       <td className="py-0 px-2 align-middle w-[90px]" onClick={(e) => e.stopPropagation()}>
                                         <Select
                                           className="h-8 w-20 rounded-lg border border-gray-200 px-2 py-0 text-[11px] font-normal dark:border-white/10 shadow-none"
-                                          value={String(r.student.room || "")}
+                                          value={String(room || "")}
                                           onChange={(e) =>
                                             setCsvRowField(
                                               r.index,
@@ -897,17 +951,17 @@ export default function ScanUploadTab({
                                             )
                                           }
                                         >
-                                          {roomOptions.map((room) => (
-                                            <option key={room} value={room}>
-                                              {room}
+                                          {roomOptions.map((rm) => (
+                                            <option key={rm} value={rm}>
+                                              {rm}
                                             </option>
                                           ))}
                                         </Select>
                                       </td>
-                                      <td className="py-0 px-2 align-middle w-[90px]" onClick={(e) => e.stopPropagation()}>
+                                      <td className="py-0 px-2 align-middle w-[120px]" onClick={(e) => e.stopPropagation()}>
                                         <Select
-                                          className="h-8 w-20 rounded-lg border border-gray-200 px-2 py-0 text-[11px] font-normal dark:border-white/10 shadow-none"
-                                          value={String(r.student.cabinet || "")}
+                                          className="h-8 w-28 rounded-lg border border-gray-200 px-2 py-0 text-[11px] font-normal dark:border-white/10 shadow-none"
+                                          value={String(cabinet || "")}
                                           onChange={(e) =>
                                             setCsvRowField(
                                               r.index,
@@ -916,37 +970,53 @@ export default function ScanUploadTab({
                                             )
                                           }
                                         >
-                                          {mergeSelectedCabinetId(
-                                            r.student.room,
-                                            r.student.cabinet
-                                          ).map((c) => (
-                                            <option key={c} value={c}>
-                                              {c}
-                                            </option>
-                                          ))}
+                                          {isOsas ? (
+                                            ["ACADEMIC ORGANIZATIONS", "NON-ACADEMIC ORGANIZATIONS"].map((c) => (
+                                              <option key={c} value={c}>
+                                                {c}
+                                              </option>
+                                            ))
+                                          ) : (
+                                            mergeSelectedCabinetId(
+                                              r.student?.room,
+                                              r.student?.cabinet
+                                            ).map((c) => (
+                                              <option key={c} value={c}>
+                                                {c}
+                                              </option>
+                                            ))
+                                          )}
                                         </Select>
                                       </td>
                                       <td className="py-0 px-2 align-middle w-[90px]" onClick={(e) => e.stopPropagation()}>
                                         <Select
                                           className="h-8 w-20 rounded-lg border border-gray-200 px-2 py-0 text-[11px] font-normal dark:border-white/10 shadow-none"
-                                          value={String(r.student.drawer || "")}
+                                          value={String(drawer || "")}
                                           onChange={(e) =>
                                             setCsvRowField(
                                               r.index,
                                               "drawer",
-                                              parseInt(e.target.value)
+                                              parseInt(e.target.value) || e.target.value
                                             )
                                           }
                                         >
-                                          {mergeSelectedDrawerId(
-                                            r.student.room,
-                                            r.student.cabinet,
-                                            r.student.drawer
-                                          ).map((d) => (
-                                            <option key={d} value={d}>
-                                              {d}
-                                            </option>
-                                          ))}
+                                          {isOsas ? (
+                                            [1, 2, 3, 4].map((d) => (
+                                              <option key={d} value={d}>
+                                                Drawer {d}
+                                              </option>
+                                            ))
+                                          ) : (
+                                            mergeSelectedDrawerId(
+                                              r.student?.room,
+                                              r.student?.cabinet,
+                                              r.student?.drawer
+                                            ).map((d) => (
+                                              <option key={d} value={d}>
+                                                {d}
+                                              </option>
+                                            ))
+                                          )}
                                         </Select>
                                       </td>
                                       <td className="py-0 px-4 align-middle text-right">
@@ -1094,13 +1164,24 @@ export default function ScanUploadTab({
                           }}
                         />
                         <div className="pointer-events-none flex flex-col items-center justify-center text-center w-full h-full">
-                          <HugeIcon  className={cn("ph-bold ph-file-csv text-[32px] transition-colors duration-fast", csvDropActive ? "text-pup-maroon" : "text-gray-400 dark:text-zinc-500")}></HugeIcon>
+                          <HugeIcon className={cn("ph-bold ph-file-csv text-[32px] transition-colors duration-fast", csvDropActive ? "text-pup-maroon" : "text-gray-400 dark:text-zinc-500")} />
                           <p className="text-sm font-semibold text-gray-900 dark:text-zinc-100 mt-3 m-0">
-                            Drop CSV File Here
+                            {isOsas ? "Drop Organizations CSV Here" : "Drop CSV File Here"}
                           </p>
                           <p className="text-xs font-normal text-gray-500 dark:text-zinc-400 mt-1 m-0">
                             or click to <span className="text-pup-maroon dark:text-red-400 font-medium cursor-pointer hover:underline">browse</span> local files (.csv)
                           </p>
+                          <div className="pointer-events-auto mt-4">
+                            <a
+                              href={isOsas ? "/sample_osas_organizations.csv" : "/sample_registrar_students.csv"}
+                              download={isOsas ? "sample_osas_organizations.csv" : "sample_registrar_students.csv"}
+                              onClick={(e) => e.stopPropagation()}
+                              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-white dark:bg-zinc-800 border border-gray-200 dark:border-white/10 text-pup-maroon dark:text-red-400 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs transition-all cursor-pointer"
+                            >
+                              <HugeIcon className="ph-bold ph-download-simple text-sm" />
+                              Download Sample CSV Template
+                            </a>
+                          </div>
                         </div>
                       </div>
                     )
@@ -1452,14 +1533,14 @@ export default function ScanUploadTab({
                 >
                   <div className="flex flex-col gap-1 border-b border-gray-100 bg-transparent p-5 dark:border-white/10">
                     <h3 className="text-base font-semibold text-gray-900 dark:text-zinc-50 m-0">
-                      {uploadMode === "csv" ? "Bulk Upload" : "Label Document"}
+                      {uploadMode === "csv" ? "Bulk Upload" : (isOsas ? "Organization Document" : "Label Document")}
                     </h3>
                     <p className="text-xs text-gray-500 dark:text-zinc-400 m-0 leading-normal">
                       {uploadMode === "csv"
                         ? "Review rows, bulk-edit locations, then import students."
                         : uploadedFile
-                          ? "Review scanned information and fill in missing fields."
-                          : "Drop or select a file on the left, then fill in the form here."}
+                          ? (isOsas ? "Review detected organization details and assign storage." : "Review scanned information and fill in missing fields.")
+                          : (isOsas ? "Drop or select a file on the left, then associate an organization." : "Drop or select a file on the left, then fill in the form here.")}
                     </p>
                   </div>
 
@@ -1468,279 +1549,580 @@ export default function ScanUploadTab({
                       <div className="space-y-5">
                         {ocrSuggestion && (
                           <div className="grid grid-cols-2 gap-2 rounded-xl border border-blue-100 bg-blue-50/60 p-3.5 dark:border-blue-400/20 dark:bg-blue-950/20">
-                            <div><div className="text-[10px] font-semibold uppercase tracking-wider text-blue-700 dark:text-blue-300">Student match</div><div className="text-lg font-bold text-blue-900 dark:text-blue-100">{ocrSuggestion.matchPercent != null ? `${ocrSuggestion.matchPercent}%` : "—"}</div><div className="text-[11px] text-blue-700 dark:text-blue-300">{ocrSuggestion.matchBand || ocrSuggestion.matchStatus || "Not scored"}</div></div>
+                            <div><div className="text-[10px] font-semibold uppercase tracking-wider text-blue-700 dark:text-blue-300">{isOsas ? "Organization match" : "Student match"}</div><div className="text-lg font-bold text-blue-900 dark:text-blue-100">{ocrSuggestion.matchPercent != null ? `${ocrSuggestion.matchPercent}%` : "—"}</div><div className="text-[11px] text-blue-700 dark:text-blue-300">{ocrSuggestion.matchBand || ocrSuggestion.matchStatus || "Not scored"}</div></div>
                             <div><div className="text-[10px] font-semibold uppercase tracking-wider text-emerald-700 dark:text-emerald-300">OCR read quality</div><div className="text-lg font-bold text-emerald-900 dark:text-emerald-100">{ocrSuggestion.ocrQualityPercent != null ? `${ocrSuggestion.ocrQualityPercent}%` : "—"}</div><div className="text-[11px] text-emerald-700 dark:text-emerald-300">{ocrSuggestion.ocrQualityBand || "Not scored"}</div></div>
                             {ocrSuggestion.matchEvidence?.reason && <div className="col-span-2 border-t border-blue-100 pt-2 text-[11px] text-gray-600 dark:border-blue-400/20 dark:text-zinc-300">{ocrSuggestion.matchEvidence.reason}</div>}
                           </div>
                         )}
-                        {uploadStudentIsExisting && (
-                          <div className="flex flex-col gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3.5 py-3 dark:border-emerald-500/20 dark:bg-emerald-950/20">
-                             <span className="inline-flex items-start gap-2 text-[11px] font-medium tracking-[0.04em] text-emerald-900 dark:text-emerald-400">
-                              <HugeIcon 
-                                className="ph-bold ph-check-circle mt-0.5 shrink-0"
-                                aria-hidden
-                              />
-                              <span>
-                                Existing student — profile fields below are locked.
-                                Adjust room, cabinet, drawer, or document type if
-                                needed, then submit.
-                              </span>
-                            </span>
-                            <button
-                              type="button"
-                              title="Switch to new student"
-                              className="shrink-0 text-left text-xs font-semibold text-pup-maroon dark:text-red-400 underline-offset-2 hover:underline cursor-pointer"
-                              onClick={() => {
-                                setUploadStudentIsExisting(false)
-                                clearAllUploadFieldErrors?.()
-                              }}
-                            >
-                              Switch
-                            </button>
-                          </div>
-                        )}
 
-                        <div className="grid grid-cols-1 gap-5">
-                          <div>
-                            <div className="mb-2 flex items-center justify-between">
-                              <label
-                                className={`block text-xs font-medium ${ lockIdentity ? lockedLabel : "text-gray-500" } dark:text-zinc-400`}
-                              >
-                                Student Number
-                              </label>
-                              {(newRec.studentNo ||
-                                newRec.name ||
-                                newRec.course ||
-                                newRec.docType ||
-                                newRec.room ||
-                                newRec.cabinet ||
-                                newRec.drawer ||
-                                uploadedFile ||
-                                hf.selected) && (
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => {
-                                    setNewRec({
-                                      studentNo: "",
-                                      name: "",
-                                      course: "",
-                                      year: "",
-                                      sectionPart: "",
-                                      room: "",
-                                      cabinet: "",
-                                      drawer: "",
-                                      docType: "",
-                                    })
-                                    setUploadStudentIsExisting(false)
-                                    clearAllUploadFieldErrors?.()
-                                    if (uploadedFile || hf.selected) {
-                                      handleClearPdf()
-                                    }
-                                  }}
-                                  className="h-6 rounded-lg px-2 text-xs font-semibold text-pup-maroon dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 cursor-pointer"
-                                >
-                                  Clear
-                                </Button>
-                              )}
-                            </div>
-                            <div className="relative">
-                              <Input
-                                type="text"
+                        {isOsas ? (
+                          <div className="space-y-4">
+                            {/* Segmented control: Recognized Organization vs Register New Organization */}
+                            <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-gray-200/60 dark:border-white/5">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setUploadStudentIsExisting(true)
+                                  clearAllUploadFieldErrors?.()
+                                }}
                                 className={cn(
-                                  "h-10 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-3 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all",
-                                  ring("studentNo"),
-                                  lockIdentity && lockedField
+                                  "flex-1 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer",
+                                  uploadStudentIsExisting
+                                    ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
+                                    : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
                                 )}
-                                placeholder="202X-XXXXX-MN-0"
-                                ref={newStudentNoInputRef}
-                                value={newRec.studentNo}
-                                disabled={lockIdentity}
-                                onFocus={() => setShowStudentNoSuggestions(true)}
-                                onBlur={() => {
-                                  setNewRecStudentNoTouched(true)
-                                  setTimeout(() => setShowStudentNoSuggestions(false), 200)
+                              >
+                                Recognized Organization
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setUploadStudentIsExisting(false)
+                                  clearAllUploadFieldErrors?.()
                                 }}
-                                onChange={(e) => {
-                                  clearUploadFieldError?.("studentNo")
-                                  clearUploadFieldError?.("year")
-                                  clearUploadFieldError?.("sectionPart")
-                                  setNewRecStudentNoTouched(true)
-                                  const masked = applyStudentNoMask(e.target.value)
-                                  const derivedYear = deriveYearFromStudentNo(
-                                    masked.value
-                                  )
-                                  setNewRec((p) => ({
-                                    ...p,
-                                    studentNo: masked.value,
-                                    year: derivedYear,
-                                    sectionPart: "",
-                                  }))
-                                }}
-                              />
-                              {showStudentNoSuggestions && filteredStudentNoSuggestions.length > 0 && (
-                                <div className="absolute z-50 left-0 right-0 mt-1 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-900 overflow-hidden shadow-xl p-1 animate-in fade-in slide-in-from-top-1 duration-fast">
-                                  {filteredStudentNoSuggestions.map((s) => {
-                                    const sn = String(s?.studentNo || s?.student_no || "");
-                                    return (
-                                      <button
-                                        key={sn}
-                                        type="button"
-                                        onMouseDown={(e) => e.preventDefault()}
-                                        className="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors group flex flex-col gap-0.5 cursor-pointer"
-                                        onClick={() => handleSelectStudent(s)}
+                                className={cn(
+                                  "flex-1 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer",
+                                  !uploadStudentIsExisting
+                                    ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
+                                    : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
+                                )}
+                              >
+                                Register New Organization
+                              </button>
+                            </div>
+
+                            {uploadStudentIsExisting ? (
+                              /* Recognized Organization Selection */
+                              <div className="space-y-4">
+                                {newRec.organizationId && (
+                                  <div className="flex flex-col gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3.5 py-3 dark:border-emerald-500/20 dark:bg-emerald-950/20">
+                                    <span className="inline-flex items-start gap-2 text-[11px] font-medium tracking-[0.04em] text-emerald-900 dark:text-emerald-400">
+                                      <HugeIcon 
+                                        className="ph-bold ph-check-circle mt-0.5 shrink-0"
+                                        aria-hidden
+                                      />
+                                      <span>
+                                        Recognized organization selected — profile details locked. Adjust storage location or document type if needed, then submit.
+                                      </span>
+                                    </span>
+                                  </div>
+                                )}
+
+                                <div>
+                                  <div className="mb-2 flex items-center justify-between">
+                                    <label className="block text-xs font-medium text-gray-500 dark:text-zinc-400">
+                                      Select Recognized Organization
+                                    </label>
+                                    {(newRec.organizationId || newRec.name || uploadedFile || hf.selected) && (
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => {
+                                          setNewRec({
+                                            studentNo: "",
+                                            name: "",
+                                            course: "",
+                                            year: "",
+                                            sectionPart: "",
+                                            room: "",
+                                            cabinet: "",
+                                            drawer: "",
+                                            docType: "",
+                                            organizationId: "",
+                                            acronym: "",
+                                            category: "",
+                                            adviserName: "",
+                                            adviserEmail: "",
+                                          })
+                                          setUploadStudentIsExisting(true)
+                                          clearAllUploadFieldErrors?.()
+                                          if (uploadedFile || hf.selected) {
+                                            handleClearPdf()
+                                          }
+                                        }}
+                                        className="h-6 rounded-lg px-2 text-xs font-semibold text-pup-maroon dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 cursor-pointer"
                                       >
-                                        <div className="text-xs font-semibold text-gray-900 dark:text-zinc-100 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors">
-                                          {s?.name}
-                                        </div>
-                                        <div className="text-[10px] text-gray-500 dark:text-zinc-400">
-                                          {sn}
-                                        </div>
-                                      </button>
-                                    );
-                                  })}
+                                        Clear
+                                      </Button>
+                                    )}
+                                  </div>
+                                  <Select
+                                    placeholder="Choose an organization..."
+                                    className={cn(
+                                      "h-10 rounded-xl px-3 bg-white dark:bg-zinc-800 border border-gray-200 dark:border-white/10 text-xs shadow-none hover:bg-gray-50 dark:hover:bg-zinc-800/80 transition-all",
+                                      ring("organization"),
+                                      ring("organizationId")
+                                    )}
+                                    value={newRec.organizationId || ""}
+                                    onChange={(e) => {
+                                      clearUploadFieldError?.("organization")
+                                      clearUploadFieldError?.("organizationId")
+                                      const targetOrg = organizations.find((o) => o.id === e.target.value)
+                                      if (targetOrg) {
+                                        onSelectExistingStudent?.(targetOrg, newRec.docType || null)
+                                      }
+                                    }}
+                                  >
+                                    <option value="">Choose an organization...</option>
+                                    {organizations.map((org) => (
+                                      <option key={org.id} value={org.id}>
+                                        {org.acronym ? `[${org.acronym}] ` : ""}{org.name} ({org.category || "Organization"})
+                                      </option>
+                                    ))}
+                                  </Select>
                                 </div>
-                              )}
-                            </div>
-                            {newRecStudentNoHint ? (
-                              <div className="mt-2 text-xs font-semibold text-red-700">
-                                {newRecStudentNoHint}
-                              </div>
-                            ) : null}
-                          </div>
-                          {lockIdentity ? (
-                            <div>
-                              <label
-                                className={`mb-2 block text-xs font-medium ${lockedLabel} dark:text-zinc-400`}
-                              >
-                                Full Name
-                              </label>
-                              <Input
-                                type="text"
-                                className={cn(
-                                  "h-10 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-3 text-xs font-normal transition-all",
-                                  lockedField
-                                )}
-                                value={newRec.name}
-                                disabled
-                              />
-                            </div>
-                          ) : (
-                            <div>
-                              <label
-                                className="mb-2 block text-xs font-medium text-gray-500 dark:text-zinc-400"
-                              >
-                                Full Name (LN, FN MI.)
-                              </label>
-                              <div className="relative">
-                                <Input
-                                  type="text"
-                                  className={cn(
-                                    "h-10 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-3 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all",
-                                    ring("name")
-                                  )}
-                                  placeholder="e.g. DELA CRUZ, JUAN S."
-                                  value={newRec.name || ""}
-                                  onFocus={() => setShowNameSuggestions(true)}
-                                  onBlur={() => {
-                                    setTimeout(() => setShowNameSuggestions(false), 200)
-                                  }}
-                                  onChange={(e) => {
-                                    clearUploadFieldError?.("name")
-                                    setNewRec((p) => ({ ...p, name: e.target.value }))
-                                  }}
-                                />
-                                {showNameSuggestions && filteredNameSuggestions.length > 0 && (
-                                  <div className="absolute z-50 left-0 right-0 mt-1 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-900 overflow-hidden shadow-xl p-1 animate-in fade-in slide-in-from-top-1 duration-fast">
-                                    {filteredNameSuggestions.map((s) => {
-                                      const sn = String(s?.studentNo || s?.student_no || "");
-                                      return (
-                                        <button
-                                          key={sn}
-                                          type="button"
-                                          onMouseDown={(e) => e.preventDefault()}
-                                          className="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors group flex flex-col gap-0.5 cursor-pointer"
-                                          onClick={() => handleSelectStudent(s)}
-                                        >
-                                          <div className="text-xs font-semibold text-gray-900 dark:text-zinc-100 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors">
-                                            {s?.name}
-                                          </div>
-                                          <div className="text-[10px] text-gray-500 dark:text-zinc-400">
-                                            {sn}
-                                          </div>
-                                        </button>
-                                      );
-                                    })}
+
+                                {newRec.organizationId && (
+                                  <div className="grid grid-cols-2 gap-3">
+                                    <div>
+                                      <label className={`mb-2 block text-xs font-medium ${lockedLabel} dark:text-zinc-400`}>
+                                        Acronym
+                                      </label>
+                                      <Input
+                                        type="text"
+                                        className={cn(
+                                          "h-10 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-3 text-xs font-normal transition-all",
+                                          lockedField
+                                        )}
+                                        value={newRec.acronym || "—"}
+                                        disabled
+                                      />
+                                    </div>
+                                    <div>
+                                      <label className={`mb-2 block text-xs font-medium ${lockedLabel} dark:text-zinc-400`}>
+                                        Category
+                                      </label>
+                                      <Input
+                                        type="text"
+                                        className={cn(
+                                          "h-10 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-3 text-xs font-normal transition-all",
+                                          lockedField
+                                        )}
+                                        value={newRec.category || "—"}
+                                        disabled
+                                      />
+                                    </div>
+                                    {newRec.adviserName && (
+                                      <div className="col-span-2">
+                                        <label className={`mb-2 block text-xs font-medium ${lockedLabel} dark:text-zinc-400`}>
+                                          Faculty Adviser
+                                        </label>
+                                        <Input
+                                          type="text"
+                                          className={cn(
+                                            "h-10 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-3 text-xs font-normal transition-all",
+                                            lockedField
+                                          )}
+                                          value={newRec.adviserName}
+                                          disabled
+                                        />
+                                      </div>
+                                    )}
                                   </div>
                                 )}
                               </div>
+                            ) : (
+                              /* Register New Organization */
+                              <div className="space-y-4">
+                                <div>
+                                  <div className="mb-2 flex items-center justify-between">
+                                    <label className="block text-xs font-medium text-gray-500 dark:text-zinc-400">
+                                      Organization Name
+                                    </label>
+                                    {(newRec.name || uploadedFile || hf.selected) && (
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => {
+                                          setNewRec({
+                                            studentNo: "",
+                                            name: "",
+                                            course: "",
+                                            year: "",
+                                            sectionPart: "",
+                                            room: "",
+                                            cabinet: "",
+                                            drawer: "",
+                                            docType: "",
+                                            organizationId: "",
+                                            acronym: "",
+                                            category: "",
+                                            adviserName: "",
+                                            adviserEmail: "",
+                                          })
+                                          clearAllUploadFieldErrors?.()
+                                          if (uploadedFile || hf.selected) {
+                                            handleClearPdf()
+                                          }
+                                        }}
+                                        className="h-6 rounded-lg px-2 text-xs font-semibold text-pup-maroon dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 cursor-pointer"
+                                      >
+                                        Clear
+                                      </Button>
+                                    )}
+                                  </div>
+                                  <Input
+                                    type="text"
+                                    className={cn(
+                                      "h-10 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-3 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all",
+                                      ring("name")
+                                    )}
+                                    placeholder="e.g. Junior Philippine Computer Society"
+                                    value={newRec.name || ""}
+                                    onChange={(e) => {
+                                      clearUploadFieldError?.("name")
+                                      setNewRec((p) => ({ ...p, name: e.target.value }))
+                                    }}
+                                  />
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-3">
+                                  <div>
+                                    <label className="mb-2 block text-xs font-medium text-gray-500 dark:text-zinc-400">
+                                      Acronym
+                                    </label>
+                                    <Input
+                                      type="text"
+                                      className={cn(
+                                        "h-10 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-3 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all",
+                                        ring("acronym")
+                                      )}
+                                      placeholder="e.g. JPCS"
+                                      value={newRec.acronym || ""}
+                                      onChange={(e) => {
+                                        clearUploadFieldError?.("acronym")
+                                        setNewRec((p) => ({ ...p, acronym: e.target.value.toUpperCase() }))
+                                      }}
+                                    />
+                                  </div>
+
+                                  <div>
+                                    <label className="mb-2 block text-xs font-medium text-gray-500 dark:text-zinc-400">
+                                      Category
+                                    </label>
+                                    <Select
+                                      placeholder="Select Category"
+                                      className={cn(
+                                        "h-10 rounded-xl px-3 bg-white dark:bg-zinc-800 border border-gray-200 dark:border-white/10 text-xs shadow-none hover:bg-gray-50 dark:hover:bg-zinc-800/80 transition-all",
+                                        ring("category")
+                                      )}
+                                      value={newRec.category || ""}
+                                      onChange={(e) => {
+                                        clearUploadFieldError?.("category")
+                                        const nextCategory = e.target.value
+                                        setNewRec((p) => ({
+                                          ...p,
+                                          category: nextCategory,
+                                          cabinet: nextCategory === "Academic" ? "ACADEMIC ORGANIZATIONS" : "NON-ACADEMIC ORGANIZATIONS",
+                                        }))
+                                      }}
+                                    >
+                                      <option value="">Select Category</option>
+                                      <option value="Academic">Academic</option>
+                                      <option value="Non-Academic">Non-Academic</option>
+                                    </Select>
+                                  </div>
+                                </div>
+
+                                <div>
+                                  <label className="mb-2 block text-xs font-medium text-gray-500 dark:text-zinc-400">
+                                    Faculty Adviser
+                                  </label>
+                                  <Input
+                                    type="text"
+                                    className={cn(
+                                      "h-10 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-3 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all",
+                                      ring("adviserName")
+                                    )}
+                                    placeholder="e.g. Prof. Juan Dela Cruz"
+                                    value={newRec.adviserName || ""}
+                                    onChange={(e) => {
+                                      clearUploadFieldError?.("adviserName")
+                                      setNewRec((p) => ({ ...p, adviserName: e.target.value }))
+                                    }}
+                                  />
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          /* Existing Student Record Form for Registrar */
+                          <div className="space-y-5">
+                            {uploadStudentIsExisting && (
+                              <div className="flex flex-col gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3.5 py-3 dark:border-emerald-500/20 dark:bg-emerald-950/20">
+                                <span className="inline-flex items-start gap-2 text-[11px] font-medium tracking-[0.04em] text-emerald-900 dark:text-emerald-400">
+                                  <HugeIcon 
+                                    className="ph-bold ph-check-circle mt-0.5 shrink-0"
+                                    aria-hidden
+                                  />
+                                  <span>
+                                    Existing student — profile fields below are locked.
+                                    Adjust room, cabinet, drawer, or document type if
+                                    needed, then submit.
+                                  </span>
+                                </span>
+                                <button
+                                  type="button"
+                                  title="Switch to new student"
+                                  className="shrink-0 text-left text-xs font-semibold text-pup-maroon dark:text-red-400 underline-offset-2 hover:underline cursor-pointer"
+                                  onClick={() => {
+                                    setUploadStudentIsExisting(false)
+                                    clearAllUploadFieldErrors?.()
+                                  }}
+                                >
+                                  Switch
+                                </button>
+                              </div>
+                            )}
+
+                            <div className="grid grid-cols-1 gap-5">
+                              <div>
+                                <div className="mb-2 flex items-center justify-between">
+                                  <label
+                                    className={`block text-xs font-medium ${ lockIdentity ? lockedLabel : "text-gray-500" } dark:text-zinc-400`}
+                                  >
+                                    Student Number
+                                  </label>
+                                  {(newRec.studentNo ||
+                                    newRec.name ||
+                                    newRec.course ||
+                                    newRec.docType ||
+                                    newRec.room ||
+                                    newRec.cabinet ||
+                                    newRec.drawer ||
+                                    uploadedFile ||
+                                    hf.selected) && (
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => {
+                                        setNewRec({
+                                          studentNo: "",
+                                          name: "",
+                                          course: "",
+                                          year: "",
+                                          sectionPart: "",
+                                          room: "",
+                                          cabinet: "",
+                                          drawer: "",
+                                          docType: "",
+                                          organizationId: "",
+                                          acronym: "",
+                                          category: "",
+                                          adviserName: "",
+                                          adviserEmail: "",
+                                        })
+                                        setUploadStudentIsExisting(false)
+                                        clearAllUploadFieldErrors?.()
+                                        if (uploadedFile || hf.selected) {
+                                          handleClearPdf()
+                                        }
+                                      }}
+                                      className="h-6 rounded-lg px-2 text-xs font-semibold text-pup-maroon dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 cursor-pointer"
+                                    >
+                                      Clear
+                                    </Button>
+                                  )}
+                                </div>
+                                <div className="relative">
+                                  <Input
+                                    type="text"
+                                    className={cn(
+                                      "h-10 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-3 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all",
+                                      ring("studentNo"),
+                                      lockIdentity && lockedField
+                                    )}
+                                    placeholder="202X-XXXXX-MN-0"
+                                    ref={newStudentNoInputRef}
+                                    value={newRec.studentNo}
+                                    disabled={lockIdentity}
+                                    onFocus={() => setShowStudentNoSuggestions(true)}
+                                    onBlur={() => {
+                                      setNewRecStudentNoTouched(true)
+                                      setTimeout(() => setShowStudentNoSuggestions(false), 200)
+                                    }}
+                                    onChange={(e) => {
+                                      clearUploadFieldError?.("studentNo")
+                                      clearUploadFieldError?.("year")
+                                      clearUploadFieldError?.("sectionPart")
+                                      setNewRecStudentNoTouched(true)
+                                      const masked = applyStudentNoMask(e.target.value)
+                                      const derivedYear = deriveYearFromStudentNo(
+                                        masked.value
+                                      )
+                                      setNewRec((p) => ({
+                                        ...p,
+                                        studentNo: masked.value,
+                                        year: derivedYear,
+                                        sectionPart: "",
+                                      }))
+                                    }}
+                                  />
+                                  {showStudentNoSuggestions && filteredStudentNoSuggestions.length > 0 && (
+                                    <div className="absolute z-50 left-0 right-0 mt-1 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-900 overflow-hidden shadow-xl p-1 animate-in fade-in slide-in-from-top-1 duration-fast">
+                                      {filteredStudentNoSuggestions.map((s) => {
+                                        const sn = String(s?.studentNo || s?.student_no || "");
+                                        return (
+                                          <button
+                                            key={sn}
+                                            type="button"
+                                            onMouseDown={(e) => e.preventDefault()}
+                                            className="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors group flex flex-col gap-0.5 cursor-pointer"
+                                            onClick={() => handleSelectStudent(s)}
+                                          >
+                                            <div className="text-xs font-semibold text-gray-900 dark:text-zinc-100 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors">
+                                              {s?.name}
+                                            </div>
+                                            <div className="text-[10px] text-gray-500 dark:text-zinc-400">
+                                              {sn}
+                                            </div>
+                                          </button>
+                                        );
+                                      })}
+                                    </div>
+                                  )}
+                                </div>
+                                {newRecStudentNoHint ? (
+                                  <div className="mt-2 text-xs font-semibold text-red-700">
+                                    {newRecStudentNoHint}
+                                  </div>
+                                ) : null}
+                              </div>
+                              {lockIdentity ? (
+                                <div>
+                                  <label
+                                    className={`mb-2 block text-xs font-medium ${lockedLabel} dark:text-zinc-400`}
+                                  >
+                                    Full Name
+                                  </label>
+                                  <Input
+                                    type="text"
+                                    className={cn(
+                                      "h-10 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-3 text-xs font-normal transition-all",
+                                      lockedField
+                                    )}
+                                    value={newRec.name}
+                                    disabled
+                                  />
+                                </div>
+                              ) : (
+                                <div>
+                                  <label
+                                    className="mb-2 block text-xs font-medium text-gray-500 dark:text-zinc-400"
+                                  >
+                                    Full Name (LN, FN MI.)
+                                  </label>
+                                  <div className="relative">
+                                    <Input
+                                      type="text"
+                                      className={cn(
+                                        "h-10 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-3 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all",
+                                        ring("name")
+                                      )}
+                                      placeholder="e.g. DELA CRUZ, JUAN S."
+                                      value={newRec.name || ""}
+                                      onFocus={() => setShowNameSuggestions(true)}
+                                      onBlur={() => {
+                                        setTimeout(() => setShowNameSuggestions(false), 200)
+                                      }}
+                                      onChange={(e) => {
+                                        clearUploadFieldError?.("name")
+                                        setNewRec((p) => ({ ...p, name: e.target.value }))
+                                      }}
+                                    />
+                                    {showNameSuggestions && filteredNameSuggestions.length > 0 && (
+                                      <div className="absolute z-50 left-0 right-0 mt-1 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-900 overflow-hidden shadow-xl p-1 animate-in fade-in slide-in-from-top-1 duration-fast">
+                                        {filteredNameSuggestions.map((s) => {
+                                          const sn = String(s?.studentNo || s?.student_no || "");
+                                          return (
+                                            <button
+                                              key={sn}
+                                              type="button"
+                                              onMouseDown={(e) => e.preventDefault()}
+                                              className="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors group flex flex-col gap-0.5 cursor-pointer"
+                                              onClick={() => handleSelectStudent(s)}
+                                            >
+                                              <div className="text-xs font-semibold text-gray-900 dark:text-zinc-100 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors">
+                                                {s?.name}
+                                              </div>
+                                              <div className="text-[10px] text-gray-500 dark:text-zinc-400">
+                                                {sn}
+                                              </div>
+                                            </button>
+                                          );
+                                        })}
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              )}
+
                             </div>
-                          )}
 
-                        </div>
+                            <div>
+                              <label
+                                className={`mb-2 block text-xs font-medium ${ lockIdentity ? lockedLabel : "text-gray-500" } dark:text-zinc-400`}
+                              >
+                                Course / Program
+                              </label>
+                              <Select
+                                placeholder="Select Course"
+                                className={cn(
+                                  "h-10 rounded-xl px-3 bg-white dark:bg-zinc-800 border border-gray-200 dark:border-white/10 text-xs shadow-none hover:bg-gray-50 dark:hover:bg-zinc-800/80 transition-all",
+                                  ring("course"),
+                                  lockIdentity && lockedField
+                                )}
+                                value={newRec.course}
+                                disabled={lockIdentity}
+                                onChange={(e) => {
+                                  clearUploadFieldError?.("course")
+                                  setNewRec((p) => ({
+                                    ...p,
+                                    course: e.target.value,
+                                    sectionPart: "",
+                                  }))
+                                }}
+                              >
+                                {courses.map((c) => (
+                                  <option key={c.code} value={c.code}>
+                                    {c.name}
+                                  </option>
+                                ))}
+                              </Select>
+                            </div>
 
-                        <div>
-                          <label
-                            className={`mb-2 block text-xs font-medium ${ lockIdentity ? lockedLabel : "text-gray-500" } dark:text-zinc-400`}
-                          >
-                            Course / Program
-                          </label>
-                          <Select
-                            placeholder="Select Course"
-                            className={cn(
-                              "h-10 rounded-xl px-3 bg-white dark:bg-zinc-800 border border-gray-200 dark:border-white/10 text-xs shadow-none hover:bg-gray-50 dark:hover:bg-zinc-800/80 transition-all",
-                              ring("course"),
-                              lockIdentity && lockedField
-                            )}
-                            value={newRec.course}
-                            disabled={lockIdentity}
-                            onChange={(e) => {
-                              clearUploadFieldError?.("course")
-                              setNewRec((p) => ({
-                                ...p,
-                                course: e.target.value,
-                                sectionPart: "",
-                              }))
-                            }}
-                          >
-                            {courses.map((c) => (
-                              <option key={c.code} value={c.code}>
-                                {c.name}
-                              </option>
-                            ))}
-                          </Select>
-                        </div>
-
-                        <div>
-                          <label
-                            className={`mb-2 block text-xs font-medium ${ lockIdentity ? lockedLabel : "text-gray-500" } dark:text-zinc-400`}
-                          >
-                            Section
-                          </label>
-                          <Select
-                            placeholder="Select Section"
-                            className={cn(
-                              "h-10 rounded-xl px-3 bg-white dark:bg-zinc-800 border border-gray-200 dark:border-white/10 text-xs shadow-none hover:bg-gray-50 dark:hover:bg-zinc-800/80 transition-all",
-                              ring("sectionPart"),
-                              lockIdentity && lockedField
-                            )}
-                            value={newRec.sectionPart}
-                            onChange={(e) => {
-                              clearUploadFieldError?.("sectionPart")
-                              setNewRec((p) => ({
-                                ...p,
-                                sectionPart: e.target.value,
-                              }))
-                            }}
-                            disabled={lockIdentity || !newRec.course}
-                          >
-                            {sysSections.map((sec) => (
-                              <option key={sec.id} value={sec.name}>
-                                {sec.name}
-                              </option>
-                            ))}
-                          </Select>
-                        </div>
+                            <div>
+                              <label
+                                className={`mb-2 block text-xs font-medium ${ lockIdentity ? lockedLabel : "text-gray-500" } dark:text-zinc-400`}
+                              >
+                                Section
+                              </label>
+                              <Select
+                                placeholder="Select Section"
+                                className={cn(
+                                  "h-10 rounded-xl px-3 bg-white dark:bg-zinc-800 border border-gray-200 dark:border-white/10 text-xs shadow-none hover:bg-gray-50 dark:hover:bg-zinc-800/80 transition-all",
+                                  ring("sectionPart"),
+                                  lockIdentity && lockedField
+                                )}
+                                value={newRec.sectionPart}
+                                onChange={(e) => {
+                                  clearUploadFieldError?.("sectionPart")
+                                  setNewRec((p) => ({
+                                    ...p,
+                                    sectionPart: e.target.value,
+                                  }))
+                                }}
+                                disabled={lockIdentity || !newRec.course}
+                              >
+                                {sysSections.map((sec) => (
+                                  <option key={sec.id} value={sec.name}>
+                                    {sec.name}
+                                  </option>
+                                ))}
+                              </Select>
+                            </div>
+                          </div>
+                        )}
 
                         <div className="grid grid-cols-3 gap-3">
                           <div>
@@ -1986,7 +2368,11 @@ export default function ScanUploadTab({
                                 onChange={(e) => setCsvBulkCabinet(e.target.value)}
                               >
                                 <option value="">No change</option>
-                                {(() => {
+                                {isOsas ? (
+                                  ["ACADEMIC ORGANIZATIONS", "NON-ACADEMIC ORGANIZATIONS"].map((c) => (
+                                    <option key={c} value={c}>{c}</option>
+                                  ))
+                                ) : (() => {
                                   const bulkRoomId = coerceRoomId(csvBulkRoom)
                                   const ids = bulkRoomId
                                     ? getCabinetsForRoom(bulkRoomId).map(
@@ -2018,7 +2404,11 @@ export default function ScanUploadTab({
                                 onChange={(e) => setCsvBulkDrawer(e.target.value)}
                               >
                                 <option value="">No change</option>
-                                {(() => {
+                                {isOsas ? (
+                                  [1, 2, 3, 4].map((d) => (
+                                    <option key={d} value={String(d)}>Drawer {d}</option>
+                                  ))
+                                ) : (() => {
                                   const bulkRoomId = coerceRoomId(csvBulkRoom)
                                   const bulkCabId = String(
                                     csvBulkCabinet || ""
@@ -2078,7 +2468,13 @@ export default function ScanUploadTab({
                         {(() => {
                           const selectedIndices = Object.keys(csvSelected).filter(k => csvSelected[k])
                           const selectedRows = csvRows.filter(r => selectedIndices.includes(String(r.index)))
-                          const hasInvalidSelected = selectedRows.some(r => !isLocationValid(r.student.room, r.student.cabinet, r.student.drawer))
+                          const hasInvalidSelected = isOsas
+                            ? selectedRows.some(r => {
+                                const rm = r.organization?.room ?? r.student?.room
+                                const cb = r.organization?.cabinet ?? r.student?.cabinet
+                                return !rm || !cb
+                              })
+                            : selectedRows.some(r => !isLocationValid(r.student?.room, r.student?.cabinet, r.student?.drawer))
                           const importDisabled = csvLoading || selectedRows.length === 0 || hasInvalidSelected
 
                           return (
@@ -2087,7 +2483,7 @@ export default function ScanUploadTab({
                                 type="button"
                                 onClick={importCsvStudents}
                                 disabled={importDisabled}
-                                title="Import Students"
+                                title={isOsas ? "Import Organizations" : "Import Students"}
                                 className="w-full h-10 px-5 text-xs font-semibold rounded-xl! btn-brand-red text-white! active:scale-95 disabled:opacity-50 transition-all cursor-pointer shadow-xs"
                                 style={{ color: "#ffffff" }}
                               >
@@ -2097,7 +2493,7 @@ export default function ScanUploadTab({
                                     <span>Importing...</span>
                                   </span>
                                 ) : (
-                                  "Import"
+                                  isOsas ? "Import Organizations" : "Import Students"
                                 )}
                               </Button>
 

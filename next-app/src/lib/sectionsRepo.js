@@ -20,7 +20,7 @@ export async function listSections({ includeArchived = false, officeId } = {}) {
   return rows || [];
 }
 
-export async function createSection(nameRaw, courseCodeRaw, officeId) {
+export async function createSection(nameRaw, courseCodeRaw, officeId, { upsert = false } = {}) {
   const scopedOfficeId = requireOfficeId(officeId);
   const name = String(nameRaw || "").trim();
   const courseCode = String(courseCodeRaw || "").trim().toUpperCase();
@@ -40,7 +40,19 @@ export async function createSection(nameRaw, courseCodeRaw, officeId) {
 
   // Existence check
   const existing = await dbGet("SELECT id FROM sections WHERE office_id = ? AND name = ? AND COALESCE(course_code, 'UNKN') = ?", [scopedOfficeId, name, safeCode]);
-  if (existing) throw new Error("Section name already exists for this degree program");
+  if (existing) {
+    if (upsert) {
+      await dbRun("UPDATE sections SET status = 'Active' WHERE office_id = ? AND id = ?", [scopedOfficeId, existing.id]);
+      return await dbGet(
+        `SELECT s.*, c.name as course_name
+         FROM sections s
+         LEFT JOIN courses c ON c.office_id = s.office_id AND c.code = s.course_code
+         WHERE s.office_id = ? AND s.id = ?`,
+        [scopedOfficeId, existing.id]
+      );
+    }
+    throw new Error("Section name already exists for this degree program");
+  }
 
   // Insert
   const res = await dbRun("INSERT INTO sections (office_id, name, course_code, status) VALUES (?, ?, ?, 'Active')", [scopedOfficeId, name, safeCode]);

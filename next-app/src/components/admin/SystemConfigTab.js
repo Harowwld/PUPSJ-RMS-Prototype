@@ -750,6 +750,9 @@ export default function SystemConfigTab({
         const category = row.category || ""
         const name = row.name || ""
         const code = row.code || ""
+        const isCompliance = row.iscompliance !== undefined ? (String(row.iscompliance).toLowerCase() === "true" || row.iscompliance === "1") : false
+        const isRequestable = row.isrequestable !== undefined ? (String(row.isrequestable).toLowerCase() === "true" || row.isrequestable === "1") : false
+        const complianceCategory = row.compliancecategory || ""
 
         let error = ""
         if (!category) error = "Missing Category"
@@ -787,7 +790,7 @@ export default function SystemConfigTab({
           initialSelection[rowIndex] = true
         }
 
-        return { category, name, code, error, index: rowIndex }
+        return { category, name, code, isCompliance, isRequestable, complianceCategory, error, index: rowIndex }
       })
 
       setImportRows(parsed)
@@ -856,7 +859,11 @@ export default function SystemConfigTab({
             setImportSelected((prevSel) => ({ ...prevSel, [index]: false }))
           }
 
-          return { ...row, category, name, code, error }
+          const isCompliance = newData.isCompliance !== undefined ? newData.isCompliance : row.isCompliance
+          const isRequestable = newData.isRequestable !== undefined ? newData.isRequestable : row.isRequestable
+          const complianceCategory = newData.complianceCategory !== undefined ? newData.complianceCategory : row.complianceCategory
+
+          return { ...row, category, name, code, isCompliance, isRequestable, complianceCategory, error }
         }
         return row
       })
@@ -868,6 +875,9 @@ export default function SystemConfigTab({
     const category = newData.category || ""
     const name = newData.name || ""
     const code = newData.code || ""
+    const isCompliance = newData.isCompliance !== undefined ? Boolean(newData.isCompliance) : false
+    const isRequestable = newData.isRequestable !== undefined ? Boolean(newData.isRequestable) : false
+    const complianceCategory = newData.complianceCategory || ""
 
     let error = ""
     if (!category) error = "Missing Category"
@@ -891,7 +901,7 @@ export default function SystemConfigTab({
     }
 
     const nextIndex = importRows.length > 0 ? Math.max(...importRows.map((r) => r.index)) + 1 : 1
-    const newRow = { category, name, code, error, index: nextIndex }
+    const newRow = { category, name, code, isCompliance, isRequestable, complianceCategory, error, index: nextIndex }
 
     setImportRows((prev) => [newRow, ...prev])
     if (!error) {
@@ -960,8 +970,8 @@ export default function SystemConfigTab({
 
   function handleCopySample() {
     const sample = isOsas
-      ? "Category,Name,Code\nDocumentType,Event Proposal,\nDocumentType,Constitution & By-Laws (CBL),\nDocumentType,Activity Request,\nDocumentType,Financial Liquidation Report,\nCourse,Bachelor of Science in Information Technology,BSIT\nCourse,Bachelor of Science in Accountancy,BSA"
-      : "Category,Name,Code\nDocumentType,Transcript of Records,\nDocumentType,Diploma,\nCourse,Bachelor of Science in Information Technology,BSIT\nCourse,Bachelor of Science in Accountancy,BSA\nSection,Block 1,BSIT\nSection,Section 1,BSA";
+      ? "Category,Name,Code,IsCompliance,IsRequestable,ComplianceCategory\nDocumentType,Event Proposal,,true,false,Student Governance & Activities\nDocumentType,Constitution & By-Laws (CBL),,true,false,Student Governance & Activities\nDocumentType,Activity Request,,true,false,Student Governance & Activities\nDocumentType,Financial Liquidation Report,,true,false,Student Governance & Activities\nDocumentType,Clearance Form,,true,true,Certificates & Clearances\nCourse,Bachelor of Science in Information Technology,BSIT,,,\nCourse,Bachelor of Science in Accountancy,BSA,,,"
+      : "Category,Name,Code,IsCompliance,IsRequestable,ComplianceCategory\nDocumentType,Transcript of Records,,false,true,Academic Records\nDocumentType,Diploma,,false,true,Graduation & Exit Records\nDocumentType,PSA Birth Certificate,,true,false,Admission & Identity\nDocumentType,Form 137,,true,false,Academic Records\nCourse,Bachelor of Science in Information Technology,BSIT,,,\nCourse,Bachelor of Science in Accountancy,BSA,,,\nSection,Block 1,BSIT,,,\nSection,Section 1,BSA,,,";
     navigator.clipboard.writeText(sample);
     showToast({
       title: "CSV sample copied to clipboard.",

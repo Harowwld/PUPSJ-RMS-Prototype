@@ -16,6 +16,51 @@ export async function POST(req) {
   if (!extractedName) return NextResponse.json({ ok: true, data: [] });
   const officeId = isSystemAdminRole(user.role) ? null : getPrincipalOfficeId(user);
   if (!isSystemAdminRole(user.role) && !officeId) return createAuthErrorResponse("Office scope is required", 403);
+
+  // === OSAS Polymorphic Recognition (Matches Student Organizations) ===
+  if (officeId === "osas") {
+    const rows = await query(
+      `WITH input AS (
+         SELECT trim(regexp_replace(lower($1), '[^a-z0-9]+', ' ', 'g')) AS full_name
+       ), candidates AS (
+         SELECT so.id, so.id AS "studentNo", so.id AS "organizationId", so.name, so.acronym, so.category,
+                so.adviser_name AS "adviserName", so.storage_room AS room, so.storage_cabinet AS cabinet, so.storage_drawer AS drawer,
+                trim(regexp_replace(lower(so.name), '[^a-z0-9]+', ' ', 'g')) AS db_name,
+                trim(regexp_replace(lower(coalesce(so.acronym, '')), '[^a-z0-9]+', ' ', 'g')) AS db_acronym
+         FROM student_organizations so
+         WHERE so.status = 'Active'
+       )
+       SELECT "organizationId", "studentNo", name, acronym, category, "adviserName", room, cabinet, drawer,
+         round((CASE
+           WHEN db_name = input.full_name OR db_acronym = input.full_name THEN 1.0
+           WHEN db_name LIKE input.full_name || '%' OR input.full_name LIKE db_acronym || '%' THEN 0.95
+           WHEN db_name LIKE '%' || input.full_name || '%' OR input.full_name LIKE '%' || db_acronym || '%' THEN 0.90
+           ELSE similarity(db_name, input.full_name)
+         END)::numeric, 4) AS score,
+         CASE
+           WHEN db_name = input.full_name OR db_acronym = input.full_name THEN 'Exact organization match'
+           WHEN db_name LIKE '%' || input.full_name || '%' OR input.full_name LIKE '%' || db_acronym || '%' THEN 'Name/acronym keyword match'
+           ELSE 'Trigram similarity'
+         END AS reason
+       FROM candidates, input
+       WHERE db_name = input.full_name
+          OR db_acronym = input.full_name
+          OR db_name LIKE '%' || input.full_name || '%'
+          OR input.full_name LIKE '%' || db_acronym || '%'
+          OR ($2 = false AND similarity(db_name, input.full_name) >= 0.35)
+       ORDER BY score DESC, name ASC LIMIT 20`,
+      [extractedName.toLowerCase(), strict]
+    );
+
+    return NextResponse.json({
+      ok: true,
+      data: rows.map((r) => ({
+        ...r,
+        score: Number(r.score) || 0,
+      })),
+    });
+  }
+
   const officeClause = officeId
     ? "AND EXISTS (SELECT 1 FROM student_office_memberships som WHERE som.student_no = s.student_no AND som.office_id = $5 AND som.status = 'Active')"
     : "";

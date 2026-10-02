@@ -51,16 +51,34 @@ export async function listAllDocTypes({ includeArchived = false, officeId, scope
   ) || [];
 }
 
-export async function createDocTypeFull(nameRaw, officeId, { isRequestable = false, isCompliance = false, complianceCategory = "General Requirements" } = {}) {
+export async function createDocTypeFull(nameRaw, officeId, { isRequestable = false, isCompliance = false, complianceCategory = "General Requirements", upsert = false } = {}) {
   const scopedOfficeId = requireOfficeId(officeId);
   const name = String(nameRaw || "").trim();
   if (!name) throw new Error("Missing name");
 
   const nameNorm = normalizeDocTypeKey(name);
   
-  // 1. Strict existence check
+  // 1. Strict existence check / upsert
   const existing = await dbGet("SELECT id FROM document_types WHERE office_id = ? AND name_norm = ?", [scopedOfficeId, nameNorm]);
-  if (existing) throw new Error("Document type already exists");
+  if (existing) {
+    if (upsert) {
+      await dbRun(
+        `UPDATE document_types
+         SET name = ?, status = 'Active', is_requestable = ?, is_compliance = ?, compliance_category = ?
+         WHERE office_id = ? AND id = ?`,
+        [
+          name,
+          Boolean(isRequestable),
+          Boolean(isCompliance),
+          String(complianceCategory || "General Requirements").trim(),
+          scopedOfficeId,
+          existing.id,
+        ]
+      );
+      return await dbGet("SELECT * FROM document_types WHERE office_id = ? AND id = ?", [scopedOfficeId, existing.id]);
+    }
+    throw new Error("Document type already exists");
+  }
 
   // 2. Perform insertion
   const res = await dbRun(

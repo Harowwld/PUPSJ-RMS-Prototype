@@ -43,30 +43,59 @@ async function main() {
     );
   }
 
-  const docTypesToInsert = [
-    "CAEPUP Application Form",
-    "SAR Form",
-    "Health and Information Sheet",
-    "Undertaking and Waiver of Right",
-    "CTC Grade 10 Report Card",
-    "CTC Grade 11 Report Card",
-    "Grade 12 Report Card",
-    "Certification of Graduation",
-    "Certificate of Good Moral Character",
-    "PSA Birth Certificate",
-    "Diploma",
-    "Form 137",
-    "Transcript of Records",
-    "Certificate of Enrollment",
-  ];
+  // Dynamic Document Types from CSV
+  const OSAS_DOC_TYPES = new Set([
+    "constitution & by-laws (cbl)",
+    "event proposal",
+    "activity request",
+    "activity permit",
+    "financial liquidation report",
+    "good moral certificate",
+    "student disciplinary clearance",
+    "organization registration certificate",
+  ]);
 
-  for (const dt of docTypesToInsert) {
-    await query(
-      `INSERT INTO document_types (office_id, name, name_norm, status)
-       VALUES ('registrar', $1, $2, 'Active')
-       ON CONFLICT (office_id, name_norm) DO UPDATE SET name = EXCLUDED.name, status = 'Active'`,
-      [dt, dt.toLowerCase()]
-    );
+  for (const line of taxLines.slice(1)) {
+    const parts = line.split(",").map(p => p.trim());
+    const category = parts[0];
+    const name = parts[1];
+    const isCompliance = parts[3] === "true";
+    const isRequestable = parts[4] === "true";
+    const complianceCategory = parts[5] || "General Requirements";
+
+    if (!category || !name) continue;
+
+    if (category.toLowerCase() === "documenttype") {
+      const nameNorm = name.toLowerCase();
+      const officeId = OSAS_DOC_TYPES.has(nameNorm) ? "osas" : "registrar";
+
+      await query(
+        `INSERT INTO document_types (office_id, name, name_norm, status, is_compliance, is_requestable, compliance_category)
+         VALUES ($1, $2, $3, 'Active', $4, $5, $6)
+         ON CONFLICT (office_id, name_norm) DO UPDATE SET
+           name = EXCLUDED.name,
+           status = 'Active',
+           is_compliance = EXCLUDED.is_compliance,
+           is_requestable = EXCLUDED.is_requestable,
+           compliance_category = EXCLUDED.compliance_category`,
+        [officeId, name, nameNorm, isCompliance, isRequestable, complianceCategory]
+      );
+
+      // Clearance Form applies to both registrar and osas
+      if (nameNorm === "clearance form") {
+        await query(
+          `INSERT INTO document_types (office_id, name, name_norm, status, is_compliance, is_requestable, compliance_category)
+           VALUES ('registrar', $1, $2, 'Active', $3, $4, $5)
+           ON CONFLICT (office_id, name_norm) DO UPDATE SET
+             name = EXCLUDED.name,
+             status = 'Active',
+             is_compliance = EXCLUDED.is_compliance,
+             is_requestable = EXCLUDED.is_requestable,
+             compliance_category = EXCLUDED.compliance_category`,
+          [name, nameNorm, isCompliance, isRequestable, complianceCategory]
+        );
+      }
+    }
   }
 
   // Sections

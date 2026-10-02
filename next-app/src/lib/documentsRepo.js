@@ -64,6 +64,7 @@ export async function createDocument({
   officeId = null,
   studentNo,
   studentName,
+  organizationId = null,
   docType,
   originalFilename,
   mimeType,
@@ -75,17 +76,53 @@ export async function createDocument({
   await ensureReviewColumns();
   if (!officeId) throw new Error("Document office scope is required.");
 
-  const student = await dbGet(
-    `SELECT s.student_no
-       FROM students s
-      WHERE s.student_no = ?
-        AND EXISTS (SELECT 1 FROM student_office_memberships som
-                     WHERE som.student_no = s.student_no
-                       AND som.office_id = ?
-                       AND som.status = 'Active')`,
-    [String(studentNo || "").trim().toUpperCase(), officeId],
-  );
-  if (!student) throw new Error("Student is not assigned to this office.");
+  let effectiveOrgId = organizationId ? String(organizationId).trim() : null;
+  let effectiveStudentNo = studentNo ? String(studentNo).trim().toUpperCase() : null;
+  let effectiveStudentName = studentName ? String(studentName).trim() : null;
+
+  if (officeId === "osas") {
+    const orgKey = effectiveOrgId || effectiveStudentNo;
+    if (orgKey) {
+      const org = await dbGet(
+        `SELECT id, name, acronym, storage_room, storage_cabinet, storage_drawer
+           FROM student_organizations
+          WHERE lower(id) = lower(?) OR lower(coalesce(acronym, '')) = lower(?)`,
+        [orgKey, orgKey]
+      );
+      if (org) {
+        effectiveOrgId = org.id;
+        if (!effectiveStudentName) effectiveStudentName = org.name;
+      }
+    }
+
+    if (!effectiveOrgId) {
+      const student = await dbGet(
+        `SELECT s.student_no
+           FROM students s
+          WHERE s.student_no = ?
+            AND EXISTS (SELECT 1 FROM student_office_memberships som
+                         WHERE som.student_no = s.student_no
+                           AND som.office_id = ?
+                           AND som.status = 'Active')`,
+        [effectiveStudentNo, officeId],
+      );
+      if (!student) {
+        throw new Error("Student organization is not recognized by OSAS.");
+      }
+    }
+  } else {
+    const student = await dbGet(
+      `SELECT s.student_no
+         FROM students s
+        WHERE s.student_no = ?
+          AND EXISTS (SELECT 1 FROM student_office_memberships som
+                       WHERE som.student_no = s.student_no
+                         AND som.office_id = ?
+                         AND som.status = 'Active')`,
+      [effectiveStudentNo, officeId],
+    );
+    if (!student) throw new Error("Student is not assigned to this office.");
+  }
 
   const documentType = await dbGet(
     `SELECT id FROM document_types
@@ -102,11 +139,22 @@ export async function createDocument({
     }
   } catch {}
 
-  const cleanStudentNo = String(studentNo || "UNKNOWN").trim().toUpperCase().replace(/[^A-Z0-9-]/g, "_");
+  let verifiedStudentNo = null;
+  if (effectiveStudentNo) {
+    const studentExists = await dbGet(
+      `SELECT student_no FROM students WHERE student_no = ?`,
+      [effectiveStudentNo]
+    );
+    if (studentExists) {
+      verifiedStudentNo = effectiveStudentNo;
+    }
+  }
+
+  const cleanEntityId = String(effectiveOrgId || effectiveStudentNo || "UNKNOWN").trim().toUpperCase().replace(/[^A-Z0-9-]/g, "_");
   const cleanDocType = String(docType || "DOCUMENT").trim().toUpperCase().replace(/[^A-Z0-9-]/g, "_");
   const ext = path.extname(originalFilename || "").toLowerCase() || ".pdf";
   const storageFilename =
-    providedStorageFilename || `${cleanStudentNo}_${cleanDocType}_${Date.now()}${ext}`;
+    providedStorageFilename || `${cleanEntityId}_${cleanDocType}_${Date.now()}${ext}`;
   if (!isSafeStorageFilename(storageFilename)) {
     throw new Error("Invalid document storage filename.");
   }
@@ -121,6 +169,7 @@ export async function createDocument({
       office_id,
       student_no,
       student_name,
+      organization_id,
       doc_type,
       original_filename,
       storage_filename,
@@ -128,12 +177,13 @@ export async function createDocument({
       size_bytes,
       approval_status,
       uploaded_by
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `,
     [
       officeId,
-      studentNo,
-      studentName || null,
+      verifiedStudentNo,
+      effectiveStudentName || null,
+      effectiveOrgId || null,
       docType,
       originalFilename,
       storageFilename,
@@ -151,6 +201,7 @@ export async function listDocuments({
   officeId,
   q,
   studentNo,
+  organizationId,
   docType,
   approvalStatus,
   excludeDeclined,
@@ -163,33 +214,38 @@ export async function listDocuments({
   const params = [];
 
   if (officeId) {
-    filters.push("office_id = ?");
+    filters.push("d.office_id = ?");
     params.push(officeId);
   }
 
   if (studentNo) {
-    filters.push("student_no = ?");
-    params.push(studentNo);
+    filters.push("(d.student_no = ? OR d.organization_id = ?)");
+    params.push(studentNo, studentNo);
+  }
+
+  if (organizationId) {
+    filters.push("d.organization_id = ?");
+    params.push(organizationId);
   }
 
   if (docType) {
-    filters.push("doc_type = ?");
+    filters.push("d.doc_type = ?");
     params.push(docType);
   }
 
   if (approvalStatus) {
-    filters.push("approval_status = ?");
+    filters.push("d.approval_status = ?");
     params.push(approvalStatus);
   } else if (excludeDeclined) {
-    filters.push("(approval_status IS NULL OR approval_status != 'Declined')");
+    filters.push("(d.approval_status IS NULL OR d.approval_status != 'Declined')");
   }
 
   if (q) {
     filters.push(
-      "(student_no LIKE ? OR student_name LIKE ? OR doc_type LIKE ? OR original_filename LIKE ?)"
+      "(d.student_no LIKE ? OR d.student_name LIKE ? OR d.doc_type LIKE ? OR d.original_filename LIKE ? OR so.name LIKE ? OR so.acronym LIKE ?)"
     );
     const like = `%${q}%`;
-    params.push(like, like, like, like);
+    params.push(like, like, like, like, like, like);
   }
 
   const where = filters.length ? `WHERE ${filters.join(" AND ")}` : "";
@@ -199,10 +255,11 @@ export async function listDocuments({
 
   const rows = await dbAll(
     `
-      SELECT *
-      FROM documents
+      SELECT d.*, so.acronym AS org_acronym, so.name AS organization_name
+      FROM documents d
+      LEFT JOIN student_organizations so ON so.id = d.organization_id
       ${where}
-      ORDER BY created_at DESC, id DESC
+      ORDER BY d.created_at DESC, d.id DESC
       LIMIT ? OFFSET ?
     `,
     [...params, lim, off]
@@ -212,22 +269,29 @@ export async function listDocuments({
 
 export async function getDocumentById(id, { officeId } = {}) {
   await ensureReviewColumns();
-  const filters = ["id = ?"];
+  const filters = ["d.id = ?"];
   const params = [id];
   if (officeId) {
-    filters.push("office_id = ?");
+    filters.push("d.office_id = ?");
     params.push(officeId);
   }
-  const row = await dbGet(`SELECT * FROM documents WHERE ${filters.join(" AND ")}`, params);
+  const row = await dbGet(
+    `SELECT d.*, so.acronym AS org_acronym, so.name AS organization_name
+     FROM documents d
+     LEFT JOIN student_organizations so ON so.id = d.organization_id
+     WHERE ${filters.join(" AND ")}`,
+    params
+  );
   return decryptDocumentRow(row) || null;
 }
 
-export async function updateDocumentMetadata(id, { studentNo, studentName, docType, isPreviewed }, { officeId } = {}) {
+export async function updateDocumentMetadata(id, { studentNo, studentName, organizationId, docType, isPreviewed }, { officeId } = {}) {
   await ensureReviewColumns();
   const scopedOfficeId = requireOfficeId(officeId);
   const existing = await getDocumentById(id, { officeId: scopedOfficeId });
   if (!existing) return null;
 
+  const nextOrgId = organizationId !== undefined ? organizationId : existing.organization_id;
   const nextStudentNo = studentNo ?? existing.student_no;
   const nextStudentName = studentName ?? existing.student_name;
   const nextDocType = docType ?? existing.doc_type;
@@ -235,17 +299,27 @@ export async function updateDocumentMetadata(id, { studentNo, studentName, docTy
     ? Boolean(isPreviewed)
     : Boolean(existing.is_previewed);
 
-  const student = await dbGet(
-    `SELECT s.student_no
-       FROM students s
-      WHERE s.student_no = ?
-        AND EXISTS (SELECT 1 FROM student_office_memberships som
-                     WHERE som.student_no = s.student_no
-                       AND som.office_id = ?
-                       AND som.status = 'Active')`,
-    [String(nextStudentNo || "").trim().toUpperCase(), scopedOfficeId],
-  );
-  if (!student) throw new Error("Student is not assigned to this office.");
+  if (scopedOfficeId === "osas") {
+    if (nextOrgId) {
+      const org = await dbGet(
+        `SELECT id, name, acronym FROM student_organizations WHERE lower(id) = lower(?) OR lower(coalesce(acronym, '')) = lower(?)`,
+        [nextOrgId, nextOrgId]
+      );
+      if (!org) throw new Error("Student organization is not recognized by OSAS.");
+    }
+  } else {
+    const student = await dbGet(
+      `SELECT s.student_no
+         FROM students s
+        WHERE s.student_no = ?
+          AND EXISTS (SELECT 1 FROM student_office_memberships som
+                       WHERE som.student_no = s.student_no
+                         AND som.office_id = ?
+                         AND som.status = 'Active')`,
+      [String(nextStudentNo || "").trim().toUpperCase(), scopedOfficeId],
+    );
+    if (!student) throw new Error("Student is not assigned to this office.");
+  }
 
   const documentType = await dbGet(
     `SELECT id FROM document_types
@@ -254,11 +328,22 @@ export async function updateDocumentMetadata(id, { studentNo, studentName, docTy
   );
   if (!documentType) throw new Error("Document type is not available in this office.");
 
+  let verifiedStudentNo = null;
+  if (nextStudentNo) {
+    const studentExists = await dbGet(
+      `SELECT student_no FROM students WHERE student_no = ?`,
+      [nextStudentNo]
+    );
+    if (studentExists) {
+      verifiedStudentNo = nextStudentNo;
+    }
+  }
+
   await dbRun(
     `UPDATE documents
-     SET student_no = ?, student_name = ?, doc_type = ?, is_previewed = ?
+     SET student_no = ?, student_name = ?, organization_id = ?, doc_type = ?, is_previewed = ?
      WHERE id = ? AND office_id = ?`,
-    [nextStudentNo, nextStudentName, nextDocType, nextIsPreviewed, id, scopedOfficeId]
+    [verifiedStudentNo, nextStudentName, nextOrgId || null, nextDocType, nextIsPreviewed, id, scopedOfficeId]
   );
 
   return await getDocumentById(id, { officeId: scopedOfficeId });

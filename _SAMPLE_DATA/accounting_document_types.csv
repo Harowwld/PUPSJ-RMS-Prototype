@@ -1,0 +1,7 @@
+Category,Name,Code,IsCompliance,IsRequestable,ComplianceCategory
+DocumentType,Disbursement Voucher,,true,false,Disbursements & Payables
+DocumentType,Official Receipt (OR),,true,false,Revenue & Collections
+DocumentType,Purchase Order (PO),,true,false,Procurement & Assets
+DocumentType,Certificate of Full Payment,,false,true,Student Billing & Clearances
+DocumentType,Tuition Fee Assessment Form,,true,false,Student Billing & Clearances
+DocumentType,Budget Liquidation Report,,true,false,Disbursements & Payables

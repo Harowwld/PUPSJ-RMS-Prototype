@@ -1,67 +1,92 @@
-Category,Name,Code
-DocumentType,CAEPUP Application Form,
-DocumentType,SAR Form,
-DocumentType,Health and Information Sheet,
-DocumentType,Undertaking and Waiver of Right,
-DocumentType,CTC Grade 10 Report Card,
-DocumentType,CTC Grade 11 Report Card,
-DocumentType,Grade 12 Report Card,
-DocumentType,Certification of Graduation,
-DocumentType,Certificate of Good Moral Character,
-DocumentType,PSA Birth Certificate,
-DocumentType,Diploma,
-DocumentType,Form 137,
-Course,Bachelor of Science in Business Administration major in Financial Management,BSBA-FM
-Course,Bachelor of Science in Entrepreneurship,BSENT
-Course,Bachelor of Science in Information Technology,BSIT
-Course,Bachelor of Science in Psychology,BSPsych
-Course,Bachelor in Secondary Education major in English,BSEDUC
-Course,Diploma in Information Technology,DIT
-Section,1-1,BSBA-FM
-Section,1-2,BSBA-FM
-Section,2-1,BSBA-FM
-Section,2-2,BSBA-FM
-Section,3-1,BSBA-FM
-Section,3-2,BSBA-FM
-Section,4-1,BSBA-FM
-Section,4-2,BSBA-FM
-Section,1-1,BSENT
-Section,1-2,BSENT
-Section,2-1,BSENT
-Section,2-2,BSENT
-Section,3-1,BSENT
-Section,3-2,BSENT
-Section,4-1,BSENT
-Section,4-2,BSENT
-Section,1-1,BSIT
-Section,1-2,BSIT
-Section,2-1,BSIT
-Section,2-2,BSIT
-Section,3-1,BSIT
-Section,3-2,BSIT
-Section,4-1,BSIT
-Section,4-2,BSIT
-Section,1-1,BSPsych
-Section,1-2,BSPsych
-Section,2-1,BSPsych
-Section,2-2,BSPsych
-Section,3-1,BSPsych
-Section,3-2,BSPsych
-Section,4-1,BSPsych
-Section,4-2,BSPsych
-Section,1-1,BSEDUC
-Section,1-2,BSEDUC
-Section,2-1,BSEDUC
-Section,2-2,BSEDUC
-Section,3-1,BSEDUC
-Section,3-2,BSEDUC
-Section,4-1,BSEDUC
-Section,4-2,BSEDUC
-Section,1-1,DIT
-Section,1-2,DIT
-Section,2-1,DIT
-Section,2-2,DIT
-Section,3-1,DIT
-Section,3-2,DIT
-Section,4-1,DIT
-Section,4-2,DIT
+Category,Name,Code,IsCompliance,IsRequestable,ComplianceCategory
+DocumentType,CAEPUP Application Form,,true,false,Admission & Identity
+DocumentType,SAR Form,,true,false,Admission & Identity
+DocumentType,PSA Birth Certificate,,true,false,Admission & Identity
+DocumentType,Undertaking and Waiver of Right,,true,false,Admission & Identity
+DocumentType,Form 137,,true,false,Academic Records
+DocumentType,Grade 12 Report Card,,true,false,Academic Records
+DocumentType,CTC Grade 10 Report Card,,true,false,Academic Records
+DocumentType,CTC Grade 11 Report Card,,true,false,Academic Records
+DocumentType,Health Information Sheet,,true,false,Certificates & Clearances
+DocumentType,Health and Information Sheet,,true,false,Certificates & Clearances
+DocumentType,Certificate of Good Moral Character,,true,false,Certificates & Clearances
+DocumentType,Transcript of Records,,false,true,Academic Records
+DocumentType,Certified True Copy of Records,,false,true,Academic Records
+DocumentType,Certification of Grades (Cross-Enrollee),,false,true,Academic Records
+DocumentType,Diploma,,false,true,Graduation & Exit Records
+DocumentType,Certificate of Graduation,,false,true,Graduation & Exit Records
+DocumentType,Certificate of Transfer Credentials (Honorable Dismissal),,false,true,Graduation & Exit Records
+DocumentType,Certificate of Enrollment,,false,true,Certificates & Clearances
+DocumentType,Certificate of Registration,,false,true,Certificates & Clearances
+DocumentType,Constitution & By-Laws (CBL),,true,false,Student Governance & Activities
+DocumentType,Event Proposal,,true,false,Student Governance & Activities
+DocumentType,Activity Request,,true,false,Student Governance & Activities
+DocumentType,Activity Permit,,true,false,Student Governance & Activities
+DocumentType,Financial Liquidation Report,,true,false,Student Governance & Activities
+DocumentType,Good Moral Certificate,,false,true,Certificates & Clearances
+DocumentType,Student Disciplinary Clearance,,false,true,Certificates & Clearances
+DocumentType,Organization Registration Certificate,,false,true,Certificates & Clearances
+DocumentType,Clearance Form,,true,true,Certificates & Clearances
+Course,Bachelor of Science in Business Administration major in Financial Management,BSBA-FM,,,
+Course,Bachelor of Science in Entrepreneurship,BSENT,,,
+Course,Bachelor of Science in Information Technology,BSIT,,,
+Course,Bachelor of Science in Psychology,BSPsych,,,
+Course,Bachelor in Secondary Education major in English,BSEDUC,,,
+Course,Diploma in Information Technology,DIT,,,
+Course,Bachelor of Science in Computer Science,BSCS,,,
+Section,1-1,BSBA-FM,,,
+Section,1-2,BSBA-FM,,,
+Section,2-1,BSBA-FM,,,
+Section,2-2,BSBA-FM,,,
+Section,3-1,BSBA-FM,,,
+Section,3-2,BSBA-FM,,,
+Section,4-1,BSBA-FM,,,
+Section,4-2,BSBA-FM,,,
+Section,1-1,BSENT,,,
+Section,1-2,BSENT,,,
+Section,2-1,BSENT,,,
+Section,2-2,BSENT,,,
+Section,3-1,BSENT,,,
+Section,3-2,BSENT,,,
+Section,4-1,BSENT,,,
+Section,4-2,BSENT,,,
+Section,1-1,BSIT,,,
+Section,1-2,BSIT,,,
+Section,2-1,BSIT,,,
+Section,2-2,BSIT,,,
+Section,3-1,BSIT,,,
+Section,3-2,BSIT,,,
+Section,4-1,BSIT,,,
+Section,4-2,BSIT,,,
+Section,1-1,BSPsych,,,
+Section,1-2,BSPsych,,,
+Section,2-1,BSPsych,,,
+Section,2-2,BSPsych,,,
+Section,3-1,BSPsych,,,
+Section,3-2,BSPsych,,,
+Section,4-1,BSPsych,,,
+Section,4-2,BSPsych,,,
+Section,1-1,BSEDUC,,,
+Section,1-2,BSEDUC,,,
+Section,2-1,BSEDUC,,,
+Section,2-2,BSEDUC,,,
+Section,3-1,BSEDUC,,,
+Section,3-2,BSEDUC,,,
+Section,4-1,BSEDUC,,,
+Section,4-2,BSEDUC,,,
+Section,1-1,DIT,,,
+Section,1-2,DIT,,,
+Section,2-1,DIT,,,
+Section,2-2,DIT,,,
+Section,3-1,DIT,,,
+Section,3-2,DIT,,,
+Section,4-1,DIT,,,
+Section,4-2,DIT,,,
+Section,1-1,BSCS,,,
+Section,1-2,BSCS,,,
+Section,2-1,BSCS,,,
+Section,2-2,BSCS,,,
+Section,3-1,BSCS,,,
+Section,3-2,BSCS,,,
+Section,4-1,BSCS,,,
+Section,4-2,BSCS,,,

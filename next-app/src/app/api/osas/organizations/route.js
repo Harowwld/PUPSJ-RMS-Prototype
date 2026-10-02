@@ -10,6 +10,9 @@ export async function GET(req) {
   if (!access) {
     access = await requireOfficeModule("records_archive", { officeId: "osas" }, req);
   }
+  if (!access) {
+    access = await requireOfficeModule("scan_upload", { officeId: "osas" }, req);
+  }
   if (access === null) return NextResponse.json({ ok: false, error: "Authentication required" }, { status: 401 });
   if (!access) return NextResponse.json({ ok: false, error: "Forbidden" }, { status: 403 });
 
@@ -23,7 +26,10 @@ export async function GET(req) {
 }
 
 export async function POST(req) {
-  const access = await requireOfficeModule("student_organizations", { officeId: "osas" }, req);
+  let access = await requireOfficeModule("student_organizations", { officeId: "osas" }, req);
+  if (!access) {
+    access = await requireOfficeModule("scan_upload", { officeId: "osas" }, req);
+  }
   if (access === null) return NextResponse.json({ ok: false, error: "Authentication required" }, { status: 401 });
   if (!access) return NextResponse.json({ ok: false, error: "Forbidden" }, { status: 403 });
 

@@ -206,6 +206,61 @@ test("Backend hardened parameterized DELETE query operates cleanly without SQL s
   }).catch((err) => {
     if (err.message !== "__ROLLBACK_TEST__") throw err;
   });
+});
+
+test("Demo verification: _SAMPLE_DATA/security_questions.csv parses, validates, and imports seamlessly", async () => {
+  const fs = await import("fs");
+  const path = await import("path");
+  const csvPath = path.resolve(process.cwd(), "../_SAMPLE_DATA/security_questions.csv");
+
+  assert.ok(fs.existsSync(csvPath), "_SAMPLE_DATA/security_questions.csv must exist");
+  const csvContent = fs.readFileSync(csvPath, "utf8");
+
+  // 1. Parse using frontend logic
+  const parsed = parseFileQuestions(csvContent);
+  assert.ok(parsed.length >= 10, `Should parse at least 10 questions (parsed ${parsed.length})`);
+
+  // 2. Fetch existing questions from DB
+  const existingRows = await query("SELECT question FROM security_questions");
+  const existingTexts = existingRows.map((r) => r.question);
+
+  // 3. Evaluate rows
+  const evaluated = evaluateQuestionRows(parsed, existingTexts);
+  const invalidRows = evaluated.filter((r) => r.status !== "valid");
+  assert.equal(
+    invalidRows.length,
+    0,
+    `All sample CSV rows should be valid without duplicates/short/simple errors. Found invalid: ${JSON.stringify(invalidRows)}`
+  );
+
+  // 4. Test database transaction insertion (simulate PUT /api/system/security-questions)
+  await transaction(async ({ query: txQuery }) => {
+    let nextId = 1000;
+    for (let i = 0; i < parsed.length; i++) {
+      const q = parsed[i];
+      const targetId = nextId++;
+      const inserted = await txQuery(
+        `INSERT INTO security_questions (id, question, is_required)
+         VALUES ($1, $2, $3)
+         ON CONFLICT (id) DO UPDATE SET question = EXCLUDED.question, is_required = EXCLUDED.is_required
+         RETURNING *`,
+        [targetId, q.text, q.is_required]
+      );
+      assert.ok(inserted.rows[0].id, "Inserted question must have a numeric ID");
+      assert.equal(inserted.rows[0].question, q.text);
+      assert.equal(Boolean(inserted.rows[0].is_required), q.is_required);
+    }
+
+    // Verify recovery queries work with these questions
+    const verifyRows = await txQuery("SELECT id, question, is_required FROM security_questions WHERE is_required = TRUE");
+    assert.ok(verifyRows.rows.length >= 2, "Should have required challenge questions");
+
+    // Force rollback so test DB is untouched
+    throw new Error("__ROLLBACK_DEMO_TEST__");
+  }).catch((err) => {
+    if (err.message !== "__ROLLBACK_DEMO_TEST__") throw err;
+  });
 
   setTimeout(() => process.exit(0), 100).unref();
 });
+
