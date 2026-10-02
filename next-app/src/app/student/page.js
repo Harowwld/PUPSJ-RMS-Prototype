@@ -609,11 +609,11 @@ export default function StudentDashboard() {
         fetch("/api/student/post-event-reports", { cache: "no-store" }).catch(() => ({ ok: false, json: async () => ({}) })),
       ]);
       const [requestJson, proposalJson, typesJson, coursesJson, orgsJson, postEventJson] = await Promise.all([
-        requestRes.json(),
-        proposalRes.json(),
-        typesRes.json(),
-        coursesRes.json(),
-        orgsRes.json(),
+        requestRes.ok ? requestRes.json().catch(() => ({})) : {},
+        proposalRes.ok ? proposalRes.json().catch(() => ({})) : {},
+        typesRes.ok ? typesRes.json().catch(() => ({})) : {},
+        coursesRes.ok ? coursesRes.json().catch(() => ({})) : {},
+        orgsRes.ok ? orgsRes.json().catch(() => ({})) : {},
         postEventRes.ok ? postEventRes.json().catch(() => ({})) : {},
       ]);
       if (!requestRes.ok || !requestJson?.ok || !proposalRes.ok || !proposalJson?.ok) {
