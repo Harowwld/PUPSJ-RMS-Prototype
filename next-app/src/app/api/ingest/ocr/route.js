@@ -10,22 +10,14 @@ export const runtime = "nodejs";
 
 /**
  * Endpoint POST /api/ingest/ocr
- * Secure server-side native OCR route. Saves the uploaded document to a temporary file,
- * triggers high-speed native Apple Vision extraction, deletes the temporary file,
+ * Secure server-side OCR route. Saves the uploaded document to a temporary file,
+ * runs the platform OCR engine, deletes the temporary file,
  * and returns the completed transcription text.
  */
 export async function POST(req) {
   const { user, error } = await requireStaff(req);
   if (error || !user) {
     return createAuthErrorResponse(error || "Authentication required", 401);
-  }
-
-  // Ensure this is macOS or Windows
-  if (os.platform() !== "darwin" && os.platform() !== "win32") {
-    return NextResponse.json(
-      { ok: false, error: "Native offline OCR is only supported on macOS and Windows." },
-      { status: 400 }
-    );
   }
 
   try {
@@ -74,7 +66,11 @@ export async function POST(req) {
       ok: true,
       text: ocrResult.text,
       pages: ocrResult.pages,
-      engine: os.platform() === "darwin" ? "apple-vision" : "windows-media",
+      engine: os.platform() === "darwin"
+        ? "apple-vision"
+        : os.platform() === "win32"
+          ? "windows-media"
+          : "tesseract",
     });
 
   } catch (err) {

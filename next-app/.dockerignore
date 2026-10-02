@@ -1,0 +1,13 @@
+.dockerignore
+.git
+.next
+.local
+node_modules
+coverage
+.env
+.env.*
+!.env.example
+*.log
+scripts/windows-media-ocr/bin
+scripts/windows-media-ocr/obj
+scripts/windows-media-ocr/Release

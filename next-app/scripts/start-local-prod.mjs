@@ -1,4 +1,4 @@
-import { spawn } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 import process from "node:process";
 import dotenv from "dotenv";
 
@@ -9,6 +9,17 @@ const isWindows = process.platform === "win32";
 const pnpmCommand = isWindows ? "pnpm.cmd" : "pnpm";
 const port = Number(process.env.PORT || 3000);
 process.env.HOT_FOLDER_API_URL ||= `http://localhost:${port}/api/ingest/hot-folder`;
+
+const migration = spawnSync(pnpmCommand, ["db:migrate"], {
+  stdio: "inherit",
+  cwd: process.cwd(),
+  shell: isWindows,
+});
+if (migration.error || migration.status !== 0) {
+  console.error(`[start] Database migrations failed${migration.error ? `: ${migration.error.message}` : ` (exit ${migration.status})`}`);
+  process.exit(1);
+}
+
 const commands = ['"next start"'];
 const names = ["next"];
 const colors = ["cyan"];
