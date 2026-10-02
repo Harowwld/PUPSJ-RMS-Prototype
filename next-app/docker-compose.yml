@@ -3,18 +3,52 @@ services:
     image: postgres:16-alpine
     container_name: pupsj-rms-postgres
     environment:
-      POSTGRES_DB: pupsj_rms
-      POSTGRES_USER: pupsj_rms
-      POSTGRES_PASSWORD: pupsj_rms_local
+      POSTGRES_DB: ${POSTGRES_DB:-pupsj_rms}
+      POSTGRES_USER: ${POSTGRES_USER:-pupsj_rms}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-pupsj_rms_local}
     ports:
       - "5433:5432"
     volumes:
       - pupsj_rms_postgres:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U pupsj_rms -d pupsj_rms"]
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 5s
       timeout: 5s
       retries: 12
 
+  app:
+    build: .
+    container_name: pupsj-rms-app
+    init: true
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-pupsj_rms}:${POSTGRES_PASSWORD:-pupsj_rms_local}@postgres:5432/${POSTGRES_DB:-pupsj_rms}
+      JWT_SECRET: ${JWT_SECRET:-}
+      DEFAULT_STAFF_PASSWORD: ${DEFAULT_STAFF_PASSWORD:-}
+      PII_ENCRYPTION_KEY: ${PII_ENCRYPTION_KEY:-}
+      BACKUP_ENCRYPTION_KEY: ${BACKUP_ENCRYPTION_KEY:-}
+      HOT_FOLDER_INGEST_TOKEN: ${HOT_FOLDER_INGEST_TOKEN:-}
+      HOT_FOLDER_API_URL: http://localhost:3000/api/ingest/hot-folder
+      HOT_FOLDER_SOURCE_STATION: ${HOT_FOLDER_SOURCE_STATION:-Docker-Scanner}
+      HOT_FOLDER_OFFICE_ID: ${HOT_FOLDER_OFFICE_ID:-registrar}
+      HOT_FOLDER_ROOT: /app/.local/hot-folder
+      EXTERNAL_BACKUP_PATH: /app/.local/external_media
+      NODE_ENV: production
+    ports:
+      - "${APP_PORT:-3000}:3000"
+    volumes:
+      - pupsj_rms_app_data:/app/.local
+      - ${HOT_FOLDER_HOST_PATH:-/tmp/pupsj-rms-hot-folder}:/app/.local/hot-folder
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+
 volumes:
   pupsj_rms_postgres:
+  pupsj_rms_app_data:

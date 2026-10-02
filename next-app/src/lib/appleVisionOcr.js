@@ -17,6 +17,11 @@ export async function performNativeOcr(filePath) {
   const platform = os.platform();
   let binaryName = "";
 
+  if (platform === "linux") {
+    const { performTesseractOcr } = await import("./tesseractOcr.js");
+    return performTesseractOcr(filePath);
+  }
+
   if (platform === "darwin") {
     binaryName = "apple-vision-ocr";
   } else if (platform === "win32") {

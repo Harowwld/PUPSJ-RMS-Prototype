@@ -9,6 +9,7 @@ Local records-management application for PUP San Juan. The current development s
 - pnpm
 - Docker Desktop, running before starting the app
 - macOS for Apple Vision OCR, or Windows 10/11 with the .NET 8 SDK for Windows OCR
+- Docker mode uses Tesseract OCR in its Linux app container
 
 Install pnpm if it is not already available:
 
@@ -34,19 +35,47 @@ To run the stable `main` branch, omit `-b OCR-Improvements` from the clone comma
 Create `next-app/.env.local` from the example file:
 
 ```bash
-cp .env.example .env.local
+cp -n .env.example .env.local
 ```
 
-At minimum, set a private JWT secret:
+Set private values for the JWT secret and default staff password. Set a hot-folder token if you want the scanner watcher enabled during host-based development:
 
 ```dotenv
-DATABASE_URL=postgres://pupsj_rms:pupsj_rms_local@localhost:5432/pupsj_rms
+DATABASE_URL=postgres://pupsj_rms:pupsj_rms_local@localhost:5433/pupsj_rms
 JWT_SECRET=replace_with_a_long_random_value
-DEFAULT_STAFF_PASSWORD=pupstaff
+DEFAULT_STAFF_PASSWORD=replace_with_a_private_password
+HOT_FOLDER_INGEST_TOKEN=replace_with_a_random_token_at_least_32_chars
 LOCAL_DATA_DIR=.local
 ```
 
-Do not commit `.env.local`. The default Docker Compose database values are intended for local development only.
+Do not commit `.env.local` or `.env`. The default Docker Compose database values are intended for local development only.
+
+## Run the complete application with Docker
+
+From `next-app/`, create the Compose environment file and replace the sample secrets:
+
+```bash
+cp -n .env.example .env
+```
+
+Set private values for `JWT_SECRET`, `DEFAULT_STAFF_PASSWORD`, `HOT_FOLDER_INGEST_TOKEN`, and `POSTGRES_PASSWORD` in `.env`. Production startup requires the first three; the token also authenticates the scanner watcher.
+
+Build and start the web app, PostgreSQL, migrations, and hot-folder watcher:
+
+```bash
+docker compose up -d --build --wait
+docker compose ps
+```
+
+Open [http://localhost:3000](http://localhost:3000). Application uploads and backups persist in the `pupsj_rms_app_data` Docker volume; PostgreSQL persists separately in `pupsj_rms_postgres`. The scanner inbox is a host folder mounted into the app container. By default, put scanner files in `/tmp/pupsj-rms-hot-folder/INBOUND`; set `HOT_FOLDER_HOST_PATH` in `.env` to choose another Docker-shared host folder. The watcher moves files through `PROCESSING`, then to `DONE` or `FAILED`, and uses the configured token to authenticate with the app. Database migrations run automatically before the web server starts. OCR uses Tesseract inside the Linux app container.
+
+Stop the containers while preserving the PostgreSQL database volume with:
+
+```bash
+docker compose down
+```
+
+`docker compose down -v` removes the PostgreSQL and app-data volumes, permanently deleting their contents. The scanner inbox is a host folder and remains in place.
 
 ## Start PostgreSQL and initialize the database
 
@@ -54,7 +83,7 @@ Do not commit `.env.local`. The default Docker Compose database values are inten
 On Linux environments, ensure your active shell session has Docker permissions before running services:
 ```bash
 newgrp docker
-docker compose up -d
+docker compose up -d --wait postgres
 pnpm dev
 ```
 
@@ -70,7 +99,7 @@ pnpm db:verify
 
 `db:migrate` applies every numbered SQL migration once. `db:seed:sample` is safe to run again because the sample records use conflict-safe inserts. It creates sample courses, sections, document types, staff, students, documents, requests, and the default room/cabinet/drawer layout.
 
-To start everything in one command, use:
+For host-based development, use:
 
 ```bash
 pnpm dev
@@ -88,15 +117,15 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ## Default demo & local accounts
 
-The system includes pre-seeded demo accounts for all administrative, office, and student roles. The default password for all accounts is `pupstaff` (configured via `DEFAULT_STAFF_PASSWORD`).
+The system includes pre-seeded demo accounts for all administrative, office, and student roles. Personnel use the `DEFAULT_STAFF_PASSWORD` value configured in `.env` (Docker) or `.env.local` (host development). Student demo credentials depend on which seed script created the account.
 
 | Role | Office / Scope | Account ID / Student No | Email Identifier | Default Password | Dashboard Route & Purpose |
 |---|---|---|---|---|---|
-| **SuperAdmin** | Global (`NULL`) | `PUPSUPERADMIN-001` | `superadmin@pup.local` *(or `admin.default@pup.local`)* | `pupstaff` | `/systemadmin` (System-wide administration, office provisioning, system health) |
-| **Registrar Admin** | Office of the Registrar | `PUPREGISTRAR-003` | `admin.registrar@pup.local` | `pupstaff` | `/admin` (Registrar compliance, storage layout, document review, batch scanning) |
-| **Registrar Staff** | Office of the Registrar | `PUPREGISTRAR-002` | `staff.registrar@pup.local` | `pupstaff` | `/staff` (Digitization, scan & upload, student records, document request fulfillment) |
-| **OSAS Admin** | Office of Student Affairs and Services | `PUPOSAS-001` | `admin.osas@pup.local` | `pupstaff` | `/admin` (OSAS records review, student organization event proposals) |
-| **Student** | Student Portal | `2022-10001-MN-1` (Juan Dela Cruz) | `student@pup.local` *(or `2022-10001-MN-1`)* | `pupstaff` *(or `student123`)* | `/student` (Online Document Request System & Student Org Event Submissions) |
+| **SuperAdmin** | Global (`NULL`) | `PUPSUPERADMIN-001` | `superadmin@pup.local` *(or `admin.default@pup.local`)* | `DEFAULT_STAFF_PASSWORD` from `.env` or `.env.local` | `/systemadmin` (System-wide administration, office provisioning, system health) |
+| **Registrar Admin** | Office of the Registrar | `PUPREGISTRAR-003` | `admin.registrar@pup.local` | `DEFAULT_STAFF_PASSWORD` from `.env` or `.env.local` | `/admin` (Registrar compliance, storage layout, document review, batch scanning) |
+| **Registrar Staff** | Office of the Registrar | `PUPREGISTRAR-002` | `staff.registrar@pup.local` | `DEFAULT_STAFF_PASSWORD` from `.env` or `.env.local` | `/staff` (Digitization, scan & upload, student records, document request fulfillment) |
+| **OSAS Admin** | Office of Student Affairs and Services | `PUPOSAS-001` | `admin.osas@pup.local` | `DEFAULT_STAFF_PASSWORD` from `.env` or `.env.local` | `/admin` (OSAS records review, student organization event proposals) |
+| **Student** | Student Portal | `2022-10001-MN-1` (Juan Dela Cruz) | `student@pup.local` *(or `2022-10001-MN-1`)* | Set by the seed script | `/student` (Online Document Request System & Student Org Event Submissions) |
 
 > **Note**: Demo personnel accounts are pre-seeded with recovery answers so they bypass first-time password setup modals during presentations. You can also use the **Demo Accounts** quick-fill pills located on the sign-in page (`/`).
 
