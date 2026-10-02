@@ -684,7 +684,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
       /* ignore */
     }
     localStorage.setItem("pup-logout", Date.now());
-    window.location.href = "/";
+    window.location.href = "/login";
   };
 
   const getStudentFolderYear = (s) => {

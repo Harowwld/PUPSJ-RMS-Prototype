@@ -16,6 +16,7 @@ const staffTests = [
   { email: "admin.registrar@pup.local", id: "PUPREGISTRAR-003", role: "Admin", office: "registrar" },
   { email: "staff.registrar@pup.local", id: "PUPREGISTRAR-002", role: "Staff", office: "registrar" },
   { email: "admin.osas@pup.local", id: "PUPOSAS-001", role: "Admin", office: "osas" },
+  { email: "staff.osas@pup.local", id: "PUPOSAS-002", role: "Staff", office: "osas" },
 ];
 
 for (const t of staffTests) {
@@ -32,11 +33,7 @@ for (const t of staffTests) {
   console.log(`PASS: ${t.role} (${t.email}) - PW: ${pwMatch}, HasSecurity: ${hasSec}, Role: ${roleMatch}, Office: ${officeMatch}`);
 }
 
-// Test 2: OSAS staff should not exist
-const osasStaff = await queryOne("SELECT * FROM staff WHERE id = 'PUPOSAS-002' OR email = 'staff.osas@pup.local'");
-console.log("PASS: OSAS Staff absent (osas admin only):", osasStaff === null);
-
-// Test 3: Student authentication
+// Test 2: Student authentication
 const s1 = await authenticateStudent({ studentNo: "student@pup.local", password: studentPassword });
 const s2 = await authenticateStudent({ studentNo: "2022-10001-MN-1", password: studentPassword });
 const s3 = await authenticateStudent({ studentNo: "2022-10001-MN-1", password: studentPassword });
@@ -54,6 +51,8 @@ const testInputs = [
   { input: "PUPREGISTRAR-002", expectedRole: "Staff" },
   { input: "admin.osas@pup.local", expectedRole: "Admin" },
   { input: "PUPOSAS-001", expectedRole: "Admin" },
+  { input: "staff.osas@pup.local", expectedRole: "Staff" },
+  { input: "PUPOSAS-002", expectedRole: "Staff" },
   { input: "student@pup.local", expectedRole: "Student" },
   { input: "2022-10001-MN-1", expectedRole: "Student" },
 ];

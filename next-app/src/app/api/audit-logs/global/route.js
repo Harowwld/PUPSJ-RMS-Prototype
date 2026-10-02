@@ -6,6 +6,7 @@ import {
   createAuthErrorResponse,
 } from "@/lib/authHelpers";
 import { isSystemAdminRole } from "@/lib/roleUtils";
+import { decryptPII } from "@/lib/piiEncryption";
 
 export const runtime = "nodejs";
 
@@ -50,7 +51,12 @@ export async function GET(req) {
       countGlobalAuditLogs({ ...queryOpts, limit: undefined, offset: undefined }),
     ]);
 
-    return NextResponse.json({ ok: true, data: rows, total });
+    const readableRows = rows.map((row) => ({
+      ...row,
+      actor: decryptPII(row.actor),
+    }));
+
+    return NextResponse.json({ ok: true, data: readableRows, total });
   } catch (err) {
     return NextResponse.json({ ok: false, error: "Internal server error" }, { status: 500 });
   }

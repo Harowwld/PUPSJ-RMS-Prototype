@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Card } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import {
   Empty,
@@ -27,6 +28,7 @@ const STATUS_TABS = [
   { id: "Failed", label: "Failed" },
   { id: "", label: "All" },
 ];
+const PAGE_SIZE = 6;
 
 const REGION_LABELS = {
   firstName: { label: "First name", color: "#2563eb" },
@@ -64,13 +66,14 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
   const [saving, setSaving] = useState(false);
   const [note, setNote] = useState("");
   const [studentAssignmentQuery, setStudentAssignmentQuery] = useState("");
+  const [fullscreenPreview, setFullscreenPreview] = useState(null);
 
   const selected = useMemo(() => rows.find((row) => Number(row.id) === Number(selectedId)) || null, [rows, selectedId]);
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const params = new URLSearchParams({ limit: "50", offset: String(page * 50) });
+      const params = new URLSearchParams({ limit: String(PAGE_SIZE), offset: String(page * PAGE_SIZE) });
       if (statusFilters.length > 0) params.set("status", statusFilters.join(","));
       if (docTypeFilters.length > 0) params.set("docType", docTypeFilters.join(","));
       if (query.trim()) params.set("q", query.trim());
@@ -210,8 +213,12 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
 
   const previewUrl = selected ? `/api/ingest/hot-folder/${selected.id}/file` : "";
   const isImage = selected?.mime_type?.startsWith("image/");
+  const openFullscreenPreview = () => setFullscreenPreview({
+    src: previewUrl,
+    isImage,
+    title: selected?.original_filename || "Scanned document",
+  });
   const ocrRegions = selected?.ocr_regions && typeof selected.ocr_regions === "object" ? selected.ocr_regions : {};
-  const matchEvidence = selected?.match_evidence && typeof selected.match_evidence === "object" ? selected.match_evidence : null;
   const matchCandidates = useMemo(() => parseMatchCandidates(selected?.match_candidates), [selected]);
   const matchingStudentNumbers = useMemo(() => {
     const candidates = matchCandidates;
@@ -425,13 +432,13 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
                         Previous
                       </Button>
                       <span className="text-xs text-gray-500 dark:text-zinc-400">
-                        Page {page + 1} of {Math.max(1, Math.ceil(total / 50))}
+                        Page {page + 1} of {Math.max(1, Math.ceil(total / PAGE_SIZE))}
                       </span>
                       <Button
                         size="xs"
                         variant="outline"
                         onClick={() => setPage((current) => current + 1)}
-                        disabled={(page + 1) * 50 >= total || loading}
+                        disabled={(page + 1) * PAGE_SIZE >= total || loading}
                         className="h-7 px-2.5 text-xs font-medium rounded-lg border border-gray-200 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 disabled:opacity-40"
                       >
                         Next
@@ -463,25 +470,47 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
               </div>
               <div className="flex flex-1 min-h-0 overflow-auto p-5">
                 {selected ? (
-                  <div className="grid min-h-0 w-full gap-5 xl:grid-cols-2">
+                  <div className="grid min-h-0 w-full grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
                     {/* Preview Sub-column */}
-                    <div className="flex flex-col gap-3">
+                    <div className="flex min-w-0 flex-col gap-3">
                       {selected.review_status === "Processing" && (
                         <div className="rounded-xl border border-blue-200 bg-blue-50/70 px-3.5 py-2.5 text-xs text-blue-800 dark:border-blue-900/30 dark:bg-blue-950/20 dark:text-blue-200">
                           <strong>OCR retry in progress.</strong> This item is still in the review queue and will update when processing finishes.
                         </div>
                       )}
 
-                      <div className="flex min-h-[360px] flex-1 items-center justify-center overflow-hidden rounded-2xl border border-gray-200 bg-gray-50/70 dark:border-white/10 dark:bg-zinc-900/50">
+                      <div className="relative flex min-h-[360px] flex-1 items-start justify-center overflow-auto rounded-2xl border border-gray-200 bg-gray-300 p-3 dark:border-white/10 dark:bg-zinc-800">
+                        <button
+                          type="button"
+                          onClick={openFullscreenPreview}
+                          aria-label="Open document preview fullscreen"
+                          title="View fullscreen"
+                          className="absolute right-5 top-5 z-10 flex h-9 w-9 items-center justify-center rounded-lg border border-white/20 bg-black/60 text-white shadow-lg backdrop-blur-sm transition-colors hover:bg-black/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                        >
+                          <HugeIcon className="ph-bold ph-corners-out text-base" />
+                        </button>
                         {isImage ? (
-                          <div className="relative inline-flex max-h-[520px] max-w-full">
+                          <div
+                            role="button"
+                            tabIndex={0}
+                            aria-label="Open scanned document fullscreen"
+                            title="Click to view fullscreen"
+                            onClick={openFullscreenPreview}
+                            onKeyDown={(event) => {
+                              if (event.key === "Enter" || event.key === " ") {
+                                event.preventDefault();
+                                openFullscreenPreview();
+                              }
+                            }}
+                            className="relative flex min-h-[360px] w-full cursor-zoom-in items-start justify-center pt-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon"
+                          >
                             <Image
                               src={previewUrl}
                               alt="Scanned document"
                               width={800}
                               height={1000}
                               unoptimized
-                              className="max-h-[520px] max-w-full object-contain rounded-lg"
+                              className="block h-auto max-h-[520px] w-auto max-w-full rounded-lg object-contain"
                             />
                             {Object.entries(ocrRegions).map(([key, region]) => {
                               const field = REGION_LABELS[key];
@@ -509,7 +538,7 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
                             })}
                           </div>
                         ) : (
-                          <div className="flex h-[520px] w-full flex-col">
+                          <div className="flex h-[520px] w-full max-w-4xl flex-col overflow-hidden rounded-lg bg-white shadow-xl">
                             <iframe
                               title="Scanned document preview"
                               src={previewUrl}
@@ -657,70 +686,11 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
                         </Select>
                       </div>
 
-                      {/* Extracted Name */}
-                      <div>
-                        <label className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-300">
-                          Extracted Name
-                        </label>
-                        <Input
-                          value={selected.ocr_name || ""}
-                          onChange={(event) =>
-                            update({ ocrName: event.target.value }).catch((error) =>
-                              showToast({ title: "Save failed", description: error.message }, true)
-                            )
-                          }
-                          className="h-10 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-xs shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon"
-                        />
-                      </div>
-
-                      {/* Confidence and Quality Scores */}
-                      <div className="grid grid-cols-2 gap-2.5">
-                        <div className="rounded-xl border border-blue-100 bg-blue-50/60 p-3 dark:border-blue-900/30 dark:bg-blue-950/20">
-                          <div className="text-[10px] font-semibold uppercase tracking-wider text-blue-700 dark:text-blue-300">
-                            Match Confidence
-                          </div>
-                          <div className="mt-0.5 text-lg font-bold text-blue-900 dark:text-blue-100">
-                            {selected.match_confidence != null
-                              ? `${Math.round(Number(selected.match_confidence) * 100)}%`
-                              : "—"}
-                          </div>
-                          <div className="text-[11px] text-blue-700 dark:text-blue-300">
-                            {matchEvidence?.reason || selected.match_status || "Not scored"}
-                          </div>
-                        </div>
-
-                        <div className="rounded-xl border border-emerald-100 bg-emerald-50/60 p-3 dark:border-emerald-900/30 dark:bg-emerald-950/20">
-                          <div className="text-[10px] font-semibold uppercase tracking-wider text-emerald-700 dark:text-emerald-300">
-                            OCR Read Quality
-                          </div>
-                          <div className="mt-0.5 text-lg font-bold text-emerald-900 dark:text-emerald-100">
-                            {selected.ocr_quality_score != null
-                              ? `${Math.round(Number(selected.ocr_quality_score) * 100)}%`
-                              : "—"}
-                          </div>
-                          <div className="text-[11px] text-emerald-700 dark:text-emerald-300">
-                            {selected.match_method || "Not scored"}
-                          </div>
-                        </div>
-                      </div>
-
                       {/* Conflict Reason Banner */}
                       {(selected.match_status === "Conflict" || status === "Conflict") && (
                         <div className="rounded-xl border border-amber-200 bg-amber-50/70 p-3 text-xs text-amber-800 dark:border-amber-900/30 dark:bg-amber-950/20 dark:text-amber-200">
                           <strong>Conflict reason:</strong> {matchReason}
                         </div>
-                      )}
-
-                      {/* Evidence Breakdown */}
-                      {matchEvidence && (
-                        <details className="rounded-xl border border-gray-200 p-3 text-xs dark:border-white/10">
-                          <summary className="cursor-pointer font-semibold text-gray-700 dark:text-zinc-300">
-                            Evidence Breakdown
-                          </summary>
-                          <pre className="mt-2 max-h-40 overflow-auto rounded-lg bg-gray-50 p-2 text-[11px] text-gray-600 dark:bg-zinc-900 dark:text-zinc-400">
-                            {JSON.stringify(matchEvidence, null, 2)}
-                          </pre>
-                        </details>
                       )}
 
                       {/* OCR Response Text */}
@@ -819,6 +789,45 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
         )}
         </Card>
       </div>
+      <Dialog open={Boolean(fullscreenPreview)} onOpenChange={(open) => !open && setFullscreenPreview(null)}>
+        <DialogContent
+          hideClose
+          className="!fixed !inset-0 !flex !h-screen !w-screen !max-w-none !translate-x-0 !translate-y-0 flex-col gap-0 overflow-hidden rounded-none border-0 bg-zinc-950 p-0 text-white shadow-none"
+        >
+          <DialogHeader className="flex shrink-0 flex-row items-center justify-between border-b border-white/10 bg-black/70 px-5 py-3 text-white">
+            <DialogTitle className="truncate pr-4 text-sm font-semibold text-white">
+              {fullscreenPreview?.title || "Document preview"}
+            </DialogTitle>
+            <button
+              type="button"
+              onClick={() => setFullscreenPreview(null)}
+              aria-label="Close fullscreen preview"
+              title="Close"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-white/80 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+            >
+              <HugeIcon className="ph-bold ph-x text-base" />
+            </button>
+          </DialogHeader>
+          <div className="flex min-h-0 flex-1 items-start justify-center overflow-auto bg-zinc-900 p-4 sm:p-6">
+            {fullscreenPreview?.src && (fullscreenPreview.isImage ? (
+              <Image
+                src={fullscreenPreview.src}
+                alt={fullscreenPreview.title || "Scanned document"}
+                width={1600}
+                height={2000}
+                unoptimized
+                className="block max-h-full max-w-full rounded-md object-contain shadow-2xl"
+              />
+            ) : (
+              <iframe
+                title={fullscreenPreview.title || "Scanned document preview"}
+                src={fullscreenPreview.src}
+                className="h-full min-h-[80vh] w-full border-0 bg-white"
+              />
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
     </TooltipProvider>
   );
 }

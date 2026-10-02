@@ -63,7 +63,7 @@ function SortIndicator({ column, sortBy, sortOrder }) {
   );
 }
 
-const requestStatuses = ["Pending", "InProgress", "Ready", "Completed", "Cancelled"];
+const requestStatuses = ["Pending", "Deficient", "PendingPayment", "InProgress", "Ready", "Completed", "Cancelled"];
 
 const RATING_LABELS = {
   1: "Poor",
@@ -106,6 +106,12 @@ function StatusBadge({ status }) {
   } else if (s === "processing") {
     badgeClass = "bg-blue-50 text-blue-800 border-blue-200/80 dark:bg-blue-950/30 dark:text-blue-300 dark:border-blue-800/40";
     label = "Processing";
+  } else if (s === "deficient") {
+    badgeClass = "bg-amber-100 text-amber-900 border-amber-300 dark:bg-amber-950/50 dark:text-amber-200 dark:border-amber-800";
+    label = "Action Required";
+  } else if (s === "pendingpayment") {
+    badgeClass = "bg-amber-100 text-amber-900 border-amber-300 dark:bg-amber-950/50 dark:text-amber-200 dark:border-amber-800";
+    label = "Pending Payment";
   } else if (s === "needs revision" || s === "revision") {
     badgeClass = "bg-amber-50 text-amber-800 border-amber-200/80 dark:bg-amber-950/30 dark:text-amber-300 dark:border-amber-800/40";
     label = "Needs Revision";
@@ -159,6 +165,7 @@ export default function StudentDashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [authSubmitting, setAuthSubmitting] = useState(false);
   const [requestSubmitting, setRequestSubmitting] = useState(false);
+  const [paymentUploadRequestId, setPaymentUploadRequestId] = useState(null);
   const [proposalSubmitting, setProposalSubmitting] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [studentNoFocused, setStudentNoFocused] = useState(false);
@@ -290,6 +297,8 @@ export default function StudentDashboard() {
 
     const statusOptions = [
       { value: "Pending", label: "Pending", dotColor: "bg-amber-500", count: reqs.filter((r) => r.status === "Pending").length },
+      { value: "Deficient", label: "Action Required", dotColor: "bg-orange-500", count: reqs.filter((r) => r.status === "Deficient").length },
+      { value: "PendingPayment", label: "Pending Payment", dotColor: "bg-amber-600", count: reqs.filter((r) => r.status === "PendingPayment").length },
       { value: "InProgress", label: "In Progress", dotColor: "bg-blue-500", count: reqs.filter((r) => r.status === "InProgress").length },
       { value: "Ready", label: "Ready for Pickup", dotColor: "bg-cyan-500", count: reqs.filter((r) => r.status === "Ready").length },
       { value: "Completed", label: "Completed", dotColor: "bg-emerald-500", count: reqs.filter((r) => r.status === "Completed").length },
@@ -588,7 +597,7 @@ export default function StudentDashboard() {
       const session = await getClientSession();
       const authenticated = Boolean(session.ok && session.data);
       if (!canAccessPage("/student", session.data?.role, { authenticated })) {
-        router.replace("/");
+        router.replace("/login");
         return;
       }
       if (!authenticated) {
@@ -643,6 +652,27 @@ export default function StudentDashboard() {
     }
   }, [router, showToast]);
 
+  const handlePaymentProofUpload = useCallback(async (requestId, file) => {
+    if (file.size > 10 * 1024 * 1024) {
+      showToast("File too large", "Payment proof must be 10 MB or smaller.", true);
+      return;
+    }
+    setPaymentUploadRequestId(requestId);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const response = await fetch(`/api/document-requests/${requestId}/attachments`, { method: "POST", body: formData });
+      const json = await response.json();
+      if (!response.ok || !json?.ok) throw new Error(json?.error || "Unable to upload payment proof.");
+      showToast("Payment proof uploaded", "The Registrar can review your receipt.");
+      await load();
+    } catch (error) {
+      showToast("Upload failed", error?.message || "Unable to upload payment proof.", true);
+    } finally {
+      setPaymentUploadRequestId(null);
+    }
+  }, [load, showToast]);
+
   useEffect(() => { const timer = setTimeout(() => { load().catch((error) => { const message = error.message || "Unable to load student records."; setMessage(message); showToast("Records failed to load", message, true); }); }, 0); return () => clearTimeout(timer); }, [load, showToast]);
 
   useEffect(() => {
@@ -652,10 +682,10 @@ export default function StudentDashboard() {
           if (session.status === 401) return;
           const authenticated = Boolean(session.ok && session.data);
           if (!canAccessPage("/student", session.data?.role, { authenticated })) {
-            router.replace("/");
+            router.replace("/login");
           }
         })
-        .catch(() => router.replace("/"));
+        .catch(() => router.replace("/login"));
     }
   }, [me, router]);
 
@@ -1016,7 +1046,7 @@ export default function StudentDashboard() {
 
   async function handleLogout() {
     await fetch("/api/auth/logout", { method: "POST" }).catch(() => {});
-    window.location.href = "/";
+    window.location.href = "/login";
   }
 
   return (
@@ -1240,7 +1270,6 @@ export default function StudentDashboard() {
                                   !requestForm.docType ? "text-gray-400 dark:text-zinc-500" : "text-gray-800 dark:text-zinc-100"
                                 }`}
                               >
-                                <option value="">Select a document type</option>
                                 {docTypes.map((type) => (
                                   <option key={type} value={type}>
                                     {type}
@@ -1675,7 +1704,12 @@ export default function StudentDashboard() {
                               <tr
                                 key={item.id}
                                 onClick={() => setSelectedRequestForDetail(item)}
-                                className="group h-[52px] border-b-[0.5px] border-gray-100 dark:border-white/10 last:border-b-0 transition-all duration-fast hover:bg-gray-50/50 dark:bg-card dark:hover:bg-white/2 select-none cursor-pointer"
+                                className={cn(
+                                  "group h-[52px] border-b-[0.5px] border-gray-100 dark:border-white/10 last:border-b-0 transition-all duration-fast select-none cursor-pointer",
+                                  ["Deficient", "PendingPayment"].includes(item.status)
+                                    ? "border-l-2 border-l-amber-500 bg-amber-50/70 hover:bg-amber-100/70 dark:bg-amber-950/20 dark:hover:bg-amber-950/35"
+                                    : "hover:bg-gray-50/50 dark:bg-card dark:hover:bg-white/2"
+                                )}
                               >
                                 <td className="py-0 px-4 align-middle text-[13px] font-medium text-gray-700 dark:text-zinc-300">
                                   #{item.id}
@@ -2976,6 +3010,45 @@ export default function StudentDashboard() {
               </div>
             )}
 
+            {selectedRequestForDetail?.status === "PendingPayment" && (
+              <div
+                onDragOver={(event) => { event.preventDefault(); event.stopPropagation(); }}
+                onDrop={(event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  const file = event.dataTransfer.files?.[0];
+                  if (file) handlePaymentProofUpload(selectedRequestForDetail.id, file);
+                }}
+                className="rounded-xl border border-dashed border-amber-400 bg-amber-50/70 p-4 dark:border-amber-700 dark:bg-amber-950/20"
+              >
+                <div className="flex flex-col items-center justify-center gap-2 text-center">
+                  <HugeIcon className="ph-bold ph-receipt text-xl text-amber-700 dark:text-amber-300" />
+                  <div>
+                    <h4 className="text-sm font-semibold text-amber-950 dark:text-amber-100">Payment proof required</h4>
+                    <p className="mt-0.5 text-xs text-amber-800 dark:text-amber-300">Drop your receipt here or browse for a PDF, PNG, JPG, or WEBP file (up to 10 MB).</p>
+                  </div>
+                  <label
+                    htmlFor={`payment-proof-${selectedRequestForDetail.id}`}
+                    className="cursor-pointer rounded-lg bg-amber-700 px-3 py-1.5 text-xs font-semibold text-white hover:bg-amber-800"
+                  >
+                    {paymentUploadRequestId === selectedRequestForDetail.id ? "Uploading receipt…" : "Choose receipt"}
+                  </label>
+                  <input
+                    id={`payment-proof-${selectedRequestForDetail.id}`}
+                    type="file"
+                    accept=".pdf,.png,.jpg,.jpeg,.webp"
+                    className="hidden"
+                    disabled={paymentUploadRequestId === selectedRequestForDetail.id}
+                    onChange={(event) => {
+                      const file = event.target.files?.[0];
+                      if (file) handlePaymentProofUpload(selectedRequestForDetail.id, file);
+                      event.target.value = "";
+                    }}
+                  />
+                </div>
+              </div>
+            )}
+
             {/* Attached Supporting Documents */}
             {Array.isArray(selectedRequestForDetail?.attachments) && selectedRequestForDetail.attachments.length > 0 && (
               <div className="rounded-xl bg-gray-50/70 dark:bg-zinc-900/50 p-4 border border-gray-200/80 dark:border-white/10 space-y-3">
@@ -3085,6 +3158,8 @@ export default function StudentDashboard() {
                       idx > 0 && upd.status === selectedRequestForDetail.updates[idx - 1].status;
                     const formatStatusLabel = (st) => {
                       if (st === "InProgress") return "In Progress";
+                      if (st === "Deficient") return "Action Required";
+                      if (st === "PendingPayment") return "Pending Payment";
                       if (st === "Ready") return "Ready for Claiming";
                       return st;
                     };
@@ -3141,6 +3216,10 @@ export default function StudentDashboard() {
                             <span className="text-xs font-bold text-gray-900 dark:text-zinc-100">
                               {selectedRequestForDetail.status === "InProgress"
                                 ? "In Progress"
+                                : selectedRequestForDetail.status === "Deficient"
+                                ? "Action Required"
+                                : selectedRequestForDetail.status === "PendingPayment"
+                                ? "Pending Payment"
                                 : selectedRequestForDetail.status === "Ready"
                                 ? "Ready for Claiming"
                                 : selectedRequestForDetail.status}
@@ -3151,7 +3230,7 @@ export default function StudentDashboard() {
                           </div>
                         </div>
                         <p className="mt-1 text-xs text-gray-600 dark:text-zinc-400 leading-normal">
-                          Your document request has been updated to {selectedRequestForDetail.status === "InProgress" ? "In Progress" : selectedRequestForDetail.status === "Ready" ? "Ready for Claiming" : selectedRequestForDetail.status} by the Registrar.
+                          Your document request has been updated to {selectedRequestForDetail.status === "InProgress" ? "In Progress" : selectedRequestForDetail.status === "Deficient" ? "Action Required" : selectedRequestForDetail.status === "PendingPayment" ? "Pending Payment" : selectedRequestForDetail.status === "Ready" ? "Ready for Claiming" : selectedRequestForDetail.status} by the Registrar.
                         </p>
                       </div>
                     )}

@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { populateSampleData } from "@/lib/seedRepo";
 import { requireSystemAdmin, createAuthErrorResponse } from "@/lib/authHelpers";
 
 export const runtime = "nodejs";
@@ -18,6 +17,7 @@ async function handleSeed(req) {
   const force = req.nextUrl.searchParams.get("force") === "true";
 
   try {
+    const { populateSampleData } = await import("@/lib/seedRepo");
     const result = await populateSampleData({ force });
     return NextResponse.json({
       ok: true,

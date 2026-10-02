@@ -227,7 +227,7 @@ function SystemAdminPageContent({ authUser: propAuthUser }) {
       /* ignore network errors */
     }
     localStorage.setItem("pup-logout", Date.now().toString())
-    window.location.href = "/"
+    window.location.href = "/login"
   }, [])
 
   useEffect(() => {
@@ -250,7 +250,7 @@ function SystemAdminPageContent({ authUser: propAuthUser }) {
         const session = await getClientSession()
         if (!session.ok || !session.data) {
           if (session.status === 401) {
-            router.push("/")
+            router.push("/login")
           }
           return
         }
