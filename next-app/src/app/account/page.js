@@ -125,7 +125,7 @@ function AccountPageContent() {
 
         if (!resAuth.ok || !resAuth.data) {
           if (resAuth.status === 401) {
-            router.push("/");
+            router.push("/login");
           }
           return;
         }
@@ -172,7 +172,7 @@ function AccountPageContent() {
           setRecoveryCodesCount(jsonTOTP.data.recoveryCodesCount || 0);
         }
       } catch {
-        router.push("/");
+        router.push("/login");
       } finally {
         setLoading(false);
       }
@@ -258,7 +258,7 @@ function AccountPageContent() {
       /* ignore */
     }
     localStorage.setItem("pup-logout", Date.now());
-    window.location.href = "/";
+    window.location.href = "/login";
   };
 
   const handleAvatarClick = () => {

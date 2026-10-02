@@ -6,7 +6,7 @@ import { canTransitionRequestStatus, DEFAULT_REQUEST_STATUS_MESSAGES } from "@/l
 import { canAccessResource } from "@/lib/resourceAuthorization";
 
 export const runtime = "nodejs";
-const statuses = new Set(["Pending", "InProgress", "Ready", "Completed", "Cancelled", "Shredded"]);
+const statuses = new Set(["Pending", "Deficient", "PendingPayment", "InProgress", "Ready", "Completed", "Cancelled", "Shredded"]);
 
 export async function PATCH(req, ctx) {
   const access = await requireOfficeModule("document_requests", { officeId: "registrar" }, req);
@@ -24,6 +24,9 @@ export async function PATCH(req, ctx) {
   if (!existing || !canAccessResource(access, "request", existing)) return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
 
   const nextStatus = statuses.has(status) ? status : existing.status;
+  if (nextStatus === "Deficient" && !rawMessage) {
+    return NextResponse.json({ ok: false, error: "Add a comment explaining what the student needs to provide." }, { status: 400 });
+  }
   if (existing.status && existing.status !== nextStatus && !canTransitionRequestStatus(existing.status, nextStatus)) {
     return NextResponse.json({ ok: false, error: `Cannot change status from "${existing.status}" to "${nextStatus}". Completed and finalized requests cannot be reverted.` }, { status: 400 });
   }

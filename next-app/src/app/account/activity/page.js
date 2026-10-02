@@ -1046,7 +1046,7 @@ export default function AccountActivityPage() {
       await fetch("/api/auth/logout", { method: "POST" });
     } catch { /* ignore */ }
     localStorage.setItem("pup-logout", Date.now());
-    window.location.href = "/";
+    window.location.href = "/login";
   };
 
   // 1. Fetch user session
@@ -1056,7 +1056,7 @@ export default function AccountActivityPage() {
         const session = await getClientSession();
         if (!session.ok || !session.data) {
           if (session.status === 401) {
-            router.push("/");
+            router.push("/login");
           }
           return;
         }

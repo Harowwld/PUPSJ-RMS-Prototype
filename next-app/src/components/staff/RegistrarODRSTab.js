@@ -14,7 +14,7 @@ import {
   TERMINAL_REQUEST_STATUSES,
 } from "@/lib/constants";
 
-const statuses = ["Pending", "InProgress", "Ready", "Completed", "Cancelled", "Shredded"];
+const statuses = ["Pending", "Deficient", "PendingPayment", "InProgress", "Ready", "Completed", "Cancelled", "Shredded"];
 
 export default function RegistrarODRSTab({ showToast }) {
   const [rows, setRows] = useState([]);
@@ -289,9 +289,10 @@ export default function RegistrarODRSTab({ showToast }) {
                         const fileUrl = att.url || `/api/document-requests/${selected.id}/attachments/${att.id}`;
                         return (
                           <div key={att.id} className="flex items-center justify-between p-2 rounded-lg bg-white dark:bg-zinc-900 border border-gray-200/60 dark:border-white/5 text-xs">
-                            <span className="truncate flex-1 font-medium text-gray-800 dark:text-zinc-200 pr-2" title={att.original_filename}>
-                              {att.original_filename}
-                            </span>
+                            <div className="min-w-0 flex-1 pr-2">
+                              {att.attachment_type === "receipt" && <span className="block text-[9px] font-semibold uppercase tracking-wide text-amber-700 dark:text-amber-300">Proof of Payment</span>}
+                              <span className="block truncate font-medium text-gray-800 dark:text-zinc-200" title={att.original_filename}>{att.original_filename}</span>
+                            </div>
                             <div className="flex items-center gap-1 shrink-0">
                               {isPdf && (
                                 <Button
@@ -304,7 +305,7 @@ export default function RegistrarODRSTab({ showToast }) {
                                       title: att.original_filename,
                                       subtitle: `Attachment for Request #${selected.id}`,
                                       studentName: selected.student_name || "Requester",
-                                      docType: att.attachment_type || "Supporting Document",
+                                      docType: att.attachment_type === "receipt" ? "Proof of Payment" : att.attachment_type || "Supporting Document",
                                       originalFilename: att.original_filename,
                                     });
                                     setPdfPreviewOpen(true);
@@ -384,7 +385,7 @@ export default function RegistrarODRSTab({ showToast }) {
                         onChange={(e) => setStatus(e.target.value)}
                       >
                         {((selected?.status && ALLOWED_STATUS_TRANSITIONS[selected.status]) || statuses).map((item) => (
-                          <option key={item} value={item}>{item}</option>
+                          <option key={item} value={item}>{item === "PendingPayment" ? "Pending Payment" : item}</option>
                         ))}
                       </Select>
                     )}
@@ -392,17 +393,17 @@ export default function RegistrarODRSTab({ showToast }) {
 
                   <div>
                     <label className="block text-xs font-bold uppercase tracking-wide text-gray-600 dark:text-zinc-400 mb-1">
-                      Student-Visible Update Note
+                      {status === "Deficient" ? "Deficiency Comment (required)" : status === "PendingPayment" ? "Payment Instructions" : "Student-Visible Update Note"}
                     </label>
                     <textarea
                       className="min-h-28 w-full rounded-brand border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:border-pup-maroon focus:ring-2 focus:ring-pup-maroon/10 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
-                      placeholder="Add an update message for the student (e.g. Document signed, ready for pick up at Room 201)..."
+                      placeholder={status === "Deficient" ? "Explain what the student is missing (required)..." : status === "PendingPayment" ? "Explain the amount and how to submit payment..." : "Add an update message for the student (e.g. Document signed, ready for pick up at Room 201)..."}
                       value={message}
                       onChange={(e) => setMessage(e.target.value)}
                     />
                   </div>
 
-                  <Button className="w-full btn-brand-red text-white font-semibold rounded-xl h-10 shadow-xs cursor-pointer active:scale-95 transition-all" onClick={save}>
+                  <Button className="w-full btn-brand-red text-white font-semibold rounded-xl h-10 shadow-xs cursor-pointer active:scale-95 transition-all" onClick={save} disabled={status === "Deficient" && !message.trim()}>
                     Publish
                   </Button>
                 </div>

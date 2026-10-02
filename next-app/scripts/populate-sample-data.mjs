@@ -24,8 +24,21 @@ if (!process.env.DATABASE_URL) {
 
 const passwordHash = hashPassword(process.env.DEFAULT_STAFF_PASSWORD || "pupstaff");
 const studentPasswordHash = hashPassword("student123");
+const staffPassword = process.env.DEFAULT_STAFF_PASSWORD || "pupstaff";
 
-const students = [
+const officialStaff = [
+  ["PUPSUPERADMIN-001", null, "System", "Administrator", "SuperAdmin", "System Administration", "superadmin@pup.local"],
+  ["PUPREGISTRAR-003", "registrar", "Elias", "Austria", "Admin", "Administrative", "admin.registrar@pup.local"],
+  ["PUPREGISTRAR-002", "registrar", "Marcus", "Reyes", "Staff", "Records", "staff.registrar@pup.local"],
+  ["PUPOSAS-001", "osas", "Sandra", "Gomez", "Admin", "OSAS Admin", "admin.osas@pup.local"],
+];
+
+const demoStudentAccounts = [
+  ["2023-00001-IT-1", "test.student@pup.local"],
+  ["2022-10001-MN-1", "student@pup.local"],
+];
+
+const seedStudents = [
   ["2023-00001-IT-1", "TEST STUDENT", "BSIT", 4, "BSIT-4A", 1, "2027", 1],
   ["2022-10001-MN-1", "DELA CRUZ, JUAN A.", "BSIT", 2024, "BSIT-4A", 1, "2020", 1],
   ["2022-10002-MN-2", "SANTOS, MARIA B.", "BSIT", 2024, "BSIT-4A", 1, "2021", 2],
@@ -52,6 +65,32 @@ const students = [
   ["2017-12001-SJ-0", "SHARMA, ANIKA R.", "BSIT", 2025, "BSIT-4A", 1, "C", 4],
   ["2025-10016-SJ-0", "SANTOS, CARMELA", "BSIT", 2025, "BSIT-4A", 1, "D", 1],
 ];
+
+const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
+const studentRosterPath = path.join(repoRoot, "_SAMPLE_DATA", "cleaned_student_data.csv");
+const studentRosterRows = fs.readFileSync(studentRosterPath, "utf8").trim().split(/\r?\n/).slice(1);
+const rosterStudents = studentRosterRows.map((line, index) => {
+  const [studentNo, name, courseCode, academicYear, section, room, cabinet, drawer] = line.split(",");
+  if (![studentNo, name, courseCode, academicYear, section, room, cabinet, drawer].every(Boolean)) {
+    throw new Error(`Invalid student roster row ${index + 2} in ${studentRosterPath}`);
+  }
+  return [studentNo.trim(), name.trim(), courseCode.trim().toUpperCase(), Number(academicYear), section.trim(), Number(room), cabinet.trim(), Number(drawer)];
+});
+const rosterStudentNumbers = new Set(rosterStudents.map(([studentNo]) => studentNo));
+const students = [
+  ...seedStudents.filter(([studentNo]) => !rosterStudentNumbers.has(studentNo)),
+  ...rosterStudents,
+];
+const rosterCourses = [
+  ["BSBA-FM", "Bachelor of Science in Business Administration major in Financial Management"],
+  ["BSENT", "Bachelor of Science in Entrepreneurship"],
+  ["BSIT", "Bachelor of Science in Information Technology"],
+  ["BSPSYCH", "Bachelor of Science in Psychology"],
+  ["BSEDUC", "Bachelor in Secondary Education major in English"],
+  ["DIT", "Diploma in Information Technology"],
+];
+const rosterSections = [...new Set(rosterStudents.map(([, , courseCode, , section]) => `${courseCode}\t${section}`))]
+  .map((entry) => entry.split("\t"));
 
 const documents = [
   [1, "2022-10001-MN-1", "DELA CRUZ, JUAN A.", "Transcript of Records", "sample-tor-juan.pdf"],
@@ -292,13 +331,6 @@ const minimalPdf = Buffer.from(
 export async function seed({ force: forceOverride } = {}) {
   const force = forceOverride ?? process.argv.includes("--force");
   await transaction(async ({ query: run, queryOne: runOne }) => {
-    const officialStaff = [
-      ["PUPSUPERADMIN-001", null, "System", "Administrator", "SuperAdmin", "System Administration", "superadmin@pup.local"],
-      ["PUPREGISTRAR-003", "registrar", "Elias", "Austria", "Admin", "Administrative", "admin.registrar@pup.local"],
-      ["PUPREGISTRAR-002", "registrar", "Marcus", "Reyes", "Staff", "Records", "staff.registrar@pup.local"],
-      ["PUPOSAS-001", "osas", "Sandra", "Gomez", "Admin", "OSAS Admin", "admin.osas@pup.local"],
-    ];
-
     for (const [id, office, fname, lname, role, section, email] of officialStaff) {
       await run(
         `INSERT INTO staff (id, office_id, fname, lname, role, section, status, email, password_hash, password_last_changed, updated_at)
@@ -358,6 +390,13 @@ export async function seed({ force: forceOverride } = {}) {
       await run(`INSERT INTO sections (office_id, name, course_code, status) VALUES ('registrar', $1, $2, 'Active') ON CONFLICT (office_id, name, course_code) DO UPDATE SET status='Active'`, [name, code]);
     }
 
+    for (const [code, name] of rosterCourses) {
+      await run(`INSERT INTO courses (office_id, code, name, status) VALUES ('registrar', $1, $2, 'Active') ON CONFLICT (office_id, code) DO UPDATE SET name=EXCLUDED.name, status='Active'`, [code, name]);
+    }
+    for (const [courseCode, section] of rosterSections) {
+      await run(`INSERT INTO sections (office_id, name, course_code, status) VALUES ('registrar', $1, $2, 'Active') ON CONFLICT (office_id, name, course_code) DO UPDATE SET status='Active'`, [section, courseCode]);
+    }
+
     for (const name of ["Transcript of Records", "Diploma", "Certificate of Good Moral", "Form 137", "Certificate of Enrollment", "Birth Certificate"]) {
       await run(`INSERT INTO document_types (office_id, name, name_norm, status) VALUES ('registrar', $1, $2, 'Active') ON CONFLICT (office_id, name_norm) DO UPDATE SET name=EXCLUDED.name, status='Active'`, [name, name.toLowerCase()]);
     }
@@ -365,6 +404,34 @@ export async function seed({ force: forceOverride } = {}) {
     for (const [code, name] of [["BSA", "Bachelor of Science in Accountancy"]]) {
       await run(`INSERT INTO courses (office_id, code, name, status) VALUES ('osas', $1, $2, 'Active') ON CONFLICT (office_id, code) DO UPDATE SET name=EXCLUDED.name, status='Active'`, [code, name]);
     }
+
+    // Recognized OSAS student organizations from the campus list.
+    const organizations = [
+      ["jfinex", "Junior Financial Executives (JFINEX)", "JFINEX", "Academic"],
+      ["yes", "YES", "YES", "Non-Academic"],
+      ["jpia", "JPIA", "JPIA", "Academic"],
+      ["ceo", "CEO", "CEO", "Academic"],
+      ["hm-society", "HM Society", "HM Society", "Academic"],
+      ["glitch", "GLITCH", "GLITCH", "Non-Academic"],
+      ["psysoc", "PSYSOC", "PSYSOC", "Academic"],
+      ["pylon-esports", "PYLON E-Sports", "PYLON E-Sports", "Non-Academic"],
+      ["rotaract", "Rotaract", "Rotaract", "Non-Academic"],
+      ["hhc", "HHC", "HHC", "Non-Academic"],
+      ["adc", "ADC", "ADC", "Academic"],
+      ["paraseist", "PARASEIST", "PARASEIST", "Non-Academic"],
+      ["sa", "SA", "SA", "Non-Academic"],
+      ["lente-filikulas", "Lente Filikulas", "Lente Filikulas", "Non-Academic"],
+    ];
+    for (const [id, name, acronym, category] of organizations) {
+      await run(
+        `INSERT INTO student_organizations (id, name, acronym, category, status, description)
+         VALUES ($1, $2, $3, $4, 'Active', 'Recognized PUP San Juan student organization under OSAS.')
+         ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, acronym=EXCLUDED.acronym,
+           category=EXCLUDED.category, status='Active', updated_at=NOW()`,
+        [id, name, acronym, category],
+      );
+    }
+
     await run(`DELETE FROM sections WHERE office_id = 'osas'`);
     for (const name of [
       "Event Proposal",
@@ -388,12 +455,15 @@ export async function seed({ force: forceOverride } = {}) {
            storage_drawer=EXCLUDED.storage_drawer, updated_at=NOW()`,
         student,
       );
+      await run(
+        `INSERT INTO student_office_memberships (student_no, office_id, status)
+         VALUES ($1, 'registrar', 'Active')
+         ON CONFLICT (student_no, office_id) DO UPDATE SET status='Active', updated_at=NOW()`,
+        [student[0]],
+      );
     }
 
-    for (const [sNo, sEmail] of [
-      ["2023-00001-IT-1", "test.student@pup.local"],
-      ["2022-10001-MN-1", "student@pup.local"],
-    ]) {
+    for (const [sNo, sEmail] of demoStudentAccounts) {
       await run(
         `INSERT INTO student_accounts (student_no, email, password_hash, status, updated_at)
          VALUES ($1, $2, $3, 'Active', NOW())
@@ -546,6 +616,15 @@ export async function seed({ force: forceOverride } = {}) {
 if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1])) {
   try {
     await seed();
+    console.log("\n[populate-sample-data] Demo login credentials:");
+    console.log("Staff accounts:");
+    for (const [id, , fname, lname, role, , email] of officialStaff) {
+      console.log(`  ${role} — ${fname} ${lname} (${id}) | login: ${email} | password: ${staffPassword}`);
+    }
+    console.log("Student accounts (login with email or student number):");
+    for (const [studentNo, email] of demoStudentAccounts) {
+      console.log(`  ${studentNo} / ${email} | password: student123`);
+    }
   } catch (error) {
     console.error("[populate-sample-data] Failed:", error);
     process.exitCode = 1;

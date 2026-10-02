@@ -1,7 +1,8 @@
 import fs from "node:fs";
 import { NextResponse } from "next/server";
 import { getIngestById, getIngestFilePath } from "@/lib/ingestQueueRepo";
-import { getDocumentById, getDocumentFilePath } from "@/lib/documentsRepo";
+import { getDocumentById, getDocumentFilePath, setOfficeStoragePath } from "@/lib/documentsRepo";
+import { getOfficeById } from "@/lib/officesRepo";
 import { requireStaff, createAuthErrorResponse, getPrincipalOfficeId } from "../../../../../../lib/authHelpers";
 import { canAccessResource } from "../../../../../../lib/resourceAuthorization";
 
@@ -27,6 +28,10 @@ export async function GET(req, ctx) {
   const document = row.promoted_document_id ? await getDocumentById(row.promoted_document_id, { officeId }) : null;
   if (document && !canAccessResource(user, "document", document)) {
     return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
+  }
+  if (document) {
+    const office = await getOfficeById(officeId);
+    if (office?.storage_path) setOfficeStoragePath(officeId, office.storage_path);
   }
   const previewRow = document || row;
   const absPath = document ? getDocumentFilePath(document) : getIngestFilePath(row.storage_filename);

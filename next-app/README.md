@@ -97,7 +97,7 @@ pnpm db:seed:sample
 pnpm db:verify
 ```
 
-`db:migrate` applies every numbered SQL migration once. `db:seed:sample` is safe to run again because the sample records use conflict-safe inserts. It creates sample courses, sections, document types, staff, students, documents, requests, and the default room/cabinet/drawer layout.
+`db:migrate` applies every numbered SQL migration once. `db:seed:sample` is safe to run again because the sample records use conflict-safe inserts. It creates sample courses, sections, document types, staff, students, documents, requests, and the default room/cabinet/drawer layout. When run from the terminal, it prints credentials for the staff and student demo accounts it seeds; staff passwords use `DEFAULT_STAFF_PASSWORD` or default to `pupstaff`, and student passwords are `student123`.
 
 For host-based development, use:
 
@@ -176,13 +176,33 @@ pnpm db:backup            # create a local encrypted backup
 pnpm populate-sample-data # seed/update sample data
 ```
 
-Resetting the database is destructive. The legacy helper requires the app to be running and should only be used for local testing:
+To inspect request counts without deleting anything, run this from `next-app/`:
+
+```bash
+pnpm requests:clear
+```
+
+To delete all document requests and their request-owned attachments, feedback, and timeline updates, explicitly confirm:
+
+```bash
+pnpm requests:clear -- --confirm
+```
+
+This preserves students, accounts, official documents, staff, and OSAS event-proposal updates.
+
+Resetting the database is destructive. The local helper requires the app to be running and a SuperAdmin account. Running the command starts the reset without prompts. It uses `DEFAULT_STAFF_PASSWORD` from `.env.local` (or `pupstaff` if unset); set `RESET_PASSWORD` or `RESET_USERNAME` to override the login values:
 
 ```bash
 pnpm reset-db
 ```
 
-After a reset, restart the Next.js server and run `pnpm db:seed:sample` again.
+After a reset, restart the Next.js server if needed and run `pnpm populate-sample-data` to restore sample records.
+
+To clear current rate-limit hits and lockouts without changing the configured protections, run:
+
+```bash
+pnpm reset-rate-limit
+```
 
 ## Project structure
 

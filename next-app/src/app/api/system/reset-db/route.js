@@ -132,12 +132,13 @@ async function handleResetDb(req) {
       { name: "Form 137", isCompliance: true, isRequestable: false, category: "Academic Records" },
       { name: "Grade 12 Report Card", isCompliance: true, isRequestable: false, category: "Academic Records" },
       { name: "Health Information Sheet", isCompliance: true, isRequestable: false, category: "Certificates & Clearances" },
-      { name: "Certificate of Good Moral", isCompliance: false, isRequestable: true, category: "Certificates & Clearances" },
-      { name: "Copy of Grades", isCompliance: false, isRequestable: true, category: "Academic Records" },
-      { name: "Certificate of Registration", isCompliance: false, isRequestable: true, category: "Certificates & Clearances" },
+      { name: "Certified True Copy of Records", isCompliance: false, isRequestable: true, category: "Academic Records" },
+      { name: "Certificate of Transfer Credentials (Honorable Dismissal)", isCompliance: false, isRequestable: true, category: "Graduation & Exit Records" },
       { name: "Certificate of Enrollment", isCompliance: false, isRequestable: true, category: "Certificates & Clearances" },
-      { name: "Transcript of Records", isCompliance: false, isRequestable: true, category: "Graduation & Exit Records" },
+      { name: "Certification of Grades (Cross-Enrollee)", isCompliance: false, isRequestable: true, category: "Academic Records" },
+      { name: "Transcript of Records", isCompliance: false, isRequestable: true, category: "Academic Records" },
       { name: "Diploma", isCompliance: false, isRequestable: true, category: "Graduation & Exit Records" },
+      { name: "Certificate of Graduation", isCompliance: false, isRequestable: true, category: "Graduation & Exit Records" },
     ];
     for (const dt of registrarDocTypes) {
       await query(
@@ -258,7 +259,7 @@ async function handleResetDb(req) {
       await query(
         `INSERT INTO student_accounts (student_no, email, password_hash, status, first_name, middle_name, last_name, client_type)
          VALUES ($1, $2, $3, 'Active', $4, $5, $6, $7)
-         ON CONFLICT (student_no) DO UPDATE SET email = EXCLUDED.email, password_hash = EXCLUDED.password_hash,
+         ON CONFLICT (email) DO UPDATE SET student_no = EXCLUDED.student_no, password_hash = EXCLUDED.password_hash,
            first_name = EXCLUDED.first_name, middle_name = EXCLUDED.middle_name, last_name = EXCLUDED.last_name,
            client_type = EXCLUDED.client_type, status = 'Active', updated_at = NOW()`,
         [sNo, sEmail, studentHash, fName, mName, lName, clientType]

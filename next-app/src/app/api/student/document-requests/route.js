@@ -272,7 +272,7 @@ export async function POST(req) {
   const accFirst = acc?.first_name ? decryptPII(acc.first_name) : "";
   const accMiddle = acc?.middle_name ? decryptPII(acc.middle_name) : "";
   const accLast = acc?.last_name ? decryptPII(acc.last_name) : "";
-  const accEmail = acc?.email ? decryptPII(acc.email) : session.email || "";
+  const accEmail = acc?.email ? decryptPII(acc.email) : decryptPII(session.email || "");
   const accFullName = [accFirst, accMiddle, accLast].filter(Boolean).join(" ");
   const defaultRequesterName = accFullName || accEmail || null;
   const rawBodyName = body?.requesterName ? decryptField(String(body.requesterName).trim()) : null;
@@ -349,7 +349,7 @@ export async function POST(req) {
   );
 
   await writeGlobalAuditLog(req, "Student document request created", {
-    actor: acc?.email || session.email || effectiveStudentNo || "Requester",
+    actor: accEmail || effectiveStudentNo || "Requester",
     role: "Student",
     officeId: "registrar",
     details: `Requested ${docType} (${clientType})${effectiveStudentNo ? ` for ${effectiveStudentNo}` : ""}${savedAttachments.length > 0 ? ` with ${savedAttachments.length} attachment(s)` : ""}`,
