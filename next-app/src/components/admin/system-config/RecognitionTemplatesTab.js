@@ -489,7 +489,6 @@ export default function RecognitionTemplatesTab({ showToast }) {
               <input
                 ref={importInputRef}
                 type="file"
-                accept=".json"
                 className="sr-only"
                 onChange={(event) => importTemplates(event.target.files?.[0])}
               />
