@@ -190,7 +190,7 @@ pnpm requests:clear -- --confirm
 
 This preserves students, accounts, official documents, staff, and OSAS event-proposal updates.
 
-Resetting the database is destructive. The local helper requires the app to be running and a SuperAdmin account. It prompts for confirmation and credentials, then sends the authenticated `POST` request:
+Resetting the database is destructive. The local helper requires the app to be running and a SuperAdmin account. Running the command starts the reset without prompts. It uses `DEFAULT_STAFF_PASSWORD` from `.env.local` (or `pupstaff` if unset); set `RESET_PASSWORD` or `RESET_USERNAME` to override the login values:
 
 ```bash
 pnpm reset-db

@@ -4,23 +4,7 @@ set -euo pipefail
 
 BASE_URL="${BASE_URL:-http://localhost:3000}"
 RESET_USERNAME="${RESET_USERNAME:-superadmin@pup.local}"
-
-if [[ ! -t 0 ]]; then
-  echo "[reset-db] Run this command in an interactive terminal so it can prompt for confirmation and credentials." >&2
-  exit 1
-fi
-
-echo "This will erase local student, document, request, staff, and audit data."
-read -r -p 'Type RESET to continue: ' confirmation
-if [[ "$confirmation" != "RESET" ]]; then
-  echo "[reset-db] Cancelled."
-  exit 1
-fi
-
-read -r -p "SuperAdmin email [${RESET_USERNAME}]: " entered_username
-RESET_USERNAME="${entered_username:-$RESET_USERNAME}"
-read -r -s -p "Password for ${RESET_USERNAME}: " RESET_PASSWORD
-echo
+RESET_PASSWORD="${RESET_PASSWORD:-$(node --input-type=module -e 'import dotenv from "dotenv"; dotenv.config({ path: ".env.local" }); dotenv.config(); process.stdout.write(process.env.DEFAULT_STAFF_PASSWORD || "pupstaff")')}"
 
 tmp_dir="$(mktemp -d)"
 chmod 700 "$tmp_dir"
@@ -32,7 +16,7 @@ reset_response="$tmp_dir/reset.json"
 login_payload="$(RESET_USERNAME="$RESET_USERNAME" RESET_PASSWORD="$RESET_PASSWORD" node -e 'process.stdout.write(JSON.stringify({ username: process.env.RESET_USERNAME, password: process.env.RESET_PASSWORD }))')"
 unset RESET_PASSWORD
 
-echo "[reset-db] Authenticating with ${BASE_URL}/api/auth/login"
+echo "[reset-db] Authenticating as ${RESET_USERNAME}"
 login_status="$(curl --silent --show-error --output "$login_response" --write-out '%{http_code}' \
   --cookie-jar "$cookie_jar" \
   --header 'Content-Type: application/json' \
@@ -41,7 +25,7 @@ login_status="$(curl --silent --show-error --output "$login_response" --write-ou
 unset login_payload
 
 if [[ "$login_status" != "200" ]] || ! node -e 'const r = require(process.argv[1]); process.exit(r?.ok && !r?.data?.totpRequired ? 0 : 1)' "$login_response"; then
-  echo "[reset-db] SuperAdmin login failed (HTTP ${login_status}). Check the email, password, and whether two-factor authentication is enabled." >&2
+  echo "[reset-db] SuperAdmin login failed (HTTP ${login_status}). Check RESET_USERNAME, RESET_PASSWORD, and whether two-factor authentication is enabled." >&2
   cat "$login_response" >&2
   exit 1
 fi
