@@ -64,20 +64,21 @@ const DEMO_ACCOUNTS = [
     badgeColor: "bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300",
   },
   {
-    role: "OSAS Staff",
-    title: "Student Affairs Personnel",
-    department: "Event Proposals & Organization Monitoring",
-    email: "staff.osas@pup.local",
-    badge: "OSAS",
-    icon: "ph-student",
-    accent: "text-sky-800 dark:text-sky-200 bg-sky-50 dark:bg-sky-950/40 border-sky-200/80 dark:border-sky-900/60",
-    badgeColor: "bg-sky-100 dark:bg-sky-900/60 text-sky-700 dark:text-sky-300",
-  },
-  {
     role: "Student",
     title: "Undergraduate / Alumni",
     department: "ODRS Online Document Requests",
     email: "student@pup.local",
+    password: "student123",
+    badge: "Student",
+    icon: "ph-graduation-cap",
+    accent: "text-emerald-800 dark:text-emerald-200 bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200/80 dark:border-emerald-900/60",
+    badgeColor: "bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300",
+  },
+  {
+    role: "Test Student",
+    title: "Second seeded student record",
+    department: "ODRS Online Document Requests",
+    email: "test.student@pup.local",
     password: "student123",
     badge: "Student",
     icon: "ph-graduation-cap",
@@ -114,14 +115,13 @@ export default function Home() {
   const handleSelectDemoAccount = (acc) => {
     setView("login");
     setUsername(acc.email);
-    const demoPassword = acc.password || "pupstaff";
-    setPassword(demoPassword);
+    setPassword("");
     setLoginStep(2);
     setEmailError("");
     setPasswordError("");
     setError("");
     setDemoOpen(false);
-    handleLogin(acc.email, demoPassword);
+    handleLogin(acc.email, "", true);
   };
 
   useEffect(() => {
@@ -316,7 +316,7 @@ export default function Home() {
     }
   };
 
-  function handleLogin(usernameValue = username, passwordValue = password) {
+  function handleLogin(usernameValue = username, passwordValue = password, isDemo = false) {
     if (isLoading) return;
 
     const usernameInput = usernameValue.trim();
@@ -327,10 +327,10 @@ export default function Home() {
 
     (async () => {
       try {
-        const res = await fetch("/api/auth/login", {
+        const res = await fetch(isDemo ? "/api/auth/demo-login" : "/api/auth/login", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ username: usernameInput, password: passwordInput }),
+          body: JSON.stringify(isDemo ? { username: usernameInput } : { username: usernameInput, password: passwordInput }),
         });
         const json = await res.json();
         if (!res.ok || !json?.ok) {
@@ -1180,18 +1180,7 @@ export default function Home() {
                       </p>
                     </div>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      navigator.clipboard?.writeText("pupstaff");
-                      toast.success("Password copied: pupstaff");
-                    }}
-                    className="flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 rounded-md bg-gray-200/60 dark:bg-zinc-700/60 hover:bg-gray-200 text-gray-600 dark:text-zinc-300 transition-colors cursor-pointer"
-                    title="Click to copy password"
-                  >
-                    <HugeIcon  className="ph-bold ph-key text-[10px]"></HugeIcon>
-                    <span>pupstaff</span>
-                  </button>
+                  <span className="text-[10px] text-gray-500 dark:text-zinc-400">Server-seeded demo sign-in</span>
                 </div>
 
                 {/* Account List */}
