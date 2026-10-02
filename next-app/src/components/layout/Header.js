@@ -208,12 +208,12 @@ export default function Header({ authUser, onLogout, children }) {
     }
     fetch("/api/auth/logout", { method: "POST" }).catch(() => {});
     localStorage.setItem("pup-logout", Date.now().toString());
-    window.location.href = "/";
+    window.location.href = "/login";
   };
 
   const handleSessionExpiredRedirect = () => {
     setShowSessionExpired(false);
-    window.location.href = "/";
+    window.location.href = "/login";
   };
 
   const isSettingsActive = pathname === "/account";

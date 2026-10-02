@@ -78,6 +78,7 @@ const DEMO_ACCOUNTS = [
     title: "Undergraduate / Alumni",
     department: "ODRS Online Document Requests",
     email: "student@pup.local",
+    password: "student123",
     badge: "Student",
     icon: "ph-graduation-cap",
     accent: "text-emerald-800 dark:text-emerald-200 bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200/80 dark:border-emerald-900/60",
@@ -113,15 +114,14 @@ export default function Home() {
   const handleSelectDemoAccount = (acc) => {
     setView("login");
     setUsername(acc.email);
-    setPassword("pupstaff");
+    const demoPassword = acc.password || "pupstaff";
+    setPassword(demoPassword);
     setLoginStep(2);
     setEmailError("");
     setPasswordError("");
     setError("");
     setDemoOpen(false);
-    toast.info(`Selected ${acc.role}`, {
-      description: `${acc.email} • Ready to sign in`,
-    });
+    handleLogin(acc.email, demoPassword);
   };
 
   useEffect(() => {
@@ -316,11 +316,11 @@ export default function Home() {
     }
   };
 
-  function handleLogin() {
+  function handleLogin(usernameValue = username, passwordValue = password) {
     if (isLoading) return;
 
-    const usernameInput = username.trim();
-    const passwordInput = password;
+    const usernameInput = usernameValue.trim();
+    const passwordInput = passwordValue;
 
     setError("");
     setIsLoading(true);
@@ -1176,7 +1176,7 @@ export default function Home() {
                         Demo Personas
                       </h4>
                       <p className="text-[10px] text-gray-500 dark:text-zinc-400 mt-0.5">
-                        Select an account to pre-fill credentials
+                        Select an account to sign in immediately
                       </p>
                     </div>
                   </div>
@@ -1201,7 +1201,8 @@ export default function Home() {
                       key={acc.role}
                       type="button"
                       onClick={() => handleSelectDemoAccount(acc)}
-                      className="w-full flex items-center gap-2.5 p-2 rounded-xl text-left hover:bg-gray-100/80 dark:hover:bg-zinc-800/80 transition-all duration-150 active:scale-[0.98] cursor-pointer group"
+                      disabled={isLoading}
+                      className="w-full flex items-center gap-2.5 p-2 rounded-xl text-left hover:bg-gray-100/80 dark:hover:bg-zinc-800/80 transition-all duration-150 active:scale-[0.98] cursor-pointer group disabled:opacity-50 disabled:cursor-wait"
                     >
                       
                       <div className="flex-1 min-w-0">
