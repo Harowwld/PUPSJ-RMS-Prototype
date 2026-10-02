@@ -15,6 +15,7 @@
     "requests:clear": "node scripts/clear-document-requests.mjs",
     "reset-scan-documents": "node scripts/reset-scan-documents.mjs",
     "reset-db": "bash scripts/reset-db.sh",
+    "reset-rate-limit": "node scripts/reset-rate-limit.mjs",
     "db:migrate": "node scripts/run-migrations.mjs",
     "db:migrate:sqlite": "node scripts/migrate-sqlite-to-postgres.mjs",
     "db:backup": "node scripts/backup-postgres.mjs",

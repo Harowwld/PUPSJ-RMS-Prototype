@@ -198,6 +198,12 @@ pnpm reset-db
 
 After a reset, restart the Next.js server if needed and run `pnpm populate-sample-data` to restore sample records.
 
+To clear current rate-limit hits and lockouts without changing the configured protections, run:
+
+```bash
+pnpm reset-rate-limit
+```
+
 ## Project structure
 
 - `src/app/` — Next.js pages and API routes
