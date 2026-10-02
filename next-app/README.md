@@ -176,6 +176,20 @@ pnpm db:backup            # create a local encrypted backup
 pnpm populate-sample-data # seed/update sample data
 ```
 
+To inspect request counts without deleting anything, run this from `next-app/`:
+
+```bash
+pnpm requests:clear
+```
+
+To delete all document requests and their request-owned attachments, feedback, and timeline updates, explicitly confirm:
+
+```bash
+pnpm requests:clear -- --confirm
+```
+
+This preserves students, accounts, official documents, staff, and OSAS event-proposal updates.
+
 Resetting the database is destructive. The legacy helper requires the app to be running and should only be used for local testing:
 
 ```bash
