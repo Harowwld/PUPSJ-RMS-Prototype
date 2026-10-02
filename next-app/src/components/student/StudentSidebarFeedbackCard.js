@@ -177,9 +177,10 @@ export default function StudentSidebarFeedbackCard({
       <button
         type="button"
         onClick={() => onRateRequest?.(targetRequest, hoverRating || 0)}
+        title="Rate Request"
         className="h-8 w-full text-xs font-semibold rounded-xl bg-pup-maroon hover:bg-pup-darkMaroon text-white dark:bg-red-800 dark:hover:bg-red-700 shadow-xs cursor-pointer active:scale-95 transition-all flex items-center justify-center border-0"
       >
-        Rate Request
+        Rate
       </button>
     </div>
   );

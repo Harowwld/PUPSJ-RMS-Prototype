@@ -15,6 +15,28 @@ export const OFFICIAL_FALLBACK_LOGO = "/assets/branding/black-icon.png"
 const BRANDING_CACHE_KEY = "institution_branding_cache"
 
 /**
+ * Automatically derives a clean, uppercase document tracking prefix from the institution and campus names.
+ * e.g. "Polytechnic University of the Philippines", "San Juan City Campus" -> "PUPSJ"
+ *      "University of the Philippines", "Diliman" -> "UPD"
+ */
+export function deriveDocumentPrefix(institutionName = "", campusName = "") {
+  const getInitials = (str) => {
+    if (!str || typeof str !== "string") return ""
+    const clean = str.replace(/[^a-zA-Z0-9\s]/g, " ")
+    const words = clean.split(/\s+/).filter(Boolean)
+    const stopWords = new Set(["of", "the", "and", "in", "at", "for", "ng", "mga", "city", "campus", "branch"])
+    const significant = words.filter((w) => !stopWords.has(w.toLowerCase()))
+    if (significant.length === 0) return words.map((w) => w[0]).join("").toUpperCase().slice(0, 4)
+    return significant.map((w) => w[0]).join("").toUpperCase().slice(0, 5)
+  }
+
+  const instInitials = getInitials(institutionName) || "RMS"
+  const campusInitials = getInitials(campusName)
+  const combined = `${instInitials}${campusInitials}`.slice(0, 8)
+  return combined || "RMS"
+}
+
+/**
  * Resolves active institutional branding from localStorage or API.
  * Guaranteed to return safe values even if completely offline.
  */
@@ -25,6 +47,9 @@ export async function getInstitutionalBranding() {
       if (cached) {
         const parsed = JSON.parse(cached)
         if (parsed && typeof parsed === "object" && parsed.institutionName) {
+          if (!parsed.documentCodePrefix) {
+            parsed.documentCodePrefix = deriveDocumentPrefix(parsed.institutionName, parsed.campusName)
+          }
           return parsed
         }
       }
@@ -39,6 +64,9 @@ export async function getInstitutionalBranding() {
       if (res.ok) {
         const json = await res.json()
         if (json.ok && json.data) {
+          if (!json.data.documentCodePrefix) {
+            json.data.documentCodePrefix = deriveDocumentPrefix(json.data.institutionName, json.data.campusName)
+          }
           try {
             localStorage.setItem(BRANDING_CACHE_KEY, JSON.stringify(json.data))
           } catch (e) {}
@@ -50,14 +78,23 @@ export async function getInstitutionalBranding() {
     }
   }
 
+  const fallbackInst = "Polytechnic University of the Philippines"
+  const fallbackCampus = "San Juan City Campus"
+
   return {
-    institutionName: "Polytechnic University of the Philippines",
-    campusName: "San Juan City Campus",
+    institutionName: fallbackInst,
+    campusName: fallbackCampus,
     tagline: "OFFICIAL ACADEMIC ARCHIVES & RECORDS",
+    jurisdictionHeader: "Republic of the Philippines",
+    documentCodePrefix: deriveDocumentPrefix(fallbackInst, fallbackCampus),
     brandColor: "#7A1E28",
     logoUrl: DEFAULT_BRANDING_LOGO,
     fallbackLogoUrl: OFFICIAL_FALLBACK_LOGO,
     logoBase64: null,
+    secondaryLogoUrl: null,
+    secondaryLogoBase64: null,
+    signatoryRegistrarTitle: "",
+    signatoryHeadTitle: "",
   }
 }
 
@@ -85,18 +122,27 @@ function hexToRgb(hex) {
 /**
  * Helper to convert a source image or base64 to a PNG data URL (preserves transparency in jsPDF).
  * Cascades: customSrc -> default PUP logo -> official eManage fallback logo.
+ * If fallbackToDefault is false and customSrc is not provided, returns null.
  */
-export const getLogoAsPng = (customSrc = null) => {
+export const getLogoAsPng = async (customSrc = null, fallbackToDefault = true) => {
+  if (!customSrc && !fallbackToDefault) {
+    return null
+  }
+
+  if (customSrc && typeof customSrc === "string" && customSrc.startsWith("data:image/")) {
+    return customSrc
+  }
+
+  if (typeof window === "undefined" || typeof Image === "undefined") {
+    return fallbackToDefault ? "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==" : null
+  }
+
+  const primarySrc = customSrc || (fallbackToDefault ? DEFAULT_BRANDING_LOGO : null)
+  if (!primarySrc) {
+    return null
+  }
+
   return new Promise((resolve) => {
-    if (typeof window === "undefined" || typeof Image === "undefined") {
-      return resolve(OFFICIAL_FALLBACK_LOGO)
-    }
-
-    if (customSrc && typeof customSrc === "string" && customSrc.startsWith("data:image/")) {
-      return resolve(customSrc)
-    }
-
-    const primarySrc = customSrc || DEFAULT_BRANDING_LOGO
 
     const tryLoad = (src, onFail) => {
       const img = new Image()
@@ -118,12 +164,12 @@ export const getLogoAsPng = (customSrc = null) => {
     }
 
     tryLoad(primarySrc, () => {
-      if (primarySrc !== DEFAULT_BRANDING_LOGO) {
+      if (primarySrc !== DEFAULT_BRANDING_LOGO && fallbackToDefault) {
         tryLoad(DEFAULT_BRANDING_LOGO, () => {
           tryLoad(OFFICIAL_FALLBACK_LOGO, () => resolve(OFFICIAL_FALLBACK_LOGO))
         })
       } else {
-        tryLoad(OFFICIAL_FALLBACK_LOGO, () => resolve(OFFICIAL_FALLBACK_LOGO))
+        resolve(fallbackToDefault ? OFFICIAL_FALLBACK_LOGO : null)
       }
     })
   })
@@ -131,73 +177,171 @@ export const getLogoAsPng = (customSrc = null) => {
 
 /**
  * Generates a standardized RMS report header (Master Layout)
+ * Supports Single-Logo (Centered) and Dual-Logo (Split Left/Right) modes.
  * @param {jsPDF} doc - The jsPDF instance
  * @param {string} reportTitle - The main report title
- * @param {Object} options - Metadata like documentId, logoData (Base64 PNG), institutionName, etc.
+ * @param {Object} options - Metadata like documentId, logoData (Base64 PNG), secondaryLogoData, institutionName, etc.
  */
 export const addPUPReportHeader = (doc, reportTitle, options = {}) => {
   const pageWidth = doc.internal.pageSize.getWidth()
-  const {
-    documentId = `RKS-${Date.now()}`,
-    charSpace = 2,
-    logoData,
-    institutionName = "Polytechnic University of the Philippines",
-    campusName = "San Juan City Campus",
-    officeName = "ADMISSION AND REGISTRATION OFFICE",
-    brandColor = "#7A1E28",
-  } = options
+  const instName = options?.institutionName || "Polytechnic University of the Philippines"
+  const campName = options?.campusName || "San Juan City Campus"
+  const autoPrefix = deriveDocumentPrefix(instName, campName)
+  const documentId = options?.documentId || `${autoPrefix}-${Date.now()}`
+  const charSpace = options?.charSpace ?? 2
+  const logoData = options?.logoData
+  const secondaryLogoData = options?.secondaryLogoData
+  const jurisdictionHeader = options?.jurisdictionHeader || "Republic of the Philippines"
+  const officeName = options?.officeName || "ADMISSION AND REGISTRATION OFFICE"
+  const brandColor = options?.brandColor || "#7A1E28"
 
   const [brandR, brandG, brandB] = hexToRgb(brandColor)
 
-  // 1. Centered Logo (48x48)
-  try {
-    if (logoData) {
-      doc.addImage(logoData, "PNG", pageWidth / 2 - 24, 20, 48, 48, undefined, 'FAST')
-    } else {
-      doc.addImage(OFFICIAL_FALLBACK_LOGO, "PNG", pageWidth / 2 - 24, 20, 48, 48, undefined, 'FAST')
+  if (secondaryLogoData) {
+    // DUAL-LOGO SPLIT MASTHEAD (Philippine SUC / DepEd / Regulatory standard)
+    const logoSize = 46
+    const logoY = 18
+
+    // 1. Left Primary Logo (aligned with left margin 40)
+    try {
+      if (logoData) {
+        doc.addImage(logoData, "PNG", 40, logoY, logoSize, logoSize, undefined, "FAST")
+      }
+    } catch (e) {
+      console.error("Primary logo failed to load", e)
     }
-  } catch (e) {
-    console.error("Logo failed to load", e)
+
+    // 2. Right Secondary Logo (aligned with right margin)
+    try {
+      doc.addImage(secondaryLogoData, "PNG", pageWidth - 40 - logoSize, logoY, logoSize, logoSize, undefined, "FAST")
+    } catch (e) {
+      console.error("Secondary logo failed to load", e)
+    }
+
+    // 3. Centered School Information (between Left and Right seals)
+    let currentY = 24
+    if (jurisdictionHeader && jurisdictionHeader.trim()) {
+      doc.setTextColor(120, 120, 120)
+      doc.setFontSize(7.5)
+      doc.setFont("helvetica", "normal")
+      doc.text(jurisdictionHeader.trim(), pageWidth / 2, currentY, { align: "center", charSpace: 1.2 })
+      currentY += 13
+    } else {
+      currentY = 28
+    }
+
+    // School Name
+    doc.setTextColor(brandR, brandG, brandB)
+    doc.setFontSize(13.5)
+    doc.setFont("helvetica", "bold")
+    doc.text(instName, pageWidth / 2, currentY, { align: "center" })
+
+    // Campus (if provided)
+    if (campName && campName.trim()) {
+      currentY += 12
+      doc.setFontSize(9.5)
+      doc.setFont("helvetica", "bold")
+      doc.setTextColor(100, 100, 100)
+      doc.text(campName.trim(), pageWidth / 2, currentY, { align: "center" })
+    }
+
+    // Office Subheader
+    currentY += 13
+    doc.setTextColor(130, 130, 130)
+    doc.setFontSize(8)
+    doc.setFont("helvetica", "bold")
+    doc.text(officeName, pageWidth / 2, currentY, { align: "center", charSpace })
+
+    // 4. Report Title
+    currentY = Math.max(currentY + 22, logoY + logoSize + 20)
+    doc.setTextColor(0, 0, 0)
+    doc.setFontSize(13.5)
+    doc.setFont("helvetica", "bold")
+    doc.text(reportTitle || "Report", pageWidth / 2, currentY, { align: "center" })
+
+    // 5. Document ID
+    currentY += 14
+    doc.setTextColor(110, 110, 110)
+    doc.setFontSize(8.5)
+    doc.setFont("helvetica", "italic")
+    doc.text(`Document ID: ${documentId}`, pageWidth / 2, currentY, { align: "center" })
+
+    // 6. Master Divider Line
+    currentY += 15
+    doc.setDrawColor(brandR, brandG, brandB)
+    doc.setLineWidth(1.8)
+    doc.line(40, currentY, pageWidth - 40, currentY)
+  } else {
+    // SINGLE-LOGO CENTERED MASTHEAD (Original Standard)
+    try {
+      if (logoData) {
+        doc.addImage(logoData, "PNG", pageWidth / 2 - 24, 18, 48, 48, undefined, 'FAST')
+      }
+    } catch (e) {
+      console.error("Logo failed to load", e)
+    }
+
+    let currentY = 78
+    if (jurisdictionHeader && jurisdictionHeader.trim()) {
+      doc.setTextColor(120, 120, 120)
+      doc.setFontSize(8)
+      doc.setFont("helvetica", "normal")
+      doc.text(jurisdictionHeader.trim(), pageWidth / 2, currentY, { align: "center", charSpace: 1.5 })
+      currentY += 15
+    } else {
+      currentY = 82
+    }
+
+    doc.setTextColor(brandR, brandG, brandB)
+    doc.setFontSize(14.5)
+    doc.setFont("helvetica", "bold")
+    const fullTitle = campName
+      ? `${instName} · ${campName}`
+      : instName
+    doc.text(fullTitle, pageWidth / 2, currentY, { align: "center" })
+
+    currentY += 16
+    doc.setTextColor(130, 130, 130)
+    doc.setFontSize(8.5)
+    doc.setFont("helvetica", "bold")
+    doc.text(officeName, pageWidth / 2, currentY, { align: "center", charSpace })
+
+    currentY += 28
+    doc.setTextColor(0, 0, 0)
+    doc.setFontSize(13.5)
+    doc.setFont("helvetica", "bold")
+    doc.text(reportTitle || "Report", pageWidth / 2, currentY, { align: "center" })
+
+    currentY += 15
+    doc.setTextColor(110, 110, 110)
+    doc.setFontSize(8.5)
+    doc.setFont("helvetica", "italic")
+    doc.text(`Document ID: ${documentId}`, pageWidth / 2, currentY, { align: "center" })
+
+    currentY += 15
+    doc.setDrawColor(brandR, brandG, brandB)
+    doc.setLineWidth(1.8)
+    doc.line(40, currentY, pageWidth - 40, currentY)
   }
-
-  // 2. School Name (Brand Color, Centered, Bold)
-  doc.setTextColor(brandR, brandG, brandB)
-  doc.setFontSize(14.5)
-  doc.setFont("helvetica", "bold")
-  const fullTitle = campusName
-    ? `${institutionName} · ${campusName}`
-    : institutionName
-  doc.text(fullTitle, pageWidth / 2, 92, { align: "center" })
-
-  // 3. Office / Tagline (Gray, Centered, tracking-widest style)
-  doc.setTextColor(130, 130, 130)
-  doc.setFontSize(8.5)
-  doc.setFont("helvetica", "bold")
-  doc.text(officeName, pageWidth / 2, 108, { align: "center", charSpace })
-
-  // 4. Report Title (Black, Centered, Bold)
-  doc.setTextColor(0, 0, 0)
-  doc.setFontSize(13.5)
-  doc.setFont("helvetica", "bold")
-  doc.text(reportTitle, pageWidth / 2, 138, { align: "center" })
-
-  // 5. Document ID (Italic, Gray, Centered)
-  doc.setTextColor(110, 110, 110)
-  doc.setFontSize(8.5)
-  doc.setFont("helvetica", "italic")
-  doc.text(`Document ID: ${documentId}`, pageWidth / 2, 153, { align: "center" })
-
-  // 6. Master Divider Line (Brand Color)
-  doc.setDrawColor(brandR, brandG, brandB)
-  doc.setLineWidth(1.8)
-  doc.line(40, 168, pageWidth - 40, 168)
 }
 
 /**
  * Common Signature Section
+ * Supports dynamic signatory titles with intelligent auto-fallbacks.
  */
-const addSignatures = (doc, startY) => {
+const addSignatures = (doc, startY, options = {}) => {
   const pageWidth = doc.internal.pageSize.getWidth()
+  const hasCampus = !!options.campusName
+  const staffTitle = options.staffTitle || "ADMINISTRATIVE STAFF"
+  const registrarTitle =
+    options.signatoryRegistrarTitle ||
+    options.registrarTitle ||
+    (hasCampus ? "CAMPUS REGISTRAR" : "REGISTRAR")
+  const headTitle =
+    options.signatoryHeadTitle ||
+    options.headTitle ||
+    (hasCampus ? "CAMPUS DIRECTOR" : "HEAD OF INSTITUTION")
+
   doc.setFontSize(9)
   doc.setTextColor(150, 150, 150)
   doc.setFont("helvetica", "bold")
@@ -212,32 +356,40 @@ const addSignatures = (doc, startY) => {
   doc.line(pageWidth / 2, startY + 40, pageWidth / 2 + 160, startY + 40)
 
   doc.setTextColor(0, 0, 0)
-  doc.text("ADMINISTRATIVE STAFF", 40, startY + 52)
-  doc.text("CAMPUS REGISTRAR", pageWidth / 2, startY + 52)
+  doc.text(staffTitle, 40, startY + 52)
+  doc.text(registrarTitle, pageWidth / 2, startY + 52)
 
   doc.setTextColor(150, 150, 150)
   doc.text("NOTED BY", 40, startY + 100)
   doc.line(40, startY + 140, 200, startY + 140)
   doc.setTextColor(0, 0, 0)
-  doc.text("CAMPUS DIRECTOR", 40, startY + 152)
+  doc.text(headTitle, 40, startY + 152)
 }
 
 /**
  * Generates an Audit Logs PDF Report
  */
-export const generateAuditLogsPdf = async (logs, options = {}) => {
+export const generateAuditLogsPdf = async (logs = [], options = {}) => {
   const doc = new jsPDF("l", "pt", "a4")
   const branding = options.branding || await getInstitutionalBranding()
-  const logoData = await getLogoAsPng(branding.logoBase64 || branding.logoUrl)
+  const logoData = await getLogoAsPng(branding?.logoBase64 || branding?.logoUrl)
+  const secondaryLogoSrc = branding?.secondaryLogoBase64 || branding?.secondaryLogoUrl
+  const secondaryLogoData = secondaryLogoSrc ? await getLogoAsPng(secondaryLogoSrc, false) : null
+  const instName = branding?.institutionName || "Polytechnic University of the Philippines"
+  const campName = branding?.campusName || "San Juan City Campus"
+  const prefix = deriveDocumentPrefix(instName, campName)
+  const [brandR, brandG, brandB] = hexToRgb(branding?.brandColor || "#7A1E28")
   
-  const docId = `RKS-LOG-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`
+  const docId = `${prefix}-LOG-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`
   addPUPReportHeader(doc, "Audit Logs Summary Report", {
     documentId: docId,
     logoData,
-    institutionName: branding.institutionName,
-    campusName: branding.campusName,
-    brandColor: branding.brandColor,
-    officeName: branding.tagline || "OFFICIAL ACADEMIC ARCHIVES & RECORDS",
+    secondaryLogoData,
+    jurisdictionHeader: branding?.jurisdictionHeader,
+    institutionName: instName,
+    campusName: campName,
+    brandColor: branding?.brandColor,
+    officeName: branding?.tagline || "OFFICIAL ACADEMIC ARCHIVES & RECORDS",
   })
 
   let y = 215
@@ -261,23 +413,25 @@ export const generateAuditLogsPdf = async (logs, options = {}) => {
   const filterText = filterParts.join(" | ")
   doc.text(filterText, 130, y)
 
-  const hasScope = logs.some((l) => l.officeName || l.scope || l.office_id)
+  const logList = Array.isArray(logs) ? logs : []
+  const hasScope = logList.some((l) => l && (l.officeName || l.office_name || l.scope || l.office_id))
   const head = hasScope
     ? [["Timestamp", "Severity", "Actor", "Role", "Scope", "Action", "Details"]]
     : [["Timestamp", "Severity", "Actor", "Role", "Action", "Details"]]
 
-  const tableData = logs.map((log) => {
+  const tableData = logList.map((log) => {
+    const timeVal = log?.created_at || log?.time || log?.timestamp || new Date().toISOString()
     const base = [
-      formatPHDateTime(log.created_at || log.time),
-      log.severity || "INFO",
-      log.actor || log.user,
-      log.role,
+      formatPHDateTime(timeVal),
+      log?.severity || "INFO",
+      log?.actor || log?.user || log?.actor_name || "System",
+      log?.role || "Staff",
     ]
     if (hasScope) {
-      base.push(log.officeName || log.scope || (log.office_id ? "Office" : "Global"))
+      base.push(log?.officeName || log?.office_name || log?.scope || (log?.office_id ? "Office" : "Global"))
     }
-    base.push(log.action)
-    base.push(log.details || "—")
+    base.push(log?.action || "Activity")
+    base.push(log?.details || "—")
     return base
   })
 
@@ -286,7 +440,7 @@ export const generateAuditLogsPdf = async (logs, options = {}) => {
     head: head,
     body: tableData,
     theme: "striped",
-    headStyles: { fillColor: [122, 30, 40] },
+    headStyles: { fillColor: [brandR, brandG, brandB], textColor: [255, 255, 255], fontStyle: "bold" },
     styles: { fontSize: 8, cellPadding: 4 },
     columnStyles: hasScope
       ? {
@@ -317,16 +471,25 @@ export const generateAuditLogsPdf = async (logs, options = {}) => {
 export const generateDigitizationCompliancePdf = async (data, summary, meta, byCourse) => {
   const doc = new jsPDF("p", "pt", "a4")
   const branding = meta?.branding || await getInstitutionalBranding()
-  const logoData = await getLogoAsPng(branding.logoBase64 || branding.logoUrl)
+  const logoData = await getLogoAsPng(branding?.logoBase64 || branding?.logoUrl)
+  const secondaryLogoSrc = branding?.secondaryLogoBase64 || branding?.secondaryLogoUrl
+  const secondaryLogoData = secondaryLogoSrc ? await getLogoAsPng(secondaryLogoSrc, false) : null
+  const instName = branding?.institutionName || "Polytechnic University of the Philippines"
+  const campName = branding?.campusName || "San Juan City Campus"
+  const prefix = deriveDocumentPrefix(instName, campName)
+  const [brandR, brandG, brandB] = hexToRgb(branding?.brandColor || "#7A1E28")
+  const institutionFull = campName ? `${instName} - ${campName}` : instName
   
-  const docId = `RKS-ANL-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`
+  const docId = `${prefix}-ANL-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`
   addPUPReportHeader(doc, "Digitization Compliance Report", {
     documentId: docId,
     logoData,
-    institutionName: branding.institutionName,
-    campusName: branding.campusName,
-    brandColor: branding.brandColor,
-    officeName: branding.tagline || "OFFICIAL ACADEMIC ARCHIVES & RECORDS",
+    secondaryLogoData,
+    jurisdictionHeader: branding?.jurisdictionHeader,
+    institutionName: instName,
+    campusName: campName,
+    brandColor: branding?.brandColor,
+    officeName: branding?.tagline || "OFFICIAL ACADEMIC ARCHIVES & RECORDS",
   })
 
   let y = 215
@@ -340,17 +503,17 @@ export const generateDigitizationCompliancePdf = async (data, summary, meta, byC
   y += 40
   doc.setFontSize(12)
   doc.setFont("helvetica", "bold")
-  doc.setTextColor(122, 30, 40) // PUP Maroon
+  doc.setTextColor(brandR, brandG, brandB)
   doc.text("I. Executive Summary", 40, y)
   doc.setLineWidth(1.5)
-  doc.setDrawColor(122, 30, 40)
+  doc.setDrawColor(brandR, brandG, brandB)
   doc.line(40, y + 5, doc.internal.pageSize.getWidth() - 40, y + 5)
   
   y += 30
   doc.setFontSize(10)
   doc.setFont("helvetica", "normal")
   doc.setTextColor(60, 60, 60)
-  const intro = "This document serves as the official compliance assessment regarding the digitization of student records at the Polytechnic University of the Philippines - San Juan City Campus. The analysis evaluates the current state of digital archives against institutional standards."
+  const intro = `This document serves as the official compliance assessment regarding the digitization of student records at ${institutionFull}. The analysis evaluates the current state of digital archives against institutional standards.`
   const splitIntro = doc.splitTextToSize(intro, doc.internal.pageSize.getWidth() - 80)
   doc.text(splitIntro, 40, y)
   y += splitIntro.length * 14 + 10
@@ -359,14 +522,14 @@ export const generateDigitizationCompliancePdf = async (data, summary, meta, byC
   doc.setTextColor(80, 80, 80)
   doc.text("Student Population Distribution:", 40, y)
   y += 20
-  if (data?.byYear) {
+  if (data?.byYear && Array.isArray(data.byYear)) {
     data.byYear.forEach(yearData => {
       doc.setFont("helvetica", "bold")
-      doc.setTextColor(122, 30, 40)
-      doc.text(`Batch ${yearData.year}`, 60, y)
+      doc.setTextColor(brandR, brandG, brandB)
+      doc.text(`Batch ${yearData?.year || "—"}`, 60, y)
       doc.setFont("helvetica", "normal")
       doc.setTextColor(60, 60, 60)
-      doc.text(`${yearData.count} Students`, doc.internal.pageSize.getWidth() - 60, y, { align: "right" })
+      doc.text(`${(yearData?.count ?? 0).toLocaleString()} Students`, doc.internal.pageSize.getWidth() - 60, y, { align: "right" })
       y += 15
     })
   }
@@ -374,12 +537,16 @@ export const generateDigitizationCompliancePdf = async (data, summary, meta, byC
   y += 15
   doc.setFont("helvetica", "normal")
   doc.setTextColor(60, 60, 60)
-  const p2 = `The primary objective of this audit is to measure the completeness of the digital archives against the mandatory document set defined by university policy and accreditation requirements. The system currently requires ${meta?.definitions?.configuredDocTypes?.length || 0} unique document types per student record.`
+  const reqDocCount = meta?.definitions?.configuredDocTypes?.length ?? 0
+  const p2 = `The primary objective of this audit is to measure the completeness of the digital archives against the mandatory document set defined by university policy and accreditation requirements. The system currently requires ${reqDocCount} unique document types per student record.`
   const splitP2 = doc.splitTextToSize(p2, doc.internal.pageSize.getWidth() - 80)
   doc.text(splitP2, 40, y)
   y += splitP2.length * 14 + 15
 
-  const p3 = `Based on the comprehensive audit performed by the Records Keeping System (RKS), the total percentage of digitized records currently stands at ${summary?.percentDigitized}%. This represents a verified volume of ${summary?.totalDigitizedDocsCount?.toLocaleString()} digital files out of the ${summary?.totalExpectedDocsCount?.toLocaleString()} documents required for full compliance.`
+  const percentDig = summary?.percentDigitized ?? 0
+  const totalDigDocs = (summary?.totalDigitizedDocsCount ?? 0).toLocaleString()
+  const totalExpDocs = (summary?.totalExpectedDocsCount ?? 0).toLocaleString()
+  const p3 = `Based on the comprehensive audit performed by the ${prefix} Records Keeping System, the total percentage of digitized records currently stands at ${percentDig}%. This represents a verified volume of ${totalDigDocs} digital files out of the ${totalExpDocs} documents required for full compliance.`
   const splitP3 = doc.splitTextToSize(p3, doc.internal.pageSize.getWidth() - 80)
   doc.text(splitP3, 40, y)
 
@@ -387,10 +554,10 @@ export const generateDigitizationCompliancePdf = async (data, summary, meta, byC
   y = 60
   doc.setFontSize(12)
   doc.setFont("helvetica", "bold")
-  doc.setTextColor(122, 30, 40)
+  doc.setTextColor(brandR, brandG, brandB)
   doc.text("II. Program-Specific Breakdown", 40, y)
   doc.setLineWidth(1.5)
-  doc.setDrawColor(122, 30, 40)
+  doc.setDrawColor(brandR, brandG, brandB)
   doc.line(40, y + 5, doc.internal.pageSize.getWidth() - 40, y + 5)
   y += 25
 
@@ -402,39 +569,49 @@ export const generateDigitizationCompliancePdf = async (data, summary, meta, byC
   doc.text(splitProgram, 40, y)
   y += splitProgram.length * 14 + 10
   
-  const tableData = byCourse.map((c) => [c.courseCode, c.total, c.digitized, `${c.percent}%`])
+  const courseList = Array.isArray(byCourse) ? byCourse : []
+  const tableData = courseList.map((c) => [
+    c?.courseCode || "—",
+    c?.total ?? 0,
+    c?.digitized ?? 0,
+    `${c?.percent ?? 0}%`
+  ])
   autoTable(doc, {
     startY: y,
     head: [["Academic Program", "Enrolled", "Complete", "Avg. Progress"]],
     body: tableData,
     theme: "striped",
-    headStyles: { fillColor: [122, 30, 40], textColor: [255, 255, 255], fontStyle: "bold" },
+    headStyles: { fillColor: [brandR, brandG, brandB], textColor: [255, 255, 255], fontStyle: "bold" },
     styles: { fontSize: 10, cellPadding: 6 },
     columnStyles: {
       0: { fontStyle: "bold" },
       1: { halign: "center" },
       2: { halign: "center", textColor: [16, 185, 129], fontStyle: "bold" },
-      3: { halign: "right", fontStyle: "bold", textColor: [122, 30, 40] }
+      3: { halign: "right", fontStyle: "bold", textColor: [brandR, brandG, brandB] }
     },
   })
   
   y = doc.lastAutoTable.finalY + 40
   doc.setFontSize(12)
   doc.setFont("helvetica", "bold")
-  doc.setTextColor(122, 30, 40)
+  doc.setTextColor(brandR, brandG, brandB)
   doc.text("III. Certification Statement", 40, y)
   doc.setLineWidth(1.5)
-  doc.setDrawColor(122, 30, 40)
+  doc.setDrawColor(brandR, brandG, brandB)
   doc.line(40, y + 5, doc.internal.pageSize.getWidth() - 40, y + 5)
   y += 25
   doc.setFontSize(10)
   doc.setFont("helvetica", "normal")
   doc.setTextColor(60, 60, 60)
-  const cert = "We hereby certify that the data presented in this report is an accurate representation of the digital archives maintained by the Polytechnic University of the Philippines - San Juan City Campus. The metrics have been generated through the Records Keeping System (RKS) audit engine, reflecting real-time synchronization with physical folders."
+  const cert = `We hereby certify that the data presented in this report is an accurate representation of the digital archives maintained by ${institutionFull}. The metrics have been generated through the ${prefix} Records Keeping System audit engine, reflecting real-time synchronization with physical folders.`
   const splitCert = doc.splitTextToSize(cert, doc.internal.pageSize.getWidth() - 80)
   doc.text(splitCert, 40, y)
   y += splitCert.length * 14 + 60
-  addSignatures(doc, y)
+  addSignatures(doc, y, {
+    campusName: campName,
+    signatoryRegistrarTitle: branding?.signatoryRegistrarTitle,
+    signatoryHeadTitle: branding?.signatoryHeadTitle,
+  })
 
   return doc.output("blob")
 }
@@ -445,16 +622,23 @@ export const generateDigitizationCompliancePdf = async (data, summary, meta, byC
 export const generateOrganizationCompliancePdf = async (data, summary, meta, organizations, byCategory, options = {}) => {
   const doc = new jsPDF("p", "pt", "a4")
   const branding = meta?.branding || await getInstitutionalBranding()
-  const logoData = await getLogoAsPng(branding.logoBase64 || branding.logoUrl)
-  const [brandR, brandG, brandB] = hexToRgb(branding.brandColor)
+  const logoData = await getLogoAsPng(branding?.logoBase64 || branding?.logoUrl)
+  const secondaryLogoSrc = branding?.secondaryLogoBase64 || branding?.secondaryLogoUrl
+  const secondaryLogoData = secondaryLogoSrc ? await getLogoAsPng(secondaryLogoSrc, false) : null
+  const instName = branding?.institutionName || "Polytechnic University of the Philippines"
+  const campName = branding?.campusName || "San Juan City Campus"
+  const prefix = deriveDocumentPrefix(instName, campName)
+  const [brandR, brandG, brandB] = hexToRgb(branding?.brandColor || "#7A1E28")
 
-  const docId = `OSAS-CMP-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`
+  const docId = `${prefix}-CMP-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`
   addPUPReportHeader(doc, "Student Organization Compliance Report", {
     documentId: docId,
     logoData,
-    institutionName: branding.institutionName,
-    campusName: branding.campusName,
-    brandColor: branding.brandColor,
+    secondaryLogoData,
+    jurisdictionHeader: branding?.jurisdictionHeader,
+    institutionName: instName,
+    campusName: campName,
+    brandColor: branding?.brandColor,
     officeName: "OFFICE OF STUDENT AFFAIRS AND SERVICES",
   })
 
@@ -476,7 +660,7 @@ export const generateOrganizationCompliancePdf = async (data, summary, meta, org
     y += 16
     doc.setTextColor(150, 150, 150)
     doc.text("REPORT SCOPE:", 40, y)
-    doc.setTextColor(122, 30, 40)
+    doc.setTextColor(brandR, brandG, brandB)
     doc.text(options.scopeNote, 150, y)
   }
 
@@ -493,7 +677,7 @@ export const generateOrganizationCompliancePdf = async (data, summary, meta, org
   doc.setFontSize(10)
   doc.setFont("helvetica", "normal")
   doc.setTextColor(60, 60, 60)
-  const institutionFull = branding.campusName ? `${branding.institutionName} - ${branding.campusName}` : branding.institutionName
+  const institutionFull = campName ? `${instName} - ${campName}` : instName
   const intro = `This document presents the official compliance and accreditation assessment of recognized student organizations under the jurisdiction of the Office of Student Affairs and Services (OSAS) at ${institutionFull}. Organizations are audited across institutional pillars: Constitution & By-Laws (CBL) archival, accredited officer roster, designated faculty adviser, and active accreditation standing.`
   const splitIntro = doc.splitTextToSize(intro, doc.internal.pageSize.getWidth() - 80)
   doc.text(splitIntro, 40, y)
@@ -505,18 +689,30 @@ export const generateOrganizationCompliancePdf = async (data, summary, meta, org
   doc.text("Key Institutional Compliance Indicators:", 40, y)
   y += 18
 
+  const orgList = Array.isArray(organizations) ? organizations : []
+  const totalOrgs = summary?.totalOrganizations ?? orgList.length ?? 0
+  const fullyCompliant = summary?.fullyCompliantCount ?? 0
+  const fullyCompliantRate = summary?.fullyCompliantRate ?? (totalOrgs > 0 ? Math.round((fullyCompliant / totalOrgs) * 100) : 0)
+  const cblArchived = summary?.cblArchivedCount ?? 0
+  const cblRate = summary?.cblArchivedRate ?? (totalOrgs > 0 ? Math.round((cblArchived / totalOrgs) * 100) : 0)
+  const withOfficers = summary?.withOfficersCount ?? 0
+  const totalOfficers = summary?.totalActiveOfficers ?? 0
+  const withAdvisers = summary?.withAdviserCount ?? summary?.withAdvisersCount ?? 0
+  const withAdviserRate = summary?.withAdviserRate ?? (totalOrgs > 0 ? Math.round((withAdvisers / totalOrgs) * 100) : 0)
+  const overallRate = summary?.overallComplianceRate ?? (totalOrgs > 0 ? Math.round((fullyCompliant / totalOrgs) * 100) : 0)
+
   const kpis = [
-    { label: "Total Recognized Organizations", val: `${summary?.totalOrganizations || 0} Organizations` },
-    { label: "Overall Institutional Compliance Rate", val: `${summary?.overallComplianceRate || 0}%` },
-    { label: "Fully Compliant Organizations", val: `${summary?.fullyCompliantCount || 0} (${summary?.fullyCompliantRate || 0}%)` },
-    { label: "Constitution & By-Laws (CBL) Archival", val: `${summary?.cblArchivedCount || 0} of ${summary?.totalOrganizations || 0} (${summary?.cblArchivedRate || 0}%)` },
-    { label: "Accredited Officer Leadership Roster", val: `${summary?.withOfficersCount || 0} Orgs (${summary?.totalActiveOfficers || 0} active leaders)` },
-    { label: "Faculty Adviser Endorsements", val: `${summary?.withAdviserCount || 0} of ${summary?.totalOrganizations || 0} (${summary?.withAdviserRate || 0}%)` },
+    { label: "Total Recognized Organizations", val: `${totalOrgs} Organizations` },
+    { label: "Overall Institutional Compliance Rate", val: `${overallRate}%` },
+    { label: "Fully Compliant Organizations", val: `${fullyCompliant} (${fullyCompliantRate}%)` },
+    { label: "Constitution & By-Laws (CBL) Archival", val: `${cblArchived} of ${totalOrgs} (${cblRate}%)` },
+    { label: "Accredited Officer Leadership Roster", val: `${withOfficers} Orgs (${totalOfficers} active leaders)` },
+    { label: "Faculty Adviser Endorsements", val: `${withAdvisers} of ${totalOrgs} (${withAdviserRate}%)` },
   ]
 
   kpis.forEach(item => {
     doc.setFont("helvetica", "bold")
-    doc.setTextColor(122, 30, 40)
+    doc.setTextColor(brandR, brandG, brandB)
     doc.text(item.label, 50, y)
     doc.setFont("helvetica", "normal")
     doc.setTextColor(40, 40, 40)
@@ -527,28 +723,36 @@ export const generateOrganizationCompliancePdf = async (data, summary, meta, org
   y += 20
   doc.setFontSize(12)
   doc.setFont("helvetica", "bold")
-  doc.setTextColor(122, 30, 40)
+  doc.setTextColor(brandR, brandG, brandB)
   doc.text("II. Category Performance Distribution", 40, y)
   doc.setLineWidth(1.5)
-  doc.setDrawColor(122, 30, 40)
+  doc.setDrawColor(brandR, brandG, brandB)
   doc.line(40, y + 5, doc.internal.pageSize.getWidth() - 40, y + 5)
   y += 20
 
-  const catTableData = (byCategory || []).map((c) => [
-    c.category,
-    String(c.totalOrganizations),
-    String(c.fullyCompliantCount),
-    `${c.cblArchivedRate || 0}%`,
-    `${c.withOfficersRate || 0}%`,
-    `${c.complianceRate}%`,
-  ])
+  const catList = Array.isArray(byCategory) ? byCategory : []
+  const catTableData = catList.map((c) => {
+    const orgCount = c?.totalOrganizations ?? c?.totalOrgs ?? 0
+    const compliant = c?.fullyCompliantCount ?? c?.compliantCount ?? 0
+    const cblArchivedRate = c?.cblArchivedRate ?? (orgCount > 0 ? Math.round(((c?.cblArchivedCount ?? 0) / orgCount) * 100) : 0)
+    const withOfficersRate = c?.withOfficersRate ?? (orgCount > 0 ? Math.round(((c?.withOfficersCount ?? 0) / orgCount) * 100) : 0)
+    const complianceRate = c?.complianceRate ?? (orgCount > 0 ? Math.round((compliant / orgCount) * 100) : 0)
+    return [
+      c?.category || "—",
+      String(orgCount),
+      String(compliant),
+      `${cblArchivedRate}%`,
+      `${withOfficersRate}%`,
+      `${complianceRate}%`,
+    ]
+  })
 
   autoTable(doc, {
     startY: y,
     head: [["Category", "Total Orgs", "Fully Compliant", "CBL Archived", "Officers Whitelisted", "Compliance Rate"]],
     body: catTableData,
     theme: "striped",
-    headStyles: { fillColor: [122, 30, 40], textColor: [255, 255, 255], fontStyle: "bold" },
+    headStyles: { fillColor: [brandR, brandG, brandB], textColor: [255, 255, 255], fontStyle: "bold" },
     styles: { fontSize: 9, cellPadding: 5 },
     columnStyles: {
       0: { fontStyle: "bold" },
@@ -556,7 +760,7 @@ export const generateOrganizationCompliancePdf = async (data, summary, meta, org
       2: { halign: "center" },
       3: { halign: "center" },
       4: { halign: "center" },
-      5: { halign: "right", fontStyle: "bold", textColor: [122, 30, 40] },
+      5: { halign: "right", fontStyle: "bold", textColor: [brandR, brandG, brandB] },
     },
   })
 
@@ -564,36 +768,46 @@ export const generateOrganizationCompliancePdf = async (data, summary, meta, org
   y = 60
   doc.setFontSize(12)
   doc.setFont("helvetica", "bold")
-  doc.setTextColor(122, 30, 40)
+  doc.setTextColor(brandR, brandG, brandB)
   doc.text("III. Detailed Organization Compliance Matrix", 40, y)
   doc.setLineWidth(1.5)
-  doc.setDrawColor(122, 30, 40)
+  doc.setDrawColor(brandR, brandG, brandB)
   doc.line(40, y + 5, doc.internal.pageSize.getWidth() - 40, y + 5)
   y += 20
 
-  const orgTableData = (organizations || []).map((o) => [
-    `${o.name} (${o.acronym || "—"})`,
-    o.category,
-    o.adviserName || "Pending",
-    o.hasCbl ? "Archived" : "Pending",
-    `${o.activeOfficerCount} Officers`,
-    o.status,
-    `${o.complianceScore}% (${o.complianceStatus})`,
-  ])
+  const orgTableData = orgList.map((o) => {
+    const orgName = o?.name || "Unnamed Organization"
+    const orgAcronym = o?.acronym ? ` (${o.acronym})` : ""
+    const adviser = o?.adviserName || o?.adviser_name || "Pending"
+    const cblStatus = (o?.hasCbl ?? o?.checklist?.cbl ?? o?.checklist?.has_cbl) ? "Archived" : "Pending"
+    const officerCount = o?.activeOfficerCount ?? o?.officers?.length ?? 0
+    const standing = o?.status || "Active"
+    const score = o?.complianceScore ?? 0
+    const status = o?.complianceStatus || "Pending"
+    return [
+      `${orgName}${orgAcronym}`,
+      o?.category || "—",
+      adviser,
+      cblStatus,
+      `${officerCount} Officers`,
+      standing,
+      `${score}% (${status})`,
+    ]
+  })
 
   autoTable(doc, {
     startY: y,
     head: [["Organization", "Category", "Adviser", "CBL", "Officers", "Standing", "Compliance"]],
     body: orgTableData,
     theme: "striped",
-    headStyles: { fillColor: [122, 30, 40], textColor: [255, 255, 255], fontStyle: "bold" },
+    headStyles: { fillColor: [brandR, brandG, brandB], textColor: [255, 255, 255], fontStyle: "bold" },
     styles: { fontSize: 8.5, cellPadding: 4.5 },
     columnStyles: {
       0: { fontStyle: "bold" },
       3: { halign: "center" },
       4: { halign: "center" },
       5: { halign: "center" },
-      6: { halign: "right", fontStyle: "bold", textColor: [122, 30, 40] },
+      6: { halign: "right", fontStyle: "bold", textColor: [brandR, brandG, brandB] },
     },
   })
 
@@ -605,20 +819,24 @@ export const generateOrganizationCompliancePdf = async (data, summary, meta, org
 
   doc.setFontSize(12)
   doc.setFont("helvetica", "bold")
-  doc.setTextColor(122, 30, 40)
+  doc.setTextColor(brandR, brandG, brandB)
   doc.text("IV. Certification & Attestation", 40, y)
   doc.setLineWidth(1.5)
-  doc.setDrawColor(122, 30, 40)
+  doc.setDrawColor(brandR, brandG, brandB)
   doc.line(40, y + 5, doc.internal.pageSize.getWidth() - 40, y + 5)
   y += 20
   doc.setFontSize(9.5)
   doc.setFont("helvetica", "normal")
   doc.setTextColor(60, 60, 60)
-  const cert = "This official accreditation audit has been prepared by the Office of Student Affairs and Services (OSAS). The compliance metrics documented herein represent active organizational records and official submissions validated by the PUPSJ Records Keeping System."
+  const cert = `This official accreditation audit has been prepared by the Office of Student Affairs and Services (OSAS). The compliance metrics documented herein represent active organizational records and official submissions validated by the ${prefix} Records Keeping System.`
   const splitCert = doc.splitTextToSize(cert, doc.internal.pageSize.getWidth() - 80)
   doc.text(splitCert, 40, y)
   y += splitCert.length * 13 + 50
-  addSignatures(doc, y)
+  addSignatures(doc, y, {
+    campusName: branding?.campusName,
+    signatoryRegistrarTitle: branding?.signatoryRegistrarTitle,
+    signatoryHeadTitle: branding?.signatoryHeadTitle,
+  })
 
   return doc.output("blob")
 }
@@ -626,15 +844,21 @@ export const generateOrganizationCompliancePdf = async (data, summary, meta, org
 /**
  * Generates a SLA Analytics PDF Report
  */
-export const generateSLAAnalyticsPdf = async (data, total, completionRate, options = {}) => {
+export const generateSLAAnalyticsPdf = async (data = {}, total = 0, completionRate = 0, options = {}) => {
   const doc = new jsPDF("p", "pt", "a4")
   const branding = options?.branding || await getInstitutionalBranding()
   const logoData = await getLogoAsPng(branding.logoBase64 || branding.logoUrl)
+  const secondaryLogoSrc = branding?.secondaryLogoBase64 || branding?.secondaryLogoUrl
+  const secondaryLogoData = secondaryLogoSrc ? await getLogoAsPng(secondaryLogoSrc, false) : null
+  const prefix = deriveDocumentPrefix(branding.institutionName, branding.campusName)
+  const [brandR, brandG, brandB] = hexToRgb(branding.brandColor || "#7A1E28")
   
-  const docId = `RKS-SLA-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`
+  const docId = `${prefix}-SLA-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`
   addPUPReportHeader(doc, "Fulfillment SLA Analytics Report", {
     documentId: docId,
     logoData,
+    secondaryLogoData,
+    jurisdictionHeader: branding.jurisdictionHeader,
     institutionName: branding.institutionName,
     campusName: branding.campusName,
     brandColor: branding.brandColor,
@@ -663,10 +887,10 @@ export const generateSLAAnalyticsPdf = async (data, total, completionRate, optio
   y += 40
   doc.setFontSize(12)
   doc.setFont("helvetica", "bold")
-  doc.setTextColor(122, 30, 40) // PUP Maroon
+  doc.setTextColor(brandR, brandG, brandB)
   doc.text("I. Service Efficiency Summary", 40, y)
   doc.setLineWidth(1.5)
-  doc.setDrawColor(122, 30, 40) // PUP Maroon
+  doc.setDrawColor(brandR, brandG, brandB)
   doc.line(40, y + 5, doc.internal.pageSize.getWidth() - 40, y + 5)
   
   y += 30
@@ -677,7 +901,9 @@ export const generateSLAAnalyticsPdf = async (data, total, completionRate, optio
     ? "during the specified reporting period" 
     : "aggregated from all available historical records";
   const frameworkTitle = data?.sla?.standards?.frameworkName || "Service Level Agreement (SLA)";
-  const intro = `This document details the registry's fulfillment efficiency across ${total} total documented requests ${dataScope}. Public service operations and timeliness are measured against the institutional ${frameworkTitle} fulfillment standard.`;
+  const safeTotal = typeof total === "number" ? total : (Number(total) || 0);
+  const safeCompletionRate = typeof completionRate === "number" ? completionRate : (Number(completionRate) || 0);
+  const intro = `This document details the registry's fulfillment efficiency across ${safeTotal.toLocaleString()} total documented requests ${dataScope}. Public service operations and timeliness are measured against the institutional ${frameworkTitle} fulfillment standard.`;
   const splitIntro = doc.splitTextToSize(intro, doc.internal.pageSize.getWidth() - 80)
   doc.text(splitIntro, 40, y)
   y += splitIntro.length * 14 + 25
@@ -694,10 +920,10 @@ export const generateSLAAnalyticsPdf = async (data, total, completionRate, optio
   doc.text("FULFILLMENT COMPLETION", doc.internal.pageSize.getWidth() / 2 + 15, y + 25)
   
   doc.setFontSize(22)
-  doc.setTextColor(122, 30, 40) // PUP Maroon
-  doc.text(`${total.toLocaleString()}`, 50, y + 55)
+  doc.setTextColor(brandR, brandG, brandB)
+  doc.text(`${safeTotal.toLocaleString()}`, 50, y + 55)
   doc.setTextColor(16, 185, 129) // Emerald for completion
-  doc.text(`${completionRate}%`, doc.internal.pageSize.getWidth() / 2 + 15, y + 55)
+  doc.text(`${safeCompletionRate}%`, doc.internal.pageSize.getWidth() / 2 + 15, y + 55)
   
   y += 110
   doc.setFontSize(9)
@@ -711,10 +937,10 @@ export const generateSLAAnalyticsPdf = async (data, total, completionRate, optio
   y = 60
   doc.setFontSize(12)
   doc.setFont("helvetica", "bold")
-  doc.setTextColor(122, 30, 40) // PUP Maroon
+  doc.setTextColor(brandR, brandG, brandB)
   doc.text("II. Top Demand Analysis", 40, y)
   doc.setLineWidth(1.5)
-  doc.setDrawColor(122, 30, 40)
+  doc.setDrawColor(brandR, brandG, brandB)
   doc.line(40, y + 5, doc.internal.pageSize.getWidth() - 40, y + 5)
   y += 25
   
@@ -726,15 +952,18 @@ export const generateSLAAnalyticsPdf = async (data, total, completionRate, optio
   doc.text(splitDemand, 40, y)
   y += splitDemand.length * 14 + 10
 
-  const topDemandData = (data?.topDocTypes || []).map((dt, i) => [`${i + 1}. ${dt.name}`, dt.count])
+  const rawTopDocs = Array.isArray(data?.topDocTypes) ? data.topDocTypes : []
+  const topDemandData = rawTopDocs.length > 0
+    ? rawTopDocs.map((dt, i) => [`${i + 1}. ${dt?.name || "Unspecified Document"}`, Number(dt?.count || 0).toLocaleString()])
+    : [["No request records found", "0"]]
   autoTable(doc, {
     startY: y,
     head: [["Document Type", "Total Requests"]],
     body: topDemandData,
     theme: "striped",
-    headStyles: { fillColor: [122, 30, 40], textColor: [255, 255, 255], fontStyle: "bold" },
+    headStyles: { fillColor: [brandR, brandG, brandB], textColor: [255, 255, 255], fontStyle: "bold" },
     styles: { fontSize: 10, cellPadding: 6 },
-    columnStyles: { 0: { fontStyle: "bold" }, 1: { halign: "right", fontStyle: "bold", textColor: [122, 30, 40] } },
+    columnStyles: { 0: { fontStyle: "bold" }, 1: { halign: "right", fontStyle: "bold", textColor: [brandR, brandG, brandB] } },
   })
   
   // Section III: Client Satisfaction Measurement (CSM)
@@ -747,10 +976,10 @@ export const generateSLAAnalyticsPdf = async (data, total, completionRate, optio
 
   doc.setFontSize(12)
   doc.setFont("helvetica", "bold")
-  doc.setTextColor(122, 30, 40) // PUP Maroon
+  doc.setTextColor(brandR, brandG, brandB)
   doc.text("III. Client Satisfaction Measurement (CSM)", 40, y)
   doc.setLineWidth(1.5)
-  doc.setDrawColor(122, 30, 40)
+  doc.setDrawColor(brandR, brandG, brandB)
   doc.line(40, y + 5, doc.internal.pageSize.getWidth() - 40, y + 5)
   y += 25
 
@@ -762,19 +991,19 @@ export const generateSLAAnalyticsPdf = async (data, total, completionRate, optio
   doc.text(splitCsm, 40, y)
   y += splitCsm.length * 14 + 10
 
-  const feedbackTotal = data?.feedback?.totalResponses || 0
-  const avgRating = feedbackTotal > 0 ? `${data.feedback.averageRating} / 5.0` : "No ratings"
-  const satRate = feedbackTotal > 0 ? `${data.feedback.satisfactionRate}% Positive` : "N/A"
+  const feedbackTotal = Number(data?.feedback?.totalResponses || 0)
+  const avgRating = feedbackTotal > 0 && data?.feedback?.averageRating != null ? `${data.feedback.averageRating} / 5.0` : "No ratings"
+  const satRate = feedbackTotal > 0 && data?.feedback?.satisfactionRate != null ? `${data.feedback.satisfactionRate}% Positive` : "N/A"
 
   const csmRows = [
     ["Average Client Satisfaction Score", avgRating],
     ["Total Student Evaluations Received", `${feedbackTotal.toLocaleString()}`],
     ["Overall Positive Sentiment Rate", satRate],
-    ["5-Star Evaluations", `${data?.feedback?.ratingBreakdown?.[5] || 0}`],
-    ["4-Star Evaluations", `${data?.feedback?.ratingBreakdown?.[4] || 0}`],
-    ["3-Star Evaluations", `${data?.feedback?.ratingBreakdown?.[3] || 0}`],
-    ["2-Star Evaluations", `${data?.feedback?.ratingBreakdown?.[2] || 0}`],
-    ["1-Star Evaluations", `${data?.feedback?.ratingBreakdown?.[1] || 0}`],
+    ["5-Star Evaluations", `${Number(data?.feedback?.ratingBreakdown?.[5] || 0).toLocaleString()}`],
+    ["4-Star Evaluations", `${Number(data?.feedback?.ratingBreakdown?.[4] || 0).toLocaleString()}`],
+    ["3-Star Evaluations", `${Number(data?.feedback?.ratingBreakdown?.[3] || 0).toLocaleString()}`],
+    ["2-Star Evaluations", `${Number(data?.feedback?.ratingBreakdown?.[2] || 0).toLocaleString()}`],
+    ["1-Star Evaluations", `${Number(data?.feedback?.ratingBreakdown?.[1] || 0).toLocaleString()}`],
   ]
 
   autoTable(doc, {
@@ -782,9 +1011,9 @@ export const generateSLAAnalyticsPdf = async (data, total, completionRate, optio
     head: [["Evaluation Metric", "Recorded Result"]],
     body: csmRows,
     theme: "striped",
-    headStyles: { fillColor: [122, 30, 40], textColor: [255, 255, 255], fontStyle: "bold" },
+    headStyles: { fillColor: [brandR, brandG, brandB], textColor: [255, 255, 255], fontStyle: "bold" },
     styles: { fontSize: 9.5, cellPadding: 5 },
-    columnStyles: { 0: { fontStyle: "bold" }, 1: { halign: "right", fontStyle: "bold", textColor: [122, 30, 40] } },
+    columnStyles: { 0: { fontStyle: "bold" }, 1: { halign: "right", fontStyle: "bold", textColor: [brandR, brandG, brandB] } },
   })
 
   y = doc.lastAutoTable.finalY + 50
@@ -792,7 +1021,11 @@ export const generateSLAAnalyticsPdf = async (data, total, completionRate, optio
     doc.addPage()
     y = 60
   }
-  addSignatures(doc, y)
+  addSignatures(doc, y, {
+    campusName: branding?.campusName,
+    signatoryRegistrarTitle: branding?.signatoryRegistrarTitle,
+    signatoryHeadTitle: branding?.signatoryHeadTitle,
+  })
 
   return doc.output("blob")
 }
@@ -802,17 +1035,27 @@ export const generateSLAAnalyticsPdf = async (data, total, completionRate, optio
  */
 export const generateSampleBrandingPdf = async (branding) => {
   const doc = new jsPDF("p", "pt", "a4")
-  const activeBranding = branding || await getInstitutionalBranding()
-  const logoData = await getLogoAsPng(activeBranding.logoBase64 || activeBranding.logoUrl)
+  const activeBranding = branding || await getInstitutionalBranding() || {}
+  const logoData = await getLogoAsPng(activeBranding?.logoBase64 || activeBranding?.logoUrl)
+  const secondaryLogoSrc = activeBranding?.secondaryLogoBase64 || activeBranding?.secondaryLogoUrl
+  const secondaryLogoData = secondaryLogoSrc ? await getLogoAsPng(secondaryLogoSrc, false) : null
+  const instName = activeBranding?.institutionName || "Polytechnic University of the Philippines"
+  const campusName = activeBranding?.campusName || "San Juan Campus"
+  const accentColor = activeBranding?.brandColor || "#7A1E28"
+  const tagline = activeBranding?.tagline || "OFFICIAL ACADEMIC ARCHIVES & RECORDS"
+  const jurisdictionHeader = activeBranding?.jurisdictionHeader || "Republic of the Philippines"
+  const prefix = deriveDocumentPrefix(instName, campusName)
   
-  const docId = `SAMPLE-SPEC-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`
+  const docId = `${prefix}-SPEC-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`
   addPUPReportHeader(doc, "Official Document Header Specification", {
     documentId: docId,
     logoData,
-    institutionName: activeBranding.institutionName,
-    campusName: activeBranding.campusName,
-    brandColor: activeBranding.brandColor,
-    officeName: activeBranding.tagline || "OFFICIAL ACADEMIC ARCHIVES & RECORDS",
+    secondaryLogoData,
+    jurisdictionHeader,
+    institutionName: instName,
+    campusName,
+    brandColor: accentColor,
+    officeName: tagline,
   })
 
   let y = 205
@@ -827,18 +1070,18 @@ export const generateSampleBrandingPdf = async (branding) => {
   doc.setTextColor(150, 150, 150)
   doc.text("INSTITUTION:", 40, y)
   doc.setTextColor(0, 0, 0)
-  doc.text(`${activeBranding.institutionName} (${activeBranding.campusName})`, 135, y)
+  doc.text(`${instName} (${campusName})`, 135, y)
 
   y += 18
   doc.setTextColor(150, 150, 150)
   doc.text("ACCENT COLOR:", 40, y)
   doc.setTextColor(0, 0, 0)
-  doc.text(activeBranding.brandColor, 135, y)
+  doc.text(accentColor, 135, y)
 
   y += 35
   doc.setFontSize(12)
   doc.setFont("helvetica", "bold")
-  const [brandR, brandG, brandB] = hexToRgb(activeBranding.brandColor)
+  const [brandR, brandG, brandB] = hexToRgb(accentColor)
   doc.setTextColor(brandR, brandG, brandB)
   doc.text("I. Institutional Branding Verification", 40, y)
   doc.setLineWidth(1.5)
@@ -858,11 +1101,16 @@ export const generateSampleBrandingPdf = async (branding) => {
     startY: y,
     head: [["Configuration Key", "Configured Value", "Status"]],
     body: [
-      ["School / University Name", activeBranding.institutionName, "Active"],
-      ["Campus / Branch", activeBranding.campusName, "Active"],
-      ["Header Classification", activeBranding.tagline, "Active"],
-      ["Primary Brand Color", activeBranding.brandColor, "Applied"],
-      ["Institutional Logo", activeBranding.logoBase64 ? "Custom High-Res Image Uploaded" : "Default PUP Seal (eManage Fallback)", "Verified"],
+      ["Super-Header / Jurisdiction", jurisdictionHeader || "—", "Active"],
+      ["School / University Name", instName, "Active"],
+      ["Campus / Branch", campusName || "—", "Active"],
+      ["Administrative Office Line", tagline || "—", "Active"],
+      ["Automated Document Prefix", prefix, "Auto-Derived"],
+      ["Primary Brand Color", accentColor, "Applied"],
+      ["Primary Seal", activeBranding?.logoBase64 ? "Custom High-Res Image Uploaded" : "Default PUP Seal (eManage Fallback)", "Verified"],
+      ["Secondary / Partner Seal", activeBranding?.secondaryLogoBase64 ? "Custom Image Uploaded (Dual-Seal Masthead)" : "None (Single-Logo Mode)", "Active"],
+      ["Records / Registrar Signatory", activeBranding?.signatoryRegistrarTitle || (campusName ? "Campus Registrar (Auto)" : "Registrar (Auto)"), "Active"],
+      ["Executive Approver Signatory", activeBranding?.signatoryHeadTitle || (campusName ? "Campus Director (Auto)" : "Head of Institution (Auto)"), "Active"],
     ],
     theme: "striped",
     headStyles: { fillColor: [brandR, brandG, brandB], textColor: 255 },
@@ -870,7 +1118,11 @@ export const generateSampleBrandingPdf = async (branding) => {
   })
 
   y = doc.lastAutoTable.finalY + 40
-  addSignatures(doc, y)
+  addSignatures(doc, y, {
+    campusName: campusName,
+    signatoryRegistrarTitle: activeBranding?.signatoryRegistrarTitle,
+    signatoryHeadTitle: activeBranding?.signatoryHeadTitle,
+  })
 
   return doc.output("blob")
 }
@@ -881,21 +1133,30 @@ export const generateSampleBrandingPdf = async (branding) => {
  */
 export const generateStudentComplianceSlipPdf = async (student = {}, requirements = [], summary = {}, options = {}) => {
   const doc = new jsPDF("p", "pt", "a4")
-  const branding = options.branding || (await getInstitutionalBranding())
-  const logoData = await getLogoAsPng(branding.logoBase64 || branding.logoUrl)
+  const branding = options?.branding || (await getInstitutionalBranding()) || {}
+  const logoData = await getLogoAsPng(branding?.logoBase64 || branding?.logoUrl)
+  const secondaryLogoSrc = branding?.secondaryLogoBase64 || branding?.secondaryLogoUrl
+  const secondaryLogoData = secondaryLogoSrc ? await getLogoAsPng(secondaryLogoSrc, false) : null
   const pageWidth = doc.internal.pageSize.getWidth()
   const pageHeight = doc.internal.pageSize.getHeight()
 
-  const docId = `RKS-CMP-${student.studentNo ? String(student.studentNo).replace(/[^0-9A-Za-z]/g, "") : "STD"}-${new Date().getFullYear()}`
-  const [brandR, brandG, brandB] = hexToRgb(branding.brandColor || "#800000")
+  const instName = branding?.institutionName || "Polytechnic University of the Philippines"
+  const campusName = branding?.campusName || "San Juan Campus"
+  const prefix = deriveDocumentPrefix(instName, campusName)
+  const studentIdClean = (student?.studentNo || student?.student_no) ? String(student?.studentNo || student?.student_no).replace(/[^0-9A-Za-z]/g, "") : "STD"
+  const docId = `${prefix}-CMP-${studentIdClean}-${new Date().getFullYear()}`
+  const brandColor = branding?.brandColor || "#800000"
+  const [brandR, brandG, brandB] = hexToRgb(brandColor)
 
   addPUPReportHeader(doc, "Student Requirements Compliance Summary", {
     documentId: docId,
     logoData,
-    institutionName: branding.institutionName,
-    campusName: branding.campusName,
-    brandColor: branding.brandColor || "#800000",
-    officeName: branding.tagline || "OFFICE OF THE CAMPUS REGISTRAR",
+    secondaryLogoData,
+    jurisdictionHeader: branding?.jurisdictionHeader,
+    institutionName: instName,
+    campusName,
+    brandColor,
+    officeName: branding?.tagline || "OFFICE OF THE CAMPUS REGISTRAR",
   })
 
   let y = 188
@@ -914,7 +1175,7 @@ export const generateStudentComplianceSlipPdf = async (student = {}, requirement
   doc.text("STUDENT NAME", 52, y + 18)
   doc.setFontSize(9.5)
   doc.setTextColor(17, 24, 39)
-  doc.text(String(student.name || "—"), 52, y + 34)
+  doc.text(String(student?.name || "—"), 52, y + 34)
 
   // Col 2: Student Number
   doc.setFont("helvetica", "bold")
@@ -923,7 +1184,7 @@ export const generateStudentComplianceSlipPdf = async (student = {}, requirement
   doc.text("STUDENT NUMBER", 52 + colWidth, y + 18)
   doc.setFontSize(9.5)
   doc.setTextColor(brandR, brandG, brandB)
-  doc.text(String(student.studentNo || "—"), 52 + colWidth, y + 34)
+  doc.text(String(student?.studentNo || student?.student_no || "—"), 52 + colWidth, y + 34)
 
   // Col 3: Compliance Status
   doc.setFont("helvetica", "bold")
@@ -932,17 +1193,23 @@ export const generateStudentComplianceSlipPdf = async (student = {}, requirement
   doc.text("COMPLIANCE STATUS", 52 + colWidth * 2, y + 18)
   doc.setFontSize(9.5)
   doc.setTextColor(17, 24, 39)
-  const statusStr = `${summary.complianceRate || 0}% (${summary.submittedCount || summary.approvedCount || 0}/${summary.totalRequired || requirements.length} Submitted)`
+  const reqList = Array.isArray(requirements) ? requirements : []
+  const submittedCount = Number(summary?.submittedCount ?? summary?.approvedCount ?? 0)
+  const totalRequired = Number(summary?.totalRequired ?? reqList.length)
+  const complianceRate = Number(summary?.complianceRate ?? (totalRequired > 0 ? Math.round((submittedCount / totalRequired) * 100) : 0))
+  const statusStr = `${complianceRate}% (${submittedCount}/${totalRequired} Submitted)`
   doc.text(statusStr, 52 + colWidth * 2, y + 34)
 
   // Submissions Checklist Table (4 columns: #, Requirement / Credential, Category, Status)
   const head = [["#", "Requirement / Credential", "Category", "Status"]]
-  const tableData = requirements.map((r, idx) => [
-    idx + 1,
-    r.docType || "—",
-    r.category || "—",
-    r.status === "Submitted" ? "Submitted" : "Not Submitted",
-  ])
+  const tableData = reqList.length > 0
+    ? reqList.map((r, idx) => [
+        idx + 1,
+        r?.docType || r?.name || "—",
+        r?.category || "—",
+        r?.status === "Submitted" || r?.submitted ? "Submitted" : "Not Submitted",
+      ])
+    : [["—", "No requirements listed", "—", "—"]]
 
   autoTable(doc, {
     startY: y + 60,
@@ -985,7 +1252,7 @@ export const generateStudentComplianceSlipPdf = async (student = {}, requirement
   doc.setFontSize(8)
   doc.setTextColor(156, 163, 175)
   const noteText =
-    "Note: This is an official system-generated student compliance summary from the PUPSJ Records Keeping System for institutional verification. Alteration or unauthorized reproduction is strictly prohibited."
+    `Note: This is an official system-generated student compliance summary from the ${prefix} Records Keeping System for institutional verification. Alteration or unauthorized reproduction is strictly prohibited.`
   doc.text(noteText, pageWidth / 2, noteY, { align: "center", maxWidth: pageWidth - 80 })
 
   return doc.output("blob")

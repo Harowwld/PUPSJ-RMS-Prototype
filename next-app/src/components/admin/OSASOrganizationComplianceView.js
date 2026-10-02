@@ -400,6 +400,8 @@ export default function OSASOrganizationComplianceView({
     if (total === 0) {
       return {
         totalOrganizations: 0,
+        totalOrgs: 0,
+        activeOrganizations: 0,
         overallComplianceRate: 0,
         fullyCompliantCount: 0,
         fullyCompliantRate: 0,
@@ -411,6 +413,7 @@ export default function OSASOrganizationComplianceView({
         withOfficersCount: 0,
         withOfficersRate: 0,
         totalActiveOfficers: 0,
+        withAdviserCount: 0,
         withAdvisersCount: 0,
         withAdviserRate: 0,
         academicCount: 0,
@@ -472,24 +475,50 @@ export default function OSASOrganizationComplianceView({
       else nonAcademicCount += 1;
 
       if (!catMap[cat]) {
-        catMap[cat] = { category: cat, totalOrgs: 0, compliantCount: 0 };
+        catMap[cat] = {
+          category: cat,
+          totalOrgs: 0,
+          totalOrganizations: 0,
+          compliantCount: 0,
+          fullyCompliantCount: 0,
+          cblArchivedCount: 0,
+          withOfficersCount: 0,
+          totalScoreSum: 0,
+        };
       }
       catMap[cat].totalOrgs += 1;
+      catMap[cat].totalOrganizations += 1;
       if (compStatus === "Compliant") {
         catMap[cat].compliantCount += 1;
+        catMap[cat].fullyCompliantCount += 1;
       }
+      if (hasCbl) {
+        catMap[cat].cblArchivedCount += 1;
+      }
+      if (hasOfficers) {
+        catMap[cat].withOfficersCount += 1;
+      }
+      catMap[cat].totalScoreSum += Number(org.complianceScore || org.compliance_score || 0);
     });
 
     const categoryBreakdown = Object.values(catMap).map((c) => ({
       category: c.category,
       totalOrgs: c.totalOrgs,
-      compliantCount: c.compliantCount,
-      complianceRate: c.totalOrgs > 0 ? Math.round((c.compliantCount / c.totalOrgs) * 100) : 0,
       totalOrganizations: c.totalOrgs,
+      compliantCount: c.compliantCount,
+      fullyCompliantCount: c.fullyCompliantCount,
+      complianceRate: c.totalOrgs > 0 ? Math.round((c.compliantCount / c.totalOrgs) * 100) : 0,
+      cblArchivedCount: c.cblArchivedCount,
+      cblArchivedRate: c.totalOrgs > 0 ? Math.round((c.cblArchivedCount / c.totalOrgs) * 100) : 0,
+      withOfficersCount: c.withOfficersCount,
+      withOfficersRate: c.totalOrgs > 0 ? Math.round((c.withOfficersCount / c.totalOrgs) * 100) : 0,
+      averageComplianceScore: c.totalOrgs > 0 ? Math.round(c.totalScoreSum / c.totalOrgs) : 0,
     }));
 
     return {
       totalOrganizations: total,
+      totalOrgs: total,
+      activeOrganizations: statusDistribution["Active"] || 0,
       overallComplianceRate: Math.round((fullyCompliantCount / total) * 100),
       fullyCompliantCount,
       fullyCompliantRate: Math.round((fullyCompliantCount / total) * 100),
@@ -501,6 +530,7 @@ export default function OSASOrganizationComplianceView({
       withOfficersCount,
       withOfficersRate: Math.round((withOfficersCount / total) * 100),
       totalActiveOfficers,
+      withAdviserCount: withAdvisersCount,
       withAdvisersCount,
       withAdviserRate: Math.round((withAdvisersCount / total) * 100),
       academicCount,
@@ -1344,10 +1374,9 @@ export default function OSASOrganizationComplianceView({
                                   setOfficerSearch("");
                                 }}
                                 className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-amber-700 bg-amber-50/80 border border-amber-200/70 rounded-lg dark:bg-amber-950/30 dark:text-amber-300 dark:border-amber-800/40 hover:bg-amber-100 dark:hover:bg-amber-900/50 transition-all cursor-pointer active:scale-95"
-                                title="View Whitelist Status"
+                                title="Add Officers to Whitelist"
                               >
-                                <HugeIcon className="ph-bold ph-user-plus text-xs text-amber-600 dark:text-amber-400" />
-                                <span>Add Officers</span>
+                                <span>Add</span>
                               </button>
                             )}
                           </td>
@@ -1420,10 +1449,10 @@ export default function OSASOrganizationComplianceView({
                             type="button"
                             variant="outline"
                             onClick={handleResetFilters}
-                            className="flex h-10 items-center justify-center gap-2 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
+                            title="Reset Filters"
+                            className="flex h-10 items-center justify-center rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                           >
-                            <HugeIcon className="ph-bold ph-arrow-counter-clockwise text-[14px] shrink-0" />
-                            <span>Clear Filters</span>
+                            Reset
                           </Button>
                         </div>
                       )}

@@ -462,10 +462,10 @@ export default function RecordsArchiveTab({
             <Button
               variant="outline"
               onClick={() => onSwitchView("storage")}
-              className="flex h-10 items-center gap-2 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
+              title="Open Storage Explorer"
+              className="flex h-10 items-center justify-center rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
             >
-              Storage Explorer
-              <HugeIcon  className="ph-bold ph-arrow-right text-[14px]"></HugeIcon>
+              Explore
             </Button>
           }
         />
@@ -631,9 +631,10 @@ export default function RecordsArchiveTab({
                       variant="ghost"
                       size="sm"
                       onClick={() => toggleSelectAll(paginatedExplorerItems)}
+                      title={paginatedExplorerItems.every(it => selectedIds.has(it.student.studentNo)) ? "Deselect All" : "Select All"}
                       className="h-7 px-2.5 text-[12px] font-medium text-[#8E8E93] hover:text-[#0A84FF] hover:bg-[#F5F5F7] dark:text-zinc-400 dark:hover:text-red-400 dark:hover:bg-zinc-800 rounded-lg border border-[#E5E5EA] dark:border-white/10 cursor-pointer"
                     >
-                      {paginatedExplorerItems.every(it => selectedIds.has(it.student.studentNo)) ? "Deselect All" : "Select All"}
+                      {paginatedExplorerItems.every(it => selectedIds.has(it.student.studentNo)) ? "Deselect" : "Select"}
                     </Button>
                   )}
                   <button
@@ -692,9 +693,10 @@ export default function RecordsArchiveTab({
                     <Button
                       type="button"
                       onClick={() => onSwitchView(isOsas ? "organizations" : "upload")}
+                      title={isOsas ? "Go to Student Organizations" : "Go to Upload"}
                       className="mt-4 flex h-10 items-center justify-center rounded-xl btn-brand-red active:scale-95 transition-all dark:shadow-none px-5 text-xs font-semibold cursor-pointer"
                     >
-                      {isOsas ? "Go to Student Organizations" : "Upload"}
+                      {isOsas ? "Register" : "Upload"}
                     </Button>
                   </EmptyContent>
                 </Empty>

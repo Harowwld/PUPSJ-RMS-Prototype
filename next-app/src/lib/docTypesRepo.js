@@ -13,25 +13,45 @@ function normalizeDocTypeKey(nameRaw) {
     .replace(/\s+/g, " ");
 }
 
-export async function listDocTypes({ includeArchived = false, officeId } = {}) {
+export async function listDocTypes({ includeArchived = false, officeId, scope } = {}) {
   const scopedOfficeId = requireOfficeId(officeId);
   const statusFilter = includeArchived ? "" : " AND status = 'Active'";
+  let scopeFilter = "";
+  if (scope === "requestable") {
+    scopeFilter = " AND is_requestable = TRUE";
+  } else if (scope === "compliance") {
+    scopeFilter = " AND is_compliance = TRUE";
+  }
+
   const rows = await dbAll(
     `SELECT name FROM document_types
-     WHERE office_id = ?${statusFilter}
+     WHERE office_id = ?${statusFilter}${scopeFilter}
      ORDER BY lower(name) ASC`,
     [scopedOfficeId]
   );
   return (rows || []).map((r) => String(r?.name || ""));
 }
 
-export async function listAllDocTypes({ includeArchived = false, officeId } = {}) {
+export async function listAllDocTypes({ includeArchived = false, officeId, scope } = {}) {
   const scopedOfficeId = requireOfficeId(officeId);
   const statusFilter = includeArchived ? "" : " AND status = 'Active'";
-  return await dbAll(`SELECT id, office_id, name, name_norm, status, created_at FROM document_types WHERE office_id = ?${statusFilter} ORDER BY lower(name) ASC`, [scopedOfficeId]) || [];
+  let scopeFilter = "";
+  if (scope === "requestable") {
+    scopeFilter = " AND is_requestable = TRUE";
+  } else if (scope === "compliance") {
+    scopeFilter = " AND is_compliance = TRUE";
+  }
+
+  return await dbAll(
+    `SELECT id, office_id, name, name_norm, status, is_requestable, is_compliance, compliance_category, created_at
+     FROM document_types
+     WHERE office_id = ?${statusFilter}${scopeFilter}
+     ORDER BY lower(name) ASC`,
+    [scopedOfficeId]
+  ) || [];
 }
 
-export async function createDocTypeFull(nameRaw, officeId) {
+export async function createDocTypeFull(nameRaw, officeId, { isRequestable = false, isCompliance = false, complianceCategory = "General Requirements" } = {}) {
   const scopedOfficeId = requireOfficeId(officeId);
   const name = String(nameRaw || "").trim();
   if (!name) throw new Error("Missing name");
@@ -43,11 +63,18 @@ export async function createDocTypeFull(nameRaw, officeId) {
   if (existing) throw new Error("Document type already exists");
 
   // 2. Perform insertion
-  const res = await dbRun("INSERT INTO document_types (office_id, name, name_norm, status) VALUES (?, ?, ?, 'Active')", [
-    scopedOfficeId,
-    name,
-    nameNorm,
-  ]);
+  const res = await dbRun(
+    `INSERT INTO document_types (office_id, name, name_norm, status, is_requestable, is_compliance, compliance_category)
+     VALUES (?, ?, ?, 'Active', ?, ?, ?)`,
+    [
+      scopedOfficeId,
+      name,
+      nameNorm,
+      Boolean(isRequestable),
+      Boolean(isCompliance),
+      String(complianceCategory || "General Requirements").trim(),
+    ]
+  );
   
   if (!res || res.lastInsertRowid === null || res.lastInsertRowid === undefined) {
     throw new Error("Failed to insert document type: No ID returned from database");
@@ -57,20 +84,22 @@ export async function createDocTypeFull(nameRaw, officeId) {
   const created = await dbGet("SELECT * FROM document_types WHERE office_id = ? AND id = ?", [scopedOfficeId, res.lastInsertRowid]);
   
   if (!created) {
-    // If retrieval fails but insert succeeded, return a synthetic object so logging doesn't crash
     return {
       id: res.lastInsertRowid,
       office_id: scopedOfficeId,
       name,
       name_norm: nameNorm,
-      status: "Active"
+      status: "Active",
+      is_requestable: Boolean(isRequestable),
+      is_compliance: Boolean(isCompliance),
+      compliance_category: complianceCategory,
     };
   }
   
   return created;
 }
 
-export async function updateDocType(id, nameRaw, status = "Active", officeId) {
+export async function updateDocType(id, nameRaw, status = "Active", officeId, { isRequestable, isCompliance, complianceCategory } = {}) {
   const scopedOfficeId = requireOfficeId(officeId);
   const name = String(nameRaw || "").trim();
   if (!name) throw new Error("Missing name");
@@ -79,13 +108,28 @@ export async function updateDocType(id, nameRaw, status = "Active", officeId) {
   const existing = await dbGet("SELECT id FROM document_types WHERE office_id = ? AND name_norm = ? AND id != ?", [scopedOfficeId, nameNorm, id]);
   if (existing) throw new Error("Document type already exists");
 
-  await dbRun("UPDATE document_types SET name = ?, name_norm = ?, status = ? WHERE office_id = ? AND id = ?", [
-    name,
-    nameNorm,
-    status,
-    scopedOfficeId,
-    id
-  ]);
+  const current = await dbGet("SELECT * FROM document_types WHERE office_id = ? AND id = ?", [scopedOfficeId, id]);
+  if (!current) throw new Error("Document type not found");
+
+  const effectiveIsRequestable = isRequestable !== undefined ? Boolean(isRequestable) : Boolean(current.is_requestable);
+  const effectiveIsCompliance = isCompliance !== undefined ? Boolean(isCompliance) : Boolean(current.is_compliance);
+  const effectiveCategory = complianceCategory !== undefined ? String(complianceCategory).trim() : (current.compliance_category || "General Requirements");
+
+  await dbRun(
+    `UPDATE document_types
+     SET name = ?, name_norm = ?, status = ?, is_requestable = ?, is_compliance = ?, compliance_category = ?
+     WHERE office_id = ? AND id = ?`,
+    [
+      name,
+      nameNorm,
+      status,
+      effectiveIsRequestable,
+      effectiveIsCompliance,
+      effectiveCategory,
+      scopedOfficeId,
+      id
+    ]
+  );
   return await dbGet("SELECT * FROM document_types WHERE office_id = ? AND id = ?", [scopedOfficeId, id]);
 }
 
@@ -107,6 +151,6 @@ export async function deleteDocType(id, officeId) {
   return true;
 }
 
-export async function createDocType(nameRaw, officeId) {
-  return await createDocTypeFull(nameRaw, officeId);
+export async function createDocType(nameRaw, officeId, options) {
+  return await createDocTypeFull(nameRaw, officeId, options);
 }

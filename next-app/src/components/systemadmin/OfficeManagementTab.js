@@ -815,10 +815,10 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                 <Button
                   variant="outline"
                   onClick={() => setSearchQuery("")}
+                  title="Reset Filters"
                   className="mt-6 flex h-10 items-center justify-center gap-2 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                 >
-                  <HugeIcon className="ph-bold ph-arrow-counter-clockwise text-[14px] shrink-0" />
-                  <span>Clear Filters</span>
+                  Reset
                 </Button>
               ) : statusFilter === "Active" ? (
                 <Button
@@ -1525,9 +1525,10 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                             <button
                               type="button"
                               onClick={() => setForm(prev => ({ ...prev, selectedModules: availableModules.map(m => m.id) }))}
+                              title="Select All"
                               className="text-[10px] font-bold text-pup-maroon hover:underline dark:text-red-400 cursor-pointer"
                             >
-                              Select All
+                              Select
                             </button>
                             <span>·</span>
                             <button
@@ -1609,10 +1610,10 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                       variant="outline"
                       type="button"
                       onClick={() => setConfirmMatrixLeaveOpen(true)}
-                      className="h-8 px-3.5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-2xs cursor-pointer active:scale-95 transition-all flex items-center gap-1.5 shrink-0 self-start sm:self-auto"
+                      title="Open Module Matrix"
+                      className="h-8 px-3.5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-2xs cursor-pointer active:scale-95 transition-all flex items-center justify-center shrink-0 self-start sm:self-auto"
                     >
-                      <span>Open Matrix</span>
-                      <HugeIcon  className="ph-bold ph-arrow-square-out text-xs text-gray-400 dark:text-zinc-400"></HugeIcon>
+                      Open
                     </Button>
                   </div>
                 )}

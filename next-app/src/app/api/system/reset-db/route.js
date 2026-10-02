@@ -127,19 +127,29 @@ async function handleResetDb(req) {
         [name, code]
       );
     }
-    for (const name of [
-      "Transcript of Records",
-      "Diploma",
-      "Certificate of Good Moral",
-      "Form 137",
-      "Certificate of Enrollment",
-      "Birth Certificate",
-    ]) {
+    const registrarDocTypes = [
+      { name: "Birth Certificate", isCompliance: true, isRequestable: false, category: "Admission & Identity" },
+      { name: "Form 137", isCompliance: true, isRequestable: false, category: "Academic Records" },
+      { name: "Grade 12 Report Card", isCompliance: true, isRequestable: false, category: "Academic Records" },
+      { name: "Health Information Sheet", isCompliance: true, isRequestable: false, category: "Certificates & Clearances" },
+      { name: "Certificate of Good Moral", isCompliance: false, isRequestable: true, category: "Certificates & Clearances" },
+      { name: "Copy of Grades", isCompliance: false, isRequestable: true, category: "Academic Records" },
+      { name: "Certificate of Registration", isCompliance: false, isRequestable: true, category: "Certificates & Clearances" },
+      { name: "Certificate of Enrollment", isCompliance: false, isRequestable: true, category: "Certificates & Clearances" },
+      { name: "Transcript of Records", isCompliance: false, isRequestable: true, category: "Graduation & Exit Records" },
+      { name: "Diploma", isCompliance: false, isRequestable: true, category: "Graduation & Exit Records" },
+    ];
+    for (const dt of registrarDocTypes) {
       await query(
-        `INSERT INTO document_types (office_id, name, name_norm, status)
-         VALUES ('registrar', $1, $2, 'Active')
-         ON CONFLICT (office_id, name_norm) DO UPDATE SET name=EXCLUDED.name, status='Active'`,
-        [name, name.toLowerCase()]
+        `INSERT INTO document_types (office_id, name, name_norm, status, is_compliance, is_requestable, compliance_category)
+         VALUES ('registrar', $1, $2, 'Active', $3, $4, $5)
+         ON CONFLICT (office_id, name_norm) DO UPDATE SET
+           name = EXCLUDED.name,
+           status = 'Active',
+           is_compliance = EXCLUDED.is_compliance,
+           is_requestable = EXCLUDED.is_requestable,
+           compliance_category = EXCLUDED.compliance_category`,
+        [dt.name, dt.name.toLowerCase(), dt.isCompliance, dt.isRequestable, dt.category]
       );
     }
 
@@ -152,21 +162,27 @@ async function handleResetDb(req) {
       );
     }
     await query(`DELETE FROM sections WHERE office_id = 'osas'`);
-    for (const name of [
-      "Event Proposal",
-      "Constitution & By-Laws (CBL)",
-      "Activity Request",
-      "Financial Liquidation Report",
-      "Student Disciplinary Clearance",
-      "Organization Registration Certificate",
-      "Good Moral Certificate",
-      "Clearance Form",
-    ]) {
+    const osasDocTypes = [
+      { name: "Event Proposal", isCompliance: true, isRequestable: false, category: "Student Governance & Activities" },
+      { name: "Constitution & By-Laws (CBL)", isCompliance: true, isRequestable: false, category: "Student Governance & Activities" },
+      { name: "Activity Request", isCompliance: true, isRequestable: false, category: "Student Governance & Activities" },
+      { name: "Financial Liquidation Report", isCompliance: true, isRequestable: false, category: "Student Governance & Activities" },
+      { name: "Student Disciplinary Clearance", isCompliance: false, isRequestable: true, category: "Certificates & Clearances" },
+      { name: "Organization Registration Certificate", isCompliance: false, isRequestable: true, category: "Certificates & Clearances" },
+      { name: "Good Moral Certificate", isCompliance: false, isRequestable: true, category: "Certificates & Clearances" },
+      { name: "Clearance Form", isCompliance: true, isRequestable: true, category: "Certificates & Clearances" },
+    ];
+    for (const dt of osasDocTypes) {
       await query(
-        `INSERT INTO document_types (office_id, name, name_norm, status)
-         VALUES ('osas', $1, $2, 'Active')
-         ON CONFLICT (office_id, name_norm) DO UPDATE SET name=EXCLUDED.name, status='Active'`,
-        [name, name.toLowerCase()]
+        `INSERT INTO document_types (office_id, name, name_norm, status, is_compliance, is_requestable, compliance_category)
+         VALUES ('osas', $1, $2, 'Active', $3, $4, $5)
+         ON CONFLICT (office_id, name_norm) DO UPDATE SET
+           name = EXCLUDED.name,
+           status = 'Active',
+           is_compliance = EXCLUDED.is_compliance,
+           is_requestable = EXCLUDED.is_requestable,
+           compliance_category = EXCLUDED.compliance_category`,
+        [dt.name, dt.name.toLowerCase(), dt.isCompliance, dt.isRequestable, dt.category]
       );
     }
 

@@ -253,11 +253,20 @@ export async function POST(req) {
   }
 
   const validType = await queryOne(
-    "SELECT id FROM document_types WHERE office_id = 'registrar' AND name = $1 AND status = 'Active'",
+    "SELECT id, name, is_requestable FROM document_types WHERE office_id = 'registrar' AND name = $1 AND status = 'Active'",
     [docType]
   );
   if (!validType) {
     return NextResponse.json({ ok: false, error: "Invalid document type." }, { status: 400 });
+  }
+  if (!validType.is_requestable) {
+    return NextResponse.json(
+      {
+        ok: false,
+        error: `'${validType.name}' is an inward compliance requirement (not an issuable credential) and cannot be requested online. Please submit it through the Compliance Checklist or visit the Registrar counter (Room 102).`,
+      },
+      { status: 400 }
+    );
   }
 
   const accFirst = acc?.first_name ? decryptPII(acc.first_name) : "";

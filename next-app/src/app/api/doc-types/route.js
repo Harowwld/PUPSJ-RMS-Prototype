@@ -45,12 +45,15 @@ export async function GET(req) {
       return createAuthErrorResponse("Admin access required", 403);
     }
 
+    const rawScope = String(searchParams.get("scope") || "").toLowerCase().trim();
+    const scope = (rawScope === "requestable" || rawScope === "compliance") ? rawScope : undefined;
+
     if (searchParams.get("admin") === "true") {
-      const rows = await listAllDocTypes({ includeArchived, officeId });
+      const rows = await listAllDocTypes({ includeArchived, officeId, scope });
       return NextResponse.json({ ok: true, data: rows || [] });
     }
 
-    const rows = await listDocTypes({ includeArchived, officeId });
+    const rows = await listDocTypes({ includeArchived, officeId, scope });
     return NextResponse.json({ ok: true, data: rows || [] });
   } catch (err) {
     console.error("GET /api/doc-types error:", err);
@@ -82,9 +85,13 @@ export async function POST(req) {
     );
   }
 
+  const isRequestable = body.isRequestable !== undefined ? Boolean(body.isRequestable) : (body.is_requestable !== undefined ? Boolean(body.is_requestable) : false);
+  const isCompliance = body.isCompliance !== undefined ? Boolean(body.isCompliance) : (body.is_compliance !== undefined ? Boolean(body.is_compliance) : false);
+  const complianceCategory = String(body.complianceCategory || body.compliance_category || "General Requirements").trim();
+
   try {
     // Attempt creation with high reliability
-    const created = await createDocType(name, officeId);
+    const created = await createDocType(name, officeId, { isRequestable, isCompliance, complianceCategory });
     
     // Defensive check before logging
     const safeId = created && typeof created === 'object' ? created.id : null;
@@ -126,7 +133,11 @@ export async function PUT(req) {
 
     if (!name) throw new Error("Document name is required");
 
-    const updated = await updateDocType(id, name, "Active", officeId);
+    const isRequestable = body.isRequestable !== undefined ? Boolean(body.isRequestable) : (body.is_requestable !== undefined ? Boolean(body.is_requestable) : undefined);
+    const isCompliance = body.isCompliance !== undefined ? Boolean(body.isCompliance) : (body.is_compliance !== undefined ? Boolean(body.is_compliance) : undefined);
+    const complianceCategory = body.complianceCategory !== undefined ? String(body.complianceCategory).trim() : (body.compliance_category !== undefined ? String(body.compliance_category).trim() : undefined);
+
+    const updated = await updateDocType(id, name, "Active", officeId, { isRequestable, isCompliance, complianceCategory });
     await writeAuditLog(req, `Update Document Type`, {
         details: `updated configuration for document type identifier '${updated?.name || name}'`,
         entity_type: "DocumentType",

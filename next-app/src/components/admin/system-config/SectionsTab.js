@@ -227,11 +227,12 @@ export default function SectionsTab({
 
 
   const handleExportSections = handleExportProp || (() => {
+    const q = (cell) => `"${String(cell ?? "").replace(/"/g, '""')}"`
     const csvContent = [
       ["Course", "Block Name", "Status"],
-      ...sections.map((s) => [s.course_code, s.name, s.status]),
+      ...sections.map((s) => [s.course_code || "", s.name || "", s.status || "Active"]),
     ]
-      .map((e) => e.join(","))
+      .map((row) => row.map(q).join(","))
       .join("\n")
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
     const link = document.createElement("a")
@@ -756,10 +757,10 @@ export default function SectionsTab({
                                       setLocalSearch("")
                                       setSelectedCourseFilter("")
                                     }}
+                                    title="Reset Filters"
                                     className="mt-6 flex h-10 items-center justify-center gap-2 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                                   >
-                                    <HugeIcon className="ph-bold ph-arrow-counter-clockwise text-[14px] shrink-0" />
-                                    <span>Clear Filters</span>
+                                    Reset
                                   </Button>
                                 ) : !showArchived && (
                                   <Button

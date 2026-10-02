@@ -3,6 +3,7 @@
 import HugeIcon from "@/components/shared/HugeIcon";
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Skeleton } from "@/components/ui/skeleton"
 import {
   Popover,
   PopoverContent,
@@ -93,31 +94,43 @@ export default function BackupFilters({
 
   return (
     <div className="border-t border-gray-100 dark:border-white/10 p-5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-gray-50/40 dark:bg-zinc-900/30 flex-wrap">
-      {/* Search Bar: Placed on the left */}
+      {/* Search Bar: Placed on the left with standard count number */}
       <div className="relative flex-1 sm:w-64 min-w-[200px] max-w-sm group">
-        <HugeIcon  className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-xs pointer-events-none" />
+        <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+          <HugeIcon className="ph-bold ph-magnifying-glass text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm" />
+        </div>
         <Input
           type="text"
           placeholder="Search archive filename..."
-          className="pl-8 pr-7 h-9 text-xs w-full bg-white dark:bg-zinc-800 border border-gray-200 dark:border-white/10 rounded-xl placeholder:text-gray-400 dark:placeholder:text-zinc-500 text-gray-900 dark:text-zinc-100 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
+          className="h-9 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 pl-8 pr-16 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
           value={localSearch}
           onChange={handleSearchChange}
           disabled={isLoading}
         />
-        {localSearch && (
-          <button
-            type="button"
-            onClick={() => {
-              setLocalSearch("")
-              setBackupSearch("")
-              setPage?.(1)
-            }}
-            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
-            aria-label="Clear search"
-          >
-            ×
-          </button>
-        )}
+        <div className="absolute inset-y-0 right-3 flex items-center gap-1.5">
+          {localSearch && (
+            <button
+              type="button"
+              onClick={() => {
+                setLocalSearch("")
+                setBackupSearch("")
+                setPage?.(1)
+              }}
+              className="text-gray-400 hover:text-gray-600 dark:hover:text-zinc-300 cursor-pointer p-0.5 transition-colors border-0 bg-transparent flex items-center justify-center"
+              title="Clear search"
+              aria-label="Clear search"
+            >
+              <HugeIcon className="ph-bold ph-x-circle text-[13px]" />
+            </button>
+          )}
+          {isLoading ? (
+            <Skeleton className="h-3.5 w-6 rounded dark:bg-muted" />
+          ) : (
+            <span className="text-[11px] text-gray-400 dark:text-zinc-500 font-mono pointer-events-none">
+              {(backupTotal || 0).toLocaleString()}
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Filter controls: Shortcuts and Date Pickers on the right */}

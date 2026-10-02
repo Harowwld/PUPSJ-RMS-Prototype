@@ -79,7 +79,7 @@ export async function getDigitizationComplianceSummary({
   // migrated schema and the legacy docTypesRepo still targets SQLite.
   const typeRows = await query(
     `SELECT name FROM document_types
-      WHERE status = 'Active'${normalizedOfficeId ? " AND office_id = $1" : ""}
+      WHERE status = 'Active' AND is_compliance = TRUE${normalizedOfficeId ? " AND office_id = $1" : ""}
       ORDER BY LOWER(name) ASC`,
     normalizedOfficeId ? [normalizedOfficeId] : [],
   );

@@ -740,10 +740,10 @@ export default function LandingWorkflowCmsView({ showToast }) {
                 <button
                   type="button"
                   onClick={addNewStep}
+                  title={`Add Another Workflow Step (${currentSteps.length}/${MAX_STEPS})`}
                   className="w-full py-4 rounded-xl border-2 border-dashed border-gray-200 dark:border-white/10 hover:border-pup-maroon/40 hover:bg-pup-maroon/5 dark:hover:bg-red-500/5 transition-all flex items-center justify-center gap-2 text-xs font-semibold text-gray-600 hover:text-pup-maroon dark:text-zinc-400 dark:hover:text-red-400 cursor-pointer select-none"
                 >
-                  <HugeIcon  className="ph-bold ph-plus text-sm" />
-                  <span>Add Another Workflow Step ({currentSteps.length}/{MAX_STEPS})</span>
+                  Add
                 </button>
               ) : (
                 <div className="w-full py-3.5 px-4 rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/70 dark:bg-zinc-900/30 text-center text-xs text-gray-500 dark:text-zinc-400 flex items-center justify-center gap-2">
@@ -947,10 +947,10 @@ function StepTagInput({ onAddTag }) {
           setIsOpen(true)
           setTimeout(() => inputRef.current?.focus(), 50)
         }}
-        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium text-gray-500 hover:text-pup-maroon dark:hover:text-red-400 border border-dashed border-gray-300 dark:border-white/20 hover:border-pup-maroon cursor-pointer transition-colors"
+        title="Add Tag"
+        className="inline-flex items-center justify-center px-3 py-1 rounded-full text-[11px] font-medium text-gray-500 hover:text-pup-maroon dark:hover:text-red-400 border border-dashed border-gray-300 dark:border-white/20 hover:border-pup-maroon cursor-pointer transition-colors"
       >
-        <HugeIcon  className="ph-bold ph-plus text-[10px]" />
-        <span>Add Tag</span>
+        Add
       </button>
     )
   }

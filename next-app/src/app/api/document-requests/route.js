@@ -95,6 +95,26 @@ export async function POST(req) {
     );
   }
 
+  const typeRecord = await dbGet(
+    "SELECT id, name, is_requestable FROM document_types WHERE office_id = ? AND lower(name) = lower(?) AND status = 'Active'",
+    [officeId, docType]
+  );
+  if (!typeRecord) {
+    return NextResponse.json(
+      { ok: false, error: "The selected document type is not active in this office." },
+      { status: 400 }
+    );
+  }
+  if (!typeRecord.is_requestable) {
+    return NextResponse.json(
+      {
+        ok: false,
+        error: `'${typeRecord.name}' is designated as an inward compliance document and cannot be issued through document requests.`,
+      },
+      { status: 400 }
+    );
+  }
+
   if (clientType === "Student" && !studentNo) {
     return NextResponse.json(
       { ok: false, error: "Student number is required for enrolled student requests" },

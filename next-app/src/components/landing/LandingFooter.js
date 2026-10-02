@@ -185,8 +185,8 @@ export default function LandingFooter() {
             {/* Sub-footer Links */}
             <div className="bg-zinc-900/40 backdrop-blur-sm border border-white/5 rounded-[1.5rem] px-8 sm:px-10 py-5 flex flex-wrap items-center justify-between gap-4 shadow-xl">
               <span className="text-[11px] font-mono text-zinc-500">{footerData.copyrightText}</span>
-              <button onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} className="text-[11px] font-mono font-medium text-zinc-400 hover:text-white flex items-center gap-1 transition-colors group">
-                Back to Top
+              <button onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} title="Scroll to Top" className="text-[11px] font-mono font-medium text-zinc-400 hover:text-white flex items-center gap-1 transition-colors group">
+                Top
                 <HugeIcon className="ph-bold ph-arrow-up text-[10px] group-hover:-translate-y-0.5 transition-transform" />
               </button>
             </div>

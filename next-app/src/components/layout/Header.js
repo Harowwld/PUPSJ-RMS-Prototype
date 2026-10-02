@@ -350,7 +350,7 @@ export default function Header({ authUser, onLogout, children }) {
               view: "branding",
               icon: "ph-bold ph-certificate",
               breadcrumb: "Public Portal & Identity • View",
-              keywords: "institutional identity branding logo seal university school name color pdf header letterhead institution identity accent white label report style",
+              keywords: "institutional identity branding logo seal university school credentials jurisdiction prefix name color pdf header letterhead institution identity accent white label report style",
             },
             {
               label: "Landing Page CMS",

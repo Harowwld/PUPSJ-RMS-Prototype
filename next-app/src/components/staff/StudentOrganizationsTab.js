@@ -272,6 +272,13 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
   const [uploadingCbl, setUploadingCbl] = useState(false);
   const [previewPdf, setPreviewPdf] = useState(null);
 
+  // CBL Review State
+  const [cblReviewModalOpen, setCblReviewModalOpen] = useState(false);
+  const [cblReviewVersion, setCblReviewVersion] = useState(null);
+  const [cblReviewAction, setCblReviewAction] = useState("Approved");
+  const [cblReviewNote, setCblReviewNote] = useState("");
+  const [cblReviewSubmitting, setCblReviewSubmitting] = useState(false);
+
   // Fetch Organizations
   const fetchOrganizations = useCallback(
     async (showFeedback = false) => {
@@ -614,6 +621,58 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
     });
   };
 
+  const openCblReviewDialog = (ver, action) => {
+    setCblReviewVersion(ver);
+    setCblReviewAction(action);
+    setCblReviewNote("");
+    setCblReviewModalOpen(true);
+  };
+
+  const handleReviewCblSubmit = async (e) => {
+    if (e) e.preventDefault();
+    if (!cblReviewVersion || !selectedOrgForOfficers) return;
+
+    if ((cblReviewAction === "Needs Revision" || cblReviewAction === "Declined") && cblReviewNote.trim().length < 5) {
+      toast.error("Please provide at least 5 characters explaining what needs revision or the reason for declining.");
+      return;
+    }
+
+    setCblReviewSubmitting(true);
+    try {
+      const res = await fetch(`/api/osas/organizations/${selectedOrgForOfficers.id}/bylaws`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          versionId: cblReviewVersion.id,
+          status: cblReviewAction,
+          reviewNote: cblReviewNote.trim(),
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.ok) {
+        throw new Error(json.error || "Failed to update review status.");
+      }
+
+      toast.success(
+        cblReviewAction === "Approved"
+          ? "Constitution & By-Laws Approved & Ratified"
+          : cblReviewAction === "Needs Revision"
+          ? "Revision requested from student officers"
+          : "CBL submission declined"
+      );
+
+      setCblReviewModalOpen(false);
+      setCblReviewVersion(null);
+      setCblReviewNote("");
+      await loadBylawsHistory(selectedOrgForOfficers.id);
+      await fetchOrganizations(true);
+    } catch (err) {
+      toast.error(err.message || "Failed to submit review.");
+    } finally {
+      setCblReviewSubmitting(false);
+    }
+  };
+
   // Counts for filters
   const counts = useMemo(() => {
     const c = {
@@ -854,9 +913,10 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                 <Button
                   type="button"
                   onClick={openCreateModal}
+                  title="Register Organization"
                   className="flex h-10 px-5 text-xs font-semibold rounded-xl! btn-brand-red text-white! active:scale-95 disabled:opacity-50 transition-all cursor-pointer shadow-xs"
                 >
-                  Register Organization
+                  Register
                 </Button>
               </div>
             }
@@ -1400,10 +1460,11 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                     <Button
                       type="button"
                       onClick={openCreateModal}
+                      title="Register Organization"
                       className="mt-5 h-10 px-5 text-xs font-semibold rounded-xl! btn-brand-red text-white! active:scale-95 transition-all cursor-pointer shadow-xs"
                       style={{ color: "#ffffff" }}
                     >
-                      Register Organization
+                      Register
                     </Button>
                   </EmptyHeader>
                 </Empty>
@@ -1496,7 +1557,17 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
 
                           {/* Constitution & By-Laws */}
                           <td className="py-4 px-4 whitespace-nowrap">
-                            {hasCbl ? (
+                            {Number(org.pending_cbl_count) > 0 ? (
+                              <button
+                                type="button"
+                                onClick={() => openManageOrgSheet(org, "cbl")}
+                                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-amber-50 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300 border border-amber-200/80 dark:border-amber-800/40 hover:bg-amber-100 transition-colors cursor-pointer"
+                                title="Click to review pending CBL submission"
+                              >
+                                <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                                <span>{org.pending_cbl_count} Pending Review</span>
+                              </button>
+                            ) : hasCbl ? (
                               <div className="flex items-center gap-2">
                                 <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-red-50 text-red-700 dark:bg-red-950/30 dark:text-red-400 border border-red-100 dark:border-red-900/30">
                                   <HugeIcon className="ph-bold ph-file-pdf text-xs" />
@@ -1752,13 +1823,31 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                                   Constitution & By-Laws
                                 </span>
                                 <span className="text-[10px] text-gray-400 dark:text-zinc-500 block truncate">
-                                  {hasCbl ? "Official Archival Copy" : "Pending PDF Archival"}
+                                  {Number(org.pending_cbl_count) > 0 ? (
+                                    <span className="text-amber-600 dark:text-amber-400 font-semibold inline-flex items-center gap-1">
+                                      <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                                      {org.pending_cbl_count} Pending Review
+                                    </span>
+                                  ) : hasCbl ? (
+                                    "Official Archival Copy"
+                                  ) : (
+                                    "Pending PDF Archival"
+                                  )}
                                 </span>
                               </div>
                             </div>
 
                             <div className="flex items-center gap-1 shrink-0">
-                              {hasCbl ? (
+                              {Number(org.pending_cbl_count) > 0 ? (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => openManageOrgSheet(org, "cbl")}
+                                  className="h-7 px-2.5 text-[11px] font-semibold rounded-lg bg-amber-50 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300 border border-amber-200/80 dark:border-amber-800/40 hover:bg-amber-100 transition-all cursor-pointer active:scale-95"
+                                >
+                                  Review
+                                </Button>
+                              ) : hasCbl ? (
                                 <>
                                   <button
                                     type="button"
@@ -1787,9 +1876,10 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                                     setCblUploadOrg(org);
                                     setCblFile(null);
                                   }}
+                                  title="Upload Constitution & By-Laws"
                                   className="h-6 px-2 text-[10px] font-semibold rounded-lg border-gray-200 dark:border-white/10 cursor-pointer"
                                 >
-                                  Upload CBL
+                                  Upload
                                 </Button>
                               )}
                             </div>
@@ -1800,9 +1890,10 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                         <div className="pt-3 border-t border-gray-100 dark:border-white/10">
                           <Button
                             onClick={() => openManageOrgSheet(org, "info")}
+                            title="Manage Organization"
                             className="w-full h-9 px-4 text-xs font-semibold rounded-xl! btn-brand-red text-white! shadow-xs cursor-pointer active:scale-95 transition-all"
                           >
-                            Manage Organization
+                            Manage
                           </Button>
                         </div>
                       </div>
@@ -2311,7 +2402,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                             <div>
                               <div className="flex items-center gap-2 flex-wrap">
                                 <span className="px-2 py-0.5 text-xs font-bold rounded-lg bg-red-50 text-pup-maroon dark:bg-red-950/40 dark:text-red-400 border border-red-100 dark:border-red-900/30">
-                                  v{ver.version_number}
+                                  {ver.version_tag || (ver.version_number ? `v${ver.version_number}` : "CBL")}
                                 </span>
                                 <span
                                   className={cn(
@@ -2339,7 +2430,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                               onClick={() =>
                                 setPreviewPdf({
                                   url: ver.file_url || `/api/osas/organizations/${selectedOrgForOfficers?.id}/bylaws?file=1`,
-                                  title: `${selectedOrgForOfficers?.name} — CBL v${ver.version_number || "1.0"}`,
+                                  title: `${selectedOrgForOfficers?.name} — ${ver.version_tag || `CBL v${ver.version_number || "1.0"}`}`,
                                   filename: ver.original_filename || "Constitution-and-By-Laws.pdf",
                                 })
                               }
@@ -2366,8 +2457,55 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                           </div>
 
                           {ver.review_notes && (
-                            <div className="text-[11px] bg-gray-50 dark:bg-zinc-800/50 p-2.5 rounded-xl border border-gray-100 dark:border-white/5 text-gray-600 dark:text-zinc-300">
-                              <strong className="text-gray-800 dark:text-zinc-200 font-semibold">OSAS Review Note:</strong> {ver.review_notes}
+                            <div className={cn(
+                              "text-[11px] p-2.5 rounded-xl border",
+                              ver.status === "Needs Revision"
+                                ? "bg-amber-50/70 dark:bg-amber-950/30 border-amber-200/60 dark:border-amber-900/30 text-amber-900 dark:text-amber-200"
+                                : ver.status === "Declined"
+                                ? "bg-rose-50/70 dark:bg-rose-950/30 border-rose-200/60 dark:border-rose-900/30 text-rose-900 dark:text-rose-200"
+                                : "bg-gray-50 dark:bg-zinc-800/50 border-gray-100 dark:border-white/5 text-gray-600 dark:text-zinc-300"
+                            )}>
+                              <strong className="font-semibold">
+                                {ver.status === "Needs Revision"
+                                  ? "Revision Instructions:"
+                                  : ver.status === "Declined"
+                                  ? "Decline Reason:"
+                                  : "OSAS Review Note:"}
+                              </strong>{" "}
+                              {ver.review_notes}
+                            </div>
+                          )}
+
+                          {ver.status === "Pending" && (
+                            <div className="pt-2 border-t border-gray-100 dark:border-white/5 flex items-center justify-end gap-2 flex-wrap">
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="outline"
+                                onClick={() => openCblReviewDialog(ver, "Declined")}
+                                className="h-8 px-3 text-xs font-semibold rounded-lg text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/30 border border-rose-200 dark:border-rose-900/30 cursor-pointer active:scale-95 transition-all"
+                              >
+                                Decline
+                              </Button>
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="outline"
+                                onClick={() => openCblReviewDialog(ver, "Needs Revision")}
+                                title="Request Revision"
+                                className="h-8 px-3 text-xs font-semibold rounded-lg text-amber-700 hover:text-amber-800 hover:bg-amber-50 dark:hover:bg-amber-950/30 border border-amber-200 dark:border-amber-900/30 cursor-pointer active:scale-95 transition-all"
+                              >
+                                Revise
+                              </Button>
+                              <Button
+                                type="button"
+                                size="sm"
+                                onClick={() => openCblReviewDialog(ver, "Approved")}
+                                title="Approve & Ratify Charter"
+                                className="h-8 px-3.5 text-xs font-semibold rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs cursor-pointer active:scale-95 transition-all"
+                              >
+                                Approve
+                              </Button>
                             </div>
                           )}
                         </div>
@@ -2540,14 +2678,15 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                 <Button
                   type="submit"
                   disabled={savingOrg}
+                  title={editingOrg ? "Update Organization" : "Register Organization"}
                   className="h-10 px-5 text-xs font-semibold rounded-xl! btn-brand-red text-white! active:scale-95 transition-all cursor-pointer shadow-xs disabled:opacity-50"
                   style={{ color: "#ffffff" }}
                 >
                   {savingOrg
                     ? "Saving..."
                     : editingOrg
-                    ? "Update Organization"
-                    : "Register Organization"}
+                    ? "Update"
+                    : "Register"}
                 </Button>
               </div>
             </form>
@@ -2601,10 +2740,99 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                 <Button
                   type="submit"
                   disabled={uploadingCbl || !cblFile}
+                  title="Archive Constitution & By-Laws"
                   className="h-10 px-5 text-xs font-semibold rounded-xl! btn-brand-red text-white! active:scale-95 transition-all cursor-pointer shadow-xs disabled:opacity-50"
                   style={{ color: "#ffffff" }}
                 >
-                  {uploadingCbl ? "Uploading..." : "Archive CBL"}
+                  {uploadingCbl ? "Uploading..." : "Upload"}
+                </Button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
+
+        {/* CBL Review Dialog */}
+        <Dialog open={cblReviewModalOpen} onOpenChange={setCblReviewModalOpen}>
+          <DialogContent className="sm:max-w-md w-full rounded-2xl bg-white border border-gray-200 dark:bg-zinc-900 dark:border-white/10 p-0 shadow-2xl overflow-hidden flex flex-col gap-0">
+            <DialogHeader className="p-6 pb-4 bg-white dark:bg-card border-b border-gray-100 dark:border-white/10 text-left">
+              <DialogTitle className="text-base font-bold text-gray-900 dark:text-zinc-50">
+                {cblReviewAction === "Approved"
+                  ? "Approve Constitution & By-Laws"
+                  : cblReviewAction === "Needs Revision"
+                  ? "Request Revision on CBL"
+                  : "Decline CBL Submission"}
+              </DialogTitle>
+              <DialogDescription className="text-xs text-gray-500 dark:text-zinc-400 mt-1">
+                {cblReviewAction === "Approved"
+                  ? `Ratify ${cblReviewVersion?.version_tag || "this CBL submission"} as the active Constitution & By-Laws for ${selectedOrgForOfficers?.name}. Older versions will be marked as Superseded.`
+                  : cblReviewAction === "Needs Revision"
+                  ? "Specify the changes, missing articles, or adjustments required before this charter can be ratified."
+                  : "State the reason for declining this Constitution & By-Laws submission."}
+              </DialogDescription>
+            </DialogHeader>
+
+            <form onSubmit={handleReviewCblSubmit} className="p-6 space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-gray-700 dark:text-zinc-200">
+                  {cblReviewAction === "Approved" ? "Approval Remarks / Notes (Optional)" : "Review Feedback & Instructions"}
+                  {cblReviewAction !== "Approved" && <span className="text-red-500"> *</span>}
+                </label>
+                <textarea
+                  rows={4}
+                  required={cblReviewAction !== "Approved"}
+                  placeholder={
+                    cblReviewAction === "Approved"
+                      ? "Optional remarks for organizational record..."
+                      : "Provide detailed instructions for the student officers (minimum 5 characters)..."
+                  }
+                  value={cblReviewNote}
+                  onChange={(e) => setCblReviewNote(e.target.value)}
+                  className="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 p-3 text-xs text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon"
+                />
+              </div>
+
+              <div className="pt-2 flex items-center justify-end gap-3 border-t border-gray-100 dark:border-white/5">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setCblReviewModalOpen(false)}
+                  className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 shadow-xs cursor-pointer active:scale-95 transition-all"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={cblReviewSubmitting}
+                  title={
+                    cblReviewAction === "Approved"
+                      ? "Confirm & Ratify Charter"
+                      : cblReviewAction === "Needs Revision"
+                      ? "Send Revision Request"
+                      : "Confirm Decline"
+                  }
+                  className={cn(
+                    "h-10 px-5 text-xs font-semibold rounded-xl text-white shadow-xs cursor-pointer active:scale-95 transition-all inline-flex items-center gap-2",
+                    cblReviewAction === "Approved"
+                      ? "bg-emerald-600 hover:bg-emerald-700"
+                      : cblReviewAction === "Needs Revision"
+                      ? "bg-amber-600 hover:bg-amber-700"
+                      : "bg-rose-600 hover:bg-rose-700"
+                  )}
+                >
+                  {cblReviewSubmitting ? (
+                    <>
+                      <HugeIcon className="ph ph-spinner animate-spin text-sm" />
+                      <span>Saving...</span>
+                    </>
+                  ) : (
+                    <span>
+                      {cblReviewAction === "Approved"
+                        ? "Approve"
+                        : cblReviewAction === "Needs Revision"
+                        ? "Revise"
+                        : "Decline"}
+                    </span>
+                  )}
                 </Button>
               </div>
             </form>

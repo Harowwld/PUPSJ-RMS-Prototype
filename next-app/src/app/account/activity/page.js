@@ -925,9 +925,10 @@ function LogTable({
                               setLogEndDate("");
                               setLogPage(1);
                             }}
+                            title="Reset Filters"
                             className="mt-6 h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                           >
-                            Clear Filters
+                            Reset
                           </Button>
                         )}
                       </EmptyHeader>
@@ -1189,20 +1190,20 @@ export default function AccountActivityPage() {
       const allLogs = await fetchAllForExport();
       const headers = ["Date & Time", "Severity", "Actor", "Role", "Action", "Details", "IP Address", "User Agent", "Entity Type", "Entity ID"];
       const exportRows = allLogs.map((log) => [
-        formatPHDateTime(log.created_at),
-        log.severity || "INFO",
-        log.actor,
-        log.role,
-        log.action,
-        log.details || "No known description",
-        log.ip || "—",
-        log.user_agent || "—",
-        log.entity_type || "—",
-        log.entity_id || "—",
+        log?.created_at ? formatPHDateTime(log.created_at) : "—",
+        log?.severity || "INFO",
+        log?.actor || "System",
+        log?.role || "—",
+        log?.action || "—",
+        log?.details || "No known description",
+        log?.ip || "—",
+        log?.user_agent || "—",
+        log?.entity_type || "—",
+        log?.entity_id || "—",
       ]);
       const csvContent = [
         headers.join(","),
-        ...exportRows.map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(",")),
+        ...exportRows.map((row) => row.map((cell) => `"${String(cell ?? "").replace(/"/g, '""')}"`).join(",")),
       ].join("\n");
       const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
       const fileName = generateExportFilename("MY-ACTIVITY", "DATA", "csv");
@@ -1267,19 +1268,58 @@ export default function AccountActivityPage() {
 
   if (loadingUser) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-background">
-        <div className="h-16 bg-white border-b border-gray-200 dark:bg-card dark:border-white/10" />
-        <main className="w-full max-w-[1600px] 2xl:max-w-[1760px] mx-auto py-6 px-4 sm:px-8 space-y-8">
-          <div className="flex flex-col gap-2">
-            <Skeleton className="w-64 h-8 dark:bg-muted" />
-            <Skeleton className="w-96 h-4 dark:bg-muted" />
+      <div className="h-screen overflow-hidden flex flex-col bg-gray-50 dark:bg-background font-jakarta">
+        <Header authUser={authUser} onLogout={handleLogout} />
+        <main className="flex-1 min-h-0 overflow-y-auto w-full">
+          <div className="w-full max-w-[1600px] 2xl:max-w-[1760px] mx-auto py-6 px-4 sm:px-8">
+            <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none min-h-[600px] isolate">
+              {/* Header Skeleton */}
+              <div className="p-6 flex items-center justify-between border-b border-gray-100 dark:border-white/10">
+                <div className="space-y-1.5">
+                  <Skeleton className="h-5 w-44 rounded dark:bg-muted" />
+                  <Skeleton className="h-3.5 w-72 rounded dark:bg-muted" />
+                </div>
+                <div className="flex items-center gap-2">
+                  <Skeleton className="h-10 w-10 rounded-xl dark:bg-muted" />
+                  <Skeleton className="h-10 w-24 rounded-xl dark:bg-muted" />
+                  <Skeleton className="h-10 w-24 rounded-xl dark:bg-muted" />
+                  <Skeleton className="h-10 w-36 rounded-xl dark:bg-muted" />
+                </div>
+              </div>
+
+              {/* KPI Stat Cards Skeleton */}
+              <div className="px-6 py-6 pb-2">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {[1, 2, 3].map((i) => (
+                    <Skeleton key={i} className="h-28 rounded-2xl dark:bg-muted" />
+                  ))}
+                </div>
+              </div>
+
+              {/* Filter Toolbar Skeleton */}
+              <div className="p-4 px-6 border-t border-gray-100 dark:border-white/10 bg-gray-50/40 dark:bg-white/[0.02] flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Skeleton className="h-9 w-64 rounded-xl dark:bg-muted" />
+                  <Skeleton className="h-9 w-32 rounded-xl dark:bg-muted" />
+                </div>
+                <Skeleton className="h-9 w-20 rounded-xl dark:bg-muted" />
+              </div>
+
+              {/* Table Rows Skeleton */}
+              <div className="flex-1 p-6 space-y-4">
+                {[1, 2, 3, 4, 5, 6].map((i) => (
+                  <div key={i} className="h-12 border-b border-gray-100 dark:border-white/5 flex items-center justify-between last:border-b-0">
+                    <div className="flex items-center gap-3">
+                      <Skeleton className="h-8 w-8 rounded-lg dark:bg-muted" />
+                      <Skeleton className="h-4 w-40 rounded dark:bg-muted" />
+                    </div>
+                    <Skeleton className="h-4 w-24 rounded dark:bg-muted" />
+                    <Skeleton className="h-6 w-20 rounded-full dark:bg-muted" />
+                  </div>
+                ))}
+              </div>
+            </Card>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-             <Skeleton className="h-32 rounded-2xl dark:bg-muted" />
-             <Skeleton className="h-32 rounded-2xl dark:bg-muted" />
-             <Skeleton className="h-32 rounded-2xl dark:bg-muted" />
-          </div>
-          <Skeleton className="h-[500px] w-full rounded-2xl dark:bg-muted" />
         </main>
       </div>
     );
@@ -1340,9 +1380,10 @@ export default function AccountActivityPage() {
                       const path = getDefaultDashboardPath(authUser?.role);
                       router.push(path);
                     }}
+                    title="Return to Dashboard"
                     className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                   >
-                    Return to Dashboard
+                    Return
                   </Button>
                 </div>
               }

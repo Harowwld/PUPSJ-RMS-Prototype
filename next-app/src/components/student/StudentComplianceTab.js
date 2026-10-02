@@ -255,14 +255,23 @@ export default function StudentComplianceTab({ authUser }) {
     return <StudentComplianceSkeleton />;
   }
 
-  const summary = data?.summary || {
-    totalRequired: 0,
-    submittedCount: 0,
-    approvedCount: 0,
-    missingCount: 0,
-    complianceRate: 0,
-    overallStatus: "Incomplete",
-    isCompliant: false,
+  const rawSummary = data?.summary || {};
+  const safeSubmittedCount = Number(rawSummary.submittedCount ?? rawSummary.approvedCount ?? 0);
+  const safeTotalRequired = Number(rawSummary.totalRequired ?? (Array.isArray(requirements) ? requirements.length : 0));
+  const safeMissingCount = Number(rawSummary.missingCount ?? Math.max(0, safeTotalRequired - safeSubmittedCount));
+  const safeComplianceRate = Number(
+    rawSummary.complianceRate ??
+      (safeTotalRequired > 0 ? Math.round((safeSubmittedCount / safeTotalRequired) * 100) : 0)
+  );
+
+  const summary = {
+    totalRequired: safeTotalRequired,
+    submittedCount: safeSubmittedCount,
+    approvedCount: Number(rawSummary.approvedCount ?? safeSubmittedCount),
+    missingCount: safeMissingCount,
+    complianceRate: safeComplianceRate,
+    overallStatus: rawSummary.overallStatus || (safeComplianceRate === 100 ? "Complete" : "Incomplete"),
+    isCompliant: rawSummary.isCompliant ?? (safeComplianceRate === 100),
   };
 
   const student = data?.student || {
@@ -354,8 +363,8 @@ export default function StudentComplianceTab({ authUser }) {
         return `
           <tr>
             <td style="padding: 7px 8px; border-bottom: 1px solid #e5e7eb; font-size: 10px; color: #6b7280; text-align: center; width: 34px;">${idx + 1}</td>
-            <td style="padding: 7px 10px; border-bottom: 1px solid #e5e7eb; font-size: 11px; font-weight: 600; color: #111827;">${escapeHtml(r.docType)}</td>
-            <td style="padding: 7px 10px; border-bottom: 1px solid #e5e7eb; font-size: 10px; color: #6b7280; white-space: nowrap;">${escapeHtml(r.category)}</td>
+            <td style="padding: 7px 10px; border-bottom: 1px solid #e5e7eb; font-size: 11px; font-weight: 600; color: #111827;">${escapeHtml(r?.docType || r?.name || "—")}</td>
+            <td style="padding: 7px 10px; border-bottom: 1px solid #e5e7eb; font-size: 10px; color: #6b7280; white-space: nowrap;">${escapeHtml(r?.category || "—")}</td>
             <td style="padding: 7px 10px; border-bottom: 1px solid #e5e7eb; white-space: nowrap;">
               <span class="badge ${isSubmitted ? "badge-approved" : "badge-missing"}">
                 ${isSubmitted ? "Submitted" : "Not Submitted"}
@@ -552,7 +561,7 @@ export default function StudentComplianceTab({ authUser }) {
             </div>
             <div class="meta-item">
               <span class="meta-label">Compliance Status</span>
-              <span class="meta-val">${summary.complianceRate}% (${summary.submittedCount || summary.approvedCount || 0}/${summary.totalRequired} Submitted)</span>
+              <span class="meta-val">${summary.complianceRate}% (${summary.submittedCount}/${summary.totalRequired} Submitted)</span>
             </div>
           </div>
 
@@ -759,9 +768,10 @@ export default function StudentComplianceTab({ authUser }) {
                       <button
                         type="button"
                         onClick={clearAllFilters}
+                        title="Reset all filters"
                         className="text-[11px] font-semibold text-pup-maroon dark:text-red-400 hover:underline cursor-pointer"
                       >
-                        Reset all
+                        Reset
                       </button>
                     )}
                   </div>
@@ -1006,9 +1016,10 @@ export default function StudentComplianceTab({ authUser }) {
               <button
                 type="button"
                 onClick={clearAllFilters}
+                title="Clear all filters"
                 className="text-[11px] font-semibold text-pup-maroon dark:text-red-400 hover:underline cursor-pointer ml-1"
               >
-                Clear all
+                Clear
               </button>
             </div>
           </div>
@@ -1465,7 +1476,7 @@ export default function StudentComplianceTab({ authUser }) {
               <div className="space-y-1">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-400 block">Compliance Status</span>
                 <span className="text-xs font-bold text-gray-900 dark:text-zinc-100 block">
-                  {summary.complianceRate}% ({summary.submittedCount || summary.approvedCount || 0}/${summary.totalRequired} Submitted)
+                  {summary.complianceRate}% ({summary.submittedCount}/${summary.totalRequired} Submitted)
                 </span>
               </div>
             </div>
@@ -1485,8 +1496,8 @@ export default function StudentComplianceTab({ authUser }) {
                   {sortedRequirements.map((r, idx) => (
                     <tr key={r.id} className="hover:bg-gray-50/50 dark:hover:bg-zinc-800/30 transition-colors print:border-b print:border-gray-100">
                       <td className="py-3 px-3 text-center text-gray-400 dark:text-zinc-500 font-mono text-[11px]">{idx + 1}</td>
-                      <td className="py-3 px-4 font-semibold text-gray-900 dark:text-zinc-100 leading-normal">{r.docType}</td>
-                      <td className="py-3 px-4 text-gray-500 dark:text-zinc-400 text-xs whitespace-nowrap">{r.category}</td>
+                      <td className="py-3 px-4 font-semibold text-gray-900 dark:text-zinc-100 leading-normal">{r?.docType || r?.name || "—"}</td>
+                      <td className="py-3 px-4 text-gray-500 dark:text-zinc-400 text-xs whitespace-nowrap">{r?.category || "—"}</td>
                       <td className="py-3 px-4 whitespace-nowrap">
                         <span
                           className={cn(

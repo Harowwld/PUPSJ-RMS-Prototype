@@ -182,9 +182,10 @@ export default function MultiCriteriaFilter({
               <button
                 type="button"
                 onClick={handleResetAll}
+                title="Reset all filter criteria"
                 className="text-[11px] font-semibold text-pup-maroon dark:text-red-400 hover:underline cursor-pointer"
               >
-                Reset all
+                Reset
               </button>
             )}
           </div>

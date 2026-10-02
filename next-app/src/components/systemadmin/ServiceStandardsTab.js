@@ -10,6 +10,7 @@ import PageHeader from "@/components/shared/PageHeader";
 import { RefreshButton } from "@/components/shared/RefreshButton";
 import ConfirmModal from "@/components/shared/ConfirmModal";
 import { Skeleton } from "@/components/ui/skeleton";
+import ServiceStandardsSkeleton from "./skeletons/ServiceStandardsSkeleton";
 import { cn } from "@/lib/utils";
 import { calculateDeadline, formatCharterDeadline } from "@/lib/citizenCharter";
 
@@ -216,18 +217,7 @@ export default function ServiceStandardsTab({ showToast }) {
   const unitSuffix = standards.workingDaysOnly ? "working days" : "calendar days";
 
   if (loading) {
-    return (
-      <div className="flex flex-1 flex-col h-full min-h-0 w-full gap-6 animate-fade-up font-jakarta">
-        <Card className="flex h-auto w-full flex-col p-6 gap-6 rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card">
-          <Skeleton className="h-6 w-56 rounded-xl dark:bg-muted" />
-          <Skeleton className="h-4 w-96 rounded-xl dark:bg-muted" />
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-            <Skeleton className="h-40 rounded-2xl dark:bg-muted" />
-            <Skeleton className="h-40 rounded-2xl dark:bg-muted" />
-          </div>
-        </Card>
-      </div>
-    );
+    return <ServiceStandardsSkeleton />;
   }
 
   return (

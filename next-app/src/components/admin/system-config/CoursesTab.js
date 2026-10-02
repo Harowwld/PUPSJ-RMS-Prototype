@@ -251,11 +251,12 @@ export default function CoursesTab({
   const handleExportCourses =
     handleExportProp ||
     (() => {
+      const q = (cell) => `"${String(cell ?? "").replace(/"/g, '""')}"`
       const csvContent = [
         ["Code", "Designation", "Status"],
-        ...courses.map((c) => [c.code, c.name, c.status]),
+        ...courses.map((c) => [c?.code || "", c?.name || "", c?.status || "Active"]),
       ]
-        .map((e) => e.join(","))
+        .map((row) => row.map(q).join(","))
         .join("\n")
       const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
       const link = document.createElement("a")
@@ -767,10 +768,10 @@ export default function CoursesTab({
                                     setCourseSearch("")
                                     setLocalSearch("")
                                   }}
-                                  className="mt-6 flex h-10 items-center justify-center gap-2 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
+                                  title="Reset Filters"
+                                  className="mt-6 flex h-10 items-center justify-center rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                                 >
-                                  <HugeIcon className="ph-bold ph-arrow-counter-clockwise text-[14px] shrink-0" />
-                                  <span>Clear Filters</span>
+                                  Reset
                                 </Button>
                               ) : (
                                 !showArchived && (
@@ -922,9 +923,10 @@ export default function CoursesTab({
                     variant="ghost"
                     size="sm"
                     onClick={() => setNewCourseBlocks([...newCourseBlocks, ""])}
+                    title="Add Course Block"
                     className="h-auto p-0 bg-transparent text-xs font-medium text-red-600 hover:bg-transparent shadow-none border-0 focus:outline-none cursor-pointer"
                   >
-                    + Add Block
+                    Add
                   </Button>
                 </div>
                 <div className="flex flex-col gap-2">
@@ -1061,9 +1063,10 @@ export default function CoursesTab({
                     onClick={() =>
                       setEditCourseBlocks([...editCourseBlocks, ""])
                     }
+                    title="Add Course Block"
                     className="h-auto p-0 bg-transparent text-xs font-medium text-red-600 hover:bg-transparent shadow-none border-0 focus:outline-none cursor-pointer"
                   >
-                    + Add Block
+                    Add
                   </Button>
                 </div>
                 <div className="space-y-2">

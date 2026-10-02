@@ -161,10 +161,10 @@ export default function StorageExplorerTab({
             <Button
               variant="outline"
               onClick={() => onSwitchView("search")}
-              className="flex h-10 items-center gap-2 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
+              title="Return to Records & Archive"
+              className="flex h-10 items-center justify-center rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-5 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
             >
-              <HugeIcon  className="ph-bold ph-arrow-left text-[14px]"></HugeIcon>
-              Records & Archive
+              Return
             </Button>
           }
         />

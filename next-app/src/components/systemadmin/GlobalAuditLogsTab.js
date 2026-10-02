@@ -441,21 +441,21 @@ export default function GlobalAuditLogsTab({ showToast }) {
         "Entity ID",
       ]
       const rows = allLogs.map((log) => [
-        formatPHDateTime(log.created_at),
-        log.severity || "INFO",
-        log.actor,
-        log.role,
-        log.scope || "Global",
-        log.action,
-        log.details || "No known description",
-        log.ip || "—",
-        log.user_agent || "—",
-        log.entity_type || "—",
-        log.entity_id || "—",
+        log?.created_at ? formatPHDateTime(log.created_at) : "—",
+        log?.severity || "INFO",
+        log?.actor || "System",
+        log?.role || "—",
+        log?.scope || "Global",
+        log?.action || "—",
+        log?.details || "No known description",
+        log?.ip || "—",
+        log?.user_agent || "—",
+        log?.entity_type || "—",
+        log?.entity_id || "—",
       ])
       const csvContent = [
         headers.join(","),
-        ...rows.map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(",")),
+        ...rows.map((row) => row.map((cell) => `"${String(cell ?? "").replace(/"/g, '""')}"`).join(",")),
       ].join("\n")
       const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
       const fileName = generateExportFilename("PLATFORM-AUDIT-LOGS", "DATA", "csv")
@@ -864,10 +864,10 @@ export default function GlobalAuditLogsTab({ showToast }) {
                     <Button
                       variant="outline"
                       onClick={handleClearFilters}
+                      title="Reset Filters"
                       className="mt-6 flex h-10 items-center justify-center gap-2 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                     >
-                      <HugeIcon className="ph-bold ph-arrow-counter-clockwise text-[14px] shrink-0" />
-                      <span>Clear Filters</span>
+                      Reset
                     </Button>
                   )}
                 </EmptyHeader>

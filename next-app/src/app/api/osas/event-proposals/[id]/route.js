@@ -127,6 +127,14 @@ export async function GET(req, ctx) {
   return NextResponse.json({ ok: true, data: { ...proposal, updates } });
 }
 
+export const ALLOWED_TRANSITIONS = {
+  "Submitted": ["Under Review", "Approved", "Declined"],
+  "Under Review": ["Needs Revision", "Approved", "Declined"],
+  "Needs Revision": ["Under Review", "Declined"],
+  "Approved": ["Under Review", "Declined"],
+  "Declined": ["Under Review"],
+};
+
 export async function PATCH(req, ctx) {
   const access = await requireOfficeModule("osas_monitoring", { officeId: "osas" }, req);
   if (access === null) return NextResponse.json({ ok: false, error: "Authentication required" }, { status: 401 });
@@ -141,6 +149,71 @@ export async function PATCH(req, ctx) {
   if (!validStatuses.has(status)) {
     return NextResponse.json({ ok: false, error: "A valid status is required." }, { status: 400 });
   }
+
+  const currentStatus = existingProposal.status || "Submitted";
+
+  // No-op if status is unchanged
+  if (status === currentStatus) {
+    if (note) {
+      await query(
+        `INSERT INTO transaction_updates (event_proposal_id, status, message, created_by) VALUES ($1, $2, $3, $4)`,
+        [id, currentStatus, note, access.userId || null]
+      );
+      await writeGlobalAuditLog(req, "Added note to OSAS proposal", {
+        officeId: "osas",
+        details: `Added note to ${existingProposal.title}: ${note}`,
+        entity_type: "event_proposal",
+        entity_id: String(id),
+      });
+    }
+    return NextResponse.json({ ok: true, data: existingProposal });
+  }
+
+  // 1. Validate State Machine Transition
+  const allowedNext = ALLOWED_TRANSITIONS[currentStatus] || [];
+  if (!allowedNext.includes(status)) {
+    return NextResponse.json(
+      {
+        ok: false,
+        error: `Invalid transition: cannot move proposal from "${currentStatus}" to "${status}". Allowed transitions: ${allowedNext.join(", ") || "none"}.`,
+      },
+      { status: 400 }
+    );
+  }
+
+  // 2. Guard: Revoking an Approved proposal requires a written justification note
+  if (currentStatus === "Approved" && (!note || note.length < 5)) {
+    return NextResponse.json(
+      {
+        ok: false,
+        error: "A written justification note (at least 5 characters) is required when revoking an approved proposal.",
+      },
+      { status: 400 }
+    );
+  }
+
+  // 3. Guard: Reopening a Declined proposal requires an appeal/reconsideration note
+  if (currentStatus === "Declined" && (!note || note.length < 5)) {
+    return NextResponse.json(
+      {
+        ok: false,
+        error: "A written justification note (at least 5 characters) citing grounds for appeal or reconsideration is required to reopen a declined proposal.",
+      },
+      { status: 400 }
+    );
+  }
+
+  // 4. Guard: Requesting revisions requires instructions for the student organization
+  if (status === "Needs Revision" && (!note || note.length < 5)) {
+    return NextResponse.json(
+      {
+        ok: false,
+        error: "Detailed revision instructions (at least 5 characters) are required when requesting revisions from the student organization.",
+      },
+      { status: 400 }
+    );
+  }
+
   const studentNote = note || `Status updated to ${status} by OSAS.`;
   const proposal = await queryOne(
     `UPDATE event_proposals 
@@ -149,10 +222,12 @@ export async function PATCH(req, ctx) {
          updated_at = NOW(),
          post_event_status = CASE 
            WHEN $1 = 'Approved' AND post_event_status = 'Not Applicable' THEN 'Pending Submission' 
+           WHEN $1 != 'Approved' AND post_event_status = 'Pending Submission' THEN 'Not Applicable'
            ELSE post_event_status 
          END,
          post_event_due_date = CASE 
            WHEN $1 = 'Approved' AND post_event_due_date IS NULL THEN COALESCE(event_date + INTERVAL '10 days', (NOW() + INTERVAL '10 days')::DATE)
+           WHEN $1 != 'Approved' AND post_event_status = 'Pending Submission' THEN NULL
            ELSE post_event_due_date 
          END
      WHERE id = $2 AND office_id = 'osas' 

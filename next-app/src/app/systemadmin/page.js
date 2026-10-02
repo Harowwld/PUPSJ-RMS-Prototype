@@ -12,6 +12,8 @@ import { SystemAdminGuard, useAuthUser } from "@/components/shared/AuthGuard"
 import { Skeleton } from "@/components/ui/skeleton"
 import KpiStatCardsSkeleton from "@/components/systemadmin/skeletons/KpiStatCardsSkeleton"
 import InstitutionalBrandingSkeleton from "@/components/systemadmin/skeletons/InstitutionalBrandingSkeleton"
+import ModuleConfigSkeleton from "@/components/systemadmin/skeletons/ModuleConfigSkeleton"
+import ServiceStandardsSkeleton from "@/components/systemadmin/skeletons/ServiceStandardsSkeleton"
 import { cn } from "@/lib/utils"
 import { getClientSession } from "@/lib/clientAuth"
 
@@ -71,7 +73,7 @@ const InstitutionalBrandingTab = dynamic(() => import("@/components/systemadmin/
   loading: () => <InstitutionalBrandingSkeleton />,
 })
 const ModuleConfigTab = dynamic(() => import("@/components/systemadmin/ModuleConfigTab"), {
-  loading: () => <TabLoadingSkeleton />,
+  loading: () => <ModuleConfigSkeleton />,
 })
 const GlobalStaffTab = dynamic(() => import("@/components/systemadmin/GlobalStaffTab"), {
   loading: () => <TabLoadingSkeleton />,
@@ -92,7 +94,7 @@ const SecurityQuestionsTab = dynamic(() => import("@/components/systemadmin/Secu
   loading: () => <TabLoadingSkeleton />,
 })
 const ServiceStandardsTab = dynamic(() => import("@/components/systemadmin/ServiceStandardsTab"), {
-  loading: () => <TabLoadingSkeleton />,
+  loading: () => <ServiceStandardsSkeleton />,
 })
 
 const VALID_VIEWS = ["offices", "branding", "modules", "standards", "staff", "security", "logs", "health", "backups", "landing"]

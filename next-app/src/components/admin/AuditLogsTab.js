@@ -125,20 +125,20 @@ export default function AuditLogsTab({
       const allLogs = await fetchAllForExport()
       const headers = ["Date & Time", "Severity", "Actor", "Role", "Action", "Details", "IP Address", "User Agent", "Entity Type", "Entity ID"]
       const rows = allLogs.map((log) => [
-        formatPHDateTime(log.created_at),
-        log.severity || "INFO",
-        log.actor,
-        log.role,
-        log.action,
-        log.details || "No known description",
-        log.ip || "—",
-        log.user_agent || "—",
-        log.entity_type || "—",
-        log.entity_id || "—",
+        log?.created_at ? formatPHDateTime(log.created_at) : "—",
+        log?.severity || "INFO",
+        log?.actor || "System",
+        log?.role || "—",
+        log?.action || "—",
+        log?.details || "No known description",
+        log?.ip || "—",
+        log?.user_agent || "—",
+        log?.entity_type || "—",
+        log?.entity_id || "—",
       ])
       const csvContent = [
         headers.join(","),
-        ...rows.map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(",")),
+        ...rows.map((row) => row.map((cell) => `"${String(cell ?? "").replace(/"/g, '""')}"`).join(",")),
       ].join("\n")
       const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
       const fileName = generateExportFilename("AUDIT-LOGS", "DATA", "csv")

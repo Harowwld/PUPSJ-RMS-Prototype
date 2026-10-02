@@ -43,11 +43,11 @@ export async function GET(req, ctx) {
     const origName = fileParam === "liquidation" ? report.liquidation_original_filename : report.narrative_original_filename;
     const filePath = resolveFilePath(filename);
 
-    if (!filePath || !fs.existsSync(filePath)) {
+    if (!filePath || !fs.existsSync(/*turbopackIgnore: true*/ filePath)) {
       return NextResponse.json({ ok: false, error: "File not found on storage" }, { status: 404 });
     }
 
-    const bytes = fs.readFileSync(filePath);
+    const bytes = fs.readFileSync(/*turbopackIgnore: true*/ filePath);
     return new NextResponse(bytes, {
       headers: {
         "Content-Type": "application/pdf",

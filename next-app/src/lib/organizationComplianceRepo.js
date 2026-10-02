@@ -251,6 +251,7 @@ export async function getOrganizationComplianceSummary({
     officeName: "Office of Student Affairs and Services",
     summary: {
       totalOrganizations: totalCount,
+      totalOrgs: totalCount,
       activeOrganizations: orgs.filter((o) => o.status === "Active").length,
       fullyCompliantCount,
       fullyCompliantRate,
@@ -262,6 +263,7 @@ export async function getOrganizationComplianceSummary({
       withOfficersCount,
       withOfficersRate,
       withAdviserCount,
+      withAdvisersCount: withAdviserCount,
       withAdviserRate,
       totalActiveOfficers,
     },

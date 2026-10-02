@@ -459,17 +459,18 @@ export default function StudentDirectoryTab({
       "Status",
     ];
 
+    const q = (cell) => `"${String(cell ?? "").replace(/"/g, '""')}"`;
     const rows = filteredStudents.map((s) => [
-      `"${s.studentNo}"`,
-      `"${s.name}"`,
-      `"${s.courseCode || ""}"`,
-      `"${s.section || ""}"`,
-      `"${s.yearLevel || ""}"`,
-      `"${s.room || ""}"`,
-      `"${s.cabinet || ""}"`,
-      `"${s.drawer || ""}"`,
-      `"${docCountMap.get(String(s.studentNo).toUpperCase()) || 0}"`,
-      `"${s.status || "Active"}"`,
+      q(s?.studentNo || s?.student_no),
+      q(s?.name || "—"),
+      q(s?.courseCode || s?.course_code || ""),
+      q(s?.section || ""),
+      q(s?.yearLevel || s?.year_level || ""),
+      q(s?.room || ""),
+      q(s?.cabinet || ""),
+      q(s?.drawer || ""),
+      q(docCountMap.get(String(s?.studentNo || s?.student_no || "").toUpperCase()) || 0),
+      q(s?.status || "Active"),
     ]);
 
     const csvContent = [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");

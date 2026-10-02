@@ -631,10 +631,10 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
                       <Button
                         variant="outline"
                         onClick={handleClearFilters}
+                        title="Reset Filters"
                         className="mt-6 flex h-10 items-center justify-center gap-2 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                       >
-                        <HugeIcon className="ph-bold ph-arrow-counter-clockwise text-[14px] shrink-0" />
-                        <span>Clear Filters</span>
+                        Reset
                       </Button>
                     )}
                   </EmptyHeader>

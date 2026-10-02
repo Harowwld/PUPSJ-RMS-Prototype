@@ -1,4 +1,5 @@
 import { query, queryOne } from "./postgres.js";
+import { decryptPII } from "./piiEncryption.js";
 
 /**
  * Creates a post-event narrative & liquidation submission
@@ -87,7 +88,7 @@ export async function listPostEventReports({ status, organizationId, search } = 
 
   const whereClause = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
 
-  return query(
+  const rows = await query(
     `SELECT per.*,
             ep.title AS event_title,
             ep.event_date,
@@ -95,23 +96,33 @@ export async function listPostEventReports({ status, organizationId, search } = 
             ep.status AS proposal_status,
             ep.post_event_status,
             ep.post_event_due_date,
+            ep.student_no,
+            COALESCE(s.name, sa_student.name, ep.student_no, 'Student Officer') AS student_name,
             so.name AS organization_name,
             so.acronym AS org_acronym,
             so.category AS org_category
      FROM osas_post_event_reports per
      JOIN event_proposals ep ON ep.id = per.event_proposal_id
+     LEFT JOIN students s ON s.student_no = ep.student_no
+     LEFT JOIN student_accounts sa ON sa.id = ep.student_account_id
+     LEFT JOIN students sa_student ON sa_student.student_no = sa.student_no
      JOIN student_organizations so ON so.id = per.organization_id
      ${whereClause}
      ORDER BY per.created_at DESC`,
     params
   );
+
+  return rows.map((r) => {
+    if (r.student_name) r.student_name = decryptPII(r.student_name);
+    return r;
+  });
 }
 
 /**
  * Gets a post-event report by its ID
  */
 export async function getPostEventReportById(id) {
-  return queryOne(
+  const r = await queryOne(
     `SELECT per.*,
             ep.title AS event_title,
             ep.event_date,
@@ -119,17 +130,25 @@ export async function getPostEventReportById(id) {
             ep.status AS proposal_status,
             ep.post_event_status,
             ep.post_event_due_date,
+            ep.student_no,
+            COALESCE(s.name, sa_student.name, ep.student_no, 'Student Officer') AS student_name,
             so.name AS organization_name,
             so.acronym AS org_acronym,
             so.category AS org_category,
             st.fname || ' ' || st.lname AS reviewer_name
      FROM osas_post_event_reports per
      JOIN event_proposals ep ON ep.id = per.event_proposal_id
+     LEFT JOIN students s ON s.student_no = ep.student_no
+     LEFT JOIN student_accounts sa ON sa.id = ep.student_account_id
+     LEFT JOIN students sa_student ON sa_student.student_no = sa.student_no
      JOIN student_organizations so ON so.id = per.organization_id
      LEFT JOIN staff st ON st.id = per.reviewed_by
      WHERE per.id = $1`,
     [id]
   );
+  if (!r) return null;
+  if (r.student_name) r.student_name = decryptPII(r.student_name);
+  return r;
 }
 
 /**
@@ -156,6 +175,7 @@ export async function updatePostEventReportStatus(id, { status, note, staffId })
   if (status === "Cleared") proposalPostEventStatus = "Cleared";
   else if (status === "Needs Revision") proposalPostEventStatus = "Needs Revision";
   else if (status === "Declined") proposalPostEventStatus = "Pending Submission";
+  else if (status === "Submitted") proposalPostEventStatus = "Submitted";
 
   await query(
     `UPDATE event_proposals

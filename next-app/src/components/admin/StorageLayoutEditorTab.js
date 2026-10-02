@@ -1430,11 +1430,10 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
           variant="outline"
           onClick={addCabinet}
           disabled={!activeRoom}
-          className="h-9 px-3.5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all flex items-center gap-1.5"
+          className="h-9 px-3.5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all flex items-center justify-center"
           title="Add a new cabinet to the room"
         >
-          <HugeIcon className="ph-bold ph-plus text-[13px]" />
-          <span>Add Cabinet</span>
+          Add
         </Button>
 
         {/* Group 5: Unified Template Suite Capsule */}

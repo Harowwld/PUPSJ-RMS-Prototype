@@ -529,8 +529,9 @@ export default function ProfileSetup({
               disabled={!isValid}
               onClick={handleSubmit}
               type="button"
+              title={mode === "settings" ? "Save Avatar" : "Get Started"}
             >
-              {mode === "settings" ? "Save Avatar" : "Get Started"}
+              {mode === "settings" ? "Save" : "Start"}
               <ChevronRight
                 aria-hidden="true"
                 className="ml-1 h-4 w-4 transition-transform duration-200 ease-out group-hover:translate-x-0.5"

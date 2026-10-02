@@ -1721,16 +1721,16 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
       const dataToExport = filteredData || staffData
       const headers = ["ID", "First Name", "Last Name", "Role", "Status", "Email"]
       const csvRows = dataToExport.map((s) => [
-        s.id,
-        s.fname || "—",
-        s.lname || "—",
-        s.role || "—",
-        s.status || "—",
-        s.email || "—"
+        s?.id ?? "",
+        s?.fname || "—",
+        s?.lname || "—",
+        s?.role || "—",
+        s?.status || "—",
+        s?.email || "—"
       ])
       const csvContent = [
         headers.join(","),
-        ...csvRows.map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(",")),
+        ...csvRows.map((row) => row.map((cell) => `"${String(cell ?? "").replace(/"/g, '""')}"`).join(",")),
       ].join("\n")
       
       const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })

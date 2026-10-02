@@ -73,7 +73,7 @@ export default function StudentProfileSheet({
   useEffect(() => {
     let isMounted = true;
     if (!open) return;
-    fetch("/api/doc-types?officeId=registrar", { cache: "no-store" })
+    fetch("/api/doc-types?officeId=registrar&scope=compliance", { cache: "no-store" })
       .then((res) => res.json())
       .then((json) => {
         if (isMounted && json?.ok && Array.isArray(json?.data)) {
@@ -207,10 +207,10 @@ export default function StudentProfileSheet({
                 onOpenChange(false);
                 onEditStudent?.(student);
               }}
+              title="Edit Student Profile"
               className="h-8 px-3 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
             >
-              <HugeIcon  className="ph-bold ph-pencil-simple mr-1.5 text-xs"></HugeIcon>
-              Edit Profile
+              Edit
             </Button>
 
             <Button
@@ -220,10 +220,10 @@ export default function StudentProfileSheet({
                 onOpenChange(false);
                 onLocateStudent?.(student);
               }}
+              title="Locate in Storage Map"
               className="h-8 px-3 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
             >
-              <HugeIcon  className="ph-bold ph-compass mr-1.5 text-xs text-pup-maroon dark:text-red-400"></HugeIcon>
-              Locate in Storage Map
+              Locate
             </Button>
           </div>
         </SheetHeader>
@@ -317,10 +317,10 @@ export default function StudentProfileSheet({
                     onOpenChange(false);
                     onLocateStudent?.(student);
                   }}
+                  title="View in Storage Map"
                   className="flex h-9 px-4 text-xs font-semibold rounded-xl! btn-brand-red text-white! active:scale-95 disabled:opacity-50 transition-all cursor-pointer shadow-xs whitespace-nowrap self-start sm:self-auto"
                 >
-                  <HugeIcon  className="ph-bold ph-compass mr-1.5 text-sm"></HugeIcon>
-                  View in Map
+                  View
                 </Button>
               </div>
             </div>

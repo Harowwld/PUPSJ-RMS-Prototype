@@ -633,10 +633,11 @@ export default function DocumentRequestsTab({
                     <Button
                       type="button"
                       onClick={() => setCreateOpen(true)}
+                      title="Create Document Request"
                       className="flex h-10 px-5 text-xs font-semibold rounded-xl! btn-brand-red text-white! active:scale-95 disabled:opacity-50 transition-all cursor-pointer shadow-xs"
                       style={{ color: "#ffffff" }}
                     >
-                      Create Request
+                      Create
                     </Button>
                   )}
                 </div>
@@ -1171,7 +1172,8 @@ export default function DocumentRequestsTab({
 
                         <Button
                           type="button"
-                          className="mt-2 w-full btn-brand-red text-white! font-semibold text-xs h-9 rounded-xl transition-all border-0 flex items-center justify-center gap-2 shadow-xs cursor-pointer active:scale-95"
+                          title="Locate on Storage Map"
+                          className="mt-2 w-full btn-brand-red text-white! font-semibold text-xs h-9 rounded-xl transition-all border-0 flex items-center justify-center shadow-xs cursor-pointer active:scale-95"
                           style={{ color: "#ffffff" }}
                           disabled={!studentForRequest && !detail.room}
                           onClick={() => {
@@ -1190,8 +1192,7 @@ export default function DocumentRequestsTab({
                             onLocateOnMap(target);
                           }}
                         >
-                          <HugeIcon  className="ph-bold ph-map-pin text-sm"></HugeIcon>
-                          Locate on Storage Map
+                          Locate
                         </Button>
                       </div>
                     </div>
@@ -1230,6 +1231,7 @@ export default function DocumentRequestsTab({
                           size="sm"
                           disabled={saving}
                           onClick={() => patchDetail({ spaVerified: !detail.spa_verified })}
+                          title={detail.spa_verified ? "Revoke Verification" : "Verify SPA & Identity"}
                           className={cn(
                             "h-8 px-4 text-xs font-semibold rounded-xl shadow-xs transition-all cursor-pointer active:scale-95",
                             detail.spa_verified
@@ -1237,7 +1239,7 @@ export default function DocumentRequestsTab({
                               : "bg-emerald-600 hover:bg-emerald-700 text-white border-0"
                           )}
                         >
-                          {detail.spa_verified ? "Revoke Verification" : "Verify SPA & Identity"}
+                          {detail.spa_verified ? "Revoke" : "Verify"}
                         </Button>
                       </div>
                     </div>
@@ -1576,8 +1578,9 @@ export default function DocumentRequestsTab({
                     style={{ color: "#ffffff" }}
                     onClick={handleManualSave}
                     disabled={saving}
+                    title="Save Changes"
                   >
-                    {saving ? "Saving..." : "Save Changes"}
+                    {saving ? "Saving..." : "Save"}
                   </Button>
                 </div>
               )}

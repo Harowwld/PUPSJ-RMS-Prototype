@@ -261,13 +261,14 @@ export default function RegistrarODRSTab({ showToast }) {
                         size="sm"
                         disabled={spaSaving}
                         onClick={toggleSpaVerified}
+                        title={selected.spa_verified ? "Revoke SPA Verification" : "Verify SPA Authority"}
                         className={`h-7 px-3 text-xs font-semibold rounded-lg ${
                           selected.spa_verified
                             ? "border border-gray-200 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50"
                             : "bg-emerald-600 hover:bg-emerald-700 text-white"
                         }`}
                       >
-                        {selected.spa_verified ? "Revoke SPA" : "Verify SPA"}
+                        {selected.spa_verified ? "Revoke" : "Verify"}
                       </Button>
                     </div>
                   </div>

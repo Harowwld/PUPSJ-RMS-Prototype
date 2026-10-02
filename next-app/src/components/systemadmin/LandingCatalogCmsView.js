@@ -522,9 +522,10 @@ export default function LandingCatalogCmsView({ showToast }) {
                       size="sm"
                       onClick={handleAddCard}
                       disabled={currentItems.length >= MAX_CATALOG_ITEMS}
+                      title="Add Card to Catalog"
                       className="h-8 rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 text-xs font-semibold px-3 cursor-pointer shadow-xs disabled:opacity-50"
                     >
-                      Add Card
+                      Add
                     </Button>
                   </div>
 

@@ -9,14 +9,43 @@ export const DEFAULT_BRANDING = {
   institutionName: "Polytechnic University of the Philippines",
   campusName: "San Juan City Campus",
   tagline: "OFFICIAL ACADEMIC ARCHIVES & RECORDS",
+  jurisdictionHeader: "Republic of the Philippines",
+  documentCodePrefix: "PUPSJ",
   brandColor: "#7A1E28",
   logoUrl: "/assets/pup-logo.webp",
   fallbackLogoUrl: "/assets/branding/black-icon.png",
   logoBase64: null,
+  secondaryLogoUrl: null,
+  secondaryLogoBase64: null,
+  signatoryRegistrarTitle: "",
+  signatoryHeadTitle: "",
 };
+
+function deriveDocumentPrefix(institutionName = "", campusName = "") {
+  const getInitials = (str) => {
+    if (!str || typeof str !== "string") return ""
+    const clean = str.replace(/[^a-zA-Z0-9\s]/g, " ")
+    const words = clean.split(/\s+/).filter(Boolean)
+    const stopWords = new Set(["of", "the", "and", "in", "at", "for", "ng", "mga", "city", "campus", "branch"])
+    const significant = words.filter((w) => !stopWords.has(w.toLowerCase()))
+    if (significant.length === 0) return words.map((w) => w[0]).join("").toUpperCase().slice(0, 4)
+    return significant.map((w) => w[0]).join("").toUpperCase().slice(0, 5)
+  }
+  const instInitials = getInitials(institutionName) || "RMS"
+  const campusInitials = getInitials(campusName)
+  const combined = `${instInitials}${campusInitials}`.slice(0, 8)
+  return combined || "RMS"
+}
 
 function sanitizeBranding(raw) {
   if (!raw || typeof raw !== "object") return DEFAULT_BRANDING;
+
+  const jurisdictionHeader =
+    typeof raw.jurisdictionHeader === "string"
+      ? raw.jurisdictionHeader.trim().slice(0, 100)
+      : typeof raw.superHeader === "string"
+      ? raw.superHeader.trim().slice(0, 100)
+      : DEFAULT_BRANDING.jurisdictionHeader;
 
   const institutionName =
     typeof raw.institutionName === "string" && raw.institutionName.trim() !== ""
@@ -34,6 +63,8 @@ function sanitizeBranding(raw) {
     typeof raw.tagline === "string" && raw.tagline.trim() !== ""
       ? raw.tagline.trim().slice(0, 100)
       : DEFAULT_BRANDING.tagline;
+
+  const documentCodePrefix = deriveDocumentPrefix(institutionName, campusName);
 
   const hexRegex = /^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/;
   const brandColor =
@@ -55,14 +86,45 @@ function sanitizeBranding(raw) {
   const logoUrl = logoBase64 ? null : DEFAULT_BRANDING.logoUrl;
   const fallbackLogoUrl = DEFAULT_BRANDING.fallbackLogoUrl;
 
+  let secondaryLogoBase64 = null;
+  if (
+    typeof raw.secondaryLogoBase64 === "string" &&
+    raw.secondaryLogoBase64.startsWith("data:image/") &&
+    raw.secondaryLogoBase64.length <= 4 * 1024 * 1024
+  ) {
+    secondaryLogoBase64 = raw.secondaryLogoBase64;
+  }
+
+  const secondaryLogoUrl = secondaryLogoBase64
+    ? null
+    : typeof raw.secondaryLogoUrl === "string" && raw.secondaryLogoUrl.trim() !== ""
+    ? raw.secondaryLogoUrl.trim()
+    : null;
+
+  const signatoryRegistrarTitle =
+    typeof raw.signatoryRegistrarTitle === "string"
+      ? raw.signatoryRegistrarTitle.trim().slice(0, 80)
+      : "";
+
+  const signatoryHeadTitle =
+    typeof raw.signatoryHeadTitle === "string"
+      ? raw.signatoryHeadTitle.trim().slice(0, 80)
+      : "";
+
   return {
+    jurisdictionHeader,
     institutionName,
     campusName,
     tagline,
+    documentCodePrefix,
     brandColor,
     logoUrl,
     fallbackLogoUrl,
     logoBase64,
+    secondaryLogoUrl,
+    secondaryLogoBase64,
+    signatoryRegistrarTitle,
+    signatoryHeadTitle,
   };
 }
 

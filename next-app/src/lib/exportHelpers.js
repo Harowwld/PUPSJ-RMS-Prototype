@@ -33,7 +33,7 @@ export const downloadSlaCsv = (data, total, completionRate, onLogAction, fileNam
   if (!data) return
   
   const finalFileName = fileName || generateExportFilename("SLA-ANALYTICS", "REPORT", "csv");
-  const q = (cell) => `"${String(cell).replace(/"/g, '""')}"`
+  const q = (cell) => `"${String(cell ?? "").replace(/"/g, '""')}"`
   const row = (cells) => cells.map(q).join(",")
 
   const lines = [
@@ -41,32 +41,32 @@ export const downloadSlaCsv = (data, total, completionRate, onLogAction, fileNam
     row(["Generated (Local)", formatPHDateTime(new Date().toISOString())]),
     "",
     row(["Summary Metrics", "Value"]),
-    row(["Total Lifetime Requests", total]),
-    row(["Overall Completion Rate", `${completionRate}%`]),
+    row(["Total Lifetime Requests", total ?? 0]),
+    row(["Overall Completion Rate", `${completionRate ?? 0}%`]),
     "",
     row(["Status Distribution", "Count"]),
   ]
 
   for (const [st, val] of Object.entries(data.statusCounts || {})) {
-    if (val > 0) lines.push(row([st, val]))
+    if (val > 0) lines.push(row([st, val ?? 0]))
   }
 
   lines.push("")
   lines.push(row(["Top Requested Documents", "Count"]))
   for (const dt of data.topDocTypes || []) {
-    lines.push(row([dt.name, dt.count]))
+    lines.push(row([dt?.name || "Unspecified Document", dt?.count ?? 0]))
   }
 
   if (data?.feedback) {
     lines.push("")
     lines.push(row(["Client Satisfaction Measurement (CSM)", "Value"]))
-    lines.push(row(["Average Satisfaction Score", `${data.feedback.averageRating || 0} / 5.0`]))
-    lines.push(row(["Total Client Ratings", data.feedback.totalResponses || 0]))
-    lines.push(row(["Positive Rating Rate", `${data.feedback.satisfactionRate || 0}%`]))
+    lines.push(row(["Average Satisfaction Score", `${data.feedback.averageRating ?? 0} / 5.0`]))
+    lines.push(row(["Total Client Ratings", data.feedback.totalResponses ?? 0]))
+    lines.push(row(["Positive Rating Rate", `${data.feedback.satisfactionRate ?? 0}%`]))
     lines.push("")
     lines.push(row(["Star Rating Breakdown", "Count"]))
     for (const [star, count] of Object.entries(data.feedback.ratingBreakdown || {})) {
-      lines.push(row([`${star} Star`, count]))
+      lines.push(row([`${star} Star`, count ?? 0]))
     }
   }
 
@@ -116,13 +116,13 @@ export const downloadOrganizationComplianceCsv = (data, onLogAction, fileName, o
   lines.push(
     "",
     row(["Summary Metrics", "Value"]),
-    row(["Total Recognized Organizations", summary.totalOrganizations || 0]),
+    row(["Total Recognized Organizations", summary.totalOrganizations ?? summary.totalOrgs ?? 0]),
     row(["Active Organizations", summary.activeOrganizations ?? (summary.statusDistribution?.Active || 0)]),
-    row(["Fully Compliant Organizations", summary.fullyCompliantCount || 0]),
-    row(["Overall Institutional Compliance Rate", `${summary.overallComplianceRate || 0}%`]),
-    row(["Constitution & By-Laws (CBL) Archival Rate", `${summary.cblArchivedRate || 0}% (${summary.cblArchivedCount || 0} archived)`]),
-    row(["Accredited Officer Leadership Roster", `${summary.withOfficersRate || 0}% (${summary.totalActiveOfficers || 0} active leaders)`]),
-    row(["Faculty Adviser Endorsements", `${summary.withAdviserRate || 0}% (${summary.withAdviserCount || 0} appointed)`]),
+    row(["Fully Compliant Organizations", summary.fullyCompliantCount ?? summary.compliantCount ?? 0]),
+    row(["Overall Institutional Compliance Rate", `${summary.overallComplianceRate ?? summary.fullyCompliantRate ?? 0}%`]),
+    row(["Constitution & By-Laws (CBL) Archival Rate", `${summary.cblArchivedRate ?? 0}% (${summary.cblArchivedCount ?? 0} archived)`]),
+    row(["Accredited Officer Leadership Roster", `${summary.withOfficersRate ?? 0}% (${summary.totalActiveOfficers ?? 0} active leaders)`]),
+    row(["Faculty Adviser Endorsements", `${summary.withAdviserRate ?? 0}% (${summary.withAdviserCount ?? summary.withAdvisersCount ?? 0} appointed)`]),
     "",
     row([
       "Organization ID",
@@ -143,17 +143,17 @@ export const downloadOrganizationComplianceCsv = (data, onLogAction, fileName, o
   for (const org of targetOrgs) {
     lines.push(
       row([
-        org.id,
-        org.name,
+        org.id ?? "",
+        org.name ?? "Unnamed Organization",
         org.acronym || "",
-        org.category,
-        org.status,
-        org.adviserName || "",
-        org.adviserEmail || "",
-        org.hasCbl ? "Yes" : "No",
-        org.activeOfficerCount,
-        `${org.complianceScore}%`,
-        org.complianceStatus,
+        org.category || "—",
+        org.status || "Active",
+        org.adviserName || org.adviser_name || "",
+        org.adviserEmail || org.adviser_email || "",
+        (org.hasCbl ?? org.checklist?.cbl ?? org.checklist?.has_cbl) ? "Yes" : "No",
+        org.activeOfficerCount ?? org.officers?.length ?? 0,
+        `${org.complianceScore ?? 0}%`,
+        org.complianceStatus || "Pending",
         (org.missingRequirements || []).join("; "),
       ])
     )

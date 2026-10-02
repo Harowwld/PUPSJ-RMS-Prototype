@@ -849,11 +849,10 @@ export default function ModuleConfigTab({ showToast }) {
                     size="sm"
                     disabled={isCurrentArchived || Boolean(toggling[`${currentOffice.id}-all-batch`])}
                     onClick={() => handleBatchToggle(currentOffice.id, "all", true)}
-                    title={isCurrentArchived ? "Archived departments cannot be modified" : undefined}
-                    className="h-8 text-xs font-semibold rounded-xl border-gray-200 dark:border-white/10 cursor-pointer flex items-center gap-1.5 px-3 disabled:cursor-not-allowed disabled:opacity-50"
+                    title={isCurrentArchived ? "Archived departments cannot be modified" : "Enable all workspace features"}
+                    className="h-8 text-xs font-semibold rounded-xl border-gray-200 dark:border-white/10 cursor-pointer flex items-center justify-center px-3 disabled:cursor-not-allowed disabled:opacity-50"
                   >
-                    <HugeIcon  className="ph-bold ph-checks text-sm text-emerald-600 dark:text-emerald-400"></HugeIcon>
-                    <span>Enable</span>
+                    Enable
                   </Button>
                   <Button
                     variant="outline"
@@ -861,10 +860,9 @@ export default function ModuleConfigTab({ showToast }) {
                     disabled={isCurrentArchived || Boolean(toggling[`${currentOffice.id}-all-batch`])}
                     onClick={() => handleBatchToggle(currentOffice.id, "all", false)}
                     title={isCurrentArchived ? "Archived departments cannot be modified" : "Turn off optional features and keep required system tools only"}
-                    className="h-8 text-xs font-semibold rounded-xl border-gray-200 dark:border-white/10 text-gray-600 hover:text-red-600 cursor-pointer flex items-center gap-1.5 px-3 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="h-8 text-xs font-semibold rounded-xl border-gray-200 dark:border-white/10 text-gray-600 hover:text-red-600 cursor-pointer flex items-center justify-center px-3 disabled:cursor-not-allowed disabled:opacity-50"
                   >
-                    <HugeIcon  className="ph-bold ph-arrow-counter-clockwise text-sm"></HugeIcon>
-                    <span>Essentials Only</span>
+                    Reset
                   </Button>
                 </div>
               </div>
@@ -881,10 +879,10 @@ export default function ModuleConfigTab({ showToast }) {
                   <button
                     type="button"
                     onClick={() => window.dispatchEvent(new CustomEvent("switch-view", { detail: { view: "offices", officeId: currentOffice.id } }))}
-                    className="px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white dark:bg-amber-500 dark:hover:bg-amber-600 text-xs font-semibold shrink-0 cursor-pointer transition-colors shadow-2xs flex items-center gap-1.5 self-start sm:self-auto"
+                    title="Restore Department"
+                    className="px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white dark:bg-amber-500 dark:hover:bg-amber-600 text-xs font-semibold shrink-0 cursor-pointer transition-colors shadow-2xs flex items-center justify-center self-start sm:self-auto"
                   >
-                    <span>Restore Department</span>
-                    <HugeIcon  className="ph-bold ph-arrow-right text-xs"></HugeIcon>
+                    Restore
                   </button>
                 </div>
               )}
@@ -911,10 +909,10 @@ export default function ModuleConfigTab({ showToast }) {
                         <Button
                           variant="outline"
                           onClick={handleClearFilters}
+                          title="Reset Filters"
                           className="mt-6 flex h-10 items-center justify-center gap-2 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                         >
-                          <HugeIcon className="ph-bold ph-arrow-counter-clockwise text-[14px] shrink-0" />
-                          <span>Clear Filters</span>
+                          Reset
                         </Button>
                       </EmptyHeader>
                     </Empty>
@@ -1149,10 +1147,10 @@ export default function ModuleConfigTab({ showToast }) {
                   <Button
                     variant="outline"
                     onClick={handleClearFilters}
+                    title="Reset Filters"
                     className="mt-6 flex h-10 items-center justify-center gap-2 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                   >
-                    <HugeIcon className="ph-bold ph-arrow-counter-clockwise text-[14px] shrink-0" />
-                    <span>Clear Filters</span>
+                    Reset
                   </Button>
                 </EmptyHeader>
               </Empty>

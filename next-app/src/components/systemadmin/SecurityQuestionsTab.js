@@ -426,10 +426,10 @@ export default function SecurityQuestionsTab({ showToast }) {
                 <button
                   type="button"
                   onClick={handleAddQuestion}
+                  title="Add Security Question"
                   className="w-full h-12 rounded-xl border-2 border-dashed border-gray-200 hover:border-pup-maroon/60 dark:border-white/15 dark:hover:border-pup-maroon/60 bg-gray-50/40 hover:bg-pup-maroon/5 dark:bg-zinc-900/20 dark:hover:bg-pup-maroon/10 text-gray-600 dark:text-zinc-400 hover:text-pup-maroon dark:hover:text-pup-maroon transition-all flex items-center justify-center gap-2 text-xs font-semibold cursor-pointer active:scale-[0.99]"
                 >
-                  <HugeIcon className="ph-bold ph-plus text-sm" />
-                  <span>Add Security Question</span>
+                  Add
                 </button>
               </div>
             </div>

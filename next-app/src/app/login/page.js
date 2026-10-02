@@ -801,12 +801,13 @@ export default function Home() {
                       <Button
                         type="submit"
                         disabled={forgotLoading || !forgotIdentifier.trim()}
+                        title="Locate Account"
                         className="w-full h-11 rounded-full bg-gray-900 hover:bg-black dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100 text-[13px] font-medium text-white active:scale-95 disabled:opacity-50 transition-all flex items-center justify-center"
                       >
                         {forgotLoading ? (
                           <HugeIcon  className="ph-bold ph-spinner animate-spin text-lg flex items-center justify-center"></HugeIcon>
                         ) : (
-                          <span>Locate Account</span>
+                          <span>Locate</span>
                         )}
                       </Button>
                     </div>
@@ -916,12 +917,13 @@ export default function Home() {
                       <Button
                         type="submit"
                         disabled={forgotLoading || !forgotAnswer.trim() || !forgotNewPassword || !forgotConfirmPassword}
+                        title="Reset Password"
                         className="w-full h-11 rounded-full bg-gray-900 hover:bg-black dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100 text-[13px] font-medium text-white active:scale-95 disabled:opacity-50 transition-all flex items-center justify-center"
                       >
                         {forgotLoading ? (
                           <HugeIcon  className="ph-bold ph-spinner animate-spin text-lg flex items-center justify-center"></HugeIcon>
                         ) : (
-                          <span>Reset Password</span>
+                          <span>Reset</span>
                         )}
                       </Button>
                     </div>
@@ -1285,6 +1287,7 @@ export default function Home() {
                 <Button
                   type="submit"
                   disabled={twoFactorLoading}
+                  title="Verify & Log In"
                   className="w-full h-11 rounded-full bg-gray-900 hover:bg-black dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100 text-white dark:text-gray-900 font-semibold text-sm shadow-sm active:scale-95 transition-all disabled:opacity-50 group rounded-xl"
                 >
                   {twoFactorLoading ? (
@@ -1293,10 +1296,7 @@ export default function Home() {
                       Verifying...
                     </>
                   ) : (
-                    <>
-                      <HugeIcon  className="ph-bold ph-lock-key"></HugeIcon>
-                      Verify & Log In
-                    </>
+                    "Verify"
                   )}
                 </Button>
                 <Button

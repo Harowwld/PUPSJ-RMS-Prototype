@@ -8,7 +8,7 @@ export default function StudentComplianceSkeleton() {
     <div className="flex flex-col w-full flex-1 min-h-0 space-y-4 animate-in fade-in duration-200">
       <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
         {/* Header Skeleton */}
-        <div className="p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-100 dark:border-white/10">
+        <div className="p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <Skeleton className="w-10 h-10 rounded-xl" />
             <div className="space-y-2">

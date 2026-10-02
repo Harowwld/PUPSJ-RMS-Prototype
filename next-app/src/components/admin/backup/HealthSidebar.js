@@ -225,7 +225,7 @@ export default function HealthSidebar({
                     )}
                     title={externalDrive?.isEmulated ? "Disable simulated demo drive" : "Simulate an external storage drive for demonstration"}
                   >
-                    <span>{externalDrive?.isEmulated ? "Exit Demo" : "Simulate"}</span>
+                    <span>{externalDrive?.isEmulated ? "Exit" : "Simulate"}</span>
                   </Button>
                 )}
               </div>

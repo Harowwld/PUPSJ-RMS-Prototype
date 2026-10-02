@@ -352,7 +352,7 @@ export default function DigitizationComplianceTab({
     try {
       await new Promise(resolve => setTimeout(resolve, 600));
 
-      const q = (cell) => `"${String(cell).replace(/"/g, '""')}"`;
+      const q = (cell) => `"${String(cell ?? "").replace(/"/g, '""')}"`;
       const row = (cells) => cells.map(q).join(",");
 
       const lines = [
@@ -364,16 +364,16 @@ export default function DigitizationComplianceTab({
         row(["Requirement", meta?.definitions?.expectedCountFormula || ""]),
         "",
         row(["Summary Metrics", "Value"]),
-        row(["Total students", summary.totalStudents]),
-        row(["Fully digitized students", summary.digitizedStudents]),
-        row(["Incomplete students", summary.notDigitizedStudents]),
+        row(["Total students", summary.totalStudents ?? 0]),
+        row(["Fully digitized students", summary.digitizedStudents ?? 0]),
+        row(["Incomplete students", summary.notDigitizedStudents ?? 0]),
         row([
           "Average record completeness",
-          summary.percentDigitized != null ? `${summary.percentDigitized}%` : "N/A",
+          summary.percentDigitized != null ? `${summary.percentDigitized}%` : "0%",
         ]),
-        row(["Full Digitization Rate", summary.fullyDigitizedRate != null ? `${summary.fullyDigitizedRate}%` : "N/A"]),
-        row(["Total digitized files", summary.totalDigitizedDocsCount]),
-        row(["Total expected files", summary.totalExpectedDocsCount]),
+        row(["Full Digitization Rate", summary.fullyDigitizedRate != null ? `${summary.fullyDigitizedRate}%` : "0%"]),
+        row(["Total digitized files", summary.totalDigitizedDocsCount ?? 0]),
+        row(["Total expected files", summary.totalExpectedDocsCount ?? 0]),
       ];
 
       if (byCourse.length > 0) {
@@ -383,10 +383,10 @@ export default function DigitizationComplianceTab({
         for (const r of byCourse) {
           lines.push(
             row([
-              r.courseCode,
-              r.total,
-              r.digitized,
-              r.percent != null ? `${r.percent}%` : "N/A",
+              r.courseCode || "—",
+              r.total ?? 0,
+              r.digitized ?? 0,
+              r.percent != null ? `${r.percent}%` : "0%",
             ])
           );
         }
@@ -1099,10 +1099,10 @@ export default function DigitizationComplianceTab({
                       <Button 
                         variant="outline" 
                         onClick={handleClearAll}
-                        className="mt-6 flex h-10 items-center justify-center gap-2 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
+                        title="Reset Filters"
+                        className="mt-6 flex h-10 items-center justify-center rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                       >
-                        <HugeIcon className="ph-bold ph-arrow-counter-clockwise text-[14px] shrink-0" />
-                        <span>Clear Filters</span>
+                        Reset
                       </Button>
                     )}
                   </EmptyHeader>

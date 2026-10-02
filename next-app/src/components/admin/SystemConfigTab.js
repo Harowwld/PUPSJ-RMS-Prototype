@@ -85,6 +85,7 @@ export default function SystemConfigTab({
 
   // Document Types State
   const [docTypes, setDocTypes] = useState([])
+  const [docPurposeFilter, setDocPurposeFilter] = useState("all")
   // Courses State
   const [courses, setCourses] = useState([])
 
@@ -206,7 +207,13 @@ export default function SystemConfigTab({
     const matchesStatus = showArchived
       ? dt.status === "Archived"
       : dt.status !== "Archived"
-    return matchesSearch && matchesStatus
+    const matchesPurpose =
+      docPurposeFilter === "requestable"
+        ? Boolean(dt.is_requestable)
+        : docPurposeFilter === "compliance"
+        ? Boolean(dt.is_compliance)
+        : true
+    return matchesSearch && matchesStatus && matchesPurpose
   })
   const filteredDocTypes = applySortAndPagination(
     filteredDocTypesFull,
@@ -1093,6 +1100,8 @@ export default function SystemConfigTab({
                 docTypes={docTypes}
                 docSearch={docSearch}
                 setDocSearch={setDocSearch}
+                docPurposeFilter={docPurposeFilter}
+                setDocPurposeFilter={setDocPurposeFilter}
                 showArchived={showArchived}
                 setShowArchived={setShowArchived}
                 pageDoc={pageDoc}

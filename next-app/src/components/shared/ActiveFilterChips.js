@@ -126,9 +126,10 @@ export default function ActiveFilterChips({
         <button
           type="button"
           onClick={onClearAll}
+          title="Clear all active filters"
           className="text-[11px] font-medium text-pup-maroon hover:text-pup-darkMaroon dark:text-red-400 dark:hover:text-red-300 hover:underline cursor-pointer ml-1 py-0.5 px-1.5 transition-colors select-none"
         >
-          Clear all
+          Clear
         </button>
       )}
     </div>

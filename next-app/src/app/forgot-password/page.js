@@ -256,12 +256,13 @@ export default function ForgotPasswordPage() {
                   <Button
                     type="submit"
                     disabled={forgotLoading || !forgotIdentifier.trim()}
+                    title="Locate Account"
                     className="w-full h-11 rounded-[8px] btn-brand-red text-[13px] font-medium text-white active:scale-95 disabled:opacity-50 transition-all flex items-center justify-center"
                   >
                     {forgotLoading ? (
                       <HugeIcon  className="ph-bold ph-spinner animate-spin text-lg flex items-center justify-center"></HugeIcon>
                     ) : (
-                      <span>Locate Account</span>
+                      <span>Locate</span>
                     )}
                   </Button>
                 </div>
@@ -357,12 +358,13 @@ export default function ForgotPasswordPage() {
                   <Button
                     type="submit"
                     disabled={forgotLoading || !forgotResetToken.trim() || !forgotNewPassword || !forgotConfirmPassword}
+                    title="Reset Password"
                     className="w-full h-11 rounded-[8px] btn-brand-red text-[13px] font-medium text-white active:scale-95 disabled:opacity-50 transition-all flex items-center justify-center"
                   >
                     {forgotLoading ? (
                       <HugeIcon  className="ph-bold ph-spinner animate-spin text-lg flex items-center justify-center"></HugeIcon>
                     ) : (
-                      <span>Reset Password</span>
+                      <span>Reset</span>
                     )}
                   </Button>
                 </div>

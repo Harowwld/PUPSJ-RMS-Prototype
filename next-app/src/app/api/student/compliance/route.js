@@ -165,11 +165,11 @@ export async function GET(req) {
 
   const effectiveStudentNo = student?.student_no || studentNo;
 
-  // 2. Fetch Active Document Types for Registrar
+  // 2. Fetch Active Compliance Document Types for Registrar
   const docTypes = await query(
-    `SELECT id, name, name_norm, office_id
+    `SELECT id, name, name_norm, office_id, compliance_category
        FROM document_types
-      WHERE office_id = 'registrar' AND status = 'Active'
+      WHERE office_id = 'registrar' AND status = 'Active' AND is_compliance = TRUE
       ORDER BY LOWER(name) ASC`
   );
 
@@ -243,7 +243,7 @@ export async function GET(req) {
       id: dt.id,
       docType: dt.name,
       groupKey: gKey,
-      category: getRequirementCategory(dt.name),
+      category: dt.compliance_category || getRequirementCategory(dt.name),
       description: getRequirementDescription(dt.name),
       instructions: getRequirementInstructions(dt.name),
       status, // Strictly "Submitted" or "Not Submitted"

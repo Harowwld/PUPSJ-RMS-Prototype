@@ -124,6 +124,9 @@ function StatusBadge({ status }) {
   } else if (s === "rejected") {
     badgeClass = "bg-rose-50 text-rose-800 border-rose-200/80 dark:bg-rose-950/30 dark:text-rose-300 dark:border-rose-800/40";
     label = "Rejected";
+  } else if (s === "superseded") {
+    badgeClass = "bg-zinc-100 text-zinc-600 border-zinc-200 dark:bg-zinc-800 dark:text-zinc-400 dark:border-zinc-700";
+    label = "Superseded";
   }
   return <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${badgeClass}`}>{label}</span>;
 }
@@ -196,6 +199,18 @@ export default function StudentDashboard() {
     liquidationFile: null,
   });
   const [postEventSubmitting, setPostEventSubmitting] = useState(false);
+
+  // Constitution & By-Laws (CBL) Governance States
+  const [selectedCblOrgId, setSelectedCblOrgId] = useState("");
+  const [cblVersions, setCblVersions] = useState([]);
+  const [cblOrgData, setCblOrgData] = useState(null);
+  const [cblLoading, setCblLoading] = useState(false);
+  const [cblForm, setCblForm] = useState({
+    versionTag: "",
+    amendmentSummary: "",
+    file: null,
+  });
+  const [cblSubmitting, setCblSubmitting] = useState(false);
 
   // Filter state for OSAS Event Proposals
   const [proposalSearch, setProposalSearch] = useState("");
@@ -588,7 +603,7 @@ export default function StudentDashboard() {
       const [requestRes, proposalRes, typesRes, coursesRes, orgsRes, postEventRes] = await Promise.all([
         fetch("/api/student/document-requests", { cache: "no-store" }),
         fetch("/api/student/event-proposals", { cache: "no-store" }),
-        fetch("/api/doc-types", { cache: "no-store" }),
+        fetch("/api/doc-types?scope=requestable", { cache: "no-store" }),
         fetch("/api/courses", { cache: "no-store" }),
         fetch("/api/student/organizations", { cache: "no-store" }),
         fetch("/api/student/post-event-reports", { cache: "no-store" }).catch(() => ({ ok: false, json: async () => ({}) })),
@@ -618,6 +633,7 @@ export default function StudentDashboard() {
           ...prev,
           organizationId: prev.organizationId || loadedOrgs[0].organization_id,
         }));
+        setSelectedCblOrgId((prev) => prev || loadedOrgs[0].organization_id);
       }
       setPostEventReports(postEventJson?.data?.reports || []);
       setPendingPostEvents(postEventJson?.data?.pendingEvents || []);
@@ -917,6 +933,74 @@ export default function StudentDashboard() {
     }
   }
 
+  const loadCblData = useCallback(async (orgId) => {
+    if (!orgId) return;
+    setCblLoading(true);
+    try {
+      const res = await fetch(`/api/student/organizations/${orgId}/bylaws`, { cache: "no-store" });
+      const json = await res.json();
+      if (res.ok && json.ok) {
+        setCblOrgData(json.data?.organization || null);
+        setCblVersions(Array.isArray(json.data?.versions) ? json.data.versions : []);
+      }
+    } catch (err) {
+      console.error("Failed to load CBL versions:", err);
+    } finally {
+      setCblLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (osasSubView === "cbl" && selectedCblOrgId) {
+      loadCblData(selectedCblOrgId);
+    }
+  }, [osasSubView, selectedCblOrgId, loadCblData]);
+
+  async function submitCbl(event) {
+    event.preventDefault();
+    setMessage("");
+    setCblSubmitting(true);
+    try {
+      const selectedOrg = myOrganizations.find((o) => o.organization_id === selectedCblOrgId) || myOrganizations[0];
+      if (!selectedOrg) {
+        throw new Error("You must be an authorized officer in the OSAS whitelist to submit Constitution & By-Laws documents.");
+      }
+      if (!cblForm.file) {
+        throw new Error("Please upload the Constitution & By-Laws PDF document.");
+      }
+      const form = new FormData();
+      form.set("versionTag", cblForm.versionTag.trim() || `Amendment ${new Date().getFullYear()}`);
+      form.set("amendmentSummary", cblForm.amendmentSummary.trim() || "");
+      form.set("file", cblForm.file);
+
+      const res = await fetch(`/api/student/organizations/${selectedOrg.organization_id}/bylaws`, {
+        method: "POST",
+        body: form,
+      });
+      const json = await res.json();
+      if (!res.ok || !json.ok) {
+        const error = json.error || "Unable to submit Constitution & By-Laws.";
+        setMessage(error);
+        showToast("Submission failed", error, true);
+        return;
+      }
+      setCblForm({
+        versionTag: "",
+        amendmentSummary: "",
+        file: null,
+      });
+      setIsFormOpen(false);
+      showToast("CBL Submitted", "Your Constitution & By-Laws document has been submitted to OSAS for review.");
+      await loadCblData(selectedOrg.organization_id);
+    } catch (error) {
+      const message = error.message || "Unable to submit Constitution & By-Laws.";
+      setMessage(message);
+      showToast("Submission failed", message, true);
+    } finally {
+      setCblSubmitting(false);
+    }
+  }
+
   if (!me) {
     return <StudentDashboardSkeleton view={view} />;
   }
@@ -1027,9 +1111,10 @@ export default function StudentDashboard() {
                                 ? "border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700"
                                 : "btn-brand-red text-white! border-0"
                             )}
+                            title={isFormOpen ? "Hide Request Form" : "New Document Request"}
                             style={!isFormOpen ? { color: "#ffffff" } : undefined}
                           >
-                            {isFormOpen ? "Hide Form" : "New Request"}
+                            {isFormOpen ? "Close" : "Request"}
                           </Button>
                         </div>
                       }
@@ -1162,7 +1247,13 @@ export default function StudentDashboard() {
                                   </option>
                                 ))}
                               </Select>
-                              {docTypes.length === 0 && <p className="mt-1 text-xs text-amber-600">No active Registrar document types are available.</p>}
+                              {docTypes.length === 0 ? (
+                                <p className="mt-1 text-xs text-amber-600">No active requestable Registrar document types are available.</p>
+                              ) : (
+                                <p className="mt-1.5 text-[11px] text-gray-500 dark:text-zinc-400">
+                                  Only university-issued credentials and certifications may be requested here. For submission of enrollment records (e.g. Health Information Sheet, PSA Birth Certificate), visit the <strong className="font-semibold text-pup-maroon dark:text-red-400">Compliance Checklist</strong> tab.
+                                </p>
+                              )}
                             </div>
                           </div>
 
@@ -1361,6 +1452,7 @@ export default function StudentDashboard() {
                               <Button
                                 type="submit"
                                 disabled={requestSubmitting || docTypes.length === 0}
+                                title="Submit Request"
                                 className="w-full sm:w-auto h-10 px-6 btn-brand-red text-white! font-semibold text-xs shadow-xs rounded-xl! gap-2 flex items-center justify-center dark:shadow-none active:scale-95 cursor-pointer border-0"
                                 style={{ color: "#ffffff" }}
                               >
@@ -1370,7 +1462,7 @@ export default function StudentDashboard() {
                                     Submitting...
                                   </>
                                 ) : (
-                                  "Submit Request"
+                                  "Submit"
                                 )}
                               </Button>
                             </div>
@@ -1558,19 +1650,20 @@ export default function StudentDashboard() {
                                           setRequestFilters({ status: [], doc_type: [] });
                                           setCurrentPage(1);
                                         }}
+                                        title="Reset Filters"
                                         className="mt-6 flex h-10 items-center justify-center gap-2 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                                       >
-                                        <HugeIcon className="ph-bold ph-arrow-counter-clockwise text-[14px] shrink-0" />
-                                        <span>Clear Filters</span>
+                                        Reset
                                       </Button>
                                     ) : (
                                       <Button
                                         type="button"
                                         onClick={() => setIsFormOpen(true)}
+                                        title="New Document Request"
                                         className="mt-5 flex h-10 px-5 text-xs font-semibold rounded-xl! btn-brand-red text-white! active:scale-95 disabled:opacity-50 transition-all cursor-pointer shadow-xs border-0"
                                         style={{ color: "#ffffff" }}
                                       >
-                                        New Request
+                                        Request
                                       </Button>
                                     )}
                                   </EmptyHeader>
@@ -1782,7 +1875,7 @@ export default function StudentDashboard() {
                           onClick={() => setIsFormOpen((prev) => !prev)}
                           variant={isFormOpen ? "outline" : "default"}
                           disabled={myOrganizations.length === 0}
-                          title={myOrganizations.length === 0 ? "You must be an authorized officer in the OSAS whitelist to submit proposals" : undefined}
+                          title={myOrganizations.length === 0 ? "You must be an authorized officer in the OSAS whitelist to submit proposals" : isFormOpen ? "Close Form" : osasSubView === "proposals" ? "New Proposal" : osasSubView === "post_event" ? "New Report" : "Submit CBL"}
                           className={cn(
                             "flex h-10 px-5 text-xs font-semibold rounded-xl! active:scale-95 transition-all cursor-pointer shadow-xs",
                             isFormOpen
@@ -1792,7 +1885,7 @@ export default function StudentDashboard() {
                           )}
                           style={!isFormOpen && myOrganizations.length > 0 ? { color: "#ffffff" } : undefined}
                         >
-                          {isFormOpen ? "Hide Form" : osasSubView === "proposals" ? "New Proposal" : osasSubView === "post_event" ? "New Report" : "New Revision"}
+                          {isFormOpen ? "Close" : "Submit"}
                         </Button>
                       </div>
                     }
@@ -1825,7 +1918,7 @@ export default function StudentDashboard() {
                       </div>
                       <div className="text-xs text-amber-900 dark:text-amber-200 leading-relaxed">
                         <div className="font-bold mb-0.5">Officer Whitelist Notice</div>
-                        Event proposals may only be submitted by recognized student organization officers whitelisted by OSAS. If you represent an accredited organization, please contact OSAS to whitelist your student account (<strong>{me?.email}</strong>).
+                        Event proposals and CBL submissions may only be submitted by recognized student organization officers whitelisted by OSAS. If you represent an accredited organization, please contact OSAS to whitelist your student account (<strong>{me?.email}</strong>).
                       </div>
                     </div>
                   )}
@@ -1874,6 +1967,32 @@ export default function StudentDashboard() {
                           osasSubView === "post_event" ? "bg-white/20 text-white" : "bg-gray-200/80 dark:bg-zinc-700 text-gray-700 dark:text-zinc-300"
                         )}>
                           {postEventReports.length}
+                        </span>
+                      )}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setOsasSubView("cbl")}
+                      className={cn(
+                        "flex-1 inline-flex items-center justify-center gap-2 py-2 px-3 text-xs font-semibold rounded-lg transition-all cursor-pointer",
+                        osasSubView === "cbl"
+                          ? "bg-pup-maroon text-white shadow-xs"
+                          : "text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
+                      )}
+                    >
+                      <HugeIcon className="ph-bold ph-book-bookmark text-sm" />
+                      <span>Constitution & By-Laws</span>
+                      {cblVersions.filter((v) => v.status === "Pending").length > 0 ? (
+                        <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-amber-500 text-white animate-pulse">
+                          Pending
+                        </span>
+                      ) : (
+                        <span className={cn(
+                          "px-1.5 py-0.2 rounded-full text-[10px] font-bold",
+                          osasSubView === "cbl" ? "bg-white/20 text-white" : "bg-gray-200/80 dark:bg-zinc-700 text-gray-700 dark:text-zinc-300"
+                        )}>
+                          {cblVersions.length}
                         </span>
                       )}
                     </button>
@@ -1986,6 +2105,7 @@ export default function StudentDashboard() {
                                 <Button
                                   type="submit"
                                   disabled={proposalSubmitting}
+                                  title="Submit Proposal"
                                   className="w-full sm:w-auto h-10 px-6 btn-brand-red text-white! font-semibold text-xs shadow-xs rounded-xl! gap-2 flex items-center justify-center dark:shadow-none active:scale-95 cursor-pointer border-0"
                                   style={{ color: "#ffffff" }}
                                 >
@@ -1995,7 +2115,7 @@ export default function StudentDashboard() {
                                       Submitting...
                                     </>
                                   ) : (
-                                    "Submit Proposal"
+                                    "Submit"
                                   )}
                                 </Button>
                               </div>
@@ -2065,10 +2185,11 @@ export default function StudentDashboard() {
                                 <Button
                                   type="button"
                                   onClick={() => setIsFormOpen(true)}
+                                  title="New Event Proposal"
                                   className="mt-5 flex h-10 px-5 text-xs font-semibold rounded-xl! btn-brand-red text-white! active:scale-95 cursor-pointer shadow-xs border-0"
                                   style={{ color: "#ffffff" }}
                                 >
-                                  New Proposal
+                                  Submit
                                 </Button>
                               </EmptyHeader>
                             </Empty>
@@ -2153,10 +2274,10 @@ export default function StudentDashboard() {
                                             }));
                                             setIsFormOpen(true);
                                           }}
-                                          className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-lg bg-amber-600 hover:bg-amber-700 text-white shadow-xs active:scale-95 transition-all cursor-pointer"
+                                          title="Submit Post-Event Report"
+                                          className="inline-flex items-center justify-center px-3 py-1 text-xs font-semibold rounded-lg bg-amber-600 hover:bg-amber-700 text-white shadow-xs active:scale-95 transition-all cursor-pointer"
                                         >
-                                          <span>Submit Post-Event Report</span>
-                                          <HugeIcon className="ph-bold ph-arrow-right text-[12px]" />
+                                          Submit
                                         </button>
                                       )}
                                     </div>
@@ -2304,10 +2425,11 @@ export default function StudentDashboard() {
                                 <Button
                                   type="submit"
                                   disabled={postEventSubmitting}
+                                  title="Submit Post-Event Report"
                                   className="w-full sm:w-auto h-10 px-6 btn-brand-red text-white! font-semibold text-xs shadow-xs rounded-xl! gap-2 flex items-center justify-center dark:shadow-none active:scale-95 cursor-pointer border-0"
                                   style={{ color: "#ffffff" }}
                                 >
-                                  {postEventSubmitting ? "Submitting Report..." : "Submit Post-Event Report"}
+                                  {postEventSubmitting ? "Submitting..." : "Submit"}
                                 </Button>
                               </div>
                             </div>
@@ -2355,9 +2477,10 @@ export default function StudentDashboard() {
                                       docType: "Post-Event Narrative Report",
                                       originalFilename: report.narrative_original_filename,
                                     })}
+                                    title="Preview Narrative Report"
                                     className="h-7 px-2.5 text-[11px] font-semibold rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 shadow-xs cursor-pointer active:scale-95 transition-all"
                                   >
-                                    Preview Narrative
+                                    Preview
                                   </Button>
                                   {report.liquidation_storage_filename && (
                                     <Button
@@ -2372,9 +2495,10 @@ export default function StudentDashboard() {
                                         docType: "Financial Liquidation Report",
                                         originalFilename: report.liquidation_original_filename,
                                       })}
+                                      title="Preview Financial Liquidation"
                                       className="h-7 px-2.5 text-[11px] font-semibold rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 shadow-xs cursor-pointer active:scale-95 transition-all"
                                     >
-                                      Preview Liquidation
+                                      Preview
                                     </Button>
                                   )}
                                 </div>
@@ -2386,6 +2510,280 @@ export default function StudentDashboard() {
                               )}
                             </div>
                           ))
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* STREAM 3: CONSTITUTION & BY-LAWS */}
+                  {osasSubView === "cbl" && (
+                    <div className="space-y-0">
+                      {/* Organization Selector for students in multiple organizations */}
+                      {myOrganizations.length > 1 && (
+                        <div className="border-t border-gray-100 dark:border-white/10 p-4 bg-gray-50/70 dark:bg-zinc-800/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                          <div className="flex items-center gap-2">
+                            <HugeIcon className="ph-bold ph-buildings text-pup-maroon dark:text-red-400" />
+                            <span className="text-xs font-semibold text-gray-700 dark:text-zinc-300">Active Organization Context:</span>
+                          </div>
+                          <Select
+                            value={selectedCblOrgId}
+                            onChange={(e) => {
+                              setSelectedCblOrgId(e.target.value);
+                              loadCblData(e.target.value);
+                            }}
+                            className="w-full sm:w-72 h-9 text-xs"
+                          >
+                            {myOrganizations.map((o) => (
+                              <option key={o.organization_id} value={o.organization_id}>
+                                {o.organization_name} ({o.officer_position})
+                              </option>
+                            ))}
+                          </Select>
+                        </div>
+                      )}
+
+                      {/* Inline CBL Submission Form */}
+                      {isFormOpen && myOrganizations.length > 0 && (
+                        <div className="border-t border-gray-100 dark:border-white/10 p-5 sm:p-6 bg-gray-50/40 dark:bg-zinc-900/20 animate-in fade-in slide-in-from-top-2 duration-fast">
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-gray-100 dark:border-white/10">
+                            <div className="flex items-center gap-3">
+                              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-50 text-pup-maroon dark:bg-red-950/40 dark:text-red-400">
+                                <HugeIcon className="ph-bold ph-book-open text-xl" />
+                              </div>
+                              <div>
+                                <h2 className="text-[15px] font-semibold text-gray-900 dark:text-zinc-50">Submit Constitution & By-Laws (CBL)</h2>
+                                <p className="text-xs text-gray-500 dark:text-zinc-400">
+                                  Submit a ratified charter, baseline document, or amendment for OSAS review and archival.
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+
+                          <form onSubmit={submitCbl} className="flex flex-col gap-4 mt-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div className="min-w-0">
+                                <label className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-200">
+                                  Version Title / Tag <span className="text-red-500">*</span>
+                                </label>
+                                <Input
+                                  placeholder="e.g. 2026 Ratified Charter, CBL Amendment 2"
+                                  value={cblForm.versionTag}
+                                  onChange={(e) => setCblForm({ ...cblForm, versionTag: e.target.value })}
+                                  required
+                                  className="h-10 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-3 text-xs text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 shadow-none outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon"
+                                />
+                              </div>
+
+                              <div className="min-w-0">
+                                <label className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-200">
+                                  Official PDF Document <span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                  type="file"
+                                  accept="application/pdf"
+                                  required
+                                  onChange={(e) => setCblForm({ ...cblForm, file: e.target.files?.[0] || null })}
+                                  className="h-10 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-3 py-2 text-xs text-gray-700 dark:text-zinc-300 file:mr-3 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-[11px] file:font-semibold file:bg-red-50 file:text-pup-maroon hover:file:bg-red-100 cursor-pointer"
+                                />
+                              </div>
+                            </div>
+
+                            <div className="min-w-0">
+                              <label className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-200">
+                                Summary of Amendments / Notes for OSAS
+                              </label>
+                              <textarea
+                                placeholder="Describe the amendments made, articles updated, or context of this ratification..."
+                                value={cblForm.amendmentSummary}
+                                onChange={(e) => setCblForm({ ...cblForm, amendmentSummary: e.target.value })}
+                                rows={3}
+                                className="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 p-3 text-xs text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 shadow-none outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon"
+                              />
+                            </div>
+
+                            <div className="flex items-center justify-end gap-3 pt-2">
+                              <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => setIsFormOpen(false)}
+                                className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 shadow-xs cursor-pointer active:scale-95 transition-all"
+                              >
+                                Cancel
+                              </Button>
+                              <Button
+                                type="submit"
+                                disabled={cblSubmitting}
+                                title="Submit to OSAS"
+                                className="h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all inline-flex items-center gap-2"
+                              >
+                                {cblSubmitting ? (
+                                  <>
+                                    <HugeIcon className="ph ph-spinner animate-spin text-sm" />
+                                    <span>Submitting...</span>
+                                  </>
+                                ) : (
+                                  <span>Submit</span>
+                                )}
+                              </Button>
+                            </div>
+                          </form>
+                        </div>
+                      )}
+
+                      {/* Active Charter Status Card */}
+                      <div className="border-t border-gray-100 dark:border-white/10 p-5 bg-gray-50/40 dark:bg-zinc-900/30">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <h3 className="text-sm font-bold text-gray-900 dark:text-zinc-100">
+                                Current Active Charter
+                              </h3>
+                              {cblOrgData?.hasBylaws ? (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200/80 dark:bg-emerald-950/30 dark:text-emerald-300 dark:border-emerald-800/40">
+                                  <HugeIcon className="ph-fill ph-check-circle text-xs" />
+                                  Active & Ratified
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-amber-50 text-amber-800 border border-amber-200/80 dark:bg-amber-950/30 dark:text-amber-300 dark:border-amber-800/40">
+                                  <HugeIcon className="ph-fill ph-warning-circle text-xs" />
+                                  Not Yet Archived
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-xs text-gray-500 dark:text-zinc-400 mt-1">
+                              {cblOrgData?.hasBylaws
+                                ? `Official Constitution & By-Laws on file for ${cblOrgData.name} (${cblOrgData.originalFilename || "CBL.pdf"}).`
+                                : `No ratified Constitution & By-Laws on file for ${cblOrgData?.name || "this organization"}. Click "Submit CBL" above to submit the baseline charter.`}
+                            </p>
+                          </div>
+
+                          {cblOrgData?.hasBylaws && selectedCblOrgId && (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={() => handleOpenPdfPreview(null, {
+                                url: `/api/student/organizations/${selectedCblOrgId}/bylaws?file=1`,
+                                title: `${cblOrgData.name} — Constitution & By-Laws`,
+                                subtitle: `Official ratified charter on file with OSAS.`,
+                                studentName: me?.name || "Student Officer",
+                                docType: "Constitution & By-Laws",
+                                originalFilename: cblOrgData.originalFilename || "Constitution-and-By-Laws.pdf",
+                              })}
+                              title="Preview Active CBL"
+                              className="h-9 px-4 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 shadow-xs cursor-pointer active:scale-95 transition-all inline-flex items-center justify-center shrink-0"
+                            >
+                              Preview
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Submissions & Versions History */}
+                      <div className="border-t border-gray-100 dark:border-white/10 p-5 bg-white dark:bg-zinc-900/50 space-y-4">
+                        <div className="flex items-center justify-between">
+                          <h4 className="text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
+                            CBL Submission & Revision History ({cblVersions.length})
+                          </h4>
+                          <span className="text-[11px] text-gray-400">
+                            Review feedback and version milestones
+                          </span>
+                        </div>
+
+                        {cblLoading ? (
+                          <div className="space-y-3">
+                            <Skeleton className="h-20 w-full rounded-2xl" />
+                            <Skeleton className="h-20 w-full rounded-2xl" />
+                          </div>
+                        ) : cblVersions.length === 0 ? (
+                          <div className="rounded-2xl border border-dashed border-gray-200 dark:border-white/10 p-8 text-center text-xs text-gray-500 dark:text-zinc-400 bg-gray-50/40 dark:bg-zinc-900/30">
+                            <HugeIcon className="ph-duotone ph-book-open text-3xl text-gray-400 mb-2" />
+                            <p className="font-semibold text-gray-700 dark:text-zinc-300">No CBL submissions yet</p>
+                            <p className="text-[11px] text-gray-400 mt-0.5">
+                              Click &quot;Submit CBL&quot; above to submit your organization&apos;s Constitution & By-Laws or proposed amendments.
+                            </p>
+                            {myOrganizations.length > 0 && !isFormOpen && (
+                              <Button
+                                type="button"
+                                onClick={() => setIsFormOpen(true)}
+                                title="Submit CBL Document"
+                                className="mt-3 h-8 px-4 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all"
+                              >
+                                Submit
+                              </Button>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="space-y-3">
+                            {cblVersions.map((ver) => (
+                              <div
+                                key={ver.id}
+                                className="rounded-2xl border border-gray-200/80 dark:border-white/10 bg-white dark:bg-zinc-900 p-4 space-y-3 shadow-xs hover:border-gray-300 dark:hover:border-zinc-700 transition-all"
+                              >
+                                <div className="flex items-start justify-between gap-3">
+                                  <div>
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                      <span className="px-2 py-0.5 text-xs font-bold rounded-lg bg-red-50 text-pup-maroon dark:bg-red-950/40 dark:text-red-400 border border-red-100 dark:border-red-900/30">
+                                        {ver.version_tag || `v${ver.version_number || "1.0"}`}
+                                      </span>
+                                      <StatusBadge status={ver.status} />
+                                      {ver.effective_date && (
+                                        <span className="text-[11px] text-gray-500 dark:text-zinc-400">
+                                          Effective: <strong className="text-gray-700 dark:text-zinc-300">{ver.effective_date}</strong>
+                                        </span>
+                                      )}
+                                    </div>
+                                    <p className="text-xs font-medium text-gray-800 dark:text-zinc-200 mt-2">
+                                      {ver.amendment_summary || "Constitution & By-Laws official document"}
+                                    </p>
+                                  </div>
+
+                                  {selectedCblOrgId && (
+                                    <Button
+                                      type="button"
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() =>
+                                        handleOpenPdfPreview(null, {
+                                          url: `/api/student/organizations/${selectedCblOrgId}/bylaws?file=1&versionId=${ver.id}`,
+                                          title: `${cblOrgData?.name || "Organization"} — ${ver.version_tag || "CBL"}`,
+                                          subtitle: `Submitted by ${ver.submitted_by_name || ver.submitted_by_email || "Student Officer"}. Status: ${ver.status}`,
+                                          studentName: ver.submitted_by_name || me?.name || "Student",
+                                          docType: "Constitution & By-Laws",
+                                          originalFilename: ver.original_filename || "Constitution-and-By-Laws.pdf",
+                                        })
+                                      }
+                                      title="Preview PDF Document"
+                                      className="h-8 px-3 text-xs font-semibold text-pup-maroon dark:text-red-400 hover:bg-gray-50 dark:hover:bg-zinc-800 rounded-lg shrink-0 cursor-pointer active:scale-95 transition-all"
+                                    >
+                                      Preview
+                                    </Button>
+                                  )}
+                                </div>
+
+                                <div className="pt-2 border-t border-gray-100 dark:border-white/5 flex items-center justify-between text-[11px] text-gray-400 dark:text-zinc-500">
+                                  <span>
+                                    Submitted by {ver.submitted_by_name || ver.submitted_by_email || "Student Officer"}
+                                    {ver.submitted_by_student_no ? ` (${ver.submitted_by_student_no})` : ""}
+                                  </span>
+                                  <span>
+                                    {ver.created_at
+                                      ? new Date(ver.created_at).toLocaleDateString(undefined, {
+                                          month: "short",
+                                          day: "numeric",
+                                          year: "numeric",
+                                        })
+                                      : ""}
+                                  </span>
+                                </div>
+
+                                {ver.review_notes && (
+                                  <div className="text-[11px] bg-amber-50/70 dark:bg-amber-950/30 p-2.5 rounded-xl border border-amber-200/60 dark:border-amber-900/30 text-amber-900 dark:text-amber-200">
+                                    <strong className="font-semibold">OSAS Review Feedback:</strong> {ver.review_notes}
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
                         )}
                       </div>
                     </div>
@@ -2450,9 +2848,10 @@ export default function StudentDashboard() {
                       setFeedbackInitialRating(selectedRequestForDetail.feedback?.rating || 0);
                       setFeedbackModalOpen(true);
                     }}
+                    title="Edit Feedback"
                     className="text-[11px] font-semibold text-pup-maroon hover:underline dark:text-red-400 cursor-pointer"
                   >
-                    Edit Feedback
+                    Edit
                   </button>
                 </div>
 
@@ -2524,9 +2923,10 @@ export default function StudentDashboard() {
                     setFeedbackInitialRating(0);
                     setFeedbackModalOpen(true);
                   }}
+                  title="Rate Experience"
                   className="h-8 px-3 text-xs font-semibold rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all shrink-0"
                 >
-                  Rate Experience
+                  Rate
                 </Button>
               </div>
             )}

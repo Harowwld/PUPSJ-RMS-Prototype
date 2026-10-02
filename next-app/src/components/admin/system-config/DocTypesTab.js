@@ -51,6 +51,8 @@ export default function DocTypesTab({
   docTypes,
   docSearch,
   setDocSearch,
+  docPurposeFilter = "all",
+  setDocPurposeFilter,
   showArchived,
   setShowArchived,
   pageDoc,
@@ -77,8 +79,18 @@ export default function DocTypesTab({
 
   const [isAddDocTypeOpen, setIsAddDocTypeOpen] = useState(false)
   const [newDocTypeName, setNewDocTypeName] = useState("")
+  const [newDocTypeIsRequestable, setNewDocTypeIsRequestable] = useState(false)
+  const [newDocTypeIsCompliance, setNewDocTypeIsCompliance] = useState(true)
+  const [newDocTypeCategory, setNewDocTypeCategory] = useState("General Requirements")
+
   const [isEditDocTypeOpen, setIsEditDocTypeOpen] = useState(false)
-  const [editDocType, setEditDocType] = useState({ id: null, name: "" })
+  const [editDocType, setEditDocType] = useState({
+    id: null,
+    name: "",
+    isRequestable: false,
+    isCompliance: false,
+    complianceCategory: "General Requirements",
+  })
   const [isExporting, setIsExporting] = useState(false)
 
   const [isQuickAddLoading, setIsQuickAddLoading] = useState(false)
@@ -91,16 +103,28 @@ export default function DocTypesTab({
     if (nameOverride) setIsQuickAddLoading(true)
 
     try {
+      const isReq = nameOverride ? (docPurposeFilter === "requestable") : newDocTypeIsRequestable
+      const isComp = nameOverride ? (docPurposeFilter !== "requestable") : newDocTypeIsCompliance
+      const cat = nameOverride ? "General Requirements" : newDocTypeCategory
+
       const res = await fetch("/api/doc-types?admin=true", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name }),
+        body: JSON.stringify({
+          name,
+          isRequestable: isReq,
+          isCompliance: isComp,
+          complianceCategory: cat,
+        }),
       })
       const json = await res.json()
       if (!res.ok || !json.ok) throw new Error(json.error || "Add failed")
 
       if (!nameOverride) {
         setNewDocTypeName("")
+        setNewDocTypeIsRequestable(false)
+        setNewDocTypeIsCompliance(true)
+        setNewDocTypeCategory("General Requirements")
         setIsAddDocTypeOpen(false)
       } else {
         setNewDocTypeName("")
@@ -122,7 +146,12 @@ export default function DocTypesTab({
       const res = await fetch(`/api/doc-types?id=${editDocType.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: editDocType.name.trim() }),
+        body: JSON.stringify({
+          name: editDocType.name.trim(),
+          isRequestable: editDocType.isRequestable,
+          isCompliance: editDocType.isCompliance,
+          complianceCategory: editDocType.complianceCategory,
+        }),
       })
       const json = await res.json()
       if (!res.ok || !json.ok) throw new Error(json.error || "Update failed")
@@ -216,11 +245,12 @@ export default function DocTypesTab({
 
 
   const handleExportDocTypes = handleExportProp || (() => {
+    const q = (cell) => `"${String(cell ?? "").replace(/"/g, '""')}"`
     const csvContent = [
       ["ID", "Name", "Status"],
-      ...docTypes.map((dt) => [dt.id, dt.name, dt.status]),
+      ...docTypes.map((dt) => [dt?.id ?? "", dt?.name || "", dt?.status || "Active"]),
     ]
-      .map((e) => e.join(","))
+      .map((row) => row.map(q).join(","))
       .join("\n")
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
     const link = document.createElement("a")
@@ -300,38 +330,89 @@ export default function DocTypesTab({
 
         {/* Navigation Toolbar */}
         <div className="border-t border-gray-100 dark:border-white/10 p-5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
-          {/* Active / Archived Tabs */}
-          <div className="flex items-center gap-6 shrink-0 select-none">
-            <button
-              type="button"
-              onClick={() => {
-                setShowArchived(false)
-                setPageDoc(1)
-              }}
-              className={cn(
-                "relative h-9 flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent",
-                !showArchived
-                  ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
-                  : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
-              )}
-            >
-              Active ({docTypes.filter((dt) => dt.status !== "Archived").length})
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setShowArchived(true)
-                setPageDoc(1)
-              }}
-              className={cn(
-                "relative h-9 flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent",
-                showArchived
-                  ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
-                  : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
-              )}
-            >
-              Archived ({docTypes.filter((dt) => dt.status === "Archived").length})
-            </button>
+          {/* Active / Archived Tabs & Purpose Segmented Filter */}
+          <div className="flex flex-wrap items-center gap-4 shrink-0 select-none">
+            <div className="flex items-center gap-4">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowArchived(false)
+                  setPageDoc(1)
+                }}
+                className={cn(
+                  "relative h-9 flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent",
+                  !showArchived
+                    ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
+                    : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
+                )}
+              >
+                Active ({docTypes.filter((dt) => dt.status !== "Archived").length})
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowArchived(true)
+                  setPageDoc(1)
+                }}
+                className={cn(
+                  "relative h-9 flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent",
+                  showArchived
+                    ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
+                    : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
+                )}
+              >
+                Archived ({docTypes.filter((dt) => dt.status === "Archived").length})
+              </button>
+            </div>
+
+            {/* Segmented Control for Purpose */}
+            <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-gray-200/60 dark:border-white/5">
+              <button
+                type="button"
+                onClick={() => {
+                  setDocPurposeFilter?.("all")
+                  setPageDoc(1)
+                }}
+                className={cn(
+                  "px-3 py-1 text-xs font-semibold rounded-lg transition-all cursor-pointer",
+                  docPurposeFilter === "all"
+                    ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
+                    : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
+                )}
+              >
+                All
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setDocPurposeFilter?.("requestable")
+                  setPageDoc(1)
+                }}
+                className={cn(
+                  "px-3 py-1 text-xs font-semibold rounded-lg transition-all cursor-pointer",
+                  docPurposeFilter === "requestable"
+                    ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
+                    : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
+                )}
+              >
+                Requestable ({docTypes.filter((dt) => dt.is_requestable && (showArchived ? dt.status === "Archived" : dt.status !== "Archived")).length})
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setDocPurposeFilter?.("compliance")
+                  setPageDoc(1)
+                }}
+                className={cn(
+                  "px-3 py-1 text-xs font-semibold rounded-lg transition-all cursor-pointer",
+                  docPurposeFilter === "compliance"
+                    ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
+                    : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
+                )}
+              >
+                Compliance ({docTypes.filter((dt) => dt.is_compliance && (showArchived ? dt.status === "Archived" : dt.status !== "Archived")).length})
+              </button>
+            </div>
           </div>
 
           {/* Search Input, Matches Count, Export, Add */}
@@ -440,7 +521,8 @@ export default function DocTypesTab({
                           Document Type <SortIndicator sortState={sortDoc} column="name" />
                         </button>
                       </th>
-                      <th className="w-48 p-4 px-6 text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">Status</th>
+                      <th className="w-52 p-4 px-6 text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">Purpose / Scope</th>
+                      <th className="w-36 p-4 px-6 text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">Status</th>
                       <th className="w-32 p-4 px-6 text-right text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">Actions</th>
                     </tr>
                   </thead>
@@ -502,6 +584,9 @@ export default function DocTypesTab({
                           </div>
                         </td>
                         <td className="py-0 px-6 align-middle">
+                          <span className="text-xs text-gray-400 italic">Quick auto-classification</span>
+                        </td>
+                        <td className="py-0 px-6 align-middle">
                           {newDocTypeName.trim() ? (
                             <div className="inline-flex w-fit items-center justify-center rounded-full px-[10px] py-[2.5px] text-[11px] font-medium tracking-[0.04em] bg-orange-100 text-orange-800 dark:bg-orange-950/40 dark:text-orange-400">
                               Draft
@@ -555,9 +640,35 @@ export default function DocTypesTab({
                             />
                           </td>
                           <td className="py-0 px-6 align-middle">
-                            <span className="text-[13px] font-medium tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
-                              {dt.name}
-                            </span>
+                            <div className="flex flex-col py-1">
+                              <span className="text-[13px] font-medium tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
+                                {dt.name}
+                              </span>
+                              <span className="text-[11px] text-gray-400 dark:text-zinc-500">
+                                {dt.compliance_category || "General Requirements"}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="py-0 px-6 align-middle">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              {dt.is_requestable && (
+                                <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold bg-blue-50 text-blue-700 border border-blue-200/60 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800/40">
+                                  <HugeIcon className="ph-bold ph-hand-pointing text-[10px]" />
+                                  Requestable
+                                </span>
+                              )}
+                              {dt.is_compliance && (
+                                <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold bg-purple-50 text-purple-700 border border-purple-200/60 dark:bg-purple-950/40 dark:text-purple-300 dark:border-purple-800/40">
+                                  <HugeIcon className="ph-bold ph-clipboard-text text-[10px]" />
+                                  Compliance
+                                </span>
+                              )}
+                              {!dt.is_requestable && !dt.is_compliance && (
+                                <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium bg-gray-100 text-gray-500 dark:bg-zinc-800 dark:text-zinc-400">
+                                  General
+                                </span>
+                              )}
+                            </div>
                           </td>
                           <td className="py-0 px-6 align-middle">
                             {dt.status === "Archived" ? (
@@ -581,7 +692,13 @@ export default function DocTypesTab({
                                     <button
                                       disabled={dt.status === "Archived"}
                                       onClick={() => {
-                                        setEditDocType({ id: dt.id, name: dt.name })
+                                        setEditDocType({
+                                          id: dt.id,
+                                          name: dt.name,
+                                          isRequestable: Boolean(dt.is_requestable),
+                                          isCompliance: Boolean(dt.is_compliance),
+                                          complianceCategory: dt.compliance_category || "General Requirements",
+                                        })
                                         setIsEditDocTypeOpen(true)
                                       }}
                                       aria-label="Edit Document Type"
@@ -681,10 +798,10 @@ export default function DocTypesTab({
                                     setDocSearch("")
                                     setLocalSearch("")
                                   }}
+                                  title="Reset Filters"
                                   className="mt-6 flex h-10 items-center justify-center gap-2 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                                 >
-                                  <HugeIcon className="ph-bold ph-arrow-counter-clockwise text-[14px] shrink-0" />
-                                  <span>Clear Filters</span>
+                                  Reset
                                 </Button>
                               ) : (
                                 !showArchived && (
@@ -799,12 +916,55 @@ export default function DocTypesTab({
                 </label>
                 <Input
                   type="text"
-                  placeholder="e.g. Honorable Dismissal"
+                  placeholder="e.g. Health Information Sheet"
                   className="h-10 rounded-xl border border-gray-200 bg-white text-[13px] font-normal tracking-[-0.01em] text-gray-900 focus-visible:border-gray-500 focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none focus:ring-0 focus:border-gray-500 dark:bg-card dark:border-white/10 dark:text-zinc-50"
                   value={newDocTypeName}
                   onChange={(e) => setNewDocTypeName(e.target.value)}
                   required
                 />
+              </div>
+
+              <div>
+                <label className="mb-1 block text-[11px] font-medium uppercase tracking-[0.04em] text-gray-500 dark:text-zinc-400">
+                  Compliance / Record Category
+                </label>
+                <Input
+                  type="text"
+                  placeholder="e.g. Certificates & Clearances, Academic Records"
+                  className="h-10 rounded-xl border border-gray-200 bg-white text-[13px] font-normal tracking-[-0.01em] text-gray-900 focus-visible:border-gray-500 focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none focus:ring-0 focus:border-gray-500 dark:bg-card dark:border-white/10 dark:text-zinc-50"
+                  value={newDocTypeCategory}
+                  onChange={(e) => setNewDocTypeCategory(e.target.value)}
+                />
+              </div>
+
+              <div className="rounded-xl border border-gray-200/80 dark:border-white/10 p-3.5 space-y-3 bg-gray-50/50 dark:bg-zinc-800/30">
+                <label className="flex items-center justify-between cursor-pointer gap-2 select-none">
+                  <div>
+                    <p className="text-xs font-semibold text-gray-900 dark:text-zinc-100">Enrollment Compliance Requirement</p>
+                    <p className="text-[11px] text-gray-500 dark:text-zinc-400">Expected submission in student 201 folder & compliance metrics</p>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={newDocTypeIsCompliance}
+                    onChange={(e) => setNewDocTypeIsCompliance(e.target.checked)}
+                    className="h-4 w-4 rounded text-pup-maroon accent-pup-maroon cursor-pointer"
+                  />
+                </label>
+
+                <div className="border-t border-gray-100 dark:border-white/5 pt-2.5">
+                  <label className="flex items-center justify-between cursor-pointer gap-2 select-none">
+                    <div>
+                      <p className="text-xs font-semibold text-gray-900 dark:text-zinc-100">Available for Online Request (ODRS)</p>
+                      <p className="text-[11px] text-gray-500 dark:text-zinc-400">Allow students & alumni to request official copies</p>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={newDocTypeIsRequestable}
+                      onChange={(e) => setNewDocTypeIsRequestable(e.target.checked)}
+                      className="h-4 w-4 rounded text-pup-maroon accent-pup-maroon cursor-pointer"
+                    />
+                  </label>
+                </div>
               </div>
             </div>
             <DialogFooter className="p-6 pt-0 bg-white dark:bg-card border-none flex items-center justify-end gap-2.5">
@@ -814,6 +974,9 @@ export default function DocTypesTab({
                 onClick={() => {
                   setIsAddDocTypeOpen(false)
                   setNewDocTypeName("")
+                  setNewDocTypeIsRequestable(false)
+                  setNewDocTypeIsCompliance(true)
+                  setNewDocTypeCategory("General Requirements")
                 }}
                 className="flex h-10 items-center justify-center rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
               >
@@ -834,7 +997,7 @@ export default function DocTypesTab({
         open={isEditDocTypeOpen}
         onOpenChange={(open) => {
           setIsEditDocTypeOpen(open)
-          if (!open) setEditDocType({ id: null, name: "" })
+          if (!open) setEditDocType({ id: null, name: "", isRequestable: false, isCompliance: false, complianceCategory: "General Requirements" })
         }}
       >
         <DialogContent className="overflow-hidden rounded-2xl border border-gray-200 bg-white p-0 shadow-2xl sm:max-w-md dark:border-white/10 dark:bg-card">
@@ -845,28 +1008,87 @@ export default function DocTypesTab({
                   Edit Document Type
                 </DialogTitle>
                 <DialogDescription className="mt-1 text-[13px] font-normal text-gray-500 dark:text-zinc-400">
-                  Update the document category label.
+                  Update the document category and purpose settings.
                 </DialogDescription>
               </div>
             </div>
           </DialogHeader>
           <form onSubmit={updDocType}>
-            <div className="p-6 pb-4">
-              <label className="mb-1 block text-[11px] font-medium uppercase tracking-[0.04em] text-gray-500 dark:text-zinc-400">
-                Document Type Name <span className="text-[11px] font-normal text-gray-400 dark:text-zinc-500">*</span>
-              </label>
-              <Input
-                type="text"
-                className="h-10 rounded-xl border border-gray-200 bg-white text-[13px] font-normal tracking-[-0.01em] text-gray-900 focus-visible:border-gray-500 focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none focus:ring-0 focus:border-gray-500 dark:bg-card dark:border-white/10 dark:text-zinc-50"
-                value={editDocType.name}
-                onChange={(e) =>
-                  setEditDocType((prev) => ({
-                    ...prev,
-                    name: e.target.value,
-                  }))
-                }
-                required
-              />
+            <div className="p-6 pb-4 flex flex-col gap-[16px]">
+              <div>
+                <label className="mb-1 block text-[11px] font-medium uppercase tracking-[0.04em] text-gray-500 dark:text-zinc-400">
+                  Document Type Name <span className="text-[11px] font-normal text-gray-400 dark:text-zinc-500">*</span>
+                </label>
+                <Input
+                  type="text"
+                  className="h-10 rounded-xl border border-gray-200 bg-white text-[13px] font-normal tracking-[-0.01em] text-gray-900 focus-visible:border-gray-500 focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none focus:ring-0 focus:border-gray-500 dark:bg-card dark:border-white/10 dark:text-zinc-50"
+                  value={editDocType.name}
+                  onChange={(e) =>
+                    setEditDocType((prev) => ({
+                      ...prev,
+                      name: e.target.value,
+                    }))
+                  }
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="mb-1 block text-[11px] font-medium uppercase tracking-[0.04em] text-gray-500 dark:text-zinc-400">
+                  Compliance / Record Category
+                </label>
+                <Input
+                  type="text"
+                  className="h-10 rounded-xl border border-gray-200 bg-white text-[13px] font-normal tracking-[-0.01em] text-gray-900 focus-visible:border-gray-500 focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none focus:ring-0 focus:border-gray-500 dark:bg-card dark:border-white/10 dark:text-zinc-50"
+                  value={editDocType.complianceCategory || ""}
+                  onChange={(e) =>
+                    setEditDocType((prev) => ({
+                      ...prev,
+                      complianceCategory: e.target.value,
+                    }))
+                  }
+                />
+              </div>
+
+              <div className="rounded-xl border border-gray-200/80 dark:border-white/10 p-3.5 space-y-3 bg-gray-50/50 dark:bg-zinc-800/30">
+                <label className="flex items-center justify-between cursor-pointer gap-2 select-none">
+                  <div>
+                    <p className="text-xs font-semibold text-gray-900 dark:text-zinc-100">Enrollment Compliance Requirement</p>
+                    <p className="text-[11px] text-gray-500 dark:text-zinc-400">Expected submission in student 201 folder & compliance metrics</p>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={editDocType.isCompliance}
+                    onChange={(e) =>
+                      setEditDocType((prev) => ({
+                        ...prev,
+                        isCompliance: e.target.checked,
+                      }))
+                    }
+                    className="h-4 w-4 rounded text-pup-maroon accent-pup-maroon cursor-pointer"
+                  />
+                </label>
+
+                <div className="border-t border-gray-100 dark:border-white/5 pt-2.5">
+                  <label className="flex items-center justify-between cursor-pointer gap-2 select-none">
+                    <div>
+                      <p className="text-xs font-semibold text-gray-900 dark:text-zinc-100">Available for Online Request (ODRS)</p>
+                      <p className="text-[11px] text-gray-500 dark:text-zinc-400">Allow students & alumni to request official copies</p>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={editDocType.isRequestable}
+                      onChange={(e) =>
+                        setEditDocType((prev) => ({
+                          ...prev,
+                          isRequestable: e.target.checked,
+                        }))
+                      }
+                      className="h-4 w-4 rounded text-pup-maroon accent-pup-maroon cursor-pointer"
+                    />
+                  </label>
+                </div>
+              </div>
             </div>
             <DialogFooter className="p-6 pt-0 bg-white dark:bg-card border-none flex items-center justify-end gap-2.5">
               <Button
@@ -876,7 +1098,7 @@ export default function DocTypesTab({
                   setIsAddDocTypeOpen(false)
                   setIsEditDocTypeOpen(false)
                   setNewDocTypeName("")
-                  setEditDocType({ id: null, name: "" })
+                  setEditDocType({ id: null, name: "", isRequestable: false, isCompliance: false, complianceCategory: "General Requirements" })
                 }}
                 className="flex h-10 items-center justify-center rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
               >

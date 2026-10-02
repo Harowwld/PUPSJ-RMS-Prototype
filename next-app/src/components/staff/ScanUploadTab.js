@@ -986,10 +986,10 @@ export default function ScanUploadTab({
                               <Button
                                 variant="outline"
                                 onClick={() => setLocalCsvSearch("")}
-                                className="mt-6 flex h-10 items-center justify-center gap-2 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
+                                title="Reset Filters"
+                                className="mt-6 flex h-10 items-center justify-center rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                               >
-                                <HugeIcon className="ph-bold ph-arrow-counter-clockwise text-[14px] shrink-0" />
-                                <span>Clear Filters</span>
+                                Reset
                               </Button>
                             </Empty>
                           )}
@@ -1275,9 +1275,10 @@ export default function ScanUploadTab({
                               <button
                                 type="button"
                                 onClick={() => fileInputRef.current?.click()}
-                                className="mt-auto flex h-9 items-center justify-center gap-1.5 rounded-xl border border-gray-200 bg-white text-xs font-semibold text-gray-700 shadow-xs transition-all hover:bg-gray-50 dark:bg-card dark:border-white/10 dark:text-zinc-300 cursor-pointer active:scale-95"
+                                title="Add Page"
+                                className="mt-auto flex h-9 items-center justify-center rounded-xl border border-gray-200 bg-white text-xs font-semibold text-gray-700 shadow-xs transition-all hover:bg-gray-50 dark:bg-card dark:border-white/10 dark:text-zinc-300 cursor-pointer active:scale-95 px-3"
                               >
-                                <HugeIcon  className="ph-bold ph-plus text-xs" /> Add Page
+                                Add
                               </button>
                             </div>
                           )}
@@ -1487,13 +1488,14 @@ export default function ScanUploadTab({
                             </span>
                             <button
                               type="button"
+                              title="Switch to new student"
                               className="shrink-0 text-left text-xs font-semibold text-pup-maroon dark:text-red-400 underline-offset-2 hover:underline cursor-pointer"
                               onClick={() => {
                                 setUploadStudentIsExisting(false)
                                 clearAllUploadFieldErrors?.()
                               }}
                             >
-                              Switch to new student
+                              Switch
                             </button>
                           </div>
                         )}
@@ -2085,6 +2087,7 @@ export default function ScanUploadTab({
                                 type="button"
                                 onClick={importCsvStudents}
                                 disabled={importDisabled}
+                                title="Import Students"
                                 className="w-full h-10 px-5 text-xs font-semibold rounded-xl! btn-brand-red text-white! active:scale-95 disabled:opacity-50 transition-all cursor-pointer shadow-xs"
                                 style={{ color: "#ffffff" }}
                               >
@@ -2094,7 +2097,7 @@ export default function ScanUploadTab({
                                     <span>Importing...</span>
                                   </span>
                                 ) : (
-                                  "Import Students"
+                                  "Import"
                                 )}
                               </Button>
 

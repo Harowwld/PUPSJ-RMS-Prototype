@@ -760,10 +760,10 @@ export default function LandingFaqCmsView({ showToast }) {
                 <button
                   type="button"
                   onClick={addNewFaq}
+                  title={`Add Another Question (${faqData.faqs.length}/${MAX_FAQ_ITEMS})`}
                   className="w-full py-3.5 rounded-xl border-2 border-dashed border-gray-200 dark:border-white/10 hover:border-pup-maroon/40 hover:bg-pup-maroon/5 dark:hover:bg-red-500/5 transition-all flex items-center justify-center gap-2 text-xs font-semibold text-gray-600 hover:text-pup-maroon dark:text-zinc-400 dark:hover:text-red-400 cursor-pointer select-none"
                 >
-                  <HugeIcon  className="ph-bold ph-plus text-sm" />
-                  <span>Add Another Question ({faqData.faqs.length}/{MAX_FAQ_ITEMS})</span>
+                  Add
                 </button>
               ) : (
                 <div className="w-full py-3 px-3.5 rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/70 dark:bg-zinc-900/30 text-center text-xs text-gray-500 dark:text-zinc-400 flex items-center justify-center gap-2">

@@ -91,7 +91,7 @@ const ConflictResolutionModals = memo(({
                       : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
                   )}
                 >
-                  Auto Map
+                  Auto
                 </button>
               </div>
             </div>
