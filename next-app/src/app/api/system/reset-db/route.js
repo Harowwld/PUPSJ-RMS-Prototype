@@ -259,7 +259,7 @@ async function handleResetDb(req) {
       await query(
         `INSERT INTO student_accounts (student_no, email, password_hash, status, first_name, middle_name, last_name, client_type)
          VALUES ($1, $2, $3, 'Active', $4, $5, $6, $7)
-         ON CONFLICT (student_no) DO UPDATE SET email = EXCLUDED.email, password_hash = EXCLUDED.password_hash,
+         ON CONFLICT (email) DO UPDATE SET student_no = EXCLUDED.student_no, password_hash = EXCLUDED.password_hash,
            first_name = EXCLUDED.first_name, middle_name = EXCLUDED.middle_name, last_name = EXCLUDED.last_name,
            client_type = EXCLUDED.client_type, status = 'Active', updated_at = NOW()`,
         [sNo, sEmail, studentHash, fName, mName, lName, clientType]
