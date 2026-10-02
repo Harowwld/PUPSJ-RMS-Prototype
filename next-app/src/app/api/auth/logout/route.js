@@ -4,6 +4,7 @@ import { writeAuditLog } from "../../../../lib/auditLogRequest";
 import { authDebug } from "@/lib/authDebug";
 import { revokeSession } from "@/lib/authSessions";
 import { isAllowedOrigin } from "@/lib/csrfProtection";
+import { shouldUseSecureCookie } from "@/lib/cookieSecurity";
 
 export const runtime = "nodejs";
 
@@ -78,7 +79,7 @@ export async function POST(req) {
       value: "",
       httpOnly: name !== "pup_csrf",
       sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
+      secure: shouldUseSecureCookie(req),
       path: "/",
       maxAge: 0,
       expires: new Date(0), // Ensure immediate expiration

@@ -13,6 +13,7 @@ import { requireAuth, createAuthErrorResponse } from "../../../../lib/authHelper
 import { bumpSessionVersion, getSessionVersion, registerSessionToken } from "@/lib/authSessions";
 import { validatePasswordPolicy } from "@/lib/passwordPolicy";
 import { setCSRFTokenCookie } from "@/lib/csrfProtection";
+import { shouldUseSecureCookie } from "@/lib/cookieSecurity";
 
 export const runtime = "nodejs";
 
@@ -112,8 +113,8 @@ export async function POST(req) {
     value: nextToken,
     httpOnly: true,
     sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    secure: shouldUseSecureCookie(req),
     path: "/",
   });
-  return setCSRFTokenCookie(res, nextToken);
+  return setCSRFTokenCookie(res, nextToken, req);
 }

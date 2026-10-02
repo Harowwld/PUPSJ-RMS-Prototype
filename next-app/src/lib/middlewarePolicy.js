@@ -1,5 +1,6 @@
 const PUBLIC_SESSION_PATHS = new Set([
   "/api/auth/login",
+  "/api/auth/demo-login",
   "/api/auth/login/verify-2fa",
   "/api/auth/student/login",
   "/api/auth/student/register",

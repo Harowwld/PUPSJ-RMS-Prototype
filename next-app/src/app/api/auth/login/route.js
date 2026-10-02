@@ -18,6 +18,7 @@ import { authenticateStudent, createStudentSession, setStudentSessionCookie } fr
 import { setCSRFTokenCookie } from "../../../../lib/csrfProtection";
 import { getSessionVersion, registerSessionToken } from "@/lib/authSessions";
 import { warmRegistrarIngestQueueOnLogin } from "@/lib/ingestEventProcessor";
+import { shouldUseSecureCookie } from "@/lib/cookieSecurity";
 
 export const runtime = "nodejs";
 
@@ -142,7 +143,7 @@ async function _POST(req) {
           name: student.name,
         },
       });
-      return addSecurityHeaders(setStudentSessionCookie(studentRes, token));
+      return addSecurityHeaders(setStudentSessionCookie(studentRes, token, req));
     }
 
     authDebug("login.account_missing", { identifierLength: cleanUsername.length });
@@ -295,9 +296,9 @@ async function _POST(req) {
     value: token,
     httpOnly: true,
     sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    secure: shouldUseSecureCookie(req),
     path: "/",
   });
 
-  return addSecurityHeaders(setCSRFTokenCookie(res, token));
+  return addSecurityHeaders(setCSRFTokenCookie(res, token, req));
 }

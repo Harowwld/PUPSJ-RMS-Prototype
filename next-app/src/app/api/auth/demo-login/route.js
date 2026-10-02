@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { POST as login } from "../login/route";
+import { isLocalhostRequest } from "@/lib/cookieSecurity";
 
 export const runtime = "nodejs";
 
@@ -14,7 +15,7 @@ const DEMO_ACCOUNTS = new Set([
 ]);
 
 export async function POST(req) {
-  if (process.env.NODE_ENV === "production") {
+  if (process.env.NODE_ENV === "production" && !isLocalhostRequest(req)) {
     return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
   }
 

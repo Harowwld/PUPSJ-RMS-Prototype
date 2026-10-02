@@ -11,7 +11,7 @@ export async function POST(req) {
     const student = await registerStudent(body || {});
     await writeGlobalAuditLog(req, "Student account registered", { actor: student.student_no, role: "Student", details: "Created Student ODRS account", entity_type: "student_account", entity_id: student.student_no });
     const token = await createStudentSession(student);
-    return setStudentSessionCookie(NextResponse.json({ ok: true, data: { student_no: student.student_no, name: student.name } }, { status: 201 }), token);
+    return setStudentSessionCookie(NextResponse.json({ ok: true, data: { student_no: student.student_no, name: student.name } }, { status: 201 }), token, req);
   } catch (error) {
     return NextResponse.json({ ok: false, error: "Registration failed" }, { status: 400 });
   }

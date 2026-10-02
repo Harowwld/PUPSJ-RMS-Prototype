@@ -5,6 +5,7 @@ import { getSessionVersion, isSessionActive, registerSessionToken } from "./auth
 import { setCSRFTokenCookie } from "./csrfProtection.js";
 import { hashPassword, verifyPasswordHash } from "./passwordHash.js";
 import { validatePasswordPolicy } from "./passwordPolicy.js";
+import { shouldUseSecureCookie } from "./cookieSecurity.js";
 
 export async function registerStudent({ studentNo, name, firstName, lastName, middleName, password, email, clientType }) {
   const cleanEmail = String(email || "").trim().toLowerCase();
@@ -172,12 +173,12 @@ export async function getStudentSession(req) {
   }
 }
 
-export function setStudentSessionCookie(response, token) {
+export function setStudentSessionCookie(response, token, req) {
   response.cookies.set({
     name: getSessionCookieName(), value: token, httpOnly: true, sameSite: "lax",
-    secure: process.env.NODE_ENV === "production", path: "/",
+    secure: shouldUseSecureCookie(req), path: "/",
   });
-  return setCSRFTokenCookie(response, token);
+  return setCSRFTokenCookie(response, token, req);
 }
 
 export function decryptStudentRow(row) {

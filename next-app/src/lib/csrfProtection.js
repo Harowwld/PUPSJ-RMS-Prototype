@@ -1,5 +1,6 @@
 import { createHmac, randomBytes, timingSafeEqual } from "crypto";
 import { decodeJwt } from "jose";
+import { shouldUseSecureCookie } from "@/lib/cookieSecurity";
 
 const API_CONTENT_SECURITY_POLICY = "default-src 'self'; script-src 'none'; style-src 'none'; img-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'self';";
 
@@ -149,15 +150,16 @@ export function checkCSRFProtection(req, sessionId) {
   return validateCSRFToken(decodeURIComponent(token), sessionId);
 }
 
-export function setCSRFTokenCookie(response, sessionToken) {
+export function setCSRFTokenCookie(response, sessionToken, req) {
   const payload = decodeJwt(sessionToken);
   if (!payload?.jti) throw new Error("Session token has no jti");
+  const secure = req ? shouldUseSecureCookie(req) : process.env.NODE_ENV === "production";
   response.cookies.set({
     name: "pup_csrf",
     value: generateCSRFToken(payload.jti),
     httpOnly: false,
     sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    secure,
     path: "/",
     maxAge: 8 * 60 * 60, // 8 hours (matches session token lifetime)
   });

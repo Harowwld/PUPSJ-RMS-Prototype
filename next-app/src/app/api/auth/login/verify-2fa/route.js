@@ -15,6 +15,7 @@ import { checkAuth2FARateLimit, resetAuth2FARateLimit } from "@/lib/rateLimiter"
 import { setCSRFTokenCookie } from "../../../../../lib/csrfProtection";
 import { getSessionVersion, isSessionActive, revokeSession } from "@/lib/authSessions";
 import { warmRegistrarIngestQueueOnLogin } from "@/lib/ingestEventProcessor";
+import { shouldUseSecureCookie } from "@/lib/cookieSecurity";
 
 export const runtime = "nodejs";
 
@@ -166,9 +167,9 @@ export async function POST(req) {
     value: token,
     httpOnly: true,
     sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    secure: shouldUseSecureCookie(req),
     path: "/",
   });
 
-  return addSecurityHeaders(setCSRFTokenCookie(res, token));
+  return addSecurityHeaders(setCSRFTokenCookie(res, token, req));
 }
