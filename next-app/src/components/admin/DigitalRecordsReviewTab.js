@@ -1139,7 +1139,7 @@ export default function DigitalRecordsReviewTab({
                       {dateFrom ? format(new Date(dateFrom.includes("T") ? dateFrom : dateFrom + "T00:00:00"), "MMM d") : "Start"}
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto rounded-2xl border border-gray-200 bg-white p-0 shadow-2xl dark:border-white/10 dark:bg-card" align="start">
+                  <PopoverContent className="w-auto sm:w-auto rounded-2xl border border-gray-200 bg-white p-0 shadow-2xl dark:border-white/10 dark:bg-card" align="start">
                     <Calendar
                       mode="single"
                       selected={dateFrom ? new Date(dateFrom.includes("T") ? dateFrom : dateFrom + "T00:00:00") : undefined}
@@ -1166,7 +1166,7 @@ export default function DigitalRecordsReviewTab({
                       {dateTo ? format(new Date(dateTo.includes("T") ? dateTo : dateTo + "T00:00:00"), "MMM d") : "End"}
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto rounded-2xl border border-gray-200 bg-white p-0 shadow-2xl dark:border-white/10 dark:bg-card" align="start">
+                  <PopoverContent className="w-auto sm:w-auto rounded-2xl border border-gray-200 bg-white p-0 shadow-2xl dark:border-white/10 dark:bg-card" align="start">
                     <Calendar
                       mode="single"
                       selected={dateTo ? new Date(dateTo.includes("T") ? dateTo : dateTo + "T00:00:00") : undefined}

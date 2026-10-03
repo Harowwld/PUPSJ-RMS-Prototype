@@ -379,11 +379,7 @@ export default function NotificationsTab({
             title={
               <div className="flex items-center gap-[6px]">
                 System Notifications
-                {activeTab === "archive" && (
-                  <span className="text-[12px] font-normal text-emerald-600 dark:text-emerald-400">
-                    · Restore Mode
-                  </span>
-                )}
+                
               </div>
             }
             description="Real-time updates on document review decisions and system alerts."

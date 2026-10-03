@@ -276,11 +276,11 @@ export default function LogTable({
           : "rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card"
       )}>
         <div className="w-full overflow-x-auto select-none">
-          <table className={cn("min-w-full text-sm", displayLogs.length === 0 && "h-full")}>
+          <table className={cn("min-w-full table-fixed text-sm", displayLogs.length === 0 && "h-full")}>
             <thead className="sticky top-0 z-10 border-b border-gray-200 bg-white dark:bg-card dark:border-white/10">
               <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">
                 <th className="w-12 p-4 text-center"></th>
-                <th className="p-4">
+                <th className="p-4 w-[16%]">
                   <button
                     onClick={() => handleSort("created_at")}
                     className={cn(
@@ -298,7 +298,7 @@ export default function LogTable({
                     />
                   </button>
                 </th>
-                <th className="p-4">
+                <th className="p-4 w-[10%]">
                   <button
                     onClick={() => handleSort("severity")}
                     className={cn(
@@ -316,7 +316,7 @@ export default function LogTable({
                     />
                   </button>
                 </th>
-                <th className="p-4">
+                <th className="p-4 w-[18%]">
                   <button
                     onClick={() => handleSort("actor")}
                     className={cn(
@@ -334,7 +334,7 @@ export default function LogTable({
                     />
                   </button>
                 </th>
-                <th className="p-4">
+                <th className="p-4 w-[16%]">
                   <button
                     onClick={() => handleSort("action")}
                     className={cn(
@@ -352,8 +352,8 @@ export default function LogTable({
                     />
                   </button>
                 </th>
-                <th className="p-4 text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">Description</th>
-                <th className="p-4 text-right text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">Actions</th>
+                <th className="p-4 w-auto text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">Description</th>
+                <th className="p-4 w-16 text-right text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">Actions</th>
               </tr>
             </thead>
             <tbody className={cn("bg-transparent", displayLogs.length === 0 && "h-full")}>

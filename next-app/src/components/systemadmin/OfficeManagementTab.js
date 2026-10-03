@@ -519,11 +519,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
           title={
             <div className="flex items-center gap-[6px]">
               <span>Departments & Offices</span>
-              {statusFilter === "Inactive" && (
-                <span className="text-[12px] font-normal text-emerald-600 dark:text-emerald-400">
-                  · Restore Mode
-                </span>
-              )}
+              
             </div>
           }
           description="Manage campus offices, link scanning computers, and configure departmental storage folders."

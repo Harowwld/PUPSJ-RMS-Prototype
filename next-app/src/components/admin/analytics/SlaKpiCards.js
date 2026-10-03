@@ -19,8 +19,8 @@ export default function SlaKpiCards({ total, completionRate, completed, sla, fee
     <Reorder.Group as="div" axis="x" values={kpiOrder} onReorder={setKpiOrder} ref={containerRef} className="grid grid-cols-1 gap-4 md:grid-cols-3 items-stretch relative z-20 w-full">
       {kpiOrder.map(key => {
         if (key === "rate") return (
-          <Reorder.Item as="div" value="rate" key="rate" className={cn("relative group rounded-xl w-full cursor-grab active:cursor-grabbing", selectedKpi === "rate" ? "z-30" : "z-10")}>
-            <div onClick={() => setSelectedKpi(selectedKpi === "rate" ? null : "rate")} className={cn("relative overflow-hidden rounded-[18px] border cursor-pointer select-none transition-all shadow-none flex flex-col justify-between min-h-[110px] bg-gray-50 dark:bg-zinc-900", selectedKpi === "rate" ? "border-red-500/50 ring-1 ring-red-500/20" : "border-gray-100 dark:border-white/5")}>
+          <Reorder.Item as="div" value="rate" key="rate" className={cn("relative group rounded-xl w-full h-full cursor-grab active:cursor-grabbing", selectedKpi === "rate" ? "z-30" : "z-10")}>
+            <div onClick={() => setSelectedKpi(selectedKpi === "rate" ? null : "rate")} className={cn("relative overflow-hidden rounded-[18px] border cursor-pointer select-none transition-all shadow-none flex flex-col justify-between h-full min-h-[110px] bg-gray-50 dark:bg-zinc-900", selectedKpi === "rate" ? "border-red-500/50 ring-1 ring-red-500/20" : "border-gray-100 dark:border-white/5")}>
               <div className="flex justify-between items-start p-4 pb-0">
                 <div className="flex flex-col gap-1">
                   <span className="text-[13px] font-medium text-gray-500 dark:text-zinc-400 capitalize">{frameworkLabel}</span>
@@ -36,8 +36,8 @@ export default function SlaKpiCards({ total, completionRate, completed, sla, fee
           </Reorder.Item>
         );
         if (key === "satisfaction") return (
-          <Reorder.Item as="div" value="satisfaction" key="satisfaction" className={cn("relative group rounded-xl w-full cursor-grab active:cursor-grabbing", selectedKpi === "satisfaction" ? "z-30" : "z-10")}>
-            <div onClick={() => setSelectedKpi(selectedKpi === "satisfaction" ? null : "satisfaction")} className={cn("relative overflow-hidden rounded-[18px] border cursor-pointer select-none transition-all shadow-[0_2px_10px_rgb(0,0,0,0.04)] hover:shadow-[0_4px_15px_rgb(0,0,0,0.06)] flex flex-col justify-between min-h-[110px] bg-gray-50 dark:bg-zinc-900", selectedKpi === "satisfaction" ? "border-amber-500/50 ring-1 ring-amber-500/20" : "border-gray-100 dark:border-white/5")}>
+          <Reorder.Item as="div" value="satisfaction" key="satisfaction" className={cn("relative group rounded-xl w-full h-full cursor-grab active:cursor-grabbing", selectedKpi === "satisfaction" ? "z-30" : "z-10")}>
+            <div onClick={() => setSelectedKpi(selectedKpi === "satisfaction" ? null : "satisfaction")} className={cn("relative overflow-hidden rounded-[18px] border cursor-pointer select-none transition-all shadow-[0_2px_10px_rgb(0,0,0,0.04)] hover:shadow-[0_4px_15px_rgb(0,0,0,0.06)] flex flex-col justify-between h-full min-h-[110px] bg-gray-50 dark:bg-zinc-900", selectedKpi === "satisfaction" ? "border-amber-500/50 ring-1 ring-amber-500/20" : "border-gray-100 dark:border-white/5")}>
               <div className="flex justify-between items-start p-4 pb-0">
                 <div className="flex flex-col gap-1">
                   <span className="text-[13px] font-medium text-gray-500 dark:text-zinc-400 capitalize">Client Satisfaction</span>
@@ -69,8 +69,8 @@ export default function SlaKpiCards({ total, completionRate, completed, sla, fee
           </Reorder.Item>
         );
         if (key === "total") return (
-          <Reorder.Item as="div" value="total" key="total" className={cn("relative group rounded-xl w-full cursor-grab active:cursor-grabbing", selectedKpi === "total" ? "z-30" : "z-10")}>
-            <div onClick={() => setSelectedKpi(selectedKpi === "total" ? null : "total")} className={cn("relative overflow-hidden rounded-[18px] border cursor-pointer select-none transition-all shadow-none flex flex-col justify-between min-h-[110px] bg-gray-50 dark:bg-zinc-900", selectedKpi === "total" ? "border-emerald-500/50 ring-1 ring-emerald-500/20" : "border-gray-100 dark:border-white/5")}>
+          <Reorder.Item as="div" value="total" key="total" className={cn("relative group rounded-xl w-full h-full cursor-grab active:cursor-grabbing", selectedKpi === "total" ? "z-30" : "z-10")}>
+            <div onClick={() => setSelectedKpi(selectedKpi === "total" ? null : "total")} className={cn("relative overflow-hidden rounded-[18px] border cursor-pointer select-none transition-all shadow-none flex flex-col justify-between h-full min-h-[110px] bg-gray-50 dark:bg-zinc-900", selectedKpi === "total" ? "border-emerald-500/50 ring-1 ring-emerald-500/20" : "border-gray-100 dark:border-white/5")}>
               <div className="flex justify-between items-start p-4 pb-0">
                 <div className="flex flex-col gap-1">
                   <span className="text-[13px] font-medium text-gray-500 dark:text-zinc-400 capitalize">Total Volume</span>

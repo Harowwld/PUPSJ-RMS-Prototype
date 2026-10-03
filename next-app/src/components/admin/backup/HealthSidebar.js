@@ -148,16 +148,6 @@ export default function HealthSidebar({
             )}
           >
             <div className="flex items-start gap-3">
-              <div
-                className={cn(
-                  "w-8 h-8 rounded-lg flex items-center justify-center shrink-0 border shadow-2xs",
-                  externalDrive?.connected
-                    ? "bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 border-emerald-300/50"
-                    : "bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 border-amber-300/50"
-                )}
-              >
-                <HugeIcon className="ph-bold ph-hard-drives text-[16px]" />
-              </div>
               <div className="min-w-0 flex-1">
                 <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100 block leading-tight">
                   {externalDrive?.connected ? "External Hard Drive Connected" : "External Storage Disconnected"}
@@ -171,12 +161,6 @@ export default function HealthSidebar({
                         : "bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300"
                     )}
                   >
-                    <span
-                      className={cn(
-                        "w-1.5 h-1.5 rounded-full",
-                        externalDrive?.connected ? "bg-emerald-500" : "bg-amber-500"
-                      )}
-                    />
                     {externalDrive?.connected ? "Ready to Copy" : "Waiting for Drive"}
                   </span>
                   {externalDrive?.isEmulated && (

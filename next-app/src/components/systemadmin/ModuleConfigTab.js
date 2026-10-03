@@ -552,11 +552,7 @@ export default function ModuleConfigTab({ showToast }) {
           title={
             <div className="flex items-center gap-[6px]">
               Department Features & Permissions
-              {officeFilter === "Archived" && (
-                <span className="text-[12px] font-normal text-emerald-600 dark:text-emerald-400">
-                  · Restore Mode
-                </span>
-              )}
+              
             </div>
           }
           description="Turn system features on or off for each department."

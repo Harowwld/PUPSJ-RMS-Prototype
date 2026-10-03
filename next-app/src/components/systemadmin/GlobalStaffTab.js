@@ -711,11 +711,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
           title={
             <div className="flex items-center gap-[6px]">
               <span>Global Personnel Directory</span>
-              {statusFilter === "Inactive" && (
-                <span className="text-[12px] font-normal text-emerald-600 dark:text-emerald-400">
-                  · Restore Mode
-                </span>
-              )}
+              
             </div>
           }
           description="Manage system access, office assignments, and authorization settings for all administrators and records staff."

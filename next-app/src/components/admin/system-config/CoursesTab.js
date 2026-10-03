@@ -324,11 +324,7 @@ export default function CoursesTab({
           title={
             <div className="flex items-center gap-[6px]">
               Degree Programs
-              {showArchived && (
-                <span className="text-[12px] font-normal text-emerald-600 dark:text-emerald-400">
-                  · Restore Mode
-                </span>
-              )}
+              
             </div>
           }
           description="Manage academic programs and their corresponding identifiers."
@@ -497,24 +493,10 @@ export default function CoursesTab({
                       <tr
                         className={cn(
                           "group h-[52px] border-b-[0.5px] border-gray-100 dark:border-white/10 last:border-b-0 transition-all duration-fast hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none cursor-pointer",
-                          (newCourseCode.trim() || newCourseName.trim()) && "bg-amber-50/50 dark:bg-amber-950/10"
+                          (newCourseCode.trim() || newCourseName.trim()) && "bg-emerald-50/40 dark:bg-emerald-950/10"
                         )}
                       >
-                        <td className="py-0 px-4 align-middle text-center">
-                          <div
-                            className={cn(
-                              "flex h-5 w-5 mx-auto items-center justify-center rounded-full border-2 border-dashed transition-colors",
-                              newCourseCode.trim() || newCourseName.trim() ? "border-orange-400 dark:border-orange-500/50" : "border-gray-300 dark:border-white/10"
-                            )}
-                          >
-                            <HugeIcon 
-                              className={cn(
-                                "ph-bold text-[10px]",
-                                newCourseCode.trim() || newCourseName.trim() ? "ph-pencil-simple animate-bounce text-orange-600 dark:text-orange-400" : "ph-plus text-gray-400 dark:text-amber-400"
-                              )}
-                            ></HugeIcon>
-                          </div>
-                        </td>
+                        <td className="py-0 px-4 align-middle text-center"></td>
                         <td className="py-0 px-6 align-middle">
                           <Input
                             placeholder="CODE (e.g. BSIT)"
@@ -524,7 +506,7 @@ export default function CoursesTab({
                             }
                             className={cn(
                               "h-10 w-40 rounded-xl border border-gray-300 bg-white text-xs font-semibold transition-all focus-visible:ring-pup-maroon",
-                              newCourseCode.trim() || newCourseName.trim() ? "ring-1 ring-amber-100" : "focus-visible:border-gray-300 dark:border-white/10 dark:bg-card"
+                              newCourseCode.trim() || newCourseName.trim() ? "ring-1 ring-emerald-200 border-emerald-300 dark:ring-emerald-500/30 dark:border-emerald-500/50" : "focus-visible:border-gray-300 dark:border-white/10 dark:bg-card"
                             )}
                           />
                         </td>
@@ -545,7 +527,7 @@ export default function CoursesTab({
                               }}
                               className={cn(
                                 "h-10 flex-1 rounded-xl border border-gray-300 bg-white text-sm transition-all focus-visible:ring-pup-maroon",
-                                newCourseCode.trim() || newCourseName.trim() ? "ring-2 ring-amber-100" : "focus-visible:border-gray-300 dark:border-white/10 dark:bg-card"
+                                newCourseCode.trim() || newCourseName.trim() ? "ring-1 ring-emerald-200 border-emerald-300 dark:ring-emerald-500/30 dark:border-emerald-500/50" : "focus-visible:border-gray-300 dark:border-white/10 dark:bg-card"
                               )}
                             />
                             <Button
@@ -562,19 +544,19 @@ export default function CoursesTab({
                                 })
                               }
                               title="Add Degree Program"
-                              className="h-9 w-9 p-0 flex items-center justify-center rounded-[8px] text-[14px] font-semibold text-white shadow-sm active:scale-95 disabled:opacity-50 transition-all dark:shadow-none btn-brand-orange shrink-0"
+                              className="h-10 w-10 p-0 flex items-center justify-center rounded-xl text-[14px] font-semibold text-emerald-600 dark:text-emerald-400 shadow-[0_1px_2px_rgba(0,0,0,0.05)] active:scale-95 disabled:opacity-50 transition-all dark:shadow-none bg-white dark:bg-zinc-900 border-[1.5px] border-emerald-500/40 hover:border-emerald-500 hover:bg-emerald-50 dark:border-emerald-500/40 dark:hover:border-emerald-400 dark:hover:bg-emerald-950/40 shrink-0"
                             >
                               {isQuickAddLoading ? (
                                 <HugeIcon  className="ph-bold ph-spinner animate-spin"></HugeIcon>
                               ) : (
-                                <HugeIcon  className="ph-bold ph-plus"></HugeIcon>
+                                <HugeIcon  className="ph-bold ph-plus" strokeWidth={2.5}></HugeIcon>
                               )}
                             </Button>
                           </div>
                         </td>
                         <td className="py-0 px-6 align-middle">
                           {newCourseCode.trim() || newCourseName.trim() ? (
-                            <div className="inline-flex w-fit items-center justify-center rounded-full px-[10px] py-[2.5px] text-[11px] font-medium tracking-[0.04em] bg-orange-100 text-orange-800 dark:bg-orange-950/40 dark:text-orange-400">
+                            <div className="inline-flex w-fit items-center justify-center rounded-full px-[10px] py-[2.5px] text-[11px] font-medium tracking-[0.04em] bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-400">
                               Draft
                             </div>
                           ) : (

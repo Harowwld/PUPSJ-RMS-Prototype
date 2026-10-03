@@ -353,34 +353,9 @@ export default function BackupTab({
                 descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
                 actions={
                   <div className="flex items-center gap-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => handleToggleStatusSidebar()}
-                      title={statusSidebarOpen ? "Collapse System Status" : "Expand System Status"}
-                      className={cn(
-                        "flex h-10 items-center justify-center rounded-xl! border font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs",
-                        statusSidebarOpen
-                          ? "border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700"
-                          : "border-gray-300 dark:border-white/20 bg-gray-100/90 dark:bg-zinc-800/90 text-gray-900 dark:text-white hover:bg-white dark:hover:bg-zinc-700"
-                      )}
-                    >
-                      Status
-                    </Button>
+                    
 
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={handleRefresh}
-                      disabled={isLoading || isManualLoading || isRefreshing}
-                      className="flex h-10 items-center justify-center rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-5 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700 disabled:opacity-50"
-                    >
-                      {isLoading || isManualLoading || isRefreshing ? (
-                        <HugeIcon className="ph-bold ph-spinner animate-spin text-[16px]" />
-                      ) : (
-                        "Refresh"
-                      )}
-                    </Button>
+                    
 
                     <Button
                       type="button"
@@ -535,7 +510,7 @@ export default function BackupTab({
             </Card>
           </div>
 
-          {statusSidebarOpen ? (
+          {true ? (
             <HealthSidebar
               systemHealth={systemHealth}
               lastBackupTime={lastBackupTime}
@@ -545,7 +520,7 @@ export default function BackupTab({
               onRescanDrive={handleRescanDrive}
               onToggleSimulation={handleToggleSimulationLocal}
               isRescanning={isRescanning}
-              onToggleCollapse={() => handleToggleStatusSidebar(false)}
+              
             />
           ) : (
             <button

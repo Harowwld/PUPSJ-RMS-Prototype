@@ -168,13 +168,13 @@ export default function MultiCriteriaFilter({
         <PopoverContent
           align={align}
           sideOffset={6}
-          className="w-72 sm:w-80 rounded-2xl border border-gray-200 bg-white p-0 shadow-2xl dark:border-white/10 dark:bg-zinc-900 overflow-hidden font-jakarta"
+          className="w-80 sm:w-96 rounded-2xl border border-gray-200 bg-white p-0 shadow-2xl dark:border-white/10 dark:bg-zinc-900 overflow-hidden font-jakarta"
         >
           {/* Popover Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-white/10 bg-gray-50/60 dark:bg-zinc-800/40">
             <div className="flex items-center gap-2">
-              <HugeIcon className="ph-bold ph-faders text-xs text-gray-500 dark:text-zinc-400" />
-              <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
+              <HugeIcon className="ph-bold ph-faders text-sm text-gray-500 dark:text-zinc-400" />
+              <span className="text-sm font-semibold text-gray-900 dark:text-zinc-100">
                 Combine Filter Criteria
               </span>
             </div>
@@ -183,7 +183,7 @@ export default function MultiCriteriaFilter({
                 type="button"
                 onClick={handleResetAll}
                 title="Reset all filter criteria"
-                className="text-[11px] font-semibold text-pup-maroon dark:text-red-400 hover:underline cursor-pointer"
+                className="text-xs font-semibold text-pup-maroon dark:text-red-400 hover:underline cursor-pointer"
               >
                 Reset
               </button>
@@ -201,11 +201,11 @@ export default function MultiCriteriaFilter({
                   className={cn(groupIdx > 0 && "pt-3 border-t border-gray-100 dark:border-white/5")}
                 >
                   <div className="flex items-center justify-between px-1 mb-1.5">
-                    <span className="text-[10px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">
+                    <span className="text-xs font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">
                       {group.label}
                     </span>
                     {selectedInGroup.length > 0 && (
-                      <span className="text-[10px] font-semibold text-pup-maroon dark:text-red-400">
+                      <span className="text-xs font-semibold text-pup-maroon dark:text-red-400">
                         {selectedInGroup.length} selected
                       </span>
                     )}
@@ -241,14 +241,14 @@ export default function MultiCriteriaFilter({
                               {dot && (
                                 <span className={cn("w-1.5 h-1.5 rounded-full shrink-0", dot)} />
                               )}
-                              <span className="text-xs font-medium text-gray-800 dark:text-zinc-200 truncate">
+                              <span className="text-sm font-medium text-gray-800 dark:text-zinc-200 truncate">
                                 {opt.label}
                               </span>
                             </div>
                           </div>
 
                           {opt.count !== undefined && (
-                            <span className="text-[11px] font-semibold text-gray-400 dark:text-zinc-500 tabular-nums shrink-0 ml-2">
+                            <span className="text-xs font-semibold text-gray-400 dark:text-zinc-500 tabular-nums shrink-0 ml-2">
                               {opt.count}
                             </span>
                           )}
@@ -262,8 +262,8 @@ export default function MultiCriteriaFilter({
           </div>
 
           {/* Popover Footer */}
-          <div className="px-4 py-2.5 border-t border-gray-100 dark:border-white/10 bg-gray-50/60 dark:bg-zinc-800/40 flex items-center justify-between text-xs">
-            <span className="text-gray-500 dark:text-zinc-400 text-[11px]">
+          <div className="px-4 py-2.5 border-t border-gray-100 dark:border-white/10 bg-gray-50/60 dark:bg-zinc-800/40 flex items-center justify-between text-sm">
+            <span className="text-gray-500 dark:text-zinc-400 text-xs">
               {effectiveMatching !== undefined && totalCount !== undefined ? (
                 <>
                   Matching: <strong className="text-gray-900 dark:text-zinc-100">{effectiveMatching}</strong> of {totalCount}
@@ -273,7 +273,7 @@ export default function MultiCriteriaFilter({
               )}
             </span>
             {activeCount > 0 && (
-              <span className="text-[10px] font-medium text-emerald-600 dark:text-emerald-400">
+              <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">
                 Combined active
               </span>
             )}

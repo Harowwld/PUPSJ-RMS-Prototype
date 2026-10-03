@@ -617,11 +617,7 @@ export default function StaffDirectoryTab({
           title={
             <div className="flex items-center gap-[6px]">
               <span>Staff Directory</span>
-              {activeTab === "archived" && (
-                <span className="text-[12px] font-normal text-emerald-600 dark:text-emerald-400">
-                  · Restore Mode
-                </span>
-              )}
+              
             </div>
           }
           description="Manage system staff and administrative access."

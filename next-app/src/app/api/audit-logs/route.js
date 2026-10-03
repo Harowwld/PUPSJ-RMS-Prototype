@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { listAuditLogs, countAuditLogs } from "../../../lib/auditLogsRepo";
+import { decryptPII } from "../../../lib/piiEncryption";
 import { getPrincipalOfficeId, isAdmin, requireAuth, createAuthErrorResponse } from "../../../lib/authHelpers";
 import { isSystemAdminRole } from "../../../lib/roleUtils";
 
@@ -76,5 +77,5 @@ export async function GET(req) {
     }),
   ]);
 
-  return NextResponse.json({ ok: true, data: rows, total });
+  return NextResponse.json({ ok: true, data: rows.map(r => ({ ...r, actor: r.actor && r.actor.startsWith("enc:v1:") ? decryptPII(r.actor) : r.actor, details: r.details && r.details.startsWith("enc:v1:") ? decryptPII(r.details) : r.details })), total });
 }

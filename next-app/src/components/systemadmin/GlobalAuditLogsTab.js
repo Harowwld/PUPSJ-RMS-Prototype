@@ -740,7 +740,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
                       {startDate ? format(parseDateLocal(startDate), "MMM d") : "Start"}
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto rounded-2xl border border-gray-200 bg-white p-0 shadow-2xl dark:border-white/10 dark:bg-card" align="start">
+                  <PopoverContent className="w-auto sm:w-auto rounded-2xl border border-gray-200 bg-white p-0 shadow-2xl dark:border-white/10 dark:bg-card" align="start">
                     <Calendar
                       mode="single"
                       selected={startDate ? parseDateLocal(startDate) : undefined}
@@ -767,7 +767,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
                       {endDate ? format(parseDateLocal(endDate), "MMM d") : "End"}
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto rounded-2xl border border-gray-200 bg-white p-0 shadow-2xl dark:border-white/10 dark:bg-card" align="start">
+                  <PopoverContent className="w-auto sm:w-auto rounded-2xl border border-gray-200 bg-white p-0 shadow-2xl dark:border-white/10 dark:bg-card" align="start">
                     <Calendar
                       mode="single"
                       selected={endDate ? parseDateLocal(endDate) : undefined}
@@ -876,11 +876,11 @@ export default function GlobalAuditLogsTab({ showToast }) {
           ) : (
             <div className="overflow-hidden rounded-b-2xl border-t border-gray-100 dark:border-white/10 bg-white dark:bg-card flex flex-col flex-1">
               <div className="overflow-x-auto">
-                <table className="min-w-full text-sm">
+                <table className="w-full text-sm table-fixed">
               <thead className="sticky top-0 z-10 border-b-[0.5px] border-black/10 dark:border-white/10 bg-white dark:bg-card">
                 <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500 h-11 select-none">
                   <th className="w-12 p-4 text-center"></th>
-                  <th className="p-4">
+                  <th className="p-4 w-[14%]">
                     <button
                       onClick={() => handleSort("created_at")}
                       className={cn(
@@ -892,7 +892,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
                       <SortIndicator column="created_at" sortBy={sortBy} sortOrder={sortOrder} />
                     </button>
                   </th>
-                  <th className="p-4">
+                  <th className="p-4 w-[10%]">
                     <button
                       onClick={() => handleSort("severity")}
                       className={cn(
@@ -904,7 +904,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
                       <SortIndicator column="severity" sortBy={sortBy} sortOrder={sortOrder} />
                     </button>
                   </th>
-                  <th className="p-4">
+                  <th className="p-4 w-[14%]">
                     <button
                       onClick={() => handleSort("actor")}
                       className={cn(
@@ -916,7 +916,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
                       <SortIndicator column="actor" sortBy={sortBy} sortOrder={sortOrder} />
                     </button>
                   </th>
-                  <th className="p-4">
+                  <th className="p-4 w-[10%]">
                     <button
                       onClick={() => handleSort("office_id")}
                       className={cn(
@@ -928,7 +928,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
                       <SortIndicator column="office_id" sortBy={sortBy} sortOrder={sortOrder} />
                     </button>
                   </th>
-                  <th className="p-4">
+                  <th className="p-4 w-[14%]">
                     <button
                       onClick={() => handleSort("action")}
                       className={cn(
@@ -940,10 +940,10 @@ export default function GlobalAuditLogsTab({ showToast }) {
                       <SortIndicator column="action" sortBy={sortBy} sortOrder={sortOrder} />
                     </button>
                   </th>
-                  <th className="p-4 text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">
+                  <th className="p-4 w-auto text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">
                     Description
                   </th>
-                  <th className="p-4 text-right text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">
+                  <th className="p-4 w-16 text-right text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">
                     Actions
                   </th>
                 </tr>
@@ -988,9 +988,9 @@ export default function GlobalAuditLogsTab({ showToast }) {
                             <button
                               onClick={() => toggleRow(log.id)}
                               title={isExpanded ? "Collapse Details" : "Expand Details"}
-                              className={cn("mx-auto flex h-7 w-7 items-center justify-center bg-transparent border-none text-[#8E8E93] hover:text-[#111111] dark:hover:text-zinc-200 cursor-pointer transition-transform duration-200", isExpanded ? "rotate-180" : "rotate-0")}
+                              className="mx-auto flex h-7 w-7 items-center justify-center bg-transparent border-none text-[#8E8E93] hover:text-[#111111] dark:hover:text-zinc-200 cursor-pointer transition-colors duration-200"
                             >
-                              <HugeIcon  className="ti ti-chevron-down text-[14px]"></HugeIcon>
+                              <HugeIcon className={cn("ph-bold text-[14px]", isExpanded ? "ph-minus" : "ph-plus")}></HugeIcon>
                             </button>
                           </td>
 
