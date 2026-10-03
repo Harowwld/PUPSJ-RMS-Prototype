@@ -195,16 +195,16 @@ export default function AccountSetupModal({ authUser }) {
   return (
     <Dialog open={open} onOpenChange={() => {}}>
       <DialogContent
-        className="flex h-[85vh] max-h-screen flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white p-0 shadow-2xl shadow-black/5 sm:max-w-2xl md:h-[500px] md:flex-row transition-colors dark:border-white/10 dark:bg-card dark:shadow-none"
+        className="flex h-[85vh] max-h-screen flex-col overflow-hidden rounded-2xl border border-border bg-white p-0 shadow-2xl shadow-black/5 sm:max-w-2xl md:h-[500px] md:flex-row transition-colors dark:border-border dark:bg-card dark:shadow-none"
         hideClose
       >
         {/* Sidebar Steps */}
-        <div className="flex w-full shrink-0 flex-col overflow-y-auto border-r border-gray-200 bg-gray-50/50 p-6 md:w-1/3 dark:border-white/10 dark:bg-card">
+        <div className="flex w-full shrink-0 flex-col overflow-y-auto border-r border-border bg-gray-50/50 p-6 md:w-1/3 dark:border-border dark:bg-card">
           <div className="mb-5">
             <h3 className="text-[14px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-550">
               Account Setup
             </h3>
-            <p className="mt-1 text-[11px] font-normal leading-normal text-gray-500 dark:text-zinc-400">
+            <p className="mt-1 text-[11px] font-normal leading-normal text-gray-900 dark:text-zinc-300">
               Complete these steps to access your dashboard securely.
             </p>
           </div>
@@ -288,7 +288,7 @@ export default function AccountSetupModal({ authUser }) {
                   <h3 className="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
                     Update Default Password
                   </h3>
-                  <p className="mt-1 text-[13px] font-normal text-gray-500 dark:text-zinc-400 leading-normal">
+                  <p className="mt-1 text-[13px] font-normal text-gray-900 dark:text-zinc-300 leading-normal">
                     You&apos;re logging in for the first time. Change your default password to continue.
                   </p>
                 </div>
@@ -308,7 +308,7 @@ export default function AccountSetupModal({ authUser }) {
                     <div className="relative group">
                       <Input
                         type={showPw.next ? "text" : "password"}
-                        className="h-10 rounded-[8px] border-[0.5px] border-gray-300 bg-white pr-10 text-[13px] font-normal text-gray-900 focus-visible:border-gray-500 focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none focus:ring-0 focus:border-gray-500 dark:border-zinc-800 dark:bg-card dark:text-zinc-50 dark:focus:border-zinc-650"
+                        className="h-10 rounded-[8px] border-[0.5px] border-border bg-white pr-10 text-[13px] font-normal text-gray-900 focus-visible:border-gray-500 focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none focus:ring-0 focus:border-gray-500 dark:border-border dark:bg-card dark:text-zinc-50 dark:focus:border-zinc-650"
                         value={pwNext}
                         onChange={(e) => setPwNext(e.target.value)}
                         placeholder="••••••••"
@@ -334,7 +334,7 @@ export default function AccountSetupModal({ authUser }) {
                     <div className="relative group">
                       <Input
                         type={showPw.confirm ? "text" : "password"}
-                        className="h-10 rounded-[8px] border-[0.5px] border-gray-300 bg-white pr-10 text-[13px] font-normal text-gray-900 focus-visible:border-gray-500 focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none focus:ring-0 focus:border-gray-500 dark:border-zinc-800 dark:bg-card dark:text-zinc-50 dark:focus:border-zinc-650"
+                        className="h-10 rounded-[8px] border-[0.5px] border-border bg-white pr-10 text-[13px] font-normal text-gray-900 focus-visible:border-gray-500 focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none focus:ring-0 focus:border-gray-500 dark:border-border dark:bg-card dark:text-zinc-50 dark:focus:border-zinc-650"
                         value={pwConfirm}
                         onChange={(e) => setPwConfirm(e.target.value)}
                         placeholder="••••••••"
@@ -374,7 +374,7 @@ export default function AccountSetupModal({ authUser }) {
                   <h3 className="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
                     Recovery Questions
                   </h3>
-                  <p className="mt-1 text-[13px] font-normal text-gray-500 dark:text-zinc-400 leading-normal">
+                  <p className="mt-1 text-[13px] font-normal text-gray-900 dark:text-zinc-300 leading-normal">
                     Set up security questions to recover your account if you forget your password.
                   </p>
                 </div>
@@ -395,13 +395,13 @@ export default function AccountSetupModal({ authUser }) {
                       </div>
                     ))
                   ) : questions.length === 0 ? (
-                    <div className="text-[13px] font-normal text-gray-500 dark:text-zinc-400">
+                    <div className="text-[13px] font-normal text-gray-900 dark:text-zinc-300">
                       No global security questions have been configured.
                     </div>
                   ) : (
                     questions.map((q) => (
                       <div key={q.id} className="space-y-1">
-                        <label className="text-[11px] font-medium text-gray-500 dark:text-zinc-400 block">
+                        <label className="text-[11px] font-medium text-gray-900 dark:text-zinc-300 block">
                           {q.question.replace(/\?$/, "")}{" "}
                           {q.is_required ? (
                             <span className="text-[11px] font-normal text-gray-400 dark:text-zinc-500 ml-0.5">*</span>
@@ -414,7 +414,7 @@ export default function AccountSetupModal({ authUser }) {
                         <Input
                           type="text"
                           placeholder={q.hasAnswer ? "•••••••• (Already Answered)" : "Enter your answer"}
-                          className="h-10 w-full rounded-[8px] border-[0.5px] border-gray-300 bg-white text-[13px] font-normal text-gray-900 focus-visible:border-gray-500 focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none focus:ring-0 focus:border-gray-500 dark:border-zinc-800 dark:bg-card dark:text-zinc-50 dark:focus:border-zinc-650"
+                          className="h-10 w-full rounded-[8px] border-[0.5px] border-border bg-white text-[13px] font-normal text-gray-900 focus-visible:border-gray-500 focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none focus:ring-0 focus:border-gray-500 dark:border-border dark:bg-card dark:text-zinc-50 dark:focus:border-zinc-650"
                           value={answers[q.id] || ""}
                           onChange={(e) =>
                             setAnswers({ ...answers, [q.id]: e.target.value })

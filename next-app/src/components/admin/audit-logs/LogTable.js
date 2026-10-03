@@ -107,7 +107,7 @@ const LogRow = React.memo(function LogRow({
     <React.Fragment>
       <tr
         className={cn(
-          "group h-[52px] border-b-[0.5px] border-gray-100 dark:border-white/10 last:border-b-0 transition-all duration-fast hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none cursor-pointer",
+          "group h-[52px] border-b-[0.5px] border-border dark:border-border last:border-b-0 transition-all duration-fast hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none cursor-pointer",
           isSelected && "bg-blue-50/60 dark:bg-blue-950/20",
           isExpanded && "bg-gray-50 dark:bg-white/8"
         )}
@@ -159,7 +159,7 @@ const LogRow = React.memo(function LogRow({
             </TooltipTrigger>
             <TooltipContent
               side="top"
-              className="max-w-[400px] rounded-xl border-gray-200 bg-white p-3 text-xs font-medium text-gray-700 shadow-2xl backdrop-blur-sm dark:border-white/10 dark:bg-card/95 dark:text-zinc-200"
+              className="max-w-[400px] rounded-xl border-border bg-white p-3 text-xs font-medium text-gray-700 shadow-2xl backdrop-blur-sm dark:border-border dark:bg-card/95 dark:text-zinc-200"
             >
               {log.details || "No known description"}
             </TooltipContent>
@@ -242,14 +242,14 @@ export default function LogTable({
   if (error) {
     return (
       <div className={cn(
-        "flex flex-1 min-h-[320px] flex-col items-center justify-center p-6 text-center text-gray-500 dark:text-zinc-400",
+        "flex flex-1 min-h-[320px] flex-col items-center justify-center p-6 text-center text-gray-900 dark:text-zinc-300",
         embedded
-          ? "border-t border-gray-100 dark:border-white/10 rounded-b-2xl"
-          : "overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card"
+          ? "border-t border-border dark:border-border rounded-b-2xl"
+          : "overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card"
       )}>
-        <Empty className="flex flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400">
+        <Empty className="flex flex-col items-center justify-center border-0 text-center text-gray-900 dark:text-zinc-300">
           <EmptyHeader className="flex flex-col items-center gap-0">
-            <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
+            <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none">
               <HugeIcon  className="ph-duotone ph-warning-circle text-xl text-pup-maroon dark:text-primary" />
             </EmptyMedia>
             <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">
@@ -272,12 +272,12 @@ export default function LogTable({
       <div className={cn(
         "flex flex-col isolate",
         embedded
-          ? "border-t border-gray-100 dark:border-white/10 rounded-b-2xl"
-          : "rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card"
+          ? "border-t border-border dark:border-border rounded-b-2xl"
+          : "rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card"
       )}>
         <div className="w-full overflow-x-auto select-none">
           <table className={cn("min-w-full table-fixed text-sm", displayLogs.length === 0 && "h-full")}>
-            <thead className="sticky top-0 z-10 border-b border-gray-200 bg-white dark:bg-card dark:border-white/10">
+            <thead className="sticky top-0 z-10 border-b border-border bg-white dark:bg-card dark:border-border">
               <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">
                 <th className="w-12 p-4 text-center"></th>
                 <th className="p-4 w-[16%]">
@@ -364,14 +364,14 @@ export default function LogTable({
                       <EmptyHeader className="flex flex-col items-center gap-0">
                         <div className="relative mb-6">
                           <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                          <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
+                          <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
                             <HugeIcon  className="ph-duotone ph-magnifying-glass text-xl text-gray-300 dark:text-zinc-600"></HugeIcon>
                           </EmptyMedia>
                         </div>
                         <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
                           No Activity Found
                         </EmptyTitle>
-                        <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400">
+                        <EmptyDescription className="max-w-xs text-sm font-medium text-gray-900 dark:text-zinc-300">
                           Try adjusting your search filters to find what you&apos;re looking for.
                         </EmptyDescription>
                         {(localSearch !== "" ||
@@ -391,7 +391,7 @@ export default function LogTable({
                               setLogPage(1)
                             }}
                             title="Reset Filters"
-                            className="mt-6 flex h-10 items-center justify-center gap-2 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
+                            className="mt-6 flex h-10 items-center justify-center gap-2 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                           >
                             Reset
                           </Button>

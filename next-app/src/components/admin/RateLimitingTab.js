@@ -133,10 +133,10 @@ export default function RateLimitingTab() {
     <div className="space-y-6">
       {/* Stats Cards */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-        <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-xs dark:border-white/10 dark:bg-card">
+        <div className="rounded-2xl border border-border bg-white p-6 shadow-xs dark:border-border dark:bg-card">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs font-medium text-gray-500 dark:text-zinc-400">Total Violations (24h)</p>
+              <p className="text-xs font-medium text-gray-900 dark:text-zinc-300">Total Violations (24h)</p>
               <p className="text-2xl font-semibold tracking-tight text-pup-maroon dark:text-primary mt-1">
                 {data.stats.violations.reduce(
                   (sum, v) => sum + parseInt(v.violations || 0),
@@ -150,10 +150,10 @@ export default function RateLimitingTab() {
           </div>
         </div>
 
-        <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-xs dark:border-white/10 dark:bg-card">
+        <div className="rounded-2xl border border-border bg-white p-6 shadow-xs dark:border-border dark:bg-card">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs font-medium text-gray-500 dark:text-zinc-400">API Requests (24h)</p>
+              <p className="text-xs font-medium text-gray-900 dark:text-zinc-300">API Requests (24h)</p>
               <p className="text-2xl font-semibold tracking-tight text-pup-maroon dark:text-primary mt-1">
                 {data.stats.hits.reduce(
                   (sum, h) => sum + parseInt(h.hits || 0),
@@ -167,10 +167,10 @@ export default function RateLimitingTab() {
           </div>
         </div>
 
-        <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-xs dark:border-white/10 dark:bg-card">
+        <div className="rounded-2xl border border-border bg-white p-6 shadow-xs dark:border-border dark:bg-card">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs font-medium text-gray-500 dark:text-zinc-400">Suspicious IPs</p>
+              <p className="text-xs font-medium text-gray-900 dark:text-zinc-300">Suspicious IPs</p>
               <p className="text-2xl font-semibold tracking-tight text-pup-maroon dark:text-primary mt-1">
                 {suspiciousIPs.length}
               </p>
@@ -183,21 +183,21 @@ export default function RateLimitingTab() {
       </div>
 
       {/* Recent Violations */}
-      <div className="rounded-2xl border border-gray-200 bg-white overflow-hidden shadow-xs dark:border-white/10 dark:bg-card">
-        <div className="border-b border-gray-200 bg-gray-50/75 px-5 py-3.5 dark:border-white/10 dark:bg-white/5">
+      <div className="rounded-2xl border border-border bg-white overflow-hidden shadow-xs dark:border-border dark:bg-card">
+        <div className="border-b border-border bg-gray-50/75 px-5 py-3.5 dark:border-border dark:bg-white/5">
           <h3 className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
             Recent Rate Limit Violations
           </h3>
         </div>
         <div className="overflow-x-auto">
           {data.recentViolations.length === 0 ? (
-            <div className="p-8 text-center text-gray-500 dark:text-zinc-400">
+            <div className="p-8 text-center text-gray-900 dark:text-zinc-300">
               <PhShield className="mx-auto mb-3 h-10 w-10 text-gray-300 dark:text-zinc-600" />
               <p className="text-xs font-medium">No recent violations</p>
             </div>
           ) : (
             <table className="w-full">
-              <thead className="border-b border-gray-200 bg-gray-50/50 dark:border-white/10 dark:bg-muted/40">
+              <thead className="border-b border-border bg-gray-50/50 dark:border-border dark:bg-muted/40">
                 <tr>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-zinc-300">
                     Type
@@ -219,7 +219,7 @@ export default function RateLimitingTab() {
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100 dark:divide-white/10">
+              <tbody className="divide-y divide-border dark:divide-border">
                 {data.recentViolations.map((violation) => (
                   <tr key={violation.id} className="hover:bg-gray-50 dark:hover:bg-white/5 dark:bg-card">
                     <td className="px-4 py-3 text-xs font-medium text-gray-900 dark:text-zinc-100">{violation.endpoint_type}</td>
@@ -272,13 +272,13 @@ export default function RateLimitingTab() {
   )
 
   const renderConfigurations = () => (
-    <div className="rounded-2xl border border-gray-200 bg-white overflow-hidden shadow-xs dark:border-white/10 dark:bg-card">
-      <div className="border-b border-gray-200 bg-gray-50/75 px-5 py-3.5 dark:border-white/10 dark:bg-white/5">
+    <div className="rounded-2xl border border-border bg-white overflow-hidden shadow-xs dark:border-border dark:bg-card">
+      <div className="border-b border-border bg-gray-50/75 px-5 py-3.5 dark:border-border dark:bg-white/5">
         <h3 className="text-xs font-semibold text-gray-900 dark:text-zinc-100">Rate Limit Configurations</h3>
       </div>
       <div className="overflow-x-auto">
         <table className="w-full">
-          <thead className="border-b border-gray-200 bg-gray-50/50 dark:border-white/10 dark:bg-muted/40">
+          <thead className="border-b border-border bg-gray-50/50 dark:border-border dark:bg-muted/40">
             <tr>
               <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-zinc-300">
                 Endpoint Type
@@ -294,7 +294,7 @@ export default function RateLimitingTab() {
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100 dark:divide-white/10">
+          <tbody className="divide-y divide-border dark:divide-border">
             {data.configs.map((config) => (
               <tr key={config.id} className="hover:bg-gray-50 dark:hover:bg-white/5 dark:bg-card">
                 <td className="px-4 py-3 text-xs font-semibold text-gray-900 dark:text-zinc-100">
@@ -327,19 +327,19 @@ export default function RateLimitingTab() {
   )
 
   const renderSuspiciousIPs = () => (
-    <div className="rounded-2xl border border-gray-200 bg-white overflow-hidden shadow-xs dark:border-white/10 dark:bg-card">
-      <div className="border-b border-gray-200 bg-gray-50/75 px-5 py-3.5 dark:border-white/10 dark:bg-white/5">
+    <div className="rounded-2xl border border-border bg-white overflow-hidden shadow-xs dark:border-border dark:bg-card">
+      <div className="border-b border-border bg-gray-50/75 px-5 py-3.5 dark:border-border dark:bg-white/5">
         <h3 className="text-xs font-semibold text-gray-900 dark:text-zinc-100">Suspicious IP Addresses</h3>
       </div>
       <div className="overflow-x-auto">
         {suspiciousIPs.length === 0 ? (
-          <div className="p-8 text-center text-gray-500 dark:text-zinc-400">
+          <div className="p-8 text-center text-gray-900 dark:text-zinc-300">
             <PhShield className="mx-auto mb-3 h-10 w-10 text-gray-300 dark:text-zinc-600" />
             <p className="text-xs font-medium">No suspicious activity detected</p>
           </div>
         ) : (
           <table className="w-full">
-            <thead className="border-b border-gray-200 bg-gray-50/50 dark:border-white/10 dark:bg-muted/40">
+            <thead className="border-b border-border bg-gray-50/50 dark:border-border dark:bg-muted/40">
               <tr>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-zinc-300">
                   IP Address
@@ -358,7 +358,7 @@ export default function RateLimitingTab() {
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100 dark:divide-white/10">
+            <tbody className="divide-y divide-border dark:divide-border">
               {suspiciousIPs.map((ip, index) => (
                 <tr key={index} className="hover:bg-gray-50 dark:hover:bg-white/5 dark:bg-card">
                   <td className="px-4 py-3 text-xs font-mono font-medium text-gray-900 dark:text-zinc-100">{ip.ip}</td>
@@ -390,7 +390,7 @@ export default function RateLimitingTab() {
             <h2 className="text-xl font-bold tracking-tight text-gray-900 dark:text-zinc-50">
               Rate Limiting & Security
             </h2>
-            <p className="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">
+            <p className="text-xs text-gray-900 dark:text-zinc-300 mt-0.5">
               Monitor active thresholds, API requests, and rate limit violations
             </p>
           </div>
@@ -407,7 +407,7 @@ export default function RateLimitingTab() {
         </div>
 
         {/* Apple Segmented Controls */}
-        <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-gray-200/60 dark:border-white/5 w-fit">
+        <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-border/60 dark:border-border w-fit">
           {[
             { id: "overview", label: "Overview", icon: PhGauge },
             { id: "configs", label: "Configurations", icon: PhLock },
@@ -437,14 +437,14 @@ export default function RateLimitingTab() {
               <>
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                   {[1, 2, 3].map((i) => (
-                    <div key={i} className="rounded-2xl border border-gray-200 bg-white p-6 h-24 dark:border-white/10 dark:bg-card">
+                    <div key={i} className="rounded-2xl border border-border bg-white p-6 h-24 dark:border-border dark:bg-card">
                       <Skeleton className="h-4 w-24 mb-2 dark:bg-muted" />
                       <Skeleton className="h-8 w-16 dark:bg-muted" />
                     </div>
                   ))}
                 </div>
-                <div className="rounded-2xl border border-gray-200 bg-white h-64 overflow-hidden dark:border-white/10 dark:bg-card">
-                  <div className="border-b border-gray-200 bg-transparent p-4 dark:border-white/10 dark:bg-transparent">
+                <div className="rounded-2xl border border-border bg-white h-64 overflow-hidden dark:border-border dark:bg-card">
+                  <div className="border-b border-border bg-transparent p-4 dark:border-border dark:bg-transparent">
                     <Skeleton className="h-5 w-48 dark:bg-muted" />
                   </div>
                   <div className="p-4 space-y-4">
@@ -456,8 +456,8 @@ export default function RateLimitingTab() {
               </>
             )}
             {activeTab !== "overview" && (
-              <div className="rounded-2xl border border-gray-200 bg-white h-96 overflow-hidden dark:border-white/10 dark:bg-card">
-                <div className="border-b border-gray-200 bg-transparent p-4 dark:border-white/10 dark:bg-transparent">
+              <div className="rounded-2xl border border-border bg-white h-96 overflow-hidden dark:border-border dark:bg-card">
+                <div className="border-b border-border bg-transparent p-4 dark:border-border dark:bg-transparent">
                   <Skeleton className="h-5 w-48 dark:bg-muted" />
                 </div>
                 <div className="p-4 space-y-4">

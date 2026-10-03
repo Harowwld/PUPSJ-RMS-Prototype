@@ -67,7 +67,7 @@ function DocumentsTable({
 }) {
   return (
     <table className="min-w-full text-sm table-fixed">
-      <thead className="sticky top-0 z-10 border-b-[0.5px] border-black/10 dark:border-white/10 bg-white dark:bg-card">
+      <thead className="sticky top-0 z-10 border-b-[0.5px] border-black/10 dark:border-border bg-white dark:bg-card">
         <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">
           <th className="p-4">
             <button
@@ -168,7 +168,7 @@ function DocumentsTable({
           <th className="p-4 text-right text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">Actions</th>
         </tr>
       </thead>
-      <tbody className="divide-y divide-gray-100 dark:divide-white/10">
+      <tbody className="divide-y divide-border dark:divide-border">
         {!hasActiveFilters && docsRows.length === 0 ? (
           <tr className="border-0 hover:bg-transparent">
             <td colSpan={7} className="p-0 border-0">
@@ -176,12 +176,12 @@ function DocumentsTable({
                 <EmptyHeader className="flex flex-col items-center gap-0">
                   <div className="relative mb-4">
                     <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                    <EmptyMedia className="relative z-10 flex h-20 w-20 items-center justify-center rounded-2xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
+                    <EmptyMedia className="relative z-10 flex h-20 w-20 items-center justify-center rounded-2xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
                       <HugeIcon  className="ph-duotone ph-magnifying-glass text-3xl text-gray-400 dark:text-zinc-500"></HugeIcon>
                     </EmptyMedia>
                   </div>
                   <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">Search Documents</EmptyTitle>
-                  <EmptyDescription className="max-w-xs text-xs font-normal text-gray-500 dark:text-zinc-400 mt-1">
+                  <EmptyDescription className="max-w-xs text-xs font-normal text-gray-900 dark:text-zinc-300 mt-1">
                     Enter a student number, name, or select a document
                     type to find related records.
                   </EmptyDescription>
@@ -196,12 +196,12 @@ function DocumentsTable({
                 <EmptyHeader className="flex flex-col items-center gap-0">
                   <div className="relative mb-4">
                     <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                    <EmptyMedia className="relative z-10 flex h-20 w-20 items-center justify-center rounded-2xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
+                    <EmptyMedia className="relative z-10 flex h-20 w-20 items-center justify-center rounded-2xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
                       <HugeIcon  className="ph-duotone ph-magnifying-glass text-3xl text-gray-400 dark:text-zinc-500"></HugeIcon>
                     </EmptyMedia>
                   </div>
                   <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">No Results Found</EmptyTitle>
-                  <EmptyDescription className="max-w-xs text-xs font-normal text-gray-500 dark:text-zinc-400 mt-1">
+                  <EmptyDescription className="max-w-xs text-xs font-normal text-gray-900 dark:text-zinc-300 mt-1">
                     We couldn&apos;t find any documents matching your
                     search criteria.
                   </EmptyDescription>
@@ -214,7 +214,7 @@ function DocumentsTable({
             <tr
               key={r.id || idx}
               className={cn(
-                "group h-[52px] border-b-[0.5px] border-gray-100 dark:border-white/10 last:border-b-0 transition-all duration-200 hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none",
+                "group h-[52px] border-b-[0.5px] border-border dark:border-border last:border-b-0 transition-all duration-200 hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none",
                 r.status === "uploaded"
                   ? (r.verificationStatus === "unverified" ? "bg-amber-50/30 dark:bg-amber-950/20" : "bg-green-50/30 dark:bg-emerald-950/20")
                   : "bg-red-50/30 dark:bg-red-950/20"
@@ -270,7 +270,7 @@ function DocumentsTable({
                     <div className="truncate font-medium text-gray-900 dark:text-zinc-50 text-[13px]" title={r.doc.original_filename}>
                       {r.doc.original_filename}
                     </div>
-                    <div className="text-[11px] text-gray-500 dark:text-zinc-400 font-normal mt-[1px]">
+                    <div className="text-[11px] text-gray-900 dark:text-zinc-300 font-normal mt-[1px]">
                       {(r.doc.size_bytes / 1024).toFixed(1)} KB
                     </div>
                   </>
@@ -693,16 +693,16 @@ export default function DocumentsTab({
         tabIndex={0}
       >
         {/* ONE Single Card Container encapsulating Header, Toolbar, Filters, Table & Pagination */}
-        <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none isolate mb-4 min-h-0 flex-1">
+        <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate mb-4 min-h-0 flex-1">
           {/* 1. Page Header */}
           <PageHeader
             icon="ph-files"
-            title="Documents"
+            title="Documents Matrix"
             description="Search and view digitized student records."
             showBorder={false}
             className="p-6"
             titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
-            descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
+            descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
             actions={
               <div className="flex items-center gap-2">
                 <RefreshButton
@@ -727,7 +727,7 @@ export default function DocumentsTab({
           />
 
           {/* 2. Navigation Toolbar */}
-          <div className="border-t border-gray-100 dark:border-white/10 p-5 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
+          <div className="border-t border-border dark:border-border p-5 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
             {/* Left: Status Line Tabs */}
             <div className="flex items-center gap-6 shrink-0 select-none overflow-x-auto">
               {STATUS_TABS.map((tab) => {
@@ -758,7 +758,7 @@ export default function DocumentsTab({
                     className={cn(
                       "relative h-9 flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent whitespace-nowrap",
                       isActive
-                        ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-pup-maroon dark:after:bg-red-400"
+                        ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-white"
                         : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
                     )}
                   >
@@ -789,7 +789,7 @@ export default function DocumentsTab({
                   value={searchQuery}
                   onChange={(e) => handleSearchChange(e.target.value)}
                   placeholder="Search student number or name..."
-                  className="h-9 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 pl-8 pr-16 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
+                  className="h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 pl-8 pr-16 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
                 />
                 <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] text-gray-400 dark:text-zinc-500">
                   {filteredRows.length > 0 ? filteredRows.length.toLocaleString() : "0"}
@@ -813,18 +813,18 @@ export default function DocumentsTab({
           <ActiveFilterChips
             chips={activeChips}
             onClearAll={handleClearAllFilters}
-            className="border-t border-gray-100 dark:border-white/10 px-6 py-2.5"
+            className="border-t border-border dark:border-border px-6 py-2.5"
           />
 
           {/* 4. Documents Table Content */}
-          <div className="flex flex-col flex-1 w-full min-h-0 border-t border-gray-100 dark:border-white/10">
+          <div className="flex flex-col flex-1 w-full min-h-0 border-t border-border dark:border-border">
               {docsLoading ? (
                 <DocumentsMatrixSkeleton rowCount={7} embedded={true} />
               ) : docsError ? (
                 <div className="p-8 rounded-b-2xl">
                   <Empty className="h-[320px] flex flex-col items-center justify-center text-center text-gray-500 border-0 dark:text-zinc-400">
                     <EmptyHeader className="flex flex-col items-center gap-0">
-                      <EmptyMedia className="w-16 h-16 rounded-2xl bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm dark:bg-card dark:border-white/10 dark:shadow-none">
+                      <EmptyMedia className="w-16 h-16 rounded-2xl bg-white border border-border flex items-center justify-center mb-4 shadow-sm dark:bg-card dark:border-border dark:shadow-none">
                         <HugeIcon  className="ph-duotone ph-warning-circle text-2xl text-pup-maroon dark:text-primary" />
                       </EmptyMedia>
                       <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">Could Not Load Report</EmptyTitle>
@@ -837,8 +837,8 @@ export default function DocumentsTab({
               ) : (
                 <div className="flex flex-col flex-1 w-full min-h-0 rounded-b-2xl overflow-hidden">
                   {isSingleStudentView && (
-                    <div className="p-4 border-b border-gray-100 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/20">
-                      <div className="bg-white border border-gray-200 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xs dark:bg-card dark:border-white/10">
+                    <div className="p-4 border-b border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/20">
+                      <div className="bg-white border border-border rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xs dark:bg-card dark:border-border">
                         <div>
                           <h3 className="text-sm font-semibold text-gray-900 tracking-wide dark:text-zinc-50">
                             Upload Progress • {docsRows[0]?.student_name || docsRows[0]?.student_no}
@@ -863,7 +863,7 @@ export default function DocumentsTab({
                             variant="outline"
                             onClick={openEditStudent}
                             title="Edit Student Profile"
-                            className="h-9 px-4 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                            className="h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                           >
                             Edit
                           </Button>
@@ -886,8 +886,8 @@ export default function DocumentsTab({
                   </div>
 
                   {filteredRows.length > 0 && (
-                    <div className="flex items-center justify-between border-t border-gray-100 bg-white p-4 px-6 dark:border-white/10 dark:bg-card mt-auto select-none rounded-b-2xl">
-                      <div className="flex items-center gap-6 text-xs text-gray-500 dark:text-zinc-400">
+                    <div className="flex items-center justify-between border-t border-border bg-white p-4 px-6 dark:border-border dark:bg-card mt-auto select-none rounded-b-2xl">
+                      <div className="flex items-center gap-6 text-xs text-gray-900 dark:text-zinc-300">
                         <span>
                           Showing {paginatedRows.length} of {filteredRows.length.toLocaleString()}
                         </span>
@@ -926,12 +926,12 @@ export default function DocumentsTab({
                             setPage((p) => Math.max(1, p - 1));
                             setJumpPage(String(Math.max(1, page - 1)));
                           }}
-                          className="text-xs text-gray-500 dark:text-zinc-400 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
+                          className="text-xs text-gray-900 dark:text-zinc-300 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
                         >
                           Prev
                         </Button>
 
-                        <div className="h-8 w-8 rounded-xl border border-[#e5e5ea] dark:border-zinc-800 flex items-center justify-center text-xs font-bold text-gray-800 dark:text-zinc-200 bg-white dark:bg-zinc-900">
+                        <div className="h-8 w-8 rounded-xl border border-[#e5e5ea] dark:border-border flex items-center justify-center text-xs font-bold text-gray-800 dark:text-zinc-200 bg-white dark:bg-zinc-900">
                           {page}
                         </div>
 
@@ -943,7 +943,7 @@ export default function DocumentsTab({
                             setPage((p) => Math.min(totalPages, p + 1));
                             setJumpPage(String(Math.min(totalPages, page + 1)));
                           }}
-                          className="text-xs text-gray-500 dark:text-zinc-400 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
+                          className="text-xs text-gray-900 dark:text-zinc-300 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
                         >
                           Next
                         </Button>
@@ -957,14 +957,14 @@ export default function DocumentsTab({
 
         {/* STUDENT PROFILE EDIT MODAL */}
         <Dialog open={editStudentOpen} onOpenChange={setEditStudentOpen}>
-          <DialogContent className="w-full max-w-2xl overflow-hidden rounded-2xl border border-gray-200 bg-white p-0 shadow-2xl sm:max-w-2xl dark:border-white/10 dark:bg-card flex flex-col gap-0">
+          <DialogContent className="w-full max-w-2xl overflow-hidden rounded-2xl border border-border bg-white p-0 shadow-2xl sm:max-w-2xl dark:border-border dark:bg-card flex flex-col gap-0">
             <DialogHeader className="bg-white p-6 pb-0 dark:bg-card border-none text-left">
               <div className="flex items-start gap-4">
                 <div className="min-w-0 pr-8">
                   <DialogTitle className="text-[16px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
                     Manage Student Profile
                   </DialogTitle>
-                  <DialogDescription className="mt-1 text-[13px] font-normal text-gray-500 dark:text-zinc-400">
+                  <DialogDescription className="mt-1 text-[13px] font-normal text-gray-900 dark:text-zinc-300">
                     Update student info and storage location.
                   </DialogDescription>
                 </div>
@@ -973,10 +973,10 @@ export default function DocumentsTab({
 
             <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-4">
-                <h4 className="text-[11px] font-semibold text-gray-500 tracking-widest border-b border-gray-100 pb-1 dark:text-zinc-400 dark:border-white/10">Identification</h4>
+                <h4 className="text-[11px] font-semibold text-gray-500 tracking-widest border-b border-border pb-1 dark:text-zinc-400 dark:border-border">Identification</h4>
                 <div>
                   <label className="block text-xs font-semibold text-gray-700 mb-1.5 tracking-wide dark:text-zinc-200">Student Number</label>
-                  <Input disabled value={currentStudent?.studentNo} className="bg-gray-100 text-gray-500 border-gray-200 cursor-not-allowed dark:text-zinc-400 dark:border-white/10 dark:bg-muted rounded-xl" />
+                  <Input disabled value={currentStudent?.studentNo} className="bg-gray-100 text-gray-500 border-border cursor-not-allowed dark:text-zinc-400 dark:border-border dark:bg-muted rounded-xl" />
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-gray-700 mb-1.5 tracking-wide dark:text-zinc-200">Full Name <span className="text-pup-maroon dark:text-primary">*</span></label>
@@ -984,14 +984,14 @@ export default function DocumentsTab({
                     value={editStudentForm.name}
                     onChange={(e) => setEditStudentForm((p) => ({ ...p, name: e.target.value.toUpperCase() }))}
                     placeholder="LAST NAME, FIRST NAME"
-                    className="h-10 bg-white border border-gray-200 dark:border-white/10 rounded-xl text-xs shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 dark:bg-card"
+                    className="h-10 bg-white border border-border dark:border-border rounded-xl text-xs shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 dark:bg-card"
                     required
                   />
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-gray-700 mb-1.5 tracking-wide dark:text-zinc-200">Degree Program <span className="text-pup-maroon dark:text-primary">*</span></label>
                   <Select
-                    className="h-10 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white px-3 text-xs font-normal text-gray-900 shadow-none transition-colors focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 dark:bg-card dark:text-zinc-50"
+                    className="h-10 w-full rounded-xl border border-border dark:border-border bg-white px-3 text-xs font-normal text-gray-900 shadow-none transition-colors focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 dark:bg-card dark:text-zinc-50"
                     value={editStudentForm.courseCode}
                     onChange={(e) => setEditStudentForm((p) => ({ ...p, courseCode: e.target.value }))}
                     required
@@ -1005,14 +1005,14 @@ export default function DocumentsTab({
                   <Input
                     value={editStudentForm.section}
                     onChange={(e) => setEditStudentForm((p) => ({ ...p, section: e.target.value }))}
-                    className="h-10 bg-white border border-gray-200 dark:border-white/10 rounded-xl text-xs shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 dark:bg-card"
+                    className="h-10 bg-white border border-border dark:border-border rounded-xl text-xs shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 dark:bg-card"
                     required
                   />
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-gray-700 mb-1.5 tracking-wide dark:text-zinc-200">Account Status <span className="text-pup-maroon dark:text-primary">*</span></label>
                   <Select
-                    className="h-10 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white px-3 text-xs font-normal text-gray-900 shadow-none transition-colors focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 dark:bg-card dark:text-zinc-50"
+                    className="h-10 w-full rounded-xl border border-border dark:border-border bg-white px-3 text-xs font-normal text-gray-900 shadow-none transition-colors focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 dark:bg-card dark:text-zinc-50"
                     value={editStudentForm.status}
                     onChange={(e) => setEditStudentForm((p) => ({ ...p, status: e.target.value }))}
                     required
@@ -1027,11 +1027,11 @@ export default function DocumentsTab({
               </div>
 
               <div className="space-y-4">
-                <h4 className="text-[11px] font-semibold text-gray-500 tracking-widest border-b border-gray-100 pb-1 dark:text-zinc-400 dark:border-white/10">Physical Location</h4>
+                <h4 className="text-[11px] font-semibold text-gray-500 tracking-widest border-b border-border pb-1 dark:text-zinc-400 dark:border-border">Physical Location</h4>
                 <div>
                   <label className="block text-xs font-semibold text-gray-700 mb-1.5 tracking-wide dark:text-zinc-200">Room Number <span className="text-pup-maroon dark:text-primary">*</span></label>
                   <Select
-                    className="h-10 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white px-3 text-xs font-normal text-gray-900 shadow-none transition-colors focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 dark:bg-card dark:text-zinc-50"
+                    className="h-10 w-full rounded-xl border border-border dark:border-border bg-white px-3 text-xs font-normal text-gray-900 shadow-none transition-colors focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 dark:bg-card dark:text-zinc-50"
                     value={String(editStudentForm.room || "")}
                     onChange={(e) => {
                       const nextRoom = e.target.value ? parseInt(e.target.value, 10) : "";
@@ -1048,7 +1048,7 @@ export default function DocumentsTab({
                 <div>
                   <label className="block text-xs font-semibold text-gray-700 mb-1.5 tracking-wide dark:text-zinc-200">Cabinet ID <span className="text-pup-maroon dark:text-primary">*</span></label>
                   <Select
-                    className="h-10 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white px-3 text-xs font-normal text-gray-900 shadow-none transition-colors focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 dark:bg-card dark:text-zinc-50"
+                    className="h-10 w-full rounded-xl border border-border dark:border-border bg-white px-3 text-xs font-normal text-gray-900 shadow-none transition-colors focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 dark:bg-card dark:text-zinc-50"
                     value={editStudentForm.cabinet}
                     onChange={(e) => setEditStudentForm((p) => ({ ...p, cabinet: e.target.value, drawer: "" }))}
                     disabled={!editStudentForm.room}
@@ -1063,7 +1063,7 @@ export default function DocumentsTab({
                 <div>
                   <label className="block text-xs font-semibold text-gray-700 mb-1.5 tracking-wide dark:text-zinc-200">Drawer Number <span className="text-pup-maroon dark:text-primary">*</span></label>
                   <Select
-                    className="h-10 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white px-3 text-xs font-normal text-gray-900 shadow-none transition-colors focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 dark:bg-card dark:text-zinc-50"
+                    className="h-10 w-full rounded-xl border border-border dark:border-border bg-white px-3 text-xs font-normal text-gray-900 shadow-none transition-colors focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 dark:bg-card dark:text-zinc-50"
                     value={String(editStudentForm.drawer || "")}
                     onChange={(e) => setEditStudentForm((p) => ({ ...p, drawer: e.target.value }))}
                     disabled={!editStudentForm.cabinet}
@@ -1105,7 +1105,7 @@ export default function DocumentsTab({
                 type="button"
                 variant="outline"
                 onClick={() => setEditStudentOpen(false)}
-                className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
               >
                 Cancel
               </Button>
@@ -1163,14 +1163,14 @@ export default function DocumentsTab({
             }
           }}
         >
-          <DialogContent className="flex h-[90vh] w-[96vw] max-w-[96vw] flex-col overflow-hidden border border-gray-200 bg-gray-100 p-0 shadow-2xl transition-all duration-300 xl:max-w-[1400px] rounded-2xl dark:border-white/10 dark:bg-muted gap-0">
-            <DialogHeader className="shrink-0 border-b border-gray-100 bg-white p-6 pb-4 dark:border-white/10 dark:bg-card text-left">
+          <DialogContent className="flex h-[90vh] w-[96vw] max-w-[96vw] flex-col overflow-hidden border border-border bg-gray-100 p-0 shadow-2xl transition-all duration-300 xl:max-w-[1400px] rounded-2xl dark:border-border dark:bg-muted gap-0">
+            <DialogHeader className="shrink-0 border-b border-border bg-white p-6 pb-4 dark:border-border dark:bg-card text-left">
               <div className="flex items-start gap-4">
                 <div className="min-w-0 pr-10">
                   <DialogTitle className="text-[16px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
                     Document View: {selectedDoc?.doc_type || "Loading..."}
                   </DialogTitle>
-                  <DialogDescription className="mt-1 text-[13px] font-normal text-gray-500 dark:text-zinc-400">
+                  <DialogDescription className="mt-1 text-[13px] font-normal text-gray-900 dark:text-zinc-300">
                     Viewing details for student {selectedDoc?.student_no}.
                   </DialogDescription>
                 </div>
@@ -1200,7 +1200,7 @@ export default function DocumentsTab({
               )}
 
               {/* Left: Document Preview */}
-              <div className="flex-1 bg-white border-r border-gray-200 dark:bg-zinc-900 dark:border-white/10 relative">
+              <div className="flex-1 bg-white border-r border-border dark:bg-zinc-900 dark:border-border relative">
                 {selectedDoc?.doc?.file_url || selectedDoc?.doc?.id ? (
                   <iframe
                     src={`${selectedDoc.doc.file_url || `/api/documents/${selectedDoc.doc.id}`}#toolbar=0&navpanes=0`}
@@ -1220,7 +1220,7 @@ export default function DocumentsTab({
               {/* Right: metadata & decision */}
               <div className="w-[400px] hidden xl:flex flex-col overflow-y-auto p-8 space-y-10 bg-white dark:bg-card">
                 <div>
-                  <h4 className="text-[11px] font-semibold text-gray-500 tracking-widest border-b border-gray-100 pb-2 dark:text-zinc-400 dark:border-white/10">Student Record</h4>
+                  <h4 className="text-[11px] font-semibold text-gray-500 tracking-widest border-b border-border pb-2 dark:text-zinc-400 dark:border-border">Student Record</h4>
                   <div className="mt-5 space-y-5">
                     <div>
                       <label className="text-[10px] font-semibold tracking-widest text-gray-400">Student Name</label>
@@ -1243,7 +1243,7 @@ export default function DocumentsTab({
                 </div>
 
                 <div>
-                  <h4 className="text-[11px] font-semibold text-gray-500 tracking-widest border-b border-gray-100 pb-2 dark:text-zinc-400 dark:border-white/10">Document Status</h4>
+                  <h4 className="text-[11px] font-semibold text-gray-500 tracking-widest border-b border-border pb-2 dark:text-zinc-400 dark:border-border">Document Status</h4>
                   <div className="mt-5 space-y-5">
                     <div>
                       <label className="text-[10px] font-semibold tracking-widest text-gray-400">Current Status</label>
@@ -1298,7 +1298,7 @@ export default function DocumentsTab({
               </div>
             </div>
 
-            <div className="flex shrink-0 justify-between items-center gap-3 border-t border-gray-100 bg-white p-4 dark:border-white/10 dark:bg-card">
+            <div className="flex shrink-0 justify-between items-center gap-3 border-t border-border bg-white p-4 dark:border-border dark:bg-card">
               <div className="flex items-center gap-3">
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -1308,7 +1308,7 @@ export default function DocumentsTab({
                       onClick={() => setIsFullscreen(!isFullscreen)}
                       disabled={!selectedDoc?.doc?.file_url && !selectedDoc?.doc?.id}
                       className={cn(
-                        "h-10 w-10 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-card transition-all hover:bg-gray-50 dark:hover:bg-white/10 shadow-sm dark:shadow-none",
+                        "h-10 w-10 rounded-xl border border-border dark:border-border bg-white dark:bg-card transition-all hover:bg-gray-50 dark:hover:bg-white/10 shadow-sm dark:shadow-none",
                         isFullscreen && "bg-pup-maroon dark:bg-red-600 text-white hover:bg-pup-darkMaroon border-pup-darkMaroon"
                       )}
                     >
@@ -1326,7 +1326,7 @@ export default function DocumentsTab({
                     href={selectedDoc.doc.file_url || `/api/documents/${selectedDoc.doc.id}`}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex h-10 items-center rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 px-4 text-xs font-semibold shadow-xs cursor-pointer active:scale-95 transition-all"
+                    className="inline-flex h-10 items-center rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 px-4 text-xs font-semibold shadow-xs cursor-pointer active:scale-95 transition-all"
                   >
                     Open
                   </a>
@@ -1337,7 +1337,7 @@ export default function DocumentsTab({
                 <Button
                   variant="outline"
                   onClick={() => setDetailModalOpen(false)}
-                  className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                  className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                 >
                   Close
                 </Button>

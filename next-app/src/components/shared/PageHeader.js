@@ -42,7 +42,7 @@ export default function PageHeader({
     <div className={cn(
       "bg-transparent rounded-t-brand select-none transition-colors duration-normal dark:bg-transparent",
       !className?.includes("p-") && !className?.includes("py-") && "p-6",
-      showBorder && "border-b border-gray-100 dark:border-white/5",
+      showBorder && "border-b border-border dark:border-border",
       className
     )}>
       <div className="flex flex-col justify-between gap-6 lg:flex-row lg:items-center">
@@ -97,7 +97,7 @@ export default function PageHeader({
                     <HugeIcon  className="ph-bold ph-magnifying-glass absolute top-1/2 left-3 -translate-y-1/2 text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 pointer-events-none"></HugeIcon>
                     <Input
                       placeholder={searchPlaceholder || "Search..."}
-                      className="h-10 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 pl-9 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
+                      className="h-10 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 pl-9 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
                       value={searchValue || ""}
                       onChange={(e) => onSearchChange && onSearchChange(e.target.value)}
                     />

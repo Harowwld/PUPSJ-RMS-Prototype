@@ -55,10 +55,6 @@ export function AuthGuard({ children, redirectTo = "/" }) {
         if (typeof window !== "undefined" && user) {
           const branding = getRoleBranding(user);
           if (branding?.color) {
-            document.documentElement.style.setProperty("--brand-accent", branding.color);
-            document.documentElement.style.setProperty("--brand-foreground", branding.foreground || "#ffffff");
-            document.documentElement.setAttribute("data-brand-accent", branding.color);
-            document.documentElement.setAttribute("data-brand-foreground", branding.foreground || "#ffffff");
           }
         }
 

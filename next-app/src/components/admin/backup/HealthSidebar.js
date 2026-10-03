@@ -68,7 +68,7 @@ export default function HealthSidebar({
   if (isLoading && !isManualLoading) {
     return (
       <div className="w-[350px] shrink-0 flex flex-col gap-4">
-        <Card className="flex flex-col border border-gray-200 bg-white shadow-sm h-full rounded-2xl overflow-hidden p-6 space-y-6 dark:border-white/10 dark:bg-card dark:shadow-none">
+        <Card className="flex flex-col border border-border bg-white shadow-sm h-full rounded-2xl overflow-hidden p-6 space-y-6 dark:border-border dark:bg-card dark:shadow-none">
            <Skeleton className="h-12 w-full rounded-xl dark:bg-muted" />
            <Skeleton className="h-[180px] w-full rounded-2xl dark:bg-muted" />
            <div className="space-y-4">
@@ -89,7 +89,7 @@ export default function HealthSidebar({
 
   return (
     <div className="w-[350px] shrink-0 flex flex-col gap-4 h-fit">
-      <Card className="flex flex-col p-0 gap-0 border border-gray-200 bg-white shadow-sm rounded-2xl overflow-hidden dark:border-white/10 dark:bg-card dark:shadow-none isolate">
+      <Card className="flex flex-col p-0 gap-0 border border-border bg-white shadow-sm rounded-2xl overflow-hidden dark:border-border dark:bg-card dark:shadow-none isolate">
         {/* Page Header */}
         <PageHeader
           icon="ph-chart-pie-slice"
@@ -98,7 +98,7 @@ export default function HealthSidebar({
           showBorder={false}
           className="p-6"
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
-          descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
+          descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
           actions={
             onToggleCollapse && (
               <Button
@@ -106,7 +106,7 @@ export default function HealthSidebar({
                 variant="outline"
                 onClick={onToggleCollapse}
                 title="Collapse Status"
-                className="h-8 px-3 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-600 dark:text-zinc-300 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-2xs active:scale-95 transition-all cursor-pointer"
+                className="h-8 px-3 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-600 dark:text-zinc-300 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-2xs active:scale-95 transition-all cursor-pointer"
               >
                 Hide
               </Button>
@@ -114,7 +114,7 @@ export default function HealthSidebar({
           }
         />
 
-        <div className="border-t border-gray-100 dark:border-white/10 p-6 space-y-6">
+        <div className="border-t border-border dark:border-border p-6 space-y-6">
           {/* Storage Section */}
           <div className="flex flex-col gap-3">
             <div className="flex items-center gap-3">
@@ -172,14 +172,14 @@ export default function HealthSidebar({
               </div>
             </div>
 
-            <p className="text-[11px] text-gray-500 dark:text-zinc-400 mt-2 leading-relaxed">
+            <p className="text-[11px] text-gray-900 dark:text-zinc-300 mt-2 leading-relaxed">
               {externalDrive?.connected
                 ? `Volume: ${externalDrive.label || "External Storage"}${externalDrive.freeFormatted ? ` · ${externalDrive.freeFormatted} free` : ""} · Path: ${externalDrive.path || "Mounted"}`
                 : "Connect an external USB drive to copy backups for safekeeping."}
             </p>
 
             {(onRescanDrive || onToggleSimulation) && (
-              <div className="flex items-center gap-2 mt-3 pt-2.5 border-t border-black/5 dark:border-white/5">
+              <div className="flex items-center gap-2 mt-3 pt-2.5 border-t border-black/5 dark:border-border">
                 {onRescanDrive && (
                   <Button
                     type="button"
@@ -187,7 +187,7 @@ export default function HealthSidebar({
                     size="sm"
                     disabled={isRescanning}
                     onClick={onRescanDrive}
-                    className="h-7 px-2.5 text-[11px] font-semibold rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-2xs cursor-pointer active:scale-95 transition-all inline-flex items-center gap-1.5 flex-1 justify-center"
+                    className="h-7 px-2.5 text-[11px] font-semibold rounded-lg border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-2xs cursor-pointer active:scale-95 transition-all inline-flex items-center gap-1.5 flex-1 justify-center"
                     title="Rescan USB ports and mount points"
                   >
                     {isRescanning && <HugeIcon className="ph-bold ph-arrows-clockwise text-xs animate-spin" />}
@@ -205,7 +205,7 @@ export default function HealthSidebar({
                       "h-7 px-2.5 text-[11px] font-semibold rounded-lg border shadow-2xs cursor-pointer active:scale-95 transition-all inline-flex items-center gap-1.5 flex-1 justify-center",
                       externalDrive?.isEmulated
                         ? "border-blue-300 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 hover:bg-blue-100"
-                        : "border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700"
+                        : "border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700"
                     )}
                     title={externalDrive?.isEmulated ? "Disable simulated demo drive" : "Simulate an external storage drive for demonstration"}
                   >
@@ -217,9 +217,9 @@ export default function HealthSidebar({
           </div>
 
           {/* Unified iCloud-style list of resources and info */}
-          <div className="flex flex-col border-t border-black/5 dark:border-white/5 pt-1">
+          <div className="flex flex-col border-t border-black/5 dark:border-border pt-1">
             {/* RAM Row */}
-            <div className="flex items-center justify-between h-[44px] border-b border-black/5 dark:border-white/5">
+            <div className="flex items-center justify-between h-[44px] border-b border-black/5 dark:border-border">
               <div className="flex items-center gap-3">
                 <span className="text-[13px] font-medium text-[#111111] dark:text-zinc-50">RAM</span>
                 <span className="text-[13px] font-normal text-[#8E8E93]">{ramPercent}% usage</span>
@@ -230,7 +230,7 @@ export default function HealthSidebar({
             </div>
 
             {/* CPU Row */}
-            <div className="flex items-center justify-between h-[44px] border-b border-black/5 dark:border-white/5">
+            <div className="flex items-center justify-between h-[44px] border-b border-black/5 dark:border-border">
               <div className="flex items-center gap-3">
                 <span className="text-[13px] font-medium text-[#111111] dark:text-zinc-50">CPU</span>
                 <span className="text-[13px] font-normal text-[#8E8E93]">{cpuPercent}% usage</span>
@@ -241,7 +241,7 @@ export default function HealthSidebar({
             </div>
 
             {/* Data Protection Row */}
-            <div className="flex items-center justify-between h-[44px] border-b border-black/5 dark:border-white/5">
+            <div className="flex items-center justify-between h-[44px] border-b border-black/5 dark:border-border">
               <div className="flex items-center gap-3">
                 <span className="text-[13px] font-medium text-[#111111] dark:text-zinc-50">Data Protection</span>
                 <span className="text-[13px] font-normal text-[#8E8E93]">Protected</span>
@@ -252,7 +252,7 @@ export default function HealthSidebar({
             </div>
 
             {/* Last Synced Row */}
-            <div className="flex items-center justify-between h-[44px] border-b border-black/5 dark:border-white/5">
+            <div className="flex items-center justify-between h-[44px] border-b border-black/5 dark:border-border">
               <span className="text-[13px] font-normal text-[#8E8E93]">Last Synced</span>
               <span className="text-[13px] font-normal text-[#111111] dark:text-zinc-150">
                 {formatLastSync(lastBackupTime)}
@@ -270,7 +270,7 @@ export default function HealthSidebar({
         </div>
 
         {scopeInfo && (
-          <div className="border-t border-gray-100 dark:border-white/10 p-5 bg-gray-50/50 dark:bg-zinc-900/40">
+          <div className="border-t border-border dark:border-border p-5 bg-gray-50/50 dark:bg-zinc-900/40">
             <div className="flex items-center gap-2 mb-2.5">
               <HugeIcon  className="ph-fill ph-shield-check text-[15px] text-indigo-600 dark:text-indigo-400" />
               <span className="text-[12px] font-semibold text-gray-900 dark:text-zinc-100">

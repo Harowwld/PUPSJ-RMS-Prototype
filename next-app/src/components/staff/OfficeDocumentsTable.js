@@ -42,12 +42,12 @@ export default function OfficeDocumentsTable({
   const visibleRows = rows.slice((page - 1) * pageSize, page * pageSize)
 
   const containerClasses = embedded
-    ? "border-t border-gray-100 dark:border-white/10 w-full bg-white dark:bg-card flex flex-col rounded-b-2xl overflow-hidden"
-    : "rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none overflow-hidden"
+    ? "border-t border-border dark:border-border w-full bg-white dark:bg-card flex flex-col rounded-b-2xl overflow-hidden"
+    : "rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none overflow-hidden"
 
   return (
     <div className={containerClasses}>
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 px-6 py-4 bg-gray-50/40 dark:bg-zinc-900/30 dark:border-white/10">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-6 py-4 bg-gray-50/40 dark:bg-zinc-900/30 dark:border-border">
         <div>
           <h2 className="text-[15px] font-bold text-gray-900 dark:text-zinc-50">{officeLabel} Documents</h2>
           <p className="mt-1 text-[13px] text-[#8E8E93] dark:text-zinc-400">
@@ -60,19 +60,19 @@ export default function OfficeDocumentsTable({
             value={query}
             onChange={(event) => { setQuery(event.target.value); setPage(1) }}
             placeholder="Search this office's documents"
-            className="h-9 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 pl-9 pr-4 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
+            className="h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 pl-9 pr-4 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
           />
         </div>
       </div>
 
       {visibleRows.length === 0 ? (
-        <Empty className="flex min-h-[200px] flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400 rounded-b-2xl">
+        <Empty className="flex min-h-[200px] flex-col items-center justify-center border-0 text-center text-gray-900 dark:text-zinc-300 rounded-b-2xl">
           <EmptyHeader className="flex flex-col items-center gap-0">
-            <EmptyMedia className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-gray-100 bg-gray-50 dark:border-white/10 dark:bg-zinc-900">
+            <EmptyMedia className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-border bg-gray-50 dark:border-border dark:bg-zinc-900">
               <HugeIcon  className="ph-duotone ph-files text-3xl text-gray-400 dark:text-zinc-500" />
             </EmptyMedia>
             <EmptyTitle className="text-base font-semibold text-gray-900 dark:text-zinc-50">No {officeLabel} documents</EmptyTitle>
-            <EmptyDescription className="max-w-sm text-sm text-gray-500 dark:text-zinc-400">
+            <EmptyDescription className="max-w-sm text-sm text-gray-900 dark:text-zinc-300">
               Documents from other offices are intentionally excluded from this table.
             </EmptyDescription>
           </EmptyHeader>
@@ -81,7 +81,7 @@ export default function OfficeDocumentsTable({
         <>
           <div className="overflow-x-auto">
             <table className="min-w-full text-sm">
-              <thead className="border-b border-gray-100 dark:border-white/10 bg-gray-50/50 dark:bg-white/5">
+              <thead className="border-b border-border dark:border-border bg-gray-50/50 dark:bg-white/5">
                 <tr className="text-left text-[11px] font-semibold uppercase tracking-wide text-[#8E8E93] dark:text-zinc-500">
                   <th className="px-6 py-3.5">{officeLabel === "OSAS" ? "Organization" : "Student No."}</th>
                   <th className="px-6 py-3.5">{officeLabel === "OSAS" ? "Officer / Submitter" : "Student Name"}</th>
@@ -91,7 +91,7 @@ export default function OfficeDocumentsTable({
                   <th className="px-6 py-3.5 text-right">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100 dark:divide-white/10 bg-transparent">
+              <tbody className="divide-y divide-border dark:divide-border bg-transparent">
                 {visibleRows.map((document) => (
                   <tr key={document.id} className="transition-colors hover:bg-gray-50/50 dark:hover:bg-white/5">
                     <td className="px-6 py-3.5 font-mono text-xs text-gray-700 dark:text-zinc-300">
@@ -135,8 +135,8 @@ export default function OfficeDocumentsTable({
               </tbody>
             </table>
           </div>
-          <div className="flex items-center justify-between border-t border-gray-100 bg-white p-4 px-6 dark:border-white/10 dark:bg-card mt-auto select-none rounded-b-2xl">
-            <div className="flex items-center gap-6 text-xs text-gray-500 dark:text-zinc-400">
+          <div className="flex items-center justify-between border-t border-border bg-white p-4 px-6 dark:border-border dark:bg-card mt-auto select-none rounded-b-2xl">
+            <div className="flex items-center gap-6 text-xs text-gray-900 dark:text-zinc-300">
               <span>
                 Showing {visibleRows.length} of {rows.length.toLocaleString()}
               </span>
@@ -171,11 +171,11 @@ export default function OfficeDocumentsTable({
                 size="sm"
                 disabled={page <= 1}
                 onClick={() => setPage((value) => Math.max(1, value - 1))}
-                className="text-xs text-gray-500 dark:text-zinc-400 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
+                className="text-xs text-gray-900 dark:text-zinc-300 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
               >
                 Prev
               </Button>
-              <div className="h-8 w-8 rounded-xl border border-[#e5e5ea] dark:border-zinc-800 flex items-center justify-center text-xs font-bold text-gray-800 dark:text-zinc-200 bg-white dark:bg-zinc-900">
+              <div className="h-8 w-8 rounded-xl border border-[#e5e5ea] dark:border-border flex items-center justify-center text-xs font-bold text-gray-800 dark:text-zinc-200 bg-white dark:bg-zinc-900">
                 {page}
               </div>
               <Button
@@ -183,7 +183,7 @@ export default function OfficeDocumentsTable({
                 size="sm"
                 disabled={page >= totalPages}
                 onClick={() => setPage((value) => Math.min(totalPages, value + 1))}
-                className="text-xs text-gray-500 dark:text-zinc-400 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
+                className="text-xs text-gray-900 dark:text-zinc-300 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
               >
                 Next
               </Button>

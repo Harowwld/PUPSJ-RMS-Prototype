@@ -394,7 +394,7 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
   return (
     <div className="animate-fade-up font-jakarta flex flex-1 flex-col h-full min-h-0 w-full gap-6">
       {/* ONE Single Card Container encapsulating Header, Metrics, Toolbar, Table & Pagination */}
-      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none isolate font-jakarta mb-4 min-h-0 flex-1">
+      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4 min-h-0 flex-1">
         {/* Header */}
         <PageHeader
           icon="ph-bold ph-activity"
@@ -403,7 +403,7 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
           showBorder={false}
           className="p-6"
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
-          descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
+          descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
           actions={
             <div className="flex items-center gap-2">
               <RefreshButton
@@ -443,12 +443,12 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
                       "relative overflow-hidden rounded-[18px] border cursor-pointer select-none transition-all shadow-none flex flex-col justify-between min-h-[110px] bg-gray-50 dark:bg-zinc-900",
                       selectedKpi === stat.key
                         ? `border-${stat.color}-500/50 ring-1 ring-${stat.color}-500/20`
-                        : "border-gray-100 dark:border-white/5"
+                        : "border-border dark:border-border"
                     )}
                   >
                     <div className="flex justify-between items-start p-4 pb-0">
                       <div className="flex flex-col gap-1">
-                        <span className="text-[13px] font-medium text-gray-500 dark:text-zinc-400 capitalize">
+                        <span className="text-[13px] font-medium text-gray-900 dark:text-zinc-300 capitalize">
                           {stat.label}
                         </span>
                       </div>
@@ -466,13 +466,13 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
                           {stat.sublabel}
                         </span>
                       </div>
-                      <HugeIcon className="ph-bold ph-dots-six-vertical cursor-grab active:cursor-grabbing hover:text-gray-400 dark:hover:text-zinc-500 text-gray-300 dark:text-zinc-700 text-lg mb-0.5" />
+                      <HugeIcon className="ph-bold ph-dots-six-vertical cursor-grab active:cursor-grabbing hover:text-black dark:hover:text-white text-gray-900 dark:text-zinc-300 text-xl mb-0.5" />
                     </div>
                   </div>
                   {/* Expandable details drawer */}
                   <div
                     className={cn(
-                      "absolute top-full left-0 right-0 z-[100] mt-2 rounded-xl border border-gray-200 bg-white p-4 shadow-xl dark:border-white/10 dark:bg-zinc-900 transition-all duration-300 ease-in-out origin-top",
+                      "absolute top-full left-0 right-0 z-[100] mt-2 rounded-xl border border-border bg-white p-4 shadow-xl dark:border-border dark:bg-zinc-900 transition-all duration-300 ease-in-out origin-top",
                       selectedKpi === stat.key ? "scale-y-100 opacity-100 translate-y-0" : "scale-y-95 opacity-0 -translate-y-2 pointer-events-none"
                     )}
                     onClick={(e) => e.stopPropagation()}
@@ -480,7 +480,7 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
                     {stat.key === "odrs" && (
                       <div className="space-y-3">
                         <div className="grid grid-cols-2 gap-2">
-                          <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-gray-100 dark:border-white/5">
+                          <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-border dark:border-border">
                             <span className="block text-[9px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">Pending Action</span>
                             <span className="text-base font-black text-gray-900 dark:text-zinc-50">{health?.odrs?.pending ?? 0}</span>
                           </div>
@@ -497,7 +497,7 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
                             <span className="text-base font-black text-emerald-700 dark:text-emerald-400">{health?.odrs?.completed ?? 0}</span>
                           </div>
                         </div>
-                        <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-gray-100 dark:border-white/5 text-xs text-gray-600 dark:text-zinc-300 leading-relaxed">
+                        <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-border dark:border-border text-xs text-gray-600 dark:text-zinc-300 leading-relaxed">
                           Online requests for Official Transcripts (TOR), Certifications, and Good Moral documents filed through the student portal.
                         </div>
                       </div>
@@ -506,7 +506,7 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
                     {stat.key === "osas" && (
                       <div className="space-y-3">
                         <div className="grid grid-cols-2 gap-2">
-                          <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-gray-100 dark:border-white/5">
+                          <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-border dark:border-border">
                             <span className="block text-[9px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">Submitted</span>
                             <span className="text-base font-black text-gray-900 dark:text-zinc-50">{health?.osas?.submitted ?? 0}</span>
                           </div>
@@ -523,7 +523,7 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
                             <span className="text-base font-black text-emerald-700 dark:text-emerald-400">{health?.osas?.approved ?? 0}</span>
                           </div>
                         </div>
-                        <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-gray-100 dark:border-white/5 text-xs text-gray-600 dark:text-zinc-300 leading-relaxed">
+                        <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-border dark:border-border text-xs text-gray-600 dark:text-zinc-300 leading-relaxed">
                           Campus student organization event permits, activity proposals, and annual compliance submissions for OSAS review.
                         </div>
                       </div>
@@ -536,7 +536,7 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
         )}
 
         {/* Navigation Toolbar */}
-        <div className="border-t border-gray-100 dark:border-white/10 p-5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
+        <div className="border-t border-border dark:border-border p-5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
           {/* Search Input with Clear Button & Record Count */}
           <div className="w-full sm:w-[280px] lg:w-[340px] relative group shrink-0">
             <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
@@ -546,7 +546,7 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search student, document, or org..."
-              className="h-9 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 pl-8 pr-16 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
+              className="h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 pl-8 pr-16 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
             />
             <div className="absolute inset-y-0 right-3 flex items-center gap-1.5">
               {search && (
@@ -602,11 +602,11 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
             setPage(1)
           }}
           onClearAll={handleClearFilters}
-          className="border-t border-gray-100 dark:border-white/10 bg-white dark:bg-card px-6 py-2.5"
+          className="border-t border-border dark:border-border bg-white dark:bg-card px-6 py-2.5"
         />
 
         {/* Cross-Department Activity Stream Table */}
-        <div className="overflow-hidden rounded-b-2xl border-t border-gray-100 dark:border-white/10 bg-white dark:bg-card flex flex-col flex-1">
+        <div className="overflow-hidden rounded-b-2xl border-t border-border dark:border-border bg-white dark:bg-card flex flex-col flex-1">
             {loading ? (
               <TransactionsTableSkeleton rowCount={8} />
             ) : paginatedTransactions.length === 0 ? (
@@ -615,14 +615,14 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
                   <EmptyHeader className="flex flex-col items-center gap-0">
                     <div className="relative mb-6">
                       <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                      <EmptyMedia className="relative z-10 flex h-20 w-20 items-center justify-center rounded-2xl border border-gray-100 bg-white shadow-md dark:border-white/10 dark:bg-card">
+                      <EmptyMedia className="relative z-10 flex h-20 w-20 items-center justify-center rounded-2xl border border-border bg-white shadow-md dark:border-border dark:bg-card">
                         <HugeIcon className="ph-bold ph-tray text-3xl text-gray-400 dark:text-zinc-500" />
                       </EmptyMedia>
                     </div>
                     <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">
                       No Records Found
                     </EmptyTitle>
-                    <EmptyDescription className="max-w-xs text-xs font-normal text-gray-500 dark:text-zinc-400 mt-1">
+                    <EmptyDescription className="max-w-xs text-xs font-normal text-gray-900 dark:text-zinc-300 mt-1">
                       {hasActiveFilters
                         ? "No student requests or proposals match your search or filter settings."
                         : "There are currently no active document requests or event proposals recorded."}
@@ -632,7 +632,7 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
                         variant="outline"
                         onClick={handleClearFilters}
                         title="Reset Filters"
-                        className="mt-6 flex h-10 items-center justify-center gap-2 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
+                        className="mt-6 flex h-10 items-center justify-center gap-2 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                       >
                         Reset
                       </Button>
@@ -643,7 +643,7 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
             ) : (
               <div className="overflow-x-auto">
                 <table className="min-w-full text-sm">
-                  <thead className="sticky top-0 z-10 border-b-[0.5px] border-black/10 dark:border-white/10 bg-white dark:bg-card">
+                  <thead className="sticky top-0 z-10 border-b-[0.5px] border-black/10 dark:border-border bg-white dark:bg-card">
                     <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500 h-11 select-none">
                       <th className="p-4 w-36">
                         <button
@@ -717,7 +717,7 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
                     </tr>
                   </thead>
 
-                  <tbody className="divide-y divide-gray-100 dark:divide-white/5 font-medium text-gray-900 dark:text-zinc-100 bg-white dark:bg-[#1c1c1e]">
+                  <tbody className="divide-y divide-border dark:divide-border font-medium text-gray-900 dark:text-zinc-100 bg-white dark:bg-[#1c1c1e]">
                     {paginatedTransactions.map((tx) => {
                       const isRegistrar = tx.officeId === "registrar"
                       const rel = formatRelativeTime(tx.createdAt)
@@ -726,7 +726,7 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
                         <tr
                           key={tx.id}
                           onClick={() => handleOpenDetails(tx)}
-                          className="group h-[52px] border-b-[0.5px] border-gray-100 dark:border-white/10 last:border-b-0 transition-all duration-200 hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 cursor-pointer select-none"
+                          className="group h-[52px] border-b-[0.5px] border-border dark:border-border last:border-b-0 transition-all duration-200 hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 cursor-pointer select-none"
                         >
                           {/* Department Badge */}
                           <td className="p-4 align-middle">
@@ -776,7 +776,7 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
                                 {tx.organizationName}
                               </div>
                             ) : (
-                              <div className="text-[12px] text-gray-500 dark:text-zinc-400 truncate max-w-[200px]">
+                              <div className="text-[12px] text-gray-900 dark:text-zinc-300 truncate max-w-[200px]">
                                 {tx.notes || "Standard student request"}
                               </div>
                             )}
@@ -793,7 +793,7 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
                           </td>
 
                           {/* Date Submitted */}
-                          <td className="p-4 align-middle text-[12px] text-gray-500 dark:text-zinc-400 whitespace-nowrap font-mono">
+                          <td className="p-4 align-middle text-[12px] text-gray-900 dark:text-zinc-300 whitespace-nowrap font-mono">
                             {rel.relative || rel.date}
                           </td>
 
@@ -825,7 +825,7 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
             {/* Pagination Footer */}
             {sortedTransactions.length > 0 && (
               <div className="flex items-center justify-between border-t border-[#e5e5ea] dark:border-[#3a3a3c] bg-white dark:bg-[#1c1c1e] p-4 px-6 rounded-b-2xl">
-                <div className="flex items-center gap-6 text-xs text-gray-500 dark:text-zinc-400 select-none">
+                <div className="flex items-center gap-6 text-xs text-gray-900 dark:text-zinc-300 select-none">
                   <span>
                     Showing {paginatedTransactions.length} of {sortedTransactions.length}
                   </span>
@@ -858,12 +858,12 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
                     size="sm"
                     disabled={page <= 1}
                     onClick={() => setPage((p) => Math.max(1, p - 1))}
-                    className="text-xs text-gray-500 dark:text-zinc-400 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
+                    className="text-xs text-gray-900 dark:text-zinc-300 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
                   >
                     Prev
                   </Button>
 
-                  <div className="h-8 w-8 rounded-xl border border-[#e5e5ea] dark:border-zinc-800 flex items-center justify-center text-xs font-bold text-gray-800 dark:text-zinc-200 bg-white dark:bg-zinc-900">
+                  <div className="h-8 w-8 rounded-xl border border-[#e5e5ea] dark:border-border flex items-center justify-center text-xs font-bold text-gray-800 dark:text-zinc-200 bg-white dark:bg-zinc-900">
                     {page}
                   </div>
 
@@ -872,7 +872,7 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
                     size="sm"
                     disabled={page >= totalPages || endIndex >= sortedTransactions.length}
                     onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                    className="text-xs text-gray-500 dark:text-zinc-400 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
+                    className="text-xs text-gray-900 dark:text-zinc-300 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
                   >
                     Next
                   </Button>
@@ -886,9 +886,9 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
       <Sheet open={Boolean(selectedItem)} onOpenChange={(open) => !open && setSelectedItem(null)}>
         <SheetContent
           side="right"
-          className="w-full sm:max-w-xl md:max-w-2xl flex flex-col h-full bg-white dark:bg-card border-l border-gray-200 dark:border-white/10 p-0 shadow-2xl font-jakarta overflow-hidden"
+          className="w-full sm:max-w-xl md:max-w-2xl flex flex-col h-full bg-white dark:bg-card border-l border-border dark:border-border p-0 shadow-2xl font-jakarta overflow-hidden"
         >
-          <SheetHeader className="shrink-0 p-6 pb-4 pr-14 border-b border-gray-100 dark:border-white/10 bg-white dark:bg-card text-left">
+          <SheetHeader className="shrink-0 p-6 pb-4 pr-14 border-b border-border dark:border-border bg-white dark:bg-card text-left">
             <div className="flex items-start justify-between gap-4">
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2 mb-1.5 flex-wrap">
@@ -907,7 +907,7 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
                 <SheetTitle className="text-[17px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50 truncate">
                   {sheetItem?.title}
                 </SheetTitle>
-                <SheetDescription className="text-xs font-normal text-gray-500 dark:text-zinc-400 mt-1">
+                <SheetDescription className="text-xs font-normal text-gray-900 dark:text-zinc-300 mt-1">
                   Submitted on {sheetItem?.createdAt ? formatPHDateTime(sheetItem.createdAt) : "—"}
                 </SheetDescription>
               </div>
@@ -917,7 +917,7 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
           <div className="flex-1 overflow-y-auto p-6 space-y-4">
             {/* Requester & Stage */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/70 dark:bg-zinc-800/40 p-3.5">
+              <div className="rounded-xl border border-border/80 dark:border-border bg-gray-50/70 dark:bg-zinc-800/40 p-3.5">
                 <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">
                   Student Requester
                 </span>
@@ -932,7 +932,7 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
                 </div>
               </div>
 
-              <div className="rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/70 dark:bg-zinc-800/40 p-3.5">
+              <div className="rounded-xl border border-border/80 dark:border-border bg-gray-50/70 dark:bg-zinc-800/40 p-3.5">
                 <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">
                   Current Stage
                 </span>
@@ -952,7 +952,7 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
 
             {/* Organization (if OSAS) */}
             {sheetItem?.organizationName && (
-              <div className="rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/70 dark:bg-zinc-800/40 p-3.5">
+              <div className="rounded-xl border border-border/80 dark:border-border bg-gray-50/70 dark:bg-zinc-800/40 p-3.5">
                 <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">
                   Student Organization Chapter
                 </span>
@@ -968,7 +968,7 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
             )}
 
             {/* Notes / Purpose */}
-            <div className="rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/70 dark:bg-zinc-800/40 p-3.5">
+            <div className="rounded-xl border border-border/80 dark:border-border bg-gray-50/70 dark:bg-zinc-800/40 p-3.5">
               <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">
                 Purpose / Remarks
               </span>
@@ -979,7 +979,7 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
 
             {/* Attached Document File */}
             {sheetItem?.originalFilename && (
-              <div className="p-3.5 rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/70 dark:bg-zinc-800/40 flex items-center justify-between gap-3">
+              <div className="p-3.5 rounded-xl border border-border/80 dark:border-border bg-gray-50/70 dark:bg-zinc-800/40 flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2.5 min-w-0">
                   <div className="w-8 h-8 rounded-lg bg-red-100 text-red-700 dark:bg-red-950/50 dark:text-red-400 flex items-center justify-center shrink-0">
                     <HugeIcon className="ph-bold ph-file-pdf text-base" />
@@ -1009,15 +1009,15 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
             )}
           </div>
 
-          <SheetFooter className="p-4 px-6 border-t border-gray-100 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/40 flex flex-row items-center justify-between shrink-0 gap-0">
-            <span className="text-xs text-gray-500 dark:text-zinc-400">
+          <SheetFooter className="p-4 px-6 border-t border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/40 flex flex-row items-center justify-between shrink-0 gap-0">
+            <span className="text-xs text-gray-900 dark:text-zinc-300">
               Department: <strong className="text-gray-700 dark:text-zinc-200 uppercase font-semibold">{sheetItem?.officeId}</strong>
             </span>
             <Button
               type="button"
               variant="outline"
               onClick={() => setSelectedItem(null)}
-              className="h-9 px-4 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+              className="h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
             >
               Close
             </Button>

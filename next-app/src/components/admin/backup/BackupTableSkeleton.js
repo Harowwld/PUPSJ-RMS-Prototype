@@ -10,13 +10,13 @@ export default function BackupTableSkeleton({ rowCount = 8, embedded = false, cl
         "flex-1 flex h-fit min-h-[600px] flex-col overflow-hidden isolate",
         embedded
           ? "rounded-b-2xl"
-          : "rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card",
+          : "rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card",
         className
       )}
     >
       <div className="flex-1 overflow-hidden overflow-x-auto overflow-y-auto select-none min-h-[400px]">
         <table className="min-w-full text-sm">
-          <thead className="sticky top-0 z-10 border-b-[0.5px] border-black/10 dark:border-white/10 bg-white dark:bg-card">
+          <thead className="sticky top-0 z-10 border-b-[0.5px] border-black/10 dark:border-border bg-white dark:bg-card">
             <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500 h-11 select-none">
               <th className="w-12 py-0 px-4 text-center align-middle">
                 <Skeleton className="h-4 w-4 rounded mx-auto dark:bg-muted" />
@@ -38,11 +38,11 @@ export default function BackupTableSkeleton({ rowCount = 8, embedded = false, cl
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100 dark:divide-white/10">
+          <tbody className="divide-y divide-border dark:divide-border">
             {Array.from({ length: rowCount }).map((_, i) => (
               <tr
                 key={i}
-                className="h-[52px] border-b-[0.5px] border-gray-100 dark:border-white/10 last:border-b-0"
+                className="h-[52px] border-b-[0.5px] border-border dark:border-border last:border-b-0"
               >
                 <td className="py-0 px-4 align-middle text-center">
                   <Skeleton className="h-4 w-4 rounded mx-auto dark:bg-muted" />

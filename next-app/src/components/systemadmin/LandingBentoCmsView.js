@@ -187,7 +187,7 @@ export default function LandingBentoCmsView({ showToast }) {
 
   return (
     <div className="flex flex-col gap-6 w-full animate-fade-up font-jakarta">
-      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
+      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none">
         <PageHeader
           icon="ph-bold ph-squares-four"
           title={
@@ -201,14 +201,14 @@ export default function LandingBentoCmsView({ showToast }) {
           description="Manage public portal bento grid features, interactive animation simulation steps, archive retrieval nodes, and statutory compliance tags."
           showBorder={false}
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
-          descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
+          descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
           actions={
             <div className="flex items-center gap-2.5 flex-wrap">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => window.open("/#about", "_blank")}
-                className="flex h-10 items-center justify-center rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
+                className="flex h-10 items-center justify-center rounded-xl! border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
               >
                 Preview
               </Button>
@@ -242,7 +242,7 @@ export default function LandingBentoCmsView({ showToast }) {
         />
 
         {/* Navigation Tabs */}
-        <div className="flex items-center gap-6 shrink-0 h-10 px-6 border-b border-gray-100 dark:border-white/10 bg-white dark:bg-card select-none">
+        <div className="flex items-center gap-6 shrink-0 h-10 px-6 border-b border-border dark:border-border bg-white dark:bg-card select-none">
           <button
             type="button"
             onClick={() => setActiveTab("cards")}
@@ -289,7 +289,7 @@ export default function LandingBentoCmsView({ showToast }) {
           {activeTab === "cards" && (
             <div className="space-y-4">
               {/* ACCORDION CARD 1 */}
-              <div className="rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/30 overflow-hidden transition-all">
+              <div className="rounded-xl border border-border/80 dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 overflow-hidden transition-all">
                 <button
                   type="button"
                   onClick={() => setActiveCardTab(activeCardTab === 1 ? null : 1)}
@@ -301,7 +301,7 @@ export default function LandingBentoCmsView({ showToast }) {
                         "w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors",
                         activeCardTab === 1
                           ? "bg-pup-maroon text-white"
-                          : "bg-gray-200/80 dark:bg-zinc-800 text-gray-500 dark:text-zinc-400"
+                          : "bg-gray-200/80 dark:bg-zinc-800 text-gray-900 dark:text-zinc-300"
                       )}
                     >
                       <HugeIcon className="ph-bold ph-cursor-click text-sm" />
@@ -310,7 +310,7 @@ export default function LandingBentoCmsView({ showToast }) {
                       <h3 className="text-[13px] font-semibold text-gray-900 dark:text-zinc-50 truncate">
                         Card 1: Online Request Simulation
                       </h3>
-                      <p className="text-[11px] text-gray-500 dark:text-zinc-400 mt-0.5 truncate">
+                      <p className="text-[11px] text-gray-900 dark:text-zinc-300 mt-0.5 truncate">
                         Large card showcasing document selection, purpose choice, and submission.
                       </p>
                     </div>
@@ -324,7 +324,7 @@ export default function LandingBentoCmsView({ showToast }) {
                 </button>
 
                 {activeCardTab === 1 && (
-                  <div className="px-5 pb-5 pt-2 space-y-5 border-t border-gray-200/60 dark:border-white/5">
+                  <div className="px-5 pb-5 pt-2 space-y-5 border-t border-border/60 dark:border-border">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-xs font-bold text-gray-700 dark:text-zinc-300 mb-1.5">
@@ -372,12 +372,12 @@ export default function LandingBentoCmsView({ showToast }) {
                           }))
                         }
                         rows={2}
-                        className="w-full rounded-xl border border-gray-200 bg-white p-3 text-xs leading-relaxed dark:border-white/10 dark:bg-card focus:outline-none focus:ring-1 focus:ring-pup-maroon resize-none"
+                        className="w-full rounded-xl border border-border bg-white p-3 text-xs leading-relaxed dark:border-border dark:bg-card focus:outline-none focus:ring-1 focus:ring-pup-maroon resize-none"
                       />
                     </div>
 
                     {/* Simulation Flow Steps */}
-                    <div className="p-4 rounded-xl border border-gray-200/70 dark:border-white/10 bg-white dark:bg-zinc-950 space-y-4">
+                    <div className="p-4 rounded-xl border border-border/70 dark:border-border bg-white dark:bg-zinc-950 space-y-4">
                       <div className="text-[11px] font-bold uppercase tracking-wider text-pup-maroon dark:text-red-400 font-mono">
                         Interactive Simulation Flow Labels
                       </div>
@@ -437,7 +437,7 @@ export default function LandingBentoCmsView({ showToast }) {
               </div>
 
               {/* ACCORDION CARD 2 */}
-              <div className="rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/30 overflow-hidden transition-all">
+              <div className="rounded-xl border border-border/80 dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 overflow-hidden transition-all">
                 <button
                   type="button"
                   onClick={() => setActiveCardTab(activeCardTab === 2 ? null : 2)}
@@ -449,7 +449,7 @@ export default function LandingBentoCmsView({ showToast }) {
                         "w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors",
                         activeCardTab === 2
                           ? "bg-pup-maroon text-white"
-                          : "bg-gray-200/80 dark:bg-zinc-800 text-gray-500 dark:text-zinc-400"
+                          : "bg-gray-200/80 dark:bg-zinc-800 text-gray-900 dark:text-zinc-300"
                       )}
                     >
                       <HugeIcon className="ph-bold ph-calendar-check text-sm" />
@@ -458,7 +458,7 @@ export default function LandingBentoCmsView({ showToast }) {
                       <h3 className="text-[13px] font-semibold text-gray-900 dark:text-zinc-50 truncate">
                         Card 2: Processing Schedule &amp; Milestones
                       </h3>
-                      <p className="text-[11px] text-gray-500 dark:text-zinc-400 mt-0.5 truncate">
+                      <p className="text-[11px] text-gray-900 dark:text-zinc-300 mt-0.5 truncate">
                         Large card showing document pickup schedule, notifications, and counter visit.
                       </p>
                     </div>
@@ -472,7 +472,7 @@ export default function LandingBentoCmsView({ showToast }) {
                 </button>
 
                 {activeCardTab === 2 && (
-                  <div className="px-5 pb-5 pt-2 space-y-5 border-t border-gray-200/60 dark:border-white/5">
+                  <div className="px-5 pb-5 pt-2 space-y-5 border-t border-border/60 dark:border-border">
                     <div>
                       <label className="block text-xs font-bold text-gray-700 dark:text-zinc-300 mb-1.5">
                         Card Heading Title
@@ -502,17 +502,17 @@ export default function LandingBentoCmsView({ showToast }) {
                           }))
                         }
                         rows={2}
-                        className="w-full rounded-xl border border-gray-200 bg-white p-3 text-xs leading-relaxed dark:border-white/10 dark:bg-card focus:outline-none focus:ring-1 focus:ring-pup-maroon resize-none"
+                        className="w-full rounded-xl border border-border bg-white p-3 text-xs leading-relaxed dark:border-border dark:bg-card focus:outline-none focus:ring-1 focus:ring-pup-maroon resize-none"
                       />
                     </div>
 
                     {/* Milestones */}
-                    <div className="p-4 rounded-xl border border-gray-200/70 dark:border-white/10 bg-white dark:bg-zinc-950 space-y-4">
+                    <div className="p-4 rounded-xl border border-border/70 dark:border-border bg-white dark:bg-zinc-950 space-y-4">
                       <div className="text-[11px] font-bold uppercase tracking-wider text-pup-maroon dark:text-red-400 font-mono">
                         Schedule Milestones (3 Steps)
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                        <div className="space-y-2 p-3 rounded-lg bg-gray-50 dark:bg-zinc-900 border border-gray-200/60 dark:border-white/5">
+                        <div className="space-y-2 p-3 rounded-lg bg-gray-50 dark:bg-zinc-900 border border-border/60 dark:border-border">
                           <span className="text-[10px] font-mono font-bold text-pup-maroon dark:text-red-400">Step 1: Schedule</span>
                           <Input
                             value={bentoData.card2?.step1Title || ""}
@@ -538,7 +538,7 @@ export default function LandingBentoCmsView({ showToast }) {
                           />
                         </div>
 
-                        <div className="space-y-2 p-3 rounded-lg bg-gray-50 dark:bg-zinc-900 border border-gray-200/60 dark:border-white/5">
+                        <div className="space-y-2 p-3 rounded-lg bg-gray-50 dark:bg-zinc-900 border border-border/60 dark:border-border">
                           <span className="text-[10px] font-mono font-bold text-pup-maroon dark:text-red-400">Step 2: Notification</span>
                           <Input
                             value={bentoData.card2?.step2Title || ""}
@@ -564,7 +564,7 @@ export default function LandingBentoCmsView({ showToast }) {
                           />
                         </div>
 
-                        <div className="space-y-2 p-3 rounded-lg bg-gray-50 dark:bg-zinc-900 border border-gray-200/60 dark:border-white/5">
+                        <div className="space-y-2 p-3 rounded-lg bg-gray-50 dark:bg-zinc-900 border border-border/60 dark:border-border">
                           <span className="text-[10px] font-mono font-bold text-pup-maroon dark:text-red-400">Step 3: Counter</span>
                           <Input
                             value={bentoData.card2?.step3Title || ""}
@@ -596,7 +596,7 @@ export default function LandingBentoCmsView({ showToast }) {
               </div>
 
               {/* ACCORDION CARD 3 */}
-              <div className="rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/30 overflow-hidden transition-all">
+              <div className="rounded-xl border border-border/80 dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 overflow-hidden transition-all">
                 <button
                   type="button"
                   onClick={() => setActiveCardTab(activeCardTab === 3 ? null : 3)}
@@ -608,7 +608,7 @@ export default function LandingBentoCmsView({ showToast }) {
                         "w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors",
                         activeCardTab === 3
                           ? "bg-pup-maroon text-white"
-                          : "bg-gray-200/80 dark:bg-zinc-800 text-gray-500 dark:text-zinc-400"
+                          : "bg-gray-200/80 dark:bg-zinc-800 text-gray-900 dark:text-zinc-300"
                       )}
                     >
                       <HugeIcon className="ph-bold ph-archive text-sm" />
@@ -617,7 +617,7 @@ export default function LandingBentoCmsView({ showToast }) {
                       <h3 className="text-[13px] font-semibold text-gray-900 dark:text-zinc-50 truncate">
                         Card 3: Direct from Campus Archives
                       </h3>
-                      <p className="text-[11px] text-gray-500 dark:text-zinc-400 mt-0.5 truncate">
+                      <p className="text-[11px] text-gray-900 dark:text-zinc-300 mt-0.5 truncate">
                         Flow diagram connecting online request to Room 1 archive cabinets and staff.
                       </p>
                     </div>
@@ -631,7 +631,7 @@ export default function LandingBentoCmsView({ showToast }) {
                 </button>
 
                 {activeCardTab === 3 && (
-                  <div className="px-5 pb-5 pt-2 space-y-5 border-t border-gray-200/60 dark:border-white/5">
+                  <div className="px-5 pb-5 pt-2 space-y-5 border-t border-border/60 dark:border-border">
                     <div>
                       <label className="block text-xs font-bold text-gray-700 dark:text-zinc-300 mb-1.5">
                         Card Heading Title
@@ -661,11 +661,11 @@ export default function LandingBentoCmsView({ showToast }) {
                           }))
                         }
                         rows={2}
-                        className="w-full rounded-xl border border-gray-200 bg-white p-3 text-xs leading-relaxed dark:border-white/10 dark:bg-card focus:outline-none focus:ring-1 focus:ring-pup-maroon resize-none"
+                        className="w-full rounded-xl border border-border bg-white p-3 text-xs leading-relaxed dark:border-border dark:bg-card focus:outline-none focus:ring-1 focus:ring-pup-maroon resize-none"
                       />
                     </div>
 
-                    <div className="p-4 rounded-xl border border-gray-200/70 dark:border-white/10 bg-white dark:bg-zinc-950 space-y-3">
+                    <div className="p-4 rounded-xl border border-border/70 dark:border-border bg-white dark:bg-zinc-950 space-y-3">
                       <div className="text-[11px] font-bold uppercase tracking-wider text-pup-maroon dark:text-red-400 font-mono">
                         Flow Diagram Node Labels
                       </div>
@@ -725,7 +725,7 @@ export default function LandingBentoCmsView({ showToast }) {
               </div>
 
               {/* ACCORDION CARD 4 */}
-              <div className="rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/30 overflow-hidden transition-all">
+              <div className="rounded-xl border border-border/80 dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 overflow-hidden transition-all">
                 <button
                   type="button"
                   onClick={() => setActiveCardTab(activeCardTab === 4 ? null : 4)}
@@ -737,7 +737,7 @@ export default function LandingBentoCmsView({ showToast }) {
                         "w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors",
                         activeCardTab === 4
                           ? "bg-pup-maroon text-white"
-                          : "bg-gray-200/80 dark:bg-zinc-800 text-gray-500 dark:text-zinc-400"
+                          : "bg-gray-200/80 dark:bg-zinc-800 text-gray-900 dark:text-zinc-300"
                       )}
                     >
                       <HugeIcon className="ph-bold ph-check-square-offset text-sm" />
@@ -746,7 +746,7 @@ export default function LandingBentoCmsView({ showToast }) {
                       <h3 className="text-[13px] font-semibold text-gray-900 dark:text-zinc-50 truncate">
                         Card 4: What You Need to Prepare
                       </h3>
-                      <p className="text-[11px] text-gray-500 dark:text-zinc-400 mt-0.5 truncate">
+                      <p className="text-[11px] text-gray-900 dark:text-zinc-300 mt-0.5 truncate">
                         Preparation checklist items required from students and alumni.
                       </p>
                     </div>
@@ -760,7 +760,7 @@ export default function LandingBentoCmsView({ showToast }) {
                 </button>
 
                 {activeCardTab === 4 && (
-                  <div className="px-5 pb-5 pt-2 space-y-5 border-t border-gray-200/60 dark:border-white/5">
+                  <div className="px-5 pb-5 pt-2 space-y-5 border-t border-border/60 dark:border-border">
                     <div>
                       <label className="block text-xs font-bold text-gray-700 dark:text-zinc-300 mb-1.5">
                         Card Heading Title
@@ -790,11 +790,11 @@ export default function LandingBentoCmsView({ showToast }) {
                           }))
                         }
                         rows={2}
-                        className="w-full rounded-xl border border-gray-200 bg-white p-3 text-xs leading-relaxed dark:border-white/10 dark:bg-card focus:outline-none focus:ring-1 focus:ring-pup-maroon resize-none"
+                        className="w-full rounded-xl border border-border bg-white p-3 text-xs leading-relaxed dark:border-border dark:bg-card focus:outline-none focus:ring-1 focus:ring-pup-maroon resize-none"
                       />
                     </div>
 
-                    <div className="p-4 rounded-xl border border-gray-200/70 dark:border-white/10 bg-white dark:bg-zinc-950 space-y-3">
+                    <div className="p-4 rounded-xl border border-border/70 dark:border-border bg-white dark:bg-zinc-950 space-y-3">
                       <div className="text-[11px] font-bold uppercase tracking-wider text-pup-maroon dark:text-red-400 font-mono">
                         Preparation Checklist Items
                       </div>
@@ -854,7 +854,7 @@ export default function LandingBentoCmsView({ showToast }) {
               </div>
 
               {/* ACCORDION CARD 5 */}
-              <div className="rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/30 overflow-hidden transition-all">
+              <div className="rounded-xl border border-border/80 dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 overflow-hidden transition-all">
                 <button
                   type="button"
                   onClick={() => setActiveCardTab(activeCardTab === 5 ? null : 5)}
@@ -866,7 +866,7 @@ export default function LandingBentoCmsView({ showToast }) {
                         "w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors",
                         activeCardTab === 5
                           ? "bg-pup-maroon text-white"
-                          : "bg-gray-200/80 dark:bg-zinc-800 text-gray-500 dark:text-zinc-400"
+                          : "bg-gray-200/80 dark:bg-zinc-800 text-gray-900 dark:text-zinc-300"
                       )}
                     >
                       <HugeIcon className="ph-bold ph-shield-check text-sm" />
@@ -875,7 +875,7 @@ export default function LandingBentoCmsView({ showToast }) {
                       <h3 className="text-[13px] font-semibold text-gray-900 dark:text-zinc-50 truncate">
                         Card 5: Protected by Law (RA 11032)
                       </h3>
-                      <p className="text-[11px] text-gray-500 dark:text-zinc-400 mt-0.5 truncate">
+                      <p className="text-[11px] text-gray-900 dark:text-zinc-300 mt-0.5 truncate">
                         Ease of Doing Business Act guarantees and anti-red tape commitments.
                       </p>
                     </div>
@@ -889,7 +889,7 @@ export default function LandingBentoCmsView({ showToast }) {
                 </button>
 
                 {activeCardTab === 5 && (
-                  <div className="px-5 pb-5 pt-2 space-y-5 border-t border-gray-200/60 dark:border-white/5">
+                  <div className="px-5 pb-5 pt-2 space-y-5 border-t border-border/60 dark:border-border">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-xs font-bold text-gray-700 dark:text-zinc-300 mb-1.5">
@@ -937,11 +937,11 @@ export default function LandingBentoCmsView({ showToast }) {
                           }))
                         }
                         rows={2}
-                        className="w-full rounded-xl border border-gray-200 bg-white p-3 text-xs leading-relaxed dark:border-white/10 dark:bg-card focus:outline-none focus:ring-1 focus:ring-pup-maroon resize-none"
+                        className="w-full rounded-xl border border-border bg-white p-3 text-xs leading-relaxed dark:border-border dark:bg-card focus:outline-none focus:ring-1 focus:ring-pup-maroon resize-none"
                       />
                     </div>
 
-                    <div className="p-4 rounded-xl border border-gray-200/70 dark:border-white/10 bg-white dark:bg-zinc-950 space-y-3">
+                    <div className="p-4 rounded-xl border border-border/70 dark:border-border bg-white dark:bg-zinc-950 space-y-3">
                       <div className="text-[11px] font-bold uppercase tracking-wider text-pup-maroon dark:text-red-400 font-mono">
                         Anti-Red Tape &amp; Efficiency Guarantees
                       </div>
@@ -1005,12 +1005,12 @@ export default function LandingBentoCmsView({ showToast }) {
           {/* TAB 2: Section Header & Overview */}
           {activeTab === "header" && (
             <div className="w-full space-y-6">
-              <div className="p-5 sm:p-6 rounded-2xl border border-gray-200 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/30 space-y-5">
-                <div className="border-b border-gray-200/80 dark:border-white/10 pb-3">
+              <div className="p-5 sm:p-6 rounded-2xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 space-y-5">
+                <div className="border-b border-border/80 dark:border-border pb-3">
                   <h3 className="text-sm font-bold text-gray-900 dark:text-white">
                     Editorial Header &amp; Subtitle
                   </h3>
-                  <p className="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">
+                  <p className="text-xs text-gray-900 dark:text-zinc-300 mt-0.5">
                     Controls the overarching headline and introductory copy displayed at the top of the Bento grid section.
                   </p>
                 </div>
@@ -1026,7 +1026,7 @@ export default function LandingBentoCmsView({ showToast }) {
                         setBentoData((prev) => ({ ...prev, headingLine1: e.target.value }))
                       }
                       placeholder="e.g. Request, track, and"
-                      className="h-10 rounded-xl bg-white dark:bg-zinc-900 border-gray-200 dark:border-white/10 text-sm font-bold"
+                      className="h-10 rounded-xl bg-white dark:bg-zinc-900 border-border dark:border-border text-sm font-bold"
                     />
                   </div>
 
@@ -1040,7 +1040,7 @@ export default function LandingBentoCmsView({ showToast }) {
                         setBentoData((prev) => ({ ...prev, headingLine2: e.target.value }))
                       }
                       placeholder="e.g. claim your documents"
-                      className="h-10 rounded-xl bg-white dark:bg-zinc-900 border-gray-200 dark:border-white/10 text-sm font-bold text-zinc-400"
+                      className="h-10 rounded-xl bg-white dark:bg-zinc-900 border-border dark:border-border text-sm font-bold text-zinc-400"
                     />
                   </div>
                 </div>
@@ -1056,7 +1056,7 @@ export default function LandingBentoCmsView({ showToast }) {
                       setBentoData((prev) => ({ ...prev, description: e.target.value }))
                     }
                     placeholder="Submit your request online, track its progress in real time..."
-                    className="w-full p-3 rounded-xl bg-white dark:bg-zinc-900 border border-gray-200 dark:border-white/10 text-xs leading-relaxed text-gray-800 dark:text-zinc-200 focus:outline-none focus:ring-1 focus:ring-pup-maroon resize-none"
+                    className="w-full p-3 rounded-xl bg-white dark:bg-zinc-900 border border-border dark:border-border text-xs leading-relaxed text-gray-800 dark:text-zinc-200 focus:outline-none focus:ring-1 focus:ring-pup-maroon resize-none"
                   />
                 </div>
               </div>
@@ -1066,12 +1066,12 @@ export default function LandingBentoCmsView({ showToast }) {
           {/* TAB 3: Interactive Bento Live Preview */}
           {activeTab === "preview" && (
             <div className="space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/30 p-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-xl border border-border/80 dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 p-4">
                 <div>
                   <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">
                     Simulated Bento Grid (5-Card Layout)
                   </h3>
-                  <p className="text-[12px] font-normal text-gray-500 dark:text-zinc-400">
+                  <p className="text-[12px] font-normal text-gray-900 dark:text-zinc-300">
                     Live interactive simulation showing Card 1 &amp; 2 in Row 1 (50/50) and Cards 3, 4, 5 in Row 2 (3-Column).
                   </p>
                 </div>
@@ -1079,7 +1079,7 @@ export default function LandingBentoCmsView({ showToast }) {
                 <button
                   type="button"
                   onClick={() => setPreviewDarkTheme(!previewDarkTheme)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white dark:bg-zinc-800 text-xs font-semibold text-gray-700 dark:text-zinc-200 border border-gray-200 dark:border-white/10 cursor-pointer shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700 transition-colors shrink-0"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white dark:bg-zinc-800 text-xs font-semibold text-gray-700 dark:text-zinc-200 border border-border dark:border-border cursor-pointer shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700 transition-colors shrink-0"
                 >
                   <HugeIcon className={cn("ph-bold", previewDarkTheme ? "ph-sun text-amber-500" : "ph-moon text-zinc-700")} />
                   <span>{previewDarkTheme ? "Switch to Light View" : "Switch to Dark View"}</span>
@@ -1090,7 +1090,7 @@ export default function LandingBentoCmsView({ showToast }) {
               <div
                 className={cn(
                   "relative w-full rounded-2xl border p-6 sm:p-10 overflow-hidden transition-colors select-none font-jakarta",
-                  previewDarkTheme ? "bg-zinc-950 border-zinc-800 text-white" : "bg-[#f5f5f7] border-gray-200 text-zinc-900"
+                  previewDarkTheme ? "bg-zinc-950 border-zinc-800 text-white" : "bg-[#f5f5f7] border-border text-zinc-900"
                 )}
               >
                 {/* Header Preview */}
@@ -1109,7 +1109,7 @@ export default function LandingBentoCmsView({ showToast }) {
                   {/* ROW 1: 2 Large Cards */}
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5">
                     {/* Card 1 */}
-                    <div className="rounded-3xl bg-white dark:bg-zinc-900 border border-black/[0.04] dark:border-white/10 p-5 sm:p-7 flex flex-col justify-between shadow-sm">
+                    <div className="rounded-3xl bg-white dark:bg-zinc-900 border border-black/[0.04] dark:border-border p-5 sm:p-7 flex flex-col justify-between shadow-sm">
                       <div className="rounded-2xl bg-[#f5f5f7] dark:bg-zinc-950 p-4 border-none min-h-[190px] flex flex-col justify-center items-center relative overflow-hidden">
                         <div className="relative z-10 w-full max-w-[180px] flex flex-col gap-3">
                           <div className="flex items-center gap-3">
@@ -1141,7 +1141,7 @@ export default function LandingBentoCmsView({ showToast }) {
                     </div>
 
                     {/* Card 2 */}
-                    <div className="rounded-3xl bg-white dark:bg-zinc-900 border border-black/[0.04] dark:border-white/10 p-5 sm:p-7 flex flex-col justify-between shadow-sm">
+                    <div className="rounded-3xl bg-white dark:bg-zinc-900 border border-black/[0.04] dark:border-border p-5 sm:p-7 flex flex-col justify-between shadow-sm">
                       <div className="rounded-2xl bg-[#f5f5f7] dark:bg-zinc-950 p-4 border-none min-h-[190px] flex flex-col justify-center items-center relative overflow-hidden">
                         <div className="relative z-10 w-full max-w-[190px] flex flex-col gap-3">
                           <div className="flex items-center gap-3">
@@ -1187,7 +1187,7 @@ export default function LandingBentoCmsView({ showToast }) {
                   {/* ROW 2: 3 Medium Cards */}
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-5">
                     {/* Card 3 */}
-                    <div className="rounded-3xl bg-white dark:bg-zinc-900 border border-black/[0.04] dark:border-white/10 p-5 flex flex-col justify-between shadow-sm">
+                    <div className="rounded-3xl bg-white dark:bg-zinc-900 border border-black/[0.04] dark:border-border p-5 flex flex-col justify-between shadow-sm">
                       <div className="rounded-2xl bg-[#f5f5f7] dark:bg-zinc-950 p-4 border-none min-h-[160px] flex items-center justify-center relative overflow-hidden">
                         <div className="flex items-center gap-2 sm:gap-3">
                           <div className="flex flex-col items-center gap-1.5">
@@ -1223,7 +1223,7 @@ export default function LandingBentoCmsView({ showToast }) {
                     </div>
 
                     {/* Card 4 */}
-                    <div className="rounded-3xl bg-white dark:bg-zinc-900 border border-black/[0.04] dark:border-white/10 p-5 flex flex-col justify-between shadow-sm">
+                    <div className="rounded-3xl bg-white dark:bg-zinc-900 border border-black/[0.04] dark:border-border p-5 flex flex-col justify-between shadow-sm">
                       <div className="rounded-2xl bg-[#f5f5f7] dark:bg-zinc-950 p-4 border-none min-h-[160px] flex flex-col justify-center items-center">
                         <div className="w-full max-w-[170px] flex flex-col gap-3">
                           <div className="flex items-center gap-3">
@@ -1257,7 +1257,7 @@ export default function LandingBentoCmsView({ showToast }) {
                     </div>
 
                     {/* Card 5 */}
-                    <div className="rounded-3xl bg-white dark:bg-zinc-900 border border-black/[0.04] dark:border-white/10 p-5 flex flex-col justify-between shadow-sm">
+                    <div className="rounded-3xl bg-white dark:bg-zinc-900 border border-black/[0.04] dark:border-border p-5 flex flex-col justify-between shadow-sm">
                       <div className="rounded-2xl bg-[#f5f5f7] dark:bg-zinc-950 p-4 border-none min-h-[160px] flex items-center justify-center gap-4">
                         <div className="w-14 h-14 rounded-2xl bg-white dark:bg-zinc-800 shadow-sm flex flex-col items-center justify-center text-[#800000] dark:text-red-400 border border-black/5 shrink-0 relative">
                           <HugeIcon className="ph-bold ph-shield-check text-2xl" />

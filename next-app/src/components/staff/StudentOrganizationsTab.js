@@ -73,7 +73,7 @@ const getOrgStatusBadgeClass = (status) => {
   if (status === "Archived") {
     return "bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-950/30 dark:text-amber-300 dark:border-amber-800/40";
   }
-  return "bg-zinc-100 text-zinc-700 border-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-700";
+  return "bg-zinc-100 text-zinc-700 border-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:border-border";
 };
 
 const getOrgStatusDotClass = (status) => {
@@ -109,7 +109,7 @@ const getBylawsStatusBadgeClass = (status) => {
     return "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800/40";
   }
   if (status === "Superseded") {
-    return "bg-gray-100 text-gray-600 border-gray-200 dark:bg-zinc-800 dark:text-zinc-400 dark:border-zinc-700";
+    return "bg-gray-100 text-gray-600 border-border dark:bg-zinc-800 dark:text-zinc-400 dark:border-border";
   }
   return "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800/40";
 };
@@ -161,7 +161,7 @@ function getOfficerRoleStyle(position = "") {
   return {
     gradient: "from-slate-700 via-slate-600 to-zinc-700 text-white",
     ring: "ring-gray-300/30 dark:ring-white/10",
-    badge: "bg-gray-100 text-gray-700 border-gray-200 dark:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-700",
+    badge: "bg-gray-100 text-gray-700 border-border dark:bg-zinc-800 dark:text-zinc-300 dark:border-border",
     icon: "ph-bold ph-user-check",
   };
 }
@@ -858,7 +858,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
     <TooltipProvider delayDuration={200}>
       <div className="font-jakarta w-full flex flex-1 flex-col h-auto min-h-0 gap-6 focus:outline-none animate-fade-up">
         {/* ONE Single Card Container encapsulating Header, Metrics, Toolbar, Active Filters, Content & Footer */}
-        <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none isolate font-jakarta mb-4 min-h-0 flex-1">
+        <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4 min-h-0 flex-1">
           {/* 1. Page Header */}
           <PageHeader
             icon="ph-buildings"
@@ -867,11 +867,11 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
             showBorder={false}
             className="p-6"
             titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
-            descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
+            descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
             actions={
               <div className="flex items-center gap-2">
                 {/* Segmented View Mode Toggle: Grid vs Table */}
-                <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-gray-200/60 dark:border-white/5 shrink-0">
+                <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-border/60 dark:border-border shrink-0">
                   <button
                     type="button"
                     onClick={() => setViewMode("grid")}
@@ -957,12 +957,12 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                             "relative overflow-hidden rounded-[18px] border cursor-pointer select-none transition-all shadow-none flex flex-col justify-between min-h-[110px] bg-gray-50 dark:bg-zinc-900",
                             selectedKpi === "organizations"
                               ? "border-pup-maroon/50 ring-1 ring-pup-maroon/20"
-                              : "border-gray-100 dark:border-white/5 hover:border-gray-200 dark:hover:border-white/10"
+                              : "border-border dark:border-border hover:border-border dark:hover:border-white/10"
                           )}
                         >
                           <div className="flex justify-between items-start p-4 pb-0">
                             <div className="flex flex-col gap-1">
-                              <span className="text-[13px] font-medium text-gray-500 dark:text-zinc-400 capitalize">
+                              <span className="text-[13px] font-medium text-gray-900 dark:text-zinc-300 capitalize">
                                 Recognized Orgs
                               </span>
                             </div>
@@ -981,7 +981,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                               </span>
                             </div>
                             <HugeIcon
-                              className="ph-bold ph-dots-six-vertical cursor-grab active:cursor-grabbing hover:text-gray-400 dark:hover:text-zinc-500 text-gray-300 dark:text-zinc-700 text-lg mb-0.5 shrink-0"
+                              className="ph-bold ph-dots-six-vertical cursor-grab active:cursor-grabbing hover:text-black dark:hover:text-white text-gray-900 dark:text-zinc-300 text-xl mb-0.5 shrink-0"
                               title="Drag to rearrange"
                             />
                           </div>
@@ -990,7 +990,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                         {/* Expandable Details Dropdown Popover */}
                         <div
                           className={cn(
-                            "absolute top-full left-0 right-0 z-[100] mt-2 rounded-xl border border-gray-200 bg-white p-4 shadow-xl dark:border-white/10 dark:bg-zinc-900 transition-all duration-300 ease-in-out origin-top",
+                            "absolute top-full left-0 right-0 z-[100] mt-2 rounded-xl border border-border bg-white p-4 shadow-xl dark:border-border dark:bg-zinc-900 transition-all duration-300 ease-in-out origin-top",
                             selectedKpi === "organizations"
                               ? "scale-y-100 opacity-100 translate-y-0"
                               : "scale-y-95 opacity-0 -translate-y-2 pointer-events-none"
@@ -999,7 +999,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                         >
                           <div className="space-y-3">
                             <div className="grid grid-cols-2 gap-2">
-                              <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-gray-100 dark:border-white/5">
+                              <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-border dark:border-border">
                                 <span className="block text-[9px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">
                                   Academic
                                 </span>
@@ -1007,7 +1007,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                                   {kpiStats.academicCount}
                                 </span>
                               </div>
-                              <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-gray-100 dark:border-white/5">
+                              <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-border dark:border-border">
                                 <span className="block text-[9px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">
                                   Non-Academic
                                 </span>
@@ -1039,7 +1039,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                                   kpiStats.orgRosterPreview.map((org) => (
                                     <div
                                       key={org.id}
-                                      className="flex justify-between items-center text-[11px] py-1 border-b border-gray-100 dark:border-white/5 text-gray-700 dark:text-zinc-300"
+                                      className="flex justify-between items-center text-[11px] py-1 border-b border-border dark:border-border text-gray-700 dark:text-zinc-300"
                                     >
                                       <div className="truncate max-w-[170px]" title={org.name}>
                                         <span className="font-bold text-gray-900 dark:text-zinc-50">
@@ -1084,12 +1084,12 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                             "relative overflow-hidden rounded-[18px] border cursor-pointer select-none transition-all shadow-none flex flex-col justify-between min-h-[110px] bg-gray-50 dark:bg-zinc-900",
                             selectedKpi === "officers"
                               ? "border-blue-500/50 ring-1 ring-blue-500/20"
-                              : "border-gray-100 dark:border-white/5 hover:border-gray-200 dark:hover:border-white/10"
+                              : "border-border dark:border-border hover:border-border dark:hover:border-white/10"
                           )}
                         >
                           <div className="flex justify-between items-start p-4 pb-0">
                             <div className="flex flex-col gap-1">
-                              <span className="text-[13px] font-medium text-gray-500 dark:text-zinc-400 capitalize">
+                              <span className="text-[13px] font-medium text-gray-900 dark:text-zinc-300 capitalize">
                                 Officer Whitelist
                               </span>
                             </div>
@@ -1112,7 +1112,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                               </span>
                             </div>
                             <HugeIcon
-                              className="ph-bold ph-dots-six-vertical cursor-grab active:cursor-grabbing hover:text-gray-400 dark:hover:text-zinc-500 text-gray-300 dark:text-zinc-700 text-lg mb-0.5 shrink-0"
+                              className="ph-bold ph-dots-six-vertical cursor-grab active:cursor-grabbing hover:text-black dark:hover:text-white text-gray-900 dark:text-zinc-300 text-xl mb-0.5 shrink-0"
                               title="Drag to rearrange"
                             />
                           </div>
@@ -1121,7 +1121,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                         {/* Expandable Details Dropdown Popover */}
                         <div
                           className={cn(
-                            "absolute top-full left-0 right-0 z-[100] mt-2 rounded-xl border border-gray-200 bg-white p-4 shadow-xl dark:border-white/10 dark:bg-zinc-900 transition-all duration-300 ease-in-out origin-top",
+                            "absolute top-full left-0 right-0 z-[100] mt-2 rounded-xl border border-border bg-white p-4 shadow-xl dark:border-border dark:bg-zinc-900 transition-all duration-300 ease-in-out origin-top",
                             selectedKpi === "officers"
                               ? "scale-y-100 opacity-100 translate-y-0"
                               : "scale-y-95 opacity-0 -translate-y-2 pointer-events-none"
@@ -1130,7 +1130,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                         >
                           <div className="space-y-3">
                             <div className="grid grid-cols-2 gap-2">
-                              <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-gray-100 dark:border-white/5">
+                              <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-border dark:border-border">
                                 <span className="block text-[9px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">
                                   Configured Orgs
                                 </span>
@@ -1148,7 +1148,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                               </div>
                             </div>
 
-                            <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-gray-100 dark:border-white/5 flex justify-between items-center text-xs">
+                            <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-border dark:border-border flex justify-between items-center text-xs">
                               <span className="font-semibold text-gray-600 dark:text-zinc-300">
                                 Average Officers Per Org
                               </span>
@@ -1170,7 +1170,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                                   kpiStats.topOrgsByOfficers.map((org) => (
                                     <div
                                       key={org.id}
-                                      className="flex justify-between items-center text-[11px] py-1 border-b border-gray-100 dark:border-white/5 text-gray-700 dark:text-zinc-300"
+                                      className="flex justify-between items-center text-[11px] py-1 border-b border-border dark:border-border text-gray-700 dark:text-zinc-300"
                                     >
                                       <span
                                         className="truncate max-w-[170px] font-medium"
@@ -1216,12 +1216,12 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                             "relative overflow-hidden rounded-[18px] border cursor-pointer select-none transition-all shadow-none flex flex-col justify-between min-h-[110px] bg-gray-50 dark:bg-zinc-900",
                             selectedKpi === "proposals"
                               ? "border-emerald-500/50 ring-1 ring-emerald-500/20"
-                              : "border-gray-100 dark:border-white/5 hover:border-gray-200 dark:hover:border-white/10"
+                              : "border-border dark:border-border hover:border-border dark:hover:border-white/10"
                           )}
                         >
                           <div className="flex justify-between items-start p-4 pb-0">
                             <div className="flex flex-col gap-1">
-                              <span className="text-[13px] font-medium text-gray-500 dark:text-zinc-400 capitalize">
+                              <span className="text-[13px] font-medium text-gray-900 dark:text-zinc-300 capitalize">
                                 Event Proposals
                               </span>
                             </div>
@@ -1244,7 +1244,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                               </span>
                             </div>
                             <HugeIcon
-                              className="ph-bold ph-dots-six-vertical cursor-grab active:cursor-grabbing hover:text-gray-400 dark:hover:text-zinc-500 text-gray-300 dark:text-zinc-700 text-lg mb-0.5 shrink-0"
+                              className="ph-bold ph-dots-six-vertical cursor-grab active:cursor-grabbing hover:text-black dark:hover:text-white text-gray-900 dark:text-zinc-300 text-xl mb-0.5 shrink-0"
                               title="Drag to rearrange"
                             />
                           </div>
@@ -1253,7 +1253,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                         {/* Expandable Details Dropdown Popover */}
                         <div
                           className={cn(
-                            "absolute top-full left-0 right-0 z-[100] mt-2 rounded-xl border border-gray-200 bg-white p-4 shadow-xl dark:border-white/10 dark:bg-zinc-900 transition-all duration-300 ease-in-out origin-top",
+                            "absolute top-full left-0 right-0 z-[100] mt-2 rounded-xl border border-border bg-white p-4 shadow-xl dark:border-border dark:bg-zinc-900 transition-all duration-300 ease-in-out origin-top",
                             selectedKpi === "proposals"
                               ? "scale-y-100 opacity-100 translate-y-0"
                               : "scale-y-95 opacity-0 -translate-y-2 pointer-events-none"
@@ -1262,7 +1262,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                         >
                           <div className="space-y-3">
                             <div className="grid grid-cols-2 gap-2">
-                              <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-gray-100 dark:border-white/5">
+                              <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-border dark:border-border">
                                 <span className="block text-[9px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">
                                   Active Proponents
                                 </span>
@@ -1280,7 +1280,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                               </div>
                             </div>
 
-                            <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-gray-100 dark:border-white/5 flex justify-between items-center text-xs">
+                            <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-border dark:border-border flex justify-between items-center text-xs">
                               <span className="font-semibold text-gray-600 dark:text-zinc-300">
                                 Total Activity Submissions
                               </span>
@@ -1302,7 +1302,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                                   kpiStats.topOrgsByProposals.map((org) => (
                                     <div
                                       key={org.id}
-                                      className="flex justify-between items-center text-[11px] py-1 border-b border-gray-100 dark:border-white/5 text-gray-700 dark:text-zinc-300"
+                                      className="flex justify-between items-center text-[11px] py-1 border-b border-border dark:border-border text-gray-700 dark:text-zinc-300"
                                     >
                                       <span
                                         className="truncate max-w-[170px] font-medium"
@@ -1334,7 +1334,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
           </div>
 
           {/* 3. Navigation Toolbar: Category Line Tabs & Search/Status Controls */}
-          <div className="border-t border-gray-100 dark:border-white/10 p-5 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
+          <div className="border-t border-border dark:border-border p-5 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
             {/* Left: Category Line Tabs */}
             <div className="flex items-center gap-6 shrink-0 select-none overflow-x-auto">
               {CATEGORIES.map((cat) => {
@@ -1350,7 +1350,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                     className={cn(
                       "relative h-9 flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent whitespace-nowrap",
                       isActive
-                        ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-pup-maroon dark:after:bg-red-400"
+                        ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-white"
                         : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
                     )}
                   >
@@ -1371,7 +1371,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="Search org name, acronym, adviser..."
-                  className="h-9 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 pl-8 pr-16 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
+                  className="h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 pl-8 pr-16 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
                 />
                 <div className="absolute inset-y-0 right-3 flex items-center gap-1.5">
                   {search && (
@@ -1406,11 +1406,11 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
           <ActiveFilterChips
             chips={activeChips}
             onClearAll={handleResetFilters}
-            className="border-t border-gray-100 dark:border-white/10 px-6 py-2.5"
+            className="border-t border-border dark:border-border px-6 py-2.5"
           />
 
           {/* 5. Main Content Area (Dual View Engine) */}
-          <div className="flex-1 border-t border-gray-100 dark:border-white/10 bg-white dark:bg-card">
+          <div className="flex-1 border-t border-border dark:border-border bg-white dark:bg-card">
             {loading ? (
               viewMode === "table" ? (
                 <div className="p-6 space-y-3">
@@ -1423,7 +1423,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                   {Array.from({ length: 6 }).map((_, i) => (
                     <Card
                       key={i}
-                      className="rounded-2xl p-5 border border-gray-200 dark:border-white/10 space-y-4"
+                      className="rounded-2xl p-5 border border-border dark:border-border space-y-4"
                     >
                       <div className="flex items-center justify-between">
                         <Skeleton className="h-6 w-16 rounded-md" />
@@ -1431,7 +1431,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                       </div>
                       <Skeleton className="h-5 w-3/4" />
                       <Skeleton className="h-12 w-full" />
-                      <div className="pt-3 border-t border-gray-100 dark:border-white/5 flex justify-between">
+                      <div className="pt-3 border-t border-border dark:border-border flex justify-between">
                         <Skeleton className="h-8 w-24 rounded-xl" />
                         <Skeleton className="h-8 w-20 rounded-xl" />
                       </div>
@@ -1445,14 +1445,14 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                   <EmptyHeader className="flex flex-col items-center gap-0">
                     <div className="relative mb-6">
                       <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card" />
-                      <EmptyMedia className="relative z-10 flex h-20 w-20 items-center justify-center rounded-2xl border border-gray-100 bg-white shadow-md dark:border-white/10 dark:bg-card">
+                      <EmptyMedia className="relative z-10 flex h-20 w-20 items-center justify-center rounded-2xl border border-border bg-white shadow-md dark:border-border dark:bg-card">
                         <HugeIcon className="ph-bold ph-buildings text-2xl text-pup-maroon dark:text-red-400" />
                       </EmptyMedia>
                     </div>
                     <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">
                       No Student Organizations Found
                     </EmptyTitle>
-                    <EmptyDescription className="max-w-xs text-xs font-medium text-gray-500 dark:text-zinc-400 mt-1">
+                    <EmptyDescription className="max-w-xs text-xs font-medium text-gray-900 dark:text-zinc-300 mt-1">
                       {hasActiveFilters
                         ? "Try adjusting your search criteria or resetting category filters."
                         : "Register recognized student organizations to start managing Constitution & By-Laws and whitelisted officers."}
@@ -1473,7 +1473,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
               /* Table View Mode */
               <div className="overflow-x-auto min-h-[300px]">
                 <table className="min-w-full text-sm">
-                  <thead className="sticky top-0 z-10 border-b-[0.5px] border-black/10 dark:border-white/10 bg-white dark:bg-card">
+                  <thead className="sticky top-0 z-10 border-b-[0.5px] border-black/10 dark:border-border bg-white dark:bg-card">
                     <tr className="text-left text-[12px] uppercase font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">
                       <th className="py-3.5 px-6 font-semibold">Organization</th>
                       <th className="py-3.5 px-4 font-semibold">Category</th>
@@ -1484,7 +1484,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                       <th className="py-3.5 px-6 font-semibold text-right">Actions</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-100 dark:divide-white/5">
+                  <tbody className="divide-y divide-border dark:divide-border">
                     {filteredOrganizations.map((org) => {
                       const hasCbl = Boolean(org.bylaws_storage_filename);
                       const officerCount = parseInt(org.active_officer_count, 10) || 0;
@@ -1508,7 +1508,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                                 )}
                               </div>
                               {org.description ? (
-                                <p className="text-[11px] text-gray-500 dark:text-zinc-400 line-clamp-1 mt-0.5 max-w-xs md:max-w-sm">
+                                <p className="text-[11px] text-gray-900 dark:text-zinc-300 line-clamp-1 mt-0.5 max-w-xs md:max-w-sm">
                                   {org.description}
                                 </p>
                               ) : (
@@ -1694,7 +1694,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                   return (
                     <Card
                       key={org.id}
-                      className="group rounded-2xl border border-gray-200/80 dark:border-white/10 bg-white dark:bg-card shadow-xs hover:border-gray-300 dark:hover:border-white/20 hover:shadow-md transition-all flex flex-col justify-between overflow-hidden"
+                      className="group rounded-2xl border border-border/80 dark:border-border bg-white dark:bg-card shadow-xs hover:border-border dark:hover:border-white/20 hover:shadow-md transition-all flex flex-col justify-between overflow-hidden"
                     >
                       {/* Institutional Header Banner */}
                       <div className="relative overflow-hidden bg-gradient-to-br from-[#800000] via-[#700000] to-[#4d0000] p-5 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.15)]">
@@ -1771,7 +1771,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
 
                           {/* Key Metrics - Compact paired stat pills */}
                           <div className="grid grid-cols-2 gap-2">
-                            <div className="flex items-center gap-2 p-2 rounded-xl bg-gray-50/70 dark:bg-zinc-800/40 border border-gray-100 dark:border-white/5">
+                            <div className="flex items-center gap-2 p-2 rounded-xl bg-gray-50/70 dark:bg-zinc-800/40 border border-border dark:border-border">
                               <span className="w-7 h-7 rounded-lg bg-red-50 text-pup-maroon dark:bg-red-950/40 dark:text-red-400 flex items-center justify-center shrink-0">
                                 <HugeIcon className="ph-bold ph-shield-check text-sm" />
                               </span>
@@ -1785,7 +1785,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                               </div>
                             </div>
 
-                            <div className="flex items-center gap-2 p-2 rounded-xl bg-gray-50/70 dark:bg-zinc-800/40 border border-gray-100 dark:border-white/5">
+                            <div className="flex items-center gap-2 p-2 rounded-xl bg-gray-50/70 dark:bg-zinc-800/40 border border-border dark:border-border">
                               <span className="w-7 h-7 rounded-lg bg-sky-50 text-sky-700 dark:bg-sky-950/40 dark:text-sky-300 flex items-center justify-center shrink-0">
                                 <HugeIcon className="ph-bold ph-calendar-check text-sm" />
                               </span>
@@ -1801,7 +1801,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                           </div>
 
                           {/* CBL Archival Row */}
-                          <div className="flex items-center justify-between p-2 rounded-xl bg-slate-50/70 dark:bg-zinc-800/30 border border-gray-200/50 dark:border-white/5">
+                          <div className="flex items-center justify-between p-2 rounded-xl bg-slate-50/70 dark:bg-zinc-800/30 border border-border/50 dark:border-border">
                             <div className="flex items-center gap-2 min-w-0">
                               <span
                                 className={cn(
@@ -1877,7 +1877,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                                     setCblFile(null);
                                   }}
                                   title="Upload Constitution & By-Laws"
-                                  className="h-6 px-2 text-[10px] font-semibold rounded-lg border-gray-200 dark:border-white/10 cursor-pointer"
+                                  className="h-6 px-2 text-[10px] font-semibold rounded-lg border-border dark:border-border cursor-pointer"
                                 >
                                   Upload
                                 </Button>
@@ -1887,7 +1887,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                         </div>
 
                         {/* Card Actions */}
-                        <div className="pt-3 border-t border-gray-100 dark:border-white/10">
+                        <div className="pt-3 border-t border-border dark:border-border">
                           <Button
                             onClick={() => openManageOrgSheet(org, "info")}
                             title="Manage Organization"
@@ -1905,7 +1905,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
           </div>
 
           {/* 6. Footer Summary Strip */}
-          <div className="flex items-center justify-between border-t border-gray-100 dark:border-white/10 bg-white dark:bg-card px-6 py-3.5 rounded-b-2xl text-xs text-gray-500 dark:text-zinc-400 select-none">
+          <div className="flex items-center justify-between border-t border-border dark:border-border bg-white dark:bg-card px-6 py-3.5 rounded-b-2xl text-xs text-gray-900 dark:text-zinc-300 select-none">
             <span>
               Showing <strong>{filteredOrganizations.length}</strong> of <strong>{organizations.length}</strong> recognized{" "}
               {organizations.length === 1 ? "organization" : "organizations"}
@@ -1928,9 +1928,9 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
         >
           <SheetContent
             side="right"
-            className="w-full sm:max-w-xl md:max-w-2xl data-[side=right]:w-full data-[side=right]:sm:max-w-xl data-[side=right]:md:max-w-2xl flex flex-col h-full bg-white dark:bg-card border-l border-gray-200 dark:border-white/10 p-0 shadow-2xl font-jakarta overflow-hidden"
+            className="w-full sm:max-w-xl md:max-w-2xl data-[side=right]:w-full data-[side=right]:sm:max-w-xl data-[side=right]:md:max-w-2xl flex flex-col h-full bg-white dark:bg-card border-l border-border dark:border-border p-0 shadow-2xl font-jakarta overflow-hidden"
           >
-            <SheetHeader className="shrink-0 p-6 pb-4 pr-14 border-b border-gray-100 dark:border-white/10 bg-gradient-to-r from-gray-50/90 via-white to-gray-50/50 dark:from-zinc-900/90 dark:via-card dark:to-zinc-900/50">
+            <SheetHeader className="shrink-0 p-6 pb-4 pr-14 border-b border-border dark:border-border bg-gradient-to-r from-gray-50/90 via-white to-gray-50/50 dark:from-zinc-900/90 dark:via-card dark:to-zinc-900/50">
               <div className="flex items-center gap-2 mb-1">
                 {selectedOrgForOfficers?.acronym && (
                   <span className="px-2.5 py-0.5 text-[11px] font-bold rounded-lg bg-red-50 text-pup-maroon dark:bg-red-950/40 dark:text-red-400 border border-red-100 dark:border-red-900/30">
@@ -1944,14 +1944,14 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
               <SheetTitle className="text-lg font-bold text-gray-900 dark:text-zinc-50">
                 {selectedOrgForOfficers?.name}
               </SheetTitle>
-              <SheetDescription className="text-xs text-gray-500 dark:text-zinc-400 mt-1">
+              <SheetDescription className="text-xs text-gray-900 dark:text-zinc-300 mt-1">
                 Manage organization profile, accredited student officers, and official Constitution & By-Laws records.
               </SheetDescription>
             </SheetHeader>
 
             {/* Sub-tab segmented switcher */}
-            <div className="px-6 py-2.5 bg-gray-50/80 dark:bg-zinc-900/60 border-b border-gray-100 dark:border-white/10 flex items-center justify-between gap-2 flex-wrap">
-              <div className="flex items-center gap-1 bg-gray-100/90 dark:bg-zinc-800/80 p-1 rounded-xl border border-gray-200/60 dark:border-white/5">
+            <div className="px-6 py-2.5 bg-gray-50/80 dark:bg-zinc-900/60 border-b border-border dark:border-border flex items-center justify-between gap-2 flex-wrap">
+              <div className="flex items-center gap-1 bg-gray-100/90 dark:bg-zinc-800/80 p-1 rounded-xl border border-border/60 dark:border-border">
                 <button
                   type="button"
                   onClick={() => setSheetSubTab("info")}
@@ -2020,7 +2020,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                   size="sm"
                   variant="outline"
                   onClick={() => setCblUploadOrg(selectedOrgForOfficers)}
-                  className="h-8 px-3 text-xs font-semibold rounded-lg border-gray-200 dark:border-white/10 text-pup-maroon dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 cursor-pointer active:scale-95 transition-all"
+                  className="h-8 px-3 text-xs font-semibold rounded-lg border-border dark:border-border text-pup-maroon dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 cursor-pointer active:scale-95 transition-all"
                 >
                   Archive
                 </Button>
@@ -2031,8 +2031,8 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
               {sheetSubTab === "info" ? (
                 /* Organization Info Form */
                 <form id="org-info-form" onSubmit={handleSaveOrg} className="space-y-4">
-                  <div className="rounded-2xl border border-gray-200/80 dark:border-white/10 bg-white dark:bg-zinc-900 p-5 space-y-4 shadow-2xs">
-                    <div className="flex items-center justify-between border-b border-gray-100 dark:border-white/5 pb-3">
+                  <div className="rounded-2xl border border-border/80 dark:border-border bg-white dark:bg-zinc-900 p-5 space-y-4 shadow-2xs">
+                    <div className="flex items-center justify-between border-b border-border dark:border-border pb-3">
                       <div>
                         <h4 className="text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
                           Organization Profile
@@ -2156,7 +2156,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                         placeholder="Brief description of the organization's goals, objectives, and scope..."
                         value={orgForm.description}
                         onChange={(e) => setOrgForm({ ...orgForm, description: e.target.value })}
-                        className="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 p-3 text-xs focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus:outline-none resize-none text-gray-900 dark:text-zinc-100"
+                        className="w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 p-3 text-xs focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus:outline-none resize-none text-gray-900 dark:text-zinc-100"
                       />
                     </div>
                   </div>
@@ -2164,7 +2164,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
               ) : sheetSubTab === "officers" ? (
                 <>
                   {/* Add Officer Whitelist Box */}
-                  <div className="rounded-2xl border border-gray-200/80 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-800/40 p-4 space-y-3">
+                  <div className="rounded-2xl border border-border/80 dark:border-border bg-gray-50/50 dark:bg-zinc-800/40 p-4 space-y-3">
                     <h4 className="text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-zinc-300 flex items-center gap-1.5">
                       <HugeIcon className="ph-bold ph-user-plus text-pup-maroon dark:text-red-400 text-sm" />
                       Add Student Officer to Whitelist
@@ -2265,11 +2265,11 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                         <Skeleton className="h-12 w-full rounded-xl" />
                       </div>
                     ) : officersList.length === 0 ? (
-                      <div className="rounded-xl border border-dashed border-gray-200 dark:border-white/10 p-6 text-center text-xs text-gray-500 dark:text-zinc-400">
+                      <div className="rounded-xl border border-dashed border-border dark:border-border p-6 text-center text-xs text-gray-900 dark:text-zinc-300">
                         No officers have been whitelisted for this organization yet. Add a student account email above.
                       </div>
                     ) : (
-                      <div className="rounded-2xl border border-gray-200/80 dark:border-white/10 overflow-hidden divide-y divide-gray-100 dark:divide-white/5 bg-white dark:bg-zinc-900 shadow-2xs">
+                      <div className="rounded-2xl border border-border/80 dark:border-border overflow-hidden divide-y divide-border dark:divide-border bg-white dark:bg-zinc-900 shadow-2xs">
                         {officersList.map((officer) => {
                           const roleStyle = getOfficerRoleStyle(officer.position);
                           const displayName =
@@ -2353,7 +2353,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                                 variant="outline"
                                 size="sm"
                                 onClick={() => setOfficerToRemove(officer)}
-                                className="h-8 px-2.5 text-xs text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950/30 border border-gray-200 dark:border-white/10 rounded-lg cursor-pointer active:scale-95 transition-all shrink-0"
+                                className="h-8 px-2.5 text-xs text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950/30 border border-border dark:border-border rounded-lg cursor-pointer active:scale-95 transition-all shrink-0"
                               >
                                 Revoke
                               </Button>
@@ -2372,7 +2372,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                       <h4 className="text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
                         Constitution & By-Laws Versions ({bylawsHistory.length})
                       </h4>
-                      <p className="text-[11px] text-gray-500 dark:text-zinc-400 mt-0.5">
+                      <p className="text-[11px] text-gray-900 dark:text-zinc-300 mt-0.5">
                         Track ratification milestones, student amendment proposals, and official archived texts.
                       </p>
                     </div>
@@ -2384,7 +2384,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                       <Skeleton className="h-20 w-full rounded-2xl" />
                     </div>
                   ) : bylawsHistory.length === 0 ? (
-                    <div className="rounded-2xl border border-dashed border-gray-200 dark:border-white/10 p-8 text-center text-xs text-gray-500 dark:text-zinc-400 bg-gray-50/40 dark:bg-zinc-900/30">
+                    <div className="rounded-2xl border border-dashed border-border dark:border-border p-8 text-center text-xs text-gray-900 dark:text-zinc-300 bg-gray-50/40 dark:bg-zinc-900/30">
                       <HugeIcon className="ph-duotone ph-book-open text-3xl text-gray-400 mb-2" />
                       <p className="font-semibold text-gray-700 dark:text-zinc-300">No CBL records on file</p>
                       <p className="text-[11px] text-gray-400 mt-0.5 mb-3">
@@ -2396,7 +2396,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                       {bylawsHistory.map((ver) => (
                         <div
                           key={ver.id}
-                          className="rounded-2xl border border-gray-200/80 dark:border-white/10 bg-white dark:bg-zinc-900 p-4 space-y-3 shadow-xs hover:border-gray-300 dark:hover:border-zinc-700 transition-all"
+                          className="rounded-2xl border border-border/80 dark:border-border bg-white dark:bg-zinc-900 p-4 space-y-3 shadow-xs hover:border-border dark:hover:border-zinc-700 transition-all"
                         >
                           <div className="flex items-start justify-between gap-3">
                             <div>
@@ -2413,7 +2413,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                                   {ver.status}
                                 </span>
                                 {ver.effective_date && (
-                                  <span className="text-[11px] text-gray-500 dark:text-zinc-400">
+                                  <span className="text-[11px] text-gray-900 dark:text-zinc-300">
                                     Effective: <strong className="text-gray-700 dark:text-zinc-300">{ver.effective_date}</strong>
                                   </span>
                                 )}
@@ -2440,7 +2440,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                             </Button>
                           </div>
 
-                          <div className="pt-2 border-t border-gray-100 dark:border-white/5 flex items-center justify-between text-[11px] text-gray-400 dark:text-zinc-500">
+                          <div className="pt-2 border-t border-border dark:border-border flex items-center justify-between text-[11px] text-gray-400 dark:text-zinc-500">
                             <span>
                               Submitted by {ver.submitted_by_name || "OSAS Admin"}
                               {ver.submitted_by_student_no ? ` (${ver.submitted_by_student_no})` : ""}
@@ -2463,7 +2463,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                                 ? "bg-amber-50/70 dark:bg-amber-950/30 border-amber-200/60 dark:border-amber-900/30 text-amber-900 dark:text-amber-200"
                                 : ver.status === "Declined"
                                 ? "bg-rose-50/70 dark:bg-rose-950/30 border-rose-200/60 dark:border-rose-900/30 text-rose-900 dark:text-rose-200"
-                                : "bg-gray-50 dark:bg-zinc-800/50 border-gray-100 dark:border-white/5 text-gray-600 dark:text-zinc-300"
+                                : "bg-gray-50 dark:bg-zinc-800/50 border-border dark:border-border text-gray-600 dark:text-zinc-300"
                             )}>
                               <strong className="font-semibold">
                                 {ver.status === "Needs Revision"
@@ -2477,7 +2477,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                           )}
 
                           {ver.status === "Pending" && (
-                            <div className="pt-2 border-t border-gray-100 dark:border-white/5 flex items-center justify-end gap-2 flex-wrap">
+                            <div className="pt-2 border-t border-border dark:border-border flex items-center justify-end gap-2 flex-wrap">
                               <Button
                                 type="button"
                                 size="sm"
@@ -2516,7 +2516,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
               )}
             </div>
 
-            <SheetFooter className="shrink-0 p-4 border-t border-gray-100 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/30 w-full">
+            <SheetFooter className="shrink-0 p-4 border-t border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 w-full">
               <div className="flex items-center gap-3 w-full">
                 <Button
                   type="button"
@@ -2525,7 +2525,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                     setSelectedOrgForOfficers(null);
                     setEditingOrg(null);
                   }}
-                  className="flex-1 h-10 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                  className="flex-1 h-10 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                 >
                   Close
                 </Button>
@@ -2548,12 +2548,12 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
 
         {/* Register / Edit Organization Dialog (Section 9.3 Layout) */}
         <Dialog open={orgModalOpen} onOpenChange={setOrgModalOpen}>
-          <DialogContent className="sm:max-w-xl w-full rounded-2xl bg-white border border-gray-200 dark:bg-zinc-900 dark:border-white/10 p-0 shadow-2xl overflow-hidden flex flex-col gap-0">
-            <DialogHeader className="p-6 pb-4 bg-white dark:bg-card border-b border-gray-100 dark:border-white/10 text-left">
+          <DialogContent className="sm:max-w-xl w-full rounded-2xl bg-white border border-border dark:bg-zinc-900 dark:border-border p-0 shadow-2xl overflow-hidden flex flex-col gap-0">
+            <DialogHeader className="p-6 pb-4 bg-white dark:bg-card border-b border-border dark:border-border text-left">
               <DialogTitle className="text-base font-bold text-gray-900 dark:text-zinc-50">
                 {editingOrg ? "Edit Organization" : "Register Student Organization"}
               </DialogTitle>
-              <DialogDescription className="text-xs text-gray-500 dark:text-zinc-400 mt-1">
+              <DialogDescription className="text-xs text-gray-900 dark:text-zinc-300 mt-1">
                 {editingOrg
                   ? "Update official student organization accreditation information."
                   : "Register a recognized campus organization in the OSAS records directory."}
@@ -2661,17 +2661,17 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                     placeholder="Brief description of the organization's goals and scope..."
                     value={orgForm.description}
                     onChange={(e) => setOrgForm({ ...orgForm, description: e.target.value })}
-                    className="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 p-3 text-xs focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus:outline-none resize-none text-gray-900 dark:text-zinc-100"
+                    className="w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 p-3 text-xs focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus:outline-none resize-none text-gray-900 dark:text-zinc-100"
                   />
                 </div>
               </div>
 
-              <div className="px-6 py-4 bg-gray-50/50 dark:bg-zinc-900/50 border-t border-gray-100 dark:border-white/10 flex items-center justify-end gap-2.5 shrink-0">
+              <div className="px-6 py-4 bg-gray-50/50 dark:bg-zinc-900/50 border-t border-border dark:border-border flex items-center justify-end gap-2.5 shrink-0">
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => setOrgModalOpen(false)}
-                  className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                  className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                 >
                   Cancel
                 </Button>
@@ -2698,12 +2698,12 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
           open={Boolean(cblUploadOrg)}
           onOpenChange={(open) => !open && setCblUploadOrg(null)}
         >
-          <DialogContent className="sm:max-w-md w-full rounded-2xl bg-white border border-gray-200 dark:bg-zinc-900 dark:border-white/10 p-0 shadow-2xl overflow-hidden flex flex-col gap-0">
-            <DialogHeader className="p-6 pb-4 bg-white dark:bg-card border-b border-gray-100 dark:border-white/10 text-left">
+          <DialogContent className="sm:max-w-md w-full rounded-2xl bg-white border border-border dark:bg-zinc-900 dark:border-border p-0 shadow-2xl overflow-hidden flex flex-col gap-0">
+            <DialogHeader className="p-6 pb-4 bg-white dark:bg-card border-b border-border dark:border-border text-left">
               <DialogTitle className="text-base font-bold text-gray-900 dark:text-zinc-50">
                 Upload Constitution & By-Laws (CBL)
               </DialogTitle>
-              <DialogDescription className="text-xs text-gray-500 dark:text-zinc-400 mt-1">
+              <DialogDescription className="text-xs text-gray-900 dark:text-zinc-300 mt-1">
                 Archive the official approved Constitution and By-Laws document for{" "}
                 <strong className="text-gray-900 dark:text-zinc-200">{cblUploadOrg?.name}</strong>.
               </DialogDescription>
@@ -2728,12 +2728,12 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                 </div>
               </div>
 
-              <div className="px-6 py-4 bg-gray-50/50 dark:bg-zinc-900/50 border-t border-gray-100 dark:border-white/10 flex items-center justify-end gap-2.5 shrink-0">
+              <div className="px-6 py-4 bg-gray-50/50 dark:bg-zinc-900/50 border-t border-border dark:border-border flex items-center justify-end gap-2.5 shrink-0">
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => setCblUploadOrg(null)}
-                  className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                  className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                 >
                   Cancel
                 </Button>
@@ -2753,8 +2753,8 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
 
         {/* CBL Review Dialog */}
         <Dialog open={cblReviewModalOpen} onOpenChange={setCblReviewModalOpen}>
-          <DialogContent className="sm:max-w-md w-full rounded-2xl bg-white border border-gray-200 dark:bg-zinc-900 dark:border-white/10 p-0 shadow-2xl overflow-hidden flex flex-col gap-0">
-            <DialogHeader className="p-6 pb-4 bg-white dark:bg-card border-b border-gray-100 dark:border-white/10 text-left">
+          <DialogContent className="sm:max-w-md w-full rounded-2xl bg-white border border-border dark:bg-zinc-900 dark:border-border p-0 shadow-2xl overflow-hidden flex flex-col gap-0">
+            <DialogHeader className="p-6 pb-4 bg-white dark:bg-card border-b border-border dark:border-border text-left">
               <DialogTitle className="text-base font-bold text-gray-900 dark:text-zinc-50">
                 {cblReviewAction === "Approved"
                   ? "Approve Constitution & By-Laws"
@@ -2762,7 +2762,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                   ? "Request Revision on CBL"
                   : "Decline CBL Submission"}
               </DialogTitle>
-              <DialogDescription className="text-xs text-gray-500 dark:text-zinc-400 mt-1">
+              <DialogDescription className="text-xs text-gray-900 dark:text-zinc-300 mt-1">
                 {cblReviewAction === "Approved"
                   ? `Ratify ${cblReviewVersion?.version_tag || "this CBL submission"} as the active Constitution & By-Laws for ${selectedOrgForOfficers?.name}. Older versions will be marked as Superseded.`
                   : cblReviewAction === "Needs Revision"
@@ -2787,16 +2787,16 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                   }
                   value={cblReviewNote}
                   onChange={(e) => setCblReviewNote(e.target.value)}
-                  className="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 p-3 text-xs text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon"
+                  className="w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 p-3 text-xs text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon"
                 />
               </div>
 
-              <div className="pt-2 flex items-center justify-end gap-3 border-t border-gray-100 dark:border-white/5">
+              <div className="pt-2 flex items-center justify-end gap-3 border-t border-border dark:border-border">
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => setCblReviewModalOpen(false)}
-                  className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 shadow-xs cursor-pointer active:scale-95 transition-all"
+                  className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 shadow-xs cursor-pointer active:scale-95 transition-all"
                 >
                   Cancel
                 </Button>

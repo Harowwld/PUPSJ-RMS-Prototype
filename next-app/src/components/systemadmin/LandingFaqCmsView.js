@@ -326,7 +326,7 @@ export default function LandingFaqCmsView({ showToast }) {
 
   return (
     <div className="flex flex-col gap-6 w-full animate-fade-up font-jakarta">
-      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
+      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none">
         {/* Page Header */}
         <PageHeader
           icon="ph-bold ph-question"
@@ -341,14 +341,14 @@ export default function LandingFaqCmsView({ showToast }) {
           description="Manage frequently asked questions, detailed answers, and category tags."
           showBorder={false}
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
-          descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
+          descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
           actions={
             <div className="flex items-center gap-2.5 flex-wrap">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => window.open("/#faq", "_blank")}
-                className="flex h-10 items-center justify-center rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
+                className="flex h-10 items-center justify-center rounded-xl! border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
               >
                 Preview
               </Button>
@@ -382,7 +382,7 @@ export default function LandingFaqCmsView({ showToast }) {
         />
 
         {/* Standardized SuperAdmin Underline Navigation Tabs */}
-        <div className="flex items-center gap-6 shrink-0 h-10 px-6 border-b border-gray-100 dark:border-white/10 bg-white dark:bg-card select-none overflow-x-auto">
+        <div className="flex items-center gap-6 shrink-0 h-10 px-6 border-b border-border dark:border-border bg-white dark:bg-card select-none overflow-x-auto">
           <button
             type="button"
             onClick={() => setActiveTab("content")}
@@ -416,12 +416,12 @@ export default function LandingFaqCmsView({ showToast }) {
           {activeTab === "content" && (
             <div className="space-y-5">
               {/* Section Header & Subtitle Card */}
-              <div className="w-full rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/30 p-4 sm:p-5 space-y-4">
+              <div className="w-full rounded-xl border border-border/80 dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 p-4 sm:p-5 space-y-4">
                 <div>
                   <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">
                     Section Header &amp; Description
                   </h3>
-                  <p className="text-[12px] font-normal text-gray-500 dark:text-zinc-400 mt-0.5">
+                  <p className="text-[12px] font-normal text-gray-900 dark:text-zinc-300 mt-0.5">
                     Main heading and explanatory copy displayed at the top of the public FAQ section.
                   </p>
                 </div>
@@ -446,7 +446,7 @@ export default function LandingFaqCmsView({ showToast }) {
                       }
                       placeholder="Frequently Asked Questions"
                       maxLength={60}
-                      className="h-10 w-full rounded-xl border border-gray-200 bg-white px-3 text-xs font-semibold dark:border-white/10 dark:bg-card focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5"
+                      className="h-10 w-full rounded-xl border border-border bg-white px-3 text-xs font-semibold dark:border-border dark:bg-card focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5"
                     />
                   </div>
 
@@ -469,13 +469,13 @@ export default function LandingFaqCmsView({ showToast }) {
                       }
                       placeholder="Quick answers on requesting, tracking, and claiming your official school records."
                       maxLength={200}
-                      className="h-10 w-full rounded-xl border border-gray-200 bg-white px-3 text-xs dark:border-white/10 dark:bg-card focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5"
+                      className="h-10 w-full rounded-xl border border-border bg-white px-3 text-xs dark:border-border dark:bg-card focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5"
                     />
                   </div>
                 </div>
               </div>
               {/* Header Action Bar */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/30">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border border-border/80 dark:border-border bg-gray-50/50 dark:bg-zinc-900/30">
                 <div>
                   <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50 flex items-center gap-2">
                     <span>Questions &amp; Answers List</span>
@@ -483,7 +483,7 @@ export default function LandingFaqCmsView({ showToast }) {
                       {faqData.faqs.length}/{MAX_FAQ_ITEMS}
                     </span>
                   </h3>
-                  <p className="text-[12px] font-normal text-gray-500 dark:text-zinc-400">
+                  <p className="text-[12px] font-normal text-gray-900 dark:text-zinc-300">
                     Expand any question below to edit its text, category, or order.
                   </p>
                 </div>
@@ -550,7 +550,7 @@ export default function LandingFaqCmsView({ showToast }) {
                         "rounded-xl border transition-all overflow-hidden",
                         isExpanded
                           ? "border-pup-maroon/30 dark:border-red-500/30 bg-white dark:bg-zinc-900/60 shadow-xs"
-                          : "border-gray-200/80 dark:border-white/10 bg-white dark:bg-zinc-900/30 hover:border-gray-300 dark:hover:border-white/20"
+                          : "border-border/80 dark:border-border bg-white dark:bg-zinc-900/30 hover:border-border dark:hover:border-white/20"
                       )}
                     >
                       {/* Accordion Bar / Header */}
@@ -628,7 +628,7 @@ export default function LandingFaqCmsView({ showToast }) {
 
                       {/* Expandable Form Body */}
                       {isExpanded && (
-                        <div className="p-4 sm:p-5 border-t border-gray-100 dark:border-white/5 space-y-4 bg-white dark:bg-zinc-900/40">
+                        <div className="p-4 sm:p-5 border-t border-border dark:border-border space-y-4 bg-white dark:bg-zinc-900/40">
                           {/* Question Input */}
                           <div>
                             <div className="flex justify-between items-center mb-1.5">
@@ -644,7 +644,7 @@ export default function LandingFaqCmsView({ showToast }) {
                               onChange={(e) => updateFaqItem(originalIdx, "q", e.target.value)}
                               placeholder="e.g. How do I request my school records?"
                               maxLength={140}
-                              className="h-10 w-full rounded-xl border border-gray-200 bg-white px-3 text-xs font-semibold dark:border-white/10 dark:bg-zinc-950 focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5"
+                              className="h-10 w-full rounded-xl border border-border bg-white px-3 text-xs font-semibold dark:border-border dark:bg-zinc-950 focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5"
                             />
                           </div>
 
@@ -664,7 +664,7 @@ export default function LandingFaqCmsView({ showToast }) {
                               rows={3}
                               maxLength={400}
                               placeholder="Provide clear, direct guidance for this inquiry..."
-                              className="w-full rounded-xl border border-gray-200 bg-white p-3 text-xs font-normal leading-relaxed dark:border-white/10 dark:bg-zinc-950 focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 focus:outline-hidden"
+                              className="w-full rounded-xl border border-border bg-white p-3 text-xs font-normal leading-relaxed dark:border-border dark:bg-zinc-950 focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 focus:outline-hidden"
                             />
                           </div>
 
@@ -697,8 +697,8 @@ export default function LandingFaqCmsView({ showToast }) {
                                         updateFaqItem(originalIdx, "category", e.target.value)
                                       }
                                     }}
-                                    className="h-9 rounded-xl bg-white dark:bg-zinc-900 border border-gray-200 dark:border-white/10 text-xs font-normal text-gray-800 dark:text-zinc-200 cursor-pointer shadow-none px-3"
-                                    menuClassName="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-900 shadow-2xl p-1.5"
+                                    className="h-9 rounded-xl bg-white dark:bg-zinc-900 border border-border dark:border-border text-xs font-normal text-gray-800 dark:text-zinc-200 cursor-pointer shadow-none px-3"
+                                    menuClassName="rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-900 shadow-2xl p-1.5"
                                     optionClassName="rounded-lg text-xs font-normal py-2 px-3 hover:bg-gray-100 dark:hover:bg-zinc-800"
                                   >
                                     {STANDARD_CATEGORIES.map((cat) => (
@@ -717,7 +717,7 @@ export default function LandingFaqCmsView({ showToast }) {
                                   }
                                   placeholder="Type or customize category tag (e.g. Requests, Clearance, Graduation)"
                                   maxLength={30}
-                                  className="h-9 flex-1 rounded-xl border border-gray-200 bg-white px-3 text-xs dark:border-white/10 dark:bg-zinc-950 focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5"
+                                  className="h-9 flex-1 rounded-xl border border-border bg-white px-3 text-xs dark:border-border dark:bg-zinc-950 focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5"
                                 />
                               </div>
 
@@ -738,7 +738,7 @@ export default function LandingFaqCmsView({ showToast }) {
                                         "px-2.5 py-0.5 rounded-lg text-[10px] font-mono transition-all cursor-pointer border",
                                         isSelected
                                           ? "bg-pup-maroon text-white border-pup-maroon font-bold shadow-xs"
-                                          : "bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-zinc-400 border-transparent hover:border-gray-300 dark:hover:border-zinc-700"
+                                          : "bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-zinc-400 border-transparent hover:border-border dark:hover:border-zinc-700"
                                       )}
                                     >
                                       {cat}
@@ -761,12 +761,12 @@ export default function LandingFaqCmsView({ showToast }) {
                   type="button"
                   onClick={addNewFaq}
                   title={`Add Another Question (${faqData.faqs.length}/${MAX_FAQ_ITEMS})`}
-                  className="w-full py-3.5 rounded-xl border-2 border-dashed border-gray-200 dark:border-white/10 hover:border-pup-maroon/40 hover:bg-pup-maroon/5 dark:hover:bg-red-500/5 transition-all flex items-center justify-center gap-2 text-xs font-semibold text-gray-600 hover:text-pup-maroon dark:text-zinc-400 dark:hover:text-red-400 cursor-pointer select-none"
+                  className="w-full py-3.5 rounded-xl border-2 border-dashed border-border dark:border-border hover:border-pup-maroon/40 hover:bg-pup-maroon/5 dark:hover:bg-red-500/5 transition-all flex items-center justify-center gap-2 text-xs font-semibold text-gray-600 hover:text-pup-maroon dark:text-zinc-400 dark:hover:text-red-400 cursor-pointer select-none"
                 >
                   Add
                 </button>
               ) : (
-                <div className="w-full py-3 px-3.5 rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/70 dark:bg-zinc-900/30 text-center text-xs text-gray-500 dark:text-zinc-400 flex items-center justify-center gap-2">
+                <div className="w-full py-3 px-3.5 rounded-xl border border-border/80 dark:border-border bg-gray-50/70 dark:bg-zinc-900/30 text-center text-xs text-gray-900 dark:text-zinc-300 flex items-center justify-center gap-2">
                   <HugeIcon  className="ph-bold ph-info text-pup-maroon dark:text-red-400" />
                   <span>Maximum limit reached ({MAX_FAQ_ITEMS} of {MAX_FAQ_ITEMS} questions). FAQ section is capped at {MAX_FAQ_ITEMS} questions for layout stability and concise reading.</span>
                 </div>
@@ -777,12 +777,12 @@ export default function LandingFaqCmsView({ showToast }) {
           {/* TAB 2: Interactive Live Preview */}
           {activeTab === "preview" && (
             <div className="space-y-4">
-              <div className="flex items-center justify-between rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/30 p-4">
+              <div className="flex items-center justify-between rounded-xl border border-border/80 dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 p-4">
                 <div>
                   <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">
                     Simulated Public FAQ Section
                   </h3>
-                  <p className="text-[12px] font-normal text-gray-500 dark:text-zinc-400">
+                  <p className="text-[12px] font-normal text-gray-900 dark:text-zinc-300">
                     Live interactive preview showing exact layout, accordion animations, category filters, and styling.
                   </p>
                 </div>
@@ -801,7 +801,7 @@ export default function LandingFaqCmsView({ showToast }) {
                       {faqData.heading || "Frequently Asked Questions"}
                     </h2>
                     {faqData.description && (
-                      <p className="mt-2 text-xs sm:text-sm text-gray-500 dark:text-zinc-400">
+                      <p className="mt-2 text-xs sm:text-sm text-gray-900 dark:text-zinc-300">
                         {faqData.description}
                       </p>
                     )}
@@ -810,7 +810,7 @@ export default function LandingFaqCmsView({ showToast }) {
                   {/* Preview Category Filter Pills Matching FAQSection.js */}
                   {uniqueCategories.length > 1 && (
                     <div className="flex justify-center mb-8">
-                      <div className="flex items-center p-1 border border-gray-100 dark:border-white/10 rounded-full bg-white dark:bg-zinc-900 shadow-xs overflow-x-auto gap-1">
+                      <div className="flex items-center p-1 border border-border dark:border-border rounded-full bg-white dark:bg-zinc-900 shadow-xs overflow-x-auto gap-1">
                         <button
                           type="button"
                           onClick={() => setPreviewFilter("all")}
@@ -876,7 +876,7 @@ export default function LandingFaqCmsView({ showToast }) {
                                 {isOpen ? (
                                   <HugeIcon className="ph-bold ph-minus text-white text-base" />
                                 ) : (
-                                  <HugeIcon className="ph-bold ph-plus text-gray-500 dark:text-zinc-400 text-base" />
+                                  <HugeIcon className="ph-bold ph-plus text-gray-900 dark:text-zinc-300 text-base" />
                                 )}
                               </div>
                             </button>

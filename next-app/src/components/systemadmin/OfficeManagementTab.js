@@ -513,7 +513,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
   return (
     <div className="animate-fade-up font-jakarta flex flex-1 flex-col h-full min-h-0 w-full gap-6">
       {/* ONE Single Card Container encapsulating Header, Metrics, Toolbar, Table & Pagination */}
-      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none isolate font-jakarta mb-4 min-h-0 flex-1">
+      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4 min-h-0 flex-1">
         <PageHeader
           icon="ph-bold ph-buildings"
           title={
@@ -526,11 +526,11 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
           showBorder={false}
           className="p-6"
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
-          descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
+          descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
           actions={
             <div className="flex items-center gap-2">
               {/* 1. View Switcher: Grid vs Table with SuperAdmin Styling */}
-              <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl shrink-0 border border-gray-200/60 dark:border-white/5">
+              <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl shrink-0 border border-border/60 dark:border-border">
                 <button
                   type="button"
                   onClick={() => setLayoutView("grid")}
@@ -598,12 +598,12 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                     className={cn(
                       "relative overflow-hidden rounded-[18px] border cursor-pointer select-none transition-all shadow-none flex flex-col justify-between min-h-[110px] h-full bg-gray-50 dark:bg-zinc-900",                      selectedKpi === stat.key
                         ? `border-${stat.color}-500/50 ring-1 ring-${stat.color}-500/20`
-                        : "border-gray-100 dark:border-white/5"
+                        : "border-border dark:border-border"
                     )}
                   >
                     <div className="flex justify-between items-start p-4 pb-0">
                       <div className="flex flex-col gap-1">
-                        <span className="text-[13px] font-medium text-gray-500 dark:text-zinc-400 capitalize">
+                        <span className="text-[13px] font-medium text-gray-900 dark:text-zinc-300 capitalize">
                           {stat.label}
                         </span>
                       </div>
@@ -621,14 +621,14 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                           {stat.sublabel}
                         </span>
                       </div>
-                      <HugeIcon className="ph-bold ph-dots-six-vertical cursor-grab active:cursor-grabbing hover:text-gray-400 dark:hover:text-zinc-500 text-gray-300 dark:text-zinc-700 text-lg mb-0.5" />
+                      <HugeIcon className="ph-bold ph-dots-six-vertical cursor-grab active:cursor-grabbing hover:text-black dark:hover:text-white text-gray-900 dark:text-zinc-300 text-xl mb-0.5" />
                     </div>
                   </div>
 
                   {/* Absolute details container */}
                   <div
                     className={cn(
-                      "absolute top-full left-0 right-0 z-[100] mt-2 rounded-xl border border-gray-200 bg-white p-4 shadow-xl dark:border-white/10 dark:bg-zinc-900 transition-all duration-300 ease-in-out origin-top",
+                      "absolute top-full left-0 right-0 z-[100] mt-2 rounded-xl border border-border bg-white p-4 shadow-xl dark:border-border dark:bg-zinc-900 transition-all duration-300 ease-in-out origin-top",
                       selectedKpi === stat.key ? "scale-y-100 opacity-100 translate-y-0" : "scale-y-95 opacity-0 -translate-y-2 pointer-events-none"
                     )}
                     onClick={(e) => e.stopPropagation()}
@@ -636,7 +636,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                     {stat.key === "total" && (
                       <div className="space-y-3">
                         <div className="grid grid-cols-2 gap-2">
-                          <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-gray-100 dark:border-white/5">
+                          <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-border dark:border-border">
                             <span className="block text-[9px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">Total Offices</span>
                             <span className="text-lg font-black text-gray-900 dark:text-zinc-50">{stats.total}</span>
                           </div>
@@ -645,7 +645,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                             <span className="text-lg font-black text-blue-700 dark:text-blue-400">{stats.avgModules}</span>
                           </div>
                         </div>
-                        <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-gray-100 dark:border-white/5 text-xs text-gray-600 dark:text-zinc-300 leading-relaxed">
+                        <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-border dark:border-border text-xs text-gray-600 dark:text-zinc-300 leading-relaxed">
                           Administrative and academic offices operating across campus with role-based access.
                         </div>
                       </div>
@@ -660,7 +660,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                               setStatusFilter("Active")
                               setSelectedKpi(null)
                             }}
-                            className="bg-gray-50 dark:bg-zinc-800/60 hover:bg-gray-100 dark:hover:bg-zinc-700/60 transition-colors p-2.5 rounded-lg text-left cursor-pointer border border-gray-100 dark:border-white/5"
+                            className="bg-gray-50 dark:bg-zinc-800/60 hover:bg-gray-100 dark:hover:bg-zinc-700/60 transition-colors p-2.5 rounded-lg text-left cursor-pointer border border-border dark:border-border"
                           >
                             <span className="block text-[9px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">Active</span>
                             <span className="text-lg font-black text-emerald-600 dark:text-emerald-400">{stats.active}</span>
@@ -672,13 +672,13 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                               setStatusFilter("Inactive")
                               setSelectedKpi(null)
                             }}
-                            className="bg-gray-50 dark:bg-zinc-800/60 hover:bg-gray-100 dark:hover:bg-zinc-700/60 transition-colors p-2.5 rounded-lg text-left cursor-pointer border border-gray-100 dark:border-white/5"
+                            className="bg-gray-50 dark:bg-zinc-800/60 hover:bg-gray-100 dark:hover:bg-zinc-700/60 transition-colors p-2.5 rounded-lg text-left cursor-pointer border border-border dark:border-border"
                           >
                             <span className="block text-[9px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">Archived</span>
                             <span className="text-lg font-black text-amber-600 dark:text-amber-400">{stats.inactive}</span>
                           </button>
                         </div>
-                        <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-gray-100 dark:border-white/5 text-xs text-gray-600 dark:text-zinc-300 leading-relaxed">
+                        <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-border dark:border-border text-xs text-gray-600 dark:text-zinc-300 leading-relaxed">
                           Click either button to filter active departments or switch to the archived recovery vault.
                         </div>
                       </div>
@@ -697,17 +697,17 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                                 window.dispatchEvent(new CustomEvent("switch-view", { detail: { view: "staff" } }))
                               }
                             }}
-                            className="bg-gray-50 dark:bg-zinc-800/60 hover:bg-gray-100 dark:hover:bg-zinc-700/60 transition-colors p-2.5 rounded-lg text-left cursor-pointer border border-gray-100 dark:border-white/5"
+                            className="bg-gray-50 dark:bg-zinc-800/60 hover:bg-gray-100 dark:hover:bg-zinc-700/60 transition-colors p-2.5 rounded-lg text-left cursor-pointer border border-border dark:border-border"
                           >
                             <span className="block text-[9px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">Total Staff</span>
                             <span className="text-lg font-black text-gray-900 dark:text-zinc-50">{stats.totalStaff}</span>
                           </button>
-                          <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-gray-100 dark:border-white/5">
+                          <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-border dark:border-border">
                             <span className="block text-[9px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">Avg. Staff / Office</span>
                             <span className="text-lg font-black text-amber-600 dark:text-amber-400">{stats.avgStaff}</span>
                           </div>
                         </div>
-                        <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-gray-100 dark:border-white/5 text-xs text-gray-600 dark:text-zinc-300 leading-relaxed">
+                        <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-border dark:border-border text-xs text-gray-600 dark:text-zinc-300 leading-relaxed">
                           Click Total Staff to view all personnel across all offices in the Global Directory.
                         </div>
                       </div>
@@ -720,7 +720,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
         )}
 
         {/* Navigation Toolbar */}
-        <div className="border-t border-gray-100 dark:border-white/10 p-5 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
+        <div className="border-t border-border dark:border-border p-5 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
           {/* Left: Active vs Archived Tabs */}
           <div className="flex items-center gap-6 shrink-0 select-none">
             <button
@@ -758,7 +758,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search offices by name, acronym, ID..."
-              className="h-9 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 pl-8 pr-20 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
+              className="h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 pl-8 pr-20 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
             />
             <div className="absolute inset-y-0 right-3 flex items-center gap-1.5">
               {searchQuery && (
@@ -779,7 +779,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
         </div>
 
         {/* Content Section inside the single card */}
-        <div className="overflow-hidden rounded-b-2xl border-t border-gray-100 dark:border-white/10 bg-white dark:bg-card flex flex-col flex-1">
+        <div className="overflow-hidden rounded-b-2xl border-t border-border dark:border-border bg-white dark:bg-card flex flex-col flex-1">
           {loading ? (
             <OfficeGridSkeleton layoutView={layoutView} count={6} />
           ) : filteredOffices.length === 0 ? (
@@ -788,7 +788,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
             <EmptyHeader className="flex flex-col items-center gap-0">
               <div className="relative mb-6">
                 <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
+                <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
                   <HugeIcon  className={cn(
                     searchQuery ? "ph-magnifying-glass" : (statusFilter === "Inactive" ? "ph-archive" : "ph-buildings"),
                     "text-3xl text-gray-400 dark:text-zinc-500"
@@ -800,7 +800,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                   ? "No Results Found"
                   : (statusFilter === "Inactive" ? "No Archived Offices Found" : "No Offices Found")}
               </EmptyTitle>
-              <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400 mt-1">
+              <EmptyDescription className="max-w-xs text-sm font-medium text-gray-900 dark:text-zinc-300 mt-1">
                 {searchQuery
                   ? "We couldn't find any offices matching your search criteria. Try adjusting your keywords."
                   : (statusFilter === "Inactive"
@@ -812,7 +812,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                   variant="outline"
                   onClick={() => setSearchQuery("")}
                   title="Reset Filters"
-                  className="mt-6 flex h-10 items-center justify-center gap-2 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
+                  className="mt-6 flex h-10 items-center justify-center gap-2 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                 >
                   Reset
                 </Button>
@@ -840,13 +840,13 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                   "overflow-hidden border relative shadow-[0_2px_8px_rgba(0,0,0,0.03)] transition-all duration-300 rounded-2xl flex flex-col justify-between",
                   isActive
                     ? "border-[#e5e5ea] dark:border-[#3a3a3c] bg-white dark:bg-[#1c1c1e] hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)] hover:-translate-y-0.5"
-                    : "border-dashed border-gray-300 dark:border-zinc-700 bg-gray-50/70 dark:bg-zinc-900/40 opacity-80 dark:opacity-75"
+                    : "border-dashed border-border dark:border-border bg-gray-50/70 dark:bg-zinc-900/40 opacity-80 dark:opacity-75"
                 )}
               >
                 <CardContent className="p-6 flex flex-col h-full justify-between">
                   <div>
                     {!isActive && (
-                      <div className="mb-3 px-2.5 py-1.5 rounded-lg bg-gray-100 dark:bg-zinc-800/80 text-[11px] font-medium text-gray-600 dark:text-zinc-300 flex items-center justify-between border border-gray-200/60 dark:border-white/5">
+                      <div className="mb-3 px-2.5 py-1.5 rounded-lg bg-gray-100 dark:bg-zinc-800/80 text-[11px] font-medium text-gray-600 dark:text-zinc-300 flex items-center justify-between border border-border/60 dark:border-border">
                         <span className="flex items-center gap-1.5">
                           <HugeIcon  className="ph-bold ph-archive text-gray-400"></HugeIcon>
                           <span>Archived Department</span>
@@ -899,15 +899,15 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                       {office.name}
                     </h4>
 
-                    <p className="text-xs text-gray-500 dark:text-zinc-400 line-clamp-2 leading-relaxed mb-4">
+                    <p className="text-xs text-gray-900 dark:text-zinc-300 line-clamp-2 leading-relaxed mb-4">
                       {office.description || "No description provided."}
                     </p>
                   </div>
 
                   {/* Workstation & Scanner Setup */}
-                  <div className="space-y-1.5 mt-2 pt-3 border-t border-gray-100 dark:border-zinc-800 text-[11px] text-gray-600 dark:text-zinc-400">
+                  <div className="space-y-1.5 mt-2 pt-3 border-t border-border dark:border-border text-[11px] text-gray-600 dark:text-zinc-400">
                     <div className="flex items-center justify-between">
-                      <span className="text-gray-500 dark:text-zinc-400">
+                      <span className="text-gray-900 dark:text-zinc-300">
                         <span>Scanning Computer:</span>
                       </span>
                       <span className="font-semibold text-gray-900 dark:text-zinc-100">
@@ -916,7 +916,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                     </div>
 
                     <div className="flex items-center justify-between">
-                      <span className="text-gray-500 dark:text-zinc-400">
+                      <span className="text-gray-900 dark:text-zinc-300">
                         <span>Storage Folder:</span>
                       </span>
                       <span className="font-medium text-gray-700 dark:text-zinc-300 truncate max-w-[150px]" title={office.storage_path}>
@@ -926,7 +926,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                   </div>
 
                   {/* Office Metrics: Clickable Deep Links */}
-                  <div className="border-t border-gray-100 dark:border-zinc-800 pt-2.5 mt-2 flex items-center justify-between text-xs text-gray-600 dark:text-zinc-400">
+                  <div className="border-t border-border dark:border-border pt-2.5 mt-2 flex items-center justify-between text-xs text-gray-600 dark:text-zinc-400">
                     <button
                       type="button"
                       onClick={() => window.dispatchEvent(new CustomEvent("switch-view", { detail: { view: "staff", officeId: office.id } }))}
@@ -950,7 +950,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                   </div>
 
                   {/* Actions */}
-                  <div className="flex items-center gap-2 mt-5 pt-3 border-t border-gray-100 dark:border-zinc-800">
+                  <div className="flex items-center gap-2 mt-5 pt-3 border-t border-border dark:border-border">
                     {isActive ? (
                       <>
                         <Button
@@ -989,7 +989,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
         <>
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs text-gray-600 dark:text-zinc-400">
-              <thead className="sticky top-0 z-10 border-b-[0.5px] border-black/10 dark:border-white/10 bg-white dark:bg-card">
+              <thead className="sticky top-0 z-10 border-b-[0.5px] border-black/10 dark:border-border bg-white dark:bg-card">
                 <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500 h-11 select-none">
                   <th className="px-5 py-3">
                     <button
@@ -1068,7 +1068,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100 dark:divide-white/5">
+              <tbody className="divide-y divide-border dark:divide-border">
                 {paginatedOffices.map((office) => {
                   const accent = office.accent_color || "#800000"
                   const isActive = office.status === "Active"
@@ -1235,8 +1235,8 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
 
           {/* Pagination Footer */}
           {filteredOffices.length > 0 && (
-            <div className="flex items-center justify-between border-t border-gray-100 dark:border-white/10 bg-gray-50/30 dark:bg-zinc-900/20 p-4 px-6 rounded-b-2xl mt-auto">
-              <div className="flex items-center gap-6 text-xs text-gray-500 dark:text-zinc-400 select-none">
+            <div className="flex items-center justify-between border-t border-border dark:border-border bg-gray-50/30 dark:bg-zinc-900/20 p-4 px-6 rounded-b-2xl mt-auto">
+              <div className="flex items-center gap-6 text-xs text-gray-900 dark:text-zinc-300 select-none">
                 <span>Showing {paginatedOffices.length} of {filteredOffices.length}</span>
                 <div className="flex items-center gap-2">
                   <span>Rows:</span>
@@ -1266,11 +1266,11 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                   size="sm"
                   disabled={page <= 1}
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
-                  className="text-xs text-gray-500 dark:text-zinc-400 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
+                  className="text-xs text-gray-900 dark:text-zinc-300 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
                 >
                   Prev
                 </Button>
-                <div className="h-8 w-8 rounded-xl border border-[#e5e5ea] dark:border-zinc-800 flex items-center justify-center text-xs font-bold text-gray-800 dark:text-zinc-200 bg-white dark:bg-zinc-900">
+                <div className="h-8 w-8 rounded-xl border border-[#e5e5ea] dark:border-border flex items-center justify-center text-xs font-bold text-gray-800 dark:text-zinc-200 bg-white dark:bg-zinc-900">
                   {page}
                 </div>
                 <Button
@@ -1278,7 +1278,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                   size="sm"
                   disabled={page >= totalPages || endIndex >= filteredOffices.length}
                   onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                  className="text-xs text-gray-500 dark:text-zinc-400 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
+                  className="text-xs text-gray-900 dark:text-zinc-300 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
                 >
                   Next
                 </Button>
@@ -1292,10 +1292,10 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
 
       {/* Create / Edit Dialog - Wide & Spacious Layout with Collapsible Accordion */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="w-full max-w-4xl sm:max-w-4xl rounded-2xl bg-white border border-gray-200 dark:bg-zinc-900 dark:border-white/10 p-0 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+        <DialogContent className="w-full max-w-4xl sm:max-w-4xl rounded-2xl bg-white border border-border dark:bg-zinc-900 dark:border-border p-0 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
           <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0 overflow-hidden">
             {/* Header: Clean title without icon as requested */}
-            <DialogHeader className="p-6 sm:px-8 pt-6 pb-4 bg-white dark:bg-card border-b border-gray-100 dark:border-white/5 text-left shrink-0">
+            <DialogHeader className="p-6 sm:px-8 pt-6 pb-4 bg-white dark:bg-card border-b border-border dark:border-border text-left shrink-0">
               <DialogTitle className="text-[17px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
                 {isEditing ? "Edit Office Details" : "Add New Office"}
               </DialogTitle>
@@ -1330,7 +1330,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                       })
                     }}
                     placeholder="e.g. Registrar, OSAS, Library"
-                    className="h-10 rounded-xl bg-white border border-gray-200 text-xs focus-visible:ring-pup-maroon dark:bg-zinc-950 dark:border-white/10 dark:text-white"
+                    className="h-10 rounded-xl bg-white border border-border text-xs focus-visible:ring-pup-maroon dark:bg-zinc-950 dark:border-border dark:text-white"
                     required
                   />
                 </div>
@@ -1352,7 +1352,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                     }}
                     disabled={isEditing}
                     placeholder="e.g. registrar, osas, library"
-                    className="h-10 rounded-xl bg-white border border-gray-200 text-xs focus-visible:ring-pup-maroon dark:bg-zinc-950 dark:border-white/10 dark:text-white"
+                    className="h-10 rounded-xl bg-white border border-border text-xs focus-visible:ring-pup-maroon dark:bg-zinc-950 dark:border-border dark:text-white"
                     required
                   />
                   {!isEditing && (
@@ -1379,7 +1379,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                   value={form.name}
                   onChange={(e) => setForm(prev => ({ ...prev, name: e.target.value }))}
                   placeholder="e.g. Office of the University Library Services"
-                  className="h-10 rounded-xl bg-white border border-gray-200 text-xs focus-visible:ring-pup-maroon dark:bg-zinc-950 dark:border-white/10 dark:text-white"
+                  className="h-10 rounded-xl bg-white border border-border text-xs focus-visible:ring-pup-maroon dark:bg-zinc-950 dark:border-border dark:text-white"
                   required
                 />
               </div>
@@ -1393,13 +1393,13 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                   value={form.description}
                   onChange={(e) => setForm(prev => ({ ...prev, description: e.target.value }))}
                   placeholder="Describe the department's institutional role and functions..."
-                  className="h-10 rounded-xl bg-white border border-gray-200 text-xs focus-visible:ring-pup-maroon dark:bg-zinc-950 dark:border-white/10 dark:text-white"
+                  className="h-10 rounded-xl bg-white border border-border text-xs focus-visible:ring-pup-maroon dark:bg-zinc-950 dark:border-border dark:text-white"
                 />
               </div>
 
               {/* Row 3: Scanning Workstation Setup (Simplified Option A) */}
-              <div className="p-4 sm:p-5 rounded-2xl border border-gray-200 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-950/40 space-y-3.5">
-                <div className="flex items-center justify-between pb-2.5 border-b border-gray-100 dark:border-white/5">
+              <div className="p-4 sm:p-5 rounded-2xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-950/40 space-y-3.5">
+                <div className="flex items-center justify-between pb-2.5 border-b border-border dark:border-border">
                   <div className="flex items-center gap-2.5">
                     <div className="h-7 w-7 rounded-lg bg-pup-maroon/10 text-pup-maroon dark:bg-white/10 dark:text-zinc-100 flex items-center justify-center text-sm">
                       <HugeIcon  className="ph-bold ph-desktop"></HugeIcon>
@@ -1408,7 +1408,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                       <h5 className="text-xs font-bold text-gray-900 dark:text-zinc-50">
                         Scanning Workstation
                       </h5>
-                      <p className="text-[11px] text-gray-500 dark:text-zinc-400">
+                      <p className="text-[11px] text-gray-900 dark:text-zinc-300">
                         Optionally assign an identifiable terminal name to this department&apos;s scanning PC.
                       </p>
                     </div>
@@ -1431,7 +1431,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                     value={form.station_name}
                     onChange={(e) => setForm(prev => ({ ...prev, station_name: e.target.value }))}
                     placeholder="e.g. REG-ARCHIVE-PC01 (leave blank to auto-assign)"
-                    className="h-10 rounded-xl bg-white border border-gray-200 text-xs focus-visible:ring-pup-maroon dark:bg-zinc-950 dark:border-white/10 dark:text-white"
+                    className="h-10 rounded-xl bg-white border border-border text-xs focus-visible:ring-pup-maroon dark:bg-zinc-950 dark:border-border dark:text-white"
                   />
                   <span className="text-[10px] text-gray-400 dark:text-zinc-500 mt-1 block">
                     Shows on staff terminal headers and audit logs. Storage partitions are automatically managed.
@@ -1439,7 +1439,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                 </div>
 
                 {showAdvancedStorage && (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-3 border-t border-gray-100 dark:border-white/5 animate-fade-in">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-3 border-t border-border dark:border-border animate-fade-in">
                     <div>
                       <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
                         Custom Storage Folder Path
@@ -1448,7 +1448,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                         value={form.storage_path}
                         onChange={(e) => setForm(prev => ({ ...prev, storage_path: e.target.value }))}
                         placeholder="Default: .local/storage/{id}/uploads"
-                        className="h-10 rounded-xl bg-white border border-gray-200 text-xs focus-visible:ring-pup-maroon dark:bg-zinc-950 dark:border-white/10 dark:text-white font-mono text-[11px]"
+                        className="h-10 rounded-xl bg-white border border-border text-xs focus-visible:ring-pup-maroon dark:bg-zinc-950 dark:border-border dark:text-white font-mono text-[11px]"
                       />
                       <span className="text-[10px] text-gray-400 mt-1 block">
                         Server directory for storing uploaded archives.
@@ -1463,7 +1463,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                         value={form.inbound_path}
                         onChange={(e) => setForm(prev => ({ ...prev, inbound_path: e.target.value }))}
                         placeholder="Default: .local/hot-folder/INBOUND"
-                        className="h-10 rounded-xl bg-white border border-gray-200 text-xs focus-visible:ring-pup-maroon dark:bg-zinc-950 dark:border-white/10 dark:text-white font-mono text-[11px]"
+                        className="h-10 rounded-xl bg-white border border-border text-xs focus-visible:ring-pup-maroon dark:bg-zinc-950 dark:border-border dark:text-white font-mono text-[11px]"
                       />
                       <span className="text-[10px] text-gray-400 mt-1 block">
                         Folder monitored for automated scanner drops.
@@ -1474,9 +1474,9 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
               </div>
 
               {/* Row 4: Module Scope Section with Collapsible Accordion (Create View) / Workspace Modules Configured (Edit View) */}
-              <div className="space-y-2 pt-1 border-t border-gray-100 dark:border-white/5">
+              <div className="space-y-2 pt-1 border-t border-border dark:border-border">
                 {!isEditing ? (
-                  <div className="border border-gray-200 dark:border-white/10 rounded-2xl overflow-hidden bg-gray-50/50 dark:bg-zinc-950/40 transition-all">
+                  <div className="border border-border dark:border-border rounded-2xl overflow-hidden bg-gray-50/50 dark:bg-zinc-950/40 transition-all">
                     <button
                       type="button"
                       onClick={() => setModulesAccordionOpen(prev => !prev)}
@@ -1514,8 +1514,8 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
 
                     {/* Accordion Content */}
                     {modulesAccordionOpen && (
-                      <div className="p-4 border-t border-gray-200/80 dark:border-white/10 bg-white/70 dark:bg-zinc-950/70 space-y-3 animate-in fade-in duration-150">
-                        <div className="flex items-center justify-between text-[11px] text-gray-500 dark:text-zinc-400 pb-1">
+                      <div className="p-4 border-t border-border/80 dark:border-border bg-white/70 dark:bg-zinc-950/70 space-y-3 animate-in fade-in duration-150">
+                        <div className="flex items-center justify-between text-[11px] text-gray-900 dark:text-zinc-300 pb-1">
                           <span>Select which standard modules should be enabled for this office:</span>
                           <div className="flex items-center gap-2">
                             <button
@@ -1549,8 +1549,8 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                                 className={cn(
                                   "flex items-start gap-2.5 p-2.5 rounded-xl text-xs transition-all border select-none",
                                   isChecked
-                                    ? "border-pup-maroon/20 bg-pup-maroon/5 dark:border-white/15 dark:bg-white/5"
-                                    : "border-gray-200/70 bg-gray-50/50 dark:border-white/5 dark:bg-zinc-900/40",
+                                    ? "border-pup-maroon/20 bg-pup-maroon/5 dark:border-border dark:bg-white/5"
+                                    : "border-border/70 bg-gray-50/50 dark:border-border dark:bg-zinc-900/40",
                                   isSystem ? "opacity-80 cursor-default" : "hover:border-pup-maroon/40 cursor-pointer"
                                 )}
                               >
@@ -1581,14 +1581,14 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                           })}
                         </div>
 
-                        <div className="text-[10px] text-gray-400 dark:text-zinc-500 italic pt-1 border-t border-gray-100 dark:border-white/5">
+                        <div className="text-[10px] text-gray-400 dark:text-zinc-500 italic pt-1 border-t border-border dark:border-border">
                           * Note: Offices only use this standardized system catalog. Custom modules cannot be created per office.
                         </div>
                       </div>
                     )}
                   </div>
                 ) : (
-                  <div className="p-4 rounded-2xl border border-gray-200/80 dark:border-white/10 bg-gray-50/80 dark:bg-zinc-950/40 text-xs text-gray-600 dark:text-zinc-400 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="p-4 rounded-2xl border border-border/80 dark:border-border bg-gray-50/80 dark:bg-zinc-950/40 text-xs text-gray-600 dark:text-zinc-400 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div className="flex items-center gap-3">
                       <div className="h-8 w-8 rounded-lg bg-pup-maroon/10 text-pup-maroon dark:bg-white/10 dark:text-zinc-100 flex items-center justify-center shrink-0">
                         <HugeIcon  className="ti ti-layout-grid text-base"></HugeIcon>
@@ -1597,7 +1597,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                         <span className="font-semibold text-gray-900 dark:text-zinc-100 block leading-tight">
                           Workspace Modules Configured
                         </span>
-                        <span className="text-[11px] text-gray-500 dark:text-zinc-400">
+                        <span className="text-[11px] text-gray-900 dark:text-zinc-300">
                           System modules are managed centrally in the Module Matrix tab. Save any changes here before navigating away.
                         </span>
                       </div>
@@ -1607,7 +1607,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                       type="button"
                       onClick={() => setConfirmMatrixLeaveOpen(true)}
                       title="Open Module Matrix"
-                      className="h-8 px-3.5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-2xs cursor-pointer active:scale-95 transition-all flex items-center justify-center shrink-0 self-start sm:self-auto"
+                      className="h-8 px-3.5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-2xs cursor-pointer active:scale-95 transition-all flex items-center justify-center shrink-0 self-start sm:self-auto"
                     >
                       Open
                     </Button>
@@ -1616,7 +1616,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
               </div>
 
               {/* Row 5: Expanded Office Icon Section */}
-              <div className="space-y-2 pt-1 border-t border-gray-100 dark:border-white/5">
+              <div className="space-y-2 pt-1 border-t border-border dark:border-border">
                 <div className="flex items-center justify-between">
                   <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider">
                     Office Icon
@@ -1631,7 +1631,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                 </div>
 
                 {!showCustomIcon ? (
-                  <div className="p-3.5 sm:p-4 rounded-2xl border border-gray-200 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-950/40">
+                  <div className="p-3.5 sm:p-4 rounded-2xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-950/40">
                     <div className="grid grid-cols-6 sm:grid-cols-12 gap-2.5 sm:gap-3">
                       {PRESET_ICONS.map((opt) => {
                         const selected = form.icon === opt.value
@@ -1644,8 +1644,8 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                             className={cn(
                               "h-10 w-full flex items-center justify-center rounded-xl border text-lg transition-all cursor-pointer shadow-2xs",
                               selected
-                                ? "border-slate-900 bg-slate-900 text-white dark:border-zinc-100 dark:bg-zinc-100 dark:text-zinc-900 scale-105"
-                                : "border-gray-200/90 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-100 dark:border-white/10 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800"
+                                ? "border-slate-900 bg-slate-900 text-white dark:border-border dark:bg-zinc-100 dark:text-zinc-900 scale-105"
+                                : "border-border/90 bg-white text-gray-600 hover:border-border hover:bg-gray-100 dark:border-border dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800"
                             )}
                           >
                             <HugeIcon  className={opt.value}></HugeIcon>
@@ -1659,7 +1659,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                     value={form.icon}
                     onChange={(e) => setForm(prev => ({ ...prev, icon: e.target.value }))}
                     placeholder="e.g. ti ti-building, ph-bold ph-certificate"
-                    className="h-10 rounded-xl bg-white border border-gray-200 text-xs focus-visible:ring-pup-maroon dark:bg-zinc-950 dark:border-white/10 dark:text-white"
+                    className="h-10 rounded-xl bg-white border border-border text-xs focus-visible:ring-pup-maroon dark:bg-zinc-950 dark:border-border dark:text-white"
                   />
                 )}
                 <div className="flex items-center justify-between text-[10px] text-gray-400 dark:text-zinc-500 pt-0.5">
@@ -1671,7 +1671,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
               </div>
 
               {/* Row 6: Expanded Branding Theme Colors & Live Preview */}
-              <div className="space-y-2 pt-1 border-t border-gray-100 dark:border-white/5">
+              <div className="space-y-2 pt-1 border-t border-border dark:border-border">
                 <div className="flex items-center justify-between">
                   <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider">
                     Branding Theme Color
@@ -1681,7 +1681,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                   </span>
                 </div>
 
-                <div className="p-4 sm:p-5 rounded-2xl border border-gray-200 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-950/40 space-y-4">
+                <div className="p-4 sm:p-5 rounded-2xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-950/40 space-y-4">
                   {/* Expanded Swatches Grid */}
                   <div className="grid grid-cols-6 sm:grid-cols-9 gap-3">
                     {PRESET_COLORS.map(c => {
@@ -1712,7 +1712,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                   </div>
 
                   {/* Custom Color Input & Live Preview */}
-                  <div className="flex flex-wrap sm:flex-nowrap items-center justify-between gap-4 pt-3 border-t border-gray-200/70 dark:border-white/5">
+                  <div className="flex flex-wrap sm:flex-nowrap items-center justify-between gap-4 pt-3 border-t border-border/70 dark:border-border">
                     <div className="flex items-center gap-3">
                       <div className="relative flex items-center">
                         <input
@@ -1726,7 +1726,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                         value={form.accent_color}
                         onChange={(e) => setForm(prev => ({ ...prev, accent_color: e.target.value }))}
                         placeholder="#800000"
-                        className="h-10 w-32 rounded-xl bg-white border border-gray-200 font-mono text-xs focus-visible:ring-pup-maroon dark:bg-zinc-950 dark:border-white/10 dark:text-white"
+                        className="h-10 w-32 rounded-xl bg-white border border-border font-mono text-xs focus-visible:ring-pup-maroon dark:bg-zinc-950 dark:border-border dark:text-white"
                       />
                     </div>
 
@@ -1758,7 +1758,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                 type="button"
                 variant="outline"
                 onClick={() => setDialogOpen(false)}
-                className="h-10 px-4 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                className="h-10 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
               >
                 Cancel
               </Button>

@@ -119,7 +119,7 @@ export default function StudentFeedbackModal({
 
   return (
     <Dialog open={isModalOpen} onOpenChange={(openState) => !openState && handleClose()}>
-      <DialogContent className="overflow-hidden rounded-2xl border border-gray-200 bg-white p-0 shadow-2xl sm:max-w-md dark:border-white/10 dark:bg-card gap-0 font-jakarta">
+      <DialogContent className="overflow-hidden rounded-2xl border border-border bg-white p-0 shadow-2xl sm:max-w-md dark:border-border dark:bg-card gap-0 font-jakarta">
         <DialogHeader className="bg-white p-6 pb-0 dark:bg-card border-none text-left">
           <div className="flex items-start gap-4">
             <div className="min-w-0 flex-1">
@@ -133,7 +133,7 @@ export default function StudentFeedbackModal({
                   </span>
                 )}
               </div>
-              <DialogDescription className="mt-1 text-[13px] font-normal text-gray-500 dark:text-zinc-400">
+              <DialogDescription className="mt-1 text-[13px] font-normal text-gray-900 dark:text-zinc-300">
                 {request?.doc_type ? `${request.doc_type} · ` : ""}Help the Registrar improve student and alumni digital services.
               </DialogDescription>
             </div>
@@ -144,10 +144,10 @@ export default function StudentFeedbackModal({
           <div className="space-y-4 p-6">
             {/* Star Rating Section */}
             <div>
-              <label className="mb-2 block text-[11px] font-medium uppercase tracking-wider text-gray-500 dark:text-zinc-400">
+              <label className="mb-2 block text-[11px] font-medium uppercase tracking-wider text-gray-900 dark:text-zinc-300">
                 Overall Satisfaction <span className="text-red-500">*</span>
               </label>
-              <div className="flex flex-col items-center justify-center py-3 bg-gray-50/70 dark:bg-zinc-900/40 rounded-xl border border-gray-100 dark:border-white/5">
+              <div className="flex flex-col items-center justify-center py-3 bg-gray-50/70 dark:bg-zinc-900/40 rounded-xl border border-border dark:border-border">
                 <div
                   className="flex items-center gap-1.5"
                   role="radiogroup"
@@ -200,7 +200,7 @@ export default function StudentFeedbackModal({
 
             {/* Quick Feedback Aspect Chips */}
             <div>
-              <label className="mb-2 block text-[11px] font-medium uppercase tracking-wider text-gray-500 dark:text-zinc-400">
+              <label className="mb-2 block text-[11px] font-medium uppercase tracking-wider text-gray-900 dark:text-zinc-300">
                 What went well? <span className="text-[11px] font-normal text-gray-400 dark:text-zinc-500">(Optional)</span>
               </label>
               <div className="flex flex-wrap gap-1.5">
@@ -215,7 +215,7 @@ export default function StudentFeedbackModal({
                         "rounded-lg px-2.5 py-1 text-xs font-medium border transition-all active:scale-95 cursor-pointer",
                         isSelected
                           ? "bg-red-50 text-pup-maroon border-red-200 dark:bg-red-950/50 dark:border-red-900/60 dark:text-red-300 shadow-xs"
-                          : "bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100 hover:text-gray-900 dark:bg-zinc-800/80 dark:border-white/10 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
+                          : "bg-gray-50 text-gray-600 border-border hover:bg-gray-100 hover:text-gray-900 dark:bg-zinc-800/80 dark:border-border dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
                       )}
                     >
                       {aspect}
@@ -227,7 +227,7 @@ export default function StudentFeedbackModal({
 
             {/* Suggestions / Comments Textarea */}
             <div>
-              <label htmlFor="student-feedback-comments" className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-gray-500 dark:text-zinc-400">
+              <label htmlFor="student-feedback-comments" className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-gray-900 dark:text-zinc-300">
                 Comments or Suggestions <span className="text-[11px] font-normal text-gray-400 dark:text-zinc-500">(Optional)</span>
               </label>
               <textarea
@@ -236,7 +236,7 @@ export default function StudentFeedbackModal({
                 value={comments}
                 onChange={(e) => setComments(e.target.value)}
                 placeholder="Share any thoughts or suggestions for the Registrar Office..."
-                className="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 p-3 text-xs text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon shadow-xs resize-none transition-all"
+                className="w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 p-3 text-xs text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon shadow-xs resize-none transition-all"
               />
             </div>
           </div>
@@ -247,7 +247,7 @@ export default function StudentFeedbackModal({
               variant="outline"
               onClick={handleClose}
               disabled={submitting}
-              className="h-10 px-4 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+              className="h-10 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
             >
               Cancel
             </Button>

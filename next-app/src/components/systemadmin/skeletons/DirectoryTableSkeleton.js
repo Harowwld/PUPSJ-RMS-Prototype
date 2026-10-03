@@ -8,7 +8,7 @@ export default function DirectoryTableSkeleton({ rowCount = 8 }) {
     <div className="overflow-hidden rounded-b-2xl bg-white dark:bg-card flex flex-col flex-1 isolate">
       <div className="overflow-x-auto">
         <table className="min-w-full text-sm">
-          <thead className="sticky top-0 z-10 border-b-[0.5px] border-black/10 dark:border-white/10 bg-white dark:bg-card">
+          <thead className="sticky top-0 z-10 border-b-[0.5px] border-black/10 dark:border-border bg-white dark:bg-card">
             <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500 h-11 select-none">
               <th className="w-12 p-4 text-center">
                 <Skeleton className="h-4 w-4 rounded mx-auto dark:bg-muted" />
@@ -30,11 +30,11 @@ export default function DirectoryTableSkeleton({ rowCount = 8 }) {
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100 dark:divide-white/5 bg-white dark:bg-[#1c1c1e]">
+          <tbody className="divide-y divide-border dark:divide-border bg-white dark:bg-[#1c1c1e]">
             {Array.from({ length: rowCount }).map((_, i) => (
               <tr
                 key={i}
-                className="h-[56px] border-b-[0.5px] border-gray-100 dark:border-white/10 last:border-b-0"
+                className="h-[56px] border-b-[0.5px] border-border dark:border-border last:border-b-0"
               >
                 <td className="py-0 px-4 align-middle text-center">
                   <Skeleton className="h-4 w-4 rounded mx-auto dark:bg-muted" />

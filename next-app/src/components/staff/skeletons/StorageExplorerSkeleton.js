@@ -8,7 +8,7 @@ export default function StorageExplorerSkeleton() {
       {Array.from({ length: 6 }).map((_, i) => (
         <div
           key={i}
-          className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-card flex flex-col justify-between min-h-[180px]"
+          className="rounded-2xl border border-border bg-white p-6 shadow-sm dark:border-border dark:bg-card flex flex-col justify-between min-h-[180px]"
         >
           <div>
             <div className="flex items-center justify-between mb-4">
@@ -32,7 +32,7 @@ export default function StorageExplorerSkeleton() {
             </div>
           </div>
 
-          <div className="flex items-center justify-between pt-4 border-t border-gray-100 dark:border-white/5 mt-4">
+          <div className="flex items-center justify-between pt-4 border-t border-border dark:border-border mt-4">
             <Skeleton className="h-3 w-28 rounded dark:bg-muted" />
             <Skeleton className="h-3 w-16 rounded dark:bg-muted" />
           </div>

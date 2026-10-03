@@ -108,14 +108,14 @@ export default function RegistrarODRSTab({ showToast }) {
     <TooltipProvider delayDuration={200}>
       <div className="flex flex-col h-full gap-4 animate-fade-up font-jakarta">
         {/* Card Header aligned with other pages */}
-        <Card className="rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none overflow-hidden">
+        <Card className="rounded-brand border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none overflow-hidden">
           <PageHeader
             icon="ph-tray"
             title="Student Document Requests"
             description="Review, process, and publish status updates for student academic document requests."
             showBorder={false}
             titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
-            descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
+            descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
             actions={
               <RefreshButton
                 onRefresh={async () => {
@@ -134,8 +134,8 @@ export default function RegistrarODRSTab({ showToast }) {
         </Card>
 
         <div className="grid flex-1 gap-4 lg:grid-cols-[1fr_360px]">
-          <section className="rounded-brand border border-gray-200 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-card">
-            <div className="flex items-center justify-between pb-3 border-b border-gray-100 dark:border-white/5 mb-4">
+          <section className="rounded-brand border border-border bg-white p-5 shadow-sm dark:border-border dark:bg-card">
+            <div className="flex items-center justify-between pb-3 border-b border-border dark:border-border mb-4">
               <h2 className="text-base font-bold text-gray-900 dark:text-zinc-50">Request Queue</h2>
               <span className="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-bold text-gray-600 dark:bg-zinc-800 dark:text-zinc-300">
                 {rows.length} total
@@ -143,10 +143,10 @@ export default function RegistrarODRSTab({ showToast }) {
             </div>
             <div className="space-y-2">
               {rows.length === 0 ? (
-                <div className="rounded-brand border border-dashed border-gray-200 bg-gray-50 px-4 py-12 text-center dark:border-zinc-800 dark:bg-zinc-900/50">
+                <div className="rounded-brand border border-dashed border-border bg-gray-50 px-4 py-12 text-center dark:border-border dark:bg-zinc-900/50">
                   <HugeIcon  className="ph-duotone ph-tray text-3xl text-gray-400 dark:text-zinc-500 mb-2 block"></HugeIcon>
                   <p className="text-sm font-semibold text-gray-700 dark:text-zinc-300">No document requests yet.</p>
-                  <p className="mt-1 text-xs text-gray-500 dark:text-zinc-400">New student requests will appear here automatically.</p>
+                  <p className="mt-1 text-xs text-gray-900 dark:text-zinc-300">New student requests will appear here automatically.</p>
                 </div>
               ) : (
                 rows.map((item) => {
@@ -158,7 +158,7 @@ export default function RegistrarODRSTab({ showToast }) {
                       className={`block w-full rounded-brand border p-3.5 text-left text-sm transition-all ${
                         isSelected
                           ? "border-pup-maroon/40 bg-red-50/50 dark:border-red-800/40 dark:bg-red-950/20 shadow-xs"
-                          : "border-gray-200 hover:bg-gray-50 dark:border-zinc-800 dark:hover:bg-zinc-800/50"
+                          : "border-border hover:bg-gray-50 dark:border-border dark:hover:bg-zinc-800/50"
                       }`}
                     >
                       <div className="flex items-center justify-between gap-2">
@@ -175,7 +175,7 @@ export default function RegistrarODRSTab({ showToast }) {
                           </span>
                         </div>
                       </div>
-                      <div className="mt-1 flex items-center gap-1.5 flex-wrap text-xs text-gray-500 dark:text-zinc-400">
+                      <div className="mt-1 flex items-center gap-1.5 flex-wrap text-xs text-gray-900 dark:text-zinc-300">
                         <span>{item.student_name}</span>
                         <span>·</span>
                         <span>{item.student_no || "No Student ID"}</span>
@@ -191,7 +191,7 @@ export default function RegistrarODRSTab({ showToast }) {
                           </span>
                         )}
                         {(Number(item.attachment_count) > 0 || (Array.isArray(item.attachments) && item.attachments.length > 0)) && (
-                          <span className="inline-flex items-center gap-1 text-[11px] font-medium text-gray-500 dark:text-zinc-400" title={`${item.attachment_count || item.attachments?.length} attachment(s)`}>
+                          <span className="inline-flex items-center gap-1 text-[11px] font-medium text-gray-900 dark:text-zinc-300" title={`${item.attachment_count || item.attachments?.length} attachment(s)`}>
                             <HugeIcon className="ph-bold ph-paperclip text-[11px]" />
                             {item.attachment_count || item.attachments?.length}
                           </span>
@@ -209,13 +209,13 @@ export default function RegistrarODRSTab({ showToast }) {
             </div>
           </section>
 
-          <aside className="rounded-brand border border-gray-200 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-card">
+          <aside className="rounded-brand border border-border bg-white p-5 shadow-sm dark:border-border dark:bg-card">
             {selected ? (
               <div className="flex flex-col h-full">
-                <div className="pb-3 border-b border-gray-100 dark:border-white/5 mb-4">
+                <div className="pb-3 border-b border-border dark:border-border mb-4">
                   <span className="text-[10px] font-semibold uppercase tracking-wider text-pup-maroon dark:text-primary">Selected Ticket #{selected.id}</span>
                   <h3 className="text-lg font-bold text-gray-900 dark:text-zinc-50 mt-0.5">{selected.doc_type}</h3>
-                  <div className="flex flex-wrap items-center gap-2 mt-1 text-xs text-gray-500 dark:text-zinc-400">
+                  <div className="flex flex-wrap items-center gap-2 mt-1 text-xs text-gray-900 dark:text-zinc-300">
                     <span>Requester: <strong className="text-gray-800 dark:text-zinc-200">{selected.student_name}</strong> {selected.student_no ? `(${selected.student_no})` : <span className="italic text-gray-400">(No Student ID)</span>}</span>
                     {selected.client_type && (
                       <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold border ${
@@ -264,7 +264,7 @@ export default function RegistrarODRSTab({ showToast }) {
                         title={selected.spa_verified ? "Revoke SPA Verification" : "Verify SPA Authority"}
                         className={`h-7 px-3 text-xs font-semibold rounded-lg ${
                           selected.spa_verified
-                            ? "border border-gray-200 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50"
+                            ? "border border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50"
                             : "bg-emerald-600 hover:bg-emerald-700 text-white"
                         }`}
                       >
@@ -276,7 +276,7 @@ export default function RegistrarODRSTab({ showToast }) {
 
                 {/* Supporting Attachments */}
                 {Array.isArray(selected.attachments) && selected.attachments.length > 0 && (
-                  <div className="rounded-xl bg-gray-50/70 dark:bg-zinc-800/40 p-3.5 border border-gray-200 dark:border-white/10 space-y-2 mb-3">
+                  <div className="rounded-xl bg-gray-50/70 dark:bg-zinc-800/40 p-3.5 border border-border dark:border-border space-y-2 mb-3">
                     <div className="flex items-center justify-between">
                       <span className="text-[11px] font-bold uppercase tracking-wider text-gray-700 dark:text-zinc-300 flex items-center gap-1.5">
                         <HugeIcon className="ph-bold ph-paperclip text-xs" />
@@ -288,7 +288,7 @@ export default function RegistrarODRSTab({ showToast }) {
                         const isPdf = att.original_filename?.toLowerCase().endsWith(".pdf") || att.mime_type === "application/pdf";
                         const fileUrl = att.url || `/api/document-requests/${selected.id}/attachments/${att.id}`;
                         return (
-                          <div key={att.id} className="flex items-center justify-between p-2 rounded-lg bg-white dark:bg-zinc-900 border border-gray-200/60 dark:border-white/5 text-xs">
+                          <div key={att.id} className="flex items-center justify-between p-2 rounded-lg bg-white dark:bg-zinc-900 border border-border/60 dark:border-border text-xs">
                             <div className="min-w-0 flex-1 pr-2">
                               {att.attachment_type === "receipt" && <span className="block text-[9px] font-semibold uppercase tracking-wide text-amber-700 dark:text-amber-300">Proof of Payment</span>}
                               <span className="block truncate font-medium text-gray-800 dark:text-zinc-200" title={att.original_filename}>{att.original_filename}</span>
@@ -320,7 +320,7 @@ export default function RegistrarODRSTab({ showToast }) {
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 download={att.original_filename}
-                                className="h-6 px-2 inline-flex items-center text-[10px] font-semibold rounded-md border border-gray-200 dark:border-white/10 hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-700 dark:text-zinc-300"
+                                className="h-6 px-2 inline-flex items-center text-[10px] font-semibold rounded-md border border-border dark:border-border hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-700 dark:text-zinc-300"
                               >
                                 Download
                               </a>
@@ -369,7 +369,7 @@ export default function RegistrarODRSTab({ showToast }) {
                       {Boolean(selected?.status && TERMINAL_REQUEST_STATUSES.includes(selected.status)) ? "Request Status" : "Update Status"}
                     </label>
                     {Boolean(selected?.status && TERMINAL_REQUEST_STATUSES.includes(selected.status)) ? (
-                      <div className="h-10 px-3 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-zinc-800/80 flex items-center justify-between text-sm font-semibold text-gray-800 dark:text-zinc-200">
+                      <div className="h-10 px-3 rounded-xl border border-border dark:border-border bg-gray-50 dark:bg-zinc-800/80 flex items-center justify-between text-sm font-semibold text-gray-800 dark:text-zinc-200">
                         <span className="flex items-center gap-1.5 truncate">
                           <HugeIcon  className="ph-bold ph-lock-simple text-gray-400 text-xs"></HugeIcon>
                           <span>{selected.status}</span>
@@ -380,7 +380,7 @@ export default function RegistrarODRSTab({ showToast }) {
                       </div>
                     ) : (
                       <Select
-                        className="h-10 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-sm font-normal text-gray-800 dark:text-zinc-100 shadow-none"
+                        className="h-10 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-sm font-normal text-gray-800 dark:text-zinc-100 shadow-none"
                         value={status}
                         onChange={(e) => setStatus(e.target.value)}
                       >
@@ -396,7 +396,7 @@ export default function RegistrarODRSTab({ showToast }) {
                       {status === "Deficient" ? "Deficiency Comment (required)" : status === "PendingPayment" ? "Payment Instructions" : "Student-Visible Update Note"}
                     </label>
                     <textarea
-                      className="min-h-28 w-full rounded-brand border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:border-pup-maroon focus:ring-2 focus:ring-pup-maroon/10 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+                      className="min-h-28 w-full rounded-brand border border-border bg-white px-3 py-2 text-sm outline-none focus:border-pup-maroon focus:ring-2 focus:ring-pup-maroon/10 dark:border-border dark:bg-zinc-800 dark:text-zinc-100"
                       placeholder={status === "Deficient" ? "Explain what the student is missing (required)..." : status === "PendingPayment" ? "Explain the amount and how to submit payment..." : "Add an update message for the student (e.g. Document signed, ready for pick up at Room 201)..."}
                       value={message}
                       onChange={(e) => setMessage(e.target.value)}

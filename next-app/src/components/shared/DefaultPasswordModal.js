@@ -32,14 +32,14 @@ export default function DefaultPasswordModal({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="overflow-hidden rounded-2xl border border-gray-200 bg-white p-0 shadow-2xl sm:max-w-md dark:border-white/10 dark:bg-card gap-0">
+      <DialogContent className="overflow-hidden rounded-2xl border border-border bg-white p-0 shadow-2xl sm:max-w-md dark:border-border dark:bg-card gap-0">
         <DialogHeader className="bg-white p-6 pb-0 dark:bg-card border-none">
           <div className="flex items-start gap-4">
             <div className="min-w-0">
               <DialogTitle className="text-[16px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
                 Account Credentials Ready
               </DialogTitle>
-              <DialogDescription className="mt-1 text-[13px] font-normal text-gray-500 dark:text-zinc-400">
+              <DialogDescription className="mt-1 text-[13px] font-normal text-gray-900 dark:text-zinc-300">
                 The staff account has been created. Securely share these
                 temporary credentials with the user.
               </DialogDescription>
@@ -49,12 +49,12 @@ export default function DefaultPasswordModal({
 
         <div className="space-y-4 p-6">
           {/* User info */}
-          <div className="flex items-center gap-3 rounded-brand border border-gray-200 bg-transparent p-3 dark:border-white/10 dark:bg-transparent">
+          <div className="flex items-center gap-3 rounded-brand border border-border bg-transparent p-3 dark:border-border dark:bg-transparent">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-pup-maroon/10">
               <HugeIcon  className="ph-bold ph-user text-lg text-pup-maroon dark:text-primary"></HugeIcon>
             </div>
             <div className="min-w-0">
-              <p className="text-xs font-semibold tracking-wider text-gray-500 dark:text-zinc-400">
+              <p className="text-xs font-semibold tracking-wider text-gray-900 dark:text-zinc-300">
                 New Account
               </p>
               <p className="truncate text-sm font-semibold text-gray-900 dark:text-zinc-50">
@@ -97,7 +97,7 @@ export default function DefaultPasswordModal({
             type="button"
             variant="outline"
             onClick={onClose}
-            className="h-10 px-4 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+            className="h-10 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
           >
             Close
           </Button>

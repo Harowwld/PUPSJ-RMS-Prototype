@@ -84,7 +84,7 @@ export default function FAQSection() {
 
         {categories.length > 1 && (
           <div className="flex justify-center mb-12">
-            <div className="flex items-center p-1.5 border border-gray-100 rounded-full bg-white shadow-sm overflow-x-auto gap-1">
+            <div className="flex items-center p-1.5 border border-border rounded-full bg-white shadow-sm overflow-x-auto gap-1">
               <button
                 type="button"
                 onClick={() => { setActiveCategory("all"); setOpenIndex(0); }}

@@ -16,7 +16,7 @@ export default function StudentDashboardSkeleton({ view = "odrs" }) {
       </div>
 
       {/* Header Bar Skeleton */}
-      <header className="relative z-20 flex h-16 w-full shrink-0 items-center justify-between border-b border-gray-200/80 bg-white/80 px-4 sm:px-6 backdrop-blur-md dark:border-white/10 dark:bg-zinc-950/80">
+      <header className="relative z-20 flex h-16 w-full shrink-0 items-center justify-between border-b border-border/80 bg-white/80 px-4 sm:px-6 backdrop-blur-md dark:border-border dark:bg-zinc-950/80">
         <div className="flex items-center gap-3">
           <Skeleton className="h-8 w-8 rounded-lg dark:bg-muted" />
           <Skeleton className="h-5 w-24 rounded dark:bg-muted" />
@@ -33,7 +33,7 @@ export default function StudentDashboardSkeleton({ view = "odrs" }) {
       {/* Main Body with Sidebar + Main Workspace */}
       <div className="flex min-h-0 flex-1">
         {/* Sidebar Skeleton */}
-        <aside className="hidden md:flex w-64 shrink-0 flex-col justify-between border-r border-gray-200/80 bg-white/60 p-4 backdrop-blur-md dark:border-white/10 dark:bg-zinc-950/60">
+        <aside className="hidden md:flex w-64 shrink-0 flex-col justify-between border-r border-border/80 bg-white/60 p-4 backdrop-blur-md dark:border-border dark:bg-zinc-950/60">
           <div className="space-y-4">
             {/* Header label */}
             <div className="px-2 pt-2">
@@ -54,7 +54,7 @@ export default function StudentDashboardSkeleton({ view = "odrs" }) {
           </div>
 
           {/* Bottom logout area */}
-          <div className="border-t border-gray-100 dark:border-white/10 pt-3">
+          <div className="border-t border-border dark:border-border pt-3">
             <div className="flex items-center gap-3 p-2">
               <Skeleton className="h-5 w-5 rounded dark:bg-muted" />
               <Skeleton className="h-4 w-20 rounded dark:bg-muted" />

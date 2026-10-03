@@ -354,7 +354,7 @@ export default function InstitutionalBrandingTab({ showToast }) {
   return (
     <div className="flex flex-col gap-6 w-full animate-fade-up font-jakarta">
       {/* Main Container Card */}
-      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
+      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none">
         <PageHeader
           icon="ph-bold ph-certificate"
           title={
@@ -368,7 +368,7 @@ export default function InstitutionalBrandingTab({ showToast }) {
           description="Configure your official university seal, school credentials, administrative letterhead, and color theme for all official reports."
           showBorder={false}
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
-          descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
+          descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
           actions={
             <div className="flex items-center gap-2.5 flex-wrap">
               <RefreshButton
@@ -382,7 +382,7 @@ export default function InstitutionalBrandingTab({ showToast }) {
                 variant="outline"
                 onClick={handleDownloadSamplePdf}
                 disabled={generatingPdf}
-                className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
               >
                 {generatingPdf ? "Rendering..." : "Preview"}
               </Button>
@@ -416,19 +416,19 @@ export default function InstitutionalBrandingTab({ showToast }) {
             <div className="lg:col-span-7 space-y-5">
               
               {/* Card 1: Official Institutional Seals & Logos (Side-by-Side Dual-Seal Masthead Layout) */}
-              <div className="rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/30 p-5 space-y-4">
+              <div className="rounded-xl border border-border/80 dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 p-5 space-y-4">
                 <div>
                   <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">
                     Official Institutional Seals &amp; Logos
                   </h3>
-                  <p className="text-[12px] font-normal text-gray-500 dark:text-zinc-400 mt-0.5">
+                  <p className="text-[12px] font-normal text-gray-900 dark:text-zinc-300 mt-0.5">
                     Configure your primary school seal (Left) and an optional secondary seal (Right: Republic, DepEd, CHED, or ISO badge) to activate dual-masthead letterheads.
                   </p>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                   {/* Primary Seal */}
-                  <div className="rounded-xl border border-gray-200/70 dark:border-white/10 bg-white dark:bg-zinc-950/60 p-3.5 flex flex-col justify-between gap-3">
+                  <div className="rounded-xl border border-border/70 dark:border-border bg-white dark:bg-zinc-950/60 p-3.5 flex flex-col justify-between gap-3">
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-1.5 min-w-0">
                         <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300 truncate">
@@ -461,7 +461,7 @@ export default function InstitutionalBrandingTab({ showToast }) {
                         "relative rounded-xl border-2 border-dashed flex flex-col items-center justify-center p-3 text-center cursor-pointer transition-all select-none min-h-[140px]",
                         isDragOver
                           ? "border-pup-maroon bg-pup-maroon/5 dark:border-red-500 dark:bg-red-950/20"
-                          : "border-gray-200 dark:border-white/15 bg-gray-50/50 dark:bg-zinc-900/40 hover:bg-gray-100/50 dark:hover:bg-zinc-800/40"
+                          : "border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/40 hover:bg-gray-100/50 dark:hover:bg-zinc-800/40"
                       )}
                     >
                       <input
@@ -471,7 +471,7 @@ export default function InstitutionalBrandingTab({ showToast }) {
                         onChange={handleFileChange}
                         className="hidden"
                       />
-                      <div className="w-14 h-14 rounded-xl flex items-center justify-center p-1.5 relative overflow-hidden bg-[repeating-conic-gradient(#f3f4f6_0%_25%,transparent_0%_50%)] [background-size:8px_8px] dark:bg-[repeating-conic-gradient(#18181b_0%_25%,transparent_0%_50%)] border border-gray-200/60 dark:border-white/10 shadow-xs mb-2">
+                      <div className="w-14 h-14 rounded-xl flex items-center justify-center p-1.5 relative overflow-hidden bg-[repeating-conic-gradient(#f3f4f6_0%_25%,transparent_0%_50%)] [background-size:8px_8px] dark:bg-[repeating-conic-gradient(#18181b_0%_25%,transparent_0%_50%)] border border-border/60 dark:border-border shadow-xs mb-2">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                           src={activeLogoSrc}
@@ -492,7 +492,7 @@ export default function InstitutionalBrandingTab({ showToast }) {
                   </div>
 
                   {/* Secondary / Regulatory Seal (Optional) */}
-                  <div className="rounded-xl border border-gray-200/70 dark:border-white/10 bg-white dark:bg-zinc-950/60 p-3.5 flex flex-col justify-between gap-3">
+                  <div className="rounded-xl border border-border/70 dark:border-border bg-white dark:bg-zinc-950/60 p-3.5 flex flex-col justify-between gap-3">
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-1.5 min-w-0">
                         <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300 truncate">
@@ -530,7 +530,7 @@ export default function InstitutionalBrandingTab({ showToast }) {
                         "relative rounded-xl border-2 border-dashed flex flex-col items-center justify-center p-3 text-center cursor-pointer transition-all select-none min-h-[140px]",
                         isSecondaryDragOver
                           ? "border-pup-maroon bg-pup-maroon/5 dark:border-red-500 dark:bg-red-950/20"
-                          : "border-gray-200 dark:border-white/15 bg-gray-50/50 dark:bg-zinc-900/40 hover:bg-gray-100/50 dark:hover:bg-zinc-800/40"
+                          : "border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/40 hover:bg-gray-100/50 dark:hover:bg-zinc-800/40"
                       )}
                     >
                       <input
@@ -550,7 +550,7 @@ export default function InstitutionalBrandingTab({ showToast }) {
                           />
                         </div>
                       ) : (
-                        <div className="w-12 h-12 rounded-full bg-gray-100 dark:bg-zinc-800 flex items-center justify-center text-gray-400 dark:text-zinc-500 mb-2 border border-gray-200/60 dark:border-white/5">
+                        <div className="w-12 h-12 rounded-full bg-gray-100 dark:bg-zinc-800 flex items-center justify-center text-gray-400 dark:text-zinc-500 mb-2 border border-border/60 dark:border-border">
                           <HugeIcon className="ph-duotone ph-shield-plus text-xl" />
                         </div>
                       )}
@@ -566,12 +566,12 @@ export default function InstitutionalBrandingTab({ showToast }) {
               </div>
 
               {/* Card 2: Official School Credentials & Administrative Letterhead */}
-              <div className="rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/30 p-5 space-y-4">
+              <div className="rounded-xl border border-border/80 dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 p-5 space-y-4">
                 <div>
                   <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">
                     School Credentials
                   </h3>
-                  <p className="text-[12px] font-normal text-gray-500 dark:text-zinc-400 mt-0.5">
+                  <p className="text-[12px] font-normal text-gray-900 dark:text-zinc-300 mt-0.5">
                     Official institution name, campus designation, and administrative header line rendered across all official PDF records. Document tracking codes are automatically derived.
                   </p>
                 </div>
@@ -597,7 +597,7 @@ export default function InstitutionalBrandingTab({ showToast }) {
                       }
                       placeholder="e.g. Republic of the Philippines"
                       maxLength={100}
-                      className="h-10 w-full rounded-xl border border-gray-200 bg-white px-3 text-xs font-medium dark:border-white/10 dark:bg-card"
+                      className="h-10 w-full rounded-xl border border-border bg-white px-3 text-xs font-medium dark:border-border dark:bg-card"
                     />
                   </div>
 
@@ -616,7 +616,7 @@ export default function InstitutionalBrandingTab({ showToast }) {
                       }
                       placeholder="e.g. Polytechnic University of the Philippines"
                       maxLength={120}
-                      className="h-10 w-full rounded-xl border border-gray-200 bg-white px-3 text-xs font-medium dark:border-white/10 dark:bg-card"
+                      className="h-10 w-full rounded-xl border border-border bg-white px-3 text-xs font-medium dark:border-border dark:bg-card"
                     />
                   </div>
 
@@ -636,7 +636,7 @@ export default function InstitutionalBrandingTab({ showToast }) {
                         }
                         placeholder="e.g. San Juan City Campus"
                         maxLength={100}
-                        className="h-10 w-full rounded-xl border border-gray-200 bg-white px-3 text-xs font-medium dark:border-white/10 dark:bg-card"
+                        className="h-10 w-full rounded-xl border border-border bg-white px-3 text-xs font-medium dark:border-border dark:bg-card"
                       />
                     </div>
 
@@ -654,13 +654,13 @@ export default function InstitutionalBrandingTab({ showToast }) {
                         }
                         placeholder="e.g. OFFICIAL ACADEMIC ARCHIVES & RECORDS"
                         maxLength={100}
-                        className="h-10 w-full rounded-xl border border-gray-200 bg-white px-3 text-xs font-mono dark:border-white/10 dark:bg-card uppercase"
+                        className="h-10 w-full rounded-xl border border-border bg-white px-3 text-xs font-mono dark:border-border dark:bg-card uppercase"
                       />
                     </div>
                   </div>
 
                   {/* Signatory Titles (Optional Overrides) */}
-                  <div className="pt-3 border-t border-gray-200/70 dark:border-white/5 space-y-3">
+                  <div className="pt-3 border-t border-border/70 dark:border-border space-y-3">
                     <div className="flex items-center justify-between">
                       <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
                         Signatory Titles (Optional Overrides)
@@ -672,7 +672,7 @@ export default function InstitutionalBrandingTab({ showToast }) {
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-[10px] font-medium text-gray-500 dark:text-zinc-400 mb-1">
+                        <label className="block text-[10px] font-medium text-gray-900 dark:text-zinc-300 mb-1">
                           Records / Registrar Title
                         </label>
                         <Input
@@ -685,12 +685,12 @@ export default function InstitutionalBrandingTab({ showToast }) {
                           }
                           placeholder={branding.campusName ? "Default: CAMPUS REGISTRAR" : "Default: REGISTRAR"}
                           maxLength={60}
-                          className="h-10 w-full rounded-xl border border-gray-200 bg-white px-3 text-xs font-mono dark:border-white/10 dark:bg-card uppercase"
+                          className="h-10 w-full rounded-xl border border-border bg-white px-3 text-xs font-mono dark:border-border dark:bg-card uppercase"
                         />
                       </div>
 
                       <div>
-                        <label className="block text-[10px] font-medium text-gray-500 dark:text-zinc-400 mb-1">
+                        <label className="block text-[10px] font-medium text-gray-900 dark:text-zinc-300 mb-1">
                           Executive Approver Title
                         </label>
                         <Input
@@ -703,7 +703,7 @@ export default function InstitutionalBrandingTab({ showToast }) {
                           }
                           placeholder={branding.campusName ? "Default: CAMPUS DIRECTOR" : "Default: HEAD OF INSTITUTION"}
                           maxLength={60}
-                          className="h-10 w-full rounded-xl border border-gray-200 bg-white px-3 text-xs font-mono dark:border-white/10 dark:bg-card uppercase"
+                          className="h-10 w-full rounded-xl border border-border bg-white px-3 text-xs font-mono dark:border-border dark:bg-card uppercase"
                         />
                       </div>
                     </div>
@@ -712,12 +712,12 @@ export default function InstitutionalBrandingTab({ showToast }) {
               </div>
 
               {/* Card 3: Brand Color Accent */}
-              <div className="rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/30 p-5 space-y-4">
+              <div className="rounded-xl border border-border/80 dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 p-5 space-y-4">
                 <div>
                   <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">
                     Official Brand Color Theme
                   </h3>
-                  <p className="text-[12px] font-normal text-gray-500 dark:text-zinc-400 mt-0.5">
+                  <p className="text-[12px] font-normal text-gray-900 dark:text-zinc-300 mt-0.5">
                     Primary institutional color applied to university titles, dividing rules, and table header accents.
                   </p>
                 </div>
@@ -734,7 +734,7 @@ export default function InstitutionalBrandingTab({ showToast }) {
                             brandColor: e.target.value.toUpperCase(),
                           }))
                         }
-                        className="w-10 h-10 rounded-xl border border-gray-200 dark:border-white/10 cursor-pointer p-0 bg-transparent"
+                        className="w-10 h-10 rounded-xl border border-border dark:border-border cursor-pointer p-0 bg-transparent"
                       />
                     </div>
                     <div className="flex-1">
@@ -748,14 +748,14 @@ export default function InstitutionalBrandingTab({ showToast }) {
                         }
                         placeholder="#7A1E28"
                         maxLength={7}
-                        className="h-10 w-full rounded-xl border border-gray-200 bg-white px-3 text-xs font-mono font-semibold dark:border-white/10 dark:bg-card uppercase"
+                        className="h-10 w-full rounded-xl border border-border bg-white px-3 text-xs font-mono font-semibold dark:border-border dark:bg-card uppercase"
                       />
                     </div>
                   </div>
 
                   {/* Preset Quick-Picks */}
                   <div>
-                    <label className="block text-[10px] font-semibold uppercase tracking-wider text-gray-500 dark:text-zinc-400 mb-1.5">
+                    <label className="block text-[10px] font-semibold uppercase tracking-wider text-gray-900 dark:text-zinc-300 mb-1.5">
                       Recommended University Presets
                     </label>
                     <div className="flex items-center gap-2 flex-wrap">
@@ -772,8 +772,8 @@ export default function InstitutionalBrandingTab({ showToast }) {
                           className={cn(
                             "flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-medium cursor-pointer transition-all active:scale-95 shadow-xs",
                             branding.brandColor === preset.hex
-                              ? "border-slate-900 dark:border-zinc-200 bg-slate-900 text-zinc-100 dark:bg-zinc-100 dark:text-zinc-900"
-                              : "border-gray-200 dark:border-white/10 bg-zinc-50 dark:bg-zinc-900 text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-800"
+                              ? "border-slate-900 dark:border-border bg-slate-900 text-zinc-100 dark:bg-zinc-100 dark:text-zinc-900"
+                              : "border-border dark:border-border bg-zinc-50 dark:bg-zinc-900 text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-800"
                           )}
                         >
                           <span
@@ -792,13 +792,13 @@ export default function InstitutionalBrandingTab({ showToast }) {
 
             {/* RIGHT COLUMN (5 cols): Live Interactive PDF Simulator (Sticky) */}
             <div className="lg:col-span-5 space-y-5 lg:sticky lg:top-6">
-              <div className="rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/30 p-5 space-y-4">
+              <div className="rounded-xl border border-border/80 dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 p-5 space-y-4">
                 <div className="flex items-center justify-between gap-3">
                   <div>
                     <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">
                       Live PDF Report Header Simulator
                     </h3>
-                    <p className="text-[12px] font-normal text-gray-500 dark:text-zinc-400 mt-0.5">
+                    <p className="text-[12px] font-normal text-gray-900 dark:text-zinc-300 mt-0.5">
                       Pixel-accurate representation of your A4 print headers.
                     </p>
                   </div>
@@ -806,19 +806,19 @@ export default function InstitutionalBrandingTab({ showToast }) {
                     "text-[10px] font-semibold px-2.5 py-1 rounded-full shrink-0 border",
                     hasSecondaryLogo
                       ? "bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800/40"
-                      : "bg-slate-50 text-slate-700 border-slate-200 dark:bg-zinc-800 dark:text-zinc-300 dark:border-white/10"
+                      : "bg-slate-50 text-slate-700 border-slate-200 dark:bg-zinc-800 dark:text-zinc-300 dark:border-border"
                   )}>
                     {hasSecondaryLogo ? "Dual-Seal Split" : "Single-Seal Mode"}
                   </span>
                 </div>
 
                 {/* Simulated A4 Paper Header */}
-                <div className="w-full rounded-2xl bg-white border border-gray-200 shadow-lg p-6 sm:p-8 select-none text-center relative overflow-hidden font-sans">
+                <div className="w-full rounded-2xl bg-white border border-border shadow-lg p-6 sm:p-8 select-none text-center relative overflow-hidden font-sans">
                   {hasSecondaryLogo ? (
                     /* Mode B: Dual-Logo Split Masthead */
                     <div className="flex items-center justify-between gap-3 mb-4">
                       {/* Left Primary Seal */}
-                      <div className="w-14 h-14 sm:w-16 sm:h-16 shrink-0 flex items-center justify-center p-1 border border-gray-200/60 rounded-xl bg-gray-50/50">
+                      <div className="w-14 h-14 sm:w-16 sm:h-16 shrink-0 flex items-center justify-center p-1 border border-border/60 rounded-xl bg-gray-50/50">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                           src={activeLogoSrc}
@@ -918,7 +918,7 @@ export default function InstitutionalBrandingTab({ showToast }) {
                   />
 
                   {/* Simulated Table Body Snippet */}
-                  <div className="rounded-lg border border-gray-100 bg-gray-50/60 p-3 text-left space-y-2 text-[10px]">
+                  <div className="rounded-lg border border-border bg-gray-50/60 p-3 text-left space-y-2 text-[10px]">
                     <div
                       className="p-1.5 rounded text-white font-bold text-[9px] uppercase tracking-wider flex items-center justify-between"
                       style={{ backgroundColor: branding.brandColor }}
@@ -929,24 +929,24 @@ export default function InstitutionalBrandingTab({ showToast }) {
                       </span>
                     </div>
                     {branding.jurisdictionHeader && (
-                      <div className="flex justify-between py-1 border-b border-gray-200/60 text-gray-600">
+                      <div className="flex justify-between py-1 border-b border-border/60 text-gray-600">
                         <span>Super-Header / Jurisdiction</span>
                         <span className="font-semibold text-gray-900">{branding.jurisdictionHeader}</span>
                       </div>
                     )}
-                    <div className="flex justify-between py-1 border-b border-gray-200/60 text-gray-600">
+                    <div className="flex justify-between py-1 border-b border-border/60 text-gray-600">
                       <span>School / University</span>
                       <span className="font-semibold text-gray-900">{branding.institutionName}</span>
                     </div>
-                    <div className="flex justify-between py-1 border-b border-gray-200/60 text-gray-600">
+                    <div className="flex justify-between py-1 border-b border-border/60 text-gray-600">
                       <span>Campus / Branch</span>
                       <span className="font-semibold text-gray-900">{branding.campusName || "—"}</span>
                     </div>
-                    <div className="flex justify-between py-1 border-b border-gray-200/60 text-gray-600">
+                    <div className="flex justify-between py-1 border-b border-border/60 text-gray-600">
                       <span>Office / Subheader</span>
                       <span className="font-semibold text-gray-900 text-right truncate max-w-[210px]">{branding.tagline || "—"}</span>
                     </div>
-                    <div className="flex justify-between py-1 border-b border-gray-200/60 text-gray-600">
+                    <div className="flex justify-between py-1 border-b border-border/60 text-gray-600">
                       <div className="flex items-center gap-1.5">
                         <span>Tracking Code Prefix</span>
                         <span className="text-[8px] font-semibold px-1 py-0.5 rounded bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400">
@@ -955,13 +955,13 @@ export default function InstitutionalBrandingTab({ showToast }) {
                       </div>
                       <span className="font-semibold font-mono text-gray-900">{derivedPrefix}</span>
                     </div>
-                    <div className="flex justify-between py-1 border-b border-gray-200/60 text-gray-600">
+                    <div className="flex justify-between py-1 border-b border-border/60 text-gray-600">
                       <span>Primary Seal</span>
                       <span className="font-semibold text-emerald-600">
                         {isCustomLogo ? "Custom Upload" : "Default PUP Seal (eManage Fallback)"}
                       </span>
                     </div>
-                    <div className="flex justify-between py-1 border-b border-gray-200/60 text-gray-600">
+                    <div className="flex justify-between py-1 border-b border-border/60 text-gray-600">
                       <span>Secondary / Regulatory Seal</span>
                       <span className={cn(
                         "font-semibold",
@@ -970,7 +970,7 @@ export default function InstitutionalBrandingTab({ showToast }) {
                         {hasSecondaryLogo ? "Custom Upload (Dual Masthead Active)" : "None (Single Logo Mode)"}
                       </span>
                     </div>
-                    <div className="flex justify-between py-1 border-b border-gray-200/60 text-gray-600">
+                    <div className="flex justify-between py-1 border-b border-border/60 text-gray-600">
                       <span>Registrar Signatory</span>
                       <span className="font-semibold text-gray-900">
                         {branding.signatoryRegistrarTitle || (branding.campusName ? "CAMPUS REGISTRAR (Auto)" : "REGISTRAR (Auto)")}
@@ -986,7 +986,7 @@ export default function InstitutionalBrandingTab({ showToast }) {
                 </div>
 
                 <div className="flex items-center justify-between gap-3 pt-1">
-                  <div className="flex items-center gap-1.5 text-[11px] text-gray-500 dark:text-zinc-400">
+                  <div className="flex items-center gap-1.5 text-[11px] text-gray-900 dark:text-zinc-300">
                     <HugeIcon className="ph-fill ph-check-circle text-emerald-500 text-sm shrink-0" />
                     <span>Matches official A4 PDF engine</span>
                   </div>
@@ -997,7 +997,7 @@ export default function InstitutionalBrandingTab({ showToast }) {
                     onClick={handleDownloadSamplePdf}
                     disabled={generatingPdf}
                     title="Export Sample Preview PDF"
-                    className="h-8 px-3 rounded-lg text-xs font-semibold border border-gray-200 dark:border-white/10 hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-700 dark:text-zinc-200 cursor-pointer active:scale-95 transition-all shadow-xs"
+                    className="h-8 px-3 rounded-lg text-xs font-semibold border border-border dark:border-border hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-700 dark:text-zinc-200 cursor-pointer active:scale-95 transition-all shadow-xs"
                   >
                     {generatingPdf ? "Exporting..." : "Export"}
                   </Button>

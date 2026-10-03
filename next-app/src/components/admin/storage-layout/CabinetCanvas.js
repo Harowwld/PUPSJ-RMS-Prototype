@@ -47,7 +47,7 @@ const CabinetCanvas = memo(({
       ref={canvasRef}
       data-slot="storage-canvas"
       className={cn(
-        "relative w-full overflow-hidden border border-gray-200 bg-[#f8fafc] dark:bg-zinc-800 dark:border-white/10 transition-all duration-normal rounded-2xl",
+        "relative w-full overflow-hidden border border-border bg-[#f8fafc] dark:bg-zinc-800 dark:border-border transition-all duration-normal rounded-2xl",
         isModalOpen ? "h-full" : ""
       )}
       style={!isModalOpen ? { aspectRatio: "16 / 10", transform: "rotateX(35deg) scale(0.95)", transformStyle: "preserve-3d" } : { transform: "rotateX(35deg) scale(0.95)", transformStyle: "preserve-3d" }}
@@ -266,7 +266,7 @@ const CabinetElement = memo(({
         "absolute rounded-lg border-2 transition-all duration-fast cursor-move group/cab hover:brightness-105",
         isSelected ? "z-30 border-cyan-400 bg-cyan-50 dark:border-cyan-500 dark:bg-cyan-950" 
           : isConflict ? "z-20 border-red-400 bg-red-50 dark:border-red-500 dark:bg-red-950" 
-          : "z-10 border-gray-200 bg-white dark:border-zinc-600 dark:bg-zinc-800"
+          : "z-10 border-border bg-white dark:border-border dark:bg-zinc-800"
       )}
       style={{
         left: `${cab.rect.x * 100}%`,
@@ -337,7 +337,7 @@ const CabinetElement = memo(({
           <div
             key={idx}
             className={cn(
-              "flex-1 flex items-center justify-center border-b last:border-b-0 border-gray-300/40 dark:border-zinc-700/40",
+              "flex-1 flex items-center justify-center border-b last:border-b-0 border-border/40 dark:border-border/40",
               isSelected && "border-cyan-300/30 dark:border-cyan-700/30",
               isConflict && "border-red-300/30 dark:border-red-800/30"
             )}
@@ -448,7 +448,7 @@ const CabinetElement = memo(({
           )}
           onPointerDown={(e) => e.stopPropagation()}
         >
-          <div className="flex items-center gap-1 rounded-full border border-gray-200 bg-white p-1 shadow-xl dark:border-white/10 dark:bg-card dark:shadow-none">
+          <div className="flex items-center gap-1 rounded-full border border-border bg-white p-1 shadow-xl dark:border-border dark:bg-card dark:shadow-none">
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button

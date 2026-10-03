@@ -768,14 +768,14 @@ export default function SystemBackupsTab({ showToast }) {
           
           {/* MAIN CONTENT */}
           <div className="flex-1 flex flex-col">
-            <Card className="flex-1 flex flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none isolate">
+            <Card className="flex-1 flex flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate">
               <PageHeader
                 icon="ph-hard-drives"
                 title="Platform Governance Backups"
                 description="Create and restore full system governance backups, manage scheduled snapshots, and sync to external hardware."
                 showBorder={false}
                 titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
-                descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
+                descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
                 actions={
                   <div className="flex items-center gap-2">
                     
@@ -790,7 +790,7 @@ export default function SystemBackupsTab({ showToast }) {
                         restoreFileRef.current.click()
                       }
                       disabled={localLoading.uploading}
-                      className="flex h-10 items-center justify-center rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-5 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
+                      className="flex h-10 items-center justify-center rounded-xl! border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-5 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
                     >
                       {localLoading.uploading ? (
                         <HugeIcon  className="ph-bold ph-spinner animate-spin text-[16px]"></HugeIcon>
@@ -862,33 +862,33 @@ export default function SystemBackupsTab({ showToast }) {
                     }
                   }] : []}
                   onClearAll={handleClearFilters}
-                  className="border-t border-gray-100 dark:border-white/10 bg-white dark:bg-card px-6 py-2.5"
+                  className="border-t border-border dark:border-border bg-white dark:bg-card px-6 py-2.5"
                 />
               )}
 
               {isLoading && !isManualLoading ? (
                 <BackupTableSkeleton embedded={true} />
               ) : error ? (
-                <div className="flex-1 flex min-h-[450px] flex-col border-t border-gray-100 dark:border-white/10 rounded-b-2xl overflow-hidden">
+                <div className="flex-1 flex min-h-[450px] flex-col border-t border-border dark:border-border rounded-b-2xl overflow-hidden">
                   <CardContent className="flex flex-1 flex-col items-center justify-center p-6 rounded-b-2xl">
                     <Empty className="flex h-[450px] flex-col items-center justify-center border-0 bg-transparent text-center">
                       <EmptyHeader className="flex flex-col items-center gap-0">
                         <div className="relative mb-6">
                           <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                          <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
+                          <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
                             <HugeIcon  className="ph-duotone ph-warning-circle text-xl text-gray-300 dark:text-zinc-650" />
                           </EmptyMedia>
                         </div>
                         <EmptyTitle className="text-lg font-semibold tracking-tight text-gray-900 dark:text-zinc-50">
                           Could not load backups
                         </EmptyTitle>
-                        <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400">
+                        <EmptyDescription className="max-w-xs text-sm font-medium text-gray-900 dark:text-zinc-300">
                           {error}
                         </EmptyDescription>
                         <Button 
                           variant="outline" 
                           onClick={() => fetchData(true)}
-                          className="mt-6 flex h-10 items-center justify-center rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-5 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
+                          className="mt-6 flex h-10 items-center justify-center rounded-xl! border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-5 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
                         >
                           Retry
                         </Button>
@@ -897,7 +897,7 @@ export default function SystemBackupsTab({ showToast }) {
                   </CardContent>
                 </div>
               ) : (
-                <div className="flex-1 flex flex-col min-h-0 border-t border-gray-100 dark:border-white/10 rounded-b-2xl overflow-hidden">
+                <div className="flex-1 flex flex-col min-h-0 border-t border-border dark:border-border rounded-b-2xl overflow-hidden">
                   <BackupTable
                     backups={backups}
                     sortedAndPaginatedBackups={sortedAndPaginatedBackups}
@@ -960,7 +960,7 @@ export default function SystemBackupsTab({ showToast }) {
               type="button"
               onClick={() => handleToggleStatusSidebar(true)}
               title="Expand System Status"
-              className="hidden md:flex flex-col items-center justify-center gap-2 w-8 self-stretch rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-card hover:bg-gray-50 dark:hover:bg-zinc-800/80 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white shadow-2xs transition-all cursor-pointer group py-4 select-none shrink-0"
+              className="hidden md:flex flex-col items-center justify-center gap-2 w-8 self-stretch rounded-2xl border border-border dark:border-border bg-white dark:bg-card hover:bg-gray-50 dark:hover:bg-zinc-800/80 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white shadow-2xs transition-all cursor-pointer group py-4 select-none shrink-0"
             >
               <HugeIcon className="ph-bold ph-caret-left text-[14px] group-hover:-translate-x-0.5 transition-transform" />
               <span className="text-[10px] font-semibold tracking-wider uppercase text-gray-400 dark:text-zinc-500 [writing-mode:vertical-lr] rotate-180">

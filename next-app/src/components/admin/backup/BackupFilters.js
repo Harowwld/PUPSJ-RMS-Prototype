@@ -93,7 +93,7 @@ export default function BackupFilters({
   })()
 
   return (
-    <div className="border-t border-gray-100 dark:border-white/10 p-5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-gray-50/40 dark:bg-zinc-900/30 flex-wrap">
+    <div className="border-t border-border dark:border-border p-5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-gray-50/40 dark:bg-zinc-900/30 flex-wrap">
       {/* Search Bar: Placed on the left with standard count number */}
       <div className="relative flex-1 sm:w-64 min-w-[200px] max-w-sm group">
         <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
@@ -102,7 +102,7 @@ export default function BackupFilters({
         <Input
           type="text"
           placeholder="Search archive filename..."
-          className="h-9 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 pl-8 pr-16 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
+          className="h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 pl-8 pr-16 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
           value={localSearch}
           onChange={handleSearchChange}
           disabled={isLoading}
@@ -136,7 +136,7 @@ export default function BackupFilters({
       {/* Filter controls: Shortcuts and Date Pickers on the right */}
       <div className="flex flex-wrap items-center gap-3">
         {/* Time Shortcuts */}
-      <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-gray-200/60 dark:border-white/5 shrink-0">
+      <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-border/60 dark:border-border shrink-0">
         {[
           { key: "today", label: "Today" },
           { key: "yesterday", label: "Yest." },
@@ -170,14 +170,14 @@ export default function BackupFilters({
               <Button
                 variant="outline"
                 className={cn(
-                  "h-9 w-full justify-start rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-left text-xs font-normal shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 px-2.5 cursor-pointer",
+                  "h-9 w-full justify-start rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-left text-xs font-normal shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 px-2.5 cursor-pointer",
                   !backupStartDate ? "text-gray-400 dark:text-zinc-500" : "text-gray-700 dark:text-zinc-200"
                 )}
               >
                 {backupStartDate ? format(parseDateLocal(backupStartDate), "MMM d") : "Start"}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto sm:w-auto rounded-2xl border border-gray-200 bg-white p-0 shadow-2xl dark:border-white/10 dark:bg-card" align="start">
+            <PopoverContent className="w-auto sm:w-auto rounded-2xl border border-border bg-white p-0 shadow-2xl dark:border-border dark:bg-card" align="start">
               <Calendar
                 mode="single"
                 selected={backupStartDate ? parseDateLocal(backupStartDate) : undefined}
@@ -197,14 +197,14 @@ export default function BackupFilters({
               <Button
                 variant="outline"
                 className={cn(
-                  "h-9 w-full justify-start rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-left text-xs font-normal shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 px-2.5 cursor-pointer",
+                  "h-9 w-full justify-start rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-left text-xs font-normal shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 px-2.5 cursor-pointer",
                   !backupEndDate ? "text-gray-400 dark:text-zinc-500" : "text-gray-700 dark:text-zinc-200"
                 )}
               >
                 {backupEndDate ? format(parseDateLocal(backupEndDate), "MMM d") : "End"}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto sm:w-auto rounded-2xl border border-gray-200 bg-white p-0 shadow-2xl dark:border-white/10 dark:bg-card" align="start">
+            <PopoverContent className="w-auto sm:w-auto rounded-2xl border border-border bg-white p-0 shadow-2xl dark:border-border dark:bg-card" align="start">
               <Calendar
                 mode="single"
                 selected={backupEndDate ? parseDateLocal(backupEndDate) : undefined}

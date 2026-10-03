@@ -125,7 +125,7 @@ export default function BulkImportTab({
             showBorder={false}
             icon="ph-file-arrow-up"
             titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
-            descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
+            descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
             title="Bulk Taxonomy Importer"
             description="Upload CSV files to batch-import and populate system taxonomies."
             className="p-6"
@@ -141,7 +141,7 @@ export default function BulkImportTab({
             }
           />
           
-          <div className="border-t border-gray-100 dark:border-white/10 p-6 flex flex-col flex-1 gap-6 w-full min-h-0">
+          <div className="border-t border-border dark:border-border p-6 flex flex-col flex-1 gap-6 w-full min-h-0">
             <div className="flex items-center gap-2">
               <a
                 href={
@@ -150,14 +150,14 @@ export default function BulkImportTab({
                     : "data:text/csv;charset=utf-8,Category,Name,Code,IsCompliance,IsRequestable,ComplianceCategory%0ADOCUMENT TYPE,Transcript of Records,,false,true,Academic Records%0ADOCUMENT TYPE,Diploma,,false,true,Graduation & Exit Records%0ADOCUMENT TYPE,PSA Birth Certificate,,true,false,Admission & Identity%0ADOCUMENT TYPE,Form 137,,true,false,Academic Records%0ACourse,Bachelor of Science in Information Technology,BSIT,,,%0ACourse,Bachelor of Science in Accountancy,BSA,,,%0ASection,Block 1,BSIT,,,%0ASection,Section 1,BSA,,,"
                 }
                 download={isOsas ? "OSAS-IMPORT-TEMPLATE.csv" : "PUP-IMPORT-TEMPLATE.csv"}
-                className="inline-flex h-10 items-center justify-center rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-4 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 cursor-pointer active:scale-95"
+                className="inline-flex h-10 items-center justify-center rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-4 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 cursor-pointer active:scale-95"
               >
                 Download
               </a>
               <button
                 type="button"
                 onClick={handleCopySample}
-                className="inline-flex h-10 items-center justify-center rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-4 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 cursor-pointer active:scale-95"
+                className="inline-flex h-10 items-center justify-center rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-4 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 cursor-pointer active:scale-95"
               >
                 Copy
               </button>
@@ -167,7 +167,7 @@ export default function BulkImportTab({
             <div className="flex flex-col flex-1 items-center justify-center min-h-0 w-full">
               <div
                 className={cn(
-                  "group relative flex flex-1 h-full w-full cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-gray-300 dark:border-white/15 bg-[#FAFAFA] dark:bg-zinc-900/50 p-10 text-center transition-all duration-150 ease-out min-h-[500px]",
+                  "group relative flex flex-1 h-full w-full cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-border dark:border-border bg-[#FAFAFA] dark:bg-zinc-900/50 p-10 text-center transition-all duration-150 ease-out min-h-[500px]",
                   importDropActive && "border-pup-maroon bg-red-50/50 dark:bg-red-950/20"
                 )}
                 onDragOver={(e) => {
@@ -195,7 +195,7 @@ export default function BulkImportTab({
                   <p className="text-sm font-semibold text-gray-900 dark:text-zinc-100 mt-3 m-0">
                     Drop CSV file here
                   </p>
-                  <p className="text-xs font-normal text-gray-500 dark:text-zinc-400 mt-1 m-0">
+                  <p className="text-xs font-normal text-gray-900 dark:text-zinc-300 mt-1 m-0">
                     or click to <span className="text-pup-maroon font-semibold cursor-pointer hover:underline">browse</span> local files (.csv)
                   </p>
                 </div>
@@ -205,12 +205,12 @@ export default function BulkImportTab({
         </div>
       ) : importStatus === "preview" ? (
       <div className="animate-in fade-in slide-in-from-bottom-2 flex flex-1 min-h-[500px] flex-col duration-normal">
-        <div className="border-b border-gray-100 dark:border-white/10 p-5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
+        <div className="border-b border-border dark:border-border p-5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
           <div className="flex items-center gap-4">
             <Button
               variant="outline"
               onClick={resetImport}
-              className="flex h-10 items-center justify-center rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
+              className="flex h-10 items-center justify-center rounded-xl! border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
             >
               Back
             </Button>
@@ -235,7 +235,7 @@ export default function BulkImportTab({
                 <Input
                   type="text"
                   placeholder="Search preview..."
-                  className="h-10 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 pl-8 pr-8 text-xs font-normal placeholder:text-gray-400 dark:placeholder:text-zinc-500 text-gray-900 dark:text-zinc-100 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
+                  className="h-10 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 pl-8 pr-8 text-xs font-normal placeholder:text-gray-400 dark:placeholder:text-zinc-500 text-gray-900 dark:text-zinc-100 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
                   value={searchTerm}
                   onChange={(e) => {
                     setSearchTerm(e.target.value)
@@ -254,7 +254,7 @@ export default function BulkImportTab({
               </div>
 
               <div className="flex items-center gap-3.5 text-[12px] text-[#111111] dark:text-zinc-300">
-                <span className="border-r border-gray-200 pr-3.5 font-medium text-[#8E8E93] dark:border-zinc-700 dark:text-zinc-500">
+                <span className="border-r border-border pr-3.5 font-medium text-[#8E8E93] dark:border-border dark:text-zinc-500">
                   Summary
                 </span>
                 <div className="flex items-center gap-3.5">
@@ -295,12 +295,12 @@ export default function BulkImportTab({
                     <>
                       <div className="flex-1 overflow-hidden overflow-auto bg-white dark:bg-card rounded-[inherit]">
                         <table className="min-w-full text-sm">
-                  <thead className="sticky top-0 z-10 border-b border-gray-100 dark:border-white/10 bg-white dark:bg-card">
+                  <thead className="sticky top-0 z-10 border-b border-border dark:border-border bg-white dark:bg-card">
                     <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">
                       <th className="w-12 p-4 text-center">
                         <input
                           type="checkbox"
-                          className="h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-gray-300 text-pup-maroon dark:text-primary accent-pup-maroon focus:ring-pup-maroon dark:text-primary dark:border-white/10"
+                          className="h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-border text-pup-maroon dark:text-primary accent-pup-maroon focus:ring-pup-maroon dark:text-primary dark:border-border"
                           checked={
                             importRows.length > 0 &&
                             importRows.filter((r) => !r.error).every((r) => !!importSelected[r.index])
@@ -315,10 +315,10 @@ export default function BulkImportTab({
                       <th className="w-40 p-4 text-right font-medium text-[12px] tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">Validation</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-100 dark:divide-white/5">
+                  <tbody className="divide-y divide-border dark:divide-border">
                   <tr className="bg-gray-50/50 transition-colors hover:bg-gray-50 dark:bg-card dark:hover:bg-white/5">
                     <td className="p-4 text-center">
-                      <div className="flex h-5 w-5 mx-auto items-center justify-center rounded-full border-2 border-dashed border-gray-300 dark:border-white/10">
+                      <div className="flex h-5 w-5 mx-auto items-center justify-center rounded-full border-2 border-dashed border-border dark:border-border">
                         <HugeIcon  className="ph-bold ph-plus text-[10px] text-gray-400 dark:text-zinc-500"></HugeIcon>
                       </div>
                     </td>
@@ -327,7 +327,7 @@ export default function BulkImportTab({
                     </td>
                     <td className="p-4">
                       <Select
-                        className="h-9 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-3 text-xs font-normal text-gray-700 dark:text-zinc-200 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 cursor-pointer"
+                        className="h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-3 text-xs font-normal text-gray-700 dark:text-zinc-200 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 cursor-pointer"
                         value={quickAdd.category}
                         onChange={(e) => {
                           const cat = e.target.value
@@ -345,7 +345,7 @@ export default function BulkImportTab({
                     </td>
                     <td className="p-4">
                       <Input
-                        className="h-9 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
+                        className="h-9 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
                         value={quickAdd.name}
                         onChange={(e) =>
                           setQuickAdd((prev) => ({
@@ -362,7 +362,7 @@ export default function BulkImportTab({
                     <td className="p-4">
                       {quickAdd.category.toLowerCase() === "section" ? (
                         <Select
-                          className="h-9 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-3 text-xs font-normal text-gray-700 dark:text-zinc-200 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 cursor-pointer"
+                          className="h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-3 text-xs font-normal text-gray-700 dark:text-zinc-200 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 cursor-pointer"
                           value={quickAdd.code}
                           onChange={(e) =>
                             setQuickAdd((prev) => ({
@@ -380,7 +380,7 @@ export default function BulkImportTab({
                         </Select>
                       ) : (
                         <Input
-                          className="h-9 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-xs focus-visible:ring-1 focus-visible:ring-pup-maroon"
+                          className="h-9 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-xs focus-visible:ring-1 focus-visible:ring-pup-maroon"
                           value={quickAdd.code}
                           onChange={(e) =>
                             setQuickAdd((prev) => ({
@@ -412,14 +412,14 @@ export default function BulkImportTab({
                       <tr
                         key={row.index}
                         className={cn(
-                          "group h-[52px] border-b-[0.5px] border-gray-100 dark:border-white/10 last:border-b-0 transition-all duration-fast hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none",
+                          "group h-[52px] border-b-[0.5px] border-border dark:border-border last:border-b-0 transition-all duration-fast hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none",
                           row.error && "bg-red-50/40 dark:bg-red-500/5 hover:bg-red-50/60 dark:hover:bg-red-500/10"
                         )}
                       >
                         <td className={`p-4 text-center ${row.error ? "border-l-4 border-l-red-500" : ""}`}>
                           <input
                             type="checkbox"
-                            className="h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border-gray-300 text-pup-maroon dark:text-primary accent-pup-maroon focus:ring-pup-maroon disabled:cursor-not-allowed disabled:opacity-30 dark:text-primary dark:border-white/10"
+                            className="h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border-border text-pup-maroon dark:text-primary accent-pup-maroon focus:ring-pup-maroon disabled:cursor-not-allowed disabled:opacity-30 dark:text-primary dark:border-border"
                             checked={!!importSelected[row.index]}
                             onChange={() => toggleImportRowSelected(row.index)}
                             disabled={!!row.error || isEditing}
@@ -431,7 +431,7 @@ export default function BulkImportTab({
                         <td className="p-4">
                           {isEditing ? (
                             <Select
-                              className="h-9 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-3 text-xs font-normal text-gray-700 dark:text-zinc-200 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
+                              className="h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-3 text-xs font-normal text-gray-700 dark:text-zinc-200 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
                               value={editData.category}
                               onChange={(e) =>
                                 setEditData((prev) => ({
@@ -462,7 +462,7 @@ export default function BulkImportTab({
                         <td className="p-4">
                           {isEditing ? (
                             <Input
-                              className="h-9 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
+                              className="h-9 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
                               value={editData.name}
                               onChange={(e) =>
                                 setEditData((prev) => ({
@@ -493,7 +493,7 @@ export default function BulkImportTab({
                                     </span>
                                   )}
                                   {row.complianceCategory && (
-                                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium text-gray-500 dark:text-zinc-400 bg-gray-100 dark:bg-zinc-800">
+                                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium text-gray-900 dark:text-zinc-300 bg-gray-100 dark:bg-zinc-800">
                                       {row.complianceCategory}
                                     </span>
                                   )}
@@ -506,7 +506,7 @@ export default function BulkImportTab({
                           {isEditing ? (
                             editData.category.toLowerCase() === "section" ? (
                               <Select
-                                className="h-9 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-3 text-xs font-normal text-gray-700 dark:text-zinc-200 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 cursor-pointer"
+                                className="h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-3 text-xs font-normal text-gray-700 dark:text-zinc-200 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 cursor-pointer"
                                 value={editData.code}
                                 onChange={(e) =>
                                   setEditData((prev) => ({
@@ -524,7 +524,7 @@ export default function BulkImportTab({
                               </Select>
                             ) : (
                               <Input
-                                className="h-9 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-xs focus-visible:ring-1 focus-visible:ring-pup-maroon"
+                                className="h-9 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-xs focus-visible:ring-1 focus-visible:ring-pup-maroon"
                                 value={editData.code}
                                 onChange={(e) =>
                                   setEditData((prev) => ({
@@ -536,7 +536,7 @@ export default function BulkImportTab({
                               />
                             )
                           ) : (
-                            <div className="text-xs text-gray-500 dark:text-zinc-400">
+                            <div className="text-xs text-gray-900 dark:text-zinc-300">
                               {row.code || "—"}
                             </div>
                           )}
@@ -563,7 +563,7 @@ export default function BulkImportTab({
                                     type="button"
                                     onClick={cancelEdit}
                                     aria-label="Cancel Edit"
-                                    className="w-7 h-7 rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center cursor-pointer active:scale-95 transition-all shadow-xs"
+                                    className="w-7 h-7 rounded-lg border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center cursor-pointer active:scale-95 transition-all shadow-xs"
                                   >
                                     <HugeIcon className="ph-bold ph-x text-[14px]" />
                                   </button>
@@ -626,8 +626,8 @@ export default function BulkImportTab({
             </div>
 
             {importRows.length > 0 && (
-              <div className="flex items-center justify-between border-t border-gray-100 dark:border-white/10 bg-white dark:bg-card p-4 px-6 mt-auto select-none">
-                <div className="flex items-center gap-6 text-xs text-gray-500 dark:text-zinc-400 select-none">
+              <div className="flex items-center justify-between border-t border-border dark:border-border bg-white dark:bg-card p-4 px-6 mt-auto select-none">
+                <div className="flex items-center gap-6 text-xs text-gray-900 dark:text-zinc-300 select-none">
                   <span>
                     Showing {paginatedRows.length} of {filteredRows.length.toLocaleString()}
                   </span>
@@ -660,12 +660,12 @@ export default function BulkImportTab({
                     size="sm"
                     disabled={displayPage <= 1}
                     onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                    className="text-xs text-gray-500 dark:text-zinc-400 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
+                    className="text-xs text-gray-900 dark:text-zinc-300 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
                   >
                     Prev
                   </Button>
 
-                  <div className="h-8 w-8 rounded-xl border border-gray-200 dark:border-white/10 flex items-center justify-center text-xs font-bold text-gray-800 dark:text-zinc-200 bg-white dark:bg-zinc-900">
+                  <div className="h-8 w-8 rounded-xl border border-border dark:border-border flex items-center justify-center text-xs font-bold text-gray-800 dark:text-zinc-200 bg-white dark:bg-zinc-900">
                     {displayPage}
                   </div>
 
@@ -674,7 +674,7 @@ export default function BulkImportTab({
                     size="sm"
                     disabled={displayPage >= totalPages}
                     onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                    className="text-xs text-gray-500 dark:text-zinc-400 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
+                    className="text-xs text-gray-900 dark:text-zinc-300 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
                   >
                     Next
                   </Button>
@@ -684,8 +684,8 @@ export default function BulkImportTab({
          </>
         )
       })()}
-            <div className="flex items-center justify-between border-t border-gray-100 dark:border-white/10 bg-gray-50/40 dark:bg-zinc-900/30 p-4 px-6 rounded-b-2xl">
-              <p className="max-w-md text-[10px] font-medium text-gray-500 dark:text-zinc-400">
+            <div className="flex items-center justify-between border-t border-border dark:border-border bg-gray-50/40 dark:bg-zinc-900/30 p-4 px-6 rounded-b-2xl">
+              <p className="max-w-md text-[10px] font-medium text-gray-900 dark:text-zinc-300">
                 Only valid and selected rows will be committed to the database. Invalid rows are
                 automatically excluded. Duplicate records (matching name or code) will be ignored by
                 the system.
@@ -695,7 +695,7 @@ export default function BulkImportTab({
                   variant="outline"
                   size="sm"
                   onClick={resetImport}
-                  className="flex h-10 items-center justify-center rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
+                  className="flex h-10 items-center justify-center rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
                 >
                   Cancel
                 </Button>
@@ -714,12 +714,12 @@ export default function BulkImportTab({
         <div className="animate-fade-up flex flex-1 min-h-[500px] flex-col items-center justify-center bg-white dark:bg-card">
           <div className="flex max-w-sm flex-col items-center gap-6 text-center">
             <div className="relative">
-              <div className="h-20 w-20 animate-spin rounded-full border-4 border-gray-200 border-t-pup-maroon dark:border-white/10"></div>
+              <div className="h-20 w-20 animate-spin rounded-full border-4 border-border border-t-pup-maroon dark:border-border"></div>
               <HugeIcon  className="ph-duotone ph-database absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-xl text-pup-maroon dark:text-primary"></HugeIcon>
             </div>
             <div>
               <h3 className="text-xl font-semibold text-gray-900 dark:text-zinc-50">Adding Records</h3>
-              <p className="mt-2 text-sm font-medium text-gray-500 dark:text-zinc-400">
+              <p className="mt-2 text-sm font-medium text-gray-900 dark:text-zinc-300">
                 Writing validated entries to the system. Please do not close the window.
               </p>
             </div>
@@ -736,14 +736,14 @@ export default function BulkImportTab({
 
             <div className="space-y-2">
               <h3 className="text-xl font-semibold tracking-tight text-gray-900 dark:text-zinc-50">Import Complete</h3>
-              <p className="text-sm font-medium text-gray-500 dark:text-zinc-400">
+              <p className="text-sm font-medium text-gray-900 dark:text-zinc-300">
                 The batch of records has been successfully merged into the{" "}
                 <span className="font-semibold text-pup-maroon dark:text-primary">system</span>. All records are
                 now active.
               </p>
             </div>
 
-            <div className="grid w-full grid-cols-2 gap-px overflow-hidden rounded-2xl border border-gray-200 bg-gray-200 shadow-sm dark:border-white/10 dark:shadow-none dark:bg-zinc-700">
+            <div className="grid w-full grid-cols-2 gap-px overflow-hidden rounded-2xl border border-border bg-gray-200 shadow-sm dark:border-border dark:shadow-none dark:bg-zinc-700">
               <div className="space-y-1 bg-white p-5 dark:bg-card">
                 <div className="text-[10px] font-semibold tracking-widest text-gray-400 dark:text-zinc-500">
                   Success
@@ -752,7 +752,7 @@ export default function BulkImportTab({
                   {importResults?.successCount || 0}
                 </div>
               </div>
-              <div className="space-y-1 border-l border-gray-100 bg-white p-5 dark:border-white/10 dark:bg-card">
+              <div className="space-y-1 border-l border-border bg-white p-5 dark:border-border dark:bg-card">
                 <div className="text-[10px] font-semibold tracking-widest text-gray-400 dark:text-zinc-500">
                   Skipped / Duplicates
                 </div>
@@ -780,7 +780,7 @@ export default function BulkImportTab({
         </div>
       )}
       <Dialog open={showInstructions} onOpenChange={setShowInstructions}>
-        <DialogContent className="w-[680px] max-w-[90vw] sm:max-w-[90vw] overflow-hidden rounded-2xl border border-gray-200 bg-white p-8 shadow-2xl dark:border-white/10 dark:bg-zinc-950 [&>button]:hidden relative flex flex-col max-h-[80vh]">
+        <DialogContent className="w-[680px] max-w-[90vw] sm:max-w-[90vw] overflow-hidden rounded-2xl border border-border bg-white p-8 shadow-2xl dark:border-border dark:bg-zinc-950 [&>button]:hidden relative flex flex-col max-h-[80vh]">
           {/* Close button */}
           <button
             onClick={() => setShowInstructions(false)}
@@ -819,7 +819,7 @@ export default function BulkImportTab({
             </div>
 
             {/* Data Mapping */}
-            <div className="pt-6 mt-6 border-t-[0.5px] border-black/[0.08] dark:border-white/10 mb-6">
+            <div className="pt-6 mt-6 border-t-[0.5px] border-black/[0.08] dark:border-border mb-6">
               <div className="flex items-center gap-[6px] text-[11px] mb-3">
                 <span className="font-semibold tracking-[0.05em] text-[#8E8E93]">Data Mapping</span>
               </div>
@@ -835,26 +835,26 @@ export default function BulkImportTab({
 
                 <div className="text-[11px] text-[#8E8E93] mb-3 normal-case font-sans">CSV Structure Example</div>
                 
-                <span className="font-semibold text-[#111] dark:text-zinc-50 border-b border-black/[0.08] dark:border-white/5 pb-0.5">Category,Name,Code,IsCompliance,IsRequestable,ComplianceCategory</span>
+                <span className="font-semibold text-[#111] dark:text-zinc-50 border-b border-black/[0.08] dark:border-border pb-0.5">Category,Name,Code,IsCompliance,IsRequestable,ComplianceCategory</span>
                 <div className="mt-2 space-y-1">
                   <div className="flex items-center gap-2">
-                    <span className="text-gray-500 dark:text-zinc-400">DocumentType,</span>
+                    <span className="text-gray-900 dark:text-zinc-300">DocumentType,</span>
                     <span className="text-gray-800 dark:text-zinc-300 font-semibold">Transcript of Records,</span>
-                    <span className="text-gray-500 dark:text-zinc-400">,false,true,Academic Records</span>
+                    <span className="text-gray-900 dark:text-zinc-300">,false,true,Academic Records</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-gray-500 dark:text-zinc-400">DocumentType,</span>
+                    <span className="text-gray-900 dark:text-zinc-300">DocumentType,</span>
                     <span className="text-gray-800 dark:text-zinc-300 font-semibold">PSA Birth Certificate,</span>
-                    <span className="text-gray-500 dark:text-zinc-400">,true,false,Admission & Identity</span>
+                    <span className="text-gray-900 dark:text-zinc-300">,true,false,Admission & Identity</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-gray-500 dark:text-zinc-400">Course,</span>
+                    <span className="text-gray-900 dark:text-zinc-300">Course,</span>
                     <span className="text-gray-800 dark:text-zinc-300 font-semibold">Bachelor of Science in IT,</span>
                     <span className="text-[#E5484D] font-semibold">BSIT</span>
                     <span className="text-gray-400 dark:text-zinc-500">,,,</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-gray-500 dark:text-zinc-400">Section,</span>
+                    <span className="text-gray-900 dark:text-zinc-300">Section,</span>
                     <span className="text-gray-800 dark:text-zinc-300 font-semibold">Block 1,</span>
                     <span className="text-[#E5484D] font-semibold">BSIT</span>
                     <span className="text-gray-400 dark:text-zinc-500">,,,</span>
@@ -864,7 +864,7 @@ export default function BulkImportTab({
             </div>
 
             {/* Taxonomy Logic */}
-            <div className="pt-6 mt-6 border-t-[0.5px] border-black/[0.08] dark:border-white/10">
+            <div className="pt-6 mt-6 border-t-[0.5px] border-black/[0.08] dark:border-border">
               <div className="flex items-center gap-[6px] text-[11px] mb-3">
                 <span className="font-semibold tracking-[0.05em] text-[#8E8E93]">Taxonomy Logic</span>
               </div>

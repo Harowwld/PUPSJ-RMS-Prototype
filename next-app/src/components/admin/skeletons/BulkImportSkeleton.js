@@ -15,7 +15,7 @@ export default function BulkImportSkeleton() {
       </div>
 
       {/* Content Area */}
-      <div className="border-t border-gray-100 dark:border-white/10 p-6 flex flex-col flex-1 gap-6 w-full min-h-0">
+      <div className="border-t border-border dark:border-border p-6 flex flex-col flex-1 gap-6 w-full min-h-0">
         {/* Action Buttons */}
         <div className="flex items-center gap-2">
           <Skeleton className="h-9 w-28 rounded-xl dark:bg-muted" />
@@ -23,7 +23,7 @@ export default function BulkImportSkeleton() {
         </div>
 
         {/* Dropzone Skeleton */}
-        <div className="flex flex-col flex-1 items-center justify-center rounded-2xl border-2 border-dashed border-gray-200 dark:border-white/10 bg-[#FAFAFA] dark:bg-zinc-900/40 p-12 text-center min-h-[480px]">
+        <div className="flex flex-col flex-1 items-center justify-center rounded-2xl border-2 border-dashed border-border dark:border-border bg-[#FAFAFA] dark:bg-zinc-900/40 p-12 text-center min-h-[480px]">
           <div className="flex flex-col items-center gap-4 max-w-sm">
             <Skeleton className="h-16 w-16 rounded-2xl dark:bg-muted" />
             <div className="space-y-2 w-full flex flex-col items-center">

@@ -505,11 +505,10 @@ export default function Home() {
 
         <div className="w-full max-w-[550px] p-4 z-10">
           <div
-            className="bg-white rounded-[2.5rem] shadow-xl dark:bg-zinc-900 flex flex-col items-center w-full relative transition-all duration-300 border border-gray-100"
+            className="bg-white rounded-[2.5rem] shadow-xl dark:bg-zinc-900 flex flex-col items-center w-full relative transition-all duration-300 border border-border"
             style={{
               padding: "48px 48px",
               minHeight: "630px",
-              height: "630px",
             }}
           >
             {/* APP ICON WITH CONCENTRIC CIRCLES */}
@@ -688,7 +687,7 @@ export default function Home() {
 
                     {/* Keep me signed in and Forgot Password options (Step 2 only) */}
                     {loginStep === 2 && (
-                      <div className="flex items-center justify-between w-full mt-2.5 select-none animate-in fade-in duration-200">
+                      <div className="flex items-center justify-between w-full mt-6 select-none animate-in fade-in duration-200">
                         {emailError || passwordError || error ? (
                           <div className="flex items-center gap-1.5 text-[#E5484D] animate-in fade-in duration-200 text-left pr-2">
                             <HugeIcon  className="ph-bold ph-warning-circle text-[14px] shrink-0 mt-[1px]"></HugeIcon>
@@ -700,7 +699,7 @@ export default function Home() {
                           <label className="flex items-center gap-2 cursor-pointer">
                             <input
                               type="checkbox"
-                              className="w-4 h-4 m-0 shrink-0 align-middle rounded-full border-gray-300 text-blue-600 focus:ring-blue-600 accent-blue-600"
+                              className="w-4 h-4 m-0 shrink-0 align-middle rounded-full border-border text-blue-600 focus:ring-blue-600 accent-blue-600"
                             />
                             <span className="text-[13px] text-[#1D1D1F] dark:text-zinc-300">Keep me signed in</span>
                           </label>
@@ -721,7 +720,7 @@ export default function Home() {
 
                     {/* Student Sign Up Link (Step 1 only) */}
                     {loginStep === 1 && (
-                      <div className="mt-2.5 flex flex-wrap items-center animate-in fade-in duration-200">
+                      <div className="mt-6 flex flex-wrap items-center animate-in fade-in duration-200">
                         <button
                           type="button"
                           onClick={() => {
@@ -844,7 +843,7 @@ export default function Home() {
                         forgotError ? "has-error" : ""
                       }`}>
                         {/* Challenge Question select wrapper */}
-                        <div className="field-wrapper border-b border-gray-100 dark:border-zinc-700/50 select-wrapper active">
+                        <div className="field-wrapper border-b border-border dark:border-border/50 select-wrapper active">
                           <label className="text-gray-400 dark:text-zinc-500">Challenge Question</label>
                           <Select
                             className="border-none shadow-none bg-transparent hover:bg-transparent focus:ring-0 dark:border-none dark:bg-transparent dark:hover:bg-transparent h-[52px] pt-[16px] px-[14px] text-[15px] font-normal"
@@ -858,7 +857,7 @@ export default function Home() {
                         </div>
 
                         {/* Security Answer input */}
-                        <div className={`field-wrapper border-b border-gray-100 dark:border-zinc-700/50 ${answerFocused || forgotAnswer.length > 0 ? "active" : ""}`}>
+                        <div className={`field-wrapper border-b border-border dark:border-border/50 ${answerFocused || forgotAnswer.length > 0 ? "active" : ""}`}>
                           <label>Security Answer</label>
                           <Input
                             type="password"
@@ -876,7 +875,7 @@ export default function Home() {
                         </div>
 
                         {/* New Password input */}
-                        <div className={`field-wrapper border-b border-gray-100 dark:border-zinc-700/50 ${newPassFocused || forgotNewPassword.length > 0 ? "active" : ""}`}>
+                        <div className={`field-wrapper border-b border-border dark:border-border/50 ${newPassFocused || forgotNewPassword.length > 0 ? "active" : ""}`}>
                           <label>New Password</label>
                           <Input
                             type="password"
@@ -981,7 +980,7 @@ export default function Home() {
                       studentSignupError ? "has-error" : ""
                     }`}>
                       {/* First Name & Last Name (2 columns) */}
-                      <div className="flex w-full border-b border-gray-100 dark:border-zinc-700/50 divide-x divide-gray-100 dark:divide-zinc-700/50">
+                      <div className="flex w-full border-b border-border dark:border-border/50 divide-x divide-border dark:divide-border/50">
                         <div className="flex-1 min-w-0">
                           <div className={`field-wrapper ${firstNameFocused || studentSignup.firstName.length > 0 ? "active" : ""}`}>
                             <label>First Name</label>
@@ -1021,7 +1020,7 @@ export default function Home() {
                       </div>
 
                       {/* Middle Name (Optional) */}
-                      <div className={`field-wrapper border-b border-gray-100 dark:border-zinc-700/50 ${middleNameFocused || studentSignup.middleName.length > 0 ? "active" : ""}`}>
+                      <div className={`field-wrapper border-b border-border dark:border-border/50 ${middleNameFocused || studentSignup.middleName.length > 0 ? "active" : ""}`}>
                         <label>Middle Name (Optional)</label>
                         <Input
                           type="text"
@@ -1038,7 +1037,7 @@ export default function Home() {
                       </div>
 
                       {/* Email Address */}
-                      <div className={`field-wrapper border-b border-gray-100 dark:border-zinc-700/50 ${emailSignupFocused || studentSignup.email.length > 0 ? "active" : ""}`}>
+                      <div className={`field-wrapper border-b border-border dark:border-border/50 ${emailSignupFocused || studentSignup.email.length > 0 ? "active" : ""}`}>
                         <label>Email Address</label>
                         <Input
                           type="email"
@@ -1056,7 +1055,7 @@ export default function Home() {
                       </div>
 
                       {/* Password & Confirm Password (2 columns) */}
-                      <div className="flex w-full divide-x divide-gray-100 dark:divide-zinc-700/50">
+                      <div className="flex w-full divide-x divide-border dark:divide-border/50">
                         <div className="flex-1 min-w-0">
                           <div className={`field-wrapper ${signupPassFocused || studentSignup.password.length > 0 ? "active" : ""}`}>
                             <label>Password (8+ chars)</label>
@@ -1178,7 +1177,7 @@ export default function Home() {
                 className="w-[370px] p-0 rounded-2xl bg-white/95 dark:bg-zinc-900/95 backdrop-blur-2xl border border-black/[0.08] dark:border-white/[0.12] shadow-[0_24px_48px_-12px_rgba(0,0,0,0.18)] dark:shadow-[0_24px_48px_-12px_rgba(0,0,0,0.4)] overflow-hidden animate-in fade-in-0 zoom-in-95 duration-200"
               >
                 {/* Header */}
-                <div className="px-4 py-3 border-b border-gray-100 dark:border-zinc-800 flex items-center justify-between bg-gray-50/60 dark:bg-zinc-800/40">
+                <div className="px-4 py-3 border-b border-border dark:border-border flex items-center justify-between bg-gray-50/60 dark:bg-zinc-800/40">
                   <div className="flex items-center gap-2">
                     
                     <div>
@@ -1226,7 +1225,7 @@ export default function Home() {
                 </div>
 
                 {/* Footer info tip */}
-                <div className="px-3.5 py-2 bg-gray-50/70 dark:bg-zinc-800/40 border-t border-gray-100 dark:border-zinc-800/60 flex items-center justify-between text-[10px] text-gray-400 dark:text-zinc-400">
+                <div className="px-3.5 py-2 bg-gray-50/70 dark:bg-zinc-800/40 border-t border-border dark:border-border/60 flex items-center justify-between text-[10px] text-gray-400 dark:text-zinc-400">
                   <span className="flex items-center gap-1">
                     <HugeIcon  className="ph-bold ph-info text-xs"></HugeIcon>
                     1-click instant fill & sign in
@@ -1241,7 +1240,7 @@ export default function Home() {
         </div>
 
         {/* FIXED FOOTER */}
-        <div className="absolute bottom-0 left-0 right-0 bg-[#f2f2f7] dark:bg-zinc-900 border-t border-gray-200 dark:border-zinc-800 py-6 px-8 flex justify-center text-[11px] text-[#8E8E93] select-none font-sans z-0">
+        <div className="absolute bottom-0 left-0 right-0 bg-[#f2f2f7] dark:bg-zinc-900 border-t border-border dark:border-border py-6 px-8 flex justify-center text-[11px] text-[#8E8E93] select-none font-sans z-0">
           <div className="w-full max-w-[980px] flex justify-center items-center text-center">
             <span>© 2026 Polytechnic University of the Philippines. All rights reserved.</span>
           </div>
@@ -1251,7 +1250,7 @@ export default function Home() {
         <Dialog open={show2FAModal} onOpenChange={(open) => {
           if (!twoFactorLoading) setShow2FAModal(open);
         }}>
-          <DialogContent className="max-w-md rounded-[20px] border-gray-100 bg-white dark:border-zinc-800 dark:bg-zinc-900">
+          <DialogContent className="max-w-md rounded-[20px] border-border bg-white dark:border-border dark:bg-zinc-900">
             <DialogHeader>
               <DialogTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
                 Two-Factor Authentication
@@ -1275,7 +1274,7 @@ export default function Home() {
                 <Input
                   type="text"
                   placeholder="000000, Recovery Code, or Serial key"
-                  className="w-full bg-white border border-gray-300 rounded-[10px] text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E5484D] focus-visible:border-gray-300 text-center tracking-widest font-semibold h-12 text-lg dark:bg-zinc-800 dark:border-zinc-700 dark:focus-visible:ring-[#E5484D] dark:focus-visible:border-zinc-700 dark:text-zinc-100"
+                  className="w-full bg-white border border-border rounded-[10px] text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E5484D] focus-visible:border-border text-center tracking-widest font-semibold h-12 text-lg dark:bg-zinc-800 dark:border-border dark:focus-visible:ring-[#E5484D] dark:focus-visible:border-zinc-700 dark:text-zinc-100"
                   value={twoFactorCode}
                   onChange={(e) => setTwoFactorCode(e.target.value)}
                   autoFocus

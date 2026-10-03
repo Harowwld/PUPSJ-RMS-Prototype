@@ -6,7 +6,7 @@ export default function SlaKpiSkeleton() {
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-3 items-stretch relative z-20 w-full select-none">
       {/* KPI Card 1 */}
-      <div className="relative overflow-hidden rounded-xl border border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-zinc-900/30 p-4 h-full flex flex-col justify-between">
+      <div className="relative overflow-hidden rounded-xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 p-4 h-full flex flex-col justify-between">
         <div className="space-y-1">
           <Skeleton className="h-4 w-32 rounded dark:bg-muted" />
           <Skeleton className="h-7 w-20 rounded dark:bg-muted" />
@@ -18,7 +18,7 @@ export default function SlaKpiSkeleton() {
       </div>
 
       {/* KPI Card 2 - Satisfaction */}
-      <div className="relative overflow-hidden rounded-xl border border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-zinc-900/30 p-4 h-full flex flex-col justify-between">
+      <div className="relative overflow-hidden rounded-xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 p-4 h-full flex flex-col justify-between">
         <div className="space-y-1">
           <Skeleton className="h-4 w-28 rounded dark:bg-muted" />
           <Skeleton className="h-7 w-20 rounded dark:bg-muted" />
@@ -30,7 +30,7 @@ export default function SlaKpiSkeleton() {
       </div>
 
       {/* KPI Card 3 - Total */}
-      <div className="relative overflow-hidden rounded-xl border border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-zinc-900/30 p-4 h-full flex flex-col justify-between">
+      <div className="relative overflow-hidden rounded-xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 p-4 h-full flex flex-col justify-between">
         <div className="space-y-1">
           <Skeleton className="h-4 w-28 rounded dark:bg-muted" />
           <Skeleton className="h-7 w-20 rounded dark:bg-muted" />

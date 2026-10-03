@@ -476,7 +476,7 @@ export default function DigitizationComplianceTab({
   return (
     <div className="flex flex-col flex-1 h-full min-h-0 w-full gap-6 animate-fade-up font-jakarta">
       {/* Unified Single Card Container: Header, Metrics, Filters, Target Metrics & Program Breakdown Table */}
-      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none isolate font-jakarta mb-4 min-h-0 flex-1">
+      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4 min-h-0 flex-1">
         <PageHeader
           icon="ph-chart-pie"
           title="Compliance Analysis"
@@ -484,7 +484,7 @@ export default function DigitizationComplianceTab({
           showBorder={false}
           className="p-6"
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
-          descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
+          descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
           actions={
             <div className="flex items-center gap-2">
               <RefreshButton 
@@ -501,7 +501,7 @@ export default function DigitizationComplianceTab({
                   variant="outline"
                   onClick={downloadCsv}
                   disabled={loading || !data || isExportingCsv}
-                  className="flex h-10 items-center justify-center rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
+                  className="flex h-10 items-center justify-center rounded-xl! border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
                 >
                   {isExportingCsv ? (
                     <HugeIcon  className="ph-bold ph-spinner animate-spin text-[16px]"></HugeIcon>
@@ -552,12 +552,12 @@ export default function DigitizationComplianceTab({
                       "relative overflow-hidden rounded-[18px] border cursor-pointer select-none transition-all shadow-none flex flex-col justify-between min-h-[110px] bg-gray-50 dark:bg-zinc-900",
                       selectedKpi === "completeness"
                         ? "border-red-500/50 ring-1 ring-red-500/20"
-                        : "border-gray-100 dark:border-white/5"
+                        : "border-border dark:border-border"
                     )}
                   >
                     <div className="flex justify-between items-start p-4 pb-0">
                       <div className="flex items-center gap-1.5">
-                        <span className="text-[13px] font-medium text-gray-500 dark:text-zinc-400 capitalize">
+                        <span className="text-[13px] font-medium text-gray-900 dark:text-zinc-300 capitalize">
                           Completeness
                         </span>
                         <TooltipProvider delayDuration={200}>
@@ -567,13 +567,13 @@ export default function DigitizationComplianceTab({
                             </TooltipTrigger>
                             <TooltipContent 
                               side="right" 
-                              className="max-w-[280px] bg-white dark:bg-zinc-900 text-gray-900 dark:text-zinc-100 p-3 rounded-xl shadow-xl border border-gray-200 dark:border-white/10 text-xs font-normal"
+                              className="max-w-[280px] bg-white dark:bg-zinc-900 text-gray-900 dark:text-zinc-100 p-3 rounded-xl shadow-xl border border-border dark:border-border text-xs font-normal"
                             >
                               <p className="font-semibold text-pup-maroon dark:text-red-400 mb-1">Digitization Formula</p>
                               <p className="leading-relaxed text-gray-600 dark:text-zinc-300 mb-2">
                                 Percentage of expected mandatory documents uploaded across all active/selected students.
                               </p>
-                              <div className="p-2 bg-gray-50 dark:bg-zinc-800/60 rounded-lg text-[11px] font-mono border border-gray-200/60 dark:border-white/5">
+                              <div className="p-2 bg-gray-50 dark:bg-zinc-800/60 rounded-lg text-[11px] font-mono border border-border/60 dark:border-border">
                                 (Digitized Docs / Expected Docs) × 100
                               </div>
                             </TooltipContent>
@@ -591,20 +591,20 @@ export default function DigitizationComplianceTab({
                           {summary?.percentDigitized ?? 0}%
                         </span>
                       </div>
-                      <HugeIcon className="ph-bold ph-dots-six-vertical cursor-grab active:cursor-grabbing hover:text-gray-400 dark:hover:text-zinc-500 text-gray-300 dark:text-zinc-700 text-lg mb-0.5" />
+                      <HugeIcon className="ph-bold ph-dots-six-vertical cursor-grab active:cursor-grabbing hover:text-black dark:hover:text-white text-gray-900 dark:text-zinc-300 text-xl mb-0.5" />
                     </div>
                   </div>
 
                   {/* Absolute details container */}
                   <div className={cn(
-                    "absolute top-full left-0 right-0 z-[100] mt-2 rounded-xl border border-gray-200 bg-white p-4 shadow-xl dark:border-white/10 dark:bg-zinc-900 transition-all duration-300 ease-in-out origin-top",
+                    "absolute top-full left-0 right-0 z-[100] mt-2 rounded-xl border border-border bg-white p-4 shadow-xl dark:border-border dark:bg-zinc-900 transition-all duration-300 ease-in-out origin-top",
                     selectedKpi === "completeness" ? "scale-y-100 opacity-100 translate-y-0" : "scale-y-95 opacity-0 -translate-y-2 pointer-events-none"
                   )} onClick={(e) => e.stopPropagation()}>
                     <div className="space-y-3">
                       {summary && (
                         <>
                           <div className="grid grid-cols-2 gap-2">
-                            <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-gray-100 dark:border-white/5">
+                            <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-border dark:border-border">
                               <span className="block text-[9px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">Completeness</span>
                               <span className="text-lg font-black text-gray-900 dark:text-zinc-50">{summary.percentDigitized ?? 0}%</span>
                             </div>
@@ -614,7 +614,7 @@ export default function DigitizationComplianceTab({
                             </div>
                           </div>
 
-                          <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-gray-100 dark:border-white/5 flex justify-between items-center text-xs">
+                          <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-border dark:border-border flex justify-between items-center text-xs">
                             <span className="font-semibold text-gray-600 dark:text-zinc-400">Expected Documents</span>
                             <span className="font-bold text-gray-900 dark:text-zinc-50">{summary.totalExpectedDocsCount?.toLocaleString()}</span>
                           </div>
@@ -624,7 +624,7 @@ export default function DigitizationComplianceTab({
                               <h4 className="text-[10px] font-bold text-gray-400 dark:text-zinc-500 mb-1.5 uppercase tracking-wide">Course Completeness</h4>
                               <div className="max-h-32 overflow-y-auto space-y-1 pr-1">
                                 {byCourse.map((c) => (
-                                  <div key={c.courseCode} className="flex justify-between items-center text-[11px] py-1 border-b border-gray-100 dark:border-white/5 text-gray-700 dark:text-zinc-300">
+                                  <div key={c.courseCode} className="flex justify-between items-center text-[11px] py-1 border-b border-border dark:border-border text-gray-700 dark:text-zinc-300">
                                     <span className="truncate max-w-[150px]" title={c.courseCode}>{c.courseCode}</span>
                                     <span className="font-bold text-gray-900 dark:text-zinc-50">{c.percent}%</span>
                                   </div>
@@ -650,11 +650,11 @@ export default function DigitizationComplianceTab({
                       "relative overflow-hidden rounded-[18px] border cursor-pointer select-none transition-all shadow-none flex flex-col justify-between min-h-[110px] bg-gray-50 dark:bg-zinc-900",
                       selectedKpi === "students"
                         ? "border-blue-500/50 ring-1 ring-blue-500/20"
-                        : "border-gray-100 dark:border-white/5"
+                        : "border-border dark:border-border"
                     )}
                   >
                     <div className="flex justify-between items-start p-4 pb-0">
-                      <span className="text-[13px] font-medium text-gray-500 dark:text-zinc-400 capitalize">
+                      <span className="text-[13px] font-medium text-gray-900 dark:text-zinc-300 capitalize">
                         Students
                       </span>
                       <div className="w-8 h-8 rounded-[10px] flex items-center justify-center text-white shadow-sm shrink-0 bg-[#3b82f6]">
@@ -666,20 +666,20 @@ export default function DigitizationComplianceTab({
                       <span className="text-[28px] font-bold text-gray-900 dark:text-white leading-none tracking-tight">
                         {summary?.totalStudents?.toLocaleString?.() ?? summary?.totalStudents ?? 0}
                       </span>
-                      <HugeIcon className="ph-bold ph-dots-six-vertical cursor-grab active:cursor-grabbing hover:text-gray-400 dark:hover:text-zinc-500 text-gray-300 dark:text-zinc-700 text-lg mb-0.5" />
+                      <HugeIcon className="ph-bold ph-dots-six-vertical cursor-grab active:cursor-grabbing hover:text-black dark:hover:text-white text-gray-900 dark:text-zinc-300 text-xl mb-0.5" />
                     </div>
                   </div>
 
                   {/* Absolute details container */}
                   <div className={cn(
-                    "absolute top-full left-0 right-0 z-[100] mt-2 rounded-xl border border-gray-200 bg-white p-4 shadow-xl dark:border-white/10 dark:bg-zinc-900 transition-all duration-300 ease-in-out origin-top",
+                    "absolute top-full left-0 right-0 z-[100] mt-2 rounded-xl border border-border bg-white p-4 shadow-xl dark:border-border dark:bg-zinc-900 transition-all duration-300 ease-in-out origin-top",
                     selectedKpi === "students" ? "scale-y-100 opacity-100 translate-y-0" : "scale-y-95 opacity-0 -translate-y-2 pointer-events-none"
                   )} onClick={(e) => e.stopPropagation()}>
                     <div className="space-y-3">
                       {summary && (
                         <>
                           <div className="grid grid-cols-2 gap-2">
-                            <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-gray-100 dark:border-white/5">
+                            <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-border dark:border-border">
                               <span className="block text-[9px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">Enrollment</span>
                               <span className="text-lg font-black text-gray-900 dark:text-zinc-50">{summary.totalStudents?.toLocaleString()}</span>
                             </div>
@@ -689,7 +689,7 @@ export default function DigitizationComplianceTab({
                             </div>
                           </div>
 
-                          <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-gray-100 dark:border-white/5 flex justify-between items-center text-xs">
+                          <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-border dark:border-border flex justify-between items-center text-xs">
                             <span className="font-semibold text-gray-600 dark:text-zinc-400">Remaining Partially Digitized</span>
                             <span className="font-bold text-amber-600 dark:text-amber-400">{summary.notDigitizedStudents?.toLocaleString()}</span>
                           </div>
@@ -711,11 +711,11 @@ export default function DigitizationComplianceTab({
                       "relative overflow-hidden rounded-[18px] border cursor-pointer select-none transition-all shadow-none flex flex-col justify-between min-h-[110px] bg-gray-50 dark:bg-zinc-900",
                       selectedKpi === "complete"
                         ? "border-emerald-500/50 ring-1 ring-emerald-500/20"
-                        : "border-gray-100 dark:border-white/5"
+                        : "border-border dark:border-border"
                     )}
                   >
                     <div className="flex justify-between items-start p-4 pb-0">
-                      <span className="text-[13px] font-medium text-gray-500 dark:text-zinc-400 capitalize">
+                      <span className="text-[13px] font-medium text-gray-900 dark:text-zinc-300 capitalize">
                         Complete
                       </span>
                       <div className="w-8 h-8 rounded-[10px] flex items-center justify-center text-white shadow-sm shrink-0 bg-[#22c55e]">
@@ -732,20 +732,20 @@ export default function DigitizationComplianceTab({
                           {(summary?.digitizedStudents ?? summary?.fullyDigitizedStudents ?? 0).toLocaleString()} Done
                         </span>
                       </div>
-                      <HugeIcon className="ph-bold ph-dots-six-vertical cursor-grab active:cursor-grabbing hover:text-gray-400 dark:hover:text-zinc-500 text-gray-300 dark:text-zinc-700 text-lg mb-0.5" />
+                      <HugeIcon className="ph-bold ph-dots-six-vertical cursor-grab active:cursor-grabbing hover:text-black dark:hover:text-white text-gray-900 dark:text-zinc-300 text-xl mb-0.5" />
                     </div>
                   </div>
 
                   {/* Absolute details container */}
                   <div className={cn(
-                    "absolute top-full left-0 right-0 z-[100] mt-2 rounded-xl border border-gray-200 bg-white p-4 shadow-xl dark:border-white/10 dark:bg-zinc-900 transition-all duration-300 ease-in-out origin-top",
+                    "absolute top-full left-0 right-0 z-[100] mt-2 rounded-xl border border-border bg-white p-4 shadow-xl dark:border-border dark:bg-zinc-900 transition-all duration-300 ease-in-out origin-top",
                     selectedKpi === "complete" ? "scale-y-100 opacity-100 translate-y-0" : "scale-y-95 opacity-0 -translate-y-2 pointer-events-none"
                   )} onClick={(e) => e.stopPropagation()}>
                     <div className="space-y-3">
                       {summary && (
                         <>
                           <div className="grid grid-cols-2 gap-2">
-                            <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-gray-100 dark:border-white/5">
+                            <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-border dark:border-border">
                               <span className="block text-[9px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">Fully Digitized</span>
                               <span className="text-lg font-black text-gray-900 dark:text-zinc-50">{(summary?.digitizedStudents ?? summary?.fullyDigitizedStudents ?? 0).toLocaleString()}</span>
                             </div>
@@ -755,7 +755,7 @@ export default function DigitizationComplianceTab({
                             </div>
                           </div>
 
-                          <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-gray-100 dark:border-white/5 flex justify-between items-center text-xs">
+                          <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-border dark:border-border flex justify-between items-center text-xs">
                             <span className="font-semibold text-gray-600 dark:text-zinc-400">Validated student records</span>
                             <span className="font-bold text-emerald-600 dark:text-emerald-400">100% Correct</span>
                           </div>
@@ -775,14 +775,14 @@ export default function DigitizationComplianceTab({
         ) : null}
 
         {/* Navigation Toolbar */}
-        <div className="border-t border-gray-100 dark:border-white/10 p-5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-gray-50/40 dark:bg-zinc-900/30 flex-wrap">
+        <div className="border-t border-border dark:border-border p-5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-gray-50/40 dark:bg-zinc-900/30 flex-wrap">
           {/* Search Input (Left side) */}
           <div className="relative flex-1 sm:w-64 min-w-[200px] max-w-sm group">
             <HugeIcon className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-xs pointer-events-none" />
             <Input
               type="text"
               placeholder="Search Program"
-              className="pl-8 pr-16 h-9 text-xs w-full bg-white dark:bg-zinc-800 border border-gray-200 dark:border-white/10 rounded-xl text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
+              className="pl-8 pr-16 h-9 text-xs w-full bg-white dark:bg-zinc-800 border border-border dark:border-border rounded-xl text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
               value={tableSearch}
               onChange={(e) => setTableSearch(e.target.value)}
             />
@@ -813,7 +813,7 @@ export default function DigitizationComplianceTab({
             />
 
             {/* Validation Requirement Segmented Control */}
-            <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-gray-200/60 dark:border-white/5">
+            <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-border/60 dark:border-border">
               <button
                 type="button"
                 onClick={() => setRequireApproved(false)}
@@ -885,12 +885,12 @@ export default function DigitizationComplianceTab({
             searchQuery={tableSearch}
             onClearSearch={() => setTableSearch("")}
             onClearAll={handleClearAll}
-            className="border-t border-gray-100 dark:border-white/10 bg-white dark:bg-card px-6 py-2.5"
+            className="border-t border-border dark:border-border bg-white dark:bg-card px-6 py-2.5"
           />
         )}
 
         {/* Calculation block skeletons or data */}
-        <div className="p-6 border-t border-gray-100 dark:border-white/10">
+        <div className="p-6 border-t border-border dark:border-border">
           {loading && !data ? (
             <ComplianceCalcSkeleton />
           ) : !error && data ? (() => {
@@ -915,7 +915,7 @@ export default function DigitizationComplianceTab({
                         <div className="text-[10px] font-medium text-gray-400 dark:text-zinc-500 tracking-[0.05em] uppercase mt-[2px]">
                           Requirement Basis
                         </div>
-                        <p className="text-[12px] font-normal text-gray-500 dark:text-zinc-400 max-w-xl mt-[6px] mb-0">
+                        <p className="text-[12px] font-normal text-gray-900 dark:text-zinc-300 max-w-xl mt-[6px] mb-0">
                           {meta?.definitions?.expectedCountFormula || "All required documents based on program configuration."}
                         </p>
                       </div>
@@ -963,12 +963,12 @@ export default function DigitizationComplianceTab({
         {loading && !data ? (
           <ComplianceTableSkeleton rowCount={6} embedded={true} />
         ) : error ? (
-          <div className="flex min-h-[380px] flex-col items-center justify-center border-t border-gray-100 dark:border-white/10 bg-transparent text-center p-6 rounded-b-2xl">
-            <Empty className="flex flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400">
+          <div className="flex min-h-[380px] flex-col items-center justify-center border-t border-border dark:border-border bg-transparent text-center p-6 rounded-b-2xl">
+            <Empty className="flex flex-col items-center justify-center border-0 text-center text-gray-900 dark:text-zinc-300">
               <EmptyHeader className="flex flex-col items-center gap-0">
                 <div className="relative mb-6">
                   <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                  <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
+                  <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
                     <HugeIcon  className="ph-duotone ph-warning-circle text-3xl text-pup-maroon dark:text-primary" />
                   </EmptyMedia>
                 </div>
@@ -980,7 +980,7 @@ export default function DigitizationComplianceTab({
                   variant="outline" 
                   size="sm" 
                   onClick={() => load(true)}
-                  className="mt-6 flex h-10 items-center justify-center rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-6 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-colors hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer" 
+                  className="mt-6 flex h-10 items-center justify-center rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-6 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-colors hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer" 
                 >
                   Retry
                 </Button>
@@ -989,10 +989,10 @@ export default function DigitizationComplianceTab({
           </div>
         ) : data ? (
           <div className={cn(
-            "flex flex-1 flex-col min-h-0 overflow-hidden rounded-b-2xl border-t border-gray-100 dark:border-white/10", 
+            "flex flex-1 flex-col min-h-0 overflow-hidden rounded-b-2xl border-t border-border dark:border-border", 
             (loading && !manualLoading) ? "opacity-40 blur-[1px] grayscale-[0.1]" : "opacity-100"
           )}>
-            <div className="flex items-center justify-between gap-6 px-6 py-3.5 bg-gray-50/40 dark:bg-zinc-900/30 border-b border-gray-100 dark:border-white/10">
+            <div className="flex items-center justify-between gap-6 px-6 py-3.5 bg-gray-50/40 dark:bg-zinc-900/30 border-b border-border dark:border-border">
               <div className="flex items-center gap-2.5">
                 <h4 className="text-xs font-semibold text-gray-900 dark:text-zinc-100 tracking-[-0.01em] m-0">
                   Program Breakdown
@@ -1007,7 +1007,7 @@ export default function DigitizationComplianceTab({
               {sortedByCourse.length > 0 ? (
                 <table className="min-w-full text-sm">
                   <thead className="sticky top-0 z-10 bg-white backdrop-blur-sm dark:bg-card">
-                    <tr className="hover:bg-transparent text-left border-b border-gray-100 dark:border-white/5">
+                    <tr className="hover:bg-transparent text-left border-b border-border dark:border-border">
                       <th className="p-4 px-6">
                         <button
                           onClick={() => handleSort("courseCode")}
@@ -1044,7 +1044,7 @@ export default function DigitizationComplianceTab({
                   </thead>
                   <tbody className="bg-transparent">
                     {paginatedByCourse.map((row) => (
-                      <tr key={row.courseCode} className="h-[48px] border-b-[0.5px] border-gray-100 dark:border-white/10 last:border-b-0 group transition-all duration-fast hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/[0.02]">
+                      <tr key={row.courseCode} className="h-[48px] border-b-[0.5px] border-border dark:border-border last:border-b-0 group transition-all duration-fast hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/[0.02]">
                         <td className="p-4 px-6 text-[13px] font-medium text-gray-900 dark:text-zinc-50 tracking-[-0.01em]">
                           {row.courseCode || "—"}
                         </td>
@@ -1085,12 +1085,12 @@ export default function DigitizationComplianceTab({
                   <EmptyHeader className="flex flex-col items-center gap-0">
                     <div className="relative mb-6">
                       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-36 h-36 rounded-full bg-gray-100/50 dark:bg-zinc-800/30"></div>
-                      <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
+                      <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
                         <HugeIcon  className="ph-duotone ph-magnifying-glass text-xl text-gray-300 dark:text-zinc-600"></HugeIcon>
                       </EmptyMedia>
                     </div>
                     <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">No data found</EmptyTitle>
-                    <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400">
+                    <EmptyDescription className="max-w-xs text-sm font-medium text-gray-900 dark:text-zinc-300">
                       {tableSearch 
                         ? `No results found for "${tableSearch}".` 
                         : "No student records available to analyze."}
@@ -1100,7 +1100,7 @@ export default function DigitizationComplianceTab({
                         variant="outline" 
                         onClick={handleClearAll}
                         title="Reset Filters"
-                        className="mt-6 flex h-10 items-center justify-center rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
+                        className="mt-6 flex h-10 items-center justify-center rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                       >
                         Reset
                       </Button>
@@ -1113,7 +1113,7 @@ export default function DigitizationComplianceTab({
             {/* Standard Table Pagination Footer */}
             {sortedByCourse.length > 0 && (
               <div className="flex items-center justify-between border-t border-[#e5e5ea] dark:border-[#3a3a3c] bg-white dark:bg-[#1c1c1e] p-4 px-6 rounded-b-2xl mt-auto select-none">
-                <div className="flex items-center gap-6 text-xs text-gray-500 dark:text-zinc-400 select-none">
+                <div className="flex items-center gap-6 text-xs text-gray-900 dark:text-zinc-300 select-none">
                   <span>
                     Showing {paginatedByCourse.length} of {sortedByCourse.length.toLocaleString()}
                   </span>
@@ -1146,12 +1146,12 @@ export default function DigitizationComplianceTab({
                     size="sm"
                     disabled={page <= 1}
                     onClick={() => setPage((p) => Math.max(1, p - 1))}
-                    className="text-xs text-gray-500 dark:text-zinc-400 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
+                    className="text-xs text-gray-900 dark:text-zinc-300 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
                   >
                     Prev
                   </Button>
 
-                  <div className="h-8 w-8 rounded-xl border border-[#e5e5ea] dark:border-zinc-800 flex items-center justify-center text-xs font-bold text-gray-800 dark:text-zinc-200 bg-white dark:bg-zinc-900">
+                  <div className="h-8 w-8 rounded-xl border border-[#e5e5ea] dark:border-border flex items-center justify-center text-xs font-bold text-gray-800 dark:text-zinc-200 bg-white dark:bg-zinc-900">
                     {page}
                   </div>
 
@@ -1160,7 +1160,7 @@ export default function DigitizationComplianceTab({
                     size="sm"
                     disabled={page >= totalPages}
                     onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                    className="text-xs text-gray-500 dark:text-zinc-400 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
+                    className="text-xs text-gray-900 dark:text-zinc-300 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
                   >
                     Next
                   </Button>
@@ -1186,7 +1186,7 @@ export default function DigitizationComplianceTab({
       >
         <DialogContent 
           hideClose={true}
-          className="flex h-[90vh] w-[96vw] max-w-[96vw] flex-col overflow-hidden border border-gray-200 bg-gray-100 p-0 shadow-2xl transition-all duration-normal ease-standard xl:max-w-[1400px] rounded-2xl dark:border-white/10 dark:bg-muted"
+          className="flex h-[90vh] w-[96vw] max-w-[96vw] flex-col overflow-hidden border border-border bg-gray-100 p-0 shadow-2xl transition-all duration-normal ease-standard xl:max-w-[1400px] rounded-2xl dark:border-border dark:bg-muted"
         >
           <DialogHeader 
             className="shrink-0 bg-gray-50 dark:bg-white/5"
@@ -1259,7 +1259,7 @@ export default function DigitizationComplianceTab({
             ) : (
               <div className="flex flex-1 items-center justify-center bg-white p-6 dark:bg-card">
                 <div className="max-w-lg text-center">
-                  <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-gray-50 dark:border-white/10 dark:bg-card">
+                  <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-border bg-gray-50 dark:border-border dark:bg-card">
                     <HugeIcon  className="ph-bold ph-circle-notch animate-spin text-xl text-pup-maroon dark:text-primary"></HugeIcon>
                   </div>
                   <p className="text-sm font-semibold text-gray-600 dark:text-zinc-300">
@@ -1270,7 +1270,7 @@ export default function DigitizationComplianceTab({
             )}
           </div>
 
-          <div className="flex shrink-0 items-center bg-white dark:bg-card px-6 py-4 border-t border-gray-100 dark:border-white/10">
+          <div className="flex shrink-0 items-center bg-white dark:bg-card px-6 py-4 border-t border-border dark:border-border">
             <Button
               variant="ghost"
               size="icon"
@@ -1284,7 +1284,7 @@ export default function DigitizationComplianceTab({
               <Button
                 variant="outline"
                 onClick={() => setReportOpen(false)}
-                className="flex h-10 items-center justify-center rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-5 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
+                className="flex h-10 items-center justify-center rounded-xl! border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-5 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
               >
                 Close
               </Button>

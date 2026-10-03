@@ -592,7 +592,7 @@ export default function StudentDirectoryTab({
         className="animate-fade-up font-jakarta flex h-auto w-full flex-col gap-6"
       >
         {/* ONE Single Card Container encapsulating Header, Metrics, Filters, Table & Pagination */}
-        <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none isolate font-jakarta mb-4 min-h-0 flex-1">
+        <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4 min-h-0 flex-1">
           {/* 1. Page Header */}
           <PageHeader
             icon="ph-users"
@@ -601,7 +601,7 @@ export default function StudentDirectoryTab({
             showBorder={false}
             className="p-6"
             titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
-            descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
+            descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
             actions={
               <div className="flex items-center gap-2">
                 <RefreshButton
@@ -618,7 +618,7 @@ export default function StudentDirectoryTab({
                     variant="outline"
                     onClick={handleExportCSV}
                     disabled={filteredStudents.length === 0}
-                    className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                    className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                   >
                     Export
                   </Button>
@@ -647,12 +647,12 @@ export default function StudentDirectoryTab({
                   "relative overflow-hidden rounded-[18px] border cursor-pointer select-none transition-all shadow-none flex flex-col justify-between min-h-[110px] bg-gray-50 dark:bg-zinc-900",
                   selectedKpi === "students"
                     ? "border-emerald-500/50 ring-1 ring-emerald-500/20"
-                    : "border-gray-100 dark:border-white/5"
+                    : "border-border dark:border-border"
                 )}
               >
                 <div className="flex justify-between items-start p-4 pb-0">
                   <div className="flex flex-col gap-1">
-                    <span className="text-[13px] font-medium text-gray-500 dark:text-zinc-400 capitalize">
+                    <span className="text-[13px] font-medium text-gray-900 dark:text-zinc-300 capitalize">
                       Active Students
                     </span>
                   </div>
@@ -670,14 +670,14 @@ export default function StudentDirectoryTab({
                       Enrolled
                     </span>
                   </div>
-                  <HugeIcon className="ph-bold ph-dots-six-vertical cursor-grab active:cursor-grabbing hover:text-gray-400 dark:hover:text-zinc-500 text-gray-300 dark:text-zinc-700 text-lg mb-0.5" />
+                  <HugeIcon className="ph-bold ph-dots-six-vertical cursor-grab active:cursor-grabbing hover:text-black dark:hover:text-white text-gray-900 dark:text-zinc-300 text-xl mb-0.5" />
                 </div>
               </div>
 
               {/* Absolute details container */}
               <div
                 className={cn(
-                  "absolute top-full left-0 right-0 z-[100] mt-2 rounded-xl border border-gray-200 bg-white p-4 shadow-xl dark:border-white/10 dark:bg-zinc-900 transition-all duration-300 ease-in-out origin-top",
+                  "absolute top-full left-0 right-0 z-[100] mt-2 rounded-xl border border-border bg-white p-4 shadow-xl dark:border-border dark:bg-zinc-900 transition-all duration-300 ease-in-out origin-top",
                   selectedKpi === "students"
                     ? "scale-y-100 opacity-100 translate-y-0"
                     : "scale-y-95 opacity-0 -translate-y-2 pointer-events-none"
@@ -686,7 +686,7 @@ export default function StudentDirectoryTab({
               >
                 <div className="space-y-3">
                   <div className="grid grid-cols-2 gap-2">
-                    <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-gray-100 dark:border-white/5">
+                    <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-border dark:border-border">
                       <span className="block text-[9px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">
                         Active Students
                       </span>
@@ -717,7 +717,7 @@ export default function StudentDirectoryTab({
                         kpiStats.topPrograms.map(([code, count]) => (
                           <div
                             key={code}
-                            className="flex justify-between items-center text-[11px] py-1 border-b border-gray-100 dark:border-white/5 text-gray-700 dark:text-zinc-300"
+                            className="flex justify-between items-center text-[11px] py-1 border-b border-border dark:border-border text-gray-700 dark:text-zinc-300"
                           >
                             <span className="truncate max-w-[170px] font-medium" title={code}>
                               {code}
@@ -744,12 +744,12 @@ export default function StudentDirectoryTab({
                   "relative overflow-hidden rounded-[18px] border cursor-pointer select-none transition-all shadow-none flex flex-col justify-between min-h-[110px] bg-gray-50 dark:bg-zinc-900",
                   selectedKpi === "programs"
                     ? "border-blue-500/50 ring-1 ring-blue-500/20"
-                    : "border-gray-100 dark:border-white/5"
+                    : "border-border dark:border-border"
                 )}
               >
                 <div className="flex justify-between items-start p-4 pb-0">
                   <div className="flex flex-col gap-1">
-                    <span className="text-[13px] font-medium text-gray-500 dark:text-zinc-400 capitalize">
+                    <span className="text-[13px] font-medium text-gray-900 dark:text-zinc-300 capitalize">
                       Academic Programs
                     </span>
                   </div>
@@ -767,14 +767,14 @@ export default function StudentDirectoryTab({
                       Degree Tracks
                     </span>
                   </div>
-                  <HugeIcon className="ph-bold ph-dots-six-vertical cursor-grab active:cursor-grabbing hover:text-gray-400 dark:hover:text-zinc-500 text-gray-300 dark:text-zinc-700 text-lg mb-0.5" />
+                  <HugeIcon className="ph-bold ph-dots-six-vertical cursor-grab active:cursor-grabbing hover:text-black dark:hover:text-white text-gray-900 dark:text-zinc-300 text-xl mb-0.5" />
                 </div>
               </div>
 
               {/* Absolute details container */}
               <div
                 className={cn(
-                  "absolute top-full left-0 right-0 z-[100] mt-2 rounded-xl border border-gray-200 bg-white p-4 shadow-xl dark:border-white/10 dark:bg-zinc-900 transition-all duration-300 ease-in-out origin-top",
+                  "absolute top-full left-0 right-0 z-[100] mt-2 rounded-xl border border-border bg-white p-4 shadow-xl dark:border-border dark:bg-zinc-900 transition-all duration-300 ease-in-out origin-top",
                   selectedKpi === "programs"
                     ? "scale-y-100 opacity-100 translate-y-0"
                     : "scale-y-95 opacity-0 -translate-y-2 pointer-events-none"
@@ -783,7 +783,7 @@ export default function StudentDirectoryTab({
               >
                 <div className="space-y-3">
                   <div className="grid grid-cols-2 gap-2">
-                    <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-gray-100 dark:border-white/5">
+                    <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-border dark:border-border">
                       <span className="block text-[9px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">
                         Programs
                       </span>
@@ -814,7 +814,7 @@ export default function StudentDirectoryTab({
                         kpiStats.programsList.map((p) => (
                           <div
                             key={p.code}
-                            className="flex justify-between items-center text-[11px] py-1 border-b border-gray-100 dark:border-white/5 text-gray-700 dark:text-zinc-300"
+                            className="flex justify-between items-center text-[11px] py-1 border-b border-border dark:border-border text-gray-700 dark:text-zinc-300"
                           >
                             <div className="truncate max-w-[170px]" title={p.name || p.code}>
                               <span className="font-bold text-gray-900 dark:text-zinc-50">
@@ -848,12 +848,12 @@ export default function StudentDirectoryTab({
                   "relative overflow-hidden rounded-[18px] border cursor-pointer select-none transition-all shadow-none flex flex-col justify-between min-h-[110px] bg-gray-50 dark:bg-zinc-900",
                   selectedKpi === "documents"
                     ? "border-red-500/50 ring-1 ring-red-500/20"
-                    : "border-gray-100 dark:border-white/5"
+                    : "border-border dark:border-border"
                 )}
               >
                 <div className="flex justify-between items-start p-4 pb-0">
                   <div className="flex flex-col gap-1">
-                    <span className="text-[13px] font-medium text-gray-500 dark:text-zinc-400 capitalize">
+                    <span className="text-[13px] font-medium text-gray-900 dark:text-zinc-300 capitalize">
                       Digitized Files
                     </span>
                   </div>
@@ -871,14 +871,14 @@ export default function StudentDirectoryTab({
                       Repository
                     </span>
                   </div>
-                  <HugeIcon className="ph-bold ph-dots-six-vertical cursor-grab active:cursor-grabbing hover:text-gray-400 dark:hover:text-zinc-500 text-gray-300 dark:text-zinc-700 text-lg mb-0.5" />
+                  <HugeIcon className="ph-bold ph-dots-six-vertical cursor-grab active:cursor-grabbing hover:text-black dark:hover:text-white text-gray-900 dark:text-zinc-300 text-xl mb-0.5" />
                 </div>
               </div>
 
               {/* Absolute details container */}
               <div
                 className={cn(
-                  "absolute top-full left-0 right-0 z-[100] mt-2 rounded-xl border border-gray-200 bg-white p-4 shadow-xl dark:border-white/10 dark:bg-zinc-900 transition-all duration-300 ease-in-out origin-top",
+                  "absolute top-full left-0 right-0 z-[100] mt-2 rounded-xl border border-border bg-white p-4 shadow-xl dark:border-border dark:bg-zinc-900 transition-all duration-300 ease-in-out origin-top",
                   selectedKpi === "documents"
                     ? "scale-y-100 opacity-100 translate-y-0"
                     : "scale-y-95 opacity-0 -translate-y-2 pointer-events-none"
@@ -887,7 +887,7 @@ export default function StudentDirectoryTab({
               >
                 <div className="space-y-3">
                   <div className="grid grid-cols-2 gap-2">
-                    <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-gray-100 dark:border-white/5">
+                    <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-border dark:border-border">
                       <span className="block text-[9px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">
                         Total Files
                       </span>
@@ -918,7 +918,7 @@ export default function StudentDirectoryTab({
                         kpiStats.topDocTypes.map(([type, count]) => (
                           <div
                             key={type}
-                            className="flex justify-between items-center text-[11px] py-1 border-b border-gray-100 dark:border-white/5 text-gray-700 dark:text-zinc-300"
+                            className="flex justify-between items-center text-[11px] py-1 border-b border-border dark:border-border text-gray-700 dark:text-zinc-300"
                           >
                             <span className="truncate max-w-[170px]" title={type}>
                               {type}
@@ -940,7 +940,7 @@ export default function StudentDirectoryTab({
           </Reorder.Group>
 
           {/* 3. Navigation & Filters Toolbar */}
-          <div className="border-t border-gray-100 dark:border-white/10 p-5 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30 select-none">
+          <div className="border-t border-border dark:border-border p-5 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30 select-none">
             {/* Status Segmented Tabs */}
             <div className="flex items-center gap-6 select-none shrink-0">
               <button
@@ -989,7 +989,7 @@ export default function StudentDirectoryTab({
                     setSearchQuery(e.target.value);
                     setPage(1);
                   }}
-                  className="h-9 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 pl-9 pr-8 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80"
+                  className="h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 pl-9 pr-8 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80"
                 />
                 {searchQuery && (
                   <button
@@ -1019,11 +1019,11 @@ export default function StudentDirectoryTab({
           <ActiveFilterChips
             chips={activeChips}
             onClearAll={handleResetFilters}
-            className="border-t border-gray-100 dark:border-white/10 px-6 py-2.5"
+            className="border-t border-border dark:border-border px-6 py-2.5"
           />
 
           {/* 4. Main Data Table */}
-          <div className={cn("flex-1 border-t border-gray-100 dark:border-white/10 bg-white dark:bg-card overflow-hidden", filteredStudents.length === 0 && "rounded-b-2xl")}>
+          <div className={cn("flex-1 border-t border-border dark:border-border bg-white dark:bg-card overflow-hidden", filteredStudents.length === 0 && "rounded-b-2xl")}>
             {loading ? (
               <div className="p-6 space-y-3 rounded-b-2xl">
                 {[1, 2, 3, 4, 5].map((i) => (
@@ -1032,18 +1032,18 @@ export default function StudentDirectoryTab({
               </div>
             ) : paginatedStudents.length === 0 ? (
               <div className="py-16 rounded-b-2xl">
-                <Empty className="flex h-full flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400">
+                <Empty className="flex h-full flex-col items-center justify-center border-0 text-center text-gray-900 dark:text-zinc-300">
                   <EmptyHeader className="flex flex-col items-center gap-0">
                     <div className="relative mb-6">
                       <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                      <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
+                      <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
                         <HugeIcon  className="ph-duotone ph-student text-2xl text-gray-300 dark:text-zinc-600"></HugeIcon>
                       </EmptyMedia>
                     </div>
                     <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">
                       No Student Records Found
                     </EmptyTitle>
-                    <EmptyDescription className="max-w-xs text-xs font-medium text-gray-500 dark:text-zinc-400 mt-1">
+                    <EmptyDescription className="max-w-xs text-xs font-medium text-gray-900 dark:text-zinc-300 mt-1">
                       {hasActiveFilters
                         ? "Try clearing some filter options or changing your search criteria."
                         : "There are currently no student records in this view. Enroll a student to get started."}
@@ -1054,12 +1054,12 @@ export default function StudentDirectoryTab({
             ) : (
               <div className="overflow-x-auto">
                 <table className="min-w-full text-sm">
-                  <thead className="sticky top-0 z-10 border-b-[0.5px] border-black/10 dark:border-white/10 bg-white dark:bg-card">
+                  <thead className="sticky top-0 z-10 border-b-[0.5px] border-black/10 dark:border-border bg-white dark:bg-card">
                     <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">
                       <th className="w-12 p-4 text-center">
                         <input
                           type="checkbox"
-                          className="h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-gray-300 dark:border-white/10"
+                          className="h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-border dark:border-border"
                           checked={isPageAllSelected}
                           onChange={toggleSelectAllPage}
                         />
@@ -1128,7 +1128,7 @@ export default function StudentDirectoryTab({
                     </tr>
                   </thead>
 
-                  <tbody className="divide-y divide-gray-100 dark:divide-white/5">
+                  <tbody className="divide-y divide-border dark:divide-border">
                     {paginatedStudents.map((s) => {
                       const isSelected = selectedIds.has(s.studentNo);
                       const isStudentArchived = String(s.status || "").toLowerCase() === "archived";
@@ -1155,7 +1155,7 @@ export default function StudentDirectoryTab({
                           >
                             <input
                               type="checkbox"
-                              className="h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-gray-300 dark:border-white/10"
+                              className="h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-border dark:border-border"
                               checked={isSelected}
                               onChange={() => toggleSelect(s.studentNo)}
                             />
@@ -1177,11 +1177,11 @@ export default function StudentDirectoryTab({
                             <div className="flex items-center gap-1.5">
                               <Badge
                                 variant="outline"
-                                className="text-[11px] font-semibold uppercase px-2.5 py-0.5 rounded-full border-gray-200 dark:border-white/10"
+                                className="text-[11px] font-semibold uppercase px-2.5 py-0.5 rounded-full border-border dark:border-border"
                               >
                                 {s.courseCode || "N/A"}
                               </Badge>
-                              <span className="text-xs text-gray-500 dark:text-zinc-400 font-medium">
+                              <span className="text-xs text-gray-900 dark:text-zinc-300 font-medium">
                                 Sec {s.section || "—"}
                               </span>
                             </div>
@@ -1207,7 +1207,7 @@ export default function StudentDirectoryTab({
                                 "text-[10px] font-bold px-2 py-0.5 rounded-full border",
                                 docCount > 0
                                   ? "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/20"
-                                  : "bg-gray-50 text-gray-500 border-gray-200 dark:bg-zinc-800 dark:text-zinc-400 dark:border-white/10"
+                                  : "bg-gray-50 text-gray-500 border-border dark:bg-zinc-800 dark:text-zinc-400 dark:border-border"
                               )}
                             >
                               {docCount} {docCount === 1 ? "file" : "files"}
@@ -1239,7 +1239,7 @@ export default function StudentDirectoryTab({
                                       setActiveStudent(s);
                                       setProfileOpen(true);
                                     }}
-                                    className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-100 flex items-center justify-center transition-colors"
+                                    className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-900 dark:text-zinc-300 hover:text-gray-900 dark:hover:text-zinc-100 flex items-center justify-center transition-colors"
                                   >
                                     <HugeIcon  className="ph-bold ph-eye text-[14px]"></HugeIcon>
                                   </button>
@@ -1256,7 +1256,7 @@ export default function StudentDirectoryTab({
                                       setActiveStudent(s);
                                       setEditOpen(true);
                                     }}
-                                    className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-100 flex items-center justify-center transition-colors"
+                                    className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-900 dark:text-zinc-300 hover:text-gray-900 dark:hover:text-zinc-100 flex items-center justify-center transition-colors"
                                   >
                                     <HugeIcon  className="ph-bold ph-pencil-simple text-[14px]"></HugeIcon>
                                   </button>
@@ -1270,7 +1270,7 @@ export default function StudentDirectoryTab({
                                   <button
                                     type="button"
                                     onClick={() => onLocateStudent?.(s)}
-                                    className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 dark:text-zinc-400 hover:text-pup-maroon dark:hover:text-red-400 flex items-center justify-center transition-colors"
+                                    className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-900 dark:text-zinc-300 hover:text-pup-maroon dark:hover:text-red-400 flex items-center justify-center transition-colors"
                                   >
                                     <HugeIcon  className="ph-bold ph-compass text-[14px]"></HugeIcon>
                                   </button>
@@ -1326,7 +1326,7 @@ export default function StudentDirectoryTab({
           {/* 5. Apple HIG Pagination Footer */}
           {filteredStudents.length > 0 && (
             <div className="flex items-center justify-between border-t border-[#e5e5ea] dark:border-[#3a3a3c] bg-white dark:bg-[#1c1c1e] p-4 px-6 rounded-b-2xl mt-auto select-none">
-              <div className="flex items-center gap-6 text-xs text-gray-500 dark:text-zinc-400 select-none">
+              <div className="flex items-center gap-6 text-xs text-gray-900 dark:text-zinc-300 select-none">
                 <span>
                   Showing {paginatedStudents.length} of {filteredStudents.length.toLocaleString()}
                 </span>
@@ -1359,12 +1359,12 @@ export default function StudentDirectoryTab({
                   size="sm"
                   disabled={page <= 1}
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
-                  className="text-xs text-gray-500 dark:text-zinc-400 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
+                  className="text-xs text-gray-900 dark:text-zinc-300 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
                 >
                   Prev
                 </Button>
 
-                <div className="h-8 w-8 rounded-xl border border-[#e5e5ea] dark:border-zinc-800 flex items-center justify-center text-xs font-bold text-gray-800 dark:text-zinc-200 bg-white dark:bg-zinc-900">
+                <div className="h-8 w-8 rounded-xl border border-[#e5e5ea] dark:border-border flex items-center justify-center text-xs font-bold text-gray-800 dark:text-zinc-200 bg-white dark:bg-zinc-900">
                   {page}
                 </div>
 
@@ -1373,7 +1373,7 @@ export default function StudentDirectoryTab({
                   size="sm"
                   disabled={page >= totalPages}
                   onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                  className="text-xs text-gray-500 dark:text-zinc-400 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
+                  className="text-xs text-gray-900 dark:text-zinc-300 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
                 >
                   Next
                 </Button>

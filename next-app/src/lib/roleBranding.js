@@ -4,10 +4,10 @@ export const ROLE_BRANDING = {
   red: { key: "red", color: "#800000", foreground: "#FFFFFF", iconSrc: "/assets/branding/black-icon.png" },
   black: { key: "black", color: "#0F172A", foreground: "#FFFFFF", iconSrc: "/assets/branding/black-icon.png" },
   white: { key: "white", color: "#FFFFFF", foreground: "#0F172A", iconSrc: "/assets/branding/white-icon.png" },
-  orange: { key: "orange", color: "#EA580C", foreground: "#FFFFFF", iconSrc: "/assets/branding/orange-icon.png" },
+  orange: { key: "orange", color: "#ff9b11", foreground: "#FFFFFF", iconSrc: "/assets/branding/orange-icon.png" },
   blue: { key: "blue", color: "#005AFF", foreground: "#FFFFFF", iconSrc: "/assets/branding/blue-icon.png" },
   green: { key: "green", color: "#16A34A", foreground: "#FFFFFF", iconSrc: "/assets/branding/green-icon.png" },
-  yellow: { key: "yellow", color: "#EDBB00", foreground: "#1C1C1E", iconSrc: "/assets/branding/yellow-icon.png" },
+  yellow: { key: "yellow", color: "#ffcb00", foreground: "#FFFFFF", iconSrc: "/assets/branding/yellow-icon.png" },
 };
 
 function getContextText(ctx = {}) {

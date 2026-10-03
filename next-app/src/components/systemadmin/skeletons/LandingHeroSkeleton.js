@@ -9,7 +9,7 @@ export default function LandingHeroSkeleton() {
   return (
     <div className="flex flex-col gap-4 w-full animate-fade-up font-jakarta">
       {/* Top Section Switcher Pill */}
-      <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-gray-100/90 dark:bg-zinc-900/80 border border-gray-200/80 dark:border-white/10 w-fit select-none overflow-x-auto max-w-full scrollbar-hide">
+      <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-gray-100/90 dark:bg-zinc-900/80 border border-border/80 dark:border-border w-fit select-none overflow-x-auto max-w-full scrollbar-hide">
         <div className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold bg-white dark:bg-zinc-800 text-pup-maroon dark:text-red-400 shadow-sm">
           <HugeIcon  className="ph-bold ph-image text-sm" />
           <span>Hero Section</span>
@@ -33,7 +33,7 @@ export default function LandingHeroSkeleton() {
       </div>
 
       {/* Main PageHeader Card */}
-      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
+      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none">
         <PageHeader
           icon="ph-bold ph-layout"
           title={
@@ -47,7 +47,7 @@ export default function LandingHeroSkeleton() {
           description="Manage public portal headlines, descriptive messaging, campus background photography, and operational details."
           showBorder={false}
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
-          descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
+          descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
           actions={
             <div className="flex items-center gap-2.5 flex-wrap">
               <Skeleton className="h-10 w-28 rounded-xl dark:bg-muted" />
@@ -58,7 +58,7 @@ export default function LandingHeroSkeleton() {
         />
 
         {/* Tab switcher inside header */}
-        <div className="flex items-center gap-6 shrink-0 h-10 px-6 border-b border-gray-100 dark:border-white/10 bg-white dark:bg-card select-none">
+        <div className="flex items-center gap-6 shrink-0 h-10 px-6 border-b border-border dark:border-border bg-white dark:bg-card select-none">
           <div className="relative h-full flex items-center text-[13px] font-semibold text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50">
             Hero Content
           </div>
@@ -70,14 +70,14 @@ export default function LandingHeroSkeleton() {
         <CardContent className="font-jakarta bg-white p-[24px] dark:bg-card/50 backdrop-blur-md flex flex-col gap-6">
           <div className="space-y-6">
             {/* Controls Bar */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/30 p-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-xl border border-border/80 dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 p-4">
               <div>
                 <div className="flex items-center gap-2">
                   <span className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">
                     Campus Background Photos (4)
                   </span>
                 </div>
-                <p className="text-[12px] font-normal text-gray-500 dark:text-zinc-400 mt-0.5">
+                <p className="text-[12px] font-normal text-gray-900 dark:text-zinc-300 mt-0.5">
                   Upload campus photos for the landing page carousel. Drag cards to reorder, or click any image to replace it.
                 </p>
               </div>
@@ -93,7 +93,7 @@ export default function LandingHeroSkeleton() {
               {[1, 2, 3].map((i) => (
                 <Card
                   key={i}
-                  className="rounded-2xl border border-gray-200 dark:border-white/10 overflow-hidden bg-white dark:bg-card shadow-xs"
+                  className="rounded-2xl border border-border dark:border-border overflow-hidden bg-white dark:bg-card shadow-xs"
                 >
                   <Skeleton className="aspect-video w-full rounded-none dark:bg-muted" />
                   <div className="p-4 space-y-3">

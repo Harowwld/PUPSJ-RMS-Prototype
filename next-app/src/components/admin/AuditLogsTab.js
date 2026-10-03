@@ -240,7 +240,7 @@ export default function AuditLogsTab({
     <TooltipProvider delay={200}>
       <div className="animate-fade-up font-jakarta flex flex-1 flex-col min-h-full w-full gap-6">
         {/* ONE Single Card Container encapsulating Header, Metrics, Toolbar, Table & Pagination */}
-        <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none isolate font-jakarta mb-4 flex-1">
+        <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4 flex-1">
           <PageHeader
             icon="ph-shield-check"
             title="Audit Logs"
@@ -248,7 +248,7 @@ export default function AuditLogsTab({
             showBorder={false}
             className="p-6"
             titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
-            descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
+            descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
             actions={
               <div className="flex items-center gap-2">
                 <RefreshButton 
@@ -264,7 +264,7 @@ export default function AuditLogsTab({
                     variant="outline"
                     onClick={handleDownloadCSV}
                     disabled={logTotal === 0 || isExporting || isGeneratingPdf}
-                    className="flex h-10 items-center justify-center rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-5 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
+                    className="flex h-10 items-center justify-center rounded-xl! border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-5 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
                   >
                     {isExporting ? (
                       <HugeIcon  className="ph-bold ph-spinner animate-spin text-[16px]"></HugeIcon>
@@ -378,7 +378,7 @@ export default function AuditLogsTab({
                   setLogEndDate("")
                   setLogPage(1)
                 }}
-                className="border-t border-gray-100 dark:border-white/10 bg-white dark:bg-card px-6 py-2.5"
+                className="border-t border-border dark:border-border bg-white dark:bg-card px-6 py-2.5"
               />
             )
           })()}

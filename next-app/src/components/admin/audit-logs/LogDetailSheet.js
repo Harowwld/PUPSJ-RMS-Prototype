@@ -104,7 +104,7 @@ export default function LogDetailSheet({
       onOpenChange={(open) => !open && setSelectedLog(null)}
     >
       <SheetContent 
-        className="font-jakarta flex flex-col border-l bg-white p-[24px_20px] shadow-2xl w-full sm:max-w-[480px] md:max-w-[540px] data-[side=right]:w-full data-[side=right]:sm:max-w-[480px] data-[side=right]:md:max-w-[540px] dark:border-white/10 dark:bg-[#121214]"
+        className="font-jakarta flex flex-col border-l bg-white p-[24px_20px] shadow-2xl w-full sm:max-w-[480px] md:max-w-[540px] data-[side=right]:w-full data-[side=right]:sm:max-w-[480px] data-[side=right]:md:max-w-[540px] dark:border-border dark:bg-[#121214]"
         style={{ borderLeft: '0.5px solid rgba(0,0,0,0.08)' }}
       >
         <SheetHeader className="shrink-0 p-0 mb-6 border-b-0 bg-transparent text-left relative">
@@ -122,7 +122,7 @@ export default function LogDetailSheet({
           <div className="flex-1 space-y-6 overflow-y-auto pr-1 -mr-1 pb-24">
             {/* Header Info */}
             <div 
-              className="flex justify-between items-end pb-4 border-black/5 dark:border-white/5"
+              className="flex justify-between items-end pb-4 border-black/5 dark:border-border"
               style={{ borderBottomWidth: '0.5px', borderBottomStyle: 'solid' }}
             >
               <div>
@@ -155,8 +155,8 @@ export default function LogDetailSheet({
                     Actor
                   </h4>
                 </div>
-                <div className="flex items-center gap-3 bg-white dark:bg-card p-[16px] rounded-xl border border-gray-200/60 dark:border-white/10">
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-black/5 bg-gray-50 dark:border-white/5 dark:bg-zinc-800">
+                <div className="flex items-center gap-3 bg-white dark:bg-card p-[16px] rounded-xl border border-border/60 dark:border-border">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-black/5 bg-gray-50 dark:border-border dark:bg-zinc-800">
                     <span className="text-[12px] font-medium text-[#8E8E93]">{initials}</span>
                   </div>
                   <div className="flex-1 min-w-0">
@@ -177,7 +177,7 @@ export default function LogDetailSheet({
                   Details
                 </h4>
               </div>
-              <div className="space-y-[16px] bg-white dark:bg-card p-[16px] rounded-xl border border-gray-200/60 dark:border-white/10">
+              <div className="space-y-[16px] bg-white dark:bg-card p-[16px] rounded-xl border border-border/60 dark:border-border">
                 <div>
                   <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.04em] text-[#8E8E93]">
                     Action
@@ -187,7 +187,7 @@ export default function LogDetailSheet({
                   </p>
                 </div>
 
-                <div className="border-t border-black/5 pt-[16px] dark:border-white/5">
+                <div className="border-t border-black/5 pt-[16px] dark:border-border">
                   <div className="mb-1 flex items-center justify-between">
                     <p className="text-[11px] font-semibold uppercase tracking-[0.04em] text-[#8E8E93]">
                       Description
@@ -206,7 +206,7 @@ export default function LogDetailSheet({
                 </div>
 
                 {(selectedLog.entityType || selectedLog.entityId || selectedLog.officeName || selectedLog.scope) && (
-                  <div className="grid grid-cols-2 gap-4 border-t border-black/5 pt-[16px] dark:border-white/5">
+                  <div className="grid grid-cols-2 gap-4 border-t border-black/5 pt-[16px] dark:border-border">
                     <div>
                       <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.04em] text-[#8E8E93]">
                         Target
@@ -235,7 +235,7 @@ export default function LogDetailSheet({
                       </p>
                     </div>
                     {(selectedLog.officeName || selectedLog.scope) && (
-                      <div className="col-span-2 border-t border-black/5 pt-[12px] dark:border-white/5">
+                      <div className="col-span-2 border-t border-black/5 pt-[12px] dark:border-border">
                         <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.04em] text-[#8E8E93]">
                           Scope / Office
                         </p>
@@ -257,7 +257,7 @@ export default function LogDetailSheet({
                   Network
                 </h4>
               </div>
-              <div className="space-y-[16px] bg-white dark:bg-card p-[16px] rounded-xl border border-gray-200/60 dark:border-white/10">
+              <div className="space-y-[16px] bg-white dark:bg-card p-[16px] rounded-xl border border-border/60 dark:border-border">
                 <div>
                   <div className="mb-1 flex items-center justify-between">
                     <p className="text-[11px] font-semibold uppercase tracking-[0.04em] text-[#8E8E93]">
@@ -284,7 +284,7 @@ export default function LogDetailSheet({
                     {selectedLog.ip || "::1"}
                   </p>
                 </div>
-                <div className="border-t border-black/5 pt-[16px] dark:border-white/5">
+                <div className="border-t border-black/5 pt-[16px] dark:border-border">
                   <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.04em] text-[#8E8E93]">
                     Browser
                   </p>
@@ -297,13 +297,13 @@ export default function LogDetailSheet({
           </div>
         )}
 
-        <div className="absolute bottom-0 left-0 right-0 border-t border-gray-100 bg-white p-4 backdrop-blur-sm dark:border-white/10 dark:bg-[#121214]/80">
+        <div className="absolute bottom-0 left-0 right-0 border-t border-border bg-white p-4 backdrop-blur-sm dark:border-border dark:bg-[#121214]/80">
           <div className="flex items-center justify-between gap-2.5">
             <Button
               variant="outline"
               disabled={!hasPrev}
               onClick={onPrev}
-              className="flex-1 h-10 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700 disabled:opacity-40 disabled:pointer-events-none"
+              className="flex-1 h-10 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700 disabled:opacity-40 disabled:pointer-events-none"
             >
               Previous
             </Button>
@@ -311,7 +311,7 @@ export default function LogDetailSheet({
               variant="outline"
               disabled={!hasNext}
               onClick={onNext}
-              className="flex-1 h-10 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700 disabled:opacity-40 disabled:pointer-events-none"
+              className="flex-1 h-10 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700 disabled:opacity-40 disabled:pointer-events-none"
             >
               Next
             </Button>

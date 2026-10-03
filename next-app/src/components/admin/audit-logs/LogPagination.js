@@ -19,7 +19,7 @@ export default function LogPagination({
 
   return (
     <div className="mt-auto flex items-center justify-between border-t border-[#e5e5ea] dark:border-[#3a3a3c] bg-white dark:bg-[#1c1c1e] p-4 px-6 rounded-b-2xl">
-      <div className="flex items-center gap-6 text-xs text-gray-500 dark:text-zinc-400 select-none">
+      <div className="flex items-center gap-6 text-xs text-gray-900 dark:text-zinc-300 select-none">
         <span>
           Showing {shownCount} of {logTotal.toLocaleString()}
         </span>
@@ -50,12 +50,12 @@ export default function LogPagination({
           size="sm"
           disabled={displayPage <= 1}
           onClick={() => setLogPage((p) => Math.max(1, p - 1))}
-          className="text-xs text-gray-500 dark:text-zinc-400 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
+          className="text-xs text-gray-900 dark:text-zinc-300 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
         >
           Prev
         </Button>
 
-        <div className="h-8 w-8 rounded-xl border border-[#e5e5ea] dark:border-zinc-800 flex items-center justify-center text-xs font-bold text-gray-800 dark:text-zinc-200 bg-white dark:bg-zinc-900">
+        <div className="h-8 w-8 rounded-xl border border-[#e5e5ea] dark:border-border flex items-center justify-center text-xs font-bold text-gray-800 dark:text-zinc-200 bg-white dark:bg-zinc-900">
           {displayPage}
         </div>
 
@@ -64,7 +64,7 @@ export default function LogPagination({
           size="sm"
           disabled={displayPage >= totalPages}
           onClick={() => setLogPage((p) => Math.min(totalPages, p + 1))}
-          className="text-xs text-gray-500 dark:text-zinc-400 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
+          className="text-xs text-gray-900 dark:text-zinc-300 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
         >
           Next
         </Button>

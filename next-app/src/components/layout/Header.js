@@ -952,7 +952,7 @@ export default function Header({ authUser, onLogout, children }) {
               className={cn("h-7 w-7 object-contain transition-transform group-hover/logo:scale-105", isStudent && "brightness-0 saturate-100")}
               style={isStudent ? { filter: "brightness(0) saturate(100%) invert(13%) sepia(95%) saturate(3180%) hue-rotate(355deg) brightness(77%) contrast(118%)" } : undefined}
             />
-            <span className={cn("font-bold text-[19px] tracking-tight leading-none group-hover/logo:opacity-75 transition-opacity", isStudent ? "text-pup-maroon" : "text-gray-900 dark:text-zinc-50")}>
+            <span className={cn("font-bold text-[19px] tracking-tight leading-none group-hover/logo:opacity-75 transition-opacity", "text-gray-900 dark:text-zinc-50")}>
               eManage
             </span>
           </div>

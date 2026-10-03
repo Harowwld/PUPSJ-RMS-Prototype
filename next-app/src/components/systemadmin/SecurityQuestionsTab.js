@@ -232,7 +232,7 @@ export default function SecurityQuestionsTab({ showToast }) {
 
   return (
     <div className="animate-fade-up font-jakarta flex flex-1 flex-col h-full min-h-0 w-full gap-6">
-      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none isolate font-jakarta mb-4 min-h-0 flex-1">
+      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4 min-h-0 flex-1">
         {/* Header */}
         <PageHeader
           icon="ph-bold ph-shield-check"
@@ -241,7 +241,7 @@ export default function SecurityQuestionsTab({ showToast }) {
           showBorder={true}
           className="p-6"
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
-          descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
+          descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
           actions={
             <div className="flex items-center gap-2">
               <RefreshButton
@@ -255,7 +255,7 @@ export default function SecurityQuestionsTab({ showToast }) {
                 variant="outline"
                 onClick={() => setBulkModalOpen(true)}
                 disabled={loading || saving}
-                className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
               >
                 Import
               </Button>
@@ -280,7 +280,7 @@ export default function SecurityQuestionsTab({ showToast }) {
           {loading ? (
             <div className="w-full space-y-4">
               {[1, 2].map((i) => (
-                <div key={i} className="rounded-2xl border border-gray-100 dark:border-white/5 bg-gray-50/20 dark:bg-zinc-900/20 p-4 space-y-3">
+                <div key={i} className="rounded-2xl border border-border dark:border-border bg-gray-50/20 dark:bg-zinc-900/20 p-4 space-y-3">
                   <div className="flex justify-between items-center">
                     <Skeleton className="h-5 w-32 rounded-lg dark:bg-muted" />
                     <Skeleton className="h-7 w-36 rounded-xl dark:bg-muted" />
@@ -303,12 +303,12 @@ export default function SecurityQuestionsTab({ showToast }) {
                 return (
                   <div
                     key={q.id || i}
-                    className="rounded-2xl border border-gray-200/80 dark:border-white/10 bg-gray-50/30 dark:bg-zinc-900/40 p-4 transition-all hover:border-gray-300 dark:hover:border-white/20 space-y-2.5"
+                    className="rounded-2xl border border-border/80 dark:border-border bg-gray-50/30 dark:bg-zinc-900/40 p-4 transition-all hover:border-border dark:hover:border-white/20 space-y-2.5"
                   >
                     {/* Top Row: Question label & Controls */}
                     <div className="flex items-center justify-between gap-3">
                       <div className="flex items-center gap-2">
-                        <span className="flex items-center justify-center w-6 h-6 rounded-lg bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 font-semibold font-mono text-xs border border-gray-200 dark:border-white/10 shadow-2xs">
+                        <span className="flex items-center justify-center w-6 h-6 rounded-lg bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 font-semibold font-mono text-xs border border-border dark:border-border shadow-2xs">
                           {i + 1}
                         </span>
                         <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
@@ -319,7 +319,7 @@ export default function SecurityQuestionsTab({ showToast }) {
                             Required
                           </span>
                         ) : (
-                          <span className="text-[10px] font-medium text-gray-500 dark:text-zinc-400 bg-gray-100 dark:bg-zinc-800 px-2 py-0.5 rounded-full border border-gray-200 dark:border-white/10">
+                          <span className="text-[10px] font-medium text-gray-900 dark:text-zinc-300 bg-gray-100 dark:bg-zinc-800 px-2 py-0.5 rounded-full border border-border dark:border-border">
                             Optional
                           </span>
                         )}
@@ -327,7 +327,7 @@ export default function SecurityQuestionsTab({ showToast }) {
 
                       <div className="flex items-center gap-2">
                         {/* Clear Segmented Control [ Required | Optional ] */}
-                        <div className="inline-flex items-center bg-gray-200/70 dark:bg-zinc-800 p-0.5 rounded-xl border border-gray-200/60 dark:border-white/5">
+                        <div className="inline-flex items-center bg-gray-200/70 dark:bg-zinc-800 p-0.5 rounded-xl border border-border/60 dark:border-border">
                           <button
                             type="button"
                             onClick={() => !q.is_required && handleToggleRequired(i)}
@@ -385,7 +385,7 @@ export default function SecurityQuestionsTab({ showToast }) {
                         "h-10.5 w-full rounded-xl border bg-white dark:bg-zinc-800 text-xs text-gray-900 dark:text-zinc-100 px-3.5 placeholder:text-gray-400 dark:placeholder:text-zinc-500 transition-all focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon shadow-2xs",
                         isWeak
                           ? "border-amber-400 dark:border-amber-600 focus-visible:ring-amber-500"
-                          : "border-gray-200 dark:border-white/10"
+                          : "border-border dark:border-border"
                       )}
                     />
 
@@ -427,7 +427,7 @@ export default function SecurityQuestionsTab({ showToast }) {
                   type="button"
                   onClick={handleAddQuestion}
                   title="Add Security Question"
-                  className="w-full h-12 rounded-xl border-2 border-dashed border-gray-200 hover:border-pup-maroon/60 dark:border-white/15 dark:hover:border-pup-maroon/60 bg-gray-50/40 hover:bg-pup-maroon/5 dark:bg-zinc-900/20 dark:hover:bg-pup-maroon/10 text-gray-600 dark:text-zinc-400 hover:text-pup-maroon dark:hover:text-pup-maroon transition-all flex items-center justify-center gap-2 text-xs font-semibold cursor-pointer active:scale-[0.99]"
+                  className="w-full h-12 rounded-xl border-2 border-dashed border-border hover:border-pup-maroon/60 dark:border-border dark:hover:border-pup-maroon/60 bg-gray-50/40 hover:bg-pup-maroon/5 dark:bg-zinc-900/20 dark:hover:bg-pup-maroon/10 text-gray-600 dark:text-zinc-400 hover:text-pup-maroon dark:hover:text-pup-maroon transition-all flex items-center justify-center gap-2 text-xs font-semibold cursor-pointer active:scale-[0.99]"
                 >
                   Add
                 </button>

@@ -21,7 +21,7 @@ function TabLoadingSkeleton() {
   return (
     <div className="flex flex-1 flex-col h-full min-h-0 w-full gap-6 animate-fade-up font-jakarta">
       {/* ONE Single Container Card */}
-      <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card flex flex-col flex-1 min-h-[500px] mb-4 isolate">
+      <div className="overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card flex flex-col flex-1 min-h-[500px] mb-4 isolate">
         {/* Header */}
         <div className="p-6 flex items-center justify-between">
           <div className="space-y-1.5">
@@ -40,7 +40,7 @@ function TabLoadingSkeleton() {
         </div>
 
         {/* Toolbar Row */}
-        <div className="h-14 border-t border-gray-100 dark:border-white/10 p-4 px-6 flex items-center justify-between bg-gray-50/40 dark:bg-zinc-900/30">
+        <div className="h-14 border-t border-border dark:border-border p-4 px-6 flex items-center justify-between bg-gray-50/40 dark:bg-zinc-900/30">
           <div className="flex items-center gap-3">
             <Skeleton className="h-9 w-64 rounded-xl dark:bg-muted" />
             <Skeleton className="h-9 w-32 rounded-xl dark:bg-muted" />
@@ -51,7 +51,7 @@ function TabLoadingSkeleton() {
         {/* Table Body Rows */}
         <div className="p-6 space-y-4 flex-1 rounded-b-2xl">
           {[1, 2, 3, 4, 5, 6].map((i) => (
-            <div key={i} className="h-12 border-b border-gray-100 dark:border-white/5 flex items-center justify-between last:border-b-0">
+            <div key={i} className="h-12 border-b border-border dark:border-border flex items-center justify-between last:border-b-0">
               <div className="flex items-center gap-3">
                 <Skeleton className="h-8 w-8 rounded-lg dark:bg-muted" />
                 <Skeleton className="h-4 w-40 rounded dark:bg-muted" />

@@ -313,7 +313,7 @@ export default function DocTypesTab({
           icon="ph-files"
           showBorder={false}
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
-          descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
+          descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
           title={
             <div className="flex items-center gap-[6px]">
               Document Types
@@ -325,7 +325,7 @@ export default function DocTypesTab({
         />
 
         {/* Navigation Toolbar */}
-        <div className="border-t border-gray-100 dark:border-white/10 p-5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
+        <div className="border-t border-border dark:border-border p-5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
           {/* Active / Archived Tabs & Purpose Segmented Filter */}
           <div className="flex flex-wrap items-center gap-4 shrink-0 select-none">
             <div className="flex items-center gap-4">
@@ -362,7 +362,7 @@ export default function DocTypesTab({
             </div>
 
             {/* Segmented Control for Purpose */}
-            <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-gray-200/60 dark:border-white/5">
+            <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-border/60 dark:border-border">
               <button
                 type="button"
                 onClick={() => {
@@ -420,7 +420,7 @@ export default function DocTypesTab({
               <Input
                 type="text"
                 placeholder="Filter document name..."
-                className="h-10 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 pl-9 pr-24 text-xs font-normal placeholder:text-gray-400 dark:placeholder:text-zinc-500 text-gray-900 dark:text-zinc-100 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
+                className="h-10 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 pl-9 pr-24 text-xs font-normal placeholder:text-gray-400 dark:placeholder:text-zinc-500 text-gray-900 dark:text-zinc-100 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
                 value={localSearch}
                 onChange={(e) => setLocalSearch(e.target.value)}
               />
@@ -450,7 +450,7 @@ export default function DocTypesTab({
               variant="outline"
               onClick={onExportClick}
               disabled={isExporting}
-              className="flex h-10 items-center justify-center rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
+              className="flex h-10 items-center justify-center rounded-xl! border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
             >
               {isExporting ? (
                 <HugeIcon className="ph-bold ph-spinner animate-spin text-[16px]" />
@@ -482,22 +482,22 @@ export default function DocTypesTab({
             setDocSearch("")
             setPageDoc(1)
           }}
-          className="border-t border-gray-100 dark:border-white/10 bg-white dark:bg-card px-6 py-2.5"
+          className="border-t border-border dark:border-border bg-white dark:bg-card px-6 py-2.5"
         />
 
         {/* Main Table Container (Seamless inside single card) */}
-        <div className={cn("w-full flex flex-col flex-1 min-h-0 border-t border-gray-100 dark:border-white/10 bg-white dark:bg-card", filteredDocTypes.length === 0 && "rounded-b-2xl overflow-hidden")}>
+        <div className={cn("w-full flex flex-col flex-1 min-h-0 border-t border-border dark:border-border bg-white dark:bg-card", filteredDocTypes.length === 0 && "rounded-b-2xl overflow-hidden")}>
           <div className="w-full overflow-x-auto flex-1 select-none">
             {loading && docTypes.length === 0 ? (
               <TaxonomyTableSkeleton rowCount={6} embedded={true} showSubtext={false} showPagination={false} />
             ) : (
               <table className="min-w-full text-sm">
-                <thead className="sticky top-0 z-10 border-b border-gray-100 dark:border-white/10 bg-white dark:bg-card">
+                <thead className="sticky top-0 z-10 border-b border-border dark:border-border bg-white dark:bg-card">
                     <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">
                       <th className="w-12 p-4 text-center">
                         <input
                           type="checkbox"
-                          className="h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-gray-300 text-pup-maroon dark:text-primary accent-pup-maroon focus:ring-pup-maroon disabled:cursor-not-allowed disabled:opacity-20 dark:text-primary dark:border-white/10"
+                          className="h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-border text-pup-maroon dark:text-primary accent-pup-maroon focus:ring-pup-maroon disabled:cursor-not-allowed disabled:opacity-20 dark:text-primary dark:border-border"
                           checked={
                             filteredDocTypes.length > 0 &&
                             filteredDocTypes.every((dt) => selectedDocTypes[dt.id])
@@ -522,11 +522,11 @@ export default function DocTypesTab({
                       <th className="w-32 p-4 px-6 text-right text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">Actions</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-100 dark:divide-white/5">
+                  <tbody className="divide-y divide-border dark:divide-border">
                     {!showArchived && (
                       <tr
                         className={cn(
-                          "group h-[52px] border-b-[0.5px] border-gray-100 dark:border-white/10 last:border-b-0 transition-all duration-fast hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none cursor-pointer",
+                          "group h-[52px] border-b-[0.5px] border-border dark:border-border last:border-b-0 transition-all duration-fast hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none cursor-pointer",
                           newDocTypeName.trim() && "bg-amber-50/50 dark:bg-amber-950/10"
                         )}
                       >
@@ -545,7 +545,7 @@ export default function DocTypesTab({
                               }}
                               className={cn(
                                 "h-9 flex-1 rounded-xl border-[0.5px] border-black/15 bg-white text-xs font-semibold focus-visible:ring-0 focus-visible:border-black/30",
-                                newDocTypeName.trim() ? "ring-1 ring-emerald-200 border-emerald-300 dark:ring-emerald-500/30 dark:border-emerald-500/50" : "focus-visible:border-gray-300 dark:border-white/10 dark:bg-card"
+                                newDocTypeName.trim() ? "ring-1 ring-emerald-200 border-emerald-300 dark:ring-emerald-500/30 dark:border-emerald-500/50" : "focus-visible:border-border dark:border-border dark:bg-card"
                               )}
                             />
                             <Button
@@ -595,7 +595,7 @@ export default function DocTypesTab({
                             if (!isDisabled) toggleDocTypeSelected(dt.id, e);
                           }}
                           className={cn(
-                            "group h-[52px] border-b-[0.5px] border-gray-100 dark:border-white/10 last:border-b-0 transition-all duration-fast hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none cursor-pointer",
+                            "group h-[52px] border-b-[0.5px] border-border dark:border-border last:border-b-0 transition-all duration-fast hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none cursor-pointer",
                             dt.status === "Archived" && "opacity-75",
                             isSelected && "bg-blue-50/60 dark:bg-blue-950/20",
                             isDisabled && "cursor-not-allowed"
@@ -605,7 +605,7 @@ export default function DocTypesTab({
                             <input
                               type="checkbox"
                               className={cn(
-                                "h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-gray-300 text-pup-maroon dark:text-primary accent-pup-maroon focus:ring-pup-maroon dark:text-primary dark:border-white/10 transition-opacity",
+                                "h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-border text-pup-maroon dark:text-primary accent-pup-maroon focus:ring-pup-maroon dark:text-primary dark:border-border transition-opacity",
                                 isSelected ? "opacity-100" : "opacity-50 group-hover:opacity-80"
                               )}
                               checked={isSelected}
@@ -759,14 +759,14 @@ export default function DocTypesTab({
                             <EmptyHeader className="flex flex-col items-center gap-0">
                               <div className="relative mb-6">
                                 <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                                <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
+                                <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
                                   <HugeIcon  className={showArchived && totalInView === 0 ? "ph-archive" : "ph-magnifying-glass"}></HugeIcon>
                                 </EmptyMedia>
                               </div>
                               <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
                                 {totalInView > 0 ? "No matches found" : (showArchived ? "No Archived Document Types Found" : "No Document Types Found")}
                               </EmptyTitle>
-                              <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400">
+                              <EmptyDescription className="max-w-xs text-sm font-medium text-gray-900 dark:text-zinc-300">
                                 {totalInView > 0
                                   ? "Try adjusting your search filters to find what you're looking for."
                                   : showArchived
@@ -781,7 +781,7 @@ export default function DocTypesTab({
                                     setLocalSearch("")
                                   }}
                                   title="Reset Filters"
-                                  className="mt-6 flex h-10 items-center justify-center gap-2 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
+                                  className="mt-6 flex h-10 items-center justify-center gap-2 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                                 >
                                   Reset
                                 </Button>
@@ -806,8 +806,8 @@ export default function DocTypesTab({
             </div>
 
         {filteredDocTypesFull.length > 0 && (
-          <div className="flex items-center justify-between border-t border-gray-100 dark:border-white/10 bg-white dark:bg-card p-4 px-6 rounded-b-2xl mt-auto select-none">
-            <div className="flex items-center gap-6 text-xs text-gray-500 dark:text-zinc-400 select-none">
+          <div className="flex items-center justify-between border-t border-border dark:border-border bg-white dark:bg-card p-4 px-6 rounded-b-2xl mt-auto select-none">
+            <div className="flex items-center gap-6 text-xs text-gray-900 dark:text-zinc-300 select-none">
               <span>
                 Showing {filteredDocTypes.length} of {filteredDocTypesFull.length.toLocaleString()}
               </span>
@@ -837,12 +837,12 @@ export default function DocTypesTab({
                 size="sm"
                 disabled={pageDoc <= 1}
                 onClick={() => setPageDoc((p) => Math.max(1, p - 1))}
-                className="text-xs text-gray-500 dark:text-zinc-400 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
+                className="text-xs text-gray-900 dark:text-zinc-300 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
               >
                 Prev
               </Button>
 
-              <div className="h-8 w-8 rounded-xl border border-gray-200 dark:border-white/10 flex items-center justify-center text-xs font-bold text-gray-800 dark:text-zinc-200 bg-white dark:bg-zinc-900">
+              <div className="h-8 w-8 rounded-xl border border-border dark:border-border flex items-center justify-center text-xs font-bold text-gray-800 dark:text-zinc-200 bg-white dark:bg-zinc-900">
                 {pageDoc}
               </div>
 
@@ -851,7 +851,7 @@ export default function DocTypesTab({
                 size="sm"
                 disabled={pageDoc >= Math.ceil(filteredDocTypesFull.length / itemsPerPage)}
                 onClick={() => setPageDoc((p) => p + 1)}
-                className="text-xs text-gray-500 dark:text-zinc-400 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
+                className="text-xs text-gray-900 dark:text-zinc-300 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
               >
                 Next
               </Button>
@@ -877,14 +877,14 @@ export default function DocTypesTab({
           if (!open) setNewDocTypeName("")
         }}
       >
-        <DialogContent className="overflow-hidden rounded-2xl border border-gray-200 bg-white p-0 shadow-2xl sm:max-w-md dark:border-white/10 dark:bg-card">
+        <DialogContent className="overflow-hidden rounded-2xl border border-border bg-white p-0 shadow-2xl sm:max-w-md dark:border-border dark:bg-card">
           <DialogHeader className="bg-white p-6 pb-0 dark:bg-card border-none">
             <div className="flex items-start gap-4">
               <div className="min-w-0">
                 <DialogTitle className="text-[16px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
                   New Document Type
                 </DialogTitle>
-                <DialogDescription className="mt-1 text-[13px] font-normal text-gray-500 dark:text-zinc-400">
+                <DialogDescription className="mt-1 text-[13px] font-normal text-gray-900 dark:text-zinc-300">
                   Deploy a new formal document type to the digitization framework.
                 </DialogDescription>
               </div>
@@ -893,13 +893,13 @@ export default function DocTypesTab({
           <form onSubmit={addDocType}>
             <div className="p-6 pb-4 flex flex-col gap-[16px]">
               <div>
-                <label className="mb-1 block text-[11px] font-medium uppercase tracking-[0.04em] text-gray-500 dark:text-zinc-400">
+                <label className="mb-1 block text-[11px] font-medium uppercase tracking-[0.04em] text-gray-900 dark:text-zinc-300">
                   Document Name <span className="text-[11px] font-normal text-gray-400 dark:text-zinc-500">*</span>
                 </label>
                 <Input
                   type="text"
                   placeholder="e.g. Health Information Sheet"
-                  className="h-10 rounded-xl border border-gray-200 bg-white text-[13px] font-normal tracking-[-0.01em] text-gray-900 focus-visible:border-gray-500 focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none focus:ring-0 focus:border-gray-500 dark:bg-card dark:border-white/10 dark:text-zinc-50"
+                  className="h-10 rounded-xl border border-border bg-white text-[13px] font-normal tracking-[-0.01em] text-gray-900 focus-visible:border-gray-500 focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none focus:ring-0 focus:border-gray-500 dark:bg-card dark:border-border dark:text-zinc-50"
                   value={newDocTypeName}
                   onChange={(e) => setNewDocTypeName(e.target.value)}
                   required
@@ -907,23 +907,23 @@ export default function DocTypesTab({
               </div>
 
               <div>
-                <label className="mb-1 block text-[11px] font-medium uppercase tracking-[0.04em] text-gray-500 dark:text-zinc-400">
+                <label className="mb-1 block text-[11px] font-medium uppercase tracking-[0.04em] text-gray-900 dark:text-zinc-300">
                   Compliance / Record Category
                 </label>
                 <Input
                   type="text"
                   placeholder="e.g. Certificates & Clearances, Academic Records"
-                  className="h-10 rounded-xl border border-gray-200 bg-white text-[13px] font-normal tracking-[-0.01em] text-gray-900 focus-visible:border-gray-500 focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none focus:ring-0 focus:border-gray-500 dark:bg-card dark:border-white/10 dark:text-zinc-50"
+                  className="h-10 rounded-xl border border-border bg-white text-[13px] font-normal tracking-[-0.01em] text-gray-900 focus-visible:border-gray-500 focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none focus:ring-0 focus:border-gray-500 dark:bg-card dark:border-border dark:text-zinc-50"
                   value={newDocTypeCategory}
                   onChange={(e) => setNewDocTypeCategory(e.target.value)}
                 />
               </div>
 
-              <div className="rounded-xl border border-gray-200/80 dark:border-white/10 p-3.5 space-y-3 bg-gray-50/50 dark:bg-zinc-800/30">
+              <div className="rounded-xl border border-border/80 dark:border-border p-3.5 space-y-3 bg-gray-50/50 dark:bg-zinc-800/30">
                 <label className="flex items-center justify-between cursor-pointer gap-2 select-none">
                   <div>
                     <p className="text-xs font-semibold text-gray-900 dark:text-zinc-100">Enrollment Compliance Requirement</p>
-                    <p className="text-[11px] text-gray-500 dark:text-zinc-400">Expected submission in student 201 folder & compliance metrics</p>
+                    <p className="text-[11px] text-gray-900 dark:text-zinc-300">Expected submission in student 201 folder & compliance metrics</p>
                   </div>
                   <input
                     type="checkbox"
@@ -933,11 +933,11 @@ export default function DocTypesTab({
                   />
                 </label>
 
-                <div className="border-t border-gray-100 dark:border-white/5 pt-2.5">
+                <div className="border-t border-border dark:border-border pt-2.5">
                   <label className="flex items-center justify-between cursor-pointer gap-2 select-none">
                     <div>
                       <p className="text-xs font-semibold text-gray-900 dark:text-zinc-100">Available for Online Request (ODRS)</p>
-                      <p className="text-[11px] text-gray-500 dark:text-zinc-400">Allow students & alumni to request official copies</p>
+                      <p className="text-[11px] text-gray-900 dark:text-zinc-300">Allow students & alumni to request official copies</p>
                     </div>
                     <input
                       type="checkbox"
@@ -960,7 +960,7 @@ export default function DocTypesTab({
                   setNewDocTypeIsCompliance(true)
                   setNewDocTypeCategory("General Requirements")
                 }}
-                className="flex h-10 items-center justify-center rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
+                className="flex h-10 items-center justify-center rounded-xl! border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
               >
                 Cancel
               </Button>
@@ -982,14 +982,14 @@ export default function DocTypesTab({
           if (!open) setEditDocType({ id: null, name: "", isRequestable: false, isCompliance: false, complianceCategory: "General Requirements" })
         }}
       >
-        <DialogContent className="overflow-hidden rounded-2xl border border-gray-200 bg-white p-0 shadow-2xl sm:max-w-md dark:border-white/10 dark:bg-card">
+        <DialogContent className="overflow-hidden rounded-2xl border border-border bg-white p-0 shadow-2xl sm:max-w-md dark:border-border dark:bg-card">
           <DialogHeader className="bg-white p-6 pb-0 dark:bg-card border-none">
             <div className="flex items-start gap-4">
               <div className="min-w-0">
                 <DialogTitle className="text-[16px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
                   Edit Document Type
                 </DialogTitle>
-                <DialogDescription className="mt-1 text-[13px] font-normal text-gray-500 dark:text-zinc-400">
+                <DialogDescription className="mt-1 text-[13px] font-normal text-gray-900 dark:text-zinc-300">
                   Update the document category and purpose settings.
                 </DialogDescription>
               </div>
@@ -998,12 +998,12 @@ export default function DocTypesTab({
           <form onSubmit={updDocType}>
             <div className="p-6 pb-4 flex flex-col gap-[16px]">
               <div>
-                <label className="mb-1 block text-[11px] font-medium uppercase tracking-[0.04em] text-gray-500 dark:text-zinc-400">
+                <label className="mb-1 block text-[11px] font-medium uppercase tracking-[0.04em] text-gray-900 dark:text-zinc-300">
                   Document Type Name <span className="text-[11px] font-normal text-gray-400 dark:text-zinc-500">*</span>
                 </label>
                 <Input
                   type="text"
-                  className="h-10 rounded-xl border border-gray-200 bg-white text-[13px] font-normal tracking-[-0.01em] text-gray-900 focus-visible:border-gray-500 focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none focus:ring-0 focus:border-gray-500 dark:bg-card dark:border-white/10 dark:text-zinc-50"
+                  className="h-10 rounded-xl border border-border bg-white text-[13px] font-normal tracking-[-0.01em] text-gray-900 focus-visible:border-gray-500 focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none focus:ring-0 focus:border-gray-500 dark:bg-card dark:border-border dark:text-zinc-50"
                   value={editDocType.name}
                   onChange={(e) =>
                     setEditDocType((prev) => ({
@@ -1016,12 +1016,12 @@ export default function DocTypesTab({
               </div>
 
               <div>
-                <label className="mb-1 block text-[11px] font-medium uppercase tracking-[0.04em] text-gray-500 dark:text-zinc-400">
+                <label className="mb-1 block text-[11px] font-medium uppercase tracking-[0.04em] text-gray-900 dark:text-zinc-300">
                   Compliance / Record Category
                 </label>
                 <Input
                   type="text"
-                  className="h-10 rounded-xl border border-gray-200 bg-white text-[13px] font-normal tracking-[-0.01em] text-gray-900 focus-visible:border-gray-500 focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none focus:ring-0 focus:border-gray-500 dark:bg-card dark:border-white/10 dark:text-zinc-50"
+                  className="h-10 rounded-xl border border-border bg-white text-[13px] font-normal tracking-[-0.01em] text-gray-900 focus-visible:border-gray-500 focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none focus:ring-0 focus:border-gray-500 dark:bg-card dark:border-border dark:text-zinc-50"
                   value={editDocType.complianceCategory || ""}
                   onChange={(e) =>
                     setEditDocType((prev) => ({
@@ -1032,11 +1032,11 @@ export default function DocTypesTab({
                 />
               </div>
 
-              <div className="rounded-xl border border-gray-200/80 dark:border-white/10 p-3.5 space-y-3 bg-gray-50/50 dark:bg-zinc-800/30">
+              <div className="rounded-xl border border-border/80 dark:border-border p-3.5 space-y-3 bg-gray-50/50 dark:bg-zinc-800/30">
                 <label className="flex items-center justify-between cursor-pointer gap-2 select-none">
                   <div>
                     <p className="text-xs font-semibold text-gray-900 dark:text-zinc-100">Enrollment Compliance Requirement</p>
-                    <p className="text-[11px] text-gray-500 dark:text-zinc-400">Expected submission in student 201 folder & compliance metrics</p>
+                    <p className="text-[11px] text-gray-900 dark:text-zinc-300">Expected submission in student 201 folder & compliance metrics</p>
                   </div>
                   <input
                     type="checkbox"
@@ -1051,11 +1051,11 @@ export default function DocTypesTab({
                   />
                 </label>
 
-                <div className="border-t border-gray-100 dark:border-white/5 pt-2.5">
+                <div className="border-t border-border dark:border-border pt-2.5">
                   <label className="flex items-center justify-between cursor-pointer gap-2 select-none">
                     <div>
                       <p className="text-xs font-semibold text-gray-900 dark:text-zinc-100">Available for Online Request (ODRS)</p>
-                      <p className="text-[11px] text-gray-500 dark:text-zinc-400">Allow students & alumni to request official copies</p>
+                      <p className="text-[11px] text-gray-900 dark:text-zinc-300">Allow students & alumni to request official copies</p>
                     </div>
                     <input
                       type="checkbox"
@@ -1082,7 +1082,7 @@ export default function DocTypesTab({
                   setNewDocTypeName("")
                   setEditDocType({ id: null, name: "", isRequestable: false, isCompliance: false, complianceCategory: "General Requirements" })
                 }}
-                className="flex h-10 items-center justify-center rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
+                className="flex h-10 items-center justify-center rounded-xl! border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
               >
                 Cancel
               </Button>

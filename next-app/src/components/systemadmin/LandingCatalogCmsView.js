@@ -356,7 +356,7 @@ export default function LandingCatalogCmsView({ showToast }) {
 
   return (
     <div className="flex flex-col gap-6 w-full animate-fade-up font-jakarta">
-      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
+      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none">
         <PageHeader
           icon="ph-bold ph-books"
           title={
@@ -370,14 +370,14 @@ export default function LandingCatalogCmsView({ showToast }) {
           description="Configure authentic university credentials, document codes, client eligibility tags, and filing requirements for the Apple-style carousel."
           showBorder={false}
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
-          descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
+          descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
           actions={
             <div className="flex items-center gap-2.5 flex-wrap">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => window.open("/#catalog", "_blank")}
-                className="flex h-10 items-center justify-center rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
+                className="flex h-10 items-center justify-center rounded-xl! border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
               >
                 Preview
               </Button>
@@ -411,7 +411,7 @@ export default function LandingCatalogCmsView({ showToast }) {
         />
 
         {/* Navigation Tabs */}
-        <div className="flex items-center gap-6 shrink-0 h-10 px-6 border-b border-gray-100 dark:border-white/10 bg-white dark:bg-card select-none">
+        <div className="flex items-center gap-6 shrink-0 h-10 px-6 border-b border-border dark:border-border bg-white dark:bg-card select-none">
           <button
             type="button"
             onClick={() => setActiveTab("content")}
@@ -445,12 +445,12 @@ export default function LandingCatalogCmsView({ showToast }) {
           {activeTab === "content" && (
             <div className="space-y-6">
               {/* Section Header & Subtitle */}
-              <div className="p-5 sm:p-6 rounded-2xl border border-gray-200/80 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/30 space-y-4">
+              <div className="p-5 sm:p-6 rounded-2xl border border-border/80 dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 space-y-4">
                 <div>
                   <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">
                     Section Header &amp; Description
                   </h3>
-                  <p className="text-[12px] font-normal text-gray-500 dark:text-zinc-400 mt-0.5">
+                  <p className="text-[12px] font-normal text-gray-900 dark:text-zinc-300 mt-0.5">
                     Controls the overarching headline and introductory copy displayed above the document carousel.
                   </p>
                 </div>
@@ -472,7 +472,7 @@ export default function LandingCatalogCmsView({ showToast }) {
                       }
                       placeholder="e.g. Academic Document Catalog"
                       maxLength={50}
-                      className="h-10 rounded-xl bg-white dark:bg-zinc-900 border border-gray-200 dark:border-white/10 text-xs font-semibold focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 dark:focus:ring-pup-maroon/20"
+                      className="h-10 rounded-xl bg-white dark:bg-zinc-900 border border-border dark:border-border text-xs font-semibold focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 dark:focus:ring-pup-maroon/20"
                     />
                   </div>
 
@@ -492,7 +492,7 @@ export default function LandingCatalogCmsView({ showToast }) {
                       }
                       placeholder="Explore authentic credentials, university clearance protocols..."
                       maxLength={200}
-                      className="h-10 rounded-xl bg-white dark:bg-zinc-900 border border-gray-200 dark:border-white/10 text-xs font-normal focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 dark:focus:ring-pup-maroon/20"
+                      className="h-10 rounded-xl bg-white dark:bg-zinc-900 border border-border dark:border-border text-xs font-normal focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 dark:focus:ring-pup-maroon/20"
                     />
                   </div>
                 </div>
@@ -512,7 +512,7 @@ export default function LandingCatalogCmsView({ showToast }) {
                           {currentItems.length} of {MAX_CATALOG_ITEMS}
                         </span>
                       </div>
-                      <p className="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">
+                      <p className="text-xs text-gray-900 dark:text-zinc-300 mt-0.5">
                         Select a credential to edit or adjust its order in the carousel.
                       </p>
                     </div>
@@ -541,7 +541,7 @@ export default function LandingCatalogCmsView({ showToast }) {
                             "p-3.5 rounded-2xl border transition-all cursor-pointer flex items-center gap-3.5 select-none",
                             isSelected
                               ? "border-pup-maroon dark:border-red-500/60 bg-red-50/50 dark:bg-red-950/20 shadow-xs"
-                              : "border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-900/50 hover:bg-gray-50/80 dark:hover:bg-zinc-800/60"
+                              : "border-border dark:border-border bg-white dark:bg-zinc-900/50 hover:bg-gray-50/80 dark:hover:bg-zinc-800/60"
                           )}
                         >
                           <div
@@ -561,7 +561,7 @@ export default function LandingCatalogCmsView({ showToast }) {
                                 {item.title || "Untitled Document"}
                               </span>
                             </div>
-                            <p className="text-[11px] text-gray-500 dark:text-zinc-400 truncate mt-0.5">
+                            <p className="text-[11px] text-gray-900 dark:text-zinc-300 truncate mt-0.5">
                               {item.client || "Official Record"} · {item.requirements?.length || 0} requirements
                             </p>
                           </div>
@@ -604,8 +604,8 @@ export default function LandingCatalogCmsView({ showToast }) {
 
                 {/* RIGHT COLUMN: ACTIVE CARD EDITOR & LIVE CARD MINI-PREVIEW */}
                 <div className="lg:col-span-7 flex flex-col gap-6">
-                  <div className="p-5 sm:p-6 rounded-2xl border border-gray-200 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/30 flex flex-col gap-5">
-                    <div className="flex items-center justify-between pb-3 border-b border-gray-200/80 dark:border-white/10">
+                  <div className="p-5 sm:p-6 rounded-2xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 flex flex-col gap-5">
+                    <div className="flex items-center justify-between pb-3 border-b border-border/80 dark:border-border">
                       <div className="space-y-0.5">
                         <span className="text-[10px] font-mono uppercase font-bold text-pup-maroon dark:text-red-400 tracking-wider">
                           Document Card Editor
@@ -634,7 +634,7 @@ export default function LandingCatalogCmsView({ showToast }) {
                         onChange={(e) => updateCardField("title", e.target.value)}
                         placeholder="e.g. Transcript of Records"
                         maxLength={60}
-                        className="h-10 w-full rounded-xl bg-white dark:bg-zinc-900 border-gray-200 dark:border-white/10 text-xs font-semibold"
+                        className="h-10 w-full rounded-xl bg-white dark:bg-zinc-900 border-border dark:border-border text-xs font-semibold"
                       />
                     </div>
 
@@ -647,7 +647,7 @@ export default function LandingCatalogCmsView({ showToast }) {
                         value={currentCard.client || ""}
                         onChange={(e) => updateCardField("client", e.target.value)}
                         placeholder="e.g. Student & Alumni"
-                        className="h-10 rounded-xl bg-white dark:bg-zinc-900 border-gray-200 dark:border-white/10 text-xs mb-2 font-medium"
+                        className="h-10 rounded-xl bg-white dark:bg-zinc-900 border-border dark:border-border text-xs mb-2 font-medium"
                       />
                       <div className="flex flex-wrap items-center gap-1.5">
                         <span className="text-[10px] text-gray-400 font-mono">Suggestions:</span>
@@ -656,7 +656,7 @@ export default function LandingCatalogCmsView({ showToast }) {
                             key={pill}
                             type="button"
                             onClick={() => updateCardField("client", pill)}
-                            className="px-2 py-0.5 rounded-full text-[10px] font-mono bg-white dark:bg-zinc-800 border border-gray-200 dark:border-white/10 text-gray-600 dark:text-zinc-300 hover:border-pup-maroon hover:text-pup-maroon transition-colors cursor-pointer"
+                            className="px-2 py-0.5 rounded-full text-[10px] font-mono bg-white dark:bg-zinc-800 border border-border dark:border-border text-gray-600 dark:text-zinc-300 hover:border-pup-maroon hover:text-pup-maroon transition-colors cursor-pointer"
                           >
                             {pill}
                           </button>
@@ -674,7 +674,7 @@ export default function LandingCatalogCmsView({ showToast }) {
                         value={currentCard.description || ""}
                         onChange={(e) => updateCardField("description", e.target.value)}
                         placeholder="Official comprehensive academic transcript for employment, PRC board examinations..."
-                        className="w-full p-3 rounded-xl bg-white dark:bg-zinc-900 border border-gray-200 dark:border-white/10 text-xs leading-relaxed text-gray-800 dark:text-zinc-200 focus:outline-none focus:ring-1 focus:ring-pup-maroon resize-none"
+                        className="w-full p-3 rounded-xl bg-white dark:bg-zinc-900 border border-border dark:border-border text-xs leading-relaxed text-gray-800 dark:text-zinc-200 focus:outline-none focus:ring-1 focus:ring-pup-maroon resize-none"
                       />
                     </div>
 
@@ -698,7 +698,7 @@ export default function LandingCatalogCmsView({ showToast }) {
                             <Input
                               value={req}
                               onChange={(e) => updateRequirement(rIdx, e.target.value)}
-                              className="h-8 rounded-lg bg-white dark:bg-zinc-900 border-gray-200 dark:border-white/10 text-xs flex-1"
+                              className="h-8 rounded-lg bg-white dark:bg-zinc-900 border-border dark:border-border text-xs flex-1"
                             />
                             <button
                               type="button"
@@ -713,7 +713,7 @@ export default function LandingCatalogCmsView({ showToast }) {
                       </div>
 
                       {/* Add requirement input */}
-                      <div className="flex items-center gap-2 pt-2 border-t border-gray-100 dark:border-white/5">
+                      <div className="flex items-center gap-2 pt-2 border-t border-border dark:border-border">
                         <Input
                           value={newRequirementText}
                           onChange={(e) => setNewRequirementText(e.target.value)}
@@ -724,7 +724,7 @@ export default function LandingCatalogCmsView({ showToast }) {
                             }
                           }}
                           placeholder="Add required document or clearance (e.g. Valid Student ID)..."
-                          className="h-9 rounded-xl bg-white dark:bg-zinc-900 border-gray-200 dark:border-white/10 text-xs flex-1"
+                          className="h-9 rounded-xl bg-white dark:bg-zinc-900 border-border dark:border-border text-xs flex-1"
                         />
                         <Button
                           type="button"
@@ -739,7 +739,7 @@ export default function LandingCatalogCmsView({ showToast }) {
                     </div>
 
                     {/* IN-EDITOR LIVE CARD MINI-PREVIEW (Apple-style Card) */}
-                    <div className="p-4 rounded-2xl bg-zinc-100/80 dark:bg-zinc-950/60 border border-gray-200 dark:border-white/10">
+                    <div className="p-4 rounded-2xl bg-zinc-100/80 dark:bg-zinc-950/60 border border-border dark:border-border">
                       <div className="text-[10px] font-mono uppercase font-bold text-gray-500 mb-3 flex items-center justify-between">
                         <span>Carousel Card Preview</span>
                         <span className="text-pup-maroon dark:text-red-400 font-semibold">
@@ -748,7 +748,7 @@ export default function LandingCatalogCmsView({ showToast }) {
                       </div>
 
                       {/* Apple-style card container */}
-                      <div className="max-w-[420px] mx-auto bg-[#f5f5f7] dark:bg-zinc-900 rounded-3xl p-6 sm:p-7 text-left shadow-sm border border-black/[0.04] dark:border-white/5 font-jakarta">
+                      <div className="max-w-[420px] mx-auto bg-[#f5f5f7] dark:bg-zinc-900 rounded-3xl p-6 sm:p-7 text-left shadow-sm border border-black/[0.04] dark:border-border font-jakarta">
                         <div className="flex items-center justify-between mb-4">
                           <span className="text-[10px] font-mono font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-1 rounded-full border border-emerald-100 dark:border-emerald-800/40">
                             {currentCard.client || "Student & Alumni"}
@@ -762,11 +762,11 @@ export default function LandingCatalogCmsView({ showToast }) {
                           {currentCard.title || "Untitled Document"}
                         </h3>
 
-                        <p className="text-xs text-gray-500 dark:text-zinc-400 leading-relaxed mb-6">
+                        <p className="text-xs text-gray-900 dark:text-zinc-300 leading-relaxed mb-6">
                           {currentCard.description || "Document description..."}
                         </p>
 
-                        <div className="pt-4 border-t border-black/5 dark:border-white/5">
+                        <div className="pt-4 border-t border-black/5 dark:border-border">
                           <div className="text-[10px] font-bold uppercase tracking-wider text-gray-400 font-mono mb-2.5 flex items-center gap-1.5">
                             <HugeIcon className="ph-bold ph-shield-check text-xs" />
                             Filing Requirements
@@ -798,25 +798,25 @@ export default function LandingCatalogCmsView({ showToast }) {
           {/* TAB 2: Interactive Live Carousel Preview */}
           {activeTab === "preview" && (
             <div className="space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/30 p-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-xl border border-border/80 dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 p-4">
                 <div>
                   <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">
                     Simulated Apple-Style Document Carousel
                   </h3>
-                  <p className="text-[12px] font-normal text-gray-500 dark:text-zinc-400">
+                  <p className="text-[12px] font-normal text-gray-900 dark:text-zinc-300">
                     Live interactive carousel with smooth horizontal scaling, active card highlighting, and pagination dots.
                   </p>
                 </div>
 
                 <div className="flex items-center gap-3">
-                  <span className="text-xs font-mono text-gray-500 dark:text-zinc-400">
+                  <span className="text-xs font-mono text-gray-900 dark:text-zinc-300">
                     Card {previewActiveIdx + 1} of {currentItems.length}
                   </span>
 
                   <button
                     type="button"
                     onClick={() => setPreviewDarkTheme(!previewDarkTheme)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white dark:bg-zinc-800 text-xs font-semibold text-gray-700 dark:text-zinc-200 border border-gray-200 dark:border-white/10 cursor-pointer shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700 transition-colors"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white dark:bg-zinc-800 text-xs font-semibold text-gray-700 dark:text-zinc-200 border border-border dark:border-border cursor-pointer shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700 transition-colors"
                   >
                     <HugeIcon className={cn("ph-bold", previewDarkTheme ? "ph-sun text-amber-500" : "ph-moon text-zinc-700")} />
                     <span>{previewDarkTheme ? "Switch to Light View" : "Switch to Dark View"}</span>
@@ -830,7 +830,7 @@ export default function LandingCatalogCmsView({ showToast }) {
                   "relative w-full rounded-2xl border p-6 sm:p-10 overflow-hidden transition-colors select-none font-jakarta flex flex-col items-center",
                   previewDarkTheme
                     ? "bg-zinc-950 text-white border-zinc-800"
-                    : "bg-white text-gray-900 border-gray-200"
+                    : "bg-white text-gray-900 border-border"
                 )}
               >
                 {/* Header */}
@@ -838,7 +838,7 @@ export default function LandingCatalogCmsView({ showToast }) {
                   <h2 className="text-2xl sm:text-4xl font-bold tracking-tight text-gray-950 dark:text-white leading-[1.08]">
                     {catalogData.heading || "Academic Document Catalog"}
                   </h2>
-                  <p className="text-xs sm:text-sm text-gray-500 dark:text-zinc-400 mt-3 leading-relaxed">
+                  <p className="text-xs sm:text-sm text-gray-900 dark:text-zinc-300 mt-3 leading-relaxed">
                     {catalogData.description}
                   </p>
                 </div>
@@ -872,11 +872,11 @@ export default function LandingCatalogCmsView({ showToast }) {
                           {doc.title}
                         </h3>
 
-                        <p className="text-xs text-gray-500 dark:text-zinc-400 leading-relaxed mb-6 flex-grow">
+                        <p className="text-xs text-gray-900 dark:text-zinc-300 leading-relaxed mb-6 flex-grow">
                           {doc.description}
                         </p>
 
-                        <div className="pt-4 border-t border-black/5 dark:border-white/5 mt-auto">
+                        <div className="pt-4 border-t border-black/5 dark:border-border mt-auto">
                           <div className="text-[10px] font-bold uppercase tracking-wider text-gray-400 font-mono mb-2 flex items-center gap-1.5">
                             <HugeIcon className="ph-bold ph-shield-check text-xs" />
                             Filing Requirements

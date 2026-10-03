@@ -91,7 +91,7 @@ const StaffTableRow = React.memo(({
     <tr
       onClick={(e) => !isCurrentUser && toggleSelect(s.id, e)}
       className={cn(
-        "group h-[52px] border-b-[0.5px] border-gray-100 dark:border-white/10 last:border-b-0 transition-all duration-fast hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none",
+        "group h-[52px] border-b-[0.5px] border-border dark:border-border last:border-b-0 transition-all duration-fast hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none",
         !isCurrentUser && "cursor-pointer",
         isSelected && "bg-blue-50/60 dark:bg-blue-950/20"
       )}
@@ -101,7 +101,7 @@ const StaffTableRow = React.memo(({
           <input
             type="checkbox"
             className={cn(
-              "h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-gray-300 dark:border-white/10 transition-opacity",
+              "h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-border dark:border-border transition-opacity",
               isSelected ? "opacity-100" : "opacity-50 group-hover:opacity-80"
             )}
             checked={isSelected}
@@ -177,7 +177,7 @@ const StaffTableRow = React.memo(({
                 <button
                   onClick={() => router.push("/account")}
                   aria-label="My Account Settings"
-                  className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 dark:text-zinc-400 hover:text-blue-600 dark:hover:text-blue-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
+                  className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-900 dark:text-zinc-300 hover:text-blue-600 dark:hover:text-blue-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
                 >
                   <HugeIcon  className="ph-bold ph-gear-six text-[16px]"></HugeIcon>
                 </button>
@@ -192,7 +192,7 @@ const StaffTableRow = React.memo(({
                     <button
                       onClick={() => onEditUser(s.id)}
                       aria-label="Edit Staff Member"
-                      className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 dark:text-zinc-400 hover:text-amber-600 dark:hover:text-amber-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
+                      className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-900 dark:text-zinc-300 hover:text-amber-600 dark:hover:text-amber-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
                     >
                       <HugeIcon  className="ph-bold ph-pencil-simple text-[16px]"></HugeIcon>
                     </button>
@@ -207,7 +207,7 @@ const StaffTableRow = React.memo(({
                     <button
                       onClick={() => onRestoreUser(s.id)}
                       aria-label="Restore Staff Member"
-                      className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 dark:text-zinc-400 hover:text-emerald-600 dark:hover:text-emerald-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
+                      className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-900 dark:text-zinc-300 hover:text-emerald-600 dark:hover:text-emerald-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
                     >
                       <HugeIcon  className="ph-bold ph-archive-restore text-[16px]"></HugeIcon>
                     </button>
@@ -220,7 +220,7 @@ const StaffTableRow = React.memo(({
                     <button
                       onClick={() => onDeleteUser(s.id)}
                       aria-label="Archive Staff Member"
-                      className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 dark:text-zinc-400 hover:text-amber-600 dark:hover:text-amber-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
+                      className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-900 dark:text-zinc-300 hover:text-amber-600 dark:hover:text-amber-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
                     >
                       <HugeIcon  className="ph-bold ph-archive text-[16px]"></HugeIcon>
                     </button>
@@ -611,7 +611,7 @@ export default function StaffDirectoryTab({
         tabIndex={0}
       >
       {/* Main Table Card with Header, Toolbar & Active Filter Chips */}
-      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
+      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none">
         <PageHeader
           icon="ph-users"
           title={
@@ -623,7 +623,7 @@ export default function StaffDirectoryTab({
           description="Manage system staff and administrative access."
           showBorder={false}
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
-          descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
+          descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
           actions={
             <div className="flex items-center gap-2">
               <RefreshButton
@@ -646,7 +646,7 @@ export default function StaffDirectoryTab({
         />
 
         {/* Navigation Toolbar */}
-        <div className="border-t border-gray-100 dark:border-white/10 p-5 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
+        <div className="border-t border-border dark:border-border p-5 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
           {/* Left: Active vs Archived Tabs */}
           <div className="flex items-center gap-6 shrink-0 select-none">
             <button
@@ -682,7 +682,7 @@ export default function StaffDirectoryTab({
               <Input
                 type="text"
                 placeholder="Search name, email or ID..."
-                className="h-9 pl-8 pr-16 rounded-xl text-xs font-normal border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
+                className="h-9 pl-8 pr-16 rounded-xl text-xs font-normal border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
                 value={localSearch}
                 onChange={(e) => setLocalSearch(e.target.value)}
                 disabled={isLoading}
@@ -745,20 +745,20 @@ export default function StaffDirectoryTab({
               setCurrentPage(1)
             }}
             onClearAll={handleClearFilters}
-            className="border-t border-gray-100 dark:border-white/10 bg-white dark:bg-card px-6 py-2.5"
+            className="border-t border-border dark:border-border bg-white dark:bg-card px-6 py-2.5"
           />
         )}
 
         {/* Content Area: Loading / Error / Table */}
         {isLoading ? (
-          <div className="w-full border-t border-gray-100 dark:border-white/10">
+          <div className="w-full border-t border-border dark:border-border">
             <DirectoryTableSkeleton rowCount={8} />
           </div>
         ) : error ? (
-          <div className="p-6 border-t border-gray-100 dark:border-white/10 rounded-b-2xl">
-            <Empty className="flex h-[320px] flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400">
+          <div className="p-6 border-t border-border dark:border-border rounded-b-2xl">
+            <Empty className="flex h-[320px] flex-col items-center justify-center border-0 text-center text-gray-900 dark:text-zinc-300">
               <EmptyHeader className="flex flex-col items-center gap-0">
-                <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
+                <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none">
                   <HugeIcon  className="ph-duotone ph-warning-circle text-xl text-pup-maroon dark:text-primary" />
                 </EmptyMedia>
                 <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">
@@ -771,15 +771,15 @@ export default function StaffDirectoryTab({
             </Empty>
           </div>
         ) : (
-          <div className={cn("w-full flex flex-col flex-1 min-h-0 border-t border-gray-100 dark:border-white/10", filteredStaff.length === 0 && "rounded-b-2xl overflow-hidden")}>
+          <div className={cn("w-full flex flex-col flex-1 min-h-0 border-t border-border dark:border-border", filteredStaff.length === 0 && "rounded-b-2xl overflow-hidden")}>
             <div className="w-full overflow-x-auto">
               <table className="min-w-full text-sm">
-                <thead className="sticky top-0 z-10 border-b-[0.5px] border-black/10 dark:border-white/10 bg-white dark:bg-card">
+                <thead className="sticky top-0 z-10 border-b-[0.5px] border-black/10 dark:border-border bg-white dark:bg-card">
                   <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">
                     <th className="w-16 p-4 text-center">
                       <input
                         type="checkbox"
-                        className="h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-gray-300 dark:border-white/10"
+                        className="h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-border dark:border-border"
                         checked={
                           paginatedStaff.some(
                             (s) => s.id !== currentUserId
@@ -890,14 +890,14 @@ export default function StaffDirectoryTab({
                           <EmptyHeader className="flex flex-col items-center gap-0">
                             <div className="relative mb-6">
                               <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                              <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
+                              <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
                                 <HugeIcon  className={activeTab === "archived" && !hasActiveFilters && search === "" ? "ph-archive" : "ph-magnifying-glass"}></HugeIcon>
                               </EmptyMedia>
                             </div>
                             <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
                               {hasActiveFilters || search !== "" ? "No Matches Found" : (activeTab === "archived" ? "No Archived Personnel Found" : "No Personnel Found")}
                             </EmptyTitle>
-                            <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400">
+                            <EmptyDescription className="max-w-xs text-sm font-medium text-gray-900 dark:text-zinc-300">
                               {hasActiveFilters || search !== ""
                                 ? "Try adjusting your search filters to find what you're looking for."
                                 : (activeTab === "archived" ? "There are currently no archived personnel records in the system." : "There are currently no personnel records in the system.")}
@@ -907,7 +907,7 @@ export default function StaffDirectoryTab({
                                 variant="outline"
                                 onClick={handleClearFilters}
                                 title="Reset Filters"
-                                className="mt-6 flex h-10 items-center justify-center rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
+                                className="mt-6 flex h-10 items-center justify-center rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                               >
                                 Reset
                               </Button>
@@ -948,7 +948,7 @@ export default function StaffDirectoryTab({
 
             {filteredStaff.length > 0 && (
               <div className="flex items-center justify-between border-t border-[#e5e5ea] dark:border-[#3a3a3c] bg-white dark:bg-[#1c1c1e] p-4 px-6 rounded-b-2xl mt-auto">
-                <div className="flex items-center gap-6 text-xs text-gray-500 dark:text-zinc-400 select-none">
+                <div className="flex items-center gap-6 text-xs text-gray-900 dark:text-zinc-300 select-none">
                   <span>
                     Showing {paginatedStaff.length} of {filteredStaff.length.toLocaleString()}
                   </span>
@@ -981,12 +981,12 @@ export default function StaffDirectoryTab({
                     size="sm"
                     disabled={displayPage <= 1}
                     onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                    className="text-xs text-gray-500 dark:text-zinc-400 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
+                    className="text-xs text-gray-900 dark:text-zinc-300 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
                   >
                     Prev
                   </Button>
 
-                  <div className="h-8 w-8 rounded-xl border border-[#e5e5ea] dark:border-zinc-800 flex items-center justify-center text-xs font-bold text-gray-800 dark:text-zinc-200 bg-white dark:bg-zinc-900">
+                  <div className="h-8 w-8 rounded-xl border border-[#e5e5ea] dark:border-border flex items-center justify-center text-xs font-bold text-gray-800 dark:text-zinc-200 bg-white dark:bg-zinc-900">
                     {displayPage}
                   </div>
 
@@ -995,7 +995,7 @@ export default function StaffDirectoryTab({
                     size="sm"
                     disabled={displayPage >= totalPages}
                     onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                    className="text-xs text-gray-500 dark:text-zinc-400 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
+                    className="text-xs text-gray-900 dark:text-zinc-300 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
                   >
                     Next
                   </Button>

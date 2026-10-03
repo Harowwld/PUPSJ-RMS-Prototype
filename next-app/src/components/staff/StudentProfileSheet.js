@@ -160,10 +160,10 @@ export default function StudentProfileSheet({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side="right"
-        className="w-full sm:max-w-2xl md:max-w-3xl lg:max-w-4xl data-[side=right]:w-full data-[side=right]:sm:max-w-2xl data-[side=right]:md:max-w-3xl data-[side=right]:lg:max-w-4xl flex flex-col h-full bg-white dark:bg-card border-l border-gray-200 dark:border-white/10 p-0 shadow-2xl font-jakarta overflow-hidden"
+        className="w-full sm:max-w-2xl md:max-w-3xl lg:max-w-4xl data-[side=right]:w-full data-[side=right]:sm:max-w-2xl data-[side=right]:md:max-w-3xl data-[side=right]:lg:max-w-4xl flex flex-col h-full bg-white dark:bg-card border-l border-border dark:border-border p-0 shadow-2xl font-jakarta overflow-hidden"
       >
         {/* Header with profile details */}
-        <SheetHeader className="shrink-0 p-6 pb-4 pr-14 border-b border-gray-100 dark:border-white/10 bg-gradient-to-r from-gray-50/90 via-white to-gray-50/50 dark:from-zinc-900/90 dark:via-card dark:to-zinc-900/50">
+        <SheetHeader className="shrink-0 p-6 pb-4 pr-14 border-b border-border dark:border-border bg-gradient-to-r from-gray-50/90 via-white to-gray-50/50 dark:from-zinc-900/90 dark:via-card dark:to-zinc-900/50">
           <div className="flex items-start gap-4">
             <div
               className="w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-xl shadow-xs shrink-0"
@@ -199,7 +199,7 @@ export default function StudentProfileSheet({
           </div>
 
           {/* Quick Actions Bar */}
-          <div className="mt-4 pt-3 border-t border-gray-100 dark:border-white/5 flex items-center gap-2">
+          <div className="mt-4 pt-3 border-t border-border dark:border-border flex items-center gap-2">
             <Button
               type="button"
               variant="outline"
@@ -208,7 +208,7 @@ export default function StudentProfileSheet({
                 onEditStudent?.(student);
               }}
               title="Edit Student Profile"
-              className="h-8 px-3 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+              className="h-8 px-3 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
             >
               Edit
             </Button>
@@ -221,7 +221,7 @@ export default function StudentProfileSheet({
                 onLocateStudent?.(student);
               }}
               title="Locate in Storage Map"
-              className="h-8 px-3 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+              className="h-8 px-3 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
             >
               Locate
             </Button>
@@ -236,7 +236,7 @@ export default function StudentProfileSheet({
               Academic & Registry Information
             </h4>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="p-3.5 rounded-xl border border-gray-100 bg-gray-50/50 dark:border-white/5 dark:bg-zinc-900/40 sm:col-span-2">
+              <div className="p-3.5 rounded-xl border border-border bg-gray-50/50 dark:border-border dark:bg-zinc-900/40 sm:col-span-2">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500 block mb-1">
                   Degree Program
                 </span>
@@ -254,7 +254,7 @@ export default function StudentProfileSheet({
                 </div>
               </div>
 
-              <div className="p-3.5 rounded-xl border border-gray-100 bg-gray-50/50 dark:border-white/5 dark:bg-zinc-900/40">
+              <div className="p-3.5 rounded-xl border border-border bg-gray-50/50 dark:border-border dark:bg-zinc-900/40">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500 block mb-1">
                   Section
                 </span>
@@ -263,7 +263,7 @@ export default function StudentProfileSheet({
                 </span>
               </div>
 
-              <div className="p-3.5 rounded-xl border border-gray-100 bg-gray-50/50 dark:border-white/5 dark:bg-zinc-900/40">
+              <div className="p-3.5 rounded-xl border border-border bg-gray-50/50 dark:border-border dark:bg-zinc-900/40">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500 block mb-1">
                   Entry Year / Batch
                 </span>
@@ -279,7 +279,7 @@ export default function StudentProfileSheet({
             <h4 className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
               Physical Storage Coordinates
             </h4>
-            <div className="rounded-2xl border border-gray-200 dark:border-white/10 bg-gradient-to-br from-gray-50/80 via-white to-gray-50/40 dark:from-zinc-900/60 dark:via-card dark:to-zinc-900/40 p-4 shadow-xs">
+            <div className="rounded-2xl border border-border dark:border-border bg-gradient-to-br from-gray-50/80 via-white to-gray-50/40 dark:from-zinc-900/60 dark:via-card dark:to-zinc-900/40 p-4 shadow-xs">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-3.5">
                   <div
@@ -292,7 +292,7 @@ export default function StudentProfileSheet({
                     <HugeIcon  className="ph-bold ph-warehouse text-lg"></HugeIcon>
                   </div>
                   <div>
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-400 block">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-gray-900 dark:text-zinc-300 block">
                       Physical Archive Filing Location
                     </span>
                     <div className="text-sm font-bold text-gray-900 dark:text-zinc-100 mt-0.5 flex items-center gap-2">
@@ -340,7 +340,7 @@ export default function StudentProfileSheet({
                 )}
               </div>
 
-              <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-0.5 rounded-lg border border-gray-200/60 dark:border-white/5">
+              <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-0.5 rounded-lg border border-border/60 dark:border-border">
                 <button
                   type="button"
                   onClick={() => setComplianceView("checklist")}
@@ -369,7 +369,7 @@ export default function StudentProfileSheet({
             </div>
 
             {complianceView === "checklist" && requirementsList.length > 0 ? (
-              <div className="rounded-xl border border-gray-200 dark:border-white/10 overflow-hidden divide-y divide-gray-100 dark:divide-white/5">
+              <div className="rounded-xl border border-border dark:border-border overflow-hidden divide-y divide-border dark:divide-border">
                 {requirementsList.map((req, index) => {
                   const isApproved = req.status === "Approved";
                   const isPending = req.status === "Pending";
@@ -460,19 +460,19 @@ export default function StudentProfileSheet({
                 })}
               </div>
             ) : studentDocs.length === 0 ? (
-              <div className="p-8 text-center rounded-xl border border-dashed border-gray-200 dark:border-white/10 text-xs text-gray-400 dark:text-zinc-500">
+              <div className="p-8 text-center rounded-xl border border-dashed border-border dark:border-border text-xs text-gray-400 dark:text-zinc-500">
                 <HugeIcon  className="ph-duotone ph-files text-3xl mb-1.5 block opacity-50"></HugeIcon>
                 No digitized records uploaded for this student yet.
               </div>
             ) : (
-              <div className="rounded-xl border border-gray-200 dark:border-white/10 overflow-hidden divide-y divide-gray-100 dark:divide-white/5">
+              <div className="rounded-xl border border-border dark:border-border overflow-hidden divide-y divide-border dark:divide-border">
                 {studentDocs.map((doc, docIdx) => (
                   <div
                     key={doc.id || `doc-${docIdx}`}
                     className="p-3.5 flex items-center justify-between gap-3 hover:bg-gray-50/50 dark:hover:bg-zinc-800/40 transition-colors"
                   >
                     <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-8 h-8 rounded-lg bg-gray-100 dark:bg-zinc-800 flex items-center justify-center text-gray-500 dark:text-zinc-400 shrink-0">
+                      <div className="w-8 h-8 rounded-lg bg-gray-100 dark:bg-zinc-800 flex items-center justify-center text-gray-900 dark:text-zinc-300 shrink-0">
                         <HugeIcon  className="ph-bold ph-file-pdf text-base text-pup-maroon dark:text-red-400"></HugeIcon>
                       </div>
                       <div className="min-w-0">
@@ -535,11 +535,11 @@ export default function StudentProfileSheet({
             {isLoadingRequests ? (
               <div className="p-4 text-center text-xs text-gray-400">Loading requests...</div>
             ) : requests.length === 0 ? (
-              <div className="p-4 text-center rounded-xl border border-dashed border-gray-200 dark:border-white/10 text-xs text-gray-400 dark:text-zinc-500">
+              <div className="p-4 text-center rounded-xl border border-dashed border-border dark:border-border text-xs text-gray-400 dark:text-zinc-500">
                 No document requests recorded.
               </div>
             ) : (
-              <div className="rounded-xl border border-gray-200 dark:border-white/10 overflow-hidden divide-y divide-gray-100 dark:divide-white/5">
+              <div className="rounded-xl border border-border dark:border-border overflow-hidden divide-y divide-border dark:divide-border">
                 {requests.map((req, reqIdx) => (
                   <div key={req.id || `req-hist-${reqIdx}`} className="p-3 flex items-center justify-between text-xs">
                     <div>
@@ -561,7 +561,7 @@ export default function StudentProfileSheet({
         </div>
 
         {/* Footer with actions */}
-        <SheetFooter className="shrink-0 p-4 border-t border-gray-100 dark:border-white/10 bg-gray-50/90 dark:bg-zinc-900/60 flex items-center justify-between flex-row">
+        <SheetFooter className="shrink-0 p-4 border-t border-border dark:border-border bg-gray-50/90 dark:bg-zinc-900/60 flex items-center justify-between flex-row">
           <div>
             {isArchived ? (
               <Button
@@ -596,7 +596,7 @@ export default function StudentProfileSheet({
             type="button"
             variant="outline"
             onClick={() => onOpenChange(false)}
-            className="h-9 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+            className="h-9 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
           >
             Close
           </Button>

@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card"
 export default function OsasMonitoringSkeleton() {
   return (
     <div className="font-jakarta w-full flex flex-1 flex-col h-full min-h-0 gap-6 focus:outline-none animate-fade-up select-none">
-      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none isolate font-jakarta mb-4 min-h-0 flex-1">
+      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4 min-h-0 flex-1">
         {/* PageHeader Skeleton */}
         <div className="flex items-center justify-between p-6">
           <div className="flex items-center gap-3">
@@ -24,7 +24,7 @@ export default function OsasMonitoringSkeleton() {
         </div>
 
         {/* Toolbar Skeleton */}
-        <div className="border-t border-gray-100 dark:border-white/10 p-5 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
+        <div className="border-t border-border dark:border-border p-5 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
           <div className="flex gap-1.5 overflow-x-auto">
             {Array.from({ length: 5 }).map((_, i) => (
               <Skeleton key={i} className="h-8 w-20 rounded-lg shrink-0" />
@@ -34,7 +34,7 @@ export default function OsasMonitoringSkeleton() {
         </div>
 
         {/* Table Rows Skeleton */}
-        <div className="border-t border-gray-100 dark:border-white/10 divide-y divide-gray-100 dark:divide-white/5 flex-1 bg-white dark:bg-card">
+        <div className="border-t border-border dark:border-border divide-y divide-border dark:divide-border flex-1 bg-white dark:bg-card">
           {Array.from({ length: 6 }).map((_, i) => (
             <div
               key={i}
@@ -52,7 +52,7 @@ export default function OsasMonitoringSkeleton() {
         </div>
 
         {/* Footer Skeleton */}
-        <div className="border-t border-gray-100 dark:border-white/10 p-4 px-6 flex items-center justify-between bg-white dark:bg-card mt-auto rounded-b-2xl select-none">
+        <div className="border-t border-border dark:border-border p-4 px-6 flex items-center justify-between bg-white dark:bg-card mt-auto rounded-b-2xl select-none">
           <div className="flex items-center gap-6">
             <Skeleton className="h-3.5 w-36 rounded" />
             <div className="hidden sm:flex items-center gap-2">

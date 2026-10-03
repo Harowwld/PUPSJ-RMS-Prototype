@@ -90,7 +90,7 @@ export default function ActiveFilterChips({
   return (
     <div
       className={cn(
-        "flex flex-wrap items-center gap-1.5 px-6 py-2.5 border-t border-gray-100 dark:border-white/10 bg-white dark:bg-card animate-in fade-in-50 duration-200",
+        "flex flex-wrap items-center gap-1.5 px-6 py-2.5 border-t border-border dark:border-border bg-white dark:bg-card animate-in fade-in-50 duration-200",
         className
       )}
     >
@@ -101,7 +101,7 @@ export default function ActiveFilterChips({
       {chips.map((chip, idx) => (
         <span
           key={`${chip.type}-${chip.groupId || ""}-${chip.value || idx}`}
-          className="inline-flex items-center gap-1.5 h-6 pl-2 pr-1.5 rounded-lg bg-gray-100 dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 border border-gray-200/70 dark:border-white/10 text-[11px] font-medium transition-all hover:border-gray-300 dark:hover:border-white/20 select-none shadow-2xs"
+          className="inline-flex items-center gap-1.5 h-6 pl-2 pr-1.5 rounded-lg bg-gray-100 dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 border border-border/70 dark:border-border text-[11px] font-medium transition-all hover:border-border dark:hover:border-white/20 select-none shadow-2xs"
         >
           {chip.groupLabel && (
             <span className="text-gray-400 dark:text-zinc-500 font-normal">

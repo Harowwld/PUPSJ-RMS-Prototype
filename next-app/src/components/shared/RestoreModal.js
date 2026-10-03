@@ -106,7 +106,7 @@ export default function RestoreModal({
 
   return (
     <Dialog open={open} onOpenChange={handleCancelAction}>
-      <DialogContent className="sm:max-w-xl p-0 overflow-hidden bg-white border border-gray-200 shadow-2xl rounded-2xl dark:bg-card dark:border-white/10 gap-0">
+      <DialogContent className="sm:max-w-xl p-0 overflow-hidden bg-white border border-border shadow-2xl rounded-2xl dark:bg-card dark:border-border gap-0">
         {/* Header */}
         <DialogHeader className="bg-white p-6 pb-0 dark:bg-card border-none text-left">
           <div className="flex items-start gap-3.5">
@@ -131,7 +131,7 @@ export default function RestoreModal({
               <DialogTitle className="text-[17px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
                 {title}
               </DialogTitle>
-              <DialogDescription className="mt-1 text-[13px] font-normal text-gray-500 dark:text-zinc-400 leading-relaxed">
+              <DialogDescription className="mt-1 text-[13px] font-normal text-gray-900 dark:text-zinc-300 leading-relaxed">
                 {description}
               </DialogDescription>
             </div>
@@ -141,7 +141,7 @@ export default function RestoreModal({
         {/* Content Body */}
         <div className="p-6 space-y-4">
           {/* File Summary Badge */}
-          <div className="flex items-center justify-between px-3.5 py-2.5 rounded-xl border border-gray-200/80 bg-gray-50/70 dark:border-white/10 dark:bg-zinc-900/40">
+          <div className="flex items-center justify-between px-3.5 py-2.5 rounded-xl border border-border/80 bg-gray-50/70 dark:border-border dark:bg-zinc-900/40">
             <div className="flex items-center gap-2.5 min-w-0">
               <HugeIcon className="ph-duotone ph-file-zip text-[18px] text-gray-400 dark:text-zinc-500 shrink-0" />
               <span className="text-xs font-semibold text-gray-800 dark:text-zinc-200 truncate font-mono">
@@ -149,7 +149,7 @@ export default function RestoreModal({
               </span>
             </div>
             {previewData?.totalArchiveFiles !== undefined && (
-              <span className="text-[11px] font-medium text-gray-500 dark:text-zinc-400 shrink-0">
+              <span className="text-[11px] font-medium text-gray-900 dark:text-zinc-300 shrink-0">
                 {previewData.totalArchiveFiles} files
               </span>
             )}
@@ -157,10 +157,10 @@ export default function RestoreModal({
 
           {/* Restoration Strategy Segmented Control */}
           <div className="space-y-1.5">
-            <label className="text-[11px] font-medium uppercase tracking-[0.04em] text-gray-500 dark:text-zinc-400">
+            <label className="text-[11px] font-medium uppercase tracking-[0.04em] text-gray-900 dark:text-zinc-300">
               Restoration Strategy
             </label>
-            <div className="grid grid-cols-2 gap-2 p-1 rounded-xl bg-gray-100/80 dark:bg-zinc-800/60 border border-gray-200/60 dark:border-white/5">
+            <div className="grid grid-cols-2 gap-2 p-1 rounded-xl bg-gray-100/80 dark:bg-zinc-800/60 border border-border/60 dark:border-border">
               <button
                 type="button"
                 onClick={() => setMode("merge")}
@@ -177,7 +177,7 @@ export default function RestoreModal({
                     Recommended
                   </span>
                 </div>
-                <p className="text-[11px] text-gray-500 dark:text-zinc-400 mt-1 leading-normal">
+                <p className="text-[11px] text-gray-900 dark:text-zinc-300 mt-1 leading-normal">
                   Keep modern records; only restore missing data from archive.
                 </p>
               </button>
@@ -198,7 +198,7 @@ export default function RestoreModal({
                     Disaster Rollback
                   </span>
                 </div>
-                <p className="text-[11px] text-gray-500 dark:text-zinc-400 mt-1 leading-normal">
+                <p className="text-[11px] text-gray-900 dark:text-zinc-300 mt-1 leading-normal">
                   Replace live database entirely. Records added after will be erased.
                 </p>
               </button>
@@ -208,7 +208,7 @@ export default function RestoreModal({
           {/* Table Diff Preview */}
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
-              <label className="text-[11px] font-medium uppercase tracking-[0.04em] text-gray-500 dark:text-zinc-400">
+              <label className="text-[11px] font-medium uppercase tracking-[0.04em] text-gray-900 dark:text-zinc-300">
                 Data Impact Preview
               </label>
               {previewLoading && (
@@ -219,7 +219,7 @@ export default function RestoreModal({
               )}
             </div>
 
-            <div className="rounded-xl border border-gray-200/80 dark:border-white/10 overflow-hidden bg-white dark:bg-card">
+            <div className="rounded-xl border border-border/80 dark:border-border overflow-hidden bg-white dark:bg-card">
               {previewLoading ? (
                 <div className="p-4 space-y-2">
                   <Skeleton className="h-6 w-full rounded-md" />
@@ -238,15 +238,15 @@ export default function RestoreModal({
               ) : previewData?.tables && previewData.tables.length > 0 ? (
                 <div className="max-h-40 overflow-y-auto custom-scrollbar">
                   <table className="min-w-full text-xs">
-                    <thead className="bg-gray-50/80 dark:bg-zinc-800/50 border-b border-gray-100 dark:border-white/10 sticky top-0">
-                      <tr className="text-left text-[11px] font-medium text-gray-500 dark:text-zinc-400">
+                    <thead className="bg-gray-50/80 dark:bg-zinc-800/50 border-b border-border dark:border-border sticky top-0">
+                      <tr className="text-left text-[11px] font-medium text-gray-900 dark:text-zinc-300">
                         <th className="py-2 px-3 font-medium">Resource</th>
                         <th className="py-2 px-3 font-medium text-center">Live</th>
                         <th className="py-2 px-3 font-medium text-center">In Backup</th>
                         <th className="py-2 px-3 font-medium text-right">Net Impact</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-100 dark:divide-white/5">
+                    <tbody className="divide-y divide-border dark:divide-border">
                       {previewData.tables.map((t) => {
                         const delta = Number(t.delta || 0);
                         const isSafeMerge = mode === "merge";
@@ -290,7 +290,7 @@ export default function RestoreModal({
                   </table>
                 </div>
               ) : (
-                <div className="p-4 text-center text-xs text-gray-500 dark:text-zinc-400">
+                <div className="p-4 text-center text-xs text-gray-900 dark:text-zinc-300">
                   Ready to restore. Relational tables will be validated upon confirmation.
                 </div>
               )}
@@ -307,13 +307,13 @@ export default function RestoreModal({
         </div>
 
         {/* Footer with Action-Word Only Buttons */}
-        <DialogFooter className="p-6 pt-4 bg-white dark:bg-card border-t border-gray-100 dark:border-white/10 flex items-center justify-end gap-2.5">
+        <DialogFooter className="p-6 pt-4 bg-white dark:bg-card border-t border-border dark:border-border flex items-center justify-end gap-2.5">
           <Button
             type="button"
             variant="outline"
             onClick={handleCancelAction}
             disabled={isLoading}
-            className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+            className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
           >
             Cancel
           </Button>

@@ -320,7 +320,7 @@ export default function CoursesTab({
           icon="ph-books"
           showBorder={false}
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
-          descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
+          descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
           title={
             <div className="flex items-center gap-[6px]">
               Degree Programs
@@ -332,7 +332,7 @@ export default function CoursesTab({
         />
 
         {/* Navigation Toolbar */}
-        <div className="border-t border-gray-100 dark:border-white/10 p-5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
+        <div className="border-t border-border dark:border-border p-5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
           {/* Active / Archived Tabs */}
           <div className="flex items-center gap-6 shrink-0 select-none">
             <button
@@ -376,7 +376,7 @@ export default function CoursesTab({
               <Input
                 type="text"
                 placeholder="Search code or program name..."
-                className="h-10 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 pl-9 pr-24 text-xs font-normal placeholder:text-gray-400 dark:placeholder:text-zinc-500 text-gray-900 dark:text-zinc-100 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
+                className="h-10 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 pl-9 pr-24 text-xs font-normal placeholder:text-gray-400 dark:placeholder:text-zinc-500 text-gray-900 dark:text-zinc-100 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
                 value={localSearch}
                 onChange={(e) => setLocalSearch(e.target.value)}
               />
@@ -406,7 +406,7 @@ export default function CoursesTab({
               variant="outline"
               onClick={onExportClick}
               disabled={isExporting}
-              className="flex h-10 items-center justify-center rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
+              className="flex h-10 items-center justify-center rounded-xl! border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
             >
               {isExporting ? (
                 <HugeIcon className="ph-bold ph-spinner animate-spin text-[16px]" />
@@ -438,22 +438,22 @@ export default function CoursesTab({
             setCourseSearch("")
             setPageCourse(1)
           }}
-          className="border-t border-gray-100 dark:border-white/10 bg-white dark:bg-card px-6 py-2.5"
+          className="border-t border-border dark:border-border bg-white dark:bg-card px-6 py-2.5"
         />
 
         {/* Main Table Container (Seamless inside single card) */}
-        <div className={cn("w-full flex flex-col flex-1 min-h-0 border-t border-gray-100 dark:border-white/10 bg-white dark:bg-card", filteredCourses.length === 0 && "rounded-b-2xl overflow-hidden")}>
+        <div className={cn("w-full flex flex-col flex-1 min-h-0 border-t border-border dark:border-border bg-white dark:bg-card", filteredCourses.length === 0 && "rounded-b-2xl overflow-hidden")}>
           <div className="w-full overflow-x-auto flex-1 select-none">
             {loading && courses.length === 0 ? (
               <TaxonomyTableSkeleton rowCount={6} embedded={true} showSubtext={true} showPagination={false} />
             ) : (
               <table className="min-w-full text-sm">
-                <thead className="sticky top-0 z-10 border-b border-gray-100 dark:border-white/10 bg-white dark:bg-card">
+                <thead className="sticky top-0 z-10 border-b border-border dark:border-border bg-white dark:bg-card">
                     <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">
                       <th className="w-12 p-4 text-center">
                         <input
                           type="checkbox"
-                          className="h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-gray-300 text-pup-maroon dark:text-primary accent-pup-maroon focus:ring-pup-maroon disabled:cursor-not-allowed disabled:opacity-20 dark:text-primary dark:border-white/10"
+                          className="h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-border text-pup-maroon dark:text-primary accent-pup-maroon focus:ring-pup-maroon disabled:cursor-not-allowed disabled:opacity-20 dark:text-primary dark:border-border"
                           checked={
                             filteredCourses.length > 0 &&
                             filteredCourses.every((c) => selectedCourses[c.id])
@@ -488,11 +488,11 @@ export default function CoursesTab({
                       <th className="w-32 p-4 px-6 text-right text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">Actions</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-100 dark:divide-white/5">
+                  <tbody className="divide-y divide-border dark:divide-border">
                     {!showArchived && (
                       <tr
                         className={cn(
-                          "group h-[52px] border-b-[0.5px] border-gray-100 dark:border-white/10 last:border-b-0 transition-all duration-fast hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none cursor-pointer",
+                          "group h-[52px] border-b-[0.5px] border-border dark:border-border last:border-b-0 transition-all duration-fast hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none cursor-pointer",
                           (newCourseCode.trim() || newCourseName.trim()) && "bg-emerald-50/40 dark:bg-emerald-950/10"
                         )}
                       >
@@ -505,8 +505,8 @@ export default function CoursesTab({
                               setNewCourseCode(e.target.value.toUpperCase())
                             }
                             className={cn(
-                              "h-10 w-40 rounded-xl border border-gray-300 bg-white text-xs font-semibold transition-all focus-visible:ring-pup-maroon",
-                              newCourseCode.trim() || newCourseName.trim() ? "ring-1 ring-emerald-200 border-emerald-300 dark:ring-emerald-500/30 dark:border-emerald-500/50" : "focus-visible:border-gray-300 dark:border-white/10 dark:bg-card"
+                              "h-10 w-40 rounded-xl border border-border bg-white text-xs font-semibold transition-all focus-visible:ring-pup-maroon",
+                              newCourseCode.trim() || newCourseName.trim() ? "ring-1 ring-emerald-200 border-emerald-300 dark:ring-emerald-500/30 dark:border-emerald-500/50" : "focus-visible:border-border dark:border-border dark:bg-card"
                             )}
                           />
                         </td>
@@ -526,8 +526,8 @@ export default function CoursesTab({
                                 }
                               }}
                               className={cn(
-                                "h-10 flex-1 rounded-xl border border-gray-300 bg-white text-sm transition-all focus-visible:ring-pup-maroon",
-                                newCourseCode.trim() || newCourseName.trim() ? "ring-1 ring-emerald-200 border-emerald-300 dark:ring-emerald-500/30 dark:border-emerald-500/50" : "focus-visible:border-gray-300 dark:border-white/10 dark:bg-card"
+                                "h-10 flex-1 rounded-xl border border-border bg-white text-sm transition-all focus-visible:ring-pup-maroon",
+                                newCourseCode.trim() || newCourseName.trim() ? "ring-1 ring-emerald-200 border-emerald-300 dark:ring-emerald-500/30 dark:border-emerald-500/50" : "focus-visible:border-border dark:border-border dark:bg-card"
                               )}
                             />
                             <Button
@@ -581,7 +581,7 @@ export default function CoursesTab({
                             if (!isDisabled) toggleCourseSelected(c.id, e);
                           }}
                           className={cn(
-                            "group h-[52px] border-b-[0.5px] border-gray-100 dark:border-white/10 last:border-b-0 transition-all duration-fast hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none cursor-pointer",
+                            "group h-[52px] border-b-[0.5px] border-border dark:border-border last:border-b-0 transition-all duration-fast hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none cursor-pointer",
                             c.status === "Archived" && "opacity-75",
                             isSelected && "bg-blue-50/60 dark:bg-blue-950/20",
                             isDisabled && "cursor-not-allowed"
@@ -591,7 +591,7 @@ export default function CoursesTab({
                               <input
                               type="checkbox"
                               className={cn(
-                                "h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-gray-300 text-pup-maroon dark:text-primary accent-pup-maroon focus:ring-pup-maroon dark:text-primary dark:border-white/10 transition-opacity",
+                                "h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-border text-pup-maroon dark:text-primary accent-pup-maroon focus:ring-pup-maroon dark:text-primary dark:border-border transition-opacity",
                                 isSelected ? "opacity-100" : "opacity-50 group-hover:opacity-80"
                               )}
                               checked={isSelected}
@@ -729,14 +729,14 @@ export default function CoursesTab({
                             <EmptyHeader className="flex flex-col items-center gap-0">
                               <div className="relative mb-6">
                                 <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                                <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
+                                <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
                                   <HugeIcon  className={showArchived && totalInView === 0 ? "ph-archive" : "ph-magnifying-glass"}></HugeIcon>
                                 </EmptyMedia>
                               </div>
                               <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
                                 {totalInView > 0 ? "No matches found" : (showArchived ? "No Archived Programs Found" : "No Degree Programs Found")}
                               </EmptyTitle>
-                              <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400">
+                              <EmptyDescription className="max-w-xs text-sm font-medium text-gray-900 dark:text-zinc-300">
                                 {totalInView > 0
                                   ? "Try adjusting your search filters to find what you're looking for."
                                   : showArchived
@@ -751,7 +751,7 @@ export default function CoursesTab({
                                     setLocalSearch("")
                                   }}
                                   title="Reset Filters"
-                                  className="mt-6 flex h-10 items-center justify-center rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
+                                  className="mt-6 flex h-10 items-center justify-center rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                                 >
                                   Reset
                                 </Button>
@@ -776,8 +776,8 @@ export default function CoursesTab({
             </div>
 
         {filteredCoursesFull.length > 0 && (
-          <div className="flex items-center justify-between border-t border-gray-100 dark:border-white/10 bg-white dark:bg-card p-4 px-6 rounded-b-2xl mt-auto select-none">
-            <div className="flex items-center gap-6 text-xs text-gray-500 dark:text-zinc-400 select-none">
+          <div className="flex items-center justify-between border-t border-border dark:border-border bg-white dark:bg-card p-4 px-6 rounded-b-2xl mt-auto select-none">
+            <div className="flex items-center gap-6 text-xs text-gray-900 dark:text-zinc-300 select-none">
               <span>
                 Showing {filteredCourses.length} of {filteredCoursesFull.length.toLocaleString()}
               </span>
@@ -807,12 +807,12 @@ export default function CoursesTab({
                 size="sm"
                 disabled={pageCourse <= 1}
                 onClick={() => setPageCourse((p) => Math.max(1, p - 1))}
-                className="text-xs text-gray-500 dark:text-zinc-400 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
+                className="text-xs text-gray-900 dark:text-zinc-300 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
               >
                 Prev
               </Button>
 
-              <div className="h-8 w-8 rounded-xl border border-gray-200 dark:border-white/10 flex items-center justify-center text-xs font-bold text-gray-800 dark:text-zinc-200 bg-white dark:bg-zinc-900">
+              <div className="h-8 w-8 rounded-xl border border-border dark:border-border flex items-center justify-center text-xs font-bold text-gray-800 dark:text-zinc-200 bg-white dark:bg-zinc-900">
                 {pageCourse}
               </div>
 
@@ -821,7 +821,7 @@ export default function CoursesTab({
                 size="sm"
                 disabled={pageCourse >= Math.ceil(filteredCoursesFull.length / itemsPerPage)}
                 onClick={() => setPageCourse((p) => p + 1)}
-                className="text-xs text-gray-500 dark:text-zinc-400 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
+                className="text-xs text-gray-900 dark:text-zinc-300 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
               >
                 Next
               </Button>
@@ -851,14 +851,14 @@ export default function CoursesTab({
           }
         }}
       >
-        <DialogContent className="overflow-hidden rounded-2xl border border-gray-200 bg-white p-0 shadow-2xl sm:max-w-md dark:border-white/10 dark:bg-card">
+        <DialogContent className="overflow-hidden rounded-2xl border border-border bg-white p-0 shadow-2xl sm:max-w-md dark:border-border dark:bg-card">
           <DialogHeader className="bg-white p-6 pb-0 dark:bg-card border-none">
             <div className="flex items-start gap-4">
               <div className="min-w-0">
                 <DialogTitle className="text-[16px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
                   New Degree Program
                 </DialogTitle>
-                <DialogDescription className="mt-1 text-[13px] font-normal text-gray-500 dark:text-zinc-400">
+                <DialogDescription className="mt-1 text-[13px] font-normal text-gray-900 dark:text-zinc-300">
                   Register a new academic track and its initial organizational blocks.
                 </DialogDescription>
               </div>
@@ -867,13 +867,13 @@ export default function CoursesTab({
           <form onSubmit={addCourse}>
             <div className="max-h-[60vh] overflow-y-auto p-6 pb-4 flex flex-col gap-4">
               <div>
-                <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-gray-500 dark:text-zinc-400">
+                <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-gray-900 dark:text-zinc-300">
                   Code <span className="text-[11px] font-normal text-gray-400 dark:text-zinc-500">*</span>
                 </label>
                 <Input
                   type="text"
                   placeholder="BSIT"
-                  className="h-10 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon shadow-xs"
+                  className="h-10 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon shadow-xs"
                   value={newCourseCode}
                   onChange={(e) =>
                     setNewCourseCode(e.target.value.toUpperCase())
@@ -882,13 +882,13 @@ export default function CoursesTab({
                 />
               </div>
               <div>
-                <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-gray-500 dark:text-zinc-400">
+                <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-gray-900 dark:text-zinc-300">
                   Designation <span className="text-[11px] font-normal text-gray-400 dark:text-zinc-500">*</span>
                 </label>
                 <Input
                   type="text"
                   placeholder="Bachelor of Science in Information Technology"
-                  className="h-10 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon shadow-xs"
+                  className="h-10 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon shadow-xs"
                   value={newCourseName}
                   onChange={(e) => setNewCourseName(e.target.value)}
                   required
@@ -897,7 +897,7 @@ export default function CoursesTab({
 
               <div className="flex flex-col gap-3">
                 <div className="flex items-center justify-between">
-                  <label className="text-[11px] font-medium uppercase tracking-wider text-gray-500 dark:text-zinc-400">
+                  <label className="text-[11px] font-medium uppercase tracking-wider text-gray-900 dark:text-zinc-300">
                     Course Blocks
                   </label>
                   <Button
@@ -917,7 +917,7 @@ export default function CoursesTab({
                       <Input
                         type="text"
                         placeholder={`Block ${idx + 1} Name`}
-                        className="h-10 flex-1 min-w-0 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon shadow-xs"
+                        className="h-10 flex-1 min-w-0 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon shadow-xs"
                         value={block}
                         onChange={(e) => {
                           const updated = [...newCourseBlocks]
@@ -956,7 +956,7 @@ export default function CoursesTab({
                   setNewCourseName("")
                   setNewCourseBlocks([""])
                 }}
-                className="h-10 px-4 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                className="h-10 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
               >
                 Cancel
               </Button>
@@ -981,14 +981,14 @@ export default function CoursesTab({
           }
         }}
       >
-        <DialogContent className="overflow-hidden rounded-2xl border border-gray-200 bg-white p-0 shadow-2xl sm:max-w-md dark:border-white/10 dark:bg-card">
+        <DialogContent className="overflow-hidden rounded-2xl border border-border bg-white p-0 shadow-2xl sm:max-w-md dark:border-border dark:bg-card">
           <DialogHeader className="bg-white p-6 pb-0 dark:bg-card border-none">
             <div className="flex items-start gap-4">
               <div className="min-w-0">
                 <DialogTitle className="text-[16px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
                   Update Program Details
                 </DialogTitle>
-                <DialogDescription className="mt-1 text-[13px] font-normal text-gray-500 dark:text-zinc-400">
+                <DialogDescription className="mt-1 text-[13px] font-normal text-gray-900 dark:text-zinc-300">
                   Modify the designation or associated blocks for this program.
                 </DialogDescription>
               </div>
@@ -998,12 +998,12 @@ export default function CoursesTab({
             <div className="max-h-[60vh] space-y-4 overflow-y-auto p-6 pb-4">
               <div className="space-y-4">
                 <div>
-                  <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-gray-500 dark:text-zinc-400">
+                  <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-gray-900 dark:text-zinc-300">
                     Code <span className="text-[11px] font-normal text-gray-400 dark:text-zinc-500">*</span>
                   </label>
                   <Input
                     type="text"
-                    className="h-10 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon shadow-xs"
+                    className="h-10 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon shadow-xs"
                     value={editCourse.code}
                     onChange={(e) =>
                       setEditCourse((prev) => ({
@@ -1015,12 +1015,12 @@ export default function CoursesTab({
                   />
                 </div>
                 <div>
-                  <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-gray-500 dark:text-zinc-400">
+                  <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-gray-900 dark:text-zinc-300">
                     Program Designation <span className="text-[11px] font-normal text-gray-400 dark:text-zinc-500">*</span>
                   </label>
                   <Input
                     type="text"
-                    className="h-10 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon shadow-xs"
+                    className="h-10 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon shadow-xs"
                     value={editCourse.name}
                     onChange={(e) =>
                       setEditCourse((prev) => ({
@@ -1035,7 +1035,7 @@ export default function CoursesTab({
 
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <label className="text-[11px] font-medium uppercase tracking-wider text-gray-500 dark:text-zinc-400">
+                  <label className="text-[11px] font-medium uppercase tracking-wider text-gray-900 dark:text-zinc-300">
                     Manage Course Blocks
                   </label>
                   <Button
@@ -1057,7 +1057,7 @@ export default function CoursesTab({
                       <Input
                         type="text"
                         placeholder={`Block ${idx + 1} Name`}
-                        className="h-10 flex-1 min-w-0 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon shadow-xs"
+                        className="h-10 flex-1 min-w-0 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon shadow-xs"
                         value={block}
                         onChange={(e) => {
                           const updated = [...editCourseBlocks]
@@ -1095,7 +1095,7 @@ export default function CoursesTab({
                   setEditCourse({ id: null, code: "", name: "" })
                   setEditCourseBlocks([""])
                 }}
-                className="h-10 px-4 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                className="h-10 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
               >
                 Cancel
               </Button>

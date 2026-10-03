@@ -150,13 +150,13 @@ export default function EditStudentModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-full max-w-4xl sm:max-w-4xl overflow-hidden rounded-2xl border border-gray-200 bg-white p-0 shadow-2xl dark:border-white/10 dark:bg-card">
+      <DialogContent className="w-full max-w-4xl sm:max-w-4xl overflow-hidden rounded-2xl border border-border bg-white p-0 shadow-2xl dark:border-border dark:bg-card">
         <form onSubmit={handleSubmit}>
           <DialogHeader className="bg-white p-6 pb-2 dark:bg-card border-none text-left">
             <DialogTitle className="text-[17px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
               Edit Student Profile
             </DialogTitle>
-            <DialogDescription className="mt-1 text-[13px] font-normal text-gray-500 dark:text-zinc-400">
+            <DialogDescription className="mt-1 text-[13px] font-normal text-gray-900 dark:text-zinc-300">
               Update registry details and archive drawer coordinates for student{" "}
               <span className="font-mono font-semibold text-gray-900 dark:text-zinc-200">
                 {student?.studentNo}
@@ -187,7 +187,7 @@ export default function EditStudentModal({
                   type="text"
                   disabled
                   value={student?.studentNo || ""}
-                  className="h-10 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-zinc-800/50 text-xs font-mono text-gray-500 dark:text-zinc-400 cursor-not-allowed shadow-none"
+                  className="h-10 rounded-xl border border-border dark:border-border bg-gray-50 dark:bg-zinc-800/50 text-xs font-mono text-gray-900 dark:text-zinc-300 cursor-not-allowed shadow-none"
                 />
               </div>
 
@@ -201,14 +201,14 @@ export default function EditStudentModal({
                   placeholder="DELA CRUZ, JUAN"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="h-10 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-xs font-normal text-gray-900 dark:text-zinc-100 focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 shadow-xs uppercase"
+                  className="h-10 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-xs font-normal text-gray-900 dark:text-zinc-100 focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 shadow-xs uppercase"
                 />
               </div>
             </div>
           </div>
 
           {/* Academic Profile */}
-          <div className="space-y-4 pt-1 border-t border-gray-100 dark:border-white/5">
+          <div className="space-y-4 pt-1 border-t border-border dark:border-border">
             <h4 className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
               Academic Program & Section
             </h4>
@@ -228,7 +228,7 @@ export default function EditStudentModal({
                     label: `${c.code} — ${c.name}`,
                   })) : []}
                   placeholder="Select Program"
-                  buttonClassName="h-10 text-xs rounded-xl border border-gray-200 dark:border-white/10"
+                  buttonClassName="h-10 text-xs rounded-xl border border-border dark:border-border"
                 />
               </div>
 
@@ -243,7 +243,7 @@ export default function EditStudentModal({
                   max={2100}
                   value={yearLevel}
                   onChange={(e) => setYearLevel(e.target.value)}
-                  className="h-10 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-xs font-normal text-gray-900 dark:text-zinc-100 focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 shadow-xs"
+                  className="h-10 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-xs font-normal text-gray-900 dark:text-zinc-100 focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 shadow-xs"
                 />
               </div>
 
@@ -260,7 +260,7 @@ export default function EditStudentModal({
                       label: `Section ${s.name}`,
                     }))}
                     placeholder="Select Section"
-                    buttonClassName="h-10 text-xs rounded-xl border border-gray-200 dark:border-white/10"
+                    buttonClassName="h-10 text-xs rounded-xl border border-border dark:border-border"
                   />
                 ) : (
                   <Input
@@ -269,7 +269,7 @@ export default function EditStudentModal({
                     placeholder="e.g. 1"
                     value={section}
                     onChange={(e) => setSection(e.target.value)}
-                    className="h-10 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-xs font-normal text-gray-900 dark:text-zinc-100 focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 shadow-xs"
+                    className="h-10 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-xs font-normal text-gray-900 dark:text-zinc-100 focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 shadow-xs"
                   />
                 )}
               </div>
@@ -277,7 +277,7 @@ export default function EditStudentModal({
           </div>
 
           {/* Physical Storage Coordinates */}
-          <div className="space-y-4 pt-1 border-t border-gray-100 dark:border-white/5">
+          <div className="space-y-4 pt-1 border-t border-border dark:border-border">
             <h4 className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
               Physical Storage Coordinates
             </h4>
@@ -294,7 +294,7 @@ export default function EditStudentModal({
                     label: r.name || `Room ${r.id}`,
                   }))}
                   placeholder="Select Room"
-                  buttonClassName="h-10 text-xs rounded-xl border border-gray-200 dark:border-white/10"
+                  buttonClassName="h-10 text-xs rounded-xl border border-border dark:border-border"
                 />
               </div>
 
@@ -310,7 +310,7 @@ export default function EditStudentModal({
                     label: `Cabinet ${canonicalizeCabinetId(c.id)}`,
                   }))}
                   placeholder="Select Cabinet"
-                  buttonClassName="h-10 text-xs rounded-xl border border-gray-200 dark:border-white/10"
+                  buttonClassName="h-10 text-xs rounded-xl border border-border dark:border-border"
                 />
               </div>
 
@@ -326,7 +326,7 @@ export default function EditStudentModal({
                     label: String(d).toLowerCase().startsWith("drawer") ? String(d) : `Drawer ${d}`,
                   }))}
                   placeholder="Select Drawer"
-                  buttonClassName="h-10 text-xs rounded-xl border border-gray-200 dark:border-white/10"
+                  buttonClassName="h-10 text-xs rounded-xl border border-border dark:border-border"
                 />
               </div>
             </div>
@@ -339,7 +339,7 @@ export default function EditStudentModal({
               variant="outline"
               onClick={() => onOpenChange(false)}
               disabled={isSubmitting}
-              className="h-10 px-4 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+              className="h-10 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
             >
               Cancel
             </Button>

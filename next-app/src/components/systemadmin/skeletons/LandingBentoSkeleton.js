@@ -8,7 +8,7 @@ import PageHeader from "@/components/shared/PageHeader"
 export default function LandingBentoSkeleton() {
   return (
     <div className="flex flex-col gap-6 w-full animate-fade-up font-jakarta">
-      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
+      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none">
         <PageHeader
           icon="ph-bold ph-squares-four"
           title={
@@ -22,7 +22,7 @@ export default function LandingBentoSkeleton() {
           description="Manage public portal bento grid features, interactive animation simulation steps, archive retrieval nodes, and statutory compliance tags."
           showBorder={false}
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
-          descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
+          descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
           actions={
             <div className="flex items-center gap-2.5 flex-wrap">
               <Skeleton className="h-10 w-28 rounded-xl dark:bg-muted" />
@@ -33,7 +33,7 @@ export default function LandingBentoSkeleton() {
         />
 
         {/* Standardized SuperAdmin Underline Navigation Tabs */}
-        <div className="flex items-center gap-6 shrink-0 h-10 px-6 border-b border-gray-100 dark:border-white/10 bg-white dark:bg-card select-none">
+        <div className="flex items-center gap-6 shrink-0 h-10 px-6 border-b border-border dark:border-border bg-white dark:bg-card select-none">
           <div className="relative h-full flex items-center text-[13px] font-semibold text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50">
             Bento Cards (5)
           </div>
@@ -49,7 +49,7 @@ export default function LandingBentoSkeleton() {
         <CardContent className="font-jakarta bg-white p-[24px] dark:bg-card/50 backdrop-blur-md flex flex-col gap-6">
           <div className="space-y-3">
             {/* ACCORDION CARD 1: EXPANDED (matching activeCardTab = 1) */}
-            <div className="rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/30 overflow-hidden">
+            <div className="rounded-xl border border-border/80 dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 overflow-hidden">
               <div className="w-full flex items-center justify-between gap-3 px-5 py-3.5">
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="w-8 h-8 rounded-lg bg-pup-maroon text-white flex items-center justify-center shrink-0">
@@ -59,7 +59,7 @@ export default function LandingBentoSkeleton() {
                     <h3 className="text-[13px] font-semibold text-gray-900 dark:text-zinc-50 truncate">
                       Card 1: Online Request Simulation
                     </h3>
-                    <p className="text-[11px] text-gray-500 dark:text-zinc-400 mt-0.5 truncate">
+                    <p className="text-[11px] text-gray-900 dark:text-zinc-300 mt-0.5 truncate">
                       Large card showcasing document selection, purpose choice, and submission.
                     </p>
                   </div>
@@ -68,7 +68,7 @@ export default function LandingBentoSkeleton() {
               </div>
 
               {/* Expanded Form Content */}
-              <div className="px-5 pb-5 pt-1 space-y-5 border-t border-gray-200/60 dark:border-white/5">
+              <div className="px-5 pb-5 pt-1 space-y-5 border-t border-border/60 dark:border-border">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <Skeleton className="h-3 w-28 rounded dark:bg-muted" />
@@ -122,18 +122,18 @@ export default function LandingBentoSkeleton() {
             ].map((card, idx) => (
               <div
                 key={idx}
-                className="rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/30 overflow-hidden"
+                className="rounded-xl border border-border/80 dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 overflow-hidden"
               >
                 <div className="w-full flex items-center justify-between gap-3 px-5 py-3.5">
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-8 h-8 rounded-lg bg-gray-200/80 dark:bg-zinc-800 text-gray-500 dark:text-zinc-400 flex items-center justify-center shrink-0">
+                    <div className="w-8 h-8 rounded-lg bg-gray-200/80 dark:bg-zinc-800 text-gray-900 dark:text-zinc-300 flex items-center justify-center shrink-0">
                       <HugeIcon className={`${card.icon} text-sm`} />
                     </div>
                     <div className="min-w-0">
                       <h3 className="text-[13px] font-semibold text-gray-900 dark:text-zinc-50 truncate">
                         {card.title}
                       </h3>
-                      <p className="text-[11px] text-gray-500 dark:text-zinc-400 mt-0.5 truncate">
+                      <p className="text-[11px] text-gray-900 dark:text-zinc-300 mt-0.5 truncate">
                         {card.desc}
                       </p>
                     </div>

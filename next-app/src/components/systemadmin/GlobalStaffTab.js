@@ -705,7 +705,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
   return (
     <div className="animate-fade-up font-jakarta flex flex-1 flex-col h-full min-h-0 w-full gap-6">
       {/* ONE Single Card Container encapsulating Header, Metrics, Toolbar, Table & Pagination */}
-      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none isolate font-jakarta mb-4 min-h-0 flex-1">
+      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4 min-h-0 flex-1">
         <PageHeader
           icon="ph-users"
           title={
@@ -718,7 +718,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
           showBorder={false}
           className="p-6"
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
-          descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
+          descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
           actions={
             <div className="flex items-center gap-2">
               <RefreshButton
@@ -757,12 +757,12 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                     className={cn(
                       "relative overflow-hidden rounded-[18px] border cursor-pointer select-none transition-all shadow-none flex flex-col justify-between min-h-[110px] h-full bg-gray-50 dark:bg-zinc-900",                      selectedKpi === stat.key
                         ? `border-${stat.color}-500/50 ring-1 ring-${stat.color}-500/20`
-                        : "border-gray-100 dark:border-white/5"
+                        : "border-border dark:border-border"
                     )}
                   >
                     <div className="flex justify-between items-start p-4 pb-0">
                       <div className="flex flex-col gap-1">
-                        <span className="text-[13px] font-medium text-gray-500 dark:text-zinc-400 capitalize">
+                        <span className="text-[13px] font-medium text-gray-900 dark:text-zinc-300 capitalize">
                           {stat.label}
                         </span>
                       </div>
@@ -780,14 +780,14 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                           {stat.sublabel}
                         </span>
                       </div>
-                      <HugeIcon className="ph-bold ph-dots-six-vertical cursor-grab active:cursor-grabbing hover:text-gray-400 dark:hover:text-zinc-500 text-gray-300 dark:text-zinc-700 text-lg mb-0.5" />
+                      <HugeIcon className="ph-bold ph-dots-six-vertical cursor-grab active:cursor-grabbing hover:text-black dark:hover:text-white text-gray-900 dark:text-zinc-300 text-xl mb-0.5" />
                     </div>
                   </div>
 
                   {/* Absolute details container */}
                   <div
                     className={cn(
-                      "absolute top-full left-0 right-0 z-[100] mt-2 rounded-xl border border-gray-200 bg-white p-4 shadow-xl dark:border-white/10 dark:bg-zinc-900 transition-all duration-300 ease-in-out origin-top",
+                      "absolute top-full left-0 right-0 z-[100] mt-2 rounded-xl border border-border bg-white p-4 shadow-xl dark:border-border dark:bg-zinc-900 transition-all duration-300 ease-in-out origin-top",
                       selectedKpi === stat.key ? "scale-y-100 opacity-100 translate-y-0" : "scale-y-95 opacity-0 -translate-y-2 pointer-events-none"
                     )}
                     onClick={(e) => e.stopPropagation()}
@@ -795,7 +795,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                     {stat.key === "total" && (
                       <div className="space-y-3">
                         <div className="grid grid-cols-2 gap-2">
-                          <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-gray-100 dark:border-white/5">
+                          <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-border dark:border-border">
                             <span className="block text-[9px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">Total Accounts</span>
                             <span className="text-lg font-black text-gray-900 dark:text-zinc-50">{stats.total}</span>
                           </div>
@@ -804,7 +804,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                             <span className="text-lg font-black text-blue-700 dark:text-blue-400">{stats.assignedOffices}</span>
                           </div>
                         </div>
-                        <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-gray-100 dark:border-white/5 text-xs text-gray-600 dark:text-zinc-300 leading-relaxed">
+                        <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-border dark:border-border text-xs text-gray-600 dark:text-zinc-300 leading-relaxed">
                           Directory registry of all personnel across all campus partitions and centralized administrative systems.
                         </div>
                       </div>
@@ -812,7 +812,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                     {stat.key === "active" && (
                       <div className="space-y-3">
                         <div className="grid grid-cols-2 gap-2">
-                          <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-gray-100 dark:border-white/5">
+                          <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-border dark:border-border">
                             <span className="block text-[9px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">Active Staff</span>
                             <span className="text-lg font-black text-gray-900 dark:text-zinc-50">{stats.active}</span>
                           </div>
@@ -821,7 +821,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                             <span className="text-lg font-black text-emerald-700 dark:text-emerald-400">{stats.inactive}</span>
                           </div>
                         </div>
-                        <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-gray-100 dark:border-white/5 text-xs text-gray-600 dark:text-zinc-300 leading-relaxed">
+                        <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-border dark:border-border text-xs text-gray-600 dark:text-zinc-300 leading-relaxed">
                           Personnel in good standing with active operational privileges and live credentials.
                         </div>
                       </div>
@@ -829,7 +829,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                     {stat.key === "admins" && (
                       <div className="space-y-3">
                         <div className="grid grid-cols-2 gap-2">
-                          <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-gray-100 dark:border-white/5">
+                          <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-border dark:border-border">
                             <span className="block text-[9px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">Admin Level</span>
                             <span className="text-lg font-black text-gray-900 dark:text-zinc-50">{stats.admins}</span>
                           </div>
@@ -838,7 +838,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                             <span className="text-lg font-black text-amber-700 dark:text-amber-400">{stats.regular}</span>
                           </div>
                         </div>
-                        <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-gray-100 dark:border-white/5 text-xs text-gray-600 dark:text-zinc-300 leading-relaxed">
+                        <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-border dark:border-border text-xs text-gray-600 dark:text-zinc-300 leading-relaxed">
                           Staff members holding elevated administrator or system administrator privileges.
                         </div>
                       </div>
@@ -851,7 +851,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
         )}
 
         {/* Navigation Toolbar */}
-        <div className="border-t border-gray-100 dark:border-white/10 p-5 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
+        <div className="border-t border-border dark:border-border p-5 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
           {/* Left: Active vs Archived Tabs */}
           <div className="flex items-center gap-6 shrink-0 select-none">
             <button
@@ -890,7 +890,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search by name, ID or email..."
-                className="h-9 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 pl-8 pr-16 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
+                className="h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 pl-8 pr-16 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
               />
               <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] text-gray-400 dark:text-zinc-500 font-mono">
                 {filteredStaff.length}
@@ -939,11 +939,11 @@ export default function GlobalStaffTab({ authUser, showToast }) {
             setStaffFilters({ role: [], office: [] })
             setPage(1)
           }}
-          className="border-t border-gray-100 dark:border-white/10 bg-white dark:bg-card px-6 py-2.5"
+          className="border-t border-border dark:border-border bg-white dark:bg-card px-6 py-2.5"
         />
 
         {/* Content Section: Directory Table inside the single Card */}
-        <div className="overflow-hidden rounded-b-2xl border-t border-gray-100 dark:border-white/10 bg-white dark:bg-card flex flex-col flex-1">
+        <div className="overflow-hidden rounded-b-2xl border-t border-border dark:border-border bg-white dark:bg-card flex flex-col flex-1">
           {loading ? (
             <DirectoryTableSkeleton rowCount={8} />
           ) : filteredStaff.length === 0 ? (
@@ -952,7 +952,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
             <EmptyHeader className="flex flex-col items-center gap-0">
               <div className="relative mb-6">
                 <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
+                <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
                   <HugeIcon  className={cn(
                     hasActiveFilters ? "ph-magnifying-glass" : (statusFilter === "Inactive" ? "ph-archive" : "ph-users"),
                     "text-3xl text-gray-400 dark:text-zinc-500"
@@ -964,7 +964,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                   ? "No Results Found" 
                   : (statusFilter === "Inactive" ? "No Archived Personnel Found" : "No Personnel Found")}
               </EmptyTitle>
-              <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400 mt-1">
+              <EmptyDescription className="max-w-xs text-sm font-medium text-gray-900 dark:text-zinc-300 mt-1">
                 {hasActiveFilters
                   ? "We couldn't find any personnel matching your search criteria. Try adjusting your partition filters or keywords."
                   : (statusFilter === "Inactive"
@@ -976,7 +976,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                   variant="outline"
                   onClick={handleClearFilters}
                   title="Reset Filters"
-                  className="mt-6 flex h-10 items-center justify-center gap-2 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
+                  className="mt-6 flex h-10 items-center justify-center gap-2 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                 >
                   Reset
                 </Button>
@@ -995,12 +995,12 @@ export default function GlobalStaffTab({ authUser, showToast }) {
         <>
           <div className="overflow-x-auto">
             <table className="min-w-full text-sm">
-            <thead className="sticky top-0 z-10 border-b-[0.5px] border-black/10 dark:border-white/10 bg-white dark:bg-card">
+            <thead className="sticky top-0 z-10 border-b-[0.5px] border-black/10 dark:border-border bg-white dark:bg-card">
               <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500 h-11 select-none">
                 <th className="w-12 py-0 px-4 text-center align-middle">
                   <input
                     type="checkbox"
-                    className="h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-gray-300 dark:border-white/10"
+                    className="h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-border dark:border-border"
                     checked={
                       paginatedStaff.length > 0 &&
                       paginatedStaff
@@ -1068,7 +1068,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
               </tr>
             </thead>
             
-            <tbody className="divide-y divide-gray-100 dark:divide-white/5 font-medium text-gray-900 dark:text-zinc-100 bg-white dark:bg-[#1c1c1e]">
+            <tbody className="divide-y divide-border dark:divide-border font-medium text-gray-900 dark:text-zinc-100 bg-white dark:bg-[#1c1c1e]">
               {paginatedStaff.map((member) => {
                 const office = (Array.isArray(offices) ? offices : []).find(o => o.id === member.office_id)
                 const isSelf = member.id === authUser?.id
@@ -1079,7 +1079,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                     key={member.id}
                     onClick={(e) => !isSelf && toggleSelect(member.id, e)}
                     className={cn(
-                      "group h-[52px] border-b-[0.5px] border-gray-100 dark:border-white/10 last:border-b-0 transition-all duration-200 hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none",
+                      "group h-[52px] border-b-[0.5px] border-border dark:border-border last:border-b-0 transition-all duration-200 hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none",
                       !isSelf && "cursor-pointer",
                       isSelected && "bg-blue-50/60 dark:bg-blue-950/20"
                     )}
@@ -1089,7 +1089,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                         <input
                           type="checkbox"
                           className={cn(
-                            "h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-gray-300 dark:border-white/10 transition-opacity",
+                            "h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-border dark:border-border transition-opacity",
                             isSelected ? "opacity-100" : "opacity-50 group-hover:opacity-80"
                           )}
                           checked={isSelected}
@@ -1153,7 +1153,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                               <button
                                 onClick={() => router.push("/account")}
                                 aria-label="My Account Settings"
-                                className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 dark:text-zinc-400 hover:text-blue-600 dark:hover:text-blue-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
+                                className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-900 dark:text-zinc-300 hover:text-blue-600 dark:hover:text-blue-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
                               >
                                 <HugeIcon  className="ph-bold ph-gear-six text-[16px]"></HugeIcon>
                               </button>
@@ -1168,7 +1168,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                                   <button
                                     onClick={() => handleOpenEdit(member)}
                                     aria-label="Edit Staff Member"
-                                    className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 dark:text-zinc-400 hover:text-amber-600 dark:hover:text-amber-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
+                                    className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-900 dark:text-zinc-300 hover:text-amber-600 dark:hover:text-amber-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
                                   >
                                     <HugeIcon  className="ph-bold ph-pencil-simple text-[16px]"></HugeIcon>
                                   </button>
@@ -1183,7 +1183,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                                   <button
                                     onClick={() => setRestoreTarget(member)}
                                     aria-label="Restore Staff Member"
-                                    className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 dark:text-zinc-400 hover:text-emerald-600 dark:hover:text-emerald-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
+                                    className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-900 dark:text-zinc-300 hover:text-emerald-600 dark:hover:text-emerald-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
                                   >
                                     <HugeIcon  className="ph-bold ph-archive-restore text-[16px]"></HugeIcon>
                                   </button>
@@ -1196,7 +1196,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                                   <button
                                     onClick={() => setArchiveTarget(member)}
                                     aria-label="Archive Staff Member"
-                                    className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 dark:text-zinc-400 hover:text-red-600 dark:hover:text-red-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
+                                    className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-900 dark:text-zinc-300 hover:text-red-600 dark:hover:text-red-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
                                   >
                                     <HugeIcon  className="ph-bold ph-archive text-[16px]"></HugeIcon>
                                   </button>
@@ -1216,8 +1216,8 @@ export default function GlobalStaffTab({ authUser, showToast }) {
         </div>
 
         {/* Pagination Footer */}
-        <div className="flex items-center justify-between border-t border-gray-100 dark:border-white/10 bg-gray-50/30 dark:bg-zinc-900/20 p-4 px-6 rounded-b-2xl">
-          <div className="flex items-center gap-6 text-xs text-gray-500 dark:text-zinc-400 select-none">
+        <div className="flex items-center justify-between border-t border-border dark:border-border bg-gray-50/30 dark:bg-zinc-900/20 p-4 px-6 rounded-b-2xl">
+          <div className="flex items-center gap-6 text-xs text-gray-900 dark:text-zinc-300 select-none">
             <span>Showing {paginatedStaff.length} of {filteredStaff.length}</span>
             <div className="flex items-center gap-2">
               <span>Rows:</span>
@@ -1246,11 +1246,11 @@ export default function GlobalStaffTab({ authUser, showToast }) {
               size="sm"
               disabled={page <= 1}
               onClick={() => setPage(p => p - 1)}
-              className="text-xs text-gray-500 dark:text-zinc-400 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
+              className="text-xs text-gray-900 dark:text-zinc-300 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
             >
               Prev
             </Button>
-            <div className="h-8 w-8 rounded-xl border border-[#e5e5ea] dark:border-zinc-800 flex items-center justify-center text-xs font-bold text-gray-800 dark:text-zinc-200 bg-white dark:bg-zinc-900">
+            <div className="h-8 w-8 rounded-xl border border-[#e5e5ea] dark:border-border flex items-center justify-center text-xs font-bold text-gray-800 dark:text-zinc-200 bg-white dark:bg-zinc-900">
               {page}
             </div>
             <Button
@@ -1258,7 +1258,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
               size="sm"
               disabled={endIndex >= filteredStaff.length}
               onClick={() => setPage(p => p + 1)}
-              className="text-xs text-gray-500 dark:text-zinc-400 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
+              className="text-xs text-gray-900 dark:text-zinc-300 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
             >
               Next
             </Button>
@@ -1271,13 +1271,13 @@ export default function GlobalStaffTab({ authUser, showToast }) {
 
       {/* Register / Edit Form Dialog */}
       <Dialog open={formOpen} onOpenChange={setFormOpen}>
-        <DialogContent className="sm:max-w-2xl w-full rounded-2xl bg-white border border-gray-200 dark:bg-zinc-900 dark:border-white/10 p-0 shadow-2xl overflow-hidden">
+        <DialogContent className="sm:max-w-2xl w-full rounded-2xl bg-white border border-border dark:bg-zinc-900 dark:border-border p-0 shadow-2xl overflow-hidden">
           <form onSubmit={handleSubmit}>
             <DialogHeader className="p-6 pb-0 bg-white dark:bg-card border-none text-left">
               <DialogTitle className="text-[16px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
                 {isEditing ? "Edit Personnel Profile" : "Register Personnel Account"}
               </DialogTitle>
-              <DialogDescription className="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-1">
+              <DialogDescription className="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-1">
                 Define the authorization scope, profile metadata, and security settings for the account.
               </DialogDescription>
             </DialogHeader>
@@ -1300,7 +1300,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                   onChange={(e) => setForm(prev => ({ ...prev, id: e.target.value }))}
                   disabled={isEditing}
                   placeholder="e.g. PUPREGISTRAR-004"
-                  className="h-10 rounded-xl bg-white border border-gray-200 text-xs focus-visible:ring-pup-maroon dark:bg-zinc-950 dark:border-white/10 dark:text-white disabled:bg-gray-100/80 disabled:text-gray-500 disabled:cursor-not-allowed dark:disabled:bg-zinc-900/80 dark:disabled:text-zinc-400"
+                  className="h-10 rounded-xl bg-white border border-border text-xs focus-visible:ring-pup-maroon dark:bg-zinc-950 dark:border-border dark:text-white disabled:bg-gray-100/80 disabled:text-gray-500 disabled:cursor-not-allowed dark:disabled:bg-zinc-900/80 dark:disabled:text-zinc-400"
                   required
                 />
               </div>
@@ -1315,7 +1315,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                     value={form.fname}
                     onChange={(e) => setForm(prev => ({ ...prev, fname: e.target.value }))}
                     placeholder="Elias"
-                    className="h-10 rounded-xl bg-white border border-gray-200 text-xs focus-visible:ring-pup-maroon dark:bg-zinc-950 dark:border-white/10 dark:text-white"
+                    className="h-10 rounded-xl bg-white border border-border text-xs focus-visible:ring-pup-maroon dark:bg-zinc-950 dark:border-border dark:text-white"
                     required
                   />
                 </div>
@@ -1329,7 +1329,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                     value={form.lname}
                     onChange={(e) => setForm(prev => ({ ...prev, lname: e.target.value }))}
                     placeholder="Austria"
-                    className="h-10 rounded-xl bg-white border border-gray-200 text-xs focus-visible:ring-pup-maroon dark:bg-zinc-950 dark:border-white/10 dark:text-white"
+                    className="h-10 rounded-xl bg-white border border-border text-xs focus-visible:ring-pup-maroon dark:bg-zinc-950 dark:border-border dark:text-white"
                     required
                   />
                 </div>
@@ -1353,7 +1353,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                   onChange={(e) => setForm(prev => ({ ...prev, email: e.target.value }))}
                   disabled={isEditing}
                   placeholder="email@pup.local"
-                  className="h-10 rounded-xl bg-white border border-gray-200 text-xs focus-visible:ring-pup-maroon dark:bg-zinc-950 dark:border-white/10 dark:text-white disabled:bg-gray-100/80 disabled:text-gray-500 disabled:cursor-not-allowed dark:disabled:bg-zinc-900/80 dark:disabled:text-zinc-400"
+                  className="h-10 rounded-xl bg-white border border-border text-xs focus-visible:ring-pup-maroon dark:bg-zinc-950 dark:border-border dark:text-white disabled:bg-gray-100/80 disabled:text-gray-500 disabled:cursor-not-allowed dark:disabled:bg-zinc-900/80 dark:disabled:text-zinc-400"
                   required
                 />
               </div>
@@ -1374,8 +1374,8 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                         ...(val === "" ? { role: "SystemAdmin" } : (prev.role === "SystemAdmin" ? { role: "Admin" } : {}))
                       }))
                     }}
-                    className="h-10 rounded-xl bg-white border border-gray-200 text-xs font-normal focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 dark:bg-zinc-950 dark:border-white/10 dark:text-white shadow-none cursor-pointer"
-                    menuClassName="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-900 shadow-2xl p-1.5"
+                    className="h-10 rounded-xl bg-white border border-border text-xs font-normal focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 dark:bg-zinc-950 dark:border-border dark:text-white shadow-none cursor-pointer"
+                    menuClassName="rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-900 shadow-2xl p-1.5"
                     optionClassName="rounded-lg text-xs font-normal py-2.5 px-3 hover:bg-gray-100 dark:hover:bg-zinc-800"
                     disabled={isEditing && targetIsExistingSysAdmin}
                     required={form.role !== "SystemAdmin"}
@@ -1404,8 +1404,8 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                         ...(val === "SystemAdmin" ? { office_id: "" } : (!prev.office_id ? { office_id: offices[0]?.id || "" } : {}))
                       }))
                     }}
-                    className="h-10 rounded-xl bg-white border border-gray-200 text-xs font-normal focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 dark:bg-zinc-950 dark:border-white/10 dark:text-white shadow-none cursor-pointer"
-                    menuClassName="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-900 shadow-2xl p-1.5"
+                    className="h-10 rounded-xl bg-white border border-border text-xs font-normal focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 dark:bg-zinc-950 dark:border-border dark:text-white shadow-none cursor-pointer"
+                    menuClassName="rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-900 shadow-2xl p-1.5"
                     optionClassName="rounded-lg text-xs font-normal py-2.5 px-3 hover:bg-gray-100 dark:hover:bg-zinc-800"
                     disabled={isEditing && targetIsExistingSysAdmin}
                     required
@@ -1425,7 +1425,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                 type="button"
                 variant="outline"
                 onClick={() => setFormOpen(false)}
-                className="h-10 px-4 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                className="h-10 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
               >
                 Cancel
               </Button>
@@ -1443,17 +1443,17 @@ export default function GlobalStaffTab({ authUser, showToast }) {
 
       {/* Temporary Password Dialog */}
       <Dialog open={pwDialogOpen} onOpenChange={setPwDialogOpen}>
-        <DialogContent className="max-w-md rounded-2xl bg-white border border-gray-200 dark:bg-zinc-900 dark:border-white/10 p-6 shadow-2xl">
+        <DialogContent className="max-w-md rounded-2xl bg-white border border-border dark:bg-zinc-900 dark:border-border p-6 shadow-2xl">
           <DialogHeader className="p-0 border-none text-left">
             <DialogTitle className="text-[16px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
               Staff Credentials Generated
             </DialogTitle>
-            <DialogDescription className="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-1">
+            <DialogDescription className="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-1">
               Please share this temporary password securely with the user. They will be prompted to change it upon first login.
             </DialogDescription>
           </DialogHeader>
           
-          <div className="my-5 p-4 rounded-xl border border-dashed border-gray-300 dark:border-white/10 bg-gray-50 dark:bg-zinc-950/20 text-center">
+          <div className="my-5 p-4 rounded-xl border border-dashed border-border dark:border-border bg-gray-50 dark:bg-zinc-950/20 text-center">
             <span className="text-xs text-gray-400 uppercase font-bold tracking-wider">Temporary Password</span>
             <div className="text-xl font-bold text-pup-maroon dark:text-red-400 mt-1 select-all tracking-wider">
               {tempPassword}
@@ -1467,7 +1467,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                 showToast("Password copied to clipboard")
               }}
               variant="outline"
-              className="text-xs border-gray-200 dark:border-white/10 h-10 px-4 font-semibold rounded-xl cursor-pointer hover:bg-gray-50 dark:hover:bg-white/5"
+              className="text-xs border-border dark:border-border h-10 px-4 font-semibold rounded-xl cursor-pointer hover:bg-gray-50 dark:hover:bg-white/5"
             >
               Copy
             </Button>

@@ -39,7 +39,7 @@ export default function PdfPreviewDialog({
     >
       <DialogContent 
         hideClose={true}
-        className="flex h-[90vh] w-[96vw] max-w-[96vw] flex-col overflow-hidden border border-gray-200 bg-gray-100 p-0 shadow-2xl transition-all duration-normal ease-standard xl:max-w-[1400px] rounded-2xl dark:border-white/10 dark:bg-muted"
+        className="flex h-[90vh] w-[96vw] max-w-[96vw] flex-col overflow-hidden border border-border bg-gray-100 p-0 shadow-2xl transition-all duration-normal ease-standard xl:max-w-[1400px] rounded-2xl dark:border-border dark:bg-muted"
       >
         <DialogHeader 
           className="shrink-0 bg-gray-50 dark:bg-white/5"
@@ -112,7 +112,7 @@ export default function PdfPreviewDialog({
           ) : (
             <div className="flex flex-1 items-center justify-center bg-white p-6 dark:bg-card">
               <div className="max-w-lg text-center">
-                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-gray-50 dark:border-white/10 dark:bg-card">
+                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-border bg-gray-50 dark:border-border dark:bg-card">
                   <HugeIcon  className="ph-bold ph-circle-notch animate-spin text-xl text-pup-maroon dark:text-primary"></HugeIcon>
                 </div>
                 <p className="text-sm font-semibold text-gray-600 dark:text-zinc-300">
@@ -126,7 +126,7 @@ export default function PdfPreviewDialog({
           )}
         </div>
 
-        <div className="flex shrink-0 items-center bg-white dark:bg-card px-6 py-4 border-t border-gray-100 dark:border-white/10">
+        <div className="flex shrink-0 items-center bg-white dark:bg-card px-6 py-4 border-t border-border dark:border-border">
           <Button
             variant="ghost"
             size="icon"
@@ -140,7 +140,7 @@ export default function PdfPreviewDialog({
             <Button
               variant="outline"
               onClick={() => setPdfPreviewOpen(false)}
-              className="flex h-10 items-center justify-center rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-5 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
+              className="flex h-10 items-center justify-center rounded-xl! border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-5 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
             >
               Close
             </Button>

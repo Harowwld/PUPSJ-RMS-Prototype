@@ -10,7 +10,7 @@ export default function OfficeGridSkeleton({ layoutView = "grid", count = 6 }) {
       <div className="overflow-hidden rounded-b-2xl bg-white dark:bg-card flex flex-col flex-1 isolate">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs text-gray-600 dark:text-zinc-400">
-            <thead className="sticky top-0 z-10 border-b-[0.5px] border-black/10 dark:border-white/10 bg-white dark:bg-card">
+            <thead className="sticky top-0 z-10 border-b-[0.5px] border-black/10 dark:border-border bg-white dark:bg-card">
               <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500 h-11 select-none">
                 <th className="p-4 pl-6 min-w-[240px]">
                   <Skeleton className="h-3.5 w-32 dark:bg-muted" />
@@ -35,11 +35,11 @@ export default function OfficeGridSkeleton({ layoutView = "grid", count = 6 }) {
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100 dark:divide-white/5 bg-white dark:bg-[#1c1c1e]">
+            <tbody className="divide-y divide-border dark:divide-border bg-white dark:bg-[#1c1c1e]">
               {Array.from({ length: count }).map((_, i) => (
                 <tr
                   key={i}
-                  className="h-[56px] border-b-[0.5px] border-gray-100 dark:border-white/10 last:border-b-0"
+                  className="h-[56px] border-b-[0.5px] border-border dark:border-border last:border-b-0"
                 >
                   <td className="py-2 px-4 pl-6 align-middle">
                     <div className="flex items-center gap-3">
@@ -141,7 +141,7 @@ export default function OfficeGridSkeleton({ layoutView = "grid", count = 6 }) {
               </div>
 
               {/* Metrics deep links */}
-              <div className="border-t border-gray-100 dark:border-zinc-800 pt-2.5 mt-2 flex items-center justify-between">
+              <div className="border-t border-border dark:border-border pt-2.5 mt-2 flex items-center justify-between">
                 <div className="flex items-center gap-1.5">
                   <Skeleton className="h-3.5 w-3.5 rounded dark:bg-muted" />
                   <Skeleton className="h-3 w-16 rounded dark:bg-muted" />
@@ -154,7 +154,7 @@ export default function OfficeGridSkeleton({ layoutView = "grid", count = 6 }) {
             </div>
 
             {/* Action buttons */}
-            <div className="flex items-center gap-2 pt-3 border-t border-gray-100 dark:border-zinc-800">
+            <div className="flex items-center gap-2 pt-3 border-t border-border dark:border-border">
               <Skeleton className="h-8 flex-1 rounded-xl dark:bg-muted" />
               <Skeleton className="h-8 w-20 rounded-xl dark:bg-muted" />
             </div>

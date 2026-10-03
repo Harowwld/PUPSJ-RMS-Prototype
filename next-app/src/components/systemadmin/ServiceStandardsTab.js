@@ -222,7 +222,7 @@ export default function ServiceStandardsTab({ showToast }) {
 
   return (
     <div className="animate-fade-up font-jakarta flex flex-1 flex-col h-full min-h-0 w-full gap-6 pb-6">
-      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none isolate font-jakarta">
+      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
         <PageHeader
           icon="ph-clock-countdown"
           title="Service Standards & SLA"
@@ -230,7 +230,7 @@ export default function ServiceStandardsTab({ showToast }) {
           showBorder={false}
           className="p-6"
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
-          descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
+          descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
           actions={
             <div className="flex items-center gap-2">
               <RefreshButton
@@ -244,7 +244,7 @@ export default function ServiceStandardsTab({ showToast }) {
                 variant="outline"
                 onClick={() => setConfirmResetOpen(true)}
                 disabled={saving}
-                className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
               >
                 Restore
               </Button>
@@ -269,7 +269,7 @@ export default function ServiceStandardsTab({ showToast }) {
             <span className="text-[11px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500">
               Turnaround Framework Presets
             </span>
-            <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-gray-200/60 dark:border-white/5 overflow-x-auto">
+            <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-border/60 dark:border-border overflow-x-auto">
               {PRESETS.map((p) => {
                 const isSelected = activePreset?.id === p.id;
                 return (
@@ -291,11 +291,11 @@ export default function ServiceStandardsTab({ showToast }) {
             </div>
 
             {/* Active Preset Context Banner */}
-            <div className="flex items-center justify-between px-4 py-2.5 rounded-xl bg-gray-50/70 dark:bg-zinc-900/40 border border-gray-100 dark:border-white/5 text-xs">
+            <div className="flex items-center justify-between px-4 py-2.5 rounded-xl bg-gray-50/70 dark:bg-zinc-900/40 border border-border dark:border-border text-xs">
               <span className="text-gray-600 dark:text-zinc-400 text-[12px] leading-relaxed">
                 {activePreset?.description}
               </span>
-              <span className="text-[11px] font-semibold text-gray-700 dark:text-zinc-300 bg-white dark:bg-zinc-800 px-2.5 py-1 rounded-lg border border-gray-200/80 dark:border-white/10 shrink-0 ml-3">
+              <span className="text-[11px] font-semibold text-gray-700 dark:text-zinc-300 bg-white dark:bg-zinc-800 px-2.5 py-1 rounded-lg border border-border/80 dark:border-border shrink-0 ml-3">
                 {standards.simpleDays}d · {standards.complexDays}d · {standards.highlyTechnicalDays}d
               </span>
             </div>
@@ -324,7 +324,7 @@ export default function ServiceStandardsTab({ showToast }) {
                     }))
                   }
                   placeholder="Citizen's Charter (ARTA RA 11032) or University SLA"
-                  className="h-10 text-xs rounded-xl border-gray-200 dark:border-white/10 focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon"
+                  className="h-10 text-xs rounded-xl border-border dark:border-border focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon"
                 />
                 <span className="text-[11px] text-gray-400 dark:text-zinc-500">
                   Displayed on official reports, document queue headers, and client request receipts.
@@ -332,12 +332,12 @@ export default function ServiceStandardsTab({ showToast }) {
               </div>
 
               {/* Working Days Toggle Row */}
-              <div className="flex items-center justify-between p-4 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-card">
+              <div className="flex items-center justify-between p-4 rounded-xl border border-border dark:border-border bg-white dark:bg-card">
                 <div className="flex flex-col gap-0.5 max-w-[80%]">
                   <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
                     Business Days (Monday – Friday) Only
                   </span>
-                  <span className="text-[11px] text-gray-500 dark:text-zinc-400 leading-normal">
+                  <span className="text-[11px] text-gray-900 dark:text-zinc-300 leading-normal">
                     Excludes Saturdays and Sundays from deadline calculations. Disable to count consecutive calendar days.
                   </span>
                 </div>
@@ -354,7 +354,7 @@ export default function ServiceStandardsTab({ showToast }) {
               </div>
 
               {/* Tier Stepper Rows */}
-              <div className="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-card divide-y divide-gray-100 dark:divide-white/5 overflow-hidden">
+              <div className="rounded-xl border border-border dark:border-border bg-white dark:bg-card divide-y divide-border dark:divide-border overflow-hidden">
                 {/* Simple */}
                 <div className="flex items-center justify-between p-4">
                   <div className="flex flex-col gap-1">
@@ -372,7 +372,7 @@ export default function ServiceStandardsTab({ showToast }) {
                     </span>
                   </div>
 
-                  <div className="flex items-center gap-1.5 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-gray-200/60 dark:border-white/5 shrink-0 ml-4">
+                  <div className="flex items-center gap-1.5 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-border/60 dark:border-border shrink-0 ml-4">
                     <button
                       type="button"
                       onClick={() => adjustDays("simpleDays", -1, 1, standards.complexDays)}
@@ -410,7 +410,7 @@ export default function ServiceStandardsTab({ showToast }) {
                     </span>
                   </div>
 
-                  <div className="flex items-center gap-1.5 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-gray-200/60 dark:border-white/5 shrink-0 ml-4">
+                  <div className="flex items-center gap-1.5 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-border/60 dark:border-border shrink-0 ml-4">
                     <button
                       type="button"
                       onClick={() => adjustDays("complexDays", -1, standards.simpleDays, standards.highlyTechnicalDays)}
@@ -448,7 +448,7 @@ export default function ServiceStandardsTab({ showToast }) {
                     </span>
                   </div>
 
-                  <div className="flex items-center gap-1.5 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-gray-200/60 dark:border-white/5 shrink-0 ml-4">
+                  <div className="flex items-center gap-1.5 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-border/60 dark:border-border shrink-0 ml-4">
                     <button
                       type="button"
                       onClick={() => adjustDays("highlyTechnicalDays", -1, standards.complexDays, 180)}
@@ -477,21 +477,21 @@ export default function ServiceStandardsTab({ showToast }) {
                 Fulfillment Schedule Simulation
               </span>
 
-              <div className="rounded-2xl border border-gray-200 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/20 p-5 flex flex-col gap-4">
-                <div className="flex items-center justify-between pb-3 border-b border-gray-200/70 dark:border-white/5">
+              <div className="rounded-2xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/20 p-5 flex flex-col gap-4">
+                <div className="flex items-center justify-between pb-3 border-b border-border/70 dark:border-border">
                   <div className="flex items-center gap-2">
                     <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
                     <span className="text-xs font-bold text-gray-900 dark:text-zinc-100">
                       Live Delivery Simulator
                     </span>
                   </div>
-                  <span className="text-[11px] text-gray-500 dark:text-zinc-400 font-medium">
+                  <span className="text-[11px] text-gray-900 dark:text-zinc-300 font-medium">
                     Filed {formatCharterDeadline(sampleNow)}
                   </span>
                 </div>
 
                 {/* Milestone 1: Simple */}
-                <div className="flex items-center justify-between p-3 rounded-xl bg-white dark:bg-card border border-gray-100 dark:border-white/5">
+                <div className="flex items-center justify-between p-3 rounded-xl bg-white dark:bg-card border border-border dark:border-border">
                   <div className="flex flex-col gap-0.5">
                     <span className="text-xs font-bold text-gray-900 dark:text-zinc-100">
                       Simple Tier ({standards.simpleDays} {unitSuffix})
@@ -506,7 +506,7 @@ export default function ServiceStandardsTab({ showToast }) {
                 </div>
 
                 {/* Milestone 2: Complex */}
-                <div className="flex items-center justify-between p-3 rounded-xl bg-white dark:bg-card border border-gray-100 dark:border-white/5">
+                <div className="flex items-center justify-between p-3 rounded-xl bg-white dark:bg-card border border-border dark:border-border">
                   <div className="flex flex-col gap-0.5">
                     <span className="text-xs font-bold text-gray-900 dark:text-zinc-100">
                       Complex Tier ({standards.complexDays} {unitSuffix})
@@ -521,7 +521,7 @@ export default function ServiceStandardsTab({ showToast }) {
                 </div>
 
                 {/* Milestone 3: Technical */}
-                <div className="flex items-center justify-between p-3 rounded-xl bg-white dark:bg-card border border-gray-100 dark:border-white/5">
+                <div className="flex items-center justify-between p-3 rounded-xl bg-white dark:bg-card border border-border dark:border-border">
                   <div className="flex flex-col gap-0.5">
                     <span className="text-xs font-bold text-gray-900 dark:text-zinc-100">
                       Technical Tier ({standards.highlyTechnicalDays} {unitSuffix})

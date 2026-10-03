@@ -39,7 +39,6 @@ import {
   getDefaultDashboardPath,
 } from "@/lib/roleUtils";
 import { getRoleBranding } from "@/lib/roleBranding";
-import ProfileSetup, { avatars } from "@/components/kokonutui/avatar-picker";
 import { renderToStaticMarkup } from "react-dom/server";
 
 function AccountPageContent() {
@@ -49,7 +48,7 @@ function AccountPageContent() {
   const [loading, setLoading] = useState(true);
 
   const roleBranding = getRoleBranding(authUser);
-  const brandAccent = authUser?.accent_color || roleBranding.color || "#800000";
+  const brandAccent = "#0070e2";
   const brandForeground = roleBranding.foreground || "#FFFFFF";
 
   useEffect(() => {
@@ -62,8 +61,7 @@ function AccountPageContent() {
   // Avatar State
   const [avatarUrl, setAvatarUrl] = useState(null);
   const [avatarLoaded, setAvatarLoaded] = useState(false);
-  const [showAvatarPicker, setShowAvatarPicker] = useState(false);
-  const fileInputRef = useRef(null);
+    const fileInputRef = useRef(null);
 
   // Profile Form State
   const [fname, setFname] = useState("");
@@ -261,47 +259,7 @@ function AccountPageContent() {
     window.location.href = "/login";
   };
 
-  const handleAvatarClick = () => {
-    setShowAvatarPicker(true);
-  };
-
-  const handleAvatarSave = async (data) => {
-    const avatarId = data.avatarId;
-    const avatarObj = avatars.find((a) => a.id === avatarId);
-    if (!avatarObj) return;
-
-    try {
-      const svgString = renderToStaticMarkup(avatarObj.svg);
-      const file = new File([svgString], "avatar.svg", { type: "image/svg+xml" });
-      
-      const formData = new FormData();
-      formData.append("avatar", file);
-
-      const res = await fetch("/api/account/avatar", {
-        method: "POST",
-        body: formData,
-      });
-      const json = await res.json();
-      if (!res.ok || !json.ok) {
-        throw new Error(json.error || "Upload failed");
-      }
-
-      toast.success("Avatar Updated", {
-        description: "Your profile photo has been successfully updated."
-      });
-      
-      setAvatarUrl(`/api/account/avatar?id=${authUser.id}&t=${Date.now()}`);
-      setAuthUser(prev => ({ ...prev, avatar_filename: json.avatar_filename }));
-      window.dispatchEvent(new Event("avatar-changed"));
-      setShowAvatarPicker(false);
-    } catch (err) {
-      toast.error("Upload Failed", {
-        description: err.message || "Could not update your avatar."
-      });
-    }
-  };
-
-  const handleRemoveAvatar = async () => {
+      const handleRemoveAvatar = async () => {
     try {
       const res = await fetch("/api/account/avatar", {
         method: "DELETE",
@@ -682,8 +640,8 @@ function AccountPageContent() {
         <Header authUser={authUser} onLogout={handleLogout} />
         <main className="flex-1 min-h-0 overflow-y-auto w-full">
           <div className="w-full max-w-[1600px] 2xl:max-w-[1760px] mx-auto py-6 px-4 sm:px-8">
-            <Card className="flex flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none min-h-[600px]">
-              <div className="p-6 border-b border-gray-100 dark:border-white/10 flex items-center justify-between">
+            <Card className="flex flex-col overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none min-h-[600px]">
+              <div className="p-6 border-b border-border dark:border-border flex items-center justify-between">
                 <div className="space-y-2">
                   <Skeleton className="w-48 h-6" />
                   <Skeleton className="w-72 h-4" />
@@ -691,7 +649,7 @@ function AccountPageContent() {
                 <Skeleton className="w-28 h-10 rounded-xl" />
               </div>
               <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] flex-1">
-                <div className="p-6 border-b lg:border-b-0 lg:border-r border-gray-100 dark:border-white/10 space-y-6 bg-gray-50/40 dark:bg-white/[0.02]">
+                <div className="p-6 border-b lg:border-b-0 lg:border-r border-border dark:border-border space-y-6 bg-gray-50/40 dark:bg-white/[0.02]">
                   <div className="flex items-center gap-4">
                     <Skeleton className="w-16 h-16 rounded-full shrink-0" />
                     <div className="space-y-2 flex-1">
@@ -738,15 +696,15 @@ function AccountPageContent() {
       <PageTransition className="flex-1 min-h-0 overflow-y-auto w-full">
         <div className="w-full max-w-[1600px] 2xl:max-w-[1760px] mx-auto py-6 px-4 sm:px-8">
           {/* ONE Single Card Container encapsulating Header, Sidebar & Tab Content */}
-          <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none isolate font-jakarta mb-4 min-h-0 flex-1">
+          <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4 min-h-0 flex-1">
             <PageHeader
               icon="ph-user-gear"
               title="Account Settings"
               description="Update your personal info and security settings."
               showBorder={false}
-              className="p-6 border-b border-gray-100 dark:border-white/10"
-              titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
-              descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
+              className="p-6 border-b border-border dark:border-border"
+              titleClassName="text-2xl font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
+              descriptionClassName="text-lg font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
               actions={
                 <Button
                   variant="outline"
@@ -754,7 +712,7 @@ function AccountPageContent() {
                     const path = getDefaultDashboardPath(authUser?.role);
                     router.push(path);
                   }}
-                  className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                  className="h-10 px-5 text-sm font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                 >
                   Dashboard
                 </Button>
@@ -768,15 +726,14 @@ function AccountPageContent() {
               className="grid grid-cols-1 lg:grid-cols-[280px_1fr] flex-1 items-stretch min-h-[600px]"
             >
               {/* Sidebar Navigation */}
-              <aside className="border-b lg:border-b-0 lg:border-r border-gray-100 dark:border-white/10 p-6 flex flex-col bg-gray-50/40 dark:bg-white/[0.02]">
+              <aside className="border-b lg:border-b-0 lg:border-r border-border dark:border-border p-6 flex flex-col bg-gray-50/40 dark:bg-white/[0.02]">
                 <div className="flex flex-col h-full w-full">
                   {/* Header Section */}
                   <div className="flex flex-col items-center justify-center w-full mb-8 mt-4">
                     {/* Avatar: 80px, circular */}
                     <div className="flex flex-col items-center shrink-0">
                       <div 
-                        onClick={handleAvatarClick}
-                        className="relative group w-20 h-20 shrink-0 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 flex items-center justify-center text-2xl font-medium shadow-inner cursor-pointer overflow-hidden transition-all duration-normal hover:ring-2 hover:ring-gray-900/20 dark:hover:ring-white/20 mb-3"
+                                                className="relative w-20 h-20 shrink-0 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 flex items-center justify-center text-2xl font-medium shadow-inner overflow-hidden mb-3"
                       >
                         {avatarUrl ? (
                           <>
@@ -796,21 +753,12 @@ function AccountPageContent() {
                         ) : (
                           <span>{initials}</span>
                         )}
-                        {/* Hover overlay */}
-                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-fast">
-                          <HugeIcon  className="ph-bold ph-camera text-white text-base"></HugeIcon>
-                        </div>
-                      </div>
-                      <Dialog open={showAvatarPicker} onOpenChange={setShowAvatarPicker}>
-                        <DialogContent className="p-0 border-none bg-transparent shadow-none max-w-none w-auto sm:max-w-none flex justify-center items-center">
-                          <ProfileSetup mode="settings" onComplete={handleAvatarSave} />
-                        </DialogContent>
-                      </Dialog>
-                      {avatarUrl && (
+                                              </div>
+                                            {avatarUrl && (
                         <button
                           type="button"
                           onClick={handleRemoveAvatar}
-                          className="mt-1 text-[11px] font-medium text-red-500 hover:text-red-700 cursor-pointer bg-transparent border-none p-0 focus:outline-none"
+                          className="mt-1 text-[13px] font-medium text-red-500 hover:text-red-700 cursor-pointer bg-transparent border-none p-0 focus:outline-none"
                         >
                           Remove
                         </button>
@@ -819,19 +767,19 @@ function AccountPageContent() {
                     
                     {/* Identity Info */}
                     <div className="flex flex-col items-center justify-center text-center mt-1">
-                      <h3 className="text-[17px] font-semibold text-gray-900 tracking-tight dark:text-zinc-50 leading-tight">
+                      <h3 className="text-xl font-semibold text-gray-900 tracking-tight dark:text-zinc-50 leading-tight">
                         {fname} {lname}
                       </h3>
-                      <p className="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-0.5 truncate max-w-[240px]">
+                      <p className="text-lg font-normal text-gray-500 dark:text-zinc-400 mt-0.5 truncate max-w-[240px]">
                         {authUser?.role === "Student" && studentNo ? (
-                          <span className="font-mono text-xs text-gray-700 dark:text-zinc-300 font-medium">{studentNo}</span>
+                          <span className="font-mono text-sm text-gray-700 dark:text-zinc-300 font-medium">{studentNo}</span>
                         ) : (
                           authUser?.email || authUser?.username
                         )}
                       </p>
                       {authUser?.role && (
                         <div className="mt-2.5">
-                          <span className="text-[10px] font-semibold px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-600 dark:bg-zinc-800 dark:text-zinc-300">
+                          <span className="text-sm font-semibold px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-600 dark:bg-zinc-800 dark:text-zinc-300">
                             {authUser.role === "Student" ? (clientType || "Student") : getRoleLabel(authUser.role)}
                           </span>
                         </div>
@@ -848,16 +796,16 @@ function AccountPageContent() {
                       <TabsTrigger
                         key={tab.id}
                         value={tab.id}
-                        className="group flex items-center justify-start gap-3 w-full px-3.5 py-2.5 rounded-xl text-xs font-semibold tracking-[-0.01em] whitespace-nowrap transition-all outline-none cursor-pointer data-[state=active]:bg-gray-200/60 dark:data-[state=active]:bg-white/10 data-[state=active]:text-gray-900 dark:data-[state=active]:text-zinc-50 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 hover:bg-gray-100/60 dark:hover:bg-zinc-800/40 border border-transparent"
+                        className="group flex items-center justify-start gap-3 w-full px-3.5 py-2.5 rounded-xl text-[14px] font-semibold tracking-[-0.01em] whitespace-nowrap transition-all outline-none cursor-pointer data-[state=active]:bg-gray-200/60 dark:data-[state=active]:bg-white/10 data-[state=active]:text-gray-900 dark:data-[state=active]:text-zinc-50 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 hover:bg-gray-100/60 dark:hover:bg-zinc-800/40 border border-transparent"
                       >
                         <HugeIcon  className={cn(
-                          "ph-bold text-base shrink-0 transition-colors",
+                          "ph-bold text-lg shrink-0 transition-colors",
                           "text-gray-400 group-data-[state=active]:text-gray-900 dark:text-zinc-500 dark:group-data-[state=active]:text-white",
                           tab.icon
                         )}></HugeIcon>
                         <span className="truncate text-left">{tab.label}</span>
                         <div className="shrink-0 ml-auto w-4 h-4 flex items-center justify-center opacity-0 group-data-[state=active]:opacity-100 transition-opacity">
-                          <HugeIcon  className="ph-bold ph-caret-right text-xs text-gray-400 dark:text-zinc-400"></HugeIcon>
+                          <HugeIcon  className="ph-bold ph-caret-right text-sm text-gray-400 dark:text-zinc-400"></HugeIcon>
                         </div>
                       </TabsTrigger>
                     ))}
@@ -870,10 +818,10 @@ function AccountPageContent() {
                 <TabsContent value="profile" className="m-0 border-0 focus-visible:ring-0">
                   <div className="p-8">
                     <div>
-                      <h3 className="text-base font-semibold tracking-[-0.01em] text-gray-900 transition-colors dark:text-zinc-50">
+                      <h3 className="text-lg font-semibold tracking-[-0.01em] text-gray-900 transition-colors dark:text-zinc-50">
                         Profile
                       </h3>
-                      <p className="mt-1 text-xs font-normal text-gray-500 transition-colors dark:text-zinc-400">
+                      <p className="mt-1 text-[14px] font-normal text-gray-500 transition-colors dark:text-zinc-400">
                         Your name appears across the platform and generated audit certificates.
                       </p>
                     </div>
@@ -881,7 +829,7 @@ function AccountPageContent() {
                     <div className="mt-6">
                   <form onSubmit={submitProfile} className="space-y-6">
                     {profileError && (
-                      <div className="p-4 bg-red-50 border border-red-100 text-red-700 text-xs font-semibold rounded-lg flex items-center gap-3 animate-in shake-1 dark:bg-red-500/10 dark:border-red-500/20">
+                      <div className="p-4 bg-red-50 border border-red-100 text-red-700 text-sm font-semibold rounded-lg flex items-center gap-3 animate-in shake-1 dark:bg-red-500/10 dark:border-red-500/20">
                         <HugeIcon  className="ph-fill ph-warning-circle text-lg"></HugeIcon>
                         {profileError}
                       </div>
@@ -890,7 +838,7 @@ function AccountPageContent() {
                     {authUser?.role === "Student" ? (
                       <>
                         <div className="merged-container bg-white dark:bg-zinc-800">
-                          <div className="flex flex-col md:flex-row w-full border-b border-gray-100 dark:border-zinc-700/50 md:divide-x divide-y md:divide-y-0 divide-gray-100 dark:divide-zinc-700/50">
+                          <div className="flex flex-col md:flex-row w-full border-b border-border dark:border-border/50 md:divide-x divide-y md:divide-y-0 divide-border dark:divide-border/50">
                             <div className="flex-1 min-w-0">
                               <div className={`field-wrapper ${fname ? "active" : ""}`}>
                                 <label>First Name</label>
@@ -942,22 +890,22 @@ function AccountPageContent() {
                             />
                           </div>
                         </div>
-                        <p className="text-[11px] text-gray-400 font-normal mt-1.5 ml-1 dark:text-zinc-500">
+                        <p className="text-[13px] text-gray-400 font-normal mt-1.5 ml-1 dark:text-zinc-500">
                           Your email is your account identifier and cannot be changed.
                         </p>
 
-                        <div className="pt-4 border-t border-gray-100 dark:border-white/10 space-y-4">
+                        <div className="pt-4 border-t border-border dark:border-border space-y-4">
                           <div>
-                            <h4 className="text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
+                            <h4 className="text-sm font-bold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
                               Academic Information
                             </h4>
-                            <p className="text-[12px] text-gray-500 dark:text-zinc-400 mt-0.5">
+                            <p className="text-[14px] text-gray-500 dark:text-zinc-400 mt-0.5">
                               Manage your affiliation and student credentials for registrar records.
                             </p>
                           </div>
 
                           <div className="merged-container bg-white dark:bg-zinc-800 mt-2">
-                            <div className="flex flex-col md:flex-row w-full divide-y md:divide-y-0 md:divide-x divide-gray-100 dark:divide-zinc-700/50">
+                            <div className="flex flex-col md:flex-row w-full divide-y md:divide-y-0 md:divide-x divide-border dark:divide-border/50">
                               <div className="flex-1 min-w-0">
                                 <div className="field-wrapper select-wrapper active h-full">
                                   <label className="text-gray-400 dark:text-zinc-500">Client Type</label>
@@ -986,7 +934,7 @@ function AccountPageContent() {
                               </div>
                             </div>
                           </div>
-                          <p className="text-[11px] text-gray-400 font-normal mt-1.5 ml-1 dark:text-zinc-500">
+                          <p className="text-[13px] text-gray-400 font-normal mt-1.5 ml-1 dark:text-zinc-500">
                             Optional in your profile. Choose whether you are currently enrolled or requesting as an alumnus.
                           </p>
                         </div>
@@ -994,7 +942,7 @@ function AccountPageContent() {
                     ) : (
                       <>
                         <div className="merged-container bg-white dark:bg-zinc-800">
-                          <div className="flex flex-col md:flex-row w-full border-b border-gray-100 dark:border-zinc-700/50 md:divide-x divide-y md:divide-y-0 divide-gray-100 dark:divide-zinc-700/50">
+                          <div className="flex flex-col md:flex-row w-full border-b border-border dark:border-border/50 md:divide-x divide-y md:divide-y-0 divide-border dark:divide-border/50">
                             <div className="flex-1 min-w-0">
                               <div className={`field-wrapper ${fname ? "active" : ""}`}>
                                 <label>First Name</label>
@@ -1033,7 +981,7 @@ function AccountPageContent() {
                             />
                           </div>
                         </div>
-                        <p className="text-[11px] text-gray-400 font-normal mt-1.5 ml-1 dark:text-zinc-500">
+                        <p className="text-[13px] text-gray-400 font-normal mt-1.5 ml-1 dark:text-zinc-500">
                           Your email is managed by administrators and cannot be changed.
                         </p>
                       </>
@@ -1043,7 +991,7 @@ function AccountPageContent() {
                       <Button
                         type="submit"
                         disabled={profileLoading}
-                        className="h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                        className="h-12 px-6 text-[15px] font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                       >
                         {profileLoading && (
                           <HugeIcon className="ph-bold ph-spinner animate-spin text-sm" />
@@ -1057,17 +1005,17 @@ function AccountPageContent() {
             </TabsContent>
 
             <TabsContent value="security" className="m-0 border-0 focus-visible:ring-0">
-              <div className="p-8 space-y-8 divide-y divide-gray-100 dark:divide-white/10">
+              <div className="p-8 space-y-8 divide-y divide-border dark:divide-border">
                 {/* Password Rotation Section */}
                 <div>
                   <div>
-                    <h3 className="text-base font-semibold tracking-[-0.01em] text-gray-900 transition-colors dark:text-zinc-50">
+                    <h3 className="text-lg font-semibold tracking-[-0.01em] text-gray-900 transition-colors dark:text-zinc-50">
                       Password
                     </h3>
-                    <p className="mt-1 text-xs font-normal text-gray-500 transition-colors dark:text-zinc-400">
+                    <p className="mt-1 text-[14px] font-normal text-gray-500 transition-colors dark:text-zinc-400">
                       Keep your account secure with a strong password.
                       {authUser?.password_last_changed && (
-                        <span className="block text-[11px] font-normal text-gray-400 dark:text-zinc-550 mt-1">
+                        <span className="block text-[13px] font-normal text-gray-400 dark:text-zinc-550 mt-1">
                           Last changed {new Date(authUser.password_last_changed).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
                         </span>
                       )}
@@ -1077,14 +1025,14 @@ function AccountPageContent() {
                   <div className="mt-6">
                     <form onSubmit={submitPassword} className="space-y-6">
                       {pwError && (
-                        <div className="p-4 bg-red-50 border border-red-100 text-red-700 text-xs font-semibold rounded-lg flex items-center gap-3 animate-in shake-1 dark:bg-red-500/10 dark:border-red-500/20">
+                        <div className="p-4 bg-red-50 border border-red-100 text-red-700 text-sm font-semibold rounded-lg flex items-center gap-3 animate-in shake-1 dark:bg-red-500/10 dark:border-red-500/20">
                           <HugeIcon  className="ph-fill ph-warning-circle text-lg"></HugeIcon>
                           {pwError}
                         </div>
                       )}
 
                       <div className="merged-container bg-white dark:bg-zinc-800">
-                        <div className={`field-wrapper border-b border-gray-100 dark:border-zinc-700/50 ${pwCurrent ? "active" : ""}`}>
+                        <div className={`field-wrapper border-b border-border dark:border-border/50 ${pwCurrent ? "active" : ""}`}>
                           <label>Current Password</label>
                           <Input
                             type={showPw.current ? "text" : "password"}
@@ -1103,7 +1051,7 @@ function AccountPageContent() {
                           </button>
                         </div>
 
-                        <div className="flex flex-col md:flex-row w-full divide-y md:divide-y-0 md:divide-x divide-gray-100 dark:divide-zinc-700/50">
+                        <div className="flex flex-col md:flex-row w-full divide-y md:divide-y-0 md:divide-x divide-border dark:divide-border/50">
                           <div className="flex-1 min-w-0">
                             <div className={`field-wrapper ${pwNext ? "active" : ""}`}>
                               <label>New Password</label>
@@ -1147,7 +1095,7 @@ function AccountPageContent() {
                           </div>
                         </div>
                       </div>
-                      <p className="text-[10px] text-gray-400 px-1 dark:text-zinc-500 mt-1">
+                      <p className="text-sm text-gray-400 px-1 dark:text-zinc-500 mt-1">
                         Must be at least 8 characters long.
                       </p>
 
@@ -1155,7 +1103,7 @@ function AccountPageContent() {
                         <Button
                           type="submit"
                           disabled={pwLoading}
-                          className="h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                          className="h-12 px-6 text-[15px] font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                         >
                           {pwLoading && (
                             <HugeIcon className="ph-bold ph-spinner animate-spin text-sm" />
@@ -1170,13 +1118,13 @@ function AccountPageContent() {
                 {/* Security Questions Section */}
                 <div className="pt-8">
                   <div>
-                    <h3 className="text-base font-semibold tracking-[-0.01em] text-gray-900 transition-colors dark:text-zinc-50">
+                    <h3 className="text-lg font-semibold tracking-[-0.01em] text-gray-900 transition-colors dark:text-zinc-50">
                       Security Questions
                     </h3>
-                    <p className="mt-1 text-xs font-normal text-gray-500 transition-colors dark:text-zinc-400">
+                    <p className="mt-1 text-[14px] font-normal text-gray-500 transition-colors dark:text-zinc-400">
                       Set up questions to help recover your account.
                       {hasSetSecurity && (
-                        <span className="block text-[11px] font-normal text-emerald-600 dark:text-emerald-400 mt-1">
+                        <span className="block text-[13px] font-normal text-emerald-600 dark:text-emerald-400 mt-1">
                           Recovery questions are active.
                         </span>
                       )}
@@ -1186,7 +1134,7 @@ function AccountPageContent() {
                   <div className="mt-6">
                     <form onSubmit={submitSecurity} className="space-y-6">
                       {secError && (
-                        <div className="p-4 bg-red-50 border border-red-100 text-red-700 text-xs font-semibold rounded-lg flex items-center gap-3 animate-in shake-1 dark:bg-red-500/10 dark:border-red-500/20">
+                        <div className="p-4 bg-red-50 border border-red-100 text-red-700 text-sm font-semibold rounded-lg flex items-center gap-3 animate-in shake-1 dark:bg-red-500/10 dark:border-red-500/20">
                           <HugeIcon  className="ph-fill ph-warning-circle text-lg"></HugeIcon>
                           {secError}
                         </div>
@@ -1194,7 +1142,7 @@ function AccountPageContent() {
 
                       <div className="space-y-6">
                         {globalQuestions.length === 0 ? (
-                          <div className="p-8 text-center bg-gray-50/50 rounded-2xl border border-dashed border-gray-200 text-gray-400 font-medium text-xs dark:bg-card dark:border-white/10 dark:text-zinc-500">
+                          <div className="p-8 text-center bg-gray-50/50 rounded-2xl border border-dashed border-border text-gray-400 font-medium text-sm dark:bg-card dark:border-border dark:text-zinc-500">
                             <HugeIcon  className="ph-duotone ph-mask-sad text-xl mb-3 block opacity-40"></HugeIcon>
                             No recovery questions configured.
                           </div>
@@ -1206,12 +1154,12 @@ function AccountPageContent() {
                             return (
                               <div key={q.id} className="space-y-1">
                                 <div className="flex items-center justify-between mb-1 px-1">
-                                  <label className="text-[11px] font-medium uppercase tracking-[0.04em] text-gray-500 dark:text-zinc-450 flex items-center gap-1">
+                                  <label className="text-[13px] font-medium uppercase tracking-[0.04em] text-gray-500 dark:text-zinc-450 flex items-center gap-1">
                                     <span>{q.question}</span>
                                     {q.is_required ? (
-                                      <span className="text-red-500 font-bold text-xs" title="Required challenge">*</span>
+                                      <span className="text-red-500 font-bold text-sm" title="Required challenge">*</span>
                                     ) : (
-                                      <span className="text-[10px] lowercase text-gray-400 dark:text-zinc-500 tracking-normal font-normal">(optional)</span>
+                                      <span className="text-sm lowercase text-gray-400 dark:text-zinc-500 tracking-normal font-normal">(optional)</span>
                                     )}
                                   </label>
                                   {q.hasAnswer && (
@@ -1227,7 +1175,7 @@ function AccountPageContent() {
                                           });
                                         }
                                       }}
-                                      className="text-[12px] font-medium text-gray-900 dark:text-red-400 hover:text-black dark:hover:text-red-300 transition-colors cursor-pointer"
+                                      className="text-[14px] font-medium text-gray-900 dark:text-red-400 hover:text-black dark:hover:text-red-300 transition-colors cursor-pointer"
                                     >
                                       {isEditing ? "Cancel" : "Edit"}
                                     </button>
@@ -1238,14 +1186,14 @@ function AccountPageContent() {
                                   {showInput ? (
                                     <Input
                                       type="text"
-                                      className="h-10 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-3.5 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-gray-900 focus-visible:ring-1 focus-visible:ring-gray-900 dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all animate-in fade-in slide-in-from-top-1 duration-normal"
+                                      className="h-10 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-3.5 text-sm font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-gray-900 focus-visible:ring-1 focus-visible:ring-gray-900 dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all animate-in fade-in slide-in-from-top-1 duration-normal"
                                       placeholder="••••••••"
                                       value={secAnswers[q.id] || ""}
                                       onChange={(e) => setSecAnswers({ ...secAnswers, [q.id]: e.target.value })}
                                       autoFocus={isEditing}
                                     />
                                   ) : (
-                                    <div className="h-10 flex items-center px-3.5 bg-gray-50/70 border border-gray-200 dark:border-white/10 rounded-xl text-xs font-normal text-gray-400 select-none dark:bg-white/5 dark:text-zinc-500">
+                                    <div className="h-10 flex items-center px-3.5 bg-gray-50/70 border border-border dark:border-border rounded-xl text-sm font-normal text-gray-400 select-none dark:bg-white/5 dark:text-zinc-500">
                                       Answer saved and encrypted.
                                     </div>
                                   )}
@@ -1260,7 +1208,7 @@ function AccountPageContent() {
                         <Button
                           type="submit"
                           disabled={secLoading || globalQuestions.length === 0}
-                          className="h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                          className="h-12 px-6 text-[15px] font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                         >
                           {secLoading && (
                             <HugeIcon className="ph-bold ph-spinner animate-spin text-sm" />
@@ -1275,10 +1223,10 @@ function AccountPageContent() {
                 {/* Two-Factor Authentication Section */}
                 <div className="pt-8">
                   <div>
-                    <h3 className="text-base font-semibold tracking-[-0.01em] text-gray-900 transition-colors dark:text-zinc-50">
+                    <h3 className="text-lg font-semibold tracking-[-0.01em] text-gray-900 transition-colors dark:text-zinc-50">
                       Two-Factor Authentication
                     </h3>
-                    <p className="mt-1 text-xs font-normal text-gray-500 transition-colors dark:text-zinc-400">
+                    <p className="mt-1 text-[14px] font-normal text-gray-500 transition-colors dark:text-zinc-400">
                       Add an extra layer of security to your account with time-based OTP and backup recovery codes.
                     </p>
                   </div>
@@ -1286,7 +1234,7 @@ function AccountPageContent() {
                   <div className="mt-6">
                     {totpStep === "setup" && totpSetupData ? (
                       <div className="space-y-6 animate-in zoom-in-95 duration-slow">
-                        <div className="grid grid-cols-1 md:grid-cols-[1fr_300px] gap-8 bg-gray-50 rounded-2xl border border-gray-100 p-8 items-center dark:bg-card dark:border-white/10">
+                        <div className="grid grid-cols-1 md:grid-cols-[1fr_300px] gap-8 bg-gray-50 rounded-2xl border border-border p-8 items-center dark:bg-card dark:border-border">
                           <div className="space-y-4">
                             <h4 className="text-lg font-semibold text-gray-900 tracking-tight dark:text-zinc-50">Setup</h4>
                             <p className="text-sm font-medium text-gray-600 dark:text-zinc-300">
@@ -1294,11 +1242,11 @@ function AccountPageContent() {
                             </p>
                             
                             <div className="space-y-2 mt-4">
-                               <div className="bg-white px-4 py-3 rounded-xl border border-gray-200 flex flex-col gap-1.5 shadow-xs dark:bg-card dark:border-white/10">
+                               <div className="bg-white px-4 py-3 rounded-xl border border-border flex flex-col gap-1.5 shadow-xs dark:bg-card dark:border-border">
                                   <span className="text-[9px] font-semibold text-gray-400 tracking-widest dark:text-zinc-500">Secret key</span>
                                   <span className="text-sm font-semibold text-gray-900 dark:text-primary tracking-wider break-all font-jakarta">{totpSetupData.secret}</span>
                                 </div>
-                               <div className="bg-white px-4 py-3 rounded-xl border border-gray-200 flex flex-col gap-1.5 shadow-xs dark:bg-card dark:border-white/10">
+                               <div className="bg-white px-4 py-3 rounded-xl border border-border flex flex-col gap-1.5 shadow-xs dark:bg-card dark:border-border">
                                   <span className="text-[9px] font-semibold text-gray-400 tracking-widest dark:text-zinc-500">Serial key (Backup)</span>
                                   <span className="text-sm font-semibold text-gray-900 tracking-wider break-all dark:text-zinc-50 font-jakarta">{totpSetupData.serialKey}</span>
                                 </div>
@@ -1316,13 +1264,13 @@ function AccountPageContent() {
                         </div>
 
                         <div className="space-y-2">
-                          <label className="text-[10px] font-semibold tracking-widest text-gray-500 px-1 dark:text-zinc-400">
+                          <label className="text-sm font-semibold tracking-widest text-gray-500 px-1 dark:text-zinc-400">
                             Enter Verification Code
                           </label>
                           <Input
                             type="text"
                             maxLength={6}
-                            className="h-16 rounded-xl border border-gray-200 bg-white text-center text-xl font-semibold text-gray-900 shadow-inner transition-all focus-visible:border-gray-900/20 focus-visible:ring-4 focus-visible:ring-gray-900/5 dark:border-white/10 dark:bg-card dark:text-zinc-50 dark:shadow-none"
+                            className="h-16 rounded-xl border border-border bg-white text-center text-xl font-semibold text-gray-900 shadow-inner transition-all focus-visible:border-gray-900/20 focus-visible:ring-4 focus-visible:ring-gray-900/5 dark:border-border dark:bg-card dark:text-zinc-50 dark:shadow-none"
                             placeholder="000000"
                             value={totpToken}
                             onChange={(e) => setTotpToken(e.target.value.replace(/\D/g, "").slice(0, 6))}
@@ -1337,13 +1285,13 @@ function AccountPageContent() {
                           </div>
                         )}
 
-                        <div className="pt-8 border-t border-gray-100 flex justify-end gap-2.5 dark:border-white/10">
+                        <div className="pt-8 border-t border-border flex justify-end gap-2.5 dark:border-border">
                           <Button
                             type="button"
                             onClick={cancelTOTPSetup}
                             disabled={totpLoading}
                             variant="outline"
-                            className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                            className="h-10 px-5 text-sm font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                           >
                             Cancel
                           </Button>
@@ -1351,7 +1299,7 @@ function AccountPageContent() {
                             type="button"
                             onClick={verifyTOTP}
                             disabled={totpLoading || totpToken.length !== 6}
-                            className="h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                            className="h-12 px-6 text-[15px] font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                           >
                             {totpLoading && (
                               <HugeIcon className="ph-bold ph-spinner animate-spin text-sm" />
@@ -1361,7 +1309,7 @@ function AccountPageContent() {
                         </div>
                       </div>
                     ) : (
-                      <div className="divide-y divide-gray-100 dark:divide-white/5 animate-in fade-in duration-slow">
+                      <div className="divide-y divide-border dark:divide-border animate-in fade-in duration-slow">
                         {/* Authenticator App Method */}
                         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 py-6">
                           <div className="flex gap-3 items-start">
@@ -1372,12 +1320,12 @@ function AccountPageContent() {
                               <h4 className="text-[14px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50 flex items-center gap-2 leading-tight">
                                 Authenticator App
                                 {totpEnabled && hasTotpSecret ? (
-                                  <span className="text-[10px] font-medium px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">Active</span>
+                                  <span className="text-sm font-medium px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">Active</span>
                                 ) : (
-                                  <span className="text-[10px] font-medium px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-500 dark:bg-zinc-800 dark:text-zinc-400">Inactive</span>
+                                  <span className="text-sm font-medium px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-500 dark:bg-zinc-800 dark:text-zinc-400">Inactive</span>
                                 )}
                               </h4>
-                              <p className="text-[12px] font-normal text-gray-500 mt-1 max-w-md dark:text-zinc-400">
+                              <p className="text-[14px] font-normal text-gray-500 mt-1 max-w-md dark:text-zinc-400">
                                 Secure your account with temporary, rotating 6-digit codes generated from an authenticator app (like Google Authenticator or Authy).
                               </p>
                             </div>
@@ -1388,7 +1336,7 @@ function AccountPageContent() {
                                  type="button"
                                  onClick={() => setTotpStep("disable-flow")}
                                  variant="outline"
-                                 className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                                 className="h-10 px-5 text-sm font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                                >
                                  Disable
                                </Button>
@@ -1397,7 +1345,7 @@ function AccountPageContent() {
                                  type="button"
                                  onClick={startTOTPSetup}
                                  disabled={totpSetupLoading}
-                                 className="h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                                 className="h-12 px-6 text-[15px] font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                                >
                                  {totpSetupLoading && (
                                    <HugeIcon className="ph-bold ph-spinner animate-spin text-sm" />
@@ -1410,15 +1358,15 @@ function AccountPageContent() {
 
                         {/* TOTP Disable Form Flow */}
                         {totpStep === "disable-flow" && (
-                          <div className="bg-gray-50 rounded-2xl border border-gray-100 p-8 space-y-6 animate-in zoom-in-95 duration-normal dark:bg-white/5 dark:border-white/10">
+                          <div className="bg-gray-50 rounded-2xl border border-border p-8 space-y-6 animate-in zoom-in-95 duration-normal dark:bg-white/5 dark:border-border">
                              <div className="space-y-2">
-                                <label className="text-[10px] font-semibold tracking-widest text-gray-500 px-1 dark:text-zinc-400">
+                                <label className="text-sm font-semibold tracking-widest text-gray-500 px-1 dark:text-zinc-400">
                                   Enter Authenticator Code to Disable
                                 </label>
                                 <Input
                                   type="text"
                                   maxLength={6}
-                                  className="h-16 rounded-xl border border-gray-200 bg-white text-center text-xl font-semibold text-gray-900 shadow-inner transition-all focus-visible:border-red-500/20 focus-visible:ring-4 focus-visible:ring-red-500/5 dark:border-white/10 dark:bg-card dark:text-zinc-50 dark:shadow-none"
+                                  className="h-16 rounded-xl border border-border bg-white text-center text-xl font-semibold text-gray-900 shadow-inner transition-all focus-visible:border-red-500/20 focus-visible:ring-4 focus-visible:ring-red-500/5 dark:border-border dark:bg-card dark:text-zinc-50 dark:shadow-none"
                                   placeholder="000000"
                                   value={totpToken}
                                   onChange={(e) => setTotpToken(e.target.value.replace(/\D/g, "").slice(0, 6))}
@@ -1438,7 +1386,7 @@ function AccountPageContent() {
                                   type="button"
                                   onClick={() => { setTotpStep("idle"); setTotpToken(""); setTotpError(""); }}
                                   variant="outline"
-                                  className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                                  className="h-10 px-5 text-sm font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                                 >
                                   Cancel
                                 </Button>
@@ -1449,7 +1397,7 @@ function AccountPageContent() {
                                     setTotpStep("idle");
                                   }}
                                   disabled={totpLoading || totpToken.length !== 6}
-                                  className="h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                                  className="h-12 px-6 text-[15px] font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                                 >
                                   {totpLoading && (
                                     <HugeIcon className="ph-bold ph-spinner animate-spin text-sm" />
@@ -1470,12 +1418,12 @@ function AccountPageContent() {
                               <h4 className="text-[14px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50 flex items-center gap-2 leading-tight">
                                 Backup Recovery Codes
                                 {recoveryCodesCount > 0 ? (
-                                  <span className="text-[10px] font-medium px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">Active ({recoveryCodesCount} left)</span>
+                                  <span className="text-sm font-medium px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">Active ({recoveryCodesCount} left)</span>
                                 ) : (
-                                  <span className="text-[10px] font-medium px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-500 dark:bg-zinc-800 dark:text-zinc-400">Inactive</span>
+                                  <span className="text-sm font-medium px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-500 dark:bg-zinc-800 dark:text-zinc-400">Inactive</span>
                                 )}
                               </h4>
-                              <p className="text-[12px] font-normal text-gray-500 mt-1 max-w-md dark:text-zinc-400">
+                              <p className="text-[14px] font-normal text-gray-500 mt-1 max-w-md dark:text-zinc-400">
                                 Generate a list of single-use backup recovery codes. These allow secure access to your account in emergency events.
                               </p>
                             </div>
@@ -1513,7 +1461,7 @@ function AccountPageContent() {
                                 }}
                                 disabled={recoveryCodesLoading}
                                 variant="outline"
-                                className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                                className="h-10 px-5 text-sm font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                               >
                                 Disable
                               </Button>
@@ -1522,7 +1470,7 @@ function AccountPageContent() {
                               type="button"
                               onClick={generateNewRecoveryCodes}
                               disabled={recoveryCodesLoading}
-                              className="h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                              className="h-12 px-6 text-[15px] font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                             >
                               {recoveryCodesLoading && (
                                 <HugeIcon className="ph-bold ph-spinner animate-spin text-sm" />
@@ -1543,7 +1491,7 @@ function AccountPageContent() {
 
         {/* Recovery Codes Modal */}
         <Dialog open={showRecoveryCodesDialog} onOpenChange={setShowRecoveryCodesDialog}>
-          <DialogContent hideClose={true} className="max-w-[560px] sm:max-w-[560px] rounded-[20px] border-[#E5E5EA] dark:border-zinc-800 p-6 overflow-hidden bg-white shadow-2xl dark:bg-card">
+          <DialogContent hideClose={true} className="max-w-[560px] sm:max-w-[560px] rounded-[20px] border-[#E5E5EA] dark:border-border p-6 overflow-hidden bg-white shadow-2xl dark:bg-card">
             <div className="relative pb-4">
                <DialogClose asChild>
                  <button className="absolute top-0 right-0 w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-zinc-800 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors focus:outline-none cursor-pointer">
@@ -1560,7 +1508,7 @@ function AccountPageContent() {
               <div className="grid grid-cols-2 gap-x-6 gap-y-4">
                 {recoveryCodes.map((code, idx) => (
                   <div key={idx} className="font-jakarta text-[14.5px] font-semibold text-[#1C1C1E] dark:text-zinc-200 flex items-center gap-3 bg-[#F5F5F7] p-3 rounded-[10px] border border-[#E5E5EA] dark:bg-white/5 dark:border-zinc-850">
-                    <span className="text-[11px] text-[#636366] dark:text-zinc-400 font-bold bg-[#E5E5EA] dark:bg-zinc-800 w-5 h-5 flex items-center justify-center rounded-full shrink-0">
+                    <span className="text-[13px] text-[#636366] dark:text-zinc-400 font-bold bg-[#E5E5EA] dark:bg-zinc-800 w-5 h-5 flex items-center justify-center rounded-full shrink-0">
                       {idx + 1}
                     </span>
                     <span className="tracking-widest font-jakarta">{code}</span>
@@ -1580,7 +1528,7 @@ function AccountPageContent() {
                     type="button"
                     onClick={copyRecoveryCodes}
                     variant="outline" 
-                    className="flex-1 h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                    className="flex-1 h-10 px-5 text-sm font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                   >
                     Copy
                   </Button>
@@ -1588,7 +1536,7 @@ function AccountPageContent() {
                     type="button"
                     onClick={downloadRecoveryCodes}
                     variant="outline" 
-                    className="flex-1 h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                    className="flex-1 h-10 px-5 text-sm font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                   >
                     Save
                   </Button>
@@ -1596,7 +1544,7 @@ function AccountPageContent() {
                 <Button 
                   type="button"
                   onClick={() => setShowRecoveryCodesDialog(false)}
-                  className="w-full h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all"
+                  className="w-full h-12 px-6 text-[15px] font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all"
                 >
                   Done
                 </Button>

@@ -480,7 +480,7 @@ export default function RecognitionTemplatesTab({ showToast }) {
         <PageHeader
           showBorder={false}
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
-          descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
+          descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
           title="OCR Configuration"
           description="Select a document type, upload a representative sample, and calibrate field bounding boxes for automated OCR extraction."
           className="p-6"
@@ -495,7 +495,7 @@ export default function RecognitionTemplatesTab({ showToast }) {
               <Button
                 type="button"
                 variant="outline"
-                className="h-10 rounded-xl border border-gray-200 bg-white px-4 text-xs font-semibold text-gray-700 shadow-xs transition-all hover:bg-gray-50 active:scale-95 dark:border-white/10 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700 cursor-pointer"
+                className="h-10 rounded-xl border border-border bg-white px-4 text-xs font-semibold text-gray-700 shadow-xs transition-all hover:bg-gray-50 active:scale-95 dark:border-border dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700 cursor-pointer"
                 onClick={() => importInputRef.current?.click()}
                 disabled={importing || loading}
               >
@@ -504,7 +504,7 @@ export default function RecognitionTemplatesTab({ showToast }) {
               <Button
                 type="button"
                 variant="outline"
-                className="h-10 rounded-xl border border-gray-200 bg-white px-4 text-xs font-semibold text-gray-700 shadow-xs transition-all hover:bg-gray-50 active:scale-95 dark:border-white/10 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700 cursor-pointer"
+                className="h-10 rounded-xl border border-border bg-white px-4 text-xs font-semibold text-gray-700 shadow-xs transition-all hover:bg-gray-50 active:scale-95 dark:border-border dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700 cursor-pointer"
                 onClick={exportTemplates}
                 disabled={templates.length === 0 || importing || loading}
               >
@@ -519,10 +519,10 @@ export default function RecognitionTemplatesTab({ showToast }) {
           }
         />
 
-        <div className="border-t border-gray-100 dark:border-white/10 p-6 flex-1 min-h-0">
+        <div className="border-t border-border dark:border-border p-6 flex-1 min-h-0">
           <div className="grid gap-6 xl:grid-cols-[300px_minmax(0,1fr)_300px]">
           {/* Left Panel: Calibration Controls */}
-          <div className="space-y-4 rounded-2xl border border-gray-200 bg-white p-5 dark:border-white/10 dark:bg-card shadow-xs">
+          <div className="space-y-4 rounded-2xl border border-border bg-white p-5 dark:border-border dark:bg-card shadow-xs">
             <div className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
               Template Controls
             </div>
@@ -554,13 +554,13 @@ export default function RecognitionTemplatesTab({ showToast }) {
               <Button
                 type="button"
                 variant="outline"
-                className="w-full h-10 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 text-xs font-semibold active:scale-95 transition-all shadow-xs cursor-pointer"
+                className="w-full h-10 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 text-xs font-semibold active:scale-95 transition-all shadow-xs cursor-pointer"
                 onClick={chooseSampleFile}
               >
                 {sampleFile ? "Replace" : "Upload"}
               </Button>
               {sampleFile ? (
-                <div className="flex items-center justify-between gap-2 p-2.5 rounded-xl border border-gray-100 bg-gray-50 dark:border-white/5 dark:bg-zinc-800/50">
+                <div className="flex items-center justify-between gap-2 p-2.5 rounded-xl border border-border bg-gray-50 dark:border-border dark:bg-zinc-800/50">
                   <div className="flex items-center gap-2 min-w-0">
                     <HugeIcon  className="ph-bold ph-file-text text-sm text-pup-maroon dark:text-red-400 flex-shrink-0" />
                     <span className="truncate text-xs font-medium text-gray-700 dark:text-zinc-300">
@@ -578,7 +578,7 @@ export default function RecognitionTemplatesTab({ showToast }) {
               )}
             </div>
 
-            <div className="pt-2 border-t border-gray-100 dark:border-white/5 space-y-2">
+            <div className="pt-2 border-t border-border dark:border-border space-y-2">
               <div className="flex items-center justify-between">
                 <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300">
                   Fields to OCR
@@ -621,7 +621,7 @@ export default function RecognitionTemplatesTab({ showToast }) {
                         "w-full flex items-center justify-between px-3 py-2.5 rounded-xl border text-xs font-semibold transition-all cursor-pointer",
                         isSelected
                           ? "border-pup-maroon bg-pup-maroon/5 text-pup-maroon dark:border-red-500/80 dark:bg-red-500/10 dark:text-red-300 ring-1 ring-pup-maroon dark:ring-red-500/80"
-                          : "border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800/80 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700/60",
+                          : "border-border dark:border-border bg-white dark:bg-zinc-800/80 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700/60",
                         disabled && "opacity-40 cursor-not-allowed hover:bg-transparent"
                       )}
                     >
@@ -647,7 +647,7 @@ export default function RecognitionTemplatesTab({ showToast }) {
               </div>
             </div>
 
-            <div className="rounded-xl border border-gray-100 bg-gray-50 dark:border-white/5 dark:bg-zinc-800/40 p-3 text-xs text-gray-600 dark:text-zinc-300">
+            <div className="rounded-xl border border-border bg-gray-50 dark:border-border dark:bg-zinc-800/40 p-3 text-xs text-gray-600 dark:text-zinc-300">
               <div className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
                 Active Field Target
               </div>
@@ -656,7 +656,7 @@ export default function RecognitionTemplatesTab({ showToast }) {
               </div>
             </div>
 
-            <div className="space-y-1.5 pt-2 border-t border-gray-100 dark:border-white/5">
+            <div className="space-y-1.5 pt-2 border-t border-border dark:border-border">
               <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300">
                 Template Name
               </label>
@@ -695,7 +695,7 @@ export default function RecognitionTemplatesTab({ showToast }) {
               </div>
             )}
 
-            <div className="pt-2 border-t border-gray-100 dark:border-white/5">
+            <div className="pt-2 border-t border-border dark:border-border">
               <Button
                 className="w-full h-10 rounded-xl btn-brand-red text-white text-xs font-semibold shadow-xs cursor-pointer active:scale-95 transition-all border-0"
                 onClick={saveTemplate}
@@ -707,8 +707,8 @@ export default function RecognitionTemplatesTab({ showToast }) {
           </div>
 
           {/* Center Panel: Visual Calibration Canvas */}
-          <div className="min-w-0 rounded-2xl border border-gray-200 bg-white p-5 dark:border-white/10 dark:bg-card shadow-xs flex flex-col justify-between min-h-[560px]">
-            <div className="flex items-center justify-between pb-3 border-b border-gray-100 dark:border-white/10 text-xs text-gray-500 dark:text-zinc-400">
+          <div className="min-w-0 rounded-2xl border border-border bg-white p-5 dark:border-border dark:bg-card shadow-xs flex flex-col justify-between min-h-[560px]">
+            <div className="flex items-center justify-between pb-3 border-b border-border dark:border-border text-xs text-gray-900 dark:text-zinc-300">
               <div className="flex items-center gap-2">
                 <HugeIcon  className="ph-bold ph-cursor-click text-sm text-pup-maroon dark:text-red-400" />
                 <span>Drag across the printed value area to calibrate field coordinates.</span>
@@ -734,7 +734,7 @@ export default function RecognitionTemplatesTab({ showToast }) {
                 <div className="mx-auto w-full max-w-2xl" style={{ aspectRatio: `${pageSize.width} / ${pageSize.height}` }}>
                   <div
                     ref={imageRef}
-                    className="relative h-full w-full select-none overflow-hidden rounded-xl border border-gray-200 dark:border-white/10 bg-white shadow-sm"
+                    className="relative h-full w-full select-none overflow-hidden rounded-xl border border-border dark:border-border bg-white shadow-sm"
                     onPointerDown={startDraw}
                     onPointerMove={updateDraw}
                     onPointerUp={finishDraw}
@@ -796,14 +796,14 @@ export default function RecognitionTemplatesTab({ showToast }) {
                 <EmptyHeader className="flex flex-col items-center gap-0">
                   <div className="relative mb-5">
                     <div className="absolute inset-0 rounded-3xl bg-linear-to-tr from-pup-maroon/20 to-amber-500/20 blur-xl dark:from-pup-maroon/30 dark:to-amber-500/30" />
-                    <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
+                    <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
                       <HugeIcon  className="ph-duotone ph-file-arrow-up text-4xl text-pup-maroon dark:text-red-400" />
                     </EmptyMedia>
                   </div>
                   <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">
                     No Sample Document Loaded
                   </EmptyTitle>
-                  <EmptyDescription className="mt-1 max-w-sm text-xs font-normal text-gray-500 dark:text-zinc-400">
+                  <EmptyDescription className="mt-1 max-w-sm text-xs font-normal text-gray-900 dark:text-zinc-300">
                     Load a representative PSA PDF or image to visualize text boundaries and calibrate coordinate extraction boxes.
                   </EmptyDescription>
                   <div className="mt-5 flex flex-col items-center gap-2">
@@ -825,7 +825,7 @@ export default function RecognitionTemplatesTab({ showToast }) {
             )}
 
             {pageImage && (
-              <div className="mt-4 pt-4 border-t border-gray-100 dark:border-white/10 grid gap-3 sm:grid-cols-[minmax(0,1fr)_160px] items-center">
+              <div className="mt-4 pt-4 border-t border-border dark:border-border grid gap-3 sm:grid-cols-[minmax(0,1fr)_160px] items-center">
                 <div>
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">Live Field Extraction Check</span>
@@ -833,12 +833,12 @@ export default function RecognitionTemplatesTab({ showToast }) {
                       {[WHOLE_FIELD, ...FIELDS].find(([key]) => key === activeField)?.[1] || "Field"}
                     </span>
                   </div>
-                  <p className="mt-1 font-mono text-xs text-gray-600 dark:text-zinc-300 bg-gray-50 dark:bg-zinc-800/50 p-2 rounded-lg border border-gray-100 dark:border-white/5 truncate">
+                  <p className="mt-1 font-mono text-xs text-gray-600 dark:text-zinc-300 bg-gray-50 dark:bg-zinc-800/50 p-2 rounded-lg border border-border dark:border-border truncate">
                     {previewText ? `"${previewText}"` : "No OCR text detected inside this bounding box yet."}
                   </p>
                 </div>
                 {previewRegion.width > 0 && previewRegion.height > 0 ? (
-                  <div className="relative h-18 overflow-hidden rounded-xl border border-gray-200 bg-gray-100 dark:border-white/10 dark:bg-zinc-900">
+                  <div className="relative h-18 overflow-hidden rounded-xl border border-border bg-gray-100 dark:border-border dark:bg-zinc-900">
                     <img
                       src={pageImage}
                       alt="Selected OCR region"
@@ -853,7 +853,7 @@ export default function RecognitionTemplatesTab({ showToast }) {
                     />
                   </div>
                 ) : (
-                  <div className="flex h-18 items-center justify-center rounded-xl border border-dashed border-gray-200 dark:border-zinc-800 text-[11px] text-gray-400">
+                  <div className="flex h-18 items-center justify-center rounded-xl border border-dashed border-border dark:border-border text-[11px] text-gray-400">
                     Draw bounding box
                   </div>
                 )}
@@ -862,7 +862,7 @@ export default function RecognitionTemplatesTab({ showToast }) {
           </div>
 
           {/* Right Panel: Saved Templates */}
-          <div className="space-y-4 rounded-2xl border border-gray-200 bg-white p-5 dark:border-white/10 dark:bg-card shadow-xs">
+          <div className="space-y-4 rounded-2xl border border-border bg-white p-5 dark:border-border dark:bg-card shadow-xs">
             <div className="flex items-center justify-between">
               <div className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
                 Saved Templates
@@ -870,7 +870,7 @@ export default function RecognitionTemplatesTab({ showToast }) {
             </div>
 
             {/* Active / Archived Segmented Switch */}
-            <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-gray-200/60 dark:border-white/5">
+            <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-border/60 dark:border-border">
               <button
                 type="button"
                 onClick={() => setTemplateFilter("Active")}
@@ -900,7 +900,7 @@ export default function RecognitionTemplatesTab({ showToast }) {
             {displayTemplates.length === 0 ? (
               <Empty className="py-12 flex flex-col items-center justify-center text-center border-0 bg-transparent">
                 <EmptyHeader className="flex flex-col items-center gap-0">
-                  <EmptyMedia className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl border border-gray-100 bg-gray-50 dark:border-white/10 dark:bg-zinc-800">
+                  <EmptyMedia className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl border border-border bg-gray-50 dark:border-border dark:bg-zinc-800">
                     <HugeIcon  className="ph-duotone ph-bounding-box text-2xl text-gray-400 dark:text-zinc-500" />
                   </EmptyMedia>
                   <EmptyTitle className="text-xs font-semibold text-gray-900 dark:text-zinc-50">
@@ -924,7 +924,7 @@ export default function RecognitionTemplatesTab({ showToast }) {
                         "relative rounded-xl border p-3.5 transition-all group",
                         isSelected
                           ? "border-pup-maroon bg-pup-maroon/5 dark:border-red-500/80 dark:bg-red-500/10 shadow-xs"
-                          : "border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800/40 hover:border-gray-300 dark:hover:border-zinc-700"
+                          : "border-border dark:border-border bg-white dark:bg-zinc-800/40 hover:border-border dark:hover:border-zinc-700"
                       )}
                     >
                       {/* Action buttons with Tooltips */}
@@ -996,7 +996,7 @@ export default function RecognitionTemplatesTab({ showToast }) {
                             v{template.version}
                           </span>
                         </div>
-                        <div className="mt-1 text-[11px] text-gray-500 dark:text-zinc-400 truncate">
+                        <div className="mt-1 text-[11px] text-gray-900 dark:text-zinc-300 truncate">
                           {template.name}
                         </div>
                         <div className="mt-2 flex items-center gap-2 text-[11px] text-gray-400 dark:text-zinc-500">
@@ -1017,7 +1017,7 @@ export default function RecognitionTemplatesTab({ showToast }) {
               </div>
             )}
 
-            <div className="rounded-xl bg-gray-50 dark:bg-zinc-800/50 p-3 text-[11px] text-gray-500 dark:text-zinc-400 leading-relaxed border border-gray-100 dark:border-white/5">
+            <div className="rounded-xl bg-gray-50 dark:bg-zinc-800/50 p-3 text-[11px] text-gray-900 dark:text-zinc-300 leading-relaxed border border-border dark:border-border">
               <span className="font-semibold text-gray-700 dark:text-zinc-300">Legend:</span> Green boxes represent raw OCR observations. Colored boxes reflect calibrated field regions.
             </div>
           </div>

@@ -285,7 +285,7 @@ export default function ForgotPasswordPage() {
                   <div className={`merged-container bg-white dark:bg-zinc-800 ${
                     forgotError ? "has-error" : ""
                   }`}>
-                    <div className={`field-wrapper border-b border-gray-100 dark:border-zinc-700/50 ${resetTokenFocused || forgotResetToken.length > 0 ? "active" : ""}`}>
+                    <div className={`field-wrapper border-b border-border dark:border-border/50 ${resetTokenFocused || forgotResetToken.length > 0 ? "active" : ""}`}>
                       <label>Reset Token</label>
                       <Input
                         type="text"
@@ -307,7 +307,7 @@ export default function ForgotPasswordPage() {
                     </p>
 
                     {/* New Password input */}
-                    <div className={`field-wrapper border-b border-gray-100 dark:border-zinc-700/50 ${newPassFocused || forgotNewPassword.length > 0 ? "active" : ""}`}>
+                    <div className={`field-wrapper border-b border-border dark:border-border/50 ${newPassFocused || forgotNewPassword.length > 0 ? "active" : ""}`}>
                       <label>New Password</label>
                       <Input
                         type="password"
@@ -386,7 +386,7 @@ export default function ForgotPasswordPage() {
       </div>
 
       {/* FIXED FOOTER */}
-      <div className="absolute bottom-0 left-0 right-0 bg-[#f2f2f7] dark:bg-zinc-900 border-t border-gray-200 dark:border-zinc-800 py-6 px-8 flex justify-center text-[11px] text-[#8E8E93] select-none font-sans z-0">
+      <div className="absolute bottom-0 left-0 right-0 bg-[#f2f2f7] dark:bg-zinc-900 border-t border-border dark:border-border py-6 px-8 flex justify-center text-[11px] text-[#8E8E93] select-none font-sans z-0">
         <div className="w-full max-w-[980px] flex justify-center items-center text-center">
           <span>© 2026 Polytechnic University of the Philippines. All rights reserved.</span>
         </div>

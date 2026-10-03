@@ -42,8 +42,8 @@ const CabinetSidebar = memo(({
   const [activeTab, setActiveTab] = React.useState("properties")
 
   return (
-    <Card className="overflow-hidden rounded-2xl border border-gray-200 shadow-sm select-none dark:border-white/10 dark:shadow-none">
-      <CardHeader className="border-b border-gray-100 dark:border-white/10 bg-transparent p-5">
+    <Card className="overflow-hidden rounded-2xl border border-border shadow-sm select-none dark:border-border dark:shadow-none">
+      <CardHeader className="border-b border-border dark:border-border bg-transparent p-5">
         <div>
           <CardTitle className="text-[15px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50 mb-1">
             {selectedCabinetIds.size === 0 ? "Selection Details" :
@@ -51,7 +51,7 @@ const CabinetSidebar = memo(({
              selectedCabinet?.isDoor ? "Entrance Details" : "Cabinet Details"}
           </CardTitle>
           <div className="flex items-center gap-2">
-            <CardDescription className="text-xs font-normal text-gray-500 dark:text-zinc-400 m-0">
+            <CardDescription className="text-xs font-normal text-gray-900 dark:text-zinc-300 m-0">
               {selectedCabinetIds.size > 1
                 ? `${selectedCabinetIds.size} cabinets selected`
                 : selectedCabinet
@@ -74,7 +74,7 @@ const CabinetSidebar = memo(({
 
       <CardContent className="p-4">
         {/* Apple Segmented Control */}
-        <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-gray-200/60 dark:border-white/5 w-full mb-4">
+        <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-border/60 dark:border-border w-full mb-4">
           <button
             type="button"
             onClick={() => setActiveTab("properties")}
@@ -109,19 +109,19 @@ const CabinetSidebar = memo(({
                 <h3 className="text-sm font-semibold text-gray-900 dark:text-zinc-50 mt-3">
                   No cabinet selected
                 </h3>
-                <p className="text-xs font-normal text-gray-500 dark:text-zinc-400 mt-1 max-w-[200px] mx-auto">
+                <p className="text-xs font-normal text-gray-900 dark:text-zinc-300 mt-1 max-w-[200px] mx-auto">
                   Select a cabinet on the map to edit its properties.
                 </p>
               </div>
             ) : (
               <div className="space-y-4">
                 {selectedCabinetIds.size > 1 && (
-                  <div className="flex h-9 items-center rounded-xl border border-gray-200 bg-white dark:border-white/10 dark:bg-card overflow-hidden shadow-xs">
+                  <div className="flex h-9 items-center rounded-xl border border-border bg-white dark:border-border dark:bg-card overflow-hidden shadow-xs">
                     <button
                       type="button"
                       disabled={carouselIndex <= 0}
                       onClick={() => setCarouselIndex(prev => Math.max(0, prev - 1))}
-                      className="px-3 h-full flex items-center justify-center text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-200 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer border-r border-gray-200 dark:border-white/10"
+                      className="px-3 h-full flex items-center justify-center text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-200 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer border-r border-border dark:border-border"
                     >
                       <HugeIcon  className="ph-bold ph-caret-left text-xs" />
                     </button>
@@ -134,7 +134,7 @@ const CabinetSidebar = memo(({
                       type="button"
                       disabled={carouselIndex >= selectedCabinetIds.size - 1}
                       onClick={() => setCarouselIndex(prev => Math.min(selectedCabinetIds.size - 1, prev + 1))}
-                      className="px-3 h-full flex items-center justify-center text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-200 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer border-l border-gray-200 dark:border-white/10"
+                      className="px-3 h-full flex items-center justify-center text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-200 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer border-l border-border dark:border-border"
                     >
                       <HugeIcon  className="ph-bold ph-caret-right text-xs" />
                     </button>
@@ -148,7 +148,7 @@ const CabinetSidebar = memo(({
                         type="button"
                         variant="outline"
                         onClick={() => onOpenRenameCabinet?.(selectedCabinet)}
-                        className="w-full h-9 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-xs font-semibold text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all px-1"
+                        className="w-full h-9 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-xs font-semibold text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all px-1"
                       >
                         Rename
                       </Button>
@@ -156,7 +156,7 @@ const CabinetSidebar = memo(({
                         type="button"
                         variant="outline"
                         onClick={duplicateSelectedCabinet}
-                        className="w-full h-9 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-xs font-semibold text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all px-1"
+                        className="w-full h-9 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-xs font-semibold text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all px-1"
                       >
                         Duplicate
                       </Button>
@@ -181,10 +181,10 @@ const CabinetSidebar = memo(({
                           {(selectedCabinet.drawerIds || []).length} slots
                         </span>
                       </div>
-                      <div className="flex items-center h-9 border border-gray-200 dark:border-white/10 dark:bg-zinc-800/50 bg-white rounded-xl overflow-hidden shadow-xs">
+                      <div className="flex items-center h-9 border border-border dark:border-border dark:bg-zinc-800/50 bg-white rounded-xl overflow-hidden shadow-xs">
                         <button
                           type="button"
-                          className="h-full px-3.5 text-sm font-semibold text-gray-600 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-200 border-r border-gray-200 dark:border-white/10 bg-transparent hover:bg-gray-50 dark:hover:bg-zinc-700/50 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer flex items-center justify-center select-none"
+                          className="h-full px-3.5 text-sm font-semibold text-gray-600 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-200 border-r border-border dark:border-border bg-transparent hover:bg-gray-50 dark:hover:bg-zinc-700/50 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer flex items-center justify-center select-none"
                           onClick={removeDrawerFromSelected}
                           disabled={(selectedCabinet.drawerIds || []).length <= 1}
                           title="Remove last drawer"
@@ -196,14 +196,14 @@ const CabinetSidebar = memo(({
                           <span className="text-xs font-semibold text-gray-900 dark:text-zinc-50">
                             {(selectedCabinet.drawerIds || []).length}
                           </span>
-                          <span className="ml-1 text-xs font-normal text-gray-500 dark:text-zinc-400">
+                          <span className="ml-1 text-xs font-normal text-gray-900 dark:text-zinc-300">
                             Drawers
                           </span>
                         </div>
 
                         <button
                           type="button"
-                          className="h-full px-3.5 text-sm font-semibold text-gray-600 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-200 border-l border-gray-200 dark:border-white/10 bg-transparent hover:bg-gray-50 dark:hover:bg-zinc-700/50 transition-colors cursor-pointer flex items-center justify-center select-none"
+                          className="h-full px-3.5 text-sm font-semibold text-gray-600 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-200 border-l border-border dark:border-border bg-transparent hover:bg-gray-50 dark:hover:bg-zinc-700/50 transition-colors cursor-pointer flex items-center justify-center select-none"
                           onClick={addDrawerToSelected}
                           title="Add incremented drawer"
                         >
@@ -233,7 +233,7 @@ const CabinetSidebar = memo(({
                           x: fromPct(val),
                         })
                       }}
-                      className="h-9 rounded-xl border border-gray-200 bg-white text-xs font-normal text-gray-900 px-3 shadow-xs focus-visible:border-gray-300 dark:bg-zinc-800 dark:border-white/10 dark:text-zinc-100"
+                      className="h-9 rounded-xl border border-border bg-white text-xs font-normal text-gray-900 px-3 shadow-xs focus-visible:border-border dark:bg-zinc-800 dark:border-border dark:text-zinc-100"
                     />
                   </div>
                   <div>
@@ -254,12 +254,12 @@ const CabinetSidebar = memo(({
                           y: fromPct(val),
                         })
                       }}
-                      className="h-9 rounded-xl border border-gray-200 bg-white text-xs font-normal text-gray-900 px-3 shadow-xs focus-visible:border-gray-300 dark:bg-zinc-800 dark:border-white/10 dark:text-zinc-100"
+                      className="h-9 rounded-xl border border-border bg-white text-xs font-normal text-gray-900 px-3 shadow-xs focus-visible:border-border dark:bg-zinc-800 dark:border-border dark:text-zinc-100"
                     />
                   </div>
                 </div>
 
-                <div className="text-xs font-normal text-gray-500 dark:text-zinc-400 mt-2">
+                <div className="text-xs font-normal text-gray-900 dark:text-zinc-300 mt-2">
                   Drag cabinets on the canvas. Drawer count controls available drawer slots for this cabinet.
                 </div>
               </div>
@@ -288,7 +288,7 @@ const CabinetSidebar = memo(({
                         isActive
                           ? "bg-red-50 text-gray-900 border-red-200 dark:bg-red-950/20 dark:text-zinc-50 dark:border-red-900/40"
                           : cn(
-                              "bg-transparent text-gray-700 hover:text-gray-900 hover:bg-gray-50/70 border-gray-200 dark:border-white/10 dark:text-zinc-300 dark:hover:text-zinc-100 dark:hover:bg-white/5",
+                              "bg-transparent text-gray-700 hover:text-gray-900 hover:bg-gray-50/70 border-border dark:border-border dark:text-zinc-300 dark:hover:text-zinc-100 dark:hover:bg-white/5",
                               isUndone && "opacity-60"
                             )
                       )}
@@ -304,7 +304,7 @@ const CabinetSidebar = memo(({
                 })
               )}
             </div>
-            <div className="text-xs font-normal text-gray-500 dark:text-zinc-400 mt-2">
+            <div className="text-xs font-normal text-gray-900 dark:text-zinc-300 mt-2">
               Click any previous action in the list to jump the canvas back to that point in time.
             </div>
           </div>
