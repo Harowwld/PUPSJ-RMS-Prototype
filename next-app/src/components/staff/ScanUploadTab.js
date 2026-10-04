@@ -326,7 +326,7 @@ export default function ScanUploadTab({
   /** When linking to an existing student, only room / cabinet / drawer / doc type may change. */
   const lockIdentity = uploadStudentIsExisting
   const lockedField =
-    "!bg-gray-200 dark:bg-zinc-700 !text-gray-500 dark:text-zinc-400 !border-gray-300 dark:border-white/10 cursor-not-allowed placeholder:!text-gray-400 dark:text-zinc-500 focus:!border-gray-300 dark:border-white/10 focus:!shadow-none focus:!ring-0"
+    "!bg-gray-200 dark:bg-zinc-700 !text-gray-900 dark:text-zinc-300 !border-border dark:border-border cursor-not-allowed placeholder:!text-gray-400 dark:text-zinc-500 focus:!border-border dark:border-border focus:!shadow-none focus:!ring-0"
   const lockedLabel = "text-gray-400 dark:text-zinc-500"
 
   const manualPreviewUrl = useMemo(() => {
@@ -573,7 +573,7 @@ export default function ScanUploadTab({
         id="view-upload"
         className="font-jakarta w-full flex flex-1 flex-col h-auto min-h-0 focus:outline-none animate-fade-up"
       >
-        <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none isolate font-jakarta mb-4 min-h-0 flex-1">
+        <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4 min-h-0 flex-1">
           <PageHeader
             icon="ph-scan"
             title="Scan & Upload"
@@ -581,7 +581,7 @@ export default function ScanUploadTab({
             showBorder={false}
             className="p-6"
             titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
-            descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
+            descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
             actions={
               uploadMode === "pdf" && (
                 <RefreshButton
@@ -597,11 +597,11 @@ export default function ScanUploadTab({
           />
 
           {/* Workstation Hardware & Digitization Path Banner */}
-          <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-2 bg-slate-50/70 dark:bg-zinc-900/60 border-t border-b border-gray-100 dark:border-white/5 text-xs">
+          <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-2 bg-slate-50/70 dark:bg-zinc-900/60 border-t border-b border-border dark:border-border text-xs">
             <div className="flex items-center gap-3 flex-wrap">
               <div className="flex items-center gap-1.5">
                 
-                <span className="text-[10px] font-bold text-gray-500 dark:text-zinc-400 uppercase tracking-wider">
+                <span className="text-[10px] font-bold text-gray-900 dark:text-zinc-300 uppercase tracking-wider">
                   Workstation:
                 </span>
                 <span className="font-semibold text-gray-800 dark:text-zinc-200">
@@ -611,22 +611,22 @@ export default function ScanUploadTab({
             </div>
 
             <div className="flex items-center gap-2">
-              <span className="text-[10px] font-bold text-gray-500 dark:text-zinc-400 uppercase tracking-wider">
+              <span className="text-[10px] font-bold text-gray-900 dark:text-zinc-300 uppercase tracking-wider">
                 Digitization Save Path:
               </span>
               <span 
-                className="text-[11px] font-medium text-gray-700 dark:text-zinc-200 bg-white dark:bg-zinc-800 border border-gray-200 dark:border-white/10 px-2.5 py-0.5 rounded-lg truncate max-w-[340px]"
+                className="text-[11px] font-medium text-gray-700 dark:text-zinc-200 bg-white dark:bg-zinc-800 border border-border dark:border-border px-2.5 py-0.5 rounded-lg truncate max-w-[340px]"
                 title={authUser?.storage_path || `.local/storage/${authUser?.office_id || "registrar"}/uploads`}
               >
                 {authUser?.storage_path || `.local/storage/${authUser?.office_id || "registrar"}/uploads`}
               </span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-[10px] font-bold text-gray-500 dark:text-zinc-400 uppercase tracking-wider">
+              <span className="text-[10px] font-bold text-gray-900 dark:text-zinc-300 uppercase tracking-wider">
                 Scanner Inbound:
               </span>
               <span 
-                className="text-[11px] font-medium text-gray-700 dark:text-zinc-200 bg-white dark:bg-zinc-800 border border-gray-200 dark:border-white/10 px-2.5 py-0.5 rounded-lg truncate max-w-[340px]"
+                className="text-[11px] font-medium text-gray-700 dark:text-zinc-200 bg-white dark:bg-zinc-800 border border-border dark:border-border px-2.5 py-0.5 rounded-lg truncate max-w-[340px]"
                 title={authUser?.inbound_path || ".local/hot-folder/INBOUND"}
               >
                 {authUser?.inbound_path || ".local/hot-folder/INBOUND"}
@@ -637,14 +637,14 @@ export default function ScanUploadTab({
           {uploadMode === "pdf" && <ContinuousScanningPanel onOpenReview={onOpenBatchReview} showToast={showToast} />}
 
           {/* Mode Toggles as Sub-tabs (Polymorphic: Document vs Batch CSV) */}
-          <div className="flex items-center gap-6 shrink-0 h-9 px-6 border-b border-gray-100 dark:border-white/10 bg-white dark:bg-card select-none">
+          <div className="flex items-center gap-6 shrink-0 h-9 px-6 border-b border-border dark:border-border bg-white dark:bg-card select-none">
             <button
               type="button"
               onClick={() => setUploadMode("pdf")}
               className={cn(
                 "relative h-full flex items-center text-xs font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent",
                 uploadMode === "pdf"
-                  ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-pup-maroon dark:after:bg-red-500"
+                  ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-white"
                   : "text-gray-500 font-normal hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-200"
               )}
             >
@@ -656,7 +656,7 @@ export default function ScanUploadTab({
               className={cn(
                 "relative h-full flex items-center text-xs font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent",
                 uploadMode === "csv"
-                  ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-pup-maroon dark:after:bg-red-500"
+                  ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-white"
                   : "text-gray-500 font-normal hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-200"
               )}
             >
@@ -669,9 +669,9 @@ export default function ScanUploadTab({
             <ScanUploadSkeleton />
           ) : error ? (
             <div className="flex min-h-0 flex-1 flex-col items-center justify-center p-6">
-              <Empty className="flex h-[320px] flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400">
+              <Empty className="flex h-[320px] flex-col items-center justify-center border-0 text-center text-gray-900 dark:text-zinc-300">
                 <EmptyHeader className="flex flex-col items-center gap-0">
-                  <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
+                  <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none">
                     <HugeIcon  className="ph-duotone ph-warning-circle text-xl text-pup-maroon dark:text-primary" />
                   </EmptyMedia>
                   <EmptyTitle className="text-lg font-semibold text-[#1C1C1E] dark:text-zinc-50">
@@ -727,14 +727,14 @@ export default function ScanUploadTab({
                 >
                   {uploadMode === "csv" ? (
                     csvFile ? (
-                      <div className="flex h-full w-full flex-col overflow-hidden bg-white transition-all duration-normal rounded-2xl border border-gray-200 dark:bg-card dark:border-white/10">
-                        <div className="flex flex-col items-center justify-between gap-4 border-b border-gray-100 bg-gray-50/50 p-5 px-6 sm:flex-row dark:border-white/10 dark:bg-white/5">
+                      <div className="flex h-full w-full flex-col overflow-hidden bg-white transition-all duration-normal rounded-2xl border border-border dark:bg-card dark:border-border">
+                        <div className="flex flex-col items-center justify-between gap-4 border-b border-border bg-gray-50/50 p-5 px-6 sm:flex-row dark:border-border dark:bg-white/5">
                           <div className="flex items-center gap-4">
                             <div>
                               <h3 className="text-base font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
                                 CSV Preview
                               </h3>
-                              <div className="mt-1 text-xs font-normal text-gray-500 dark:text-zinc-400">
+                              <div className="mt-1 text-xs font-normal text-gray-900 dark:text-zinc-300">
                                 <div className="flex flex-col gap-0.5">
                                   <span className="break-all text-pup-maroon dark:text-red-400 font-medium text-xs">
                                     {csvFile.name}
@@ -755,7 +755,7 @@ export default function ScanUploadTab({
                               </div>
                               <Input
                                 type="text"
-                                className="h-9 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 pl-9 pr-4 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
+                                className="h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 pl-9 pr-4 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
                                 placeholder="Search records..."
                                 value={localCsvSearch}
                                 onChange={(e) => setLocalCsvSearch(e.target.value)}
@@ -765,7 +765,7 @@ export default function ScanUploadTab({
                               variant="outline"
                               size="sm"
                               onClick={() => handleCsvFileSelect(null)}
-                              className="h-9 px-4 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                              className="h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                             >
                               Clear
                             </Button>
@@ -806,7 +806,7 @@ export default function ScanUploadTab({
                                 }
                               }}
                             >
-                              <div className="flex flex-col items-center justify-center p-6 bg-white rounded-2xl border border-[#E5E5EA] shadow-2xl max-w-xs text-center pointer-events-none dark:bg-card/95 dark:border-white/10 animate-scale-up">
+                              <div className="flex flex-col items-center justify-center p-6 bg-white rounded-2xl border border-[#E5E5EA] shadow-2xl max-w-xs text-center pointer-events-none dark:bg-card/95 dark:border-border animate-scale-up">
                                 <div className="w-14 h-14 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center mb-3 dark:bg-blue-950/30">
                                   <HugeIcon  className="ph-duotone ph-file-csv text-xl text-[#0A84FF] dark:text-primary animate-bounce"></HugeIcon>
                                 </div>
@@ -821,12 +821,12 @@ export default function ScanUploadTab({
                           )}
                           {filteredCsvRows.length ? (
                             <table className="min-w-full text-sm">
-                              <thead className="sticky top-0 z-10 border-b border-gray-200 bg-white dark:bg-card dark:border-white/10">
+                              <thead className="sticky top-0 z-10 border-b border-border bg-white dark:bg-card dark:border-border">
                                 <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">
                                   <th className="w-12 p-4 text-center">
                                     <input
                                       type="checkbox"
-                                      className="h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-gray-300 text-pup-maroon dark:text-primary accent-pup-maroon focus:ring-pup-maroon dark:text-primary dark:border-white/10"
+                                      className="h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-border text-pup-maroon dark:text-primary accent-pup-maroon focus:ring-pup-maroon dark:text-primary dark:border-border"
                                       checked={
                                         filteredCsvRows.length > 0 &&
                                         Object.keys(csvSelected).filter(k => csvSelected[k]).length >= filteredCsvRows.length &&
@@ -878,7 +878,7 @@ export default function ScanUploadTab({
                                     <tr
                                       key={r.index}
                                       className={cn(
-                                        "group h-[52px] border-b-[0.5px] border-gray-100 dark:border-white/10 last:border-b-0 transition-all duration-fast hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none cursor-pointer",
+                                        "group h-[52px] border-b-[0.5px] border-border dark:border-border last:border-b-0 transition-all duration-fast hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none cursor-pointer",
                                         isSelected && "bg-blue-50/60 dark:bg-blue-950/20"
                                       )}
                                       onClick={() => toggleCsvRowSelected(r.index)}
@@ -887,7 +887,7 @@ export default function ScanUploadTab({
                                         <input
                                           type="checkbox"
                                           className={cn(
-                                            "h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-gray-300 text-pup-maroon dark:text-primary accent-pup-maroon focus:ring-pup-maroon dark:text-primary dark:border-white/10 transition-opacity",
+                                            "h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-border text-pup-maroon dark:text-primary accent-pup-maroon focus:ring-pup-maroon dark:text-primary dark:border-border transition-opacity",
                                             isSelected ? "opacity-100" : "opacity-50 group-hover:opacity-80"
                                           )}
                                           checked={isSelected}
@@ -941,7 +941,7 @@ export default function ScanUploadTab({
                                       )}
                                       <td className="py-0 px-2 align-middle w-[90px]" onClick={(e) => e.stopPropagation()}>
                                         <Select
-                                          className="h-8 w-20 rounded-lg border border-gray-200 px-2 py-0 text-[11px] font-normal dark:border-white/10 shadow-none"
+                                          className="h-8 w-20 rounded-lg border border-border px-2 py-0 text-[11px] font-normal dark:border-border shadow-none"
                                           value={String(room || "")}
                                           onChange={(e) =>
                                             setCsvRowField(
@@ -960,7 +960,7 @@ export default function ScanUploadTab({
                                       </td>
                                       <td className="py-0 px-2 align-middle w-[120px]" onClick={(e) => e.stopPropagation()}>
                                         <Select
-                                          className="h-8 w-28 rounded-lg border border-gray-200 px-2 py-0 text-[11px] font-normal dark:border-white/10 shadow-none"
+                                          className="h-8 w-28 rounded-lg border border-border px-2 py-0 text-[11px] font-normal dark:border-border shadow-none"
                                           value={String(cabinet || "")}
                                           onChange={(e) =>
                                             setCsvRowField(
@@ -990,7 +990,7 @@ export default function ScanUploadTab({
                                       </td>
                                       <td className="py-0 px-2 align-middle w-[90px]" onClick={(e) => e.stopPropagation()}>
                                         <Select
-                                          className="h-8 w-20 rounded-lg border border-gray-200 px-2 py-0 text-[11px] font-normal dark:border-white/10 shadow-none"
+                                          className="h-8 w-20 rounded-lg border border-border px-2 py-0 text-[11px] font-normal dark:border-border shadow-none"
                                           value={String(drawer || "")}
                                           onChange={(e) =>
                                             setCsvRowField(
@@ -1057,7 +1057,7 @@ export default function ScanUploadTab({
                                 variant="outline"
                                 onClick={() => setLocalCsvSearch("")}
                                 title="Reset Filters"
-                                className="mt-6 flex h-10 items-center justify-center rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
+                                className="mt-6 flex h-10 items-center justify-center rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                               >
                                 Reset
                               </Button>
@@ -1066,13 +1066,13 @@ export default function ScanUploadTab({
                         </div>
 
                         {filteredCsvRows.length > 0 && (
-                          <div className="flex items-center justify-between border-t border-gray-100 bg-white p-5 px-6 dark:border-white/10 dark:bg-card">
+                          <div className="flex items-center justify-between border-t border-border bg-white p-5 px-6 dark:border-border dark:bg-card">
                             <div className="flex items-center gap-8">
                               <div className="flex items-center gap-6 text-xs font-normal text-gray-400 dark:text-zinc-500">
                                 <span>
                                   Showing {paginatedCsvRows.length} of {filteredCsvRows.length}
                                 </span>
-                                <div className="flex items-center gap-1.5 border-l border-gray-200 pl-6 dark:border-white/10">
+                                <div className="flex items-center gap-1.5 border-l border-border pl-6 dark:border-border">
                                   <span className="text-xs text-gray-400 dark:text-zinc-500">Rows:</span>
                                   <div className="flex items-center gap-1">
                                     {[10, 20, 50, 100].map((size) => (
@@ -1087,7 +1087,7 @@ export default function ScanUploadTab({
                                           "px-2 py-0.5 rounded-lg text-xs font-normal cursor-pointer transition-colors border-0",
                                           csvRowsPerPage === size
                                             ? "bg-gray-100 text-gray-900 font-semibold dark:bg-white/10 dark:text-zinc-50"
-                                            : "bg-transparent text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-200"
+                                            : "bg-transparent text-gray-900 dark:text-zinc-300 hover:text-gray-900 dark:hover:text-zinc-200"
                                         )}
                                       >
                                         {size}
@@ -1107,7 +1107,7 @@ export default function ScanUploadTab({
                                 Prev
                               </button>
 
-                              <div className="flex h-8 min-w-[32px] items-center justify-center rounded-lg border border-gray-200 bg-white px-2.5 text-xs font-medium text-gray-900 dark:border-white/10 dark:bg-card dark:text-zinc-100">
+                              <div className="flex h-8 min-w-[32px] items-center justify-center rounded-lg border border-border bg-white px-2.5 text-xs font-medium text-gray-900 dark:border-border dark:bg-card dark:text-zinc-100">
                                 {csvPage}
                               </div>
 
@@ -1125,7 +1125,7 @@ export default function ScanUploadTab({
                     ) : (
                       <div
                         className={cn(
-                          "group relative flex min-h-[580px] flex-1 cursor-pointer flex-col items-center justify-center p-8 rounded-2xl border-2 border-dashed border-gray-200 bg-gray-50/50 transition-all duration-150 ease-out hover:border-pup-maroon/40 dark:bg-zinc-900/30 dark:border-white/10 dark:hover:border-red-500/40",
+                          "group relative flex min-h-[580px] flex-1 cursor-pointer flex-col items-center justify-center p-8 rounded-2xl border-2 border-dashed border-border bg-gray-50/50 transition-all duration-150 ease-out hover:border-pup-maroon/40 dark:bg-zinc-900/30 dark:border-border dark:hover:border-red-500/40",
                           csvDropActive ? "border-pup-maroon bg-red-50/10 dark:border-red-500/80" : ""
                         )}
                         onDragOver={(e) => {
@@ -1168,7 +1168,7 @@ export default function ScanUploadTab({
                           <p className="text-sm font-semibold text-gray-900 dark:text-zinc-100 mt-3 m-0">
                             {isOsas ? "Drop Organizations CSV Here" : "Drop CSV File Here"}
                           </p>
-                          <p className="text-xs font-normal text-gray-500 dark:text-zinc-400 mt-1 m-0">
+                          <p className="text-xs font-normal text-gray-900 dark:text-zinc-300 mt-1 m-0">
                             or click to <span className="text-pup-maroon dark:text-red-400 font-medium cursor-pointer hover:underline">browse</span> local files (.csv)
                           </p>
                           <div className="pointer-events-auto mt-4">
@@ -1176,7 +1176,7 @@ export default function ScanUploadTab({
                               href={isOsas ? "/sample_osas_organizations.csv" : "/sample_registrar_students.csv"}
                               download={isOsas ? "sample_osas_organizations.csv" : "sample_registrar_students.csv"}
                               onClick={(e) => e.stopPropagation()}
-                              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-white dark:bg-zinc-800 border border-gray-200 dark:border-white/10 text-pup-maroon dark:text-red-400 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs transition-all cursor-pointer"
+                              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-white dark:bg-zinc-800 border border-border dark:border-border text-pup-maroon dark:text-red-400 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs transition-all cursor-pointer"
                             >
                               <HugeIcon className="ph-bold ph-download-simple text-sm" />
                               Download Sample CSV Template
@@ -1190,7 +1190,7 @@ export default function ScanUploadTab({
                       <div
                         className={cn(
                           "group relative flex flex-1 min-h-[580px] w-full flex-col overflow-hidden rounded-2xl border transition-all duration-150 ease-out",
-                          uploadedFile ? "bg-white border-gray-200 dark:bg-card dark:border-white/10" : "bg-gray-50/50 border-2 border-dashed border-gray-200 dark:bg-zinc-900/30 dark:border-white/10 hover:border-pup-maroon/40 dark:hover:border-red-500/40",
+                          uploadedFile ? "bg-white border-border dark:bg-card dark:border-border" : "bg-gray-50/50 border-2 border-dashed border-border dark:bg-zinc-900/30 dark:border-border hover:border-pup-maroon/40 dark:hover:border-red-500/40",
                           fe.pdfFile ? "border-amber-400 bg-amber-50/20" : ""
                         )}
                         onDragOver={(e) => {
@@ -1216,9 +1216,9 @@ export default function ScanUploadTab({
                             }}
                             onDrop={onPdfDrop}
                           >
-                            <div className="flex shrink-0 items-center justify-between gap-2 border-b border-gray-100 bg-white px-5 py-3 dark:border-white/10 dark:bg-card">
+                            <div className="flex shrink-0 items-center justify-between gap-2 border-b border-border bg-white px-5 py-3 dark:border-border dark:bg-card">
                           <div className="min-w-0">
-                            <div className="text-xs font-normal text-gray-500 dark:text-zinc-400">
+                            <div className="text-xs font-normal text-gray-900 dark:text-zinc-300">
                               {hf.selectedRow ? "Scanner Preview" : "Document Preview"}
                             </div>
                             <div className="truncate text-sm font-semibold text-pup-maroon dark:text-red-400">
@@ -1238,14 +1238,14 @@ export default function ScanUploadTab({
                                  variant="outline"
                                  size="sm"
                                  onClick={() => setShowPagesSidebar(!showPagesSidebar)}
-                                 className="h-8 px-3 text-xs font-semibold rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95"
+                                 className="h-8 px-3 text-xs font-semibold rounded-lg border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95"
                                >
                                  {showPagesSidebar ? "Hide" : "Show"}
                                </Button>
                              )}
                             <button
                               type="button"
-                              className="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 cursor-pointer active:scale-95"
+                              className="flex h-8 w-8 items-center justify-center rounded-lg border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 cursor-pointer active:scale-95"
                               onClick={() => setRotation((r) => r - 90)}
                               title="Rotate Left"
                             >
@@ -1253,7 +1253,7 @@ export default function ScanUploadTab({
                             </button>
                             <button
                               type="button"
-                              className="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 cursor-pointer active:scale-95"
+                              className="flex h-8 w-8 items-center justify-center rounded-lg border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 cursor-pointer active:scale-95"
                               onClick={() => setRotation((r) => r + 90)}
                               title="Rotate Right"
                             >
@@ -1263,7 +1263,7 @@ export default function ScanUploadTab({
                               type="button"
                               variant="outline"
                               size="sm"
-                              className="ml-1 h-8 px-3 text-xs font-semibold rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95"
+                              className="ml-1 h-8 px-3 text-xs font-semibold rounded-lg border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95"
                               onClick={() => {
                                 if (hf.selectedRow) {
                                   hf.clearIngestSelection()
@@ -1278,8 +1278,8 @@ export default function ScanUploadTab({
                         </div>
                         <div className="min-h-0 flex-1 flex overflow-hidden bg-gray-100 relative dark:bg-muted">
                           {uploadedFiles && uploadedFiles.length > 1 && !hf.selectedRow && showPagesSidebar && (
-                            <div className="w-1/3 min-w-[200px] max-w-[280px] border-r border-gray-200 bg-white/95 backdrop-blur-md flex flex-col min-h-0 overflow-y-auto p-4 gap-3 dark:border-white/10 dark:bg-card/95 shrink-0 z-10">
-                              <div className="flex items-center justify-between pb-2 border-b border-gray-100 dark:border-white/5">
+                            <div className="w-1/3 min-w-[200px] max-w-[280px] border-r border-border bg-white/95 backdrop-blur-md flex flex-col min-h-0 overflow-y-auto p-4 gap-3 dark:border-border dark:bg-card/95 shrink-0 z-10">
+                              <div className="flex items-center justify-between pb-2 border-b border-border dark:border-border">
                                 <span className="text-[10px] font-semibold tracking-widest text-gray-400 dark:text-zinc-500">
                                   Scan Pages ({uploadedFiles.length})
                                 </span>
@@ -1346,7 +1346,7 @@ export default function ScanUploadTab({
                                           </button>
                                         </div>
                                       </div>
-                                      <span className="truncate text-[10px] text-gray-500 dark:text-zinc-400" title={file.name}>
+                                      <span className="truncate text-[10px] text-gray-900 dark:text-zinc-300" title={file.name}>
                                         {file.name}
                                       </span>
                                     </div>
@@ -1357,7 +1357,7 @@ export default function ScanUploadTab({
                                 type="button"
                                 onClick={() => fileInputRef.current?.click()}
                                 title="Add Page"
-                                className="mt-auto flex h-9 items-center justify-center rounded-xl border border-gray-200 bg-white text-xs font-semibold text-gray-700 shadow-xs transition-all hover:bg-gray-50 dark:bg-card dark:border-white/10 dark:text-zinc-300 cursor-pointer active:scale-95 px-3"
+                                className="mt-auto flex h-9 items-center justify-center rounded-xl border border-border bg-white text-xs font-semibold text-gray-700 shadow-xs transition-all hover:bg-gray-50 dark:bg-card dark:border-border dark:text-zinc-300 cursor-pointer active:scale-95 px-3"
                               >
                                 Add
                               </button>
@@ -1408,7 +1408,7 @@ export default function ScanUploadTab({
                             if (pdfRendering) {
                               return (
                                 <div className="flex h-full w-full flex-col items-center justify-center bg-gray-100 p-8 dark:bg-muted">
-                                  <div className="h-10 w-10 animate-spin rounded-full border border-gray-300 border-t-pup-maroon mb-3 dark:border-white/10 dark:border-t-red-500" />
+                                  <div className="h-10 w-10 animate-spin rounded-full border border-border border-t-pup-maroon mb-3 dark:border-border dark:border-t-red-500" />
                                   <div className="text-xs font-semibold text-gray-500 tracking-widest animate-pulse dark:text-zinc-400">
                                     Loading Preview…
                                   </div>
@@ -1426,7 +1426,7 @@ export default function ScanUploadTab({
 
                           {windowDragActive && (
                             <div
-                              className="absolute inset-0 z-30 flex items-center justify-center bg-gray-500/10 backdrop-blur-md border border-gray-200 rounded-2xl animate-fade-up dark:bg-white/5"
+                              className="absolute inset-0 z-30 flex items-center justify-center bg-gray-500/10 backdrop-blur-md border border-border rounded-2xl animate-fade-up dark:bg-white/5"
                               onDragOver={(e) => {
                                 e.preventDefault()
                                 setDropActive(true)
@@ -1441,8 +1441,8 @@ export default function ScanUploadTab({
                                 onPdfDrop(e)
                               }}
                             >
-                              <div className="flex flex-col items-center justify-center p-6 bg-white rounded-2xl border border-gray-200 shadow-xl max-w-xs text-center pointer-events-none animate-scale-up dark:bg-card dark:border-white/10">
-                                <div className="w-14 h-14 rounded-full bg-gray-50 border border-gray-100 flex items-center justify-center mb-3 dark:bg-muted">
+                              <div className="flex flex-col items-center justify-center p-6 bg-white rounded-2xl border border-border shadow-xl max-w-xs text-center pointer-events-none animate-scale-up dark:bg-card dark:border-border">
+                                <div className="w-14 h-14 rounded-full bg-gray-50 border border-border flex items-center justify-center mb-3 dark:bg-muted">
                                   <HugeIcon  className="ph-bold ph-upload-simple text-xl text-gray-400 animate-bounce"></HugeIcon>
                                 </div>
                                 <p className="text-sm font-semibold text-gray-900 dark:text-zinc-100">
@@ -1472,11 +1472,11 @@ export default function ScanUploadTab({
                               <p className="text-sm font-semibold text-gray-900 dark:text-zinc-100 mt-3 m-0">
                                 Drop Document Or Image Here
                               </p>
-                              <p className="text-xs font-normal text-gray-500 dark:text-zinc-400 mt-1 m-0">
+                              <p className="text-xs font-normal text-gray-900 dark:text-zinc-300 mt-1 m-0">
                                 or click to <span className="text-pup-maroon dark:text-red-400 font-medium cursor-pointer hover:underline">browse</span> local files (PDF, JPG, PNG)
                               </p>
                               {hf.rows.length > 0 ? (
-                                <p className="mx-auto mt-4 max-w-xs text-[11px] font-medium text-gray-500 dark:text-zinc-400">
+                                <p className="mx-auto mt-4 max-w-xs text-[11px] font-medium text-gray-900 dark:text-zinc-300">
                                   This area still accepts manual drops and clicks even
                                   while the scanner inbox is shown above.
                                 </p>
@@ -1489,7 +1489,7 @@ export default function ScanUploadTab({
                                 variant="outline"
                                 size="sm"
                                 onClick={handlePasteButtonClick}
-                                className="flex items-center gap-2 h-9 px-4 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95"
+                                className="flex items-center gap-2 h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95"
                               >
                                 <HugeIcon  className="ph-bold ph-clipboard-text text-sm"></HugeIcon>
                                 Paste
@@ -1514,8 +1514,8 @@ export default function ScanUploadTab({
                   {uploadMode === "pdf" && (ocrLoading || hf.ocrLoading) ? (
                     <div className="absolute inset-0 z-20 flex flex-col items-center justify-center rounded-[16px] bg-white/95 backdrop-blur-sm dark:bg-card/90">
                       <div className="w-full max-w-xs px-6">
-                        <div className="rounded-[16px] border border-[#E5E5EA] bg-white p-[26px] shadow-[0_4px_16px_rgba(0,0,0,0.06)] dark:border-white/10 dark:bg-zinc-900 dark:shadow-none flex flex-col items-center justify-center">
-                          <div className="h-[34px] w-[34px] rounded-full border-[2.5px] border-[#E5E5EA] border-t-pup-maroon dark:border-zinc-800 dark:border-t-pup-maroon animate-spin mb-[12px]"></div>
+                        <div className="rounded-[16px] border border-[#E5E5EA] bg-white p-[26px] shadow-[0_4px_16px_rgba(0,0,0,0.06)] dark:border-border dark:bg-zinc-900 dark:shadow-none flex flex-col items-center justify-center">
+                          <div className="h-[34px] w-[34px] rounded-full border-[2.5px] border-[#E5E5EA] border-t-pup-maroon dark:border-border dark:border-t-pup-maroon animate-spin mb-[12px]"></div>
                           <div className="text-center text-[13px] font-normal text-[#8E8E93] dark:text-zinc-400">
                             Processing scanned information...
                           </div>
@@ -1527,15 +1527,15 @@ export default function ScanUploadTab({
 
                 <section
                   className={cn(
-                    "font-jakarta flex h-fit flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition-all duration-normal dark:border-white/10 dark:bg-card dark:shadow-none",
+                    "font-jakarta flex h-fit flex-col overflow-hidden rounded-2xl border border-border bg-white shadow-sm transition-all duration-normal dark:border-border dark:bg-card dark:shadow-none",
                     uploadMode === "csv" ? "w-full lg:w-[32%]" : "lg:w-[52%]"
                   )}
                 >
-                  <div className="flex flex-col gap-1 border-b border-gray-100 bg-transparent p-5 dark:border-white/10">
+                  <div className="flex flex-col gap-1 border-b border-border bg-transparent p-5 dark:border-border">
                     <h3 className="text-base font-semibold text-gray-900 dark:text-zinc-50 m-0">
                       {uploadMode === "csv" ? "Bulk Upload" : (isOsas ? "Organization Document" : "Label Document")}
                     </h3>
-                    <p className="text-xs text-gray-500 dark:text-zinc-400 m-0 leading-normal">
+                    <p className="text-xs text-gray-900 dark:text-zinc-300 m-0 leading-normal">
                       {uploadMode === "csv"
                         ? "Review rows, bulk-edit locations, then import students."
                         : uploadedFile
@@ -1558,7 +1558,7 @@ export default function ScanUploadTab({
                         {isOsas ? (
                           <div className="space-y-4">
                             {/* Segmented control: Recognized Organization vs Register New Organization */}
-                            <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-gray-200/60 dark:border-white/5">
+                            <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-border/60 dark:border-border">
                               <button
                                 type="button"
                                 onClick={() => {
@@ -1610,7 +1610,7 @@ export default function ScanUploadTab({
 
                                 <div>
                                   <div className="mb-2 flex items-center justify-between">
-                                    <label className="block text-xs font-medium text-gray-500 dark:text-zinc-400">
+                                    <label className="block text-xs font-medium text-gray-900 dark:text-zinc-300">
                                       Select Recognized Organization
                                     </label>
                                     {(newRec.organizationId || newRec.name || uploadedFile || hf.selected) && (
@@ -1649,7 +1649,7 @@ export default function ScanUploadTab({
                                   <Select
                                     placeholder="Choose an organization..."
                                     className={cn(
-                                      "h-10 rounded-xl px-3 bg-white dark:bg-zinc-800 border border-gray-200 dark:border-white/10 text-xs shadow-none hover:bg-gray-50 dark:hover:bg-zinc-800/80 transition-all",
+                                      "h-10 rounded-xl px-3 bg-white dark:bg-zinc-800 border border-border dark:border-border text-xs shadow-none hover:bg-gray-50 dark:hover:bg-zinc-800/80 transition-all",
                                       ring("organization"),
                                       ring("organizationId")
                                     )}
@@ -1681,7 +1681,7 @@ export default function ScanUploadTab({
                                       <Input
                                         type="text"
                                         className={cn(
-                                          "h-10 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-3 text-xs font-normal transition-all",
+                                          "h-10 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-3 text-xs font-normal transition-all",
                                           lockedField
                                         )}
                                         value={newRec.acronym || "—"}
@@ -1695,7 +1695,7 @@ export default function ScanUploadTab({
                                       <Input
                                         type="text"
                                         className={cn(
-                                          "h-10 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-3 text-xs font-normal transition-all",
+                                          "h-10 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-3 text-xs font-normal transition-all",
                                           lockedField
                                         )}
                                         value={newRec.category || "—"}
@@ -1710,7 +1710,7 @@ export default function ScanUploadTab({
                                         <Input
                                           type="text"
                                           className={cn(
-                                            "h-10 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-3 text-xs font-normal transition-all",
+                                            "h-10 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-3 text-xs font-normal transition-all",
                                             lockedField
                                           )}
                                           value={newRec.adviserName}
@@ -1726,7 +1726,7 @@ export default function ScanUploadTab({
                               <div className="space-y-4">
                                 <div>
                                   <div className="mb-2 flex items-center justify-between">
-                                    <label className="block text-xs font-medium text-gray-500 dark:text-zinc-400">
+                                    <label className="block text-xs font-medium text-gray-900 dark:text-zinc-300">
                                       Organization Name
                                     </label>
                                     {(newRec.name || uploadedFile || hf.selected) && (
@@ -1764,7 +1764,7 @@ export default function ScanUploadTab({
                                   <Input
                                     type="text"
                                     className={cn(
-                                      "h-10 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-3 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all",
+                                      "h-10 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-3 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all",
                                       ring("name")
                                     )}
                                     placeholder="e.g. Junior Philippine Computer Society"
@@ -1778,13 +1778,13 @@ export default function ScanUploadTab({
 
                                 <div className="grid grid-cols-2 gap-3">
                                   <div>
-                                    <label className="mb-2 block text-xs font-medium text-gray-500 dark:text-zinc-400">
+                                    <label className="mb-2 block text-xs font-medium text-gray-900 dark:text-zinc-300">
                                       Acronym
                                     </label>
                                     <Input
                                       type="text"
                                       className={cn(
-                                        "h-10 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-3 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all",
+                                        "h-10 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-3 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all",
                                         ring("acronym")
                                       )}
                                       placeholder="e.g. JPCS"
@@ -1797,13 +1797,13 @@ export default function ScanUploadTab({
                                   </div>
 
                                   <div>
-                                    <label className="mb-2 block text-xs font-medium text-gray-500 dark:text-zinc-400">
+                                    <label className="mb-2 block text-xs font-medium text-gray-900 dark:text-zinc-300">
                                       Category
                                     </label>
                                     <Select
                                       placeholder="Select Category"
                                       className={cn(
-                                        "h-10 rounded-xl px-3 bg-white dark:bg-zinc-800 border border-gray-200 dark:border-white/10 text-xs shadow-none hover:bg-gray-50 dark:hover:bg-zinc-800/80 transition-all",
+                                        "h-10 rounded-xl px-3 bg-white dark:bg-zinc-800 border border-border dark:border-border text-xs shadow-none hover:bg-gray-50 dark:hover:bg-zinc-800/80 transition-all",
                                         ring("category")
                                       )}
                                       value={newRec.category || ""}
@@ -1825,13 +1825,13 @@ export default function ScanUploadTab({
                                 </div>
 
                                 <div>
-                                  <label className="mb-2 block text-xs font-medium text-gray-500 dark:text-zinc-400">
+                                  <label className="mb-2 block text-xs font-medium text-gray-900 dark:text-zinc-300">
                                     Faculty Adviser
                                   </label>
                                   <Input
                                     type="text"
                                     className={cn(
-                                      "h-10 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-3 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all",
+                                      "h-10 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-3 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all",
                                       ring("adviserName")
                                     )}
                                     placeholder="e.g. Prof. Juan Dela Cruz"
@@ -1928,7 +1928,7 @@ export default function ScanUploadTab({
                                   <Input
                                     type="text"
                                     className={cn(
-                                      "h-10 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-3 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all",
+                                      "h-10 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-3 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all",
                                       ring("studentNo"),
                                       lockIdentity && lockedField
                                     )}
@@ -1959,7 +1959,7 @@ export default function ScanUploadTab({
                                     }}
                                   />
                                   {showStudentNoSuggestions && filteredStudentNoSuggestions.length > 0 && (
-                                    <div className="absolute z-50 left-0 right-0 mt-1 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-900 overflow-hidden shadow-xl p-1 animate-in fade-in slide-in-from-top-1 duration-fast">
+                                    <div className="absolute z-50 left-0 right-0 mt-1 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-900 overflow-hidden shadow-xl p-1 animate-in fade-in slide-in-from-top-1 duration-fast">
                                       {filteredStudentNoSuggestions.map((s) => {
                                         const sn = String(s?.studentNo || s?.student_no || "");
                                         return (
@@ -1973,7 +1973,7 @@ export default function ScanUploadTab({
                                             <div className="text-xs font-semibold text-gray-900 dark:text-zinc-100 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors">
                                               {s?.name}
                                             </div>
-                                            <div className="text-[10px] text-gray-500 dark:text-zinc-400">
+                                            <div className="text-[10px] text-gray-900 dark:text-zinc-300">
                                               {sn}
                                             </div>
                                           </button>
@@ -1998,7 +1998,7 @@ export default function ScanUploadTab({
                                   <Input
                                     type="text"
                                     className={cn(
-                                      "h-10 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-3 text-xs font-normal transition-all",
+                                      "h-10 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-3 text-xs font-normal transition-all",
                                       lockedField
                                     )}
                                     value={newRec.name}
@@ -2008,7 +2008,7 @@ export default function ScanUploadTab({
                               ) : (
                                 <div>
                                   <label
-                                    className="mb-2 block text-xs font-medium text-gray-500 dark:text-zinc-400"
+                                    className="mb-2 block text-xs font-medium text-gray-900 dark:text-zinc-300"
                                   >
                                     Full Name (LN, FN MI.)
                                   </label>
@@ -2016,7 +2016,7 @@ export default function ScanUploadTab({
                                     <Input
                                       type="text"
                                       className={cn(
-                                        "h-10 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-3 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all",
+                                        "h-10 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-3 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all",
                                         ring("name")
                                       )}
                                       placeholder="e.g. DELA CRUZ, JUAN S."
@@ -2031,7 +2031,7 @@ export default function ScanUploadTab({
                                       }}
                                     />
                                     {showNameSuggestions && filteredNameSuggestions.length > 0 && (
-                                      <div className="absolute z-50 left-0 right-0 mt-1 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-900 overflow-hidden shadow-xl p-1 animate-in fade-in slide-in-from-top-1 duration-fast">
+                                      <div className="absolute z-50 left-0 right-0 mt-1 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-900 overflow-hidden shadow-xl p-1 animate-in fade-in slide-in-from-top-1 duration-fast">
                                         {filteredNameSuggestions.map((s) => {
                                           const sn = String(s?.studentNo || s?.student_no || "");
                                           return (
@@ -2045,7 +2045,7 @@ export default function ScanUploadTab({
                                               <div className="text-xs font-semibold text-gray-900 dark:text-zinc-100 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors">
                                                 {s?.name}
                                               </div>
-                                              <div className="text-[10px] text-gray-500 dark:text-zinc-400">
+                                              <div className="text-[10px] text-gray-900 dark:text-zinc-300">
                                                 {sn}
                                               </div>
                                             </button>
@@ -2068,7 +2068,7 @@ export default function ScanUploadTab({
                               <Select
                                 placeholder="Select Course"
                                 className={cn(
-                                  "h-10 rounded-xl px-3 bg-white dark:bg-zinc-800 border border-gray-200 dark:border-white/10 text-xs shadow-none hover:bg-gray-50 dark:hover:bg-zinc-800/80 transition-all",
+                                  "h-10 rounded-xl px-3 bg-white dark:bg-zinc-800 border border-border dark:border-border text-xs shadow-none hover:bg-gray-50 dark:hover:bg-zinc-800/80 transition-all",
                                   ring("course"),
                                   lockIdentity && lockedField
                                 )}
@@ -2100,7 +2100,7 @@ export default function ScanUploadTab({
                               <Select
                                 placeholder="Select Section"
                                 className={cn(
-                                  "h-10 rounded-xl px-3 bg-white dark:bg-zinc-800 border border-gray-200 dark:border-white/10 text-xs shadow-none hover:bg-gray-50 dark:hover:bg-zinc-800/80 transition-all",
+                                  "h-10 rounded-xl px-3 bg-white dark:bg-zinc-800 border border-border dark:border-border text-xs shadow-none hover:bg-gray-50 dark:hover:bg-zinc-800/80 transition-all",
                                   ring("sectionPart"),
                                   lockIdentity && lockedField
                                 )}
@@ -2126,13 +2126,13 @@ export default function ScanUploadTab({
 
                         <div className="grid grid-cols-3 gap-3">
                           <div>
-                            <label className="mb-2 block text-xs font-medium text-gray-500 dark:text-zinc-400">
+                            <label className="mb-2 block text-xs font-medium text-gray-900 dark:text-zinc-300">
                               Room
                             </label>
                             <Select
                               placeholder=""
                               className={cn(
-                                "h-10 rounded-xl px-3 bg-white dark:bg-zinc-800 border border-gray-200 dark:border-white/10 text-xs shadow-none hover:bg-gray-50 dark:hover:bg-zinc-800/80 transition-all",
+                                "h-10 rounded-xl px-3 bg-white dark:bg-zinc-800 border border-border dark:border-border text-xs shadow-none hover:bg-gray-50 dark:hover:bg-zinc-800/80 transition-all",
                                 ring("room")
                               )}
                               value={String(newRec.room || "")}
@@ -2157,13 +2157,13 @@ export default function ScanUploadTab({
                             </Select>
                           </div>
                           <div>
-                            <label className="mb-2 block text-xs font-medium text-gray-500 dark:text-zinc-400">
+                            <label className="mb-2 block text-xs font-medium text-gray-900 dark:text-zinc-300">
                               Cabinet
                             </label>
                             <Select
                               placeholder=""
                               className={cn(
-                                "h-10 rounded-xl px-3 bg-white dark:bg-zinc-800 border border-gray-200 dark:border-white/10 text-xs shadow-none hover:bg-gray-50 dark:hover:bg-zinc-800/80 transition-all",
+                                "h-10 rounded-xl px-3 bg-white dark:bg-zinc-800 border border-border dark:border-border text-xs shadow-none hover:bg-gray-50 dark:hover:bg-zinc-800/80 transition-all",
                                 ring("cabinet")
                               )}
                               value={newRec.cabinet}
@@ -2187,13 +2187,13 @@ export default function ScanUploadTab({
                             </Select>
                           </div>
                           <div>
-                            <label className="mb-2 block text-xs font-medium text-gray-500 dark:text-zinc-400">
+                            <label className="mb-2 block text-xs font-medium text-gray-900 dark:text-zinc-300">
                               Drawer
                             </label>
                             <Select
                               placeholder=""
                               className={cn(
-                                "h-10 rounded-xl px-3 bg-white dark:bg-zinc-800 border border-gray-200 dark:border-white/10 text-xs shadow-none hover:bg-gray-50 dark:hover:bg-zinc-800/80 transition-all",
+                                "h-10 rounded-xl px-3 bg-white dark:bg-zinc-800 border border-border dark:border-border text-xs shadow-none hover:bg-gray-50 dark:hover:bg-zinc-800/80 transition-all",
                                 ring("drawer")
                               )}
                               value={String(newRec.drawer || "")}
@@ -2215,14 +2215,14 @@ export default function ScanUploadTab({
                           </div>
                         </div>
 
-                        <div className="border-t border-gray-100 pt-5 dark:border-white/10">
-                          <label className="mb-2 block text-xs font-medium text-gray-500 dark:text-zinc-400">
+                        <div className="border-t border-border pt-5 dark:border-border">
+                          <label className="mb-2 block text-xs font-medium text-gray-900 dark:text-zinc-300">
                             Document Type
                           </label>
                           <Select
                             placeholder="Select Document type"
                             className={cn(
-                              "h-10 rounded-xl px-3 bg-white dark:bg-zinc-800 border border-gray-200 dark:border-white/10 text-xs shadow-none hover:bg-gray-50 dark:hover:bg-zinc-800/80 transition-all",
+                              "h-10 rounded-xl px-3 bg-white dark:bg-zinc-800 border border-border dark:border-border text-xs shadow-none hover:bg-gray-50 dark:hover:bg-zinc-800/80 transition-all",
                               ring("docType")
                             )}
                             value={newRec.docType}
@@ -2240,7 +2240,7 @@ export default function ScanUploadTab({
                         </div>
 
                         {/* Target Digitization Storage Destination */}
-                        <div className="rounded-xl border border-gray-200/80 bg-slate-50/60 p-3.5 dark:border-white/10 dark:bg-white/5 text-xs space-y-1.5">
+                        <div className="rounded-xl border border-border/80 bg-slate-50/60 p-3.5 dark:border-border dark:bg-white/5 text-xs space-y-1.5">
                           <div className="flex items-center justify-between">
                             <span className="flex items-center gap-1.5 font-bold text-gray-800 dark:text-zinc-200 text-xs">
                               <span>Digitization Destination</span>
@@ -2249,10 +2249,10 @@ export default function ScanUploadTab({
                               Local Partition
                             </span>
                           </div>
-                          <p className="text-[11px] text-gray-500 dark:text-zinc-400 leading-normal">
+                          <p className="text-[11px] text-gray-900 dark:text-zinc-300 leading-normal">
                             Scanned document will be saved directly into this station&apos;s isolated directory:
                           </p>
-                          <div className="flex items-center gap-2 bg-white dark:bg-zinc-900 border border-gray-200 dark:border-white/10 rounded-lg px-2.5 py-1.5 text-[11px] text-gray-700 dark:text-zinc-300 break-all">
+                          <div className="flex items-center gap-2 bg-white dark:bg-zinc-900 border border-border dark:border-border rounded-lg px-2.5 py-1.5 text-[11px] text-gray-700 dark:text-zinc-300 break-all">
                             <HugeIcon  className="ph-bold ph-folder-notch-open text-amber-600 dark:text-amber-400 shrink-0"></HugeIcon>
                             <span>{authUser?.storage_path || `.local/storage/${authUser?.office_id || "registrar"}/uploads`}</span>
                           </div>
@@ -2286,7 +2286,7 @@ export default function ScanUploadTab({
                     ) : (
                       <div className="space-y-4">
                         <div>
-                          <label className="mb-2 block text-xs font-medium text-gray-500 dark:text-zinc-400">
+                          <label className="mb-2 block text-xs font-medium text-gray-900 dark:text-zinc-300">
                             Source File
                           </label>
                           <div className="flex items-center gap-2">
@@ -2300,7 +2300,7 @@ export default function ScanUploadTab({
                                   handleCsvFileSelect(e.target.files?.[0] || null)
                                 }
                               />
-                              <div className="flex h-10 items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 transition-all hover:bg-gray-50 dark:bg-card dark:border-white/10">
+                              <div className="flex h-10 items-center gap-2 rounded-xl border border-border bg-white px-3 transition-all hover:bg-gray-50 dark:bg-card dark:border-border">
                                 <HugeIcon  className="ph-bold ph-file-csv text-gray-400 dark:text-zinc-500"></HugeIcon>
                                 <span className="truncate text-xs font-semibold text-gray-900 dark:text-zinc-300">
                                   {csvFile ? csvFile.name : "Select CSV..."}
@@ -2311,7 +2311,7 @@ export default function ScanUploadTab({
                               <button
                                 type="button"
                                 onClick={() => handleCsvFileSelect(null)}
-                                className="group flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-500 transition-all hover:bg-gray-50 dark:bg-card dark:text-zinc-400 dark:border-white/10 cursor-pointer active:scale-95"
+                                className="group flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border bg-white text-gray-500 transition-all hover:bg-gray-50 dark:bg-card dark:text-zinc-400 dark:border-border cursor-pointer active:scale-95"
                                 title="Clear File"
                               >
                                 <HugeIcon  className="ph-bold ph-trash text-base transition-colors group-hover:text-red-500" />
@@ -2327,11 +2327,11 @@ export default function ScanUploadTab({
                         ) : null}
 
                         <div>
-                          <div className="flex items-center justify-between pb-3 border-b border-gray-100 dark:border-white/10">
+                          <div className="flex items-center justify-between pb-3 border-b border-border dark:border-border">
                             <div className="text-xs font-semibold text-gray-700 dark:text-zinc-300">
                               Bulk Edit
                             </div>
-                            <div className="text-xs font-medium text-gray-500 dark:text-zinc-400">
+                            <div className="text-xs font-medium text-gray-900 dark:text-zinc-300">
                               <span className="font-semibold text-gray-900 dark:text-zinc-100">
                                 {Object.values(csvSelected).filter(Boolean).length}
                               </span>{" "}
@@ -2341,11 +2341,11 @@ export default function ScanUploadTab({
 
                           <div className="space-y-3 pt-3">
                             <div>
-                              <label className="mb-1.5 block text-xs font-medium text-gray-500 dark:text-zinc-400">
+                              <label className="mb-1.5 block text-xs font-medium text-gray-900 dark:text-zinc-300">
                                 Room
                               </label>
                               <Select
-                                className="h-10 rounded-xl px-3 bg-white dark:bg-zinc-800 border border-gray-200 dark:border-white/10 w-full text-xs text-gray-900 dark:text-zinc-200 shadow-none hover:bg-gray-50 dark:hover:bg-zinc-800/80 transition-all"
+                                className="h-10 rounded-xl px-3 bg-white dark:bg-zinc-800 border border-border dark:border-border w-full text-xs text-gray-900 dark:text-zinc-200 shadow-none hover:bg-gray-50 dark:hover:bg-zinc-800/80 transition-all"
                                 value={csvBulkRoom}
                                 onChange={(e) => setCsvBulkRoom(e.target.value)}
                               >
@@ -2359,11 +2359,11 @@ export default function ScanUploadTab({
                             </div>
 
                             <div>
-                              <label className="mb-1.5 block text-xs font-medium text-gray-500 dark:text-zinc-400">
+                              <label className="mb-1.5 block text-xs font-medium text-gray-900 dark:text-zinc-300">
                                 Cabinet
                               </label>
                               <Select
-                                className="h-10 rounded-xl px-3 bg-white dark:bg-zinc-800 border border-gray-200 dark:border-white/10 w-full text-xs text-gray-900 dark:text-zinc-200 shadow-none hover:bg-gray-50 dark:hover:bg-zinc-800/80 transition-all"
+                                className="h-10 rounded-xl px-3 bg-white dark:bg-zinc-800 border border-border dark:border-border w-full text-xs text-gray-900 dark:text-zinc-200 shadow-none hover:bg-gray-50 dark:hover:bg-zinc-800/80 transition-all"
                                 value={csvBulkCabinet}
                                 onChange={(e) => setCsvBulkCabinet(e.target.value)}
                               >
@@ -2395,11 +2395,11 @@ export default function ScanUploadTab({
                             </div>
 
                             <div>
-                              <label className="mb-1.5 block text-xs font-medium text-gray-500 dark:text-zinc-400">
+                              <label className="mb-1.5 block text-xs font-medium text-gray-900 dark:text-zinc-300">
                                 Drawer
                               </label>
                               <Select
-                                className="h-10 rounded-xl px-3 bg-white dark:bg-zinc-800 border border-gray-200 dark:border-white/10 w-full text-xs text-gray-900 dark:text-zinc-200 shadow-none hover:bg-gray-50 dark:hover:bg-zinc-800/80 transition-all"
+                                className="h-10 rounded-xl px-3 bg-white dark:bg-zinc-800 border border-border dark:border-border w-full text-xs text-gray-900 dark:text-zinc-200 shadow-none hover:bg-gray-50 dark:hover:bg-zinc-800/80 transition-all"
                                 value={csvBulkDrawer}
                                 onChange={(e) => setCsvBulkDrawer(e.target.value)}
                               >
@@ -2452,7 +2452,7 @@ export default function ScanUploadTab({
                                 type="button"
                                 variant="outline"
                                 onClick={() => setCsvSelected({})}
-                                className="flex-1 h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-40"
+                                className="flex-1 h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-40"
                                 disabled={
                                   Object.values(csvSelected).filter(Boolean)
                                     .length === 0
@@ -2463,7 +2463,7 @@ export default function ScanUploadTab({
                             </div>
                           </div>
                         </div>
-                        <div className="border-t border-gray-100 pt-4 dark:border-white/10" />
+                        <div className="border-t border-border pt-4 dark:border-border" />
 
                         {(() => {
                           const selectedIndices = Object.keys(csvSelected).filter(k => csvSelected[k])
@@ -2511,7 +2511,7 @@ export default function ScanUploadTab({
                         })()}
 
                         {csvResults.length > 0 && (
-                          <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
+                          <div className="rounded-xl border border-border bg-white p-4 shadow-sm dark:border-border dark:bg-card dark:shadow-none">
                             <div className="mb-2 text-[10px] font-semibold tracking-widest text-gray-400 dark:text-zinc-500">
                               Import Summary
                             </div>

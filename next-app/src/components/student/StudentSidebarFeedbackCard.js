@@ -77,7 +77,7 @@ export default function StudentSidebarFeedbackCard({
 
   // Expanded Sidebar State
   return (
-    <div className="relative mx-1 mb-2 overflow-hidden rounded-2xl border border-red-200/60 bg-gradient-to-br from-red-50/70 via-white/80 to-amber-50/40 p-3 shadow-xs backdrop-blur-xs transition-all dark:border-white/10 dark:from-zinc-900/90 dark:via-zinc-900/60 dark:to-zinc-950/90">
+    <div className="relative mx-1 mb-2 overflow-hidden rounded-2xl border border-red-200/60 bg-gradient-to-br from-red-50/70 via-white/80 to-amber-50/40 p-3 shadow-xs backdrop-blur-xs transition-all dark:border-border dark:from-zinc-900/90 dark:via-zinc-900/60 dark:to-zinc-950/90">
       {/* Decorative background watermark */}
       <HugeIcon
         className="ph-fill ph-star pointer-events-none absolute -bottom-4 -right-3 text-7xl text-amber-500/10 dark:text-amber-400/5 select-none"
@@ -114,7 +114,7 @@ export default function StudentSidebarFeedbackCard({
             {targetRequest.doc_type}
           </span>
         </div>
-        <p className="text-[11px] text-gray-500 dark:text-zinc-400 leading-normal pt-0.5">
+        <p className="text-[11px] text-gray-900 dark:text-zinc-300 leading-normal pt-0.5">
           Your rating helps the Registrar improve processing speed and service quality.
         </p>
       </div>

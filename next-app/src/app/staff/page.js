@@ -111,7 +111,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
   const [authUser, setAuthUser] = useState(initialAuthUser);
 
   const roleBranding = getRoleBranding(authUser);
-  const brandAccent = authUser?.accent_color || roleBranding.color || "#EDBB00";
+  const brandAccent = "#0070e2";
   const brandForeground = roleBranding.foreground || "#FFFFFF";
 
   useEffect(() => {
@@ -831,6 +831,8 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
             : students.filter((s) => String(s.room) === String(r.id)).length,
           cabinetsCount: r.cabinets?.length || 0,
           isTarget: String(activeStudent?.room) === String(r.id),
+          cabinets: (r.cabinets || []).map((c) => ({ ...c, cab: String(c.id) })),
+          door: r.door || null,
         })),
       };
     }
@@ -2065,11 +2067,11 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
         className={cn("flex-1 w-full gap-0 relative flex min-h-0 overflow-hidden", authUser?.preferences?.navigation_layout === "topbar" ? "flex-col" : "flex-row")}
       >
         {authUser?.preferences?.navigation_layout === "topbar" ? (
-          <div className="w-full bg-white dark:bg-zinc-900 border-b border-gray-200 dark:border-white/5 py-2.5 px-4 flex items-center justify-center gap-2 overflow-x-auto shadow-xs select-none shrink-0 scrollbar-none">
+          <div className="w-full bg-white dark:bg-zinc-900 border-b border-border dark:border-border py-2.5 px-4 flex items-center justify-center gap-2 overflow-x-auto shadow-xs select-none shrink-0 scrollbar-none">
             {sidebarItems.map((item, idx) => {
               if (item.type === "header") {
                 return (
-                  <div key={`header-${idx}`} className="text-[9px] font-semibold tracking-widest text-gray-400 dark:text-zinc-500 whitespace-nowrap ml-4 first:ml-0 border-l border-gray-200 dark:border-white/5 pl-4 first:border-0 first:pl-0">
+                  <div key={`header-${idx}`} className="text-[9px] font-semibold tracking-widest text-gray-400 dark:text-zinc-500 whitespace-nowrap ml-4 first:ml-0 border-l border-border dark:border-border pl-4 first:border-0 first:pl-0">
                     {item.label}
                   </div>
                 );
@@ -2114,7 +2116,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
             zoomNode={zoomNode}
             setZoomNode={setZoomNode}
             handleZoomMouseDown={handleZoomMouseDown}
-            accentColor={brandAccent}
+            accentColor={roleBranding.color || "#ffcb00"}
             officeName={authUser?.office_name}
             authUser={authUser}
           />
@@ -2844,7 +2846,7 @@ export default function StaffPage() {
         fallback={
           <div className="min-h-screen bg-gray-50 dark:bg-background flex items-center justify-center font-jakarta p-4">
             <div className="flex flex-col items-center gap-4">
-              <div className="h-12 w-12 animate-spin rounded-full border-4 border-gray-200 border-t-pup-maroon dark:border-zinc-800 dark:border-t-primary"></div>
+              <div className="h-12 w-12 animate-spin rounded-full border-4 border-border border-t-pup-maroon dark:border-border dark:border-t-primary"></div>
               <p className="text-xs font-semibold tracking-widest text-gray-400 dark:text-zinc-500 uppercase">Loading System...</p>
             </div>
           </div>

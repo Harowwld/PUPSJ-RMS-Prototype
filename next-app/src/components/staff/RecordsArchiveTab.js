@@ -109,7 +109,7 @@ function InteractiveMacFolder({ it, theme, updateFolderColor, folderColors }) {
               <HugeIcon  className="ph-bold ph-palette text-xs" />
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-36 p-2 rounded-xl bg-white/95 backdrop-blur-md border border-gray-200 shadow-xl" side="top" align="end">
+          <PopoverContent className="w-36 p-2 rounded-xl bg-white/95 backdrop-blur-md border border-border shadow-xl" side="top" align="end">
             <div className="text-[9px] font-bold text-gray-400 uppercase mb-1.5 px-1 tracking-wider">Folder Color</div>
             <div className="grid grid-cols-4 gap-1.5">
               {Object.entries(FOLDER_COLORS).map(([colorKey, colorVal]) => (
@@ -154,13 +154,13 @@ function InteractiveMacFolder({ it, theme, updateFolderColor, folderColors }) {
         style={{ transform: "translateZ(0px)" }}
       >
         {/* Back sheet */}
-        <div className="absolute bottom-0 left-[6%] right-[6%] h-[56px] bg-white/70 rounded-t-md shadow-[0_-1px_3px_rgba(0,0,0,0.05)] border-t border-x border-gray-200/20 transform -rotate-3 origin-bottom transition-all duration-normal group-hover:rotate-[-6deg]" />
+        <div className="absolute bottom-0 left-[6%] right-[6%] h-[56px] bg-white/70 rounded-t-md shadow-[0_-1px_3px_rgba(0,0,0,0.05)] border-t border-x border-border/20 transform -rotate-3 origin-bottom transition-all duration-normal group-hover:rotate-[-6deg]" />
         
         {/* Middle sheet */}
-        <div className="absolute bottom-0 left-[3%] right-[3%] h-[60px] bg-white/85 rounded-t-md shadow-[0_-1px_4px_rgba(0,0,0,0.05)] border-t border-x border-gray-200/30 transform rotate-2 origin-bottom transition-all duration-normal group-hover:rotate-[4deg]" />
+        <div className="absolute bottom-0 left-[3%] right-[3%] h-[60px] bg-white/85 rounded-t-md shadow-[0_-1px_4px_rgba(0,0,0,0.05)] border-t border-x border-border/30 transform origin-bottom transition-all duration-normal group-hover:rotate-[4deg]" />
         
         {/* Front sheet with mock content lines */}
-        <div className="absolute bottom-0 left-0 right-0 h-[64px] bg-white rounded-t-md shadow-[0_-2px_6px_rgba(0,0,0,0.08)] border-t border-x border-gray-200 p-3 flex flex-col gap-1.5 transition-all duration-normal">
+        <div className="absolute bottom-0 left-0 right-0 h-[64px] bg-white rounded-t-md shadow-[0_-2px_6px_rgba(0,0,0,0.08)] border-t border-x border-border p-3 flex flex-col gap-1.5 transition-all duration-normal">
           <div className="h-1.5 w-1/3 bg-gray-300/60 rounded-full" />
           <div className="h-1 w-full bg-gray-200/50 rounded-full" />
           <div className="h-1 w-5/6 bg-gray-200/50 rounded-full" />
@@ -445,7 +445,7 @@ export default function RecordsArchiveTab({
       tabIndex={0}
     >
       {/* ONE Single Card Container encapsulating Header, Toolbar, Breadcrumbs, Content, Pagination & Office Documents */}
-      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none isolate font-jakarta mb-4 min-h-0 flex-1">
+      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4 min-h-0 flex-1">
         <PageHeader
           icon="ph-archive"
           title="Records & Archive"
@@ -457,19 +457,9 @@ export default function RecordsArchiveTab({
           showBorder={false}
           className="p-6"
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
-          descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
-          actions={
-            <Button
-              variant="outline"
-              onClick={() => onSwitchView("storage")}
-              title="Open Storage Explorer"
-              className="flex h-10 items-center justify-center rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
-            >
-              Explore
-            </Button>
-          }
+          descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
         />
-        <div className="border-t border-gray-100 dark:border-white/10 p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30 select-none">
+        <div className="border-t border-border dark:border-border p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30 select-none">
           {/* Left: Active / Archived Tabs */}
           <div className="flex items-center gap-6 select-none">
             <button
@@ -505,7 +495,7 @@ export default function RecordsArchiveTab({
               <Input
                 type="text"
                 placeholder={isOsas ? "Search Organization" : "Search Student"}
-                className="h-9 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 pl-9 pr-10 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
+                className="h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 pl-9 pr-10 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
                 value={quickQuery}
                 onChange={(e) => setQuickQuery(e.target.value)}
               />
@@ -522,7 +512,7 @@ export default function RecordsArchiveTab({
 
             {/* Quick Search Results Dropdown Overlay */}
             {quickQuery.trim().length >= 2 && (
-              <div className="absolute top-[calc(100%+4px)] left-0 right-0 z-50 rounded-xl border border-gray-200 bg-white shadow-lg p-2 dark:border-white/10 dark:bg-zinc-900 max-h-[250px] overflow-y-auto">
+              <div className="absolute top-[calc(100%+4px)] left-0 right-0 z-50 rounded-xl border border-border bg-white shadow-lg p-2 dark:border-border dark:bg-zinc-900 max-h-[250px] overflow-y-auto">
                 {isQuickSearching ? (
                   <div className="p-2 space-y-2">
                     {[1, 2, 3].map((i) => (
@@ -530,7 +520,7 @@ export default function RecordsArchiveTab({
                     ))}
                   </div>
                 ) : filteredQuickResults.length === 0 ? (
-                  <div className="p-4 text-center text-xs text-gray-500 dark:text-zinc-400">
+                  <div className="p-4 text-center text-xs text-gray-900 dark:text-zinc-300">
                     {showArchived
                       ? (isOsas ? "No archived organizations found." : "No archived records found.")
                       : (isOsas ? "No organizations found." : "No records found.")}
@@ -556,7 +546,7 @@ export default function RecordsArchiveTab({
                             </span>
                           )}
                         </div>
-                        <div className="text-xs font-medium text-gray-500 dark:text-zinc-400">
+                        <div className="text-xs font-medium text-gray-900 dark:text-zinc-300">
                           {s.acronym || s.studentNo}
                         </div>
                       </div>
@@ -570,21 +560,9 @@ export default function RecordsArchiveTab({
         </div>
 
         {/* 3. Breadcrumb & View Toggle Sub-Header */}
-        <div className="flex h-[52px] items-center justify-between gap-2 border-t border-b border-gray-100 dark:border-white/10 bg-white px-6 text-sm dark:bg-card select-none">
+        <div className="flex h-[52px] items-center justify-between gap-2 border-t border-border dark:border-border bg-white px-6 text-sm dark:bg-card select-none">
           <div className="flex items-center gap-3">
-                {isLeafLevel && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => onBreadcrumbClick({ level: isOsas ? "categories" : "years" })}
-                    className="h-9 px-2.5 font-semibold text-xs text-gray-600 hover:text-gray-900 hover:bg-transparent dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-transparent transition-colors flex items-center gap-1.5 rounded-xl shadow-none! border-0! cursor-pointer"
-                  >
-                    <HugeIcon  className="ph-bold ph-arrow-left text-sm"></HugeIcon>
-                    Back
-                  </Button>
-                )}
-                <Breadcrumb>
+                <Breadcrumb className="flex items-center select-none">
                   <BreadcrumbList className="flex items-center font-medium text-[14px] text-[#8E8E93] gap-0 dark:text-zinc-400">
                     {breadcrumbs.map((b, idx) => (
                       <div
@@ -613,14 +591,6 @@ export default function RecordsArchiveTab({
                     ))}
                   </BreadcrumbList>
                 </Breadcrumb>
-                {showArchived && (
-                  <>
-                    <div className="h-4 w-[1px] bg-[#E5E5EA] dark:bg-zinc-800 mx-3.5" />
-                    <div className="py-[4px] px-[10px] bg-pup-maroon/10 dark:bg-red-400/10 text-pup-maroon dark:text-red-400 rounded-full text-[12px] font-medium select-none">
-                      Archive View
-                    </div>
-                  </>
-                )}
               </div>
 
               {isLeafLevel && (
@@ -632,7 +602,7 @@ export default function RecordsArchiveTab({
                       size="sm"
                       onClick={() => toggleSelectAll(paginatedExplorerItems)}
                       title={paginatedExplorerItems.every(it => selectedIds.has(it.student.studentNo)) ? "Deselect All" : "Select All"}
-                      className="h-7 px-2.5 text-[12px] font-medium text-[#8E8E93] hover:text-[#0A84FF] hover:bg-[#F5F5F7] dark:text-zinc-400 dark:hover:text-red-400 dark:hover:bg-zinc-800 rounded-lg border border-[#E5E5EA] dark:border-white/10 cursor-pointer"
+                      className="h-7 px-2.5 text-[12px] font-medium text-[#8E8E93] hover:text-[#0A84FF] hover:bg-[#F5F5F7] dark:text-zinc-400 dark:hover:text-red-400 dark:hover:bg-zinc-800 rounded-lg border border-[#E5E5EA] dark:border-border cursor-pointer"
                     >
                       {paginatedExplorerItems.every(it => selectedIds.has(it.student.studentNo)) ? "Deselect" : "Select"}
                     </Button>
@@ -669,11 +639,11 @@ export default function RecordsArchiveTab({
               {loading ? (
                 <RecordsArchiveSkeleton />
               ) : students.length === 0 && !showArchived ? (
-                <Empty className="flex h-full flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400">
+                <Empty className="flex h-full flex-col items-center justify-center border-0 text-center text-gray-900 dark:text-zinc-300">
                   <EmptyHeader className="flex flex-col items-center gap-0">
                     <div className="relative mb-6">
                       <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                      <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
+                      <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
                         <HugeIcon  className={cn(
                           "ph-duotone text-3xl text-gray-400 dark:text-zinc-500",
                           isOsas ? "ph-buildings" : "ph-users-three"
@@ -683,7 +653,7 @@ export default function RecordsArchiveTab({
                     <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
                       {isOsas ? "No Student Organization Records Yet" : "No Student Records Yet"}
                     </EmptyTitle>
-                    <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400">
+                    <EmptyDescription className="max-w-xs text-sm font-medium text-gray-900 dark:text-zinc-300">
                       {isOsas
                         ? "Register recognized student organizations in the Student Organizations tab to view and manage their Constitution & By-Laws and physical archives here."
                         : "Register your first student record in the Upload tab. After that, you can browse, search, and locate drawers here."}
@@ -701,18 +671,18 @@ export default function RecordsArchiveTab({
                   </EmptyContent>
                 </Empty>
               ) : archivedStudents.length === 0 && showArchived ? (
-                <Empty className="flex h-full flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400">
+                <Empty className="flex h-full flex-col items-center justify-center border-0 text-center text-gray-900 dark:text-zinc-300">
                   <EmptyHeader className="flex flex-col items-center gap-0">
                     <div className="relative mb-6">
                       <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                      <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
+                      <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
                         <HugeIcon  className="ph-duotone ph-archive text-3xl text-gray-400 dark:text-zinc-500"></HugeIcon>
                       </EmptyMedia>
                     </div>
                     <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
                       {isOsas ? "No Archived Organizations" : "No Archived Students"}
                     </EmptyTitle>
-                    <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400">
+                    <EmptyDescription className="max-w-xs text-sm font-medium text-gray-900 dark:text-zinc-300">
                       {isOsas
                         ? "There are currently no archived organization records found in the system."
                         : "There are currently no archived records found in the system."}
@@ -743,11 +713,11 @@ export default function RecordsArchiveTab({
                   })}
                 </div>
               ) : filteredExplorerItems.length === 0 ? (
-                <Empty className="flex h-full flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400">
+                <Empty className="flex h-full flex-col items-center justify-center border-0 text-center text-gray-900 dark:text-zinc-300">
                   <EmptyHeader className="flex flex-col items-center gap-0">
                     <div className="relative mb-6">
                       <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                      <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
+                      <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
                         <HugeIcon  className={cn(
                           "ph-duotone text-3xl text-gray-400 dark:text-zinc-500",
                           showArchived ? "ph-archive" : (isOsas ? "ph-buildings" : "ph-users")
@@ -759,7 +729,7 @@ export default function RecordsArchiveTab({
                         ? (isOsas ? "No Archived Organizations" : "No Archived Students")
                         : (isOsas ? "No Organizations In This Category" : "No Students In This Year")}
                     </EmptyTitle>
-                    <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400">
+                    <EmptyDescription className="max-w-xs text-sm font-medium text-gray-900 dark:text-zinc-300">
                       {showArchived
                         ? (isOsas
                             ? "There are currently no archived organizations found for this category."
@@ -954,12 +924,12 @@ export default function RecordsArchiveTab({
                   className="w-full overflow-x-auto flex-1 animate-fade-up"
                 >
                   <table className="min-w-full text-sm">
-                    <thead className="sticky top-0 z-10 border-b border-gray-100 dark:border-white/10 bg-gray-50/50 dark:bg-white/5">
+                    <thead className="sticky top-0 z-10 border-b border-border dark:border-border bg-gray-50/50 dark:bg-white/5">
                       <tr className="text-left text-[11px] font-semibold uppercase tracking-wide text-[#8E8E93] dark:text-zinc-500">
                         <th className="w-16 px-6 py-3.5 text-center font-medium">
                            <input
                              type="checkbox"
-                             className="h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-gray-300 dark:border-white/10"
+                             className="h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-border dark:border-border"
                              checked={paginatedExplorerItems.length > 0 && paginatedExplorerItems.every(it => selectedIds.has(it.student.studentNo))}
                              onChange={() => toggleSelectAll(paginatedExplorerItems)}
                            />
@@ -971,7 +941,7 @@ export default function RecordsArchiveTab({
                         <th className="w-32 px-6 py-3.5 text-right font-medium">{isOsas ? "Actions" : "Locate"}</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-100 dark:divide-white/10 bg-transparent">
+                    <tbody className="divide-y divide-border dark:divide-border bg-transparent">
                       {paginatedExplorerItems.map((row) => {
                         const isSelected = selectedIds.has(row.student.studentNo)
                         return (
@@ -987,7 +957,7 @@ export default function RecordsArchiveTab({
                                <input
                                  type="checkbox"
                                  className={cn(
-                                   "h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-gray-300 dark:border-white/10 transition-opacity",
+                                   "h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-border dark:border-border transition-opacity",
                                    isSelected ? "opacity-100" : "opacity-50 group-hover:opacity-80"
                                  )}
                                  checked={isSelected}
@@ -1010,7 +980,7 @@ export default function RecordsArchiveTab({
                                   )}
                                 </div>
                                 {isOsas && row.student.adviser && (
-                                  <div className="truncate text-[12px] font-normal text-gray-500 dark:text-zinc-400 mt-[1px]">
+                                  <div className="truncate text-[12px] font-normal text-gray-900 dark:text-zinc-300 mt-[1px]">
                                     Adviser: {row.student.adviser} · {row.student.activeOfficerCount ?? 0} Officers · {row.student.proposalCount ?? 0} Proposals
                                   </div>
                                 )}
@@ -1070,8 +1040,8 @@ export default function RecordsArchiveTab({
             </div>
 
             {isLeafLevel && totalItems > 0 && (
-              <div className="flex items-center justify-between border-t border-gray-100 bg-white p-4 px-6 dark:border-white/10 dark:bg-card mt-auto select-none">
-                <div className="flex items-center gap-6 text-xs text-gray-500 dark:text-zinc-400">
+              <div className="flex items-center justify-between border-t border-border bg-white p-4 px-6 dark:border-border dark:bg-card mt-auto select-none">
+                <div className="flex items-center gap-6 text-xs text-gray-900 dark:text-zinc-300">
                   <span>
                     Showing {paginatedExplorerItems.length} of {totalItems.toLocaleString()}
                   </span>
@@ -1106,12 +1076,12 @@ export default function RecordsArchiveTab({
                     size="sm"
                     disabled={page <= 1}
                     onClick={() => setPage((p) => Math.max(1, p - 1))}
-                    className="text-xs text-gray-500 dark:text-zinc-400 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
+                    className="text-xs text-gray-900 dark:text-zinc-300 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
                   >
                     Prev
                   </Button>
 
-                  <div className="h-8 w-8 rounded-xl border border-[#e5e5ea] dark:border-zinc-800 flex items-center justify-center text-xs font-bold text-gray-800 dark:text-zinc-200 bg-white dark:bg-zinc-900">
+                  <div className="h-8 w-8 rounded-xl border border-[#e5e5ea] dark:border-border flex items-center justify-center text-xs font-bold text-gray-800 dark:text-zinc-200 bg-white dark:bg-zinc-900">
                     {page}
                   </div>
 
@@ -1120,7 +1090,7 @@ export default function RecordsArchiveTab({
                     size="sm"
                     disabled={page >= totalPages}
                     onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                    className="text-xs text-gray-500 dark:text-zinc-400 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
+                    className="text-xs text-gray-900 dark:text-zinc-300 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
                   >
                     Next
                   </Button>

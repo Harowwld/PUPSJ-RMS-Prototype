@@ -188,8 +188,8 @@ export default function AutoBackupSchedule({ showToast, scope = "system", embedd
         className={cn(
           "w-full p-5 animate-pulse",
           embedded
-            ? "border-t border-gray-100 dark:border-white/10 bg-gray-50/40 dark:bg-zinc-900/30"
-            : "rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-card shadow-xs",
+            ? "border-t border-border dark:border-border bg-gray-50/40 dark:bg-zinc-900/30"
+            : "rounded-2xl border border-border dark:border-border bg-white dark:bg-card shadow-xs",
           className
         )}
       >
@@ -218,8 +218,8 @@ export default function AutoBackupSchedule({ showToast, scope = "system", embedd
       className={cn(
         "w-full overflow-hidden transition-colors duration-200",
         embedded
-          ? "border-t border-gray-100 dark:border-white/10 bg-gray-50/40 dark:bg-zinc-900/30"
-          : "rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-card shadow-xs",
+          ? "border-t border-border dark:border-border bg-gray-50/40 dark:bg-zinc-900/30"
+          : "rounded-2xl border border-border dark:border-border bg-white dark:bg-card shadow-xs",
         className
       )}
     >
@@ -232,7 +232,7 @@ export default function AutoBackupSchedule({ showToast, scope = "system", embedd
               "w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-all duration-200 shadow-xs",
               schedule.enabled
                 ? "bg-gradient-to-b from-[#34C759] to-[#28CD41] text-white"
-                : "bg-gray-100 dark:bg-zinc-800 text-gray-400 dark:text-zinc-500 border border-gray-200/60 dark:border-white/5"
+                : "bg-gray-100 dark:bg-zinc-800 text-gray-400 dark:text-zinc-500 border border-border/60 dark:border-border"
             )}
           >
             <HugeIcon  className="ph-bold ph-arrows-clockwise text-[18px]" />
@@ -249,7 +249,7 @@ export default function AutoBackupSchedule({ showToast, scope = "system", embedd
                 </span>
               )}
             </div>
-            <p className="text-xs font-normal text-gray-500 dark:text-zinc-400 mt-0.5 leading-normal">
+            <p className="text-xs font-normal text-gray-900 dark:text-zinc-300 mt-0.5 leading-normal">
               {schedule.enabled
                 ? `Securing archives ${schedule.frequency === "weekly" ? `every ${selectedDayLabel}` : "daily"} at ${selectedTimeLabel}`
                 : "Automatically create and secure backup archives on a recurring schedule"}
@@ -284,20 +284,20 @@ export default function AutoBackupSchedule({ showToast, scope = "system", embedd
 
       {/* macOS Settings Grouped Rows — Expands when enabled */}
       {schedule.enabled && (
-        <div className="border-t border-gray-100 dark:border-white/10 divide-y divide-gray-100 dark:divide-white/10 bg-white/70 dark:bg-card/70 animate-in fade-in slide-in-from-top-1 duration-200">
+        <div className="border-t border-border dark:border-border divide-y divide-border dark:divide-border bg-white/70 dark:bg-card/70 animate-in fade-in slide-in-from-top-1 duration-200">
           {/* Row 1: Frequency with Apple Segmented Control / Tabs */}
           <div className="min-h-[52px] px-5 py-2.5 flex items-center justify-between gap-4 flex-wrap sm:flex-nowrap">
             <div className="flex flex-col">
               <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
                 Frequency
               </span>
-              <span className="text-[11px] text-gray-500 dark:text-zinc-400">
+              <span className="text-[11px] text-gray-900 dark:text-zinc-300">
                 Choose how frequently backups run automatically
               </span>
             </div>
 
             {/* Apple Segmented Tabs */}
-            <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-gray-200/60 dark:border-white/5">
+            <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-border/60 dark:border-border">
               <button
                 type="button"
                 onClick={() => handleFrequencySelect("daily")}
@@ -334,7 +334,7 @@ export default function AutoBackupSchedule({ showToast, scope = "system", embedd
                 <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
                   Scheduled Day
                 </span>
-                <span className="text-[11px] text-gray-500 dark:text-zinc-400">
+                <span className="text-[11px] text-gray-900 dark:text-zinc-300">
                   Day of the week to trigger weekly archives
                 </span>
               </div>
@@ -345,8 +345,8 @@ export default function AutoBackupSchedule({ showToast, scope = "system", embedd
                   value={schedule.dayOfWeek}
                   onChange={handleDayChange}
                   disabled={isSaving}
-                  className="h-9 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-xs font-normal text-gray-700 dark:text-zinc-200 cursor-pointer shadow-none hover:bg-gray-50 dark:hover:bg-zinc-700"
-                  menuClassName="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-900 shadow-2xl p-1.5"
+                  className="h-9 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-xs font-normal text-gray-700 dark:text-zinc-200 cursor-pointer shadow-none hover:bg-gray-50 dark:hover:bg-zinc-700"
+                  menuClassName="rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-900 shadow-2xl p-1.5"
                   optionClassName="rounded-lg text-xs font-normal py-1.5 px-2.5 hover:bg-gray-100 dark:hover:bg-zinc-800"
                 >
                   {DAY_LABELS.map((day, idx) => (
@@ -365,7 +365,7 @@ export default function AutoBackupSchedule({ showToast, scope = "system", embedd
               <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
                 Backup Time
               </span>
-              <span className="text-[11px] text-gray-500 dark:text-zinc-400">
+              <span className="text-[11px] text-gray-900 dark:text-zinc-300">
                 Optimal non-peak hour to run archival processes
               </span>
             </div>
@@ -376,8 +376,8 @@ export default function AutoBackupSchedule({ showToast, scope = "system", embedd
                 value={schedule.time}
                 onChange={handleTimeChange}
                 disabled={isSaving}
-                className="h-9 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-xs font-normal text-gray-700 dark:text-zinc-200 cursor-pointer shadow-none hover:bg-gray-50 dark:hover:bg-zinc-700"
-                menuClassName="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-900 shadow-2xl p-1.5"
+                className="h-9 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-xs font-normal text-gray-700 dark:text-zinc-200 cursor-pointer shadow-none hover:bg-gray-50 dark:hover:bg-zinc-700"
+                menuClassName="rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-900 shadow-2xl p-1.5"
                 optionClassName="rounded-lg text-xs font-normal py-1.5 px-2.5 hover:bg-gray-100 dark:hover:bg-zinc-800"
               >
                 {HOUR_OPTIONS.map((opt) => (
@@ -390,7 +390,7 @@ export default function AutoBackupSchedule({ showToast, scope = "system", embedd
           </div>
 
           {/* Apple Time Machine Status Strip */}
-          <div className="bg-gray-50/80 dark:bg-zinc-900/60 border-t border-gray-100 dark:border-white/10 px-5 py-3 flex items-center justify-between flex-wrap gap-3 text-xs">
+          <div className="bg-gray-50/80 dark:bg-zinc-900/60 border-t border-border dark:border-border px-5 py-3 flex items-center justify-between flex-wrap gap-3 text-xs">
             {/* Left: Last Backup State */}
             <div className="flex items-center gap-2">
               <span
@@ -403,7 +403,7 @@ export default function AutoBackupSchedule({ showToast, scope = "system", embedd
                     : "bg-gray-400 dark:text-zinc-500"
                 )}
               />
-              <span className="text-gray-500 dark:text-zinc-400">Last Run:</span>
+              <span className="text-gray-900 dark:text-zinc-300">Last Run:</span>
               <span className="font-semibold text-gray-900 dark:text-zinc-200 font-mono text-[11px]">
                 {lastRunFormatted || "Never"}
               </span>
@@ -424,7 +424,7 @@ export default function AutoBackupSchedule({ showToast, scope = "system", embedd
 
             {/* Right: Next Scheduled Run */}
             {nextRunFormatted ? (
-              <div className="flex items-center gap-1.5 text-gray-500 dark:text-zinc-400">
+              <div className="flex items-center gap-1.5 text-gray-900 dark:text-zinc-300">
                 <HugeIcon  className="ph-bold ph-calendar-blank text-[13px] text-gray-400 dark:text-zinc-500" />
                 <span>Next Run:</span>
                 <span className="font-semibold text-gray-900 dark:text-zinc-200 font-mono text-[11px]">

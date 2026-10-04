@@ -319,7 +319,7 @@ export default function LandingFooterCmsView({ showToast }) {
   return (
     <div className="flex flex-col gap-6 w-full animate-fade-up font-jakarta">
       {/* Main Card */}
-      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
+      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none">
         <PageHeader
           icon="ph-bold ph-panel-bottom"
           title={
@@ -333,14 +333,14 @@ export default function LandingFooterCmsView({ showToast }) {
           description="Customize campus archive location, registrar window schedules, contacts, ambient watermark, and copyright."
           showBorder={false}
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
-          descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
+          descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
           actions={
             <div className="flex items-center gap-2.5 flex-wrap">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => window.open("/#office", "_blank")}
-                className="flex h-10 items-center justify-center rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
+                className="flex h-10 items-center justify-center rounded-xl! border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
               >
                 Preview
               </Button>
@@ -374,7 +374,7 @@ export default function LandingFooterCmsView({ showToast }) {
         />
 
         {/* Standardized SuperAdmin Underline Navigation Tabs */}
-        <div className="flex items-center gap-6 shrink-0 h-10 px-6 border-b border-gray-100 dark:border-white/10 bg-white dark:bg-card select-none">
+        <div className="flex items-center gap-6 shrink-0 h-10 px-6 border-b border-border dark:border-border bg-white dark:bg-card select-none">
           <button
             type="button"
             onClick={() => setActiveTab("content")}
@@ -410,12 +410,12 @@ export default function LandingFooterCmsView({ showToast }) {
               {/* Left Column (lg:col-span-6): Location, Maps, Watermark & Copyright */}
               <div className="lg:col-span-6 space-y-5">
                 {/* Physical Archive Location & Mission */}
-                <div className="rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/30 p-5 space-y-5">
+                <div className="rounded-xl border border-border/80 dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 p-5 space-y-5">
                   <div>
                     <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">
                       Physical Archive Location &amp; Mission
                     </h3>
-                    <p className="text-[12px] font-normal text-gray-500 dark:text-zinc-400 mt-0.5">
+                    <p className="text-[12px] font-normal text-gray-900 dark:text-zinc-300 mt-0.5">
                       Credentials and archive hall details displayed in Column 1.
                     </p>
                   </div>
@@ -441,7 +441,7 @@ export default function LandingFooterCmsView({ showToast }) {
                         rows={3}
                         maxLength={250}
                         placeholder="Polytechnic University of the Philippines — San Juan Campus Records Keeping & Online Document Request Platform."
-                        className="w-full rounded-xl border border-gray-200 bg-white p-3 text-xs font-normal leading-relaxed placeholder:text-gray-400 dark:border-white/10 dark:bg-card focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 focus:outline-hidden"
+                        className="w-full rounded-xl border border-border bg-white p-3 text-xs font-normal leading-relaxed placeholder:text-gray-400 dark:border-border dark:bg-card focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 focus:outline-hidden"
                       />
                     </div>
 
@@ -466,7 +466,7 @@ export default function LandingFooterCmsView({ showToast }) {
                           }
                           placeholder="Ground Floor, Admin & Records Hall"
                           maxLength={80}
-                          className="h-10 w-full rounded-xl border border-gray-200 bg-white pl-9 pr-3 text-xs font-medium dark:border-white/10 dark:bg-card focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5"
+                          className="h-10 w-full rounded-xl border border-border bg-white pl-9 pr-3 text-xs font-medium dark:border-border dark:bg-card focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5"
                         />
                       </div>
                     </div>
@@ -490,20 +490,20 @@ export default function LandingFooterCmsView({ showToast }) {
                         }
                         placeholder="223 Ortega Street, cor. A. Mabini Street, Barangay Addition Hills, San Juan City, Metro Manila 1500"
                         maxLength={200}
-                        className="h-10 w-full rounded-xl border border-gray-200 bg-white px-3 text-xs font-normal dark:border-white/10 dark:bg-card focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5"
+                        className="h-10 w-full rounded-xl border border-border bg-white px-3 text-xs font-normal dark:border-border dark:bg-card focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5"
                       />
                     </div>
                   </div>
                 </div>
 
                 {/* Google Maps Configuration */}
-                <div className="rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/30 p-5 space-y-4">
+                <div className="rounded-xl border border-border/80 dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 p-5 space-y-4">
                   <div className="flex items-center justify-between gap-3">
                     <div>
                       <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">
                         Map Directions Link
                       </h3>
-                      <p className="text-[12px] font-normal text-gray-500 dark:text-zinc-400 mt-0.5">
+                      <p className="text-[12px] font-normal text-gray-900 dark:text-zinc-300 mt-0.5">
                         Shortcut for visitors traveling to campus archives.
                       </p>
                     </div>
@@ -520,7 +520,7 @@ export default function LandingFooterCmsView({ showToast }) {
                         }
                         className="sr-only peer"
                       />
-                      <div className="w-9 h-5 bg-gray-200 peer-focus:outline-hidden dark:bg-zinc-700 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:after:bg-zinc-900 dark:after:border-zinc-700 peer-checked:bg-pup-maroon dark:peer-checked:bg-red-600" />
+                      <div className="w-9 h-5 bg-gray-200 peer-focus:outline-hidden dark:bg-zinc-700 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-border after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:after:bg-zinc-900 dark:after:border-zinc-700 peer-checked:bg-pup-maroon dark:peer-checked:bg-red-600" />
                     </label>
                   </div>
 
@@ -540,20 +540,20 @@ export default function LandingFooterCmsView({ showToast }) {
                           }))
                         }
                         placeholder="https://maps.google.com/?q=..."
-                        className="h-10 w-full rounded-xl border border-gray-200 bg-white pl-9 pr-3 text-xs font-mono dark:border-white/10 dark:bg-card disabled:opacity-50"
+                        className="h-10 w-full rounded-xl border border-border bg-white pl-9 pr-3 text-xs font-mono dark:border-border dark:bg-card disabled:opacity-50"
                       />
                     </div>
                   </div>
                 </div>
 
                 {/* Giant Brand Watermark */}
-                <div className="rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/30 p-5 space-y-4">
+                <div className="rounded-xl border border-border/80 dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 p-5 space-y-4">
                   <div className="flex items-center justify-between gap-3">
                     <div>
                       <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">
                         Giant Brand Watermark
                       </h3>
-                      <p className="text-[12px] font-normal text-gray-500 dark:text-zinc-400 mt-0.5">
+                      <p className="text-[12px] font-normal text-gray-900 dark:text-zinc-300 mt-0.5">
                         Ambient brand typography rising from underneath the sub-footer.
                       </p>
                     </div>
@@ -570,7 +570,7 @@ export default function LandingFooterCmsView({ showToast }) {
                         }
                         className="sr-only peer"
                       />
-                      <div className="w-9 h-5 bg-gray-200 peer-focus:outline-hidden dark:bg-zinc-700 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:after:bg-zinc-900 dark:after:border-zinc-700 peer-checked:bg-pup-maroon dark:peer-checked:bg-red-600" />
+                      <div className="w-9 h-5 bg-gray-200 peer-focus:outline-hidden dark:bg-zinc-700 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-border after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:after:bg-zinc-900 dark:after:border-zinc-700 peer-checked:bg-pup-maroon dark:peer-checked:bg-red-600" />
                     </label>
                   </div>
 
@@ -589,7 +589,7 @@ export default function LandingFooterCmsView({ showToast }) {
                       }
                       placeholder="EMANAGE"
                       maxLength={20}
-                      className="h-10 w-full rounded-xl border border-gray-200 bg-white px-3 text-xs font-mono font-bold uppercase tracking-wider dark:border-white/10 dark:bg-card disabled:opacity-50"
+                      className="h-10 w-full rounded-xl border border-border bg-white px-3 text-xs font-mono font-bold uppercase tracking-wider dark:border-border dark:bg-card disabled:opacity-50"
                     />
                   </div>
 
@@ -601,12 +601,12 @@ export default function LandingFooterCmsView({ showToast }) {
                 </div>
 
                 {/* Sub-Footer & Copyright */}
-                <div className="rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/30 p-5 space-y-4">
+                <div className="rounded-xl border border-border/80 dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 p-5 space-y-4">
                   <div>
                     <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">
                       Sub-Footer &amp; Copyright
                     </h3>
-                    <p className="text-[12px] font-normal text-gray-500 dark:text-zinc-400 mt-0.5">
+                    <p className="text-[12px] font-normal text-gray-900 dark:text-zinc-300 mt-0.5">
                       Official copyright statement displayed alongside the Back to Top button.
                     </p>
                   </div>
@@ -625,7 +625,7 @@ export default function LandingFooterCmsView({ showToast }) {
                           }))
                         }
                         placeholder="© 2026 PUP San Juan Campus · All rights reserved."
-                        className="h-10 w-full rounded-xl border border-gray-200 bg-white px-3 text-xs font-normal dark:border-white/10 dark:bg-card"
+                        className="h-10 w-full rounded-xl border border-border bg-white px-3 text-xs font-normal dark:border-border dark:bg-card"
                       />
                     </div>
                   </div>
@@ -634,13 +634,13 @@ export default function LandingFooterCmsView({ showToast }) {
 
               {/* RIGHT COLUMN (6 cols): Registrar Schedule & Direct Contact Channels */}
               <div className="lg:col-span-6 space-y-5">
-                <div className="rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/30 p-5 space-y-4">
+                <div className="rounded-xl border border-border/80 dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 p-5 space-y-4">
                   <div className="flex items-center justify-between gap-3">
                     <div>
                       <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">
                         Registrar Window Schedule ({footerData.scheduleItems.length}/{MAX_SCHEDULE_ITEMS})
                       </h3>
-                      <p className="text-[12px] font-normal text-gray-500 dark:text-zinc-400 mt-0.5">
+                      <p className="text-[12px] font-normal text-gray-900 dark:text-zinc-300 mt-0.5">
                         Operating hours and shift windows displayed in the center column.
                       </p>
                     </div>
@@ -670,7 +670,7 @@ export default function LandingFooterCmsView({ showToast }) {
                         }))
                       }
                       placeholder="Registrar Schedule"
-                      className="h-10 w-full rounded-xl border border-gray-200 bg-white px-3 text-xs dark:border-white/10 dark:bg-card"
+                      className="h-10 w-full rounded-xl border border-border bg-white px-3 text-xs dark:border-border dark:bg-card"
                     />
                   </div>
 
@@ -679,7 +679,7 @@ export default function LandingFooterCmsView({ showToast }) {
                     {footerData.scheduleItems.map((item, idx) => (
                       <div
                         key={idx}
-                        className="p-3.5 rounded-xl border border-gray-200/80 dark:border-white/10 bg-white dark:bg-zinc-900/60 shadow-2xs space-y-3"
+                        className="p-3.5 rounded-xl border border-border/80 dark:border-border bg-white dark:bg-zinc-900/60 shadow-2xs space-y-3"
                       >
                         <div className="flex items-center justify-between select-none">
                           <span className="text-xs font-semibold text-gray-900 dark:text-zinc-200 flex items-center gap-1.5">
@@ -758,7 +758,7 @@ export default function LandingFooterCmsView({ showToast }) {
                                 updateScheduleItem(idx, "status", e.target.value)
                               }
                               className="h-8 rounded-lg text-xs"
-                              menuClassName="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-900 shadow-2xl p-1"
+                              menuClassName="rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-900 shadow-2xl p-1"
                               optionClassName="rounded-lg text-xs py-1.5 px-2.5"
                             >
                               {SCHEDULE_STATUS_OPTIONS.map((opt) => (
@@ -775,13 +775,13 @@ export default function LandingFooterCmsView({ showToast }) {
                 </div>
 
                 {/* Direct Inquiry Channels Card */}
-                <div className="rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/30 p-5 space-y-4">
+                <div className="rounded-xl border border-border/80 dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 p-5 space-y-4">
                   <div className="flex items-center justify-between gap-3">
                     <div>
                       <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">
                         Direct Inquiry Channels ({footerData.contactItems.length}/{MAX_CONTACT_ITEMS})
                       </h3>
-                      <p className="text-[12px] font-normal text-gray-500 dark:text-zinc-400 mt-0.5">
+                      <p className="text-[12px] font-normal text-gray-900 dark:text-zinc-300 mt-0.5">
                         Official communications channels listed in Column 3.
                       </p>
                     </div>
@@ -811,7 +811,7 @@ export default function LandingFooterCmsView({ showToast }) {
                         }))
                       }
                       placeholder="Official Desk"
-                      className="h-10 w-full rounded-xl border border-gray-200 bg-white px-3 text-xs dark:border-white/10 dark:bg-card"
+                      className="h-10 w-full rounded-xl border border-border bg-white px-3 text-xs dark:border-border dark:bg-card"
                     />
                   </div>
 
@@ -820,7 +820,7 @@ export default function LandingFooterCmsView({ showToast }) {
                     {footerData.contactItems.map((contact, idx) => (
                       <div
                         key={idx}
-                        className="p-3.5 rounded-xl border border-gray-200/80 dark:border-white/10 bg-white dark:bg-zinc-900/60 shadow-2xs space-y-3"
+                        className="p-3.5 rounded-xl border border-border/80 dark:border-border bg-white dark:bg-zinc-900/60 shadow-2xs space-y-3"
                       >
                         <div className="flex items-center justify-between select-none">
                           <span className="text-xs font-semibold text-gray-900 dark:text-zinc-200 flex items-center gap-1.5">
@@ -899,7 +899,7 @@ export default function LandingFooterCmsView({ showToast }) {
                                 updateContactItem(idx, "type", e.target.value)
                               }
                               className="h-8 rounded-lg text-xs"
-                              menuClassName="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-900 shadow-2xl p-1"
+                              menuClassName="rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-900 shadow-2xl p-1"
                               optionClassName="rounded-lg text-xs py-1.5 px-2.5"
                             >
                               {CONTACT_TYPE_OPTIONS.map((opt) => (
@@ -921,12 +921,12 @@ export default function LandingFooterCmsView({ showToast }) {
           {/* TAB 2: Interactive Live Preview */}
           {activeTab === "preview" && (
             <div className="space-y-4">
-              <div className="flex items-center justify-between rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/30 p-4">
+              <div className="flex items-center justify-between rounded-xl border border-border/80 dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 p-4">
                 <div>
                   <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">
                     Live Portal Footer Simulator
                   </h3>
-                  <p className="text-[12px] font-normal text-gray-500 dark:text-zinc-400">
+                  <p className="text-[12px] font-normal text-gray-900 dark:text-zinc-300">
                     Accurate live representation of how the public footer renders on the student portal.
                   </p>
                 </div>

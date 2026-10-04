@@ -342,7 +342,7 @@ export default function LandingPageCmsTab({ showToast }) {
   return (
     <div className="flex flex-col gap-4 w-full animate-fade-up font-jakarta">
       {/* Top Section Switcher Pill */}
-      <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-gray-100/90 dark:bg-zinc-900/80 border border-gray-200/80 dark:border-white/10 w-fit select-none">
+      <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-gray-100/90 dark:bg-zinc-900/80 border border-border/80 dark:border-border w-fit select-none">
         <button
           type="button"
           onClick={() => handleSelectSection("hero")}
@@ -421,7 +421,7 @@ export default function LandingPageCmsTab({ showToast }) {
       {currentSection === "hero" && (
         <>
           {/* Main Card with Header, Underline Tabs & Form Content */}
-          <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
+          <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none">
         <PageHeader
           icon="ph-bold ph-layout"
           title={
@@ -435,14 +435,14 @@ export default function LandingPageCmsTab({ showToast }) {
           description="Manage public portal headlines, descriptive messaging, campus background photography, and operational details."
           showBorder={false}
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
-          descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
+          descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
           actions={
             <div className="flex items-center gap-2.5 flex-wrap">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => window.open("/", "_blank")}
-                className="flex h-10 items-center justify-center rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
+                className="flex h-10 items-center justify-center rounded-xl! border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
               >
                 Preview
               </Button>
@@ -476,7 +476,7 @@ export default function LandingPageCmsTab({ showToast }) {
         />
 
         {/* Standardized SuperAdmin Underline Navigation Tabs */}
-        <div className="flex items-center gap-6 shrink-0 h-10 px-6 border-b border-gray-100 dark:border-white/10 bg-white dark:bg-card select-none">
+        <div className="flex items-center gap-6 shrink-0 h-10 px-6 border-b border-border dark:border-border bg-white dark:bg-card select-none">
           <button
             type="button"
             onClick={() => setActiveTab("slides")}
@@ -510,12 +510,12 @@ export default function LandingPageCmsTab({ showToast }) {
           {activeTab === "slides" && (
             <div className="space-y-6">
               {/* Hero Headlines & Institutional Philosophy */}
-              <div className="rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/30 p-5 space-y-5">
+              <div className="rounded-xl border border-border/80 dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 p-5 space-y-5">
                 <div>
                   <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">
                     Hero Headlines &amp; Institutional Philosophy
                   </h3>
-                  <p className="text-[12px] font-normal text-gray-500 dark:text-zinc-400 mt-0.5">
+                  <p className="text-[12px] font-normal text-gray-900 dark:text-zinc-300 mt-0.5">
                     Primary large display typography rendered over campus background photography.
                   </p>
                 </div>
@@ -542,7 +542,7 @@ export default function LandingPageCmsTab({ showToast }) {
                         }
                         placeholder="e.g. Tanglaw ng Bayan,"
                         maxLength={45}
-                        className="h-10 w-full rounded-xl border border-gray-200 bg-white px-3 text-xs font-normal placeholder:text-gray-400 dark:border-white/10 dark:bg-card focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 dark:focus:ring-pup-maroon/20"
+                        className="h-10 w-full rounded-xl border border-border bg-white px-3 text-xs font-normal placeholder:text-gray-400 dark:border-border dark:bg-card focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 dark:focus:ring-pup-maroon/20"
                       />
                     </div>
 
@@ -565,7 +565,7 @@ export default function LandingPageCmsTab({ showToast }) {
                         }
                         placeholder="e.g. Dambana ng Kagitingan."
                         maxLength={45}
-                        className="h-10 w-full rounded-xl border border-gray-200 bg-white px-3 text-xs font-normal placeholder:text-gray-400 dark:border-white/10 dark:bg-card focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 dark:focus:ring-pup-maroon/20"
+                        className="h-10 w-full rounded-xl border border-border bg-white px-3 text-xs font-normal placeholder:text-gray-400 dark:border-border dark:bg-card focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 dark:focus:ring-pup-maroon/20"
                       />
                     </div>
                   </div>
@@ -590,19 +590,19 @@ export default function LandingPageCmsTab({ showToast }) {
                       rows={3}
                       maxLength={280}
                       placeholder="Official institutional records keeping, archive retrieval, and document verification system..."
-                      className="w-full rounded-xl border border-gray-200 bg-white p-3 text-xs font-normal leading-relaxed placeholder:text-gray-400 dark:border-white/10 dark:bg-card focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 dark:focus:ring-pup-maroon/20 focus:outline-hidden"
+                      className="w-full rounded-xl border border-border bg-white p-3 text-xs font-normal leading-relaxed placeholder:text-gray-400 dark:border-border dark:bg-card focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 dark:focus:ring-pup-maroon/20 focus:outline-hidden"
                     />
                   </div>
                 </div>
               </div>
 
               {/* Campus Background Photos Controls Bar */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/30 p-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-xl border border-border/80 dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 p-4">
                 <div>
                   <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">
                     Campus Background Photos ({heroData.slides.length})
                   </h3>
-                  <p className="text-[12px] font-normal text-gray-500 dark:text-zinc-400">
+                  <p className="text-[12px] font-normal text-gray-900 dark:text-zinc-300">
                     Upload campus photos for the landing page carousel. Drag cards to reorder, or click any image to replace it.
                   </p>
                 </div>
@@ -621,8 +621,8 @@ export default function LandingPageCmsTab({ showToast }) {
                             autoRotateInterval: Number(e.target.value),
                           }))
                         }
-                        className="h-9 rounded-xl border border-gray-200 dark:border-white/10 text-xs font-normal text-gray-700 dark:text-zinc-200 bg-white dark:bg-zinc-900 cursor-pointer shadow-none px-3"
-                        menuClassName="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-900 shadow-2xl p-1.5"
+                        className="h-9 rounded-xl border border-border dark:border-border text-xs font-normal text-gray-700 dark:text-zinc-200 bg-white dark:bg-zinc-900 cursor-pointer shadow-none px-3"
+                        menuClassName="rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-900 shadow-2xl p-1.5"
                         optionClassName="rounded-lg text-xs font-normal py-2 px-3 hover:bg-gray-100 dark:hover:bg-zinc-800"
                       >
                         <option value={3500}>Fast (3.5s)</option>
@@ -730,7 +730,7 @@ export default function LandingPageCmsTab({ showToast }) {
                       setDragOverSlideIdx(null)
                     }
                   }}
-                  className="rounded-xl border-2 border-dashed border-gray-200 dark:border-white/10 hover:border-pup-maroon/40 hover:bg-pup-maroon/5 dark:hover:bg-red-500/5 transition-all p-8 flex flex-col items-center justify-center gap-3 text-gray-500 hover:text-pup-maroon dark:hover:text-red-400 min-h-[300px] cursor-pointer group select-none"
+                  className="rounded-xl border-2 border-dashed border-border dark:border-border hover:border-pup-maroon/40 hover:bg-pup-maroon/5 dark:hover:bg-red-500/5 transition-all p-8 flex flex-col items-center justify-center gap-3 text-gray-500 hover:text-pup-maroon dark:hover:text-red-400 min-h-[300px] cursor-pointer group select-none"
                 >
                   <div className="w-12 h-12 rounded-full bg-gray-100 dark:bg-zinc-800 flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
                     <HugeIcon  className="ph-bold ph-plus text-gray-500 group-hover:text-pup-maroon dark:group-hover:text-red-400" />
@@ -751,19 +751,19 @@ export default function LandingPageCmsTab({ showToast }) {
           {/* TAB 2: Interactive Live Hero Preview */}
           {activeTab === "preview" && (
             <div className="space-y-4">
-              <div className="flex items-center justify-between rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/30 p-4">
+              <div className="flex items-center justify-between rounded-xl border border-border/80 dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 p-4">
                 <div>
                   <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">
                     Simulated Hero Portal Preview
                   </h3>
-                  <p className="text-[12px] font-normal text-gray-500 dark:text-zinc-400">
+                  <p className="text-[12px] font-normal text-gray-900 dark:text-zinc-300">
                     Live interactive preview showing exact layout, typography, atmospheric gradients, and slide transitions.
                   </p>
                 </div>
 
                 {/* Slide cycler in preview */}
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-mono text-gray-500 dark:text-zinc-400">
+                  <span className="text-xs font-mono text-gray-900 dark:text-zinc-300">
                     Slide {previewSlideIdx + 1} of {heroData.slides.length}
                   </span>
                   <div className="flex items-center gap-1">
@@ -798,7 +798,7 @@ export default function LandingPageCmsTab({ showToast }) {
               </div>
 
               {/* Miniature Hero Simulator Matching LandingHero.js */}
-              <div className="relative w-full rounded-2xl overflow-hidden border border-gray-200 dark:border-white/10 bg-[#ffffff] dark:bg-zinc-900/50 shadow-sm flex flex-col select-none font-jakarta">
+              <div className="relative w-full rounded-2xl overflow-hidden border border-border dark:border-border bg-[#ffffff] dark:bg-zinc-900/50 shadow-sm flex flex-col select-none font-jakarta">
                 {/* Hero Image & Content Frame */}
                 <div className="relative w-full h-[75vh] min-h-[550px] overflow-hidden flex flex-col justify-center px-6 sm:px-12 lg:px-16">
                   {/* Background Images */}
@@ -1019,7 +1019,7 @@ function SlideCard({
           ? "opacity-35 scale-[0.98] border-dashed border-pup-maroon/60 bg-pup-maroon/5 ring-2 ring-pup-maroon/20 cursor-grabbing"
           : isDragTarget
           ? "ring-2 ring-pup-maroon ring-offset-2 ring-offset-white dark:ring-offset-zinc-950 scale-[1.01] border-pup-maroon shadow-md"
-          : "border-gray-200/80 dark:border-white/10"
+          : "border-border/80 dark:border-border"
       )}
     >
       {/* Drop Target Position Notice */}
@@ -1031,12 +1031,12 @@ function SlideCard({
       )}
 
       {/* Top Bar: Number, Drag Handle & Order / Delete Controls */}
-      <div className="px-4 py-3 bg-gray-50/80 dark:bg-zinc-950/50 border-b border-gray-100 dark:border-white/5 flex items-center justify-between select-none">
+      <div className="px-4 py-3 bg-gray-50/80 dark:bg-zinc-950/50 border-b border-border dark:border-border flex items-center justify-between select-none">
         <div
           className="flex items-center gap-2 cursor-grab active:cursor-grabbing group/drag"
           title="Drag card to reorder photos"
         >
-          <HugeIcon  className="ph-bold ph-dots-six-vertical text-gray-400 group-hover/drag:text-pup-maroon dark:text-zinc-500 dark:group-hover/drag:text-red-400 text-sm transition-colors" />
+          <HugeIcon  className="ph-bold ph-dots-six-vertical text-gray-900 group-hover/drag:text-pup-maroon dark:text-zinc-300 dark:group-hover/drag:text-red-400 text-lg transition-colors" />
           <span className="w-5 h-5 rounded-full bg-pup-maroon text-white text-[10px] font-bold flex items-center justify-center shadow-2xs">
             {index + 1}
           </span>
@@ -1191,7 +1191,7 @@ function SlideCard({
           variant="outline"
           onClick={() => fileInputRef.current?.click()}
           onMouseDown={(e) => e.stopPropagation()}
-          className="w-full flex items-center justify-center h-9 rounded-xl! border-gray-200 dark:border-white/10 text-gray-700 dark:text-zinc-300 font-semibold text-xs hover:bg-gray-50 dark:hover:bg-zinc-800 cursor-pointer shadow-2xs"
+          className="w-full flex items-center justify-center h-9 rounded-xl! border-border dark:border-border text-gray-700 dark:text-zinc-300 font-semibold text-xs hover:bg-gray-50 dark:hover:bg-zinc-800 cursor-pointer shadow-2xs"
         >
           Change
         </Button>

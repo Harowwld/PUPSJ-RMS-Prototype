@@ -613,7 +613,7 @@ export default function DocumentRequestsTab({
     <TooltipProvider delayDuration={200}>
       <div className="font-jakarta w-full flex flex-1 flex-col h-auto min-h-0 gap-6 focus:outline-none animate-fade-up">
         {/* ONE Single Card Container encapsulating Header, Toolbar, Active Filters, Table & Pagination */}
-        <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none isolate font-jakarta mb-4 min-h-0 flex-1">
+        <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4 min-h-0 flex-1">
           {/* 1. Page Header */}
           <PageHeader
             icon="ph-tray"
@@ -622,7 +622,7 @@ export default function DocumentRequestsTab({
             showBorder={false}
             className="p-6"
             titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
-            descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
+            descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
             actions={
               <div className="flex items-center gap-2">
                 <RefreshButton
@@ -652,7 +652,7 @@ export default function DocumentRequestsTab({
 
           {/* 2. Navigation Toolbar */}
           {!error && (
-            <div className="border-t border-gray-100 dark:border-white/10 p-5 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
+            <div className="border-t border-border dark:border-border p-5 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
               {/* Left: Client Type Line Tabs */}
               <div className="flex items-center gap-6 shrink-0 select-none overflow-x-auto">
                 {[
@@ -699,7 +699,7 @@ export default function DocumentRequestsTab({
                       setPage(1);
                     }}
                     placeholder="Search student, name, program..."
-                    className="h-9 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 pl-8 pr-16 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
+                    className="h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 pl-8 pr-16 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
                   />
                   <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] text-gray-400 dark:text-zinc-500">
                     {total > 0 ? `${total.toLocaleString()}` : "0"}
@@ -725,19 +725,19 @@ export default function DocumentRequestsTab({
             <ActiveFilterChips
               chips={activeChips}
               onClearAll={handleClearFilters}
-              className="border-t border-gray-100 dark:border-white/10 px-6 py-2.5"
+              className="border-t border-border dark:border-border px-6 py-2.5"
             />
           )}
 
           {/* 4. Full-Width Table Body */}
-          <div className={cn("w-full flex flex-col flex-1 min-h-0 border-t border-gray-100 dark:border-white/10", total === 0 && "rounded-b-2xl overflow-hidden")}>
+          <div className={cn("w-full flex flex-col flex-1 min-h-0 border-t border-border dark:border-border", total === 0 && "rounded-b-2xl overflow-hidden")}>
             {(loading && !isManualLoading) ? (
               <DocumentRequestsTableSkeleton rowCount={itemsPerPage} embedded={true} />
             ) : error ? (
               <div className="p-12 rounded-b-2xl">
                 <Empty className="h-[320px] flex flex-col items-center justify-center text-center text-gray-500 border-0 dark:text-zinc-400">
                   <EmptyHeader className="flex flex-col items-center gap-0">
-                    <EmptyMedia className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm dark:bg-card dark:border-white/10 dark:shadow-none">
+                    <EmptyMedia className="w-16 h-16 rounded-full bg-white border border-border flex items-center justify-center mb-4 shadow-sm dark:bg-card dark:border-border dark:shadow-none">
                       <HugeIcon  className="ph-duotone ph-warning-circle text-xl text-pup-maroon dark:text-primary" />
                     </EmptyMedia>
                     <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">Could Not Load Requests</EmptyTitle>
@@ -750,7 +750,7 @@ export default function DocumentRequestsTab({
             ) : (
               <div className="overflow-x-auto flex-1">
                 <table className={cn("min-w-full text-sm table-fixed", displayedRows.length === 0 && "h-full")}>
-                  <thead className="sticky top-0 z-10 border-b border-gray-100 dark:border-white/10 bg-white dark:bg-card">
+                  <thead className="sticky top-0 z-10 border-b border-border dark:border-border bg-white dark:bg-card">
                     <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">
                       <th className="p-4 w-20">
                         <button
@@ -827,7 +827,7 @@ export default function DocumentRequestsTab({
                       </th>
                     </tr>
                   </thead>
-                  <tbody className={cn("divide-y divide-gray-100 dark:divide-white/10", displayedRows.length === 0 && "h-full")}>
+                  <tbody className={cn("divide-y divide-border dark:divide-border", displayedRows.length === 0 && "h-full")}>
                     {displayedRows.length === 0 ? (
                       <tr className="border-0 hover:bg-transparent h-full">
                         <td colSpan={7} className="p-0 border-0 h-full">
@@ -835,12 +835,12 @@ export default function DocumentRequestsTab({
                             <EmptyHeader className="flex flex-col items-center gap-0">
                               <div className="relative mb-6">
                                 <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                                <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
+                                <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
                                   <HugeIcon  className="ph-duotone ph-magnifying-glass text-xl text-gray-300 dark:text-zinc-600"></HugeIcon>
                                 </EmptyMedia>
                               </div>
                               <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">No Document Requests Found</EmptyTitle>
-                              <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400">
+                              <EmptyDescription className="max-w-xs text-sm font-medium text-gray-900 dark:text-zinc-300">
                                 {clientTypeFilters.includes("Alumni") && !clientTypeFilters.includes("Student")
                                   ? "No document requests found matching your filters."
                                   : clientTypeFilters.includes("Student") && !clientTypeFilters.includes("Alumni")
@@ -863,7 +863,7 @@ export default function DocumentRequestsTab({
                           <tr
                             key={r.id}
                             className={cn(
-                              "group h-[56px] border-b-[0.5px] border-gray-100 dark:border-white/10 last:border-b-0 transition-all duration-fast hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none cursor-pointer",
+                              "group h-[56px] border-b-[0.5px] border-border dark:border-border last:border-b-0 transition-all duration-fast hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none cursor-pointer",
                               selectedId === r.id && "bg-blue-50/60 dark:bg-blue-950/20"
                             )}
                             onClick={() => openDetail(r.id)}
@@ -923,7 +923,7 @@ export default function DocumentRequestsTab({
                                       });
                                     }}
                                     title="View student location on storage map"
-                                    className="inline-flex items-center gap-1 rounded-full bg-red-50 hover:bg-red-100 px-2.5 py-0.5 text-[11px] font-medium tracking-[0.04em] text-pup-maroon dark:bg-red-950/40 dark:text-primary dark:hover:bg-red-950/60 border border-red-100/30 dark:border-white/5 cursor-pointer transition-colors whitespace-nowrap"
+                                    className="inline-flex items-center gap-1 rounded-full bg-red-50 hover:bg-red-100 px-2.5 py-0.5 text-[11px] font-medium tracking-[0.04em] text-pup-maroon dark:bg-red-950/40 dark:text-primary dark:hover:bg-red-950/60 border border-red-100/30 dark:border-border cursor-pointer transition-colors whitespace-nowrap"
                                   >
                                     <HugeIcon  className="ph-bold ph-map-pin text-[10px]"></HugeIcon>
                                     RM{loc.room} · CAB-{loc.cabinet} · DRW-{loc.drawer}
@@ -990,7 +990,7 @@ export default function DocumentRequestsTab({
           {/* 5. Apple HIG Pagination Footer */}
           {total > 0 && (
             <div className="flex items-center justify-between border-t border-[#e5e5ea] dark:border-[#3a3a3c] bg-white dark:bg-[#1c1c1e] p-4 px-6 rounded-b-2xl mt-auto">
-              <div className="flex items-center gap-6 text-xs text-gray-500 dark:text-zinc-400 select-none">
+              <div className="flex items-center gap-6 text-xs text-gray-900 dark:text-zinc-300 select-none">
                 <span>
                   Showing {rows.length} of {total.toLocaleString()}
                 </span>
@@ -1023,12 +1023,12 @@ export default function DocumentRequestsTab({
                   size="sm"
                   disabled={page <= 1}
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
-                  className="text-xs text-gray-500 dark:text-zinc-400 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
+                  className="text-xs text-gray-900 dark:text-zinc-300 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
                 >
                   Prev
                 </Button>
 
-                <div className="h-8 w-8 rounded-xl border border-[#e5e5ea] dark:border-zinc-800 flex items-center justify-center text-xs font-bold text-gray-800 dark:text-zinc-200 bg-white dark:bg-zinc-900">
+                <div className="h-8 w-8 rounded-xl border border-[#e5e5ea] dark:border-border flex items-center justify-center text-xs font-bold text-gray-800 dark:text-zinc-200 bg-white dark:bg-zinc-900">
                   {page}
                 </div>
 
@@ -1037,7 +1037,7 @@ export default function DocumentRequestsTab({
                   size="sm"
                   disabled={page >= totalPages}
                   onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                  className="text-xs text-gray-500 dark:text-zinc-400 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
+                  className="text-xs text-gray-900 dark:text-zinc-300 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
                 >
                   Next
                 </Button>
@@ -1058,17 +1058,17 @@ export default function DocumentRequestsTab({
           }}
         >
           <SheetContent
-            className="font-jakarta flex flex-col border-l bg-white p-0 shadow-2xl data-[side=right]:w-full data-[side=right]:sm:max-w-2xl data-[side=right]:md:max-w-3xl data-[side=right]:lg:max-w-4xl sm:max-w-2xl md:max-w-3xl lg:max-w-4xl w-full dark:border-white/10 dark:bg-[#121214]"
+            className="font-jakarta flex flex-col border-l bg-white p-0 shadow-2xl data-[side=right]:w-full data-[side=right]:sm:max-w-2xl data-[side=right]:md:max-w-3xl data-[side=right]:lg:max-w-4xl sm:max-w-2xl md:max-w-3xl lg:max-w-4xl w-full dark:border-border dark:bg-[#121214]"
             style={{ borderLeft: "0.5px solid rgba(0,0,0,0.08)" }}
           >
             {/* Sheet Header */}
-            <SheetHeader className="p-6 pb-4 border-b border-gray-100 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/40 text-left">
+            <SheetHeader className="p-6 pb-4 border-b border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/40 text-left">
               <div className="flex items-start justify-between">
                 <div>
                   <SheetTitle className="text-left text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
                     Request Details
                   </SheetTitle>
-                  <SheetDescription className="mt-1 text-left text-xs font-normal text-gray-500 dark:text-zinc-400 flex items-center gap-2">
+                  <SheetDescription className="mt-1 text-left text-xs font-normal text-gray-900 dark:text-zinc-300 flex items-center gap-2">
                     <span>Request #{selectedId}</span>
                     {detail && (
                       <span className={cn("inline-flex px-2.5 py-0.5 rounded-full text-[10px] font-medium", statusBadgeClass(detail.status))}>
@@ -1098,7 +1098,7 @@ export default function DocumentRequestsTab({
                       <span className="text-[11px] font-semibold uppercase tracking-wider text-[#8E8E93] dark:text-zinc-400 mb-1.5">
                         Requester Profile
                       </span>
-                      <div className="w-full h-full bg-[#F5F5F7] dark:bg-zinc-800/40 border border-[#E5E5EA] dark:border-white/10 rounded-xl p-4 flex flex-col justify-between space-y-2">
+                      <div className="w-full h-full bg-[#F5F5F7] dark:bg-zinc-800/40 border border-[#E5E5EA] dark:border-border rounded-xl p-4 flex flex-col justify-between space-y-2">
                         <div className="space-y-1.5">
                           <div className="flex items-center justify-between gap-2">
                             <span className="font-semibold text-sm text-gray-900 dark:text-zinc-50 truncate">
@@ -1121,7 +1121,7 @@ export default function DocumentRequestsTab({
                             {detail.student_no ? detail.student_no : <span className="italic text-amber-600 dark:text-amber-400">No Student ID</span>}
                           </div>
                           {detail.client_type === "Parent" && (
-                            <div className="text-xs text-gray-600 dark:text-zinc-300 font-normal space-y-0.5 pt-1 border-t border-gray-200/60 dark:border-white/5">
+                            <div className="text-xs text-gray-600 dark:text-zinc-300 font-normal space-y-0.5 pt-1 border-t border-border/60 dark:border-border">
                               <div>Parent/Guardian: <strong className="text-gray-900 dark:text-zinc-100">{detail.requester_name || "—"}</strong></div>
                               <div>Relationship: <strong className="text-gray-900 dark:text-zinc-100">{detail.requester_relationship || "Legal Guardian"}</strong></div>
                               {detail.requester_contact && <div>Contact: <span className="font-mono">{detail.requester_contact}</span></div>}
@@ -1135,7 +1135,7 @@ export default function DocumentRequestsTab({
                           )}
                         </div>
                         {(detail.requester_email || detail.email) && (
-                          <div className="text-xs text-gray-500 dark:text-zinc-400 font-normal pt-1.5 border-t border-gray-200/60 dark:border-white/5 truncate flex items-center gap-1.5">
+                          <div className="text-xs text-gray-900 dark:text-zinc-300 font-normal pt-1.5 border-t border-border/60 dark:border-border truncate flex items-center gap-1.5">
                             <HugeIcon  className="ph-bold ph-envelope text-gray-400 text-xs"></HugeIcon>
                             <span className="truncate">{detail.requester_email || detail.email}</span>
                           </div>
@@ -1148,10 +1148,10 @@ export default function DocumentRequestsTab({
                       <span className="text-[11px] font-semibold uppercase tracking-wider text-[#8E8E93] dark:text-zinc-400 mb-1.5">
                         Physical Storage Location
                       </span>
-                      <div className="w-full h-full rounded-xl border border-gray-200 p-4 dark:border-white/10 bg-[#F5F5F7] dark:bg-zinc-800/40 flex flex-col justify-between space-y-2">
+                      <div className="w-full h-full rounded-xl border border-border p-4 dark:border-border bg-[#F5F5F7] dark:bg-zinc-800/40 flex flex-col justify-between space-y-2">
                         <div className="space-y-1.5">
                           <div className="flex items-center justify-between">
-                            <span className="text-[11px] font-medium text-gray-500 dark:text-zinc-400">
+                            <span className="text-[11px] font-medium text-gray-900 dark:text-zinc-300">
                               Physical Archive
                             </span>
                             {studentForRequest || detail.room ? (
@@ -1240,7 +1240,7 @@ export default function DocumentRequestsTab({
                           className={cn(
                             "h-8 px-4 text-xs font-semibold rounded-xl shadow-xs transition-all cursor-pointer active:scale-95",
                             detail.spa_verified
-                              ? "border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50"
+                              ? "border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50"
                               : "bg-emerald-600 hover:bg-emerald-700 text-white border-0"
                           )}
                         >
@@ -1257,11 +1257,11 @@ export default function DocumentRequestsTab({
                       <span className="text-[11px] font-semibold uppercase tracking-wider text-[#8E8E93] dark:text-zinc-400 mb-1.5">
                         Document Requested
                       </span>
-                      <div className="w-full h-full bg-[#F5F5F7] dark:bg-zinc-800/40 border border-[#E5E5EA] dark:border-white/10 rounded-xl p-4 flex flex-col justify-between space-y-2">
-                        <span className="inline-flex w-fit items-center rounded-full bg-white dark:bg-zinc-800 border border-[#E5E5EA] dark:border-white/10 px-3 py-1 text-xs font-semibold text-gray-900 dark:text-zinc-100">
+                      <div className="w-full h-full bg-[#F5F5F7] dark:bg-zinc-800/40 border border-[#E5E5EA] dark:border-border rounded-xl p-4 flex flex-col justify-between space-y-2">
+                        <span className="inline-flex w-fit items-center rounded-full bg-white dark:bg-zinc-800 border border-[#E5E5EA] dark:border-border px-3 py-1 text-xs font-semibold text-gray-900 dark:text-zinc-100">
                           {detail.doc_type}
                         </span>
-                        <span className="text-[11px] text-gray-500 dark:text-zinc-400 flex items-center gap-1.5">
+                        <span className="text-[11px] text-gray-900 dark:text-zinc-300 flex items-center gap-1.5">
                           <HugeIcon  className="ph-bold ph-calendar text-gray-400 text-xs"></HugeIcon>
                           {formatPHDateTime(detail.created_at)}
                         </span>
@@ -1273,7 +1273,7 @@ export default function DocumentRequestsTab({
                       <span className="text-[11px] font-semibold uppercase tracking-wider text-[#8E8E93] dark:text-zinc-400 mb-1.5">
                         Requester Stated Purpose
                       </span>
-                      <div className="w-full h-full min-h-[64px] p-4 text-xs font-normal text-gray-700 dark:text-zinc-300 bg-[#F5F5F7] dark:bg-zinc-800/40 border border-[#E5E5EA] dark:border-white/10 rounded-xl whitespace-pre-wrap leading-relaxed">
+                      <div className="w-full h-full min-h-[64px] p-4 text-xs font-normal text-gray-700 dark:text-zinc-300 bg-[#F5F5F7] dark:bg-zinc-800/40 border border-[#E5E5EA] dark:border-border rounded-xl whitespace-pre-wrap leading-relaxed">
                         {detail.notes || <span className="text-gray-400 italic">No purpose entered by requester.</span>}
                       </div>
                     </div>
@@ -1304,10 +1304,10 @@ export default function DocumentRequestsTab({
                           return (
                             <div
                               key={att.id}
-                              className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 rounded-xl border border-[#E5E5EA] dark:border-white/10 bg-[#F5F5F7] dark:bg-zinc-800/40"
+                              className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 rounded-xl border border-[#E5E5EA] dark:border-border bg-[#F5F5F7] dark:bg-zinc-800/40"
                             >
                               <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white dark:bg-zinc-700 text-gray-600 dark:text-zinc-300 border border-gray-200/60 dark:border-white/5">
+                                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white dark:bg-zinc-700 text-gray-600 dark:text-zinc-300 border border-border/60 dark:border-border">
                                   <HugeIcon className={isPdf ? "ph-fill ph-file-pdf text-red-500 text-base" : "ph-fill ph-file-image text-blue-500 text-base"} />
                                 </div>
                                 <div className="min-w-0 flex-1">
@@ -1315,7 +1315,7 @@ export default function DocumentRequestsTab({
                                     {att.original_filename}
                                   </span>
                                   <div className="flex items-center gap-2 mt-0.5">
-                                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-white dark:bg-zinc-700 text-gray-700 dark:text-zinc-300 border border-gray-200/60 dark:border-white/5">
+                                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-white dark:bg-zinc-700 text-gray-700 dark:text-zinc-300 border border-border/60 dark:border-border">
                                       {typeLabel}
                                     </span>
                                     {att.size_bytes && (
@@ -1344,7 +1344,7 @@ export default function DocumentRequestsTab({
                                       });
                                       setPdfPreviewOpen(true);
                                     }}
-                                    className="h-7 px-2.5 text-[11px] font-semibold rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 shadow-xs cursor-pointer active:scale-95 transition-all"
+                                    className="h-7 px-2.5 text-[11px] font-semibold rounded-lg border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 shadow-xs cursor-pointer active:scale-95 transition-all"
                                   >
                                     Preview
                                   </Button>
@@ -1354,7 +1354,7 @@ export default function DocumentRequestsTab({
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   download={att.original_filename}
-                                  className="inline-flex items-center justify-center h-7 px-2.5 text-[11px] font-semibold rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs active:scale-95 transition-all cursor-pointer"
+                                  className="inline-flex items-center justify-center h-7 px-2.5 text-[11px] font-semibold rounded-lg border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs active:scale-95 transition-all cursor-pointer"
                                 >
                                   Download
                                 </a>
@@ -1379,7 +1379,7 @@ export default function DocumentRequestsTab({
                             {isWorkingDays ? "working days only" : "calendar days"}
                           </span>
                         </span>
-                        <div className="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-[#F5F5F7] dark:bg-zinc-800/40 p-4 space-y-2.5">
+                        <div className="w-full rounded-xl border border-border dark:border-border bg-[#F5F5F7] dark:bg-zinc-800/40 p-4 space-y-2.5">
                           <div className="flex flex-wrap items-center justify-between gap-2">
                             <div className="flex items-center gap-2 flex-wrap">
                               <span className={cn("inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold", charter.tier.badgeClass)}>
@@ -1391,7 +1391,7 @@ export default function DocumentRequestsTab({
                               </span>
                             </div>
                             <div className="text-right text-xs">
-                              <span className="text-gray-500 dark:text-zinc-400">Target Deadline: </span>
+                              <span className="text-gray-900 dark:text-zinc-300">Target Deadline: </span>
                               <span className="font-semibold text-gray-900 dark:text-zinc-100">{charter.deadlineFormatted}</span>
                             </div>
                           </div>
@@ -1404,13 +1404,13 @@ export default function DocumentRequestsTab({
                   })()}
 
                   {/* Update Status & Timeline Message Card */}
-                  <div className="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-900/40 p-4 space-y-3.5">
+                  <div className="rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-900/40 p-4 space-y-3.5">
                     <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
                       <div className="flex flex-col">
                         <span className="text-[11px] font-semibold uppercase tracking-wider text-[#8E8E93] dark:text-zinc-400">
                           {isTerminalStatus ? "Request Lifecycle State" : "Update Status"}
                         </span>
-                        <span className="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">
+                        <span className="text-xs text-gray-900 dark:text-zinc-300 mt-0.5">
                           {detail.status === "Completed"
                             ? "This document has been issued/released to the requester. This transaction is fulfilled and closed."
                             : detail.status === "Shredded"
@@ -1422,7 +1422,7 @@ export default function DocumentRequestsTab({
                       </div>
                       <div className="w-full sm:w-52 shrink-0">
                         {isTerminalStatus ? (
-                          <div className="h-9 px-3 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-zinc-800/80 flex items-center justify-between text-xs font-semibold text-gray-800 dark:text-zinc-200">
+                          <div className="h-9 px-3 rounded-xl border border-border dark:border-border bg-gray-50 dark:bg-zinc-800/80 flex items-center justify-between text-xs font-semibold text-gray-800 dark:text-zinc-200">
                             <span className="flex items-center gap-1.5 truncate">
                               <HugeIcon  className="ph-bold ph-lock-simple text-gray-400 text-xs"></HugeIcon>
                               <span>{detail.status === "InProgress" ? "In Progress" : detail.status === "PendingPayment" ? "Pending Payment" : detail.status}</span>
@@ -1433,8 +1433,8 @@ export default function DocumentRequestsTab({
                           </div>
                         ) : (
                           <Select
-                            className="w-full h-9 py-1 px-3 text-xs font-medium text-gray-900 dark:text-zinc-100 bg-white dark:bg-zinc-800 border border-gray-200 dark:border-white/10 rounded-xl shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 cursor-pointer"
-                            menuClassName="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-900 shadow-2xl p-1.5"
+                            className="w-full h-9 py-1 px-3 text-xs font-medium text-gray-900 dark:text-zinc-100 bg-white dark:bg-zinc-800 border border-border dark:border-border rounded-xl shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 cursor-pointer"
+                            menuClassName="rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-900 shadow-2xl p-1.5"
                             optionClassName="rounded-lg text-xs font-normal py-1.5 px-2.5 hover:bg-gray-100 dark:hover:bg-zinc-800"
                             value={editStatus}
                             disabled={saving}
@@ -1451,7 +1451,7 @@ export default function DocumentRequestsTab({
                     </div>
 
                     {/* Add Timeline Update */}
-                    <div className="flex flex-col pt-3 border-t border-gray-100 dark:border-white/10">
+                    <div className="flex flex-col pt-3 border-t border-border dark:border-border">
                       <div className="flex items-center justify-between mb-1.5">
                         <span className="text-[11px] font-semibold uppercase tracking-wider text-[#8E8E93] dark:text-zinc-400">
                           {isTerminalStatus ? "Add Archival Note / Log" : "Add Timeline Update"}
@@ -1461,7 +1461,7 @@ export default function DocumentRequestsTab({
                         </span>
                       </div>
                       <textarea
-                        className="w-full min-h-[72px] p-3 text-xs font-normal text-gray-900 dark:text-zinc-100 bg-[#F5F5F7] dark:bg-zinc-800/50 border border-gray-200 dark:border-white/10 rounded-xl focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus:outline-none transition-all resize-none placeholder:text-gray-400 dark:placeholder:text-zinc-500"
+                        className="w-full min-h-[72px] p-3 text-xs font-normal text-gray-900 dark:text-zinc-100 bg-[#F5F5F7] dark:bg-zinc-800/50 border border-border dark:border-border rounded-xl focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus:outline-none transition-all resize-none placeholder:text-gray-400 dark:placeholder:text-zinc-500"
                         value={editUpdateMessage}
                         onChange={(e) => setEditUpdateMessage(e.target.value)}
                         placeholder={
@@ -1488,7 +1488,7 @@ export default function DocumentRequestsTab({
                           return (
                             <div
                               key={u.id || idx}
-                              className="p-3 rounded-xl bg-[#F5F5F7] dark:bg-zinc-800/40 border border-gray-200/70 dark:border-white/5 text-xs space-y-1"
+                              className="p-3 rounded-xl bg-[#F5F5F7] dark:bg-zinc-800/40 border border-border/70 dark:border-border text-xs space-y-1"
                             >
                               <div className="flex items-center justify-between text-[11px]">
                                 <div className="flex items-center gap-1.5">
@@ -1500,7 +1500,7 @@ export default function DocumentRequestsTab({
                                       : u.status}
                                   </span>
                                   {isConsecutiveSameStatus && (
-                                    <span className="text-[10px] text-gray-500 dark:text-zinc-400 bg-gray-200/60 dark:bg-zinc-700/60 px-1.5 py-0.5 rounded">
+                                    <span className="text-[10px] text-gray-900 dark:text-zinc-300 bg-gray-200/60 dark:bg-zinc-700/60 px-1.5 py-0.5 rounded">
                                       {u.status}
                                     </span>
                                   )}
@@ -1552,11 +1552,11 @@ export default function DocumentRequestsTab({
             </div>
 
             {/* Sheet Sticky Footer */}
-            <div className="p-4 px-6 border-t border-gray-100 dark:border-white/10 bg-white dark:bg-[#18181b] flex items-center justify-between">
+            <div className="p-4 px-6 border-t border-border dark:border-border bg-white dark:bg-[#18181b] flex items-center justify-between">
               <Button
                 variant="outline"
                 size="sm"
-                className="h-9 px-4 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 shadow-xs cursor-pointer hover:bg-gray-50 dark:hover:bg-zinc-700"
+                className="h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 shadow-xs cursor-pointer hover:bg-gray-50 dark:hover:bg-zinc-700"
                 onClick={() => {
                   setSelectedId(null);
                   setDetail(null);
@@ -1571,7 +1571,7 @@ export default function DocumentRequestsTab({
                   <Button
                     variant="outline"
                     size="sm"
-                    className="h-9 px-4 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 shadow-xs cursor-pointer hover:bg-gray-50 dark:hover:bg-zinc-700"
+                    className="h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 shadow-xs cursor-pointer hover:bg-gray-50 dark:hover:bg-zinc-700"
                     onClick={handleResetEdits}
                     disabled={saving}
                   >
@@ -1595,14 +1595,14 @@ export default function DocumentRequestsTab({
 
         {/* 7. Dialog: Create Request */}
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-          <DialogContent className="w-full max-w-2xl overflow-hidden rounded-2xl border border-gray-200 bg-white p-0 shadow-2xl sm:max-w-2xl dark:border-white/10 dark:bg-card flex flex-col gap-0">
+          <DialogContent className="w-full max-w-2xl overflow-hidden rounded-2xl border border-border bg-white p-0 shadow-2xl sm:max-w-2xl dark:border-border dark:bg-card flex flex-col gap-0">
             <DialogHeader className="bg-white p-6 pb-0 dark:bg-card border-none text-left">
               <div className="flex items-start gap-4">
                 <div className="min-w-0 pr-8">
                   <DialogTitle className="text-[16px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
                     New Document Request
                   </DialogTitle>
-                  <DialogDescription className="mt-1 text-[13px] font-normal text-gray-500 dark:text-zinc-400">
+                  <DialogDescription className="mt-1 text-[13px] font-normal text-gray-900 dark:text-zinc-300">
                     Create a document request for a student or alumni record.
                   </DialogDescription>
                 </div>
@@ -1626,8 +1626,8 @@ export default function DocumentRequestsTab({
                       className={cn(
                         "flex-1 h-10 px-3 text-xs font-semibold rounded-xl border transition-all cursor-pointer text-center",
                         createClientType === "Student"
-                          ? "bg-slate-900 text-white border-slate-900 dark:bg-zinc-100 dark:text-zinc-900 dark:border-zinc-100 shadow-xs"
-                          : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50 dark:bg-zinc-800 dark:text-zinc-300 dark:border-white/10"
+                          ? "bg-slate-900 text-white border-slate-900 dark:bg-zinc-100 dark:text-zinc-900 dark:border-border shadow-xs"
+                          : "bg-white text-gray-700 border-border hover:bg-gray-50 dark:bg-zinc-800 dark:text-zinc-300 dark:border-border"
                       )}
                     >
                       Current Student
@@ -1642,8 +1642,8 @@ export default function DocumentRequestsTab({
                       className={cn(
                         "flex-1 h-10 px-3 text-xs font-semibold rounded-xl border transition-all cursor-pointer text-center",
                         createClientType === "Alumni"
-                          ? "bg-slate-900 text-white border-slate-900 dark:bg-zinc-100 dark:text-zinc-900 dark:border-zinc-100 shadow-xs"
-                          : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50 dark:bg-zinc-800 dark:text-zinc-300 dark:border-white/10"
+                          ? "bg-slate-900 text-white border-slate-900 dark:bg-zinc-100 dark:text-zinc-900 dark:border-border shadow-xs"
+                          : "bg-white text-gray-700 border-border hover:bg-gray-50 dark:bg-zinc-800 dark:text-zinc-300 dark:border-border"
                       )}
                     >
                       Alumni / Former Student
@@ -1654,10 +1654,10 @@ export default function DocumentRequestsTab({
                 {/* Form fields for Student vs Alumni */}
                 {createClientType === "Student" ? (
                   selectedStudent ? (
-                    <div className="rounded-xl border border-red-100 bg-red-50/50 p-4 relative animate-in fade-in zoom-in-95 duration-fast dark:border-white/10 dark:bg-red-950/20">
+                    <div className="rounded-xl border border-red-100 bg-red-50/50 p-4 relative animate-in fade-in zoom-in-95 duration-fast dark:border-border dark:bg-red-950/20">
                       <button
                         type="button"
-                        className="absolute top-2.5 right-2.5 text-gray-400 hover:text-gray-600 transition-colors bg-white hover:bg-gray-100 border border-gray-200 rounded-full w-5 h-5 flex items-center justify-center shadow-xs dark:bg-zinc-800 dark:border-white/10 dark:text-zinc-300"
+                        className="absolute top-2.5 right-2.5 text-gray-400 hover:text-gray-600 transition-colors bg-white hover:bg-gray-100 border border-border rounded-full w-5 h-5 flex items-center justify-center shadow-xs dark:bg-zinc-800 dark:border-border dark:text-zinc-300"
                         onClick={() => {
                           setSelectedStudent(null);
                           setCreateStudentNo("");
@@ -1693,21 +1693,21 @@ export default function DocumentRequestsTab({
                         <div className="relative mt-1.5 group">
                           <HugeIcon  className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 pointer-events-none"></HugeIcon>
                           <Input
-                            className="pl-9 h-10 bg-white dark:bg-zinc-800 border border-gray-200 dark:border-white/10 rounded-xl text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
+                            className="pl-9 h-10 bg-white dark:bg-zinc-800 border border-border dark:border-border rounded-xl text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
                             value={studentSearch}
                             onChange={(e) => setStudentSearch(e.target.value)}
                             placeholder="Type to search by student name or number..."
                           />
                         </div>
                         {studentSuggestions.length > 0 && (
-                          <div className="absolute z-50 left-0 right-0 mt-1 rounded-xl border border-gray-200 bg-white overflow-hidden shadow-lg animate-in fade-in slide-in-from-top-1 duration-fast dark:bg-zinc-900 dark:border-zinc-800">
+                          <div className="absolute z-50 left-0 right-0 mt-1 rounded-xl border border-border bg-white overflow-hidden shadow-lg animate-in fade-in slide-in-from-top-1 duration-fast dark:bg-zinc-900 dark:border-border">
                             {studentSuggestions.map((s) => {
                               const sn = String(s?.studentNo || s?.student_no || "");
                               return (
                                 <button
                                   key={sn}
                                   type="button"
-                                  className="w-full text-left px-3 py-2 border-b last:border-b-0 border-gray-100 hover:bg-red-50/50 transition-colors group flex flex-col gap-0.5 dark:border-zinc-800 dark:hover:bg-zinc-800/50"
+                                  className="w-full text-left px-3 py-2 border-b last:border-b-0 border-border hover:bg-red-50/50 transition-colors group flex flex-col gap-0.5 dark:border-border dark:hover:bg-zinc-800/50"
                                   onClick={() => {
                                     setSelectedStudent(s);
                                     setCreateStudentNo(sn);
@@ -1717,7 +1717,7 @@ export default function DocumentRequestsTab({
                                   <div className="text-sm font-semibold text-gray-900 dark:text-zinc-100 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors">
                                     {s?.name}
                                   </div>
-                                  <div className="text-[10px] text-gray-500 dark:text-zinc-400 flex items-center gap-1.5">
+                                  <div className="text-[10px] text-gray-900 dark:text-zinc-300 flex items-center gap-1.5">
                                     <span>{sn}</span>
                                     <span className="text-gray-300 dark:text-zinc-700">•</span>
                                     <span>{s?.courseCode || s?.course_code || "—"} - {s?.section || "—"}</span>
@@ -1737,7 +1737,7 @@ export default function DocumentRequestsTab({
                           <span className="text-[10px] text-gray-400 font-medium">If record is not in database</span>
                         </div>
                         <Input
-                          className="mt-1.5 h-10 bg-white dark:bg-zinc-800 border border-gray-200 dark:border-white/10 rounded-xl text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
+                          className="mt-1.5 h-10 bg-white dark:bg-zinc-800 border border-border dark:border-border rounded-xl text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
                           value={createStudentNo}
                           onChange={(e) => setCreateStudentNo(e.target.value)}
                           placeholder="202X-XXXXX-MN-0"
@@ -1753,7 +1753,7 @@ export default function DocumentRequestsTab({
                         Alumni Full Name <span className="text-red-500">*</span>
                       </label>
                       <Input
-                        className="mt-1.5 h-10 bg-white dark:bg-zinc-800 border border-gray-200 dark:border-white/10 rounded-xl text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
+                        className="mt-1.5 h-10 bg-white dark:bg-zinc-800 border border-border dark:border-border rounded-xl text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
                         value={createRequesterName}
                         onChange={(e) => setCreateRequesterName(e.target.value)}
                         placeholder="e.g. Maria Santos"
@@ -1766,7 +1766,7 @@ export default function DocumentRequestsTab({
                         Academic Program / Degree <span className="text-red-500">*</span>
                       </label>
                       <Select
-                        className="mt-1.5 h-10 w-full rounded-xl border border-gray-200 bg-white px-3 text-xs font-normal shadow-none focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 dark:bg-zinc-800 dark:border-white/10"
+                        className="mt-1.5 h-10 w-full rounded-xl border border-border bg-white px-3 text-xs font-normal shadow-none focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 dark:bg-zinc-800 dark:border-border"
                         value={createCourseCode}
                         onChange={(e) => setCreateCourseCode(e.target.value)}
                         required
@@ -1778,7 +1778,7 @@ export default function DocumentRequestsTab({
                           </option>
                         ))}
                       </Select>
-                      <span className="text-[11px] text-gray-500 dark:text-zinc-400 mt-1 block">
+                      <span className="text-[11px] text-gray-900 dark:text-zinc-300 mt-1 block">
                         Required for locating physical records when student number is not present.
                       </span>
                     </div>
@@ -1791,7 +1791,7 @@ export default function DocumentRequestsTab({
                         <span className="text-[10px] text-gray-400 font-medium">If remembered</span>
                       </div>
                       <Input
-                        className="mt-1.5 h-10 bg-white dark:bg-zinc-800 border border-gray-200 dark:border-white/10 rounded-xl text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
+                        className="mt-1.5 h-10 bg-white dark:bg-zinc-800 border border-border dark:border-border rounded-xl text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
                         value={createStudentNo}
                         onChange={(e) => setCreateStudentNo(e.target.value)}
                         placeholder="e.g. 2018-01234-SJ-0"
@@ -1805,7 +1805,7 @@ export default function DocumentRequestsTab({
                     Document Type <span className="text-red-500">*</span>
                   </label>
                   <Select
-                    className="mt-1.5 h-10 w-full rounded-xl border border-gray-200 bg-white px-3 text-xs font-normal shadow-none focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 dark:bg-zinc-800 dark:border-white/10"
+                    className="mt-1.5 h-10 w-full rounded-xl border border-border bg-white px-3 text-xs font-normal shadow-none focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 dark:bg-zinc-800 dark:border-border"
                     value={createDocType}
                     onChange={(e) => setCreateDocType(e.target.value)}
                     required
@@ -1824,7 +1824,7 @@ export default function DocumentRequestsTab({
                     Notes (Optional)
                   </label>
                   <textarea
-                    className="mt-1.5 w-full min-h-[72px] rounded-xl border border-gray-200 p-3 text-xs font-normal focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus:outline-none dark:bg-zinc-800 dark:border-white/10 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 transition-all resize-none"
+                    className="mt-1.5 w-full min-h-[72px] rounded-xl border border-border p-3 text-xs font-normal focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus:outline-none dark:bg-zinc-800 dark:border-border dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 transition-all resize-none"
                     value={createNotes}
                     onChange={(e) => setCreateNotes(e.target.value)}
                     placeholder="Requester purpose or special remarks…"
@@ -1837,7 +1837,7 @@ export default function DocumentRequestsTab({
                 <Button
                   type="button"
                   variant="outline"
-                  className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                  className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                   onClick={() => setCreateOpen(false)}
                 >
                   Cancel
@@ -1864,13 +1864,13 @@ export default function DocumentRequestsTab({
 
         {/* 8. Dialog: No Digital Copy Warning */}
         <Dialog open={fileWarningOpen} onOpenChange={setFileWarningOpen}>
-          <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-white border border-gray-200 shadow-2xl rounded-2xl dark:bg-card dark:border-white/10">
+          <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-white border border-border shadow-2xl rounded-2xl dark:bg-card dark:border-border">
             <DialogHeader className="p-6 bg-white dark:bg-card border-none pb-0">
               <div className="min-w-0">
                 <DialogTitle className="text-[16px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
                   No Digital Copy
                 </DialogTitle>
-                <DialogDescription className="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-1">
+                <DialogDescription className="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-1">
                   Document not yet scanned. Check physical storage.
                 </DialogDescription>
               </div>
@@ -1881,7 +1881,7 @@ export default function DocumentRequestsTab({
                   Check physical file in archives before releasing.
                 </div>
                 {studentForRequest || detail?.room ? (
-                  <div className="rounded-xl p-3 bg-white dark:bg-zinc-800/60 border border-gray-200 dark:border-white/10 text-xs font-semibold text-pup-maroon dark:text-red-400">
+                  <div className="rounded-xl p-3 bg-white dark:bg-zinc-800/60 border border-border dark:border-border text-xs font-semibold text-pup-maroon dark:text-red-400">
                     Room {detail?.room || studentForRequest?.room} · Cabinet {detail?.cabinet || studentForRequest?.cabinet} · Drawer {detail?.drawer || studentForRequest?.drawer}
                   </div>
                 ) : (
@@ -1903,7 +1903,7 @@ export default function DocumentRequestsTab({
               <Button
                 type="button"
                 variant="outline"
-                className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                 onClick={() => setFileWarningOpen(false)}
               >
                 Close

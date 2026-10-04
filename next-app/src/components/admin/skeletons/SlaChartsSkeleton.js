@@ -8,20 +8,20 @@ export default function SlaChartsSkeleton() {
       {/* Left Column (2 Cols): Horizontal graphs (Request Trends & Document Demand) */}
       <div className="lg:col-span-2 flex flex-col gap-6">
         {/* Card 1: Request Trends Chart Skeleton */}
-        <div className="flex-1 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none flex flex-col justify-between">
+        <div className="flex-1 rounded-2xl border border-border bg-white p-6 shadow-sm dark:border-border dark:bg-card dark:shadow-none flex flex-col justify-between">
           <div className="flex items-start justify-between mb-4 flex-wrap gap-3">
             <div className="space-y-2">
               <Skeleton className="h-5 w-32 rounded dark:bg-muted" />
               <Skeleton className="h-7 w-24 rounded dark:bg-muted" />
             </div>
-            <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-gray-200/60 dark:border-white/5">
+            <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-border/60 dark:border-border">
               <Skeleton className="h-6 w-14 rounded-lg dark:bg-muted" />
               <Skeleton className="h-6 w-14 rounded-lg dark:bg-muted" />
               <Skeleton className="h-6 w-14 rounded-lg dark:bg-muted" />
             </div>
           </div>
           <div className="flex-1 min-h-[270px] h-[270px] flex flex-col justify-end gap-2 pt-6">
-            <div className="h-[180px] w-full flex items-end justify-between gap-3 px-2 border-b border-gray-100 dark:border-white/10">
+            <div className="h-[180px] w-full flex items-end justify-between gap-3 px-2 border-b border-border dark:border-border">
               {[35, 65, 45, 80, 60, 90, 70, 50, 75, 40, 85, 60].map((h, i) => (
                 <div key={i} className="flex-1 flex flex-col items-center h-full justify-end">
                   <Skeleton className="w-full rounded-t-sm dark:bg-muted" style={{ height: `${h}%` }} />
@@ -37,7 +37,7 @@ export default function SlaChartsSkeleton() {
         </div>
 
         {/* Card 2: Document Demand Chart Skeleton (Horizontal Bars) */}
-        <div className="flex-1 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none flex flex-col justify-between">
+        <div className="flex-1 rounded-2xl border border-border bg-white p-6 shadow-sm dark:border-border dark:bg-card dark:shadow-none flex flex-col justify-between">
           <div className="flex items-start justify-between mb-4 flex-wrap gap-3">
             <div className="space-y-2">
               <Skeleton className="h-5 w-36 rounded dark:bg-muted" />
@@ -61,19 +61,19 @@ export default function SlaChartsSkeleton() {
 
       {/* Right Column (1 Col): Vertical Align (Status Distribution & Ranked Summary) */}
       <div className="lg:col-span-1 flex flex-col">
-        <div className="flex-1 flex flex-col rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none h-full justify-between">
+        <div className="flex-1 flex flex-col rounded-2xl border border-border bg-white p-6 shadow-sm dark:border-border dark:bg-card dark:shadow-none h-full justify-between">
           {/* Status Distribution Skeleton */}
           <div className="flex flex-col flex-1">
             <Skeleton className="h-5 w-36 rounded dark:bg-muted mb-4" />
             <div className="h-44 w-full flex items-center justify-center">
-              <div className="relative h-32 w-32 rounded-full border-[14px] border-gray-100 dark:border-white/10 flex items-center justify-center">
+              <div className="relative h-32 w-32 rounded-full border-[14px] border-border dark:border-border flex items-center justify-center">
                 <div className="text-center space-y-1">
                   <Skeleton className="h-6 w-10 mx-auto rounded dark:bg-muted" />
                   <Skeleton className="h-2.5 w-12 mx-auto rounded dark:bg-muted" />
                 </div>
               </div>
             </div>
-            <div className="mt-4 flex flex-col pt-3 border-t border-gray-100 dark:border-white/5 space-y-2">
+            <div className="mt-4 flex flex-col pt-3 border-t border-border dark:border-border space-y-2">
               {[1, 2, 3, 4].map((i) => (
                 <div key={i} className="flex items-center justify-between h-[36px] px-2">
                   <div className="flex items-center gap-2">

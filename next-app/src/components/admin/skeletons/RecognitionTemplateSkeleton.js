@@ -12,10 +12,10 @@ export default function RecognitionTemplateSkeleton() {
       </div>
 
       {/* 3-Column Grid */}
-      <div className="border-t border-gray-100 dark:border-white/10 p-6 flex-1 min-h-0">
+      <div className="border-t border-border dark:border-border p-6 flex-1 min-h-0">
         <div className="grid gap-5 xl:grid-cols-[280px_minmax(0,1fr)_280px]">
         {/* Left Panel */}
-        <div className="space-y-4 rounded-2xl border border-gray-200 bg-gray-50 p-4 dark:border-white/10 dark:bg-white/5">
+        <div className="space-y-4 rounded-2xl border border-border bg-gray-50 p-4 dark:border-border dark:bg-white/5">
           <div className="space-y-1.5">
             <Skeleton className="h-3 w-24 rounded dark:bg-muted" />
             <Skeleton className="h-9 w-full rounded-md dark:bg-muted" />
@@ -38,8 +38,8 @@ export default function RecognitionTemplateSkeleton() {
         </div>
 
         {/* Center Panel (Document View / Canvas) */}
-        <div className="min-h-[520px] rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-card flex flex-col justify-between">
-          <div className="flex justify-between items-center pb-4 border-b border-gray-100 dark:border-white/10">
+        <div className="min-h-[520px] rounded-2xl border border-border bg-white p-6 shadow-sm dark:border-border dark:bg-card flex flex-col justify-between">
+          <div className="flex justify-between items-center pb-4 border-b border-border dark:border-border">
             <div className="flex items-center gap-2">
               <Skeleton className="h-8 w-24 rounded-lg dark:bg-muted" />
               <Skeleton className="h-8 w-8 rounded-lg dark:bg-muted" />
@@ -53,19 +53,19 @@ export default function RecognitionTemplateSkeleton() {
             <Skeleton className="h-3 w-72 rounded dark:bg-muted" />
           </div>
 
-          <div className="pt-4 border-t border-gray-100 dark:border-white/10 flex justify-end gap-2">
+          <div className="pt-4 border-t border-border dark:border-border flex justify-end gap-2">
             <Skeleton className="h-9 w-28 rounded-lg dark:bg-muted" />
           </div>
         </div>
 
         {/* Right Panel (Saved Templates List) */}
-        <div className="space-y-3 rounded-2xl border border-gray-200 bg-gray-50 p-4 dark:border-white/10 dark:bg-white/5">
+        <div className="space-y-3 rounded-2xl border border-border bg-gray-50 p-4 dark:border-border dark:bg-white/5">
           <Skeleton className="h-4 w-32 rounded dark:bg-muted mb-3" />
           <div className="space-y-2.5">
             {[1, 2, 3].map((t) => (
               <div
                 key={t}
-                className="p-3 rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-card space-y-2"
+                className="p-3 rounded-lg border border-border dark:border-border bg-white dark:bg-card space-y-2"
               >
                 <div className="flex justify-between items-center">
                   <Skeleton className="h-3.5 w-24 rounded dark:bg-muted" />

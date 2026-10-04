@@ -4,9 +4,9 @@ import { Skeleton } from "@/components/ui/skeleton"
 
 export default function StorageLayoutSkeleton() {
   return (
-    <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card flex flex-col flex-1 min-h-[700px] select-none animate-fade-up">
+    <div className="overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card flex flex-col flex-1 min-h-[700px] select-none animate-fade-up">
       {/* Header Area */}
-      <div className="flex items-center justify-between p-6 border-b border-gray-100 dark:border-white/10">
+      <div className="flex items-center justify-between p-6 border-b border-border dark:border-border">
         <div className="flex items-center gap-3">
           <Skeleton className="h-10 w-10 rounded-xl dark:bg-muted" />
           <div className="space-y-1.5">
@@ -20,7 +20,7 @@ export default function StorageLayoutSkeleton() {
       </div>
 
       {/* Editor Toolbar (h-[56px]) */}
-      <div className="flex h-[56px] items-center justify-between px-6 border-b border-gray-100 dark:border-white/10 bg-gray-50/50 dark:bg-muted/10">
+      <div className="flex h-[56px] items-center justify-between px-6 border-b border-border dark:border-border bg-gray-50/50 dark:bg-muted/10">
         <div className="flex items-center gap-2">
           <Skeleton className="h-9 w-14 rounded-lg dark:bg-muted" />
           <Skeleton className="h-9 w-14 rounded-lg dark:bg-muted" />
@@ -39,8 +39,8 @@ export default function StorageLayoutSkeleton() {
       {/* Main Split Canvas Area */}
       <div className="grid grid-cols-1 lg:grid-cols-3 flex-1 min-h-[550px]">
         {/* Left: 2D Floorplan Blueprint Canvas (col-span-2) */}
-        <div className="lg:col-span-2 p-8 border-b lg:border-b-0 lg:border-r border-gray-100 dark:border-white/10 bg-gray-50/30 dark:bg-zinc-950/30 flex items-center justify-center">
-          <div className="relative h-[480px] w-full max-w-[650px] rounded-2xl border-2 border-dashed border-gray-200 dark:border-white/10 bg-white/60 dark:bg-card/40 p-6 flex flex-col justify-between">
+        <div className="lg:col-span-2 p-8 border-b lg:border-b-0 lg:border-r border-border dark:border-border bg-gray-50/30 dark:bg-zinc-950/30 flex items-center justify-center">
+          <div className="relative h-[480px] w-full max-w-[650px] rounded-2xl border-2 border-dashed border-border dark:border-border bg-white/60 dark:bg-card/40 p-6 flex flex-col justify-between">
             {/* Top Room Tag */}
             <div className="flex justify-between items-center">
               <Skeleton className="h-6 w-28 rounded-lg dark:bg-muted" />
@@ -52,7 +52,7 @@ export default function StorageLayoutSkeleton() {
               {[1, 2, 3, 4, 5, 6].map((cab) => (
                 <div
                   key={cab}
-                  className="h-24 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-muted/30 p-3 flex flex-col justify-between shadow-xs"
+                  className="h-24 rounded-xl border border-border dark:border-border bg-gray-50 dark:bg-muted/30 p-3 flex flex-col justify-between shadow-xs"
                 >
                   <div className="flex justify-between items-center">
                     <Skeleton className="h-4 w-8 rounded dark:bg-muted" />
@@ -67,7 +67,7 @@ export default function StorageLayoutSkeleton() {
             </div>
 
             {/* Bottom Door / Entrance Indicator */}
-            <div className="flex items-center gap-2 pt-2 border-t border-dashed border-gray-200 dark:border-white/10">
+            <div className="flex items-center gap-2 pt-2 border-t border-dashed border-border dark:border-border">
               <Skeleton className="h-3 w-16 rounded dark:bg-muted" />
             </div>
           </div>
@@ -107,7 +107,7 @@ export default function StorageLayoutSkeleton() {
             </div>
           </div>
 
-          <div className="flex gap-2 pt-4 border-t border-gray-100 dark:border-white/10">
+          <div className="flex gap-2 pt-4 border-t border-border dark:border-border">
             <Skeleton className="h-9 w-full rounded-lg dark:bg-muted" />
           </div>
         </div>

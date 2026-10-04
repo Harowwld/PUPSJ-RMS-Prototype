@@ -163,7 +163,7 @@ export default function OfficeDirectory() {
               </span>
             </div>
 
-            <div className="mt-3 pt-2.5 border-t border-gray-100  flex items-center justify-between text-[11px] text-zinc-500 ">
+            <div className="mt-3 pt-2.5 border-t border-border  flex items-center justify-between text-[11px] text-zinc-500 ">
               <span>Same-Day Evaluation Cut-off</span>
               <span className="font-mono font-bold text-[#800000] ">3:00 PM PHT</span>
             </div>
@@ -229,7 +229,7 @@ export default function OfficeDirectory() {
                       "Campus Address"
                     )
                   }
-                  className="px-3.5 py-2 rounded-xl text-xs font-semibold text-gray-700  bg-white  border border-gray-200  hover:bg-gray-50 :bg-zinc-800 transition-colors flex items-center gap-1.5 active:scale-[0.98] cursor-pointer shadow-2xs"
+                  className="px-3.5 py-2 rounded-xl text-xs font-semibold text-gray-700  bg-white  border border-border  hover:bg-gray-50 :bg-zinc-800 transition-colors flex items-center gap-1.5 active:scale-[0.98] cursor-pointer shadow-2xs"
                   title="Copy physical address"
                 >
                   <HugeIcon 
@@ -281,7 +281,7 @@ export default function OfficeDirectory() {
                       Certificate of Registration (COR), Certified Grade Slips, Assessment validation, and residency verifications.
                     </p>
                   </div>
-                  <div className="mt-3 pt-2 border-t border-gray-200/60  text-[10px] font-mono text-zinc-400">
+                  <div className="mt-3 pt-2 border-t border-border/60  text-[10px] font-mono text-zinc-400">
                     SLA: 1 – 3 Working Days
                   </div>
                 </div>
@@ -305,7 +305,7 @@ export default function OfficeDirectory() {
                       Official Transcript of Records (TOR), Second Diploma copy, CAV (DFA/CHED Apostille), and dry-seal release.
                     </p>
                   </div>
-                  <div className="mt-3 pt-2 border-t border-gray-200/60  text-[10px] font-mono text-zinc-400">
+                  <div className="mt-3 pt-2 border-t border-border/60  text-[10px] font-mono text-zinc-400">
                     SLA: 7 – 20 Working Days
                   </div>
                 </div>
@@ -314,7 +314,7 @@ export default function OfficeDirectory() {
           </div>
 
           {/* Transit & Access Advisory Footnote */}
-          <div className="mt-6 pt-4 border-t border-gray-100  flex items-center gap-2 text-[11px] text-zinc-500  font-normal">
+          <div className="mt-6 pt-4 border-t border-border  flex items-center gap-2 text-[11px] text-zinc-500  font-normal">
             <HugeIcon  className="ph-bold ph-info text-[#800000]  shrink-0 text-sm" />
             <span>Accessible via San Juan City Hall jeepney routes. Present valid ID at the university security gatehouse upon campus entry.</span>
           </div>
@@ -353,18 +353,18 @@ export default function OfficeDirectory() {
 
               {/* Schedule Table Breakdown */}
               <div className="space-y-3 text-xs">
-                <div className="flex items-center justify-between pb-2.5 border-b border-gray-100 ">
+                <div className="flex items-center justify-between pb-2.5 border-b border-border ">
                   <span className="font-semibold text-gray-700 ">Monday – Friday</span>
                   <span className="font-mono font-bold text-gray-950 ">8:00 AM – 5:00 PM</span>
                 </div>
-                <div className="flex items-center justify-between pb-2.5 border-b border-gray-100 ">
+                <div className="flex items-center justify-between pb-2.5 border-b border-border ">
                   <div className="flex items-center gap-1.5">
                     <span className="font-medium text-gray-600 ">Noon Break Shift</span>
                     <span className="text-[10px] font-mono text-amber-600 ">(Rotational)</span>
                   </div>
                   <span className="font-mono text-gray-600 ">12:00 PM – 1:00 PM</span>
                 </div>
-                <div className="flex items-center justify-between pb-2.5 border-b border-gray-100 ">
+                <div className="flex items-center justify-between pb-2.5 border-b border-border ">
                   <span className="font-medium text-gray-600 ">Saturday &amp; Sunday</span>
                   <span className="font-semibold text-rose-600 ">Closed (Archive Rest)</span>
                 </div>
@@ -477,7 +477,7 @@ export default function OfficeDirectory() {
             </div>
 
             {/* Official Certification Watermark */}
-            <div className="mt-5 pt-3 border-t border-gray-100  flex items-center justify-between text-[10px] text-zinc-400 font-mono">
+            <div className="mt-5 pt-3 border-t border-border  flex items-center justify-between text-[10px] text-zinc-400 font-mono">
               <span>PUP SAN JUAN OFFICIAL RECORDS</span>
               <span className="text-[#800000]  font-semibold">RA 11032 ARTA</span>
             </div>

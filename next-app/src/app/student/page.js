@@ -86,7 +86,7 @@ export function normalizeProposalStatus(status) {
 
 function StatusBadge({ status }) {
   const s = String(status || "").toLowerCase().trim();
-  let badgeClass = "bg-zinc-100 text-zinc-700 border-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-700";
+  let badgeClass = "bg-zinc-100 text-zinc-700 border-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:border-border";
   let label = status;
   if (s === "approved") {
     badgeClass = "bg-emerald-50 text-emerald-800 border-emerald-200/80 dark:bg-emerald-950/30 dark:text-emerald-300 dark:border-emerald-800/40";
@@ -131,7 +131,7 @@ function StatusBadge({ status }) {
     badgeClass = "bg-rose-50 text-rose-800 border-rose-200/80 dark:bg-rose-950/30 dark:text-rose-300 dark:border-rose-800/40";
     label = "Rejected";
   } else if (s === "superseded") {
-    badgeClass = "bg-zinc-100 text-zinc-600 border-zinc-200 dark:bg-zinc-800 dark:text-zinc-400 dark:border-zinc-700";
+    badgeClass = "bg-zinc-100 text-zinc-600 border-zinc-200 dark:bg-zinc-800 dark:text-zinc-400 dark:border-border";
     label = "Superseded";
   }
   return <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${badgeClass}`}>{label}</span>;
@@ -1097,7 +1097,7 @@ export default function StudentDashboard() {
                 <div className="flex flex-col w-full flex-1 min-h-0">
                   {/* ONE Single Card Container encapsulating Header, Inline Request Form, Toolbar, Active Filters, Table & Pagination */}
                   <Card
-                    className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none isolate font-jakarta mb-4 min-h-0 flex-1 focus:outline-none"
+                    className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4 min-h-0 flex-1 focus:outline-none"
                     onKeyDown={handleKeyDown}
                     tabIndex={0}
                   >
@@ -1131,29 +1131,25 @@ export default function StudentDashboard() {
                             title="Refresh Records"
                           />
                           
-                          <Button
-                            type="button"
-                            onClick={() => setIsFormOpen((prev) => !prev)}
-                            variant={isFormOpen ? "outline" : "default"}
-                            className={cn(
-                              "flex h-10 px-5 text-xs font-semibold rounded-xl! active:scale-95 transition-all cursor-pointer shadow-xs",
-                              isFormOpen
-                                ? "border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700"
-                                : "btn-brand-red text-white! border-0"
-                            )}
-                            title={isFormOpen ? "Hide Request Form" : "New Document Request"}
-                            style={!isFormOpen ? { color: "#ffffff" } : undefined}
-                          >
-                            {isFormOpen ? "Close" : "Request"}
-                          </Button>
+                          {!isFormOpen && (
+                            <Button
+                              type="button"
+                              onClick={() => setIsFormOpen(true)}
+                              className="flex h-10 px-5 text-xs font-semibold rounded-xl! active:scale-95 transition-all cursor-pointer shadow-xs btn-brand-red text-white! border-0"
+                              title="New Document Request"
+                              style={{ color: "#ffffff" }}
+                            >
+                              Request
+                            </Button>
+                          )}
                         </div>
                       }
                     />
 
                     {/* 2. Inline Non-Modal Request Form Section */}
                     {isFormOpen && (
-                      <div className="border-t border-gray-100 dark:border-white/10 p-5 sm:p-6 bg-gray-50/40 dark:bg-zinc-900/20 animate-in fade-in slide-in-from-top-2 duration-fast">
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-gray-100 dark:border-white/10">
+                      <div className="border-t border-border dark:border-border p-5 sm:p-6 bg-gray-50/40 dark:bg-zinc-900/20 animate-in fade-in slide-in-from-top-2 duration-fast">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border dark:border-border">
                           <div className="flex items-center gap-3">
                             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-50 text-pup-maroon dark:bg-red-950/40 dark:text-red-400">
                               <HugeIcon  className="ph-bold ph-plus-circle text-xl" />
@@ -1200,7 +1196,7 @@ export default function StudentDashboard() {
                                 id="student-client-type"
                                 value={requestForm.clientType}
                                 onChange={(e) => setRequestForm({ ...requestForm, clientType: e.target.value })}
-                                className="h-10 w-full rounded-xl text-xs font-normal text-gray-800 dark:text-zinc-100 border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
+                                className="h-10 w-full rounded-xl text-xs font-normal text-gray-800 dark:text-zinc-100 border border-border dark:border-border bg-white dark:bg-zinc-800 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
                               >
                                 <option value="Student">Current Student</option>
                                 <option value="Alumni">Alumni / Former Student</option>
@@ -1230,7 +1226,7 @@ export default function StudentDashboard() {
                                 }
                                 value={requestForm.studentNo || ""}
                                 onChange={(e) => setRequestForm({ ...requestForm, studentNo: e.target.value })}
-                                className="h-10 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-3 text-xs text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
+                                className="h-10 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-3 text-xs text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
                               />
                             </div>
 
@@ -1244,7 +1240,7 @@ export default function StudentDashboard() {
                                   id="student-course-select"
                                   value={requestForm.courseCode || ""}
                                   onChange={(e) => setRequestForm({ ...requestForm, courseCode: e.target.value })}
-                                  className="h-10 w-full rounded-xl text-xs font-normal border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 shadow-none text-gray-800 dark:text-zinc-100 focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
+                                  className="h-10 w-full rounded-xl text-xs font-normal border border-border dark:border-border bg-white dark:bg-zinc-800 shadow-none text-gray-800 dark:text-zinc-100 focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
                                 >
                                   <option value="">Select degree program...</option>
                                   {courses.map((c) => (
@@ -1266,7 +1262,7 @@ export default function StudentDashboard() {
                                 value={requestForm.docType}
                                 placeholder="Select a document type"
                                 onChange={(e) => setRequestForm({ ...requestForm, docType: e.target.value })}
-                                className={`h-10 w-full rounded-xl text-xs font-normal border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 ${
+                                className={`h-10 w-full rounded-xl text-xs font-normal border border-border dark:border-border bg-white dark:bg-zinc-800 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 ${
                                   !requestForm.docType ? "text-gray-400 dark:text-zinc-500" : "text-gray-800 dark:text-zinc-100"
                                 }`}
                               >
@@ -1299,7 +1295,7 @@ export default function StudentDashboard() {
                                   placeholder="e.g. Maria Santos Dela Cruz"
                                   value={requestForm.requesterName || ""}
                                   onChange={(e) => setRequestForm({ ...requestForm, requesterName: e.target.value })}
-                                  className="h-10 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-3 text-xs text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
+                                  className="h-10 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-3 text-xs text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
                                 />
                               </div>
 
@@ -1311,7 +1307,7 @@ export default function StudentDashboard() {
                                   id="parent-relationship-select"
                                   value={requestForm.requesterRelationship || "Mother"}
                                   onChange={(e) => setRequestForm({ ...requestForm, requesterRelationship: e.target.value })}
-                                  className="h-10 w-full rounded-xl text-xs font-normal border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 shadow-none text-gray-800 dark:text-zinc-100 focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
+                                  className="h-10 w-full rounded-xl text-xs font-normal border border-border dark:border-border bg-white dark:bg-zinc-800 shadow-none text-gray-800 dark:text-zinc-100 focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
                                 >
                                   <option value="Mother">Mother</option>
                                   <option value="Father">Father</option>
@@ -1330,7 +1326,7 @@ export default function StudentDashboard() {
                                   placeholder="e.g. 0917-123-4567"
                                   value={requestForm.requesterContact || ""}
                                   onChange={(e) => setRequestForm({ ...requestForm, requesterContact: e.target.value })}
-                                  className="h-10 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-3 text-xs text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
+                                  className="h-10 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-3 text-xs text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
                                 />
                               </div>
                             </div>
@@ -1345,7 +1341,7 @@ export default function StudentDashboard() {
                               id="student-request-description"
                               required
                               rows={2}
-                              className="w-full min-h-[72px] rounded-xl border border-gray-200 bg-white p-3 text-xs font-normal focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus:outline-none dark:bg-zinc-800 dark:border-white/10 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 resize-none transition-all shadow-none"
+                              className="w-full min-h-[72px] rounded-xl border border-border bg-white p-3 text-xs font-normal focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus:outline-none dark:bg-zinc-800 dark:border-border dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 resize-none transition-all shadow-none"
                               placeholder="Provide the purpose of your request (e.g. employment verification, board exam, transfer credentials, etc.)"
                               value={requestForm.notes}
                               onChange={(e) => setRequestForm({ ...requestForm, notes: e.target.value })}
@@ -1385,7 +1381,7 @@ export default function StudentDashboard() {
                             {requestForm.attachments.length === 0 ? (
                               <div
                                 onClick={() => attachmentInputRef.current?.click()}
-                                className="flex flex-col items-center justify-center p-4 border border-dashed border-gray-200 dark:border-white/10 rounded-xl bg-white dark:bg-zinc-800/40 hover:bg-gray-50/80 dark:hover:bg-zinc-800/70 transition-colors cursor-pointer text-center group"
+                                className="flex flex-col items-center justify-center p-4 border border-dashed border-border dark:border-border rounded-xl bg-white dark:bg-zinc-800/40 hover:bg-gray-50/80 dark:hover:bg-zinc-800/70 transition-colors cursor-pointer text-center group"
                               >
                                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-100 dark:bg-zinc-700 text-gray-500 dark:text-zinc-300 group-hover:scale-105 transition-transform mb-1.5">
                                   <HugeIcon className="ph-bold ph-paperclip text-sm" />
@@ -1404,7 +1400,7 @@ export default function StudentDashboard() {
                                 {requestForm.attachments.map((att) => (
                                   <div
                                     key={att.id}
-                                    className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 p-3 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800/70 shadow-xs"
+                                    className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 p-3 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800/70 shadow-xs"
                                   >
                                     <div className="flex items-center gap-2.5 min-w-0 flex-1">
                                       <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gray-100 dark:bg-zinc-700 text-gray-600 dark:text-zinc-300">
@@ -1430,7 +1426,7 @@ export default function StudentDashboard() {
                                       <Select
                                         value={att.attachmentType}
                                         onChange={(e) => handleUpdateFileType(att.id, e.target.value)}
-                                        className="h-8 rounded-lg text-[11px] font-medium border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-zinc-900 w-48 shadow-none"
+                                        className="h-8 rounded-lg text-[11px] font-medium border border-border dark:border-border bg-gray-50 dark:bg-zinc-900 w-48 shadow-none"
                                       >
                                         {requestForm.clientType === "Parent" ? (
                                           <>
@@ -1474,7 +1470,7 @@ export default function StudentDashboard() {
                                 type="button"
                                 variant="outline"
                                 onClick={() => setIsFormOpen(false)}
-                                className="w-full sm:w-auto h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                                className="w-full sm:w-auto h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                               >
                                 Hide
                               </Button>
@@ -1501,7 +1497,7 @@ export default function StudentDashboard() {
                     )}
 
                     {/* 3. Toolbar & Request History Header */}
-                    <div className="border-t border-gray-100 dark:border-white/10 p-5 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
+                    <div className="border-t border-border dark:border-border p-5 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
                       {/* Left: Heading and count */}
                       <div className="flex items-center gap-3 shrink-0">
                         <div>
@@ -1524,7 +1520,7 @@ export default function StudentDashboard() {
                           <Input
                             type="text"
                             placeholder="Search ticket, document, notes..."
-                            className="h-9 pl-8 pr-16 w-full rounded-xl text-xs font-normal border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
+                            className="h-9 pl-8 pr-16 w-full rounded-xl text-xs font-normal border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
                             value={requestSearch}
                             onChange={(e) => {
                               setRequestSearch(e.target.value);
@@ -1581,13 +1577,13 @@ export default function StudentDashboard() {
                         setRequestFilters({ status: [], doc_type: [] });
                         setCurrentPage(1);
                       }}
-                      className="border-t border-gray-100 dark:border-white/10 bg-white dark:bg-card px-6 py-2.5"
+                      className="border-t border-border dark:border-border bg-white dark:bg-card px-6 py-2.5"
                     />
 
                     {/* 5. Request History Table */}
-                    <div className="w-full overflow-x-auto border-t border-gray-100 dark:border-white/10 flex-1">
+                    <div className="w-full overflow-x-auto border-t border-border dark:border-border flex-1">
                       <table className="min-w-full text-sm">
-                        <thead className="sticky top-0 z-10 border-b border-gray-100 dark:border-white/10 bg-white dark:bg-card">
+                        <thead className="sticky top-0 z-10 border-b border-border dark:border-border bg-white dark:bg-card">
                           <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">
                             <th className="p-4 w-36 min-w-[130px]">
                               <button
@@ -1659,7 +1655,7 @@ export default function StudentDashboard() {
                                   <EmptyHeader className="flex flex-col items-center gap-0">
                                     <div className="relative mb-6">
                                       <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                                      <EmptyMedia className="relative z-10 flex h-20 w-20 items-center justify-center rounded-2xl border border-gray-100 bg-white shadow-md dark:border-white/10 dark:bg-card dark:shadow-none">
+                                      <EmptyMedia className="relative z-10 flex h-20 w-20 items-center justify-center rounded-2xl border border-border bg-white shadow-md dark:border-border dark:bg-card dark:shadow-none">
                                         <HugeIcon  className={hasActiveFilters ? "ph-magnifying-glass text-2xl text-pup-maroon" : "ph-tray text-2xl text-pup-maroon"}></HugeIcon>
                                       </EmptyMedia>
                                     </div>
@@ -1680,7 +1676,7 @@ export default function StudentDashboard() {
                                           setCurrentPage(1);
                                         }}
                                         title="Reset Filters"
-                                        className="mt-6 flex h-10 items-center justify-center gap-2 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
+                                        className="mt-6 flex h-10 items-center justify-center gap-2 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                                       >
                                         Reset
                                       </Button>
@@ -1705,7 +1701,7 @@ export default function StudentDashboard() {
                                 key={item.id}
                                 onClick={() => setSelectedRequestForDetail(item)}
                                 className={cn(
-                                  "group h-[52px] border-b-[0.5px] border-gray-100 dark:border-white/10 last:border-b-0 transition-all duration-fast select-none cursor-pointer",
+                                  "group h-[52px] border-b-[0.5px] border-border dark:border-border last:border-b-0 transition-all duration-fast select-none cursor-pointer",
                                   ["Deficient", "PendingPayment"].includes(item.status)
                                     ? "border-l-2 border-l-amber-500 bg-amber-50/70 hover:bg-amber-100/70 dark:bg-amber-950/20 dark:hover:bg-amber-950/35"
                                     : "hover:bg-gray-50/50 dark:bg-card dark:hover:bg-white/2"
@@ -1851,7 +1847,7 @@ export default function StudentDashboard() {
                             Prev
                           </Button>
 
-                          <div className="h-8 w-8 rounded-xl border border-[#e5e5ea] dark:border-zinc-800 flex items-center justify-center text-xs font-bold text-gray-800 dark:text-zinc-200 bg-white dark:bg-zinc-900">
+                          <div className="h-8 w-8 rounded-xl border border-[#e5e5ea] dark:border-border flex items-center justify-center text-xs font-bold text-gray-800 dark:text-zinc-200 bg-white dark:bg-zinc-900">
                             {displayPage}
                           </div>
 
@@ -1871,7 +1867,7 @@ export default function StudentDashboard() {
                 </div>
               ) : (
                 <Card
-                  className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none isolate font-jakarta mb-4 min-h-0 flex-1 focus:outline-none"
+                  className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4 min-h-0 flex-1 focus:outline-none"
                   tabIndex={0}
                 >
                   {/* 1. Page Header */}
@@ -1904,23 +1900,21 @@ export default function StudentDashboard() {
                           title="Refresh Records"
                         />
                         
-                        <Button
-                          type="button"
-                          onClick={() => setIsFormOpen((prev) => !prev)}
-                          variant={isFormOpen ? "outline" : "default"}
-                          disabled={myOrganizations.length === 0}
-                          title={myOrganizations.length === 0 ? "You must be an authorized officer in the OSAS whitelist to submit proposals" : isFormOpen ? "Close Form" : osasSubView === "proposals" ? "New Proposal" : osasSubView === "post_event" ? "New Report" : "Submit CBL"}
-                          className={cn(
-                            "flex h-10 px-5 text-xs font-semibold rounded-xl! active:scale-95 transition-all cursor-pointer shadow-xs",
-                            isFormOpen
-                              ? "border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700"
-                              : "btn-brand-red text-white! border-0",
-                            myOrganizations.length === 0 && "opacity-50 cursor-not-allowed"
-                          )}
-                          style={!isFormOpen && myOrganizations.length > 0 ? { color: "#ffffff" } : undefined}
-                        >
-                          {isFormOpen ? "Close" : "Submit"}
-                        </Button>
+                        {!isFormOpen && (
+                          <Button
+                            type="button"
+                            onClick={() => setIsFormOpen(true)}
+                            disabled={myOrganizations.length === 0}
+                            title={myOrganizations.length === 0 ? "You must be an authorized officer in the OSAS whitelist to submit proposals" : osasSubView === "proposals" ? "New Proposal" : osasSubView === "post_event" ? "New Report" : "Submit CBL"}
+                            className={cn(
+                              "flex h-10 px-5 text-xs font-semibold rounded-xl! active:scale-95 transition-all cursor-pointer shadow-xs btn-brand-red text-white! border-0",
+                              myOrganizations.length === 0 && "opacity-50 cursor-not-allowed"
+                            )}
+                            style={myOrganizations.length > 0 ? { color: "#ffffff" } : undefined}
+                          >
+                            Submit
+                          </Button>
+                        )}
                       </div>
                     }
                   />
@@ -1958,7 +1952,7 @@ export default function StudentDashboard() {
                   )}
 
                   {/* OSAS Stream Switcher */}
-                  <div className="flex items-center gap-1.5 p-1 rounded-xl bg-gray-100/80 dark:bg-zinc-800/60 border border-gray-200/60 dark:border-white/5 mx-6 mb-4">
+                  <div className="flex items-center gap-1.5 p-1 rounded-xl bg-gray-100/80 dark:bg-zinc-800/60 border border-border/60 dark:border-border mx-6 mb-4">
                     <button
                       type="button"
                       onClick={() => setOsasSubView("proposals")}
@@ -2037,8 +2031,8 @@ export default function StudentDashboard() {
                     <>
                       {/* Inline Proposal Form Section */}
                       {isFormOpen && myOrganizations.length > 0 && (
-                        <div className="border-t border-gray-100 dark:border-white/10 p-5 sm:p-6 bg-gray-50/40 dark:bg-zinc-900/20 animate-in fade-in slide-in-from-top-2 duration-fast">
-                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-gray-100 dark:border-white/10">
+                        <div className="border-t border-border dark:border-border p-5 sm:p-6 bg-gray-50/40 dark:bg-zinc-900/20 animate-in fade-in slide-in-from-top-2 duration-fast">
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border dark:border-border">
                             <div className="flex items-center gap-3">
                               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-50 text-pup-maroon dark:bg-red-950/40 dark:text-red-400">
                                 <HugeIcon className="ph-bold ph-plus-circle text-xl" />
@@ -2062,7 +2056,7 @@ export default function StudentDashboard() {
                                   value={proposalForm.title}
                                   onChange={(e) => setProposalForm({ ...proposalForm, title: e.target.value })}
                                   required
-                                  className="h-10 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-3 text-xs text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
+                                  className="h-10 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-3 text-xs text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
                                 />
                               </div>
 
@@ -2082,7 +2076,7 @@ export default function StudentDashboard() {
                                       organizationName: org?.organization_name || "",
                                     });
                                   }}
-                                  className="h-10 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-xs text-gray-900 dark:text-zinc-100 shadow-none"
+                                  className="h-10 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-xs text-gray-900 dark:text-zinc-100 shadow-none"
                                 >
                                   {myOrganizations.map((o) => (
                                     <option key={o.organization_id} value={o.organization_id}>
@@ -2104,7 +2098,7 @@ export default function StudentDashboard() {
                                   onClick={(e) => e.currentTarget.showPicker?.()}
                                   onChange={(e) => setProposalForm({ ...proposalForm, eventDate: e.target.value })}
                                   required
-                                  className="h-10 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-3 text-xs text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
+                                  className="h-10 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-3 text-xs text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
                                 />
                               </div>
                             </div>
@@ -2119,7 +2113,7 @@ export default function StudentDashboard() {
                                 accept="application/pdf"
                                 onChange={(e) => setProposalForm({ ...proposalForm, file: e.target.files?.[0] || null })}
                                 required
-                                className="h-10 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-3 text-xs text-gray-900 dark:text-zinc-100 file:mr-3 file:border-0 file:bg-transparent file:text-xs file:font-medium file:text-gray-500 shadow-none outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
+                                className="h-10 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-3 text-xs text-gray-900 dark:text-zinc-100 file:mr-3 file:border-0 file:bg-transparent file:text-xs file:font-medium file:text-gray-500 shadow-none outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
                               />
                             </div>
 
@@ -2132,7 +2126,7 @@ export default function StudentDashboard() {
                                   type="button"
                                   variant="outline"
                                   onClick={() => setIsFormOpen(false)}
-                                  className="w-full sm:w-auto h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                                  className="w-full sm:w-auto h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                                 >
                                   Hide
                                 </Button>
@@ -2159,7 +2153,7 @@ export default function StudentDashboard() {
                       )}
 
                       {/* Proposals History Header */}
-                      <div className="border-t border-gray-100 dark:border-white/10 p-5 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
+                      <div className="border-t border-border dark:border-border p-5 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
                         <div className="flex items-center gap-3 shrink-0">
                           <div>
                             <h3 className="text-[15px] font-semibold text-gray-900 dark:text-zinc-50">Event Proposals History</h3>
@@ -2180,7 +2174,7 @@ export default function StudentDashboard() {
                             <Input
                               type="text"
                               placeholder="Search proposals..."
-                              className="h-9 pl-8 pr-16 w-full rounded-xl text-xs font-normal border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
+                              className="h-9 pl-8 pr-16 w-full rounded-xl text-xs font-normal border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
                               value={proposalSearch}
                               onChange={(e) => setProposalSearch(e.target.value)}
                             />
@@ -2201,7 +2195,7 @@ export default function StudentDashboard() {
                       </div>
 
                       {/* Proposals List */}
-                      <div className="border-t border-gray-100 dark:border-white/10 flex-1">
+                      <div className="border-t border-border dark:border-border flex-1">
                         {loading ? (
                           <div className="p-5">
                             <StudentOsasProposalsListSkeleton count={3} />
@@ -2247,7 +2241,7 @@ export default function StudentDashboard() {
                               <article
                                 key={item.id}
                                 onClick={() => setSelectedProposalForDetail(item)}
-                                className="group rounded-xl border border-gray-200 p-4 dark:border-white/10 hover:bg-gray-50/50 dark:hover:bg-white/2 transition-colors cursor-pointer select-none"
+                                className="group rounded-xl border border-border p-4 dark:border-border hover:bg-gray-50/50 dark:hover:bg-white/2 transition-colors cursor-pointer select-none"
                               >
                                 <div className="flex flex-wrap items-center justify-between gap-2">
                                   <h3 className="text-[14px] font-medium text-[#111111] dark:text-zinc-100 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors">
@@ -2317,7 +2311,7 @@ export default function StudentDashboard() {
                                     </div>
                                   )}
                                 </div>
-                                <ol className="mt-3 space-y-2 border-l-2 border-gray-200 pl-4 text-xs text-gray-500 dark:border-white/10 dark:text-zinc-400">
+                                <ol className="mt-3 space-y-2 border-l-2 border-border pl-4 text-xs text-gray-500 dark:border-border dark:text-zinc-400">
                                   {item.updates?.map((update) => (
                                     <li key={update.id}>
                                       <span className="font-semibold text-gray-700 dark:text-zinc-300">{update.status}</span> — {update.message || "Status updated"}
@@ -2347,8 +2341,8 @@ export default function StudentDashboard() {
 
                       {/* Post-Event Submission Form */}
                       {isFormOpen && myOrganizations.length > 0 && (
-                        <div className="border-t border-gray-100 dark:border-white/10 p-5 sm:p-6 bg-gray-50/40 dark:bg-zinc-900/20 animate-in fade-in slide-in-from-top-2 duration-fast">
-                          <div className="flex items-center gap-3 pb-4 border-b border-gray-100 dark:border-white/10">
+                        <div className="border-t border-border dark:border-border p-5 sm:p-6 bg-gray-50/40 dark:bg-zinc-900/20 animate-in fade-in slide-in-from-top-2 duration-fast">
+                          <div className="flex items-center gap-3 pb-4 border-b border-border dark:border-border">
                             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-50 text-pup-maroon dark:bg-red-950/40 dark:text-red-400">
                               <HugeIcon className="ph-bold ph-clipboard-text text-xl" />
                             </div>
@@ -2375,7 +2369,7 @@ export default function StudentDashboard() {
                                       organizationId: p?.organization_id || prev.organizationId,
                                     }));
                                   }}
-                                  className="h-10 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-xs text-gray-900 dark:text-zinc-100 shadow-none"
+                                  className="h-10 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-xs text-gray-900 dark:text-zinc-100 shadow-none"
                                 >
                                   <option value="">Select an approved event...</option>
                                   {data.proposals?.filter((p) => p.status === "Approved").map((p) => (
@@ -2396,7 +2390,7 @@ export default function StudentDashboard() {
                                   placeholder="e.g. 150"
                                   value={postEventForm.actualAttendance}
                                   onChange={(e) => setPostEventForm({ ...postEventForm, actualAttendance: e.target.value })}
-                                  className="h-10 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-3 text-xs text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
+                                  className="h-10 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-3 text-xs text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
                                 />
                               </div>
 
@@ -2411,7 +2405,7 @@ export default function StudentDashboard() {
                                   placeholder="e.g. 5200.00"
                                   value={postEventForm.totalExpenses}
                                   onChange={(e) => setPostEventForm({ ...postEventForm, totalExpenses: e.target.value })}
-                                  className="h-10 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-3 text-xs text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
+                                  className="h-10 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-3 text-xs text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
                                 />
                               </div>
                             </div>
@@ -2426,7 +2420,7 @@ export default function StudentDashboard() {
                                   accept="application/pdf"
                                   onChange={(e) => setPostEventForm({ ...postEventForm, narrativeFile: e.target.files?.[0] || null })}
                                   required
-                                  className="h-10 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-3 text-xs text-gray-900 dark:text-zinc-100 file:mr-3 file:border-0 file:bg-transparent file:text-xs file:font-medium file:text-gray-500 shadow-none outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
+                                  className="h-10 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-3 text-xs text-gray-900 dark:text-zinc-100 file:mr-3 file:border-0 file:bg-transparent file:text-xs file:font-medium file:text-gray-500 shadow-none outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
                                 />
                               </div>
 
@@ -2438,7 +2432,7 @@ export default function StudentDashboard() {
                                   type="file"
                                   accept="application/pdf"
                                   onChange={(e) => setPostEventForm({ ...postEventForm, liquidationFile: e.target.files?.[0] || null })}
-                                  className="h-10 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-3 text-xs text-gray-900 dark:text-zinc-100 file:mr-3 file:border-0 file:bg-transparent file:text-xs file:font-medium file:text-gray-500 shadow-none outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
+                                  className="h-10 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-3 text-xs text-gray-900 dark:text-zinc-100 file:mr-3 file:border-0 file:bg-transparent file:text-xs file:font-medium file:text-gray-500 shadow-none outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
                                 />
                               </div>
                             </div>
@@ -2452,7 +2446,7 @@ export default function StudentDashboard() {
                                   type="button"
                                   variant="outline"
                                   onClick={() => setIsFormOpen(false)}
-                                  className="w-full sm:w-auto h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                                  className="w-full sm:w-auto h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                                 >
                                   Hide
                                 </Button>
@@ -2472,7 +2466,7 @@ export default function StudentDashboard() {
                       )}
 
                       {/* Post-Event Reports List */}
-                      <div className="border-t border-gray-100 dark:border-white/10 p-5 bg-gray-50/40 dark:bg-zinc-900/30 flex items-center justify-between">
+                      <div className="border-t border-border dark:border-border p-5 bg-gray-50/40 dark:bg-zinc-900/30 flex items-center justify-between">
                         <div>
                           <h3 className="text-[15px] font-semibold text-gray-900 dark:text-zinc-50">Post-Event Reports History</h3>
                           <p className="mt-0.5 text-xs text-gray-500 dark:text-zinc-400">Official post-event accomplishment reports, liquidation audit records, and OSAS clearance.</p>
@@ -2482,14 +2476,14 @@ export default function StudentDashboard() {
                         </span>
                       </div>
 
-                      <div className="border-t border-gray-100 dark:border-white/10 flex-1 p-5 space-y-3">
+                      <div className="border-t border-border dark:border-border flex-1 p-5 space-y-3">
                         {postEventReports.length === 0 ? (
                           <div className="p-8 text-center text-xs text-gray-500 dark:text-zinc-400">
                             No post-event reports submitted yet. Use the form above to submit your first report.
                           </div>
                         ) : (
                           postEventReports.map((report) => (
-                            <div key={report.id} className="p-4 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-900/50 space-y-3">
+                            <div key={report.id} className="p-4 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-900/50 space-y-3">
                               <div className="flex flex-wrap items-center justify-between gap-2">
                                 <div>
                                   <h4 className="text-sm font-semibold text-gray-900 dark:text-zinc-100">{report.event_title}</h4>
@@ -2512,7 +2506,7 @@ export default function StudentDashboard() {
                                       originalFilename: report.narrative_original_filename,
                                     })}
                                     title="Preview Narrative Report"
-                                    className="h-7 px-2.5 text-[11px] font-semibold rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 shadow-xs cursor-pointer active:scale-95 transition-all"
+                                    className="h-7 px-2.5 text-[11px] font-semibold rounded-lg border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 shadow-xs cursor-pointer active:scale-95 transition-all"
                                   >
                                     Preview
                                   </Button>
@@ -2530,7 +2524,7 @@ export default function StudentDashboard() {
                                         originalFilename: report.liquidation_original_filename,
                                       })}
                                       title="Preview Financial Liquidation"
-                                      className="h-7 px-2.5 text-[11px] font-semibold rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 shadow-xs cursor-pointer active:scale-95 transition-all"
+                                      className="h-7 px-2.5 text-[11px] font-semibold rounded-lg border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 shadow-xs cursor-pointer active:scale-95 transition-all"
                                     >
                                       Preview
                                     </Button>
@@ -2538,7 +2532,7 @@ export default function StudentDashboard() {
                                 </div>
                               </div>
                               {report.review_note && (
-                                <div className="p-2.5 rounded-lg bg-gray-50 dark:bg-zinc-800/60 border border-gray-100 dark:border-zinc-800 text-xs text-gray-600 dark:text-zinc-300">
+                                <div className="p-2.5 rounded-lg bg-gray-50 dark:bg-zinc-800/60 border border-border dark:border-border text-xs text-gray-600 dark:text-zinc-300">
                                   <span className="font-semibold text-gray-800 dark:text-zinc-100">OSAS Note:</span> {report.review_note}
                                 </div>
                               )}
@@ -2554,7 +2548,7 @@ export default function StudentDashboard() {
                     <div className="space-y-0">
                       {/* Organization Selector for students in multiple organizations */}
                       {myOrganizations.length > 1 && (
-                        <div className="border-t border-gray-100 dark:border-white/10 p-4 bg-gray-50/70 dark:bg-zinc-800/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div className="border-t border-border dark:border-border p-4 bg-gray-50/70 dark:bg-zinc-800/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                           <div className="flex items-center gap-2">
                             <HugeIcon className="ph-bold ph-buildings text-pup-maroon dark:text-red-400" />
                             <span className="text-xs font-semibold text-gray-700 dark:text-zinc-300">Active Organization Context:</span>
@@ -2578,8 +2572,8 @@ export default function StudentDashboard() {
 
                       {/* Inline CBL Submission Form */}
                       {isFormOpen && myOrganizations.length > 0 && (
-                        <div className="border-t border-gray-100 dark:border-white/10 p-5 sm:p-6 bg-gray-50/40 dark:bg-zinc-900/20 animate-in fade-in slide-in-from-top-2 duration-fast">
-                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-gray-100 dark:border-white/10">
+                        <div className="border-t border-border dark:border-border p-5 sm:p-6 bg-gray-50/40 dark:bg-zinc-900/20 animate-in fade-in slide-in-from-top-2 duration-fast">
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border dark:border-border">
                             <div className="flex items-center gap-3">
                               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-50 text-pup-maroon dark:bg-red-950/40 dark:text-red-400">
                                 <HugeIcon className="ph-bold ph-book-open text-xl" />
@@ -2604,7 +2598,7 @@ export default function StudentDashboard() {
                                   value={cblForm.versionTag}
                                   onChange={(e) => setCblForm({ ...cblForm, versionTag: e.target.value })}
                                   required
-                                  className="h-10 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-3 text-xs text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 shadow-none outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon"
+                                  className="h-10 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-3 text-xs text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 shadow-none outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon"
                                 />
                               </div>
 
@@ -2617,7 +2611,7 @@ export default function StudentDashboard() {
                                   accept="application/pdf"
                                   required
                                   onChange={(e) => setCblForm({ ...cblForm, file: e.target.files?.[0] || null })}
-                                  className="h-10 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-3 py-2 text-xs text-gray-700 dark:text-zinc-300 file:mr-3 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-[11px] file:font-semibold file:bg-red-50 file:text-pup-maroon hover:file:bg-red-100 cursor-pointer"
+                                  className="h-10 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-3 py-2 text-xs text-gray-700 dark:text-zinc-300 file:mr-3 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-[11px] file:font-semibold file:bg-red-50 file:text-pup-maroon hover:file:bg-red-100 cursor-pointer"
                                 />
                               </div>
                             </div>
@@ -2631,7 +2625,7 @@ export default function StudentDashboard() {
                                 value={cblForm.amendmentSummary}
                                 onChange={(e) => setCblForm({ ...cblForm, amendmentSummary: e.target.value })}
                                 rows={3}
-                                className="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 p-3 text-xs text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 shadow-none outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon"
+                                className="w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 p-3 text-xs text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 shadow-none outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon"
                               />
                             </div>
 
@@ -2640,7 +2634,7 @@ export default function StudentDashboard() {
                                 type="button"
                                 variant="outline"
                                 onClick={() => setIsFormOpen(false)}
-                                className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 shadow-xs cursor-pointer active:scale-95 transition-all"
+                                className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 shadow-xs cursor-pointer active:scale-95 transition-all"
                               >
                                 Cancel
                               </Button>
@@ -2665,7 +2659,7 @@ export default function StudentDashboard() {
                       )}
 
                       {/* Active Charter Status Card */}
-                      <div className="border-t border-gray-100 dark:border-white/10 p-5 bg-gray-50/40 dark:bg-zinc-900/30">
+                      <div className="border-t border-border dark:border-border p-5 bg-gray-50/40 dark:bg-zinc-900/30">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                           <div>
                             <div className="flex items-center gap-2">
@@ -2704,7 +2698,7 @@ export default function StudentDashboard() {
                                 originalFilename: cblOrgData.originalFilename || "Constitution-and-By-Laws.pdf",
                               })}
                               title="Preview Active CBL"
-                              className="h-9 px-4 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 shadow-xs cursor-pointer active:scale-95 transition-all inline-flex items-center justify-center shrink-0"
+                              className="h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 shadow-xs cursor-pointer active:scale-95 transition-all inline-flex items-center justify-center shrink-0"
                             >
                               Preview
                             </Button>
@@ -2713,7 +2707,7 @@ export default function StudentDashboard() {
                       </div>
 
                       {/* Submissions & Versions History */}
-                      <div className="border-t border-gray-100 dark:border-white/10 p-5 bg-white dark:bg-zinc-900/50 space-y-4">
+                      <div className="border-t border-border dark:border-border p-5 bg-white dark:bg-zinc-900/50 space-y-4">
                         <div className="flex items-center justify-between">
                           <h4 className="text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
                             CBL Submission & Revision History ({cblVersions.length})
@@ -2729,7 +2723,7 @@ export default function StudentDashboard() {
                             <Skeleton className="h-20 w-full rounded-2xl" />
                           </div>
                         ) : cblVersions.length === 0 ? (
-                          <div className="rounded-2xl border border-dashed border-gray-200 dark:border-white/10 p-8 text-center text-xs text-gray-500 dark:text-zinc-400 bg-gray-50/40 dark:bg-zinc-900/30">
+                          <div className="rounded-2xl border border-dashed border-border dark:border-border p-8 text-center text-xs text-gray-500 dark:text-zinc-400 bg-gray-50/40 dark:bg-zinc-900/30">
                             <HugeIcon className="ph-duotone ph-book-open text-3xl text-gray-400 mb-2" />
                             <p className="font-semibold text-gray-700 dark:text-zinc-300">No CBL submissions yet</p>
                             <p className="text-[11px] text-gray-400 mt-0.5">
@@ -2751,7 +2745,7 @@ export default function StudentDashboard() {
                             {cblVersions.map((ver) => (
                               <div
                                 key={ver.id}
-                                className="rounded-2xl border border-gray-200/80 dark:border-white/10 bg-white dark:bg-zinc-900 p-4 space-y-3 shadow-xs hover:border-gray-300 dark:hover:border-zinc-700 transition-all"
+                                className="rounded-2xl border border-border/80 dark:border-border bg-white dark:bg-zinc-900 p-4 space-y-3 shadow-xs hover:border-border dark:hover:border-zinc-700 transition-all"
                               >
                                 <div className="flex items-start justify-between gap-3">
                                   <div>
@@ -2794,7 +2788,7 @@ export default function StudentDashboard() {
                                   )}
                                 </div>
 
-                                <div className="pt-2 border-t border-gray-100 dark:border-white/5 flex items-center justify-between text-[11px] text-gray-400 dark:text-zinc-500">
+                                <div className="pt-2 border-t border-border dark:border-border flex items-center justify-between text-[11px] text-gray-400 dark:text-zinc-500">
                                   <span>
                                     Submitted by {ver.submitted_by_name || ver.submitted_by_email || "Student Officer"}
                                     {ver.submitted_by_student_no ? ` (${ver.submitted_by_student_no})` : ""}
@@ -2836,7 +2830,7 @@ export default function StudentDashboard() {
         onOpenChange={(open) => !open && setSelectedRequestForDetail(null)}
       >
         <SheetContent side="right" className="w-full sm:max-w-xl md:max-w-2xl lg:max-w-3xl data-[side=right]:w-full data-[side=right]:sm:max-w-xl data-[side=right]:md:max-w-2xl data-[side=right]:lg:max-w-3xl flex flex-col font-jakarta dark:bg-[#1c1c1e]">
-          <SheetHeader className="border-b border-gray-100 dark:border-white/10 p-5 pb-4 space-y-2">
+          <SheetHeader className="border-b border-border dark:border-border p-5 pb-4 space-y-2">
             <div className="flex items-center justify-between pr-8">
               <span className="text-xs font-semibold text-pup-maroon bg-red-50 dark:bg-red-950/40 px-3 py-1 rounded-full border border-red-100 dark:border-red-900/30">
                 Request #{selectedRequestForDetail?.id}
@@ -2854,7 +2848,7 @@ export default function StudentDashboard() {
           </SheetHeader>
 
           <div className="flex-1 overflow-y-auto p-5 space-y-5">
-            <div className="rounded-xl bg-gray-50 dark:bg-zinc-900/50 p-3.5 border border-gray-100 dark:border-zinc-800">
+            <div className="rounded-xl bg-gray-50 dark:bg-zinc-900/50 p-3.5 border border-border dark:border-border">
               <h4 className="text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-400 mb-1">
                 Purpose / Description
               </h4>
@@ -2939,7 +2933,7 @@ export default function StudentDashboard() {
                 )}
               </div>
             ) : (
-              <div className="rounded-xl bg-gray-50/70 dark:bg-zinc-900/40 p-3.5 border border-dashed border-gray-200 dark:border-zinc-800 flex items-center justify-between gap-3">
+              <div className="rounded-xl bg-gray-50/70 dark:bg-zinc-900/40 p-3.5 border border-dashed border-border dark:border-border flex items-center justify-between gap-3">
                 <div>
                   <h4 className="text-xs font-semibold text-gray-800 dark:text-zinc-200">
                     Experience Feedback
@@ -2958,7 +2952,7 @@ export default function StudentDashboard() {
                     setFeedbackModalOpen(true);
                   }}
                   title="Rate Experience"
-                  className="h-8 px-3 text-xs font-semibold rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all shrink-0"
+                  className="h-8 px-3 text-xs font-semibold rounded-lg border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all shrink-0"
                 >
                   Rate
                 </Button>
@@ -2967,7 +2961,7 @@ export default function StudentDashboard() {
 
             {/* Parent / Legal Guardian Profile Card */}
             {selectedRequestForDetail?.client_type === "Parent" && (
-              <div className="rounded-xl bg-gray-50/70 dark:bg-zinc-900/50 p-4 border border-gray-200/80 dark:border-white/10 space-y-2.5">
+              <div className="rounded-xl bg-gray-50/70 dark:bg-zinc-900/50 p-4 border border-border/80 dark:border-border space-y-2.5">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <HugeIcon className="ph-bold ph-shield-check text-pup-maroon dark:text-red-400 text-sm" />
@@ -3051,7 +3045,7 @@ export default function StudentDashboard() {
 
             {/* Attached Supporting Documents */}
             {Array.isArray(selectedRequestForDetail?.attachments) && selectedRequestForDetail.attachments.length > 0 && (
-              <div className="rounded-xl bg-gray-50/70 dark:bg-zinc-900/50 p-4 border border-gray-200/80 dark:border-white/10 space-y-3">
+              <div className="rounded-xl bg-gray-50/70 dark:bg-zinc-900/50 p-4 border border-border/80 dark:border-border space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <HugeIcon className="ph-bold ph-paperclip text-gray-600 dark:text-zinc-400 text-sm" />
@@ -3078,7 +3072,7 @@ export default function StudentDashboard() {
                     return (
                       <div
                         key={att.id}
-                        className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-2.5 rounded-xl border border-gray-200/80 dark:border-white/10 bg-white dark:bg-zinc-800/80 shadow-xs"
+                        className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-2.5 rounded-xl border border-border/80 dark:border-border bg-white dark:bg-zinc-800/80 shadow-xs"
                       >
                         <div className="flex items-center gap-2.5 min-w-0 flex-1">
                           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gray-100 dark:bg-zinc-700 text-gray-600 dark:text-zinc-300">
@@ -3118,7 +3112,7 @@ export default function StudentDashboard() {
                                 });
                                 setPdfPreviewOpen(true);
                               }}
-                              className="h-7 px-2.5 text-[11px] font-semibold rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 shadow-xs cursor-pointer active:scale-95 transition-all"
+                              className="h-7 px-2.5 text-[11px] font-semibold rounded-lg border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 shadow-xs cursor-pointer active:scale-95 transition-all"
                             >
                               Preview
                             </Button>
@@ -3128,7 +3122,7 @@ export default function StudentDashboard() {
                             target="_blank"
                             rel="noopener noreferrer"
                             download={att.original_filename}
-                            className="inline-flex items-center justify-center h-7 px-2.5 text-[11px] font-semibold rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs active:scale-95 transition-all cursor-pointer"
+                            className="inline-flex items-center justify-center h-7 px-2.5 text-[11px] font-semibold rounded-lg border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs active:scale-95 transition-all cursor-pointer"
                           >
                             Download
                           </a>
@@ -3168,7 +3162,7 @@ export default function StudentDashboard() {
                       <div key={upd.id || idx} className="relative pl-7">
                         <div
                           className={cn(
-                            "absolute left-2.5 -translate-x-1/2 rounded-full border-2 border-white dark:border-zinc-900 shadow-xs",
+                            "absolute left-2.5 -translate-x-1/2 rounded-full border-2 border-white dark:border-border shadow-xs",
                             isConsecutiveSameStatus
                               ? "top-1.5 h-2.5 w-2.5 bg-gray-400 dark:bg-zinc-500"
                               : "top-1 h-3.5 w-3.5 bg-pup-maroon ring-2 ring-pup-maroon/20"
@@ -3187,7 +3181,7 @@ export default function StudentDashboard() {
                               {isConsecutiveSameStatus ? "Follow-Up Notice" : formatStatusLabel(upd.status)}
                             </span>
                             {isConsecutiveSameStatus && (
-                              <span className="text-[10px] font-medium text-gray-500 dark:text-zinc-400 bg-gray-100 dark:bg-zinc-800/80 px-1.5 py-0.5 rounded border border-gray-200/60 dark:border-white/5">
+                              <span className="text-[10px] font-medium text-gray-500 dark:text-zinc-400 bg-gray-100 dark:bg-zinc-800/80 px-1.5 py-0.5 rounded border border-border/60 dark:border-border">
                                 {formatStatusLabel(upd.status)}
                               </span>
                             )}
@@ -3210,7 +3204,7 @@ export default function StudentDashboard() {
                     selectedRequestForDetail.status !== "Pending" &&
                     !selectedRequestForDetail.updates?.some((u) => u.status === selectedRequestForDetail.status) && (
                       <div className="relative pl-7">
-                        <div className="absolute left-2.5 top-1 h-3.5 w-3.5 -translate-x-1/2 rounded-full border-2 border-white dark:border-zinc-900 bg-emerald-600 shadow-xs ring-2 ring-emerald-600/20" />
+                        <div className="absolute left-2.5 top-1 h-3.5 w-3.5 -translate-x-1/2 rounded-full border-2 border-white dark:border-border bg-emerald-600 shadow-xs ring-2 ring-emerald-600/20" />
                         <div className="flex items-center justify-between gap-2">
                           <div className="flex items-center gap-1.5">
                             <span className="text-xs font-bold text-gray-900 dark:text-zinc-100">
@@ -3243,12 +3237,12 @@ export default function StudentDashboard() {
             </div>
           </div>
 
-          <SheetFooter className="border-t border-gray-100 dark:border-white/10 p-4 justify-end">
+          <SheetFooter className="border-t border-border dark:border-border p-4 justify-end">
             <Button
               variant="outline"
               size="sm"
               onClick={() => setSelectedRequestForDetail(null)}
-              className="h-9 px-4 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+              className="h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
             >
               Close
             </Button>
@@ -3262,7 +3256,7 @@ export default function StudentDashboard() {
         onOpenChange={(open) => !open && setSelectedProposalForDetail(null)}
       >
         <SheetContent side="right" className="w-full sm:max-w-xl md:max-w-2xl lg:max-w-3xl data-[side=right]:w-full data-[side=right]:sm:max-w-xl data-[side=right]:md:max-w-2xl data-[side=right]:lg:max-w-3xl flex flex-col font-jakarta dark:bg-[#1c1c1e]">
-          <SheetHeader className="border-b border-gray-100 dark:border-white/10 p-5 pb-4 space-y-2">
+          <SheetHeader className="border-b border-border dark:border-border p-5 pb-4 space-y-2">
             <div className="flex items-center justify-between pr-8">
               <span className="text-xs font-semibold text-pup-maroon bg-red-50 dark:bg-red-950/40 px-3 py-1 rounded-full border border-red-100 dark:border-red-900/30">
                 Proposal #{selectedProposalForDetail?.id}
@@ -3280,13 +3274,13 @@ export default function StudentDashboard() {
           <div className="flex-1 overflow-y-auto p-5 space-y-5">
             {/* Event & Organization Info */}
             <div className="grid grid-cols-2 gap-3">
-              <div className="rounded-xl bg-gray-50 dark:bg-zinc-900/50 p-3 border border-gray-100 dark:border-zinc-800">
+              <div className="rounded-xl bg-gray-50 dark:bg-zinc-900/50 p-3 border border-border dark:border-border">
                 <span className="text-[11px] font-medium text-gray-400 dark:text-zinc-500 block mb-0.5">Organization</span>
                 <span className="text-xs font-semibold text-gray-800 dark:text-zinc-200 truncate block">
                   {selectedProposalForDetail?.organization_name || "—"}
                 </span>
               </div>
-              <div className="rounded-xl bg-gray-50 dark:bg-zinc-900/50 p-3 border border-gray-100 dark:border-zinc-800">
+              <div className="rounded-xl bg-gray-50 dark:bg-zinc-900/50 p-3 border border-border dark:border-border">
                 <span className="text-[11px] font-medium text-gray-400 dark:text-zinc-500 block mb-0.5">Event Date</span>
                 <span className="text-xs font-semibold text-gray-800 dark:text-zinc-200 block">
                   {selectedProposalForDetail?.event_date || "—"}
@@ -3295,13 +3289,13 @@ export default function StudentDashboard() {
             </div>
 
             {/* Attached PDF Proposal File */}
-            <div className="rounded-xl bg-gray-50 dark:bg-zinc-900/50 p-3.5 border border-gray-100 dark:border-zinc-800">
+            <div className="rounded-xl bg-gray-50 dark:bg-zinc-900/50 p-3.5 border border-border dark:border-border">
               <h4 className="text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-400 mb-2">
                 Attached Proposal Document
               </h4>
               <div
                 onClick={() => handleOpenPdfPreview(selectedProposalForDetail)}
-                className="flex items-center justify-between gap-3 bg-white dark:bg-zinc-800 p-2.5 rounded-lg border border-gray-200 dark:border-white/10 hover:border-pup-maroon/30 dark:hover:border-red-400/30 hover:bg-gray-50/50 dark:hover:bg-white/5 transition-colors cursor-pointer group"
+                className="flex items-center justify-between gap-3 bg-white dark:bg-zinc-800 p-2.5 rounded-lg border border-border dark:border-border hover:border-pup-maroon/30 dark:hover:border-red-400/30 hover:bg-gray-50/50 dark:hover:bg-white/5 transition-colors cursor-pointer group"
               >
                 <div className="flex items-center gap-2.5 min-w-0">
                   <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-red-50 text-pup-maroon dark:bg-red-950/40 dark:text-red-400 group-hover:bg-pup-maroon group-hover:text-white transition-colors">
@@ -3356,7 +3350,7 @@ export default function StudentDashboard() {
                       <div key={upd.id || idx} className="relative pl-7">
                         <div
                           className={cn(
-                            "absolute left-2.5 -translate-x-1/2 rounded-full border-2 border-white dark:border-zinc-900 shadow-xs",
+                            "absolute left-2.5 -translate-x-1/2 rounded-full border-2 border-white dark:border-border shadow-xs",
                             isConsecutiveSameStatus
                               ? "top-1.5 h-2.5 w-2.5 bg-gray-400 dark:bg-zinc-500"
                               : "top-1 h-3.5 w-3.5 bg-pup-maroon ring-2 ring-pup-maroon/20"
@@ -3375,7 +3369,7 @@ export default function StudentDashboard() {
                               {isConsecutiveSameStatus ? "Evaluation Follow-Up" : upd.status}
                             </span>
                             {isConsecutiveSameStatus && (
-                              <span className="text-[10px] font-medium text-gray-500 dark:text-zinc-400 bg-gray-100 dark:bg-zinc-800/80 px-1.5 py-0.5 rounded border border-gray-200/60 dark:border-white/5">
+                              <span className="text-[10px] font-medium text-gray-500 dark:text-zinc-400 bg-gray-100 dark:bg-zinc-800/80 px-1.5 py-0.5 rounded border border-border/60 dark:border-border">
                                 {upd.status}
                               </span>
                             )}
@@ -3401,12 +3395,12 @@ export default function StudentDashboard() {
             </div>
           </div>
 
-          <SheetFooter className="border-t border-gray-100 dark:border-white/10 p-4 justify-end">
+          <SheetFooter className="border-t border-border dark:border-border p-4 justify-end">
             <Button
               variant="outline"
               size="sm"
               onClick={() => setSelectedProposalForDetail(null)}
-              className="h-9 px-4 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+              className="h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
             >
               Close
             </Button>

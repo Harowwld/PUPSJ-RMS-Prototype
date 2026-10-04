@@ -8,17 +8,17 @@ export default function ModuleConfigSkeleton({ viewMode = "office" }) {
   return (
     <div className="flex flex-col gap-6 w-full animate-fade-up font-jakarta select-none">
       {/* ONE Single Card Container encapsulating Header, Toolbar, & Content */}
-      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none isolate">
+      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate">
         <PageHeader
           icon="ph-bold ph-squares-four"
           title="Department Features & Permissions"
           description="Turn system features on or off for each department."
           showBorder={false}
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
-          descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
+          descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
           actions={
             <div className="flex items-center gap-2">
-              <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-gray-200/60 dark:border-white/5">
+              <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-border/60 dark:border-border">
                 <Skeleton className="h-7 w-28 rounded-lg dark:bg-muted" />
                 <Skeleton className="h-7 w-28 rounded-lg dark:bg-muted" />
               </div>
@@ -28,7 +28,7 @@ export default function ModuleConfigSkeleton({ viewMode = "office" }) {
         />
 
         {/* Navigation Toolbar */}
-        <div className="border-t border-gray-100 dark:border-white/10 p-5 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
+        <div className="border-t border-border dark:border-border p-5 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
           <div className="flex items-center gap-6 h-9">
             <Skeleton className="h-5 w-20 rounded dark:bg-muted" />
             <Skeleton className="h-5 w-20 rounded dark:bg-muted" />
@@ -40,11 +40,11 @@ export default function ModuleConfigSkeleton({ viewMode = "office" }) {
         </div>
 
         {/* Content Section inside the single Card */}
-        <div className="overflow-hidden rounded-b-2xl border-t border-gray-100 dark:border-white/10 bg-white dark:bg-card flex flex-col flex-1 p-6">
+        <div className="overflow-hidden rounded-b-2xl border-t border-border dark:border-border bg-white dark:bg-card flex flex-col flex-1 p-6">
           {viewMode === "matrix" ? (
-            <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-white/10">
+            <div className="overflow-x-auto rounded-xl border border-border dark:border-border">
               <table className="w-full text-left text-xs">
-                <thead className="border-b border-gray-200 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/50">
+                <thead className="border-b border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/50">
                   <tr className="h-12">
                     <th className="p-4 pl-6 w-72">
                       <Skeleton className="h-3.5 w-32 dark:bg-muted" />
@@ -59,7 +59,7 @@ export default function ModuleConfigSkeleton({ viewMode = "office" }) {
                     ))}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100 dark:divide-white/5">
+                <tbody className="divide-y divide-border dark:divide-border">
                   {[1, 2, 3, 4, 5, 6].map((i) => (
                     <tr key={i} className="h-14">
                       <td className="p-4 pl-6">
@@ -88,7 +88,7 @@ export default function ModuleConfigSkeleton({ viewMode = "office" }) {
             <div className="flex flex-col gap-6">
               {/* Department Selector Carousel Skeleton */}
               <div className="flex flex-col gap-2.5">
-                <div className="flex items-center justify-between text-xs text-gray-500 dark:text-zinc-400 px-1">
+                <div className="flex items-center justify-between text-xs text-gray-900 dark:text-zinc-300 px-1">
                   <Skeleton className="h-3.5 w-36 rounded dark:bg-muted" />
                   <Skeleton className="h-3 w-64 rounded dark:bg-muted" />
                 </div>
@@ -109,7 +109,7 @@ export default function ModuleConfigSkeleton({ viewMode = "office" }) {
                   {[1, 2, 3].map((i) => (
                     <div
                       key={i}
-                      className="rounded-xl border border-gray-200/80 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-zinc-900/40 flex flex-col justify-between h-36"
+                      className="rounded-xl border border-border/80 bg-white p-5 shadow-xs dark:border-border dark:bg-zinc-900/40 flex flex-col justify-between h-36"
                     >
                       <div className="flex items-start justify-between">
                         <div className="flex items-center gap-3">
@@ -137,7 +137,7 @@ export default function ModuleConfigSkeleton({ viewMode = "office" }) {
                   {[1, 2, 3].map((i) => (
                     <div
                       key={i}
-                      className="rounded-xl border border-gray-200/80 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-zinc-900/40 flex flex-col justify-between h-36"
+                      className="rounded-xl border border-border/80 bg-white p-5 shadow-xs dark:border-border dark:bg-zinc-900/40 flex flex-col justify-between h-36"
                     >
                       <div className="flex items-start justify-between">
                         <div className="flex items-center gap-3">

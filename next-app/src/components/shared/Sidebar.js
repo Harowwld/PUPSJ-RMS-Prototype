@@ -51,7 +51,7 @@ export default function Sidebar({ open = true, items, activeKey, onSelect, onLog
     officeName,
     accent_color: accentColor,
   })
-  const defaultColor = isSystemAdmin ? "#0F172A" : (roleBranding.color || (isStaff ? "#EDBB00" : "#EA580C"))
+  const defaultColor = isSystemAdmin ? "#0F172A" : (roleBranding.color || (isStaff ? "#ffcb00" : "#ff9b11"))
   const activeColor = accentColor || roleBranding.color || defaultColor
   const activeForeground = (accentColor && accentColor !== roleBranding.color ? "#FFFFFF" : roleBranding.foreground) || "#FFFFFF"
   const staffIconColor = activeColor
@@ -153,7 +153,7 @@ export default function Sidebar({ open = true, items, activeKey, onSelect, onLog
                     data-width={`${(zoomNode / 6) * 100}%`}
                   ></div>
                   <div
-                    className="rms-style-left border-gray-800 dark:border-zinc-200 absolute -translate-x-1/2 w-[12px] h-[12px] rounded-full bg-white dark:bg-zinc-900 shadow-xs border-2"
+                    className="rms-style-left border-gray-800 dark:border-border absolute -translate-x-1/2 w-[12px] h-[12px] rounded-full bg-white dark:bg-zinc-900 shadow-xs border-2"
                     data-left={`${(zoomNode / 6) * 100}%`}
                   ></div>
                 </div>

@@ -1,3 +1,4 @@
+import ScrollIndicator from "@/components/shared/ScrollIndicator";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
@@ -37,6 +38,7 @@ export default function RootLayout({ children }) {
           enableSystem={false}
         >
           <DynamicFavicon />
+          <ScrollIndicator />
           <TooltipProvider>{children}</TooltipProvider>
           <Toaster position="top-center" />
         </ThemeProvider>

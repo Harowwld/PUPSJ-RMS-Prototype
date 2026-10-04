@@ -16,12 +16,12 @@ export default function TaxonomyTableSkeleton({
         "flex flex-col flex-1 isolate select-none animate-fade-up",
         embedded
           ? "w-full"
-          : "overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card"
+          : "overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card"
       )}
     >
       <div className="overflow-x-auto">
         <table className="min-w-full text-sm">
-          <thead className="sticky top-0 z-10 border-b border-gray-100 dark:border-white/10 bg-white dark:bg-card">
+          <thead className="sticky top-0 z-10 border-b border-border dark:border-border bg-white dark:bg-card">
             <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500 h-11">
               <th className="w-12 p-4 text-center">
                 <Skeleton className="h-4 w-4 rounded mx-auto dark:bg-muted" />
@@ -37,11 +37,11 @@ export default function TaxonomyTableSkeleton({
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100 dark:divide-white/5 bg-white dark:bg-card">
+          <tbody className="divide-y divide-border dark:divide-border bg-white dark:bg-card">
             {Array.from({ length: rowCount }).map((_, i) => (
               <tr
                 key={i}
-                className="h-[56px] border-b-[0.5px] border-gray-100 dark:border-white/10 last:border-b-0"
+                className="h-[56px] border-b-[0.5px] border-border dark:border-border last:border-b-0"
               >
                 {/* Checkbox */}
                 <td className="py-0 px-4 align-middle text-center">
@@ -83,7 +83,7 @@ export default function TaxonomyTableSkeleton({
 
       {/* Pagination Footer */}
       {showPagination && (
-        <div className="flex items-center justify-between border-t border-gray-100 dark:border-white/10 bg-white dark:bg-card p-4 px-6 rounded-b-2xl mt-auto">
+        <div className="flex items-center justify-between border-t border-border dark:border-border bg-white dark:bg-card p-4 px-6 rounded-b-2xl mt-auto">
           <Skeleton className="h-3.5 w-32 rounded dark:bg-muted" />
           <div className="flex items-center gap-2">
             <Skeleton className="h-8 w-16 rounded-xl dark:bg-muted" />

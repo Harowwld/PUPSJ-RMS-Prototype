@@ -8,12 +8,12 @@ export default function DocumentRequestsTableSkeleton({ rowCount = 7, embedded =
     <div className={cn(
       "flex flex-col flex-1 w-full isolate select-none font-jakarta",
       embedded
-        ? "overflow-hidden rounded-b-2xl border-t border-gray-100 dark:border-white/10"
-        : "overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card"
+        ? "overflow-hidden rounded-b-2xl border-t border-border dark:border-border"
+        : "overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card"
     )}>
       <div className="overflow-x-auto">
         <table className="min-w-full text-sm table-fixed">
-          <thead className="sticky top-0 z-10 border-b border-gray-200 bg-white dark:bg-card dark:border-white/10">
+          <thead className="sticky top-0 z-10 border-b border-border bg-white dark:bg-card dark:border-border">
             <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500 h-11">
               <th className="p-4 w-20">
                 <Skeleton className="h-3.5 w-8 dark:bg-muted" />
@@ -38,11 +38,11 @@ export default function DocumentRequestsTableSkeleton({ rowCount = 7, embedded =
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100 dark:divide-white/5 bg-white dark:bg-card">
+          <tbody className="divide-y divide-border dark:divide-border bg-white dark:bg-card">
             {Array.from({ length: rowCount }).map((_, i) => (
               <tr
                 key={i}
-                className="h-[60px] border-b-[0.5px] border-gray-100 dark:border-white/10 last:border-b-0"
+                className="h-[60px] border-b-[0.5px] border-border dark:border-border last:border-b-0"
               >
                 {/* ID */}
                 <td className="p-4 align-middle">
@@ -105,7 +105,7 @@ export default function DocumentRequestsTableSkeleton({ rowCount = 7, embedded =
       </div>
 
       {/* Pagination Footer */}
-      <div className="flex items-center justify-between border-t border-gray-100 bg-white p-4 px-6 dark:border-white/10 dark:bg-card mt-auto rounded-b-2xl">
+      <div className="flex items-center justify-between border-t border-border bg-white p-4 px-6 dark:border-border dark:bg-card mt-auto rounded-b-2xl">
         <Skeleton className="h-3.5 w-36 rounded dark:bg-muted" />
         <div className="flex items-center gap-2">
           <Skeleton className="h-8 w-16 rounded-lg dark:bg-muted" />

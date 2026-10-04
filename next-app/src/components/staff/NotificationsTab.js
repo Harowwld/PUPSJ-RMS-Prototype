@@ -372,25 +372,21 @@ export default function NotificationsTab({
     <TooltipProvider delayDuration={200}>
       <div className="font-jakarta w-full flex flex-1 flex-col h-auto min-h-0 gap-6 focus:outline-none animate-fade-up">
         {/* ONE Single Card Container encapsulating Header, Toolbar, Active Filters, Table & Pagination */}
-        <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none isolate font-jakarta mb-4 min-h-0 flex-1">
+        <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4 min-h-0 flex-1">
           {/* 1. Page Header */}
           <PageHeader
             icon="ph-bell"
             title={
               <div className="flex items-center gap-[6px]">
-                System Notifications
-                {activeTab === "archive" && (
-                  <span className="text-[12px] font-normal text-emerald-600 dark:text-emerald-400">
-                    · Restore Mode
-                  </span>
-                )}
+                Notifications
+                
               </div>
             }
             description="Real-time updates on document review decisions and system alerts."
             showBorder={false}
             className="p-6"
             titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
-            descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
+            descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
             actions={
               <div className="flex items-center gap-2">
                 <RefreshButton
@@ -407,7 +403,7 @@ export default function NotificationsTab({
                     size="sm"
                     disabled={unreadCount <= 0 || activeTab === "archive"}
                     onClick={markAllRead}
-                    className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-40"
+                    className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-40"
                   >
                     <HugeIcon  className="ph-bold ph-checks mr-1.5"></HugeIcon>
                     Read
@@ -417,7 +413,7 @@ export default function NotificationsTab({
                     size="sm"
                     disabled={total <= 0 || activeTab === "archive"}
                     onClick={markAllUnread}
-                    className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-40"
+                    className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-40"
                   >
                     <HugeIcon  className="ph-bold ph-envelopes mr-1.5"></HugeIcon>
                     Unread
@@ -428,7 +424,7 @@ export default function NotificationsTab({
           />
 
           {/* 2. Navigation Toolbar */}
-          <div className="border-t border-gray-100 dark:border-white/10 p-5 flex flex-wrap items-center justify-between gap-3 bg-gray-50/40 dark:bg-zinc-900/30">
+          <div className="border-t border-border dark:border-border p-5 flex flex-wrap items-center justify-between gap-3 bg-gray-50/40 dark:bg-zinc-900/30">
             {/* Left: Underline Tabs */}
             <div className="flex items-center gap-6 select-none overflow-x-auto">
               <button
@@ -468,7 +464,7 @@ export default function NotificationsTab({
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search student, name, file..."
-                  className="h-9 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 pl-8 pr-16 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
+                  className="h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 pl-8 pr-16 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
                 />
                 <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] text-gray-400 dark:text-zinc-500">
                   {total > 0 ? `${total.toLocaleString()}` : "0"}
@@ -492,19 +488,19 @@ export default function NotificationsTab({
           <ActiveFilterChips
             chips={activeChips}
             onClearAll={handleClearFilters}
-            className="border-t border-gray-100 dark:border-white/10 px-6 py-2.5"
+            className="border-t border-border dark:border-border px-6 py-2.5"
           />
 
           {/* 4. Table / Skeleton / Empty State */}
           {isLoading && !isRefreshing ? (
-            <div className="flex-1 flex flex-col min-h-0 border-t border-gray-100 dark:border-white/10">
+            <div className="flex-1 flex flex-col min-h-0 border-t border-border dark:border-border">
               <NotificationsTableSkeleton embedded={true} />
             </div>
           ) : error ? (
-            <div className="flex-1 flex min-h-[360px] flex-col items-center justify-center p-6 border-t border-gray-100 dark:border-white/10 rounded-b-2xl">
-              <Empty className="flex h-[360px] flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400">
+            <div className="flex-1 flex min-h-[360px] flex-col items-center justify-center p-6 border-t border-border dark:border-border rounded-b-2xl">
+              <Empty className="flex h-[360px] flex-col items-center justify-center border-0 text-center text-gray-900 dark:text-zinc-300">
                 <EmptyHeader className="flex flex-col items-center gap-0">
-                  <EmptyMedia className="mb-4 flex h-16 w-16 rotate-3 items-center justify-center rounded-2xl border border-gray-200/80 bg-white shadow-sm dark:border-white/10 dark:bg-zinc-800">
+                  <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border border-border/80 bg-white shadow-sm dark:border-border dark:bg-zinc-800">
                     <HugeIcon  className="ph-duotone ph-warning-circle text-3xl text-pup-maroon dark:text-primary" />
                   </EmptyMedia>
                   <EmptyTitle className="text-base font-semibold text-gray-900 dark:text-zinc-50">
@@ -517,9 +513,9 @@ export default function NotificationsTab({
               </Empty>
             </div>
           ) : (
-            <div className="overflow-x-auto border-t border-gray-100 dark:border-white/10 flex-1">
+            <div className="overflow-x-auto border-t border-border dark:border-border flex-1">
               <table className="min-w-full table-fixed text-sm">
-                <thead className="sticky top-0 z-10 border-b-[0.5px] border-black/10 dark:border-white/10 bg-white dark:bg-card">
+                <thead className="sticky top-0 z-10 border-b-[0.5px] border-black/10 dark:border-border bg-white dark:bg-card">
                   <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">
                     <th className="w-32 p-4">
                       <button
@@ -643,14 +639,14 @@ export default function NotificationsTab({
                     <th className="w-40 p-4 text-right text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100 dark:divide-white/10">
+                <tbody className="divide-y divide-border dark:divide-border">
                   {items.length === 0 ? (
                     <tr className="border-0 hover:bg-transparent">
                       <td colSpan={8} className="border-0 p-0">
                         <Empty className="flex h-[400px] flex-col items-center justify-center border-0 bg-transparent text-center">
                           <EmptyHeader className="flex flex-col items-center gap-0">
                             <div className="relative mb-4">
-                              <EmptyMedia className="flex h-16 w-16 rotate-3 items-center justify-center rounded-2xl border border-gray-200/80 bg-white shadow-sm dark:border-white/10 dark:bg-zinc-800">
+                              <EmptyMedia className="flex h-16 w-16 items-center justify-center rounded-2xl border border-border/80 bg-white shadow-sm dark:border-border dark:bg-zinc-800">
                                 <HugeIcon 
                                   className={cn(
                                     "ph-duotone text-3xl text-gray-400 dark:text-zinc-500",
@@ -670,7 +666,7 @@ export default function NotificationsTab({
                                 ? "No archived notifications"
                                 : "No notifications found"}
                             </EmptyTitle>
-                            <EmptyDescription className="mt-1 max-w-sm text-xs font-normal text-gray-500 dark:text-zinc-400">
+                            <EmptyDescription className="mt-1 max-w-sm text-xs font-normal text-gray-900 dark:text-zinc-300">
                               {hasActiveFilters
                                 ? "No notifications match your current filter criteria. Try resetting your search or filters."
                                 : activeTab === "archive"
@@ -682,7 +678,7 @@ export default function NotificationsTab({
                                 variant="outline"
                                 onClick={handleClearFilters}
                                 title="Reset Filters"
-                                className="mt-6 flex h-10 items-center justify-center rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
+                                className="mt-6 flex h-10 items-center justify-center rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                               >
                                 Reset
                               </Button>
@@ -700,7 +696,7 @@ export default function NotificationsTab({
                         <tr
                           key={n.id}
                           className={cn(
-                            "group h-[54px] border-b-[0.5px] border-gray-100 dark:border-white/10 last:border-b-0 transition-all duration-fast hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none",
+                            "group h-[54px] border-b-[0.5px] border-border dark:border-border last:border-b-0 transition-all duration-fast hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none",
                             isUnread && "bg-amber-50/60 dark:bg-amber-950/20"
                           )}
                         >
@@ -857,7 +853,7 @@ export default function NotificationsTab({
 
           {/* 5. Pagination Footer */}
           {!isLoading && !error && total > 0 && (
-            <div className="flex flex-wrap items-center justify-between gap-4 border-t border-gray-100 bg-white p-4 px-6 rounded-b-2xl dark:border-white/10 dark:bg-card">
+            <div className="flex flex-wrap items-center justify-between gap-4 border-t border-border bg-white p-4 px-6 rounded-b-2xl dark:border-border dark:bg-card">
               <div className="flex items-center gap-8">
                 <div className="flex items-center gap-6 text-[12px] font-normal text-gray-400 dark:text-zinc-500">
                   <span>
@@ -874,7 +870,7 @@ export default function NotificationsTab({
                     ) : null}
                   </span>
 
-                  <div className="flex items-center gap-1.5 border-l border-gray-200 pl-6 dark:border-white/10">
+                  <div className="flex items-center gap-1.5 border-l border-border pl-6 dark:border-border">
                     <span className="text-[12px] text-gray-400 dark:text-zinc-500">Rows:</span>
                     <div className="flex items-center gap-1">
                       {[10, 20, 50, 100].map((size) => (
@@ -912,7 +908,7 @@ export default function NotificationsTab({
                   Prev
                 </button>
 
-                <div className="flex h-8 min-w-[32px] items-center justify-center rounded-xl border border-gray-200/80 bg-white px-2.5 text-[12px] font-semibold text-gray-900 dark:border-white/10 dark:bg-card dark:text-zinc-100">
+                <div className="flex h-8 min-w-[32px] items-center justify-center rounded-xl border border-border/80 bg-white px-2.5 text-[12px] font-semibold text-gray-900 dark:border-border dark:bg-card dark:text-zinc-100">
                   {displayPage}
                 </div>
 
@@ -943,14 +939,14 @@ export default function NotificationsTab({
             }
           }}
         >
-          <DialogContent className="flex h-[90vh] w-[96vw] max-w-[96vw] flex-col overflow-hidden border border-gray-200 bg-gray-100 p-0 shadow-2xl transition-all duration-normal xl:max-w-[1400px] rounded-2xl dark:border-white/10 dark:bg-muted gap-0">
-            <DialogHeader className="shrink-0 border-b border-gray-100 bg-white p-6 pb-4 dark:border-white/10 dark:bg-card text-left">
+          <DialogContent className="flex h-[90vh] w-[96vw] max-w-[96vw] flex-col overflow-hidden border border-border bg-gray-100 p-0 shadow-2xl transition-all duration-normal xl:max-w-[1400px] rounded-2xl dark:border-border dark:bg-muted gap-0">
+            <DialogHeader className="shrink-0 border-b border-border bg-white p-6 pb-4 dark:border-border dark:bg-card text-left">
               <div className="flex items-start gap-4">
                 <div className="min-w-0 pr-10">
                   <DialogTitle className="text-[16px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
                     Document Review: {selectedNotif?.doc_type || "Loading..."}
                   </DialogTitle>
-                  <DialogDescription className="mt-1 text-[13px] font-normal text-gray-500 dark:text-zinc-400">
+                  <DialogDescription className="mt-1 text-[13px] font-normal text-gray-900 dark:text-zinc-300">
                     Viewing review details for student {selectedNotif?.student_no}.
                   </DialogDescription>
                 </div>
@@ -980,7 +976,7 @@ export default function NotificationsTab({
               )}
 
               {/* Left: Document Preview */}
-              <div className="flex-1 bg-white border-r border-gray-200 dark:bg-zinc-900 dark:border-white/10 relative">
+              <div className="flex-1 bg-white border-r border-border dark:bg-zinc-900 dark:border-border relative">
                 {selectedNotif ? (
                   <iframe
                     src={`/api/documents/${selectedNotif.id}#toolbar=0&navpanes=0`}
@@ -997,7 +993,7 @@ export default function NotificationsTab({
               {/* Right: metadata & decision */}
               <div className="w-[400px] hidden xl:flex flex-col overflow-y-auto p-8 space-y-10 bg-white dark:bg-card">
                 <div>
-                  <h4 className="text-[11px] font-semibold text-gray-500 uppercase tracking-widest border-b border-gray-100 pb-2 dark:text-zinc-400 dark:border-white/10">Student Record</h4>
+                  <h4 className="text-[11px] font-semibold text-gray-500 uppercase tracking-widest border-b border-border pb-2 dark:text-zinc-400 dark:border-border">Student Record</h4>
                   <div className="mt-5 space-y-5">
                     <div>
                       <label className="text-[10px] font-semibold tracking-widest text-gray-400 uppercase">Student Name</label>
@@ -1023,7 +1019,7 @@ export default function NotificationsTab({
                 </div>
 
                 <div>
-                  <h4 className="text-[11px] font-semibold text-gray-500 tracking-widest border-b border-gray-100 pb-2 dark:text-zinc-400 dark:border-white/10">Review Summary</h4>
+                  <h4 className="text-[11px] font-semibold text-gray-500 tracking-widest border-b border-border pb-2 dark:text-zinc-400 dark:border-border">Review Summary</h4>
                   <div className="mt-5 space-y-5">
                     <div>
                       <label className="text-[10px] font-semibold tracking-widest text-gray-400">Approval Status</label>
@@ -1080,7 +1076,7 @@ export default function NotificationsTab({
               </div>
             </div>
 
-            <div className="flex shrink-0 justify-between items-center gap-3 border-t border-gray-100 bg-white p-4 dark:border-white/10 dark:bg-card">
+            <div className="flex shrink-0 justify-between items-center gap-3 border-t border-border bg-white p-4 dark:border-border dark:bg-card">
               <div className="flex items-center gap-3">
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -1089,7 +1085,7 @@ export default function NotificationsTab({
                       size="icon"
                       onClick={() => setIsFullscreen(!isFullscreen)}
                       className={cn(
-                        "h-10 w-10 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-card transition-all hover:bg-gray-50 dark:hover:bg-white/10 shadow-xs cursor-pointer active:scale-95",
+                        "h-10 w-10 rounded-xl border border-border dark:border-border bg-white dark:bg-card transition-all hover:bg-gray-50 dark:hover:bg-white/10 shadow-xs cursor-pointer active:scale-95",
                         isFullscreen && "bg-pup-maroon dark:bg-red-600 text-white hover:bg-pup-darkMaroon border-pup-darkMaroon"
                       )}
                     >
@@ -1110,7 +1106,7 @@ export default function NotificationsTab({
                         await handleAction(selectedNotif.id, "markUnread")
                         setDetailModalOpen(false)
                       }}
-                      className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-amber-50 hover:text-amber-600 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                      className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-amber-50 hover:text-amber-600 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                     >
                       <HugeIcon  className="ph-bold ph-envelope mr-2"></HugeIcon>
                       Unread
@@ -1122,7 +1118,7 @@ export default function NotificationsTab({
                         await handleAction(selectedNotif?.id, "markRead")
                         setDetailModalOpen(false)
                       }}
-                      className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-emerald-50 hover:text-emerald-600 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                      className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-emerald-50 hover:text-emerald-600 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                     >
                       <HugeIcon  className="ph-bold ph-checks mr-2"></HugeIcon>
                       Read
@@ -1135,7 +1131,7 @@ export default function NotificationsTab({
                 <Button
                   variant="outline"
                   onClick={() => setDetailModalOpen(false)}
-                  className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                  className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                 >
                   Close
                 </Button>

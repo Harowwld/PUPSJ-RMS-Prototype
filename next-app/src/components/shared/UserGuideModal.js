@@ -27,7 +27,7 @@ export default function UserGuideModal({ open, onClose }) {
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-5xl md:max-w-6xl w-[95vw] p-0 overflow-hidden bg-white border border-gray-200 shadow-2xl flex flex-col max-h-[90vh] rounded-2xl dark:bg-card dark:border-white/10">
+      <DialogContent className="sm:max-w-5xl md:max-w-6xl w-[95vw] p-0 overflow-hidden bg-white border border-border shadow-2xl flex flex-col max-h-[90vh] rounded-2xl dark:bg-card dark:border-border">
         <Tabs
           defaultValue="general"
           value={activeTab}
@@ -36,7 +36,7 @@ export default function UserGuideModal({ open, onClose }) {
           className="flex flex-col h-full overflow-hidden lg:flex-row"
         >
           {/* Sidebar Navigation */}
-          <aside className="w-full lg:w-64 bg-transparent border-b lg:border-b-0 lg:border-r border-gray-200 p-4 shrink-0 dark:bg-transparent dark:border-white/10">
+          <aside className="w-full lg:w-64 bg-transparent border-b lg:border-b-0 lg:border-r border-border p-4 shrink-0 dark:bg-transparent dark:border-border">
             <div className="mb-6 px-2 hidden lg:block">
               <h2 className="text-xl font-semibold text-pup-maroon dark:text-primary tracking-tight">User Guide</h2>
               <p className="text-[10px] text-gray-500 font-semibold tracking-widest mt-1 dark:text-zinc-400">Documentation</p>
@@ -58,7 +58,7 @@ export default function UserGuideModal({ open, onClose }) {
 
           {/* Main Content Area */}
           <div className="flex-1 flex flex-col overflow-hidden">
-            <DialogHeader className="p-6 border-b border-gray-100 shrink-0 bg-white dark:border-white/10 dark:bg-card">
+            <DialogHeader className="p-6 border-b border-border shrink-0 bg-white dark:border-border dark:bg-card">
               <div className="flex items-center justify-between">
                 <div>
                   <DialogTitle className="text-xl font-semibold text-gray-900 tracking-tight dark:text-zinc-50">
@@ -102,7 +102,7 @@ export default function UserGuideModal({ open, onClose }) {
                         { title: "Efficiency", icon: "ph-lightning", desc: "OCR technology extracts data automatically to reduce manual entry." },
                         { title: "Organization", icon: "ph-layout", desc: "Digital records mirror physical storage for direct retrieval." }
                       ].map((item, i) => (
-                        <div key={i} className="p-4 rounded-brand border border-gray-200 bg-gray-50 dark:border-white/10 dark:bg-white/5">
+                        <div key={i} className="p-4 rounded-brand border border-border bg-gray-50 dark:border-border dark:bg-white/5">
                           <HugeIcon  className={`ph-bold ${item.icon} text-pup-maroon dark:text-primary text-xl mb-3 block`}></HugeIcon>
                           <h5 className="font-semibold text-gray-900 text-sm dark:text-zinc-50">{item.title}</h5>
                           <p className="text-xs text-gray-600 mt-2 font-medium dark:text-zinc-300">{item.desc}</p>
@@ -116,12 +116,12 @@ export default function UserGuideModal({ open, onClose }) {
               <TabsContent value="staff" className="p-8 m-0 border-0 focus-visible:ring-0">
                 <div className="animate-fade-in space-y-8">
                   <section className="space-y-4">
-                    <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2 border-b border-gray-100 pb-2 dark:text-zinc-50 dark:border-white/10">
+                    <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2 border-b border-border pb-2 dark:text-zinc-50 dark:border-border">
                       <HugeIcon  className="ph-bold ph-magnifying-glass text-pup-maroon dark:text-primary"></HugeIcon>
                       Document Retrieval
                     </h3>
-                    <div className="bg-white rounded-brand border border-gray-200 overflow-hidden shadow-sm dark:bg-card dark:border-white/10">
-                      <div className="p-4 bg-gray-50 border-b border-gray-200 flex items-center justify-between dark:bg-card dark:border-white/10">
+                    <div className="bg-white rounded-brand border border-border overflow-hidden shadow-sm dark:bg-card dark:border-border">
+                      <div className="p-4 bg-gray-50 border-b border-border flex items-center justify-between dark:bg-card dark:border-border">
                         <span className="text-xs font-semibold text-gray-700 dark:text-zinc-200">Workflow</span>
                         <span className="px-2 py-0.5 rounded bg-pup-maroon text-[9px] font-semibold text-white tracking-widest">Standard</span>
                       </div>
@@ -151,19 +151,19 @@ export default function UserGuideModal({ open, onClose }) {
                   </section>
 
                   <section className="space-y-4">
-                    <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2 border-b border-gray-100 pb-2 dark:text-zinc-50 dark:border-white/10">
+                    <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2 border-b border-border pb-2 dark:text-zinc-50 dark:border-border">
                       <HugeIcon  className="ph-bold ph-scan text-pup-maroon dark:text-primary"></HugeIcon>
                       Scanning & Digitization
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="p-4 rounded-brand border border-gray-200 bg-white flex gap-4 dark:border-white/10 dark:bg-card">
+                      <div className="p-4 rounded-brand border border-border bg-white flex gap-4 dark:border-border dark:bg-card">
                         <HugeIcon  className="ph-bold ph-file-pdf text-xl text-red-500 shrink-0"></HugeIcon>
                         <div>
                           <h5 className="font-semibold text-gray-900 text-sm dark:text-zinc-50">Batch Scanning</h5>
                           <p className="text-xs text-gray-600 mt-1 font-medium dark:text-zinc-300">Use the <strong>Scan/Upload</strong> tab to upload documents. OCR will automatically attempt to read the Student Number.</p>
                         </div>
                       </div>
-                      <div className="p-4 rounded-brand border border-gray-200 bg-white flex gap-4 dark:border-white/10 dark:bg-card">
+                      <div className="p-4 rounded-brand border border-border bg-white flex gap-4 dark:border-border dark:bg-card">
                         <HugeIcon  className="ph-bold ph-shield-check text-xl text-green-500 shrink-0"></HugeIcon>
                         <div>
                           <h5 className="font-semibold text-gray-900 text-sm dark:text-zinc-50">Verification</h5>
@@ -178,7 +178,7 @@ export default function UserGuideModal({ open, onClose }) {
               <TabsContent value="admin" className="p-8 m-0 border-0 focus-visible:ring-0">
                 <div className="animate-fade-in space-y-8">
                   <section className="space-y-4">
-                    <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2 border-b border-gray-100 pb-2 dark:text-zinc-50 dark:border-white/10">
+                    <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2 border-b border-border pb-2 dark:text-zinc-50 dark:border-border">
                       <HugeIcon  className="ph-bold ph-layout text-pup-maroon dark:text-primary"></HugeIcon>
                       Storage Configuration
                     </h3>
@@ -194,19 +194,19 @@ export default function UserGuideModal({ open, onClose }) {
                   </section>
 
                   <section className="space-y-4">
-                    <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2 border-b border-gray-100 pb-2 dark:text-zinc-50 dark:border-white/10">
+                    <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2 border-b border-border pb-2 dark:text-zinc-50 dark:border-border">
                       <HugeIcon  className="ph-bold ph-activity text-pup-maroon dark:text-primary"></HugeIcon>
                       Accountability & Security
                     </h3>
                     <div className="space-y-3">
-                      <div className="flex items-start gap-4 p-4 rounded-brand border border-gray-200 bg-white dark:border-white/10 dark:bg-card">
+                      <div className="flex items-start gap-4 p-4 rounded-brand border border-border bg-white dark:border-border dark:bg-card">
                         <HugeIcon  className="ph-bold ph-list-magnifying-glass text-xl text-gray-600 shrink-0 dark:text-zinc-300"></HugeIcon>
                         <div>
                           <h5 className="font-semibold text-gray-900 text-sm dark:text-zinc-50">Audit Logs</h5>
                           <p className="text-xs text-gray-600 mt-1 font-medium dark:text-zinc-300">Every action (login, upload, delete) is tracked by IP address and timestamp. Use the export feature for compliance reporting.</p>
                         </div>
                       </div>
-                      <div className="flex items-start gap-4 p-4 rounded-brand border border-gray-200 bg-white dark:border-white/10 dark:bg-card">
+                      <div className="flex items-start gap-4 p-4 rounded-brand border border-border bg-white dark:border-border dark:bg-card">
                         <HugeIcon  className="ph-bold ph-database text-xl text-gray-600 shrink-0 dark:text-zinc-300"></HugeIcon>
                         <div>
                           <h5 className="font-semibold text-gray-900 text-sm dark:text-zinc-50">Backups</h5>
@@ -219,11 +219,11 @@ export default function UserGuideModal({ open, onClose }) {
               </TabsContent>
             </div>
 
-            <div className="p-4 bg-gray-50 border-t border-gray-100 flex justify-end shrink-0 gap-3 dark:bg-card dark:border-white/10">
+            <div className="p-4 bg-gray-50 border-t border-border flex justify-end shrink-0 gap-3 dark:bg-card dark:border-border">
               <Button
                 variant="outline"
                 onClick={onClose}
-                className="px-6 h-11 border-gray-300 font-semibold rounded-brand dark:border-white/10"
+                className="px-6 h-11 border-border font-semibold rounded-brand dark:border-border"
               >
                 Close
               </Button>

@@ -51,7 +51,7 @@ export default function FloatingActionBar({
               size="sm"
               onClick={handleCancel}
               title="Deselect All Selected Items"
-              className="flex h-[36px] items-center justify-center rounded-xl px-4 text-[13px] font-medium border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all whitespace-nowrap"
+              className="flex h-[36px] items-center justify-center rounded-xl px-4 text-[13px] font-medium border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all whitespace-nowrap"
             >
               Deselect
             </Button>
@@ -70,7 +70,7 @@ export default function FloatingActionBar({
                   ? "btn-brand-green !text-white text-white"
                   : act.variant === "warning"
                   ? "bg-amber-600 hover:bg-amber-700 !text-white text-white"
-                  : "border border-black/15 bg-white text-[#111111] hover:bg-black/[0.02] font-normal dark:border-white/15 dark:bg-zinc-800 dark:text-zinc-100 dark:hover:bg-zinc-700/50"
+                  : "border border-black/15 bg-white text-[#111111] hover:bg-black/[0.02] font-normal dark:border-border dark:bg-zinc-800 dark:text-zinc-100 dark:hover:bg-zinc-700/50"
               )}
             >
               {act.label}
@@ -91,7 +91,7 @@ export default function FloatingActionBar({
               size="sm"
               onClick={handleCancel}
               title="Deselect All Selected Items"
-              className="flex h-[36px] items-center justify-center rounded-xl px-4 text-[13px] font-medium border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all whitespace-nowrap"
+              className="flex h-[36px] items-center justify-center rounded-xl px-4 text-[13px] font-medium border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all whitespace-nowrap"
             >
               Deselect
             </Button>
@@ -111,7 +111,7 @@ export default function FloatingActionBar({
             size="sm"
             onClick={handleCancel}
             title="Deselect All Selected Items"
-            className="flex h-[36px] items-center justify-center rounded-xl px-4 text-[13px] font-medium border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all whitespace-nowrap"
+            className="flex h-[36px] items-center justify-center rounded-xl px-4 text-[13px] font-medium border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all whitespace-nowrap"
           >
             Deselect
           </Button>
@@ -129,7 +129,7 @@ export default function FloatingActionBar({
                 ? "btn-brand-green !text-white text-white"
                 : actionVariant === "warning"
                 ? "bg-amber-600 hover:bg-amber-700 !text-white text-white"
-                : "border border-black/15 bg-white text-[#111111] hover:bg-black/[0.02] font-normal dark:border-white/15 dark:bg-zinc-800 dark:text-zinc-100 dark:hover:bg-zinc-700/50"
+                : "border border-black/15 bg-white text-[#111111] hover:bg-black/[0.02] font-normal dark:border-border dark:bg-zinc-800 dark:text-zinc-100 dark:hover:bg-zinc-700/50"
             )}
           >
             {actionLabel}
@@ -141,7 +141,7 @@ export default function FloatingActionBar({
 
   return createPortal(
     <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 animate-in fade-in-0 slide-in-from-bottom-3 duration-200">
-      <div className="flex min-w-[320px] w-fit items-center gap-3 rounded-2xl border border-black/[0.12] dark:border-white/10 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md py-[10px] px-[16px] shadow-xl">
+      <div className="flex min-w-[320px] w-fit items-center gap-3 rounded-2xl border border-black/[0.12] dark:border-border bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md py-[10px] px-[16px] shadow-xl">
         {/* Count Label (Plain text, no red circle badge, no background pill) */}
         <span className="text-[13px] font-medium text-[#111111] dark:text-zinc-100 whitespace-nowrap">
           {count} selected

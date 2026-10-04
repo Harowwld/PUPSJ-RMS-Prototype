@@ -7,7 +7,7 @@ export default function RegistrarODRSSkeleton() {
   return (
     <div className="flex flex-col h-full gap-4 animate-fade-up font-jakarta select-none">
       {/* Top Header Card Skeleton */}
-      <Card className="rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none overflow-hidden p-6 flex items-center justify-between">
+      <Card className="rounded-brand border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none overflow-hidden p-6 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Skeleton className="h-10 w-10 rounded-xl dark:bg-muted" />
           <div className="space-y-2">
@@ -21,8 +21,8 @@ export default function RegistrarODRSSkeleton() {
       {/* 2-Column Split: Queue & Ticket Details Inspector */}
       <div className="grid flex-1 gap-4 lg:grid-cols-[1fr_360px]">
         {/* Left: Request Queue */}
-        <section className="rounded-brand border border-gray-200 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-card flex flex-col">
-          <div className="flex items-center justify-between pb-3 border-b border-gray-100 dark:border-white/5 mb-4">
+        <section className="rounded-brand border border-border bg-white p-5 shadow-sm dark:border-border dark:bg-card flex flex-col">
+          <div className="flex items-center justify-between pb-3 border-b border-border dark:border-border mb-4">
             <Skeleton className="h-4 w-32 rounded dark:bg-muted" />
             <Skeleton className="h-5 w-16 rounded-full dark:bg-muted" />
           </div>
@@ -31,7 +31,7 @@ export default function RegistrarODRSSkeleton() {
             {Array.from({ length: 4 }).map((_, i) => (
               <div
                 key={i}
-                className="w-full rounded-brand border border-gray-200 dark:border-zinc-800 p-3.5 space-y-2"
+                className="w-full rounded-brand border border-border dark:border-border p-3.5 space-y-2"
               >
                 <div className="flex items-center justify-between gap-2">
                   <Skeleton className="h-4 w-36 rounded dark:bg-muted" />
@@ -51,9 +51,9 @@ export default function RegistrarODRSSkeleton() {
         </section>
 
         {/* Right: Inspector Aside */}
-        <aside className="rounded-brand border border-gray-200 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-card flex flex-col justify-between">
+        <aside className="rounded-brand border border-border bg-white p-5 shadow-sm dark:border-border dark:bg-card flex flex-col justify-between">
           <div>
-            <div className="pb-3 border-b border-gray-100 dark:border-white/5 mb-4 space-y-2">
+            <div className="pb-3 border-b border-border dark:border-border mb-4 space-y-2">
               <Skeleton className="h-2.5 w-24 rounded dark:bg-muted" />
               <Skeleton className="h-5 w-48 rounded dark:bg-muted" />
               <div className="flex items-center gap-2">

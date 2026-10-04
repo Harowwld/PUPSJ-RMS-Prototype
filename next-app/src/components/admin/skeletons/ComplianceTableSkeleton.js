@@ -9,12 +9,12 @@ export default function ComplianceTableSkeleton({ rowCount = 6, embedded = false
       className={cn(
         "overflow-hidden flex flex-col flex-1 isolate select-none",
         embedded
-          ? "border-t border-gray-100 dark:border-white/10 rounded-b-2xl"
-          : "rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card"
+          ? "border-t border-border dark:border-border rounded-b-2xl"
+          : "rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card"
       )}
     >
       {/* Table Toolbar Header */}
-      <div className="flex items-center justify-between px-6 py-3.5 border-b border-gray-100 dark:border-white/10 bg-gray-50/40 dark:bg-zinc-900/30">
+      <div className="flex items-center justify-between px-6 py-3.5 border-b border-border dark:border-border bg-gray-50/40 dark:bg-zinc-900/30">
         <div className="flex items-center gap-2.5">
           <Skeleton className="h-4 w-32 rounded dark:bg-muted" />
           <Skeleton className="h-3 w-16 rounded dark:bg-muted" />
@@ -23,7 +23,7 @@ export default function ComplianceTableSkeleton({ rowCount = 6, embedded = false
 
       <div className="overflow-x-auto">
         <table className="min-w-full text-sm">
-          <thead className="sticky top-0 z-10 bg-white dark:bg-card border-b border-gray-100 dark:border-white/5">
+          <thead className="sticky top-0 z-10 bg-white dark:bg-card border-b border-border dark:border-border">
             <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500 h-11">
               <th className="p-4 px-6 min-w-[240px]">
                 <Skeleton className="h-3.5 w-24 dark:bg-muted" />
@@ -39,11 +39,11 @@ export default function ComplianceTableSkeleton({ rowCount = 6, embedded = false
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100 dark:divide-white/5 bg-white dark:bg-card">
+          <tbody className="divide-y divide-border dark:divide-border bg-white dark:bg-card">
             {Array.from({ length: rowCount }).map((_, i) => (
               <tr
                 key={i}
-                className="h-[54px] border-b-[0.5px] border-gray-100 dark:border-white/10 last:border-b-0"
+                className="h-[54px] border-b-[0.5px] border-border dark:border-border last:border-b-0"
               >
                 {/* Program */}
                 <td className="py-2 px-6 align-middle">

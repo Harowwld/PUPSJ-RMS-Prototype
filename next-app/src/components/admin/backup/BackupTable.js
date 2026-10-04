@@ -68,13 +68,13 @@ export default function BackupTable({
         )}
       >
         <table className={cn("min-w-full text-sm", sortedAndPaginatedBackups.length === 0 && "h-full")}>
-          <thead className="sticky top-0 z-10 border-b-[0.5px] border-black/10 dark:border-white/10 bg-white dark:bg-card">
+          <thead className="sticky top-0 z-10 border-b-[0.5px] border-black/10 dark:border-border bg-white dark:bg-card">
             <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500 h-11 select-none">
               <th className="w-12 py-0 px-4 text-center align-middle">
                 <input
                   type="checkbox"
                   className={cn(
-                    "h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-gray-300 dark:border-white/10 transition-opacity",
+                    "h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-border dark:border-border transition-opacity",
                     backups.length > 0 && backups.every((b) => selectedBackupIds.includes(b.id)) ? "opacity-100" : "opacity-50 hover:opacity-85"
                   )}
                   checked={
@@ -157,7 +157,7 @@ export default function BackupTable({
               </th>
             </tr>
           </thead>
-          <tbody className={cn("divide-y divide-gray-100 dark:divide-white/10", sortedAndPaginatedBackups.length === 0 && "h-full")}>
+          <tbody className={cn("divide-y divide-border dark:divide-border", sortedAndPaginatedBackups.length === 0 && "h-full")}>
             {sortedAndPaginatedBackups.length === 0 ? (
               <tr className="border-0 hover:bg-transparent h-full">
                 <td colSpan={6} className="border-0 p-0 h-full">
@@ -165,14 +165,14 @@ export default function BackupTable({
                     <EmptyHeader className="flex flex-col items-center gap-0">
                       <div className="relative mb-6">
                         <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                        <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
+                        <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
                           <HugeIcon  className={cn("ph-duotone text-xl text-gray-300 dark:text-zinc-650", isFilterActive ? "ph-magnifying-glass" : "ph-database")}></HugeIcon>
                         </EmptyMedia>
                       </div>
                       <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
                         {isFilterActive ? "No matches found" : "No backups detected"}
                       </EmptyTitle>
-                      <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400">
+                      <EmptyDescription className="max-w-xs text-sm font-medium text-gray-900 dark:text-zinc-300">
                         {isFilterActive 
                           ? "Adjust your search parameters or date range to locate specific historical records." 
                           : "There are no local database backups in the history log yet."}
@@ -182,7 +182,7 @@ export default function BackupTable({
                           variant="outline"
                           onClick={onClearFilters}
                           title="Reset Filters"
-                          className="mt-6 flex h-10 items-center justify-center gap-2 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
+                          className="mt-6 flex h-10 items-center justify-center gap-2 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                         >
                           Reset
                         </Button>
@@ -206,7 +206,7 @@ export default function BackupTable({
                   <tr
                     key={b.id}
                     className={cn(
-                        "group h-[52px] border-b-[0.5px] border-gray-100 dark:border-white/10 last:border-b-0 transition-all duration-fast hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none cursor-pointer",
+                        "group h-[52px] border-b-[0.5px] border-border dark:border-border last:border-b-0 transition-all duration-fast hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none cursor-pointer",
                         isSelected && "bg-blue-50/60 dark:bg-blue-950/20"
                     )}
                     onClick={(e) => {
@@ -218,7 +218,7 @@ export default function BackupTable({
                       <input
                         type="checkbox"
                         className={cn(
-                          "h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-gray-300 dark:border-white/10 transition-opacity",
+                          "h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-border dark:border-border transition-opacity",
                           isSelected ? "opacity-100" : "opacity-50 group-hover:opacity-80"
                         )}
                         checked={isSelected}
@@ -292,7 +292,7 @@ export default function BackupTable({
                           ) : !externalDriveConnected ? (
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                <div className="inline-flex items-center gap-1 rounded-full px-[10px] py-[2.5px] text-[11px] font-medium tracking-[0.04em] select-none bg-gray-100 text-gray-500 dark:bg-zinc-800 dark:text-zinc-500 border border-gray-200 dark:border-white/10 cursor-not-allowed">
+                                <div className="inline-flex items-center gap-1 rounded-full px-[10px] py-[2.5px] text-[11px] font-medium tracking-[0.04em] select-none bg-gray-100 text-gray-500 dark:bg-zinc-800 dark:text-zinc-500 border border-border dark:border-border cursor-not-allowed">
                                   <HugeIcon  className="ph-bold ph-plugs text-[11px]" />
                                   <span>Drive Offline</span>
                                 </div>

@@ -631,9 +631,13 @@ const LogRow = ({ log, isSelected, isExpanded, toggleRow, setSelectedLog, handle
         <td className="py-0 px-4 align-middle text-center" onClick={(e) => e.stopPropagation()}>
           <button
             onClick={() => toggleRow(log.id)}
-            className={cn("mx-auto flex h-7 w-7 items-center justify-center bg-transparent border-none text-[#8E8E93] hover:text-[#111111] dark:hover:text-zinc-200 cursor-pointer transition-transform duration-fast", isExpanded ? "rotate-180" : "rotate-0")}
+            className="mx-auto flex h-7 w-7 items-center justify-center bg-transparent border-none text-[#8E8E93] hover:text-[#111111] dark:hover:text-zinc-200 cursor-pointer transition-colors duration-fast"
           >
-            <HugeIcon  className="ti ti-chevron-down text-[14px]"></HugeIcon>
+            {isExpanded ? (
+              <HugeIcon className="ph-bold ph-minus text-[14px]" />
+            ) : (
+              <HugeIcon className="ph-bold ph-plus text-[14px]" />
+            )}
           </button>
         </td>
         <td className="py-0 px-4 align-middle text-[13px] font-normal text-[#111111] dark:text-zinc-50">
@@ -1271,7 +1275,7 @@ export default function AccountActivityPage() {
       <div className="h-screen overflow-hidden flex flex-col bg-gray-50 dark:bg-background font-jakarta">
         <Header authUser={authUser} onLogout={handleLogout} />
         <main className="flex-1 min-h-0 overflow-y-auto w-full">
-          <div className="w-full max-w-[1600px] 2xl:max-w-[1760px] mx-auto py-6 px-4 sm:px-8">
+          <div className="w-full max-w-[1920px] 2xl:max-w-[2560px] mx-auto py-6 px-4 sm:px-8">
             <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none min-h-[600px] isolate">
               {/* Header Skeleton */}
               <div className="p-6 flex items-center justify-between border-b border-gray-100 dark:border-white/10">
@@ -1336,7 +1340,7 @@ export default function AccountActivityPage() {
       <Header authUser={authUser} onLogout={handleLogout} />
 
       <PageTransition className="flex-1 min-h-0 overflow-y-auto w-full">
-        <div className="w-full max-w-[1600px] 2xl:max-w-[1760px] mx-auto py-6 px-4 sm:px-8">
+        <div className="w-full max-w-[1920px] 2xl:max-w-[2560px] mx-auto py-6 px-4 sm:px-8">
           <TooltipProvider delayDuration={200}>
           {/* ONE Single Card Container encapsulating Header, Metrics, Toolbar, Table & Pagination */}
           <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none isolate font-jakarta mb-4 min-h-0 flex-1">
@@ -1369,22 +1373,11 @@ export default function AccountActivityPage() {
                     type="button"
                     onClick={handlePreviewPDF}
                     disabled={total === 0 || isExporting || isGeneratingPdf}
-                    className="h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 disabled:opacity-50 transition-all border-0"
+                    className="h-10 px-5 text-xs font-semibold rounded-xl bg-[#0070e2] hover:bg-[#005bb8] text-white shadow-xs cursor-pointer active:scale-95 disabled:opacity-50 transition-all border-0"
                   >
                     {isGeneratingPdf ? "Generating..." : "Report"}
                   </Button>
 
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      const path = getDefaultDashboardPath(authUser?.role);
-                      router.push(path);
-                    }}
-                    title="Return to Dashboard"
-                    className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
-                  >
-                    Return
-                  </Button>
                 </div>
               }
             />

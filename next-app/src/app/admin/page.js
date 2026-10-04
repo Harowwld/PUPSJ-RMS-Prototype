@@ -270,7 +270,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
   const [authUser, setAuthUser] = useState(initialAuthUser)
 
   const roleBranding = getRoleBranding(authUser)
-  const brandAccent = authUser?.accent_color || roleBranding.color || "#EA580C"
+  const brandAccent = "#0070e2"
   const brandForeground = roleBranding.foreground || "#FFFFFF"
 
   useEffect(() => {
@@ -1794,11 +1794,11 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
       <Header authUser={authUser} onLogout={handleLogout} />
 
       {authUser?.preferences?.navigation_layout === "topbar" && (
-        <div className="w-full bg-white dark:bg-zinc-900 border-b border-gray-200 dark:border-white/5 py-2.5 px-4 flex items-center justify-center gap-2 overflow-x-auto shadow-xs select-none shrink-0 scrollbar-none">
+        <div className="w-full bg-white dark:bg-zinc-900 border-b border-border dark:border-border py-2.5 px-4 flex items-center justify-center gap-2 overflow-x-auto shadow-xs select-none shrink-0 scrollbar-none">
           {sidebarItems.map((item, idx) => {
             if (item.type === "header") {
               return (
-                <div key={`header-${idx}`} className="text-[9px] font-semibold tracking-widest text-gray-400 dark:text-zinc-500 whitespace-nowrap ml-4 first:ml-0 border-l border-gray-200 dark:border-white/5 pl-4 first:border-0 first:pl-0">
+                <div key={`header-${idx}`} className="text-[9px] font-semibold tracking-widest text-gray-400 dark:text-zinc-500 whitespace-nowrap ml-4 first:ml-0 border-l border-border dark:border-border pl-4 first:border-0 first:pl-0">
                   {item.label}
                 </div>
               );
@@ -1846,7 +1846,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
             zoomNode={zoomNode}
             setZoomNode={setZoomNode}
             handleZoomMouseDown={handleZoomMouseDown}
-            accentColor={brandAccent}
+            accentColor={roleBranding.color || "#ff9b11"}
             officeName={authUser?.office_name}
             authUser={authUser}
           />
@@ -2264,7 +2264,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
       />
 
       <Dialog open={defaultPwOpen} onOpenChange={setDefaultPwOpen}>
-        <DialogContent className="w-full max-w-2xl overflow-hidden rounded-2xl border border-gray-200 bg-white p-0 shadow-2xl sm:max-w-2xl dark:border-white/10 dark:bg-card flex flex-col gap-0">
+        <DialogContent className="w-full max-w-2xl overflow-hidden rounded-2xl border border-border bg-white p-0 shadow-2xl sm:max-w-2xl dark:border-border dark:bg-card flex flex-col gap-0">
           <DialogHeader className="bg-white p-6 pb-0 dark:bg-card border-none">
             <div className="flex items-start gap-4">
               <div className="min-w-0">
@@ -2288,7 +2288,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
               </label>
 
               <div 
-                className="flex items-center justify-between rounded-xl border border-gray-200 bg-white p-[10px_14px] dark:border-zinc-800 dark:bg-zinc-900/30"
+                className="flex items-center justify-between rounded-xl border border-border bg-white p-[10px_14px] dark:border-border dark:bg-zinc-900/30"
               >
                 <code className="text-[14px] font-bold text-pup-maroon dark:text-red-400 tracking-wider">
                   {defaultReturnedPw}
@@ -2318,7 +2318,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
               type="button"
               variant="outline"
               onClick={() => setDefaultPwOpen(false)}
-              className="h-10 px-4 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+              className="h-10 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
             >
               Close
             </Button>
@@ -2343,7 +2343,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
 
       {/* Global External Drive Detection Modal */}
       <Dialog open={extDriveModalOpen} onOpenChange={setExtDriveModalOpen}>
-        <DialogContent className="w-full max-w-md overflow-hidden rounded-2xl border border-gray-200 bg-white p-0 shadow-2xl sm:max-w-md dark:border-white/10 dark:bg-card flex flex-col gap-0">
+        <DialogContent className="w-full max-w-md overflow-hidden rounded-2xl border border-border bg-white p-0 shadow-2xl sm:max-w-md dark:border-border dark:bg-card flex flex-col gap-0">
           <DialogHeader className="bg-white p-6 pb-0 dark:bg-card border-none text-left">
             <div className="min-w-0">
               <DialogTitle className="text-[16px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
@@ -2364,7 +2364,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
             <div className={cn(
               "flex items-center gap-3.5 rounded-xl border p-3.5",
               extDriveEvent?.type === "connected"
-                ? "border-gray-200 bg-gray-50/60 dark:border-white/10 dark:bg-zinc-800/40"
+                ? "border-border bg-gray-50/60 dark:border-border dark:bg-zinc-800/40"
                 : "border-amber-200/60 bg-amber-50/40 dark:border-amber-900/30 dark:bg-amber-950/20"
             )}>
               <div className="min-w-0 flex-1">
@@ -2389,7 +2389,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
             </div>
 
             {/* Contextual hint */}
-            <div className="rounded-xl border border-gray-100 bg-gray-50/70 p-3 dark:border-white/5 dark:bg-white/5">
+            <div className="rounded-xl border border-border bg-gray-50/70 p-3 dark:border-border dark:bg-white/5">
               <p className="text-[12px] font-normal text-gray-600 dark:text-zinc-400 leading-relaxed">
                 {extDriveEvent?.type === "connected"
                   ? "Backup archives can now be synchronized to this external drive from the Backup & Maintenance panel."
@@ -2403,7 +2403,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
               type="button"
               variant="outline"
               onClick={() => setExtDriveModalOpen(false)}
-              className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+              className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
             >
               Dismiss
             </Button>
@@ -2432,7 +2432,7 @@ export default function AdminPage() {
         fallback={
           <div className="min-h-screen bg-gray-50 dark:bg-background flex items-center justify-center font-jakarta p-4">
             <div className="flex flex-col items-center gap-4">
-              <div className="h-12 w-12 animate-spin rounded-full border-4 border-gray-200 border-t-pup-maroon dark:border-zinc-800 dark:border-t-primary"></div>
+              <div className="h-12 w-12 animate-spin rounded-full border-4 border-border border-t-pup-maroon dark:border-border dark:border-t-primary"></div>
               <p className="text-xs font-semibold tracking-widest text-gray-400 dark:text-zinc-500 uppercase">Loading System...</p>
             </div>
           </div>

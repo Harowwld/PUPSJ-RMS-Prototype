@@ -332,12 +332,8 @@
   overflow: hidden;
   isolation: isolate;
 
-  /* Apple Liquid Glass: Frosted white translucent glass clearly visible on white backgrounds */
-  background: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.88) 0%,
-    rgba(255, 255, 255, 0.72) 100%
-  );
+  /* Solid white background for layered stacking */
+  background: #ffffff;
   backdrop-filter: blur(28px) saturate(190%) contrast(1.02);
   -webkit-backdrop-filter: blur(28px) saturate(190%) contrast(1.02);
 
@@ -358,13 +354,9 @@
 }
 
 .dark .rms-toast {
-  background: linear-gradient(
-    180deg,
-    rgba(32, 32, 38, 0.82) 0%,
-    rgba(22, 22, 26, 0.76) 100%
-  );
-  backdrop-filter: blur(28px) saturate(180%) brightness(1.05);
-  -webkit-backdrop-filter: blur(28px) saturate(180%) brightness(1.05);
+  background: #18181b;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
   border: 1px solid rgba(255, 255, 255, 0.16);
   outline: 1px solid rgba(255, 255, 255, 0.05);
   outline-offset: -1px;
@@ -1161,7 +1153,7 @@ th {
 
 /* Brand Buttons - Solid Maroon Style */
 .btn-brand-red {
-  background-color: var(--brand-accent, #800000) !important;
+  background-color: #0070e2 !important;
   background-image: none !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
@@ -1175,12 +1167,12 @@ th {
 }
 
 .dark .btn-brand-red {
-  background-color: var(--brand-accent, #800000) !important;
+  background-color: #0070e2 !important;
   box-shadow: none !important;
 }
 
 .btn-brand-red:hover {
-  background-color: color-mix(in srgb, var(--brand-accent, #800000) 85%, black) !important;
+  background-color: #005bb8 !important;
   background-image: none !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
@@ -1189,12 +1181,12 @@ th {
 }
 
 .dark .btn-brand-red:hover {
-  background-color: color-mix(in srgb, var(--brand-accent, #800000) 85%, black) !important;
+  background-color: #005bb8 !important;
   box-shadow: none !important;
 }
 
 .btn-brand-red:active {
-  background-color: color-mix(in srgb, var(--brand-accent, #800000) 75%, black) !important;
+  background-color: #004d9c !important;
   background-image: none !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
@@ -1204,7 +1196,7 @@ th {
 
 /* Brand Orange Button */
 .btn-brand-orange {
-  background-color: var(--color-pup-maroon) !important;
+  background-color: #0070e2 !important;
   background-image: none !important;
   border: none !important;
   border-width: 0px !important;
@@ -1219,7 +1211,7 @@ th {
 }
 
 .dark .btn-brand-orange {
-  background-color: var(--color-pup-maroon) !important;
+  background-color: #0070e2 !important;
   background-image: none !important;
   border: none !important;
   border-width: 0px !important;
@@ -1230,7 +1222,7 @@ th {
 }
 
 .btn-brand-orange:hover {
-  background-color: var(--color-pup-darkMaroon) !important;
+  background-color: #005bb8 !important;
   background-image: none !important;
   border: none !important;
   border-width: 0px !important;
@@ -1241,7 +1233,7 @@ th {
 }
 
 .dark .btn-brand-orange:hover {
-  background-color: var(--color-pup-darkMaroon) !important;
+  background-color: #005bb8 !important;
   background-image: none !important;
   border: none !important;
   border-width: 0px !important;
@@ -2141,3 +2133,18 @@ html {
     scrollbar-width: none;
 }
 
+/* --- Global Modern Thin Scrollbar --- */
+/* For Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.4) transparent;
+}
+/* Hide main window scrollbar to prevent layout shift, replace with custom indicator */
+/* Hide native scrollbars globally to prevent layout shift, replaced with custom indicator */
+::-webkit-scrollbar {
+  display: none;
+}
+* {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}

@@ -35,7 +35,7 @@ import { STATUS_COLORS } from "@/lib/constants"
 const CustomBarTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
     return (
-      <div className="rounded-lg border border-gray-100 bg-white p-3 shadow-xl dark:border-white/10 dark:bg-card dark:shadow-none">
+      <div className="rounded-lg border border-border bg-white p-3 shadow-xl dark:border-border dark:bg-card dark:shadow-none">
         <p className="mb-2 text-[10px] font-semibold text-gray-400 tracking-widest dark:text-zinc-500">{label}</p>
         <div className="space-y-1.5">
           {payload.map((entry, index) => {
@@ -60,7 +60,7 @@ const CustomPieTooltip = ({ active, payload }) => {
   if (active && payload && payload.length) {
     const entry = payload[0]
     return (
-      <div className="rounded-lg border border-gray-100 bg-white p-3 shadow-xl dark:border-white/10 dark:bg-card dark:shadow-none">
+      <div className="rounded-lg border border-border bg-white p-3 shadow-xl dark:border-border dark:bg-card dark:shadow-none">
         <div className="flex items-center gap-2">
           <div className="rms-style-background-color h-2 w-2 rounded-full" data-background-color={entry.payload.fill} style={{ backgroundColor: entry.payload.fill }} />
           <span className="text-xs font-semibold text-gray-700 dark:text-zinc-200">{entry.name}:</span>
@@ -152,7 +152,7 @@ const SlaCharts = React.memo(function SlaCharts({ data, pieData, onSwitchView })
       {/* Left Column (2 Cols): Horizontal graphs (Request Trends & Document Demand) */}
       <div className="lg:col-span-2 flex flex-col gap-6">
         {/* Card 1: Request Trends Chart */}
-        <div className="flex-1 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none flex flex-col justify-between">
+        <div className="flex-1 rounded-2xl border border-border bg-white p-6 shadow-sm dark:border-border dark:bg-card dark:shadow-none flex flex-col justify-between">
           <div className="flex items-start justify-between mb-4 flex-wrap gap-3">
             <div className="flex flex-col">
               <h3 className="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50 m-0">
@@ -178,7 +178,7 @@ const SlaCharts = React.memo(function SlaCharts({ data, pieData, onSwitchView })
                 </div>
               )}
             </div>
-            <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-gray-200/60 dark:border-white/5">
+            <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-border/60 dark:border-border">
               {["monthly", "weekly", "daily"].map((opt) => (
                 <button
                   key={opt}
@@ -256,14 +256,14 @@ const SlaCharts = React.memo(function SlaCharts({ data, pieData, onSwitchView })
               <Empty className="flex h-full flex-col items-center justify-center border-0 bg-transparent text-center">
                 <EmptyHeader className="flex flex-col items-center justify-center gap-0">
                   <div className="relative mb-3 flex items-center justify-center">
-                    <div className="w-16 h-16 rounded-2xl bg-gray-100/70 dark:bg-zinc-800/50 flex items-center justify-center border border-gray-200/50 dark:border-white/5 shadow-xs">
+                    <div className="w-16 h-16 rounded-2xl bg-gray-100/70 dark:bg-zinc-800/50 flex items-center justify-center border border-border/50 dark:border-border shadow-xs">
                       <HugeIcon className="ph-duotone ph-chart-line text-2xl text-gray-400 dark:text-zinc-500" />
                     </div>
                   </div>
                   <EmptyTitle className="text-base font-semibold text-gray-900 dark:text-zinc-50">
                     No trend data
                   </EmptyTitle>
-                  <EmptyDescription className="max-w-xs text-xs font-normal text-gray-500 dark:text-zinc-400 mt-1">
+                  <EmptyDescription className="max-w-xs text-xs font-normal text-gray-900 dark:text-zinc-300 mt-1">
                     Select a different range to display trend lines.
                   </EmptyDescription>
                 </EmptyHeader>
@@ -273,7 +273,7 @@ const SlaCharts = React.memo(function SlaCharts({ data, pieData, onSwitchView })
         </div>
 
         {/* Card 2: Document Demand Chart (Horizontal Bar Chart) */}
-        <div className="flex-1 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none flex flex-col justify-between">
+        <div className="flex-1 rounded-2xl border border-border bg-white p-6 shadow-sm dark:border-border dark:bg-card dark:shadow-none flex flex-col justify-between">
           <div className="flex items-start justify-between mb-4 flex-wrap gap-3">
             <div className="flex flex-col">
               <h3 className="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50 m-0">
@@ -370,14 +370,14 @@ const SlaCharts = React.memo(function SlaCharts({ data, pieData, onSwitchView })
               <Empty className="flex h-full flex-col items-center justify-center border-0 bg-transparent text-center">
                 <EmptyHeader className="flex flex-col items-center justify-center gap-0">
                   <div className="relative mb-3 flex items-center justify-center">
-                    <div className="w-16 h-16 rounded-2xl bg-gray-100/70 dark:bg-zinc-800/50 flex items-center justify-center border border-gray-200/50 dark:border-white/5 shadow-xs">
+                    <div className="w-16 h-16 rounded-2xl bg-gray-100/70 dark:bg-zinc-800/50 flex items-center justify-center border border-border/50 dark:border-border shadow-xs">
                       <HugeIcon className="ph-duotone ph-chart-bar text-2xl text-gray-400 dark:text-zinc-500" />
                     </div>
                   </div>
                   <EmptyTitle className="text-base font-semibold text-gray-900 dark:text-zinc-50">
                     No requests found
                   </EmptyTitle>
-                  <EmptyDescription className="max-w-xs text-xs font-normal text-gray-500 dark:text-zinc-400 mt-1">
+                  <EmptyDescription className="max-w-xs text-xs font-normal text-gray-900 dark:text-zinc-300 mt-1">
                     Select a different date range or wait for new requests.
                   </EmptyDescription>
                 </EmptyHeader>
@@ -389,7 +389,7 @@ const SlaCharts = React.memo(function SlaCharts({ data, pieData, onSwitchView })
 
       {/* Right Column (1 Col): Vertical Align (Status Distribution & Ranked Summary) */}
       <div className="lg:col-span-1 flex flex-col">
-        <div className="flex-1 flex flex-col rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none h-full justify-between">
+        <div className="flex-1 flex flex-col rounded-2xl border border-border bg-white p-6 shadow-sm dark:border-border dark:bg-card dark:shadow-none h-full justify-between">
           {/* Status Distribution */}
           <div className="flex flex-col flex-1">
             <h3 className="mb-4 text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50 m-0">
@@ -439,14 +439,14 @@ const SlaCharts = React.memo(function SlaCharts({ data, pieData, onSwitchView })
                 <Empty data-compact="true" className="flex h-full flex-col items-center justify-center border-0 bg-transparent text-center p-0">
                   <EmptyHeader className="flex flex-col items-center justify-center gap-0 max-w-[240px]">
                     <div className="relative mb-3 flex items-center justify-center">
-                      <div className="w-14 h-14 rounded-2xl bg-gray-100/70 dark:bg-zinc-800/50 flex items-center justify-center border border-gray-200/50 dark:border-white/5 shadow-xs">
+                      <div className="w-14 h-14 rounded-2xl bg-gray-100/70 dark:bg-zinc-800/50 flex items-center justify-center border border-border/50 dark:border-border shadow-xs">
                         <HugeIcon className="ph-duotone ph-chart-pie text-2xl text-gray-400 dark:text-zinc-500" />
                       </div>
                     </div>
                     <EmptyTitle className="text-sm font-semibold text-gray-900 dark:text-zinc-50">
                       No status data
                     </EmptyTitle>
-                    <EmptyDescription className="max-w-[200px] text-[11px] font-normal text-gray-500 dark:text-zinc-400 mt-0.5">
+                    <EmptyDescription className="max-w-[200px] text-[11px] font-normal text-gray-900 dark:text-zinc-300 mt-0.5">
                       Status distribution requires active request logs.
                     </EmptyDescription>
                   </EmptyHeader>
@@ -454,7 +454,7 @@ const SlaCharts = React.memo(function SlaCharts({ data, pieData, onSwitchView })
               )}
             </div>
             
-            <div className="mt-4 flex flex-col pt-3 border-t border-gray-100 dark:border-white/5">
+            <div className="mt-4 flex flex-col pt-3 border-t border-border dark:border-border">
               {pieData.map((d, index) => {
                 const percent = totalSlaRequests > 0 ? Math.round((d.value / totalSlaRequests) * 100) : 0
                 const displayName = d.name === "InProgress" ? "In Progress" : d.name
@@ -466,7 +466,7 @@ const SlaCharts = React.memo(function SlaCharts({ data, pieData, onSwitchView })
                     onMouseEnter={() => setActivePieIndex(index)}
                     onMouseLeave={() => setActivePieIndex(null)}
                     className={cn(
-                      "flex items-center justify-between h-[36px] border-b-[0.5px] border-gray-100 dark:border-white/5 px-2 rounded-md transition-colors cursor-pointer",
+                      "flex items-center justify-between h-[36px] border-b-[0.5px] border-border dark:border-border px-2 rounded-md transition-colors cursor-pointer",
                       isHovered && "bg-gray-50 dark:bg-zinc-800/40",
                       index === pieData.length - 1 && "border-b-0"
                     )}
@@ -515,7 +515,7 @@ const SlaCharts = React.memo(function SlaCharts({ data, pieData, onSwitchView })
                       onMouseEnter={() => setActiveBarName(dt.name)}
                       onMouseLeave={() => setActiveBarName(null)}
                       className={cn(
-                        "flex items-center justify-between h-[44px] border-b-[0.5px] border-gray-100 dark:border-white/5 px-2 rounded-lg transition-all cursor-pointer",
+                        "flex items-center justify-between h-[44px] border-b-[0.5px] border-border dark:border-border px-2 rounded-lg transition-all cursor-pointer",
                         activeBarName === dt.name 
                           ? "bg-orange-50/50 dark:bg-orange-950/20 font-bold" 
                           : "hover:bg-gray-50/50 dark:hover:bg-zinc-800/20",
@@ -540,7 +540,7 @@ const SlaCharts = React.memo(function SlaCharts({ data, pieData, onSwitchView })
                 <Empty data-compact="true" className="flex flex-1 flex-col items-center justify-center border-0 bg-transparent py-4 text-center p-0 w-full my-auto">
                   <EmptyHeader className="flex flex-col items-center justify-center gap-0 max-w-[240px]">
                     <div className="relative mb-3 flex items-center justify-center">
-                      <div className="w-14 h-14 rounded-2xl bg-gray-100/70 dark:bg-zinc-800/50 flex items-center justify-center border border-gray-200/50 dark:border-white/5 shadow-xs">
+                      <div className="w-14 h-14 rounded-2xl bg-gray-100/70 dark:bg-zinc-800/50 flex items-center justify-center border border-border/50 dark:border-border shadow-xs">
                         <HugeIcon className="ph-duotone ph-file-text text-2xl text-gray-400 dark:text-zinc-500" />
                       </div>
                     </div>
@@ -559,7 +559,7 @@ const SlaCharts = React.memo(function SlaCharts({ data, pieData, onSwitchView })
       </div>
 
       {/* Card 4: Client Satisfaction Measurement (CSM) */}
-      <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none flex flex-col gap-6 lg:col-span-3">
+      <div className="rounded-2xl border border-border bg-white p-6 shadow-sm dark:border-border dark:bg-card dark:shadow-none flex flex-col gap-6 lg:col-span-3">
         <div className="flex items-start justify-between flex-wrap gap-4">
           <div className="flex flex-col gap-1">
             <div className="flex items-center gap-2">
@@ -568,7 +568,7 @@ const SlaCharts = React.memo(function SlaCharts({ data, pieData, onSwitchView })
                 Client Satisfaction Measurement (CSM)
               </h3>
             </div>
-            <p className="text-[13px] font-normal text-gray-500 dark:text-zinc-400">
+            <p className="text-[13px] font-normal text-gray-900 dark:text-zinc-300">
               Student feedback ratings, satisfaction rate, and public service quality evaluations.
             </p>
           </div>
@@ -580,7 +580,7 @@ const SlaCharts = React.memo(function SlaCharts({ data, pieData, onSwitchView })
                 <span className="text-sm font-bold">{data.feedback.averageRating}</span>
                 <span className="text-xs text-amber-700 dark:text-amber-400">/ 5.0</span>
               </div>
-              <span className="text-xs font-medium text-gray-500 dark:text-zinc-400">
+              <span className="text-xs font-medium text-gray-900 dark:text-zinc-300">
                 {data.feedback.satisfactionRate}% Positive ({data.feedback.totalResponses} {data.feedback.totalResponses === 1 ? "review" : "reviews"})
               </span>
             </div>
@@ -588,7 +588,7 @@ const SlaCharts = React.memo(function SlaCharts({ data, pieData, onSwitchView })
         </div>
 
         {data?.feedback?.totalResponses > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start pt-2 border-t border-gray-100 dark:border-white/5">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start pt-2 border-t border-border dark:border-border">
             {/* Rating Breakdown Bars */}
             <div className="flex flex-col gap-3">
               <span className="text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
@@ -611,7 +611,7 @@ const SlaCharts = React.memo(function SlaCharts({ data, pieData, onSwitchView })
                           style={{ width: `${pct}%` }}
                         />
                       </div>
-                      <span className="w-14 text-right font-medium text-gray-500 dark:text-zinc-400">
+                      <span className="w-14 text-right font-medium text-gray-900 dark:text-zinc-300">
                         {count} ({pct}%)
                       </span>
                     </div>
@@ -630,12 +630,12 @@ const SlaCharts = React.memo(function SlaCharts({ data, pieData, onSwitchView })
                   {data.feedback.topAspects.map((aspect) => (
                     <div
                       key={aspect.tag}
-                      className="flex items-center justify-between p-2.5 rounded-xl border border-gray-100 dark:border-white/5 bg-gray-50/70 dark:bg-zinc-800/40 text-xs"
+                      className="flex items-center justify-between p-2.5 rounded-xl border border-border dark:border-border bg-gray-50/70 dark:bg-zinc-800/40 text-xs"
                     >
                       <span className="font-medium text-gray-800 dark:text-zinc-200 truncate mr-2">
                         {aspect.label}
                       </span>
-                      <span className="font-semibold text-gray-500 dark:text-zinc-400 shrink-0">
+                      <span className="font-semibold text-gray-900 dark:text-zinc-300 shrink-0">
                         {aspect.percentage}%
                       </span>
                     </div>
@@ -649,12 +649,12 @@ const SlaCharts = React.memo(function SlaCharts({ data, pieData, onSwitchView })
             </div>
           </div>
         ) : (
-          <div className="py-8 flex flex-col items-center justify-center text-center border-t border-gray-100 dark:border-white/5">
+          <div className="py-8 flex flex-col items-center justify-center text-center border-t border-border dark:border-border">
             <div className="w-12 h-12 rounded-2xl bg-amber-50 dark:bg-amber-950/30 flex items-center justify-center text-amber-600 dark:text-amber-400 mb-3 border border-amber-200/60 dark:border-amber-800/30">
               <HugeIcon className="ph-duotone ph-star text-2xl" />
             </div>
             <p className="text-sm font-semibold text-gray-900 dark:text-zinc-100">No student feedback recorded yet</p>
-            <p className="text-xs text-gray-500 dark:text-zinc-400 max-w-sm mt-1">
+            <p className="text-xs text-gray-900 dark:text-zinc-300 max-w-sm mt-1">
               Feedback scores and service ratings will automatically populate here as students rate completed document requests.
             </p>
           </div>

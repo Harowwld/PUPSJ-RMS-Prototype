@@ -85,15 +85,15 @@ export default function PDFPreviewModal({ open, isOpen, onClose, preview, pdfUrl
     >
       <DialogContent 
         hideClose={true}
-        className="flex h-[90vh] w-[96vw] max-w-[96vw] sm:max-w-[96vw] flex-col overflow-hidden border border-gray-200 bg-gray-100 p-0 shadow-2xl transition-all duration-normal ease-standard xl:max-w-[1400px] rounded-2xl dark:border-white/10 dark:bg-muted z-[70] gap-0"
+        className="flex h-[90vh] w-[96vw] max-w-[96vw] sm:max-w-[96vw] flex-col overflow-hidden border border-border bg-gray-100 p-0 shadow-2xl transition-all duration-normal ease-standard xl:max-w-[1400px] rounded-2xl dark:border-border dark:bg-muted z-[70] gap-0"
       >
-        <DialogHeader className="shrink-0 border-b border-gray-100 dark:border-white/10 bg-gray-50 dark:bg-white/5 px-6 py-4">
+        <DialogHeader className="shrink-0 border-b border-border dark:border-border bg-gray-50 dark:bg-white/5 px-6 py-4">
           <div className="flex items-center justify-between w-full gap-4">
             <div className="min-w-0 flex-1">
               <DialogTitle className="text-left font-semibold text-gray-900 dark:text-zinc-50 text-[15px] tracking-[-0.01em] truncate">
                 Document Preview: {preview?.title || preview?.docType || preview?.originalFilename || "Preview"}
               </DialogTitle>
-              <p className="text-left font-normal text-gray-500 dark:text-zinc-400 text-xs mt-0.5">
+              <p className="text-left font-normal text-gray-900 dark:text-zinc-300 text-xs mt-0.5">
                 {preview?.subtitle ? (
                   preview.subtitle
                 ) : (
@@ -148,7 +148,7 @@ export default function PDFPreviewModal({ open, isOpen, onClose, preview, pdfUrl
           ) : (
             <div className="flex flex-1 items-center justify-center bg-white p-6 dark:bg-card">
               <div className="max-w-lg text-center">
-                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-gray-50 dark:border-white/10 dark:bg-card">
+                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-border bg-gray-50 dark:border-border dark:bg-card">
                   <HugeIcon  className="ph-bold ph-file-x text-xl text-gray-300 dark:text-zinc-600"></HugeIcon>
                 </div>
                 <p className="text-sm font-semibold text-gray-600 dark:text-zinc-300">
@@ -163,14 +163,14 @@ export default function PDFPreviewModal({ open, isOpen, onClose, preview, pdfUrl
         </div>
 
         <div 
-          className="flex shrink-0 justify-end items-center bg-white dark:bg-card px-6 py-4 border-t border-gray-100 dark:border-white/10 gap-3"
+          className="flex shrink-0 justify-end items-center bg-white dark:bg-card px-6 py-4 border-t border-border dark:border-border gap-3"
         >
           <DialogClose asChild>
             <Button
               type="button"
               variant="outline"
               onClick={onClose}
-              className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+              className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
             >
               Close
             </Button>

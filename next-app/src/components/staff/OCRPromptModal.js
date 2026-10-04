@@ -54,14 +54,14 @@ export default function OCRPromptModal({
         }
       }}
     >
-      <DialogContent className="max-h-[90vh] overflow-hidden border border-gray-200 bg-white p-0 shadow-2xl sm:max-w-lg dark:border-white/10 dark:bg-card gap-0">
+      <DialogContent className="max-h-[90vh] overflow-hidden border border-border bg-white p-0 shadow-2xl sm:max-w-lg dark:border-border dark:bg-card gap-0">
         <DialogHeader className="bg-white p-6 pb-0 dark:bg-card border-none text-left">
           <div className="flex items-start gap-4">
             <div className="min-w-0">
               <DialogTitle className="text-[16px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
                 OCR Match Resolution Required
               </DialogTitle>
-              <DialogDescription className="mt-1 text-[13px] font-normal text-gray-500 dark:text-zinc-400">
+              <DialogDescription className="mt-1 text-[13px] font-normal text-gray-900 dark:text-zinc-300">
                 The optical character recognition system found possible matches. Select the correct record to continue.
               </DialogDescription>
             </div>
@@ -81,7 +81,7 @@ export default function OCRPromptModal({
 
         <div className="p-6">
           <div className="mb-4">
-            <div className="mb-2 text-[11px] font-semibold tracking-widest text-gray-500 dark:text-zinc-400">
+            <div className="mb-2 text-[11px] font-semibold tracking-widest text-gray-900 dark:text-zinc-300">
               Detected name from document
             </div>
             <div className="rounded-brand border border-red-100 dark:border-none bg-red-50 px-3 py-2 text-sm font-semibold text-pup-maroon dark:bg-red-950/30 dark:text-primary">
@@ -89,17 +89,17 @@ export default function OCRPromptModal({
             </div>
           </div>
 
-          <div className="mb-2 text-[11px] font-semibold tracking-widest text-gray-500 dark:text-zinc-400">
+          <div className="mb-2 text-[11px] font-semibold tracking-widest text-gray-900 dark:text-zinc-300">
             Select correct record
           </div>
-          <div className="flex max-h-64 flex-col gap-2 overflow-y-auto rounded-brand border border-gray-200 p-2 dark:border-white/10">
+          <div className="flex max-h-64 flex-col gap-2 overflow-y-auto rounded-brand border border-border p-2 dark:border-border">
             {nameMatches.map((s) => {
               const id = studentKey(s)
               const checked = resolvedSelectedStudentNo === id
               return (
                 <label
                   key={id}
-                  className={`flex cursor-pointer items-start gap-3 rounded-brand border p-3 transition-colors ${ checked ? "border-gray-300 bg-red-50" : "border-gray-200 bg-white hover:bg-gray-50" } dark:border-white/10 dark:bg-red-950/60 dark:hover:bg-white/10`}
+                  className={`flex cursor-pointer items-start gap-3 rounded-brand border p-3 transition-colors ${ checked ? "border-border bg-red-50" : "border-border bg-white hover:bg-gray-50" } dark:border-border dark:bg-red-950/60 dark:hover:bg-white/10`}
                 >
                   <input
                     type="radio"
@@ -115,14 +115,14 @@ export default function OCRPromptModal({
                     <span className="block font-medium text-gray-700 dark:text-zinc-200">
                       {s.name}
                     </span>
-                    <span className="block text-xs text-gray-500 dark:text-zinc-400">
+                    <span className="block text-xs text-gray-900 dark:text-zinc-300">
                       {s.category ? (
                         `${s.category}${s.adviserName ? ` · Adviser: ${s.adviserName}` : ""}`
                       ) : (
                         `${s.courseCode || s.course_code || ""} · Year ${s.yearLevel ?? s.year_level ?? ""} · ${s.section || ""}`
                       )}
                     </span>
-                    {s.score !== undefined && <span className="block text-xs text-gray-500 dark:text-zinc-400">Match: {Math.round(Number(s.score) * 100)}% · {s.reason || "Database match"}</span>}
+                    {s.score !== undefined && <span className="block text-xs text-gray-900 dark:text-zinc-300">Match: {Math.round(Number(s.score) * 100)}% · {s.reason || "Database match"}</span>}
                   </span>
                 </label>
               )
@@ -135,7 +135,7 @@ export default function OCRPromptModal({
             type="button"
             variant="outline"
             onClick={onClose}
-            className="h-10 px-4 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+            className="h-10 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
           >
             Cancel
           </Button>

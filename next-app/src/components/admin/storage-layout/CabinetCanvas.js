@@ -47,10 +47,10 @@ const CabinetCanvas = memo(({
       ref={canvasRef}
       data-slot="storage-canvas"
       className={cn(
-        "relative w-full overflow-hidden border border-gray-300 dark:border-white/10 bg-[#f8fafc] dark:bg-zinc-600/30 shadow-inner dark:shadow-none transition-all duration-normal rounded-2xl",
+        "relative w-full overflow-hidden border border-border bg-[#f8fafc] dark:bg-zinc-800 dark:border-border transition-all duration-normal rounded-2xl",
         isModalOpen ? "h-full" : ""
       )}
-      style={!isModalOpen ? { aspectRatio: "16 / 10" } : {}}
+      style={!isModalOpen ? { aspectRatio: "16 / 10", transform: "rotateX(35deg) scale(0.95)", transformStyle: "preserve-3d" } : { transform: "rotateX(35deg) scale(0.95)", transformStyle: "preserve-3d" }}
       onPointerMove={handleCanvasPointerMove}
       onPointerUp={handleCanvasPointerUp}
       onPointerCancel={handleCanvasPointerUp}
@@ -263,12 +263,10 @@ const CabinetElement = memo(({
   return (
     <div
       className={cn(
-        "absolute border-2 rounded-md transition-colors duration-fast cursor-move group/cab shadow-sm hover:shadow-md",
-        isSelected 
-          ? "z-10 border-cyan-500 bg-cyan-50 dark:border-cyan-400 dark:bg-cyan-950" 
-          : isConflict 
-            ? "border-red-600 bg-red-50 dark:border-red-500 dark:bg-red-950" 
-            : "border-gray-300/80 bg-gray-100 dark:border-zinc-700/50 dark:bg-[#949494]"
+        "absolute rounded-lg border-2 transition-all duration-fast cursor-move group/cab hover:brightness-105",
+        isSelected ? "z-30 border-cyan-400 bg-cyan-50 dark:border-cyan-500 dark:bg-cyan-950" 
+          : isConflict ? "z-20 border-red-400 bg-red-50 dark:border-red-500 dark:bg-red-950" 
+          : "z-10 border-border bg-white dark:border-border dark:bg-zinc-800"
       )}
       style={{
         left: `${cab.rect.x * 100}%`,
@@ -276,6 +274,12 @@ const CabinetElement = memo(({
         width: `calc(${eff.w * 100}% + 1px)`,
         height: `calc(${eff.h * 100}% + 1px)`,
         userSelect: "none",
+        transform: "translateY(-12px)",
+        boxShadow: isSelected 
+          ? "0 1px 0 #06b6d4, 0 2px 0 #06b6d4, 0 3px 0 #06b6d4, 0 4px 0 #06b6d4, 0 5px 0 #06b6d4, 0 6px 0 #06b6d4, 0 7px 0 #06b6d4, 0 8px 0 #06b6d4, 0 9px 0 #06b6d4, 0 10px 0 #06b6d4, 0 11px 0 #06b6d4, 0 12px 0 #06b6d4, 0 16px 20px rgba(0,0,0,0.15)"
+          : isConflict 
+            ? "0 1px 0 #ef4444, 0 2px 0 #ef4444, 0 3px 0 #ef4444, 0 4px 0 #ef4444, 0 5px 0 #ef4444, 0 6px 0 #ef4444, 0 7px 0 #ef4444, 0 8px 0 #ef4444, 0 9px 0 #ef4444, 0 10px 0 #ef4444, 0 11px 0 #ef4444, 0 12px 0 #ef4444, 0 16px 20px rgba(0,0,0,0.15)"
+            : "0 1px 0 #e2e8f0, 0 2px 0 #e2e8f0, 0 3px 0 #e2e8f0, 0 4px 0 #e2e8f0, 0 5px 0 #e2e8f0, 0 6px 0 #e2e8f0, 0 7px 0 #e2e8f0, 0 8px 0 #e2e8f0, 0 9px 0 #e2e8f0, 0 10px 0 #e2e8f0, 0 11px 0 #e2e8f0, 0 12px 0 #e2e8f0, 0 16px 20px rgba(0,0,0,0.1)",
       }}
       onPointerDown={(e) => {
         const container = e.currentTarget.closest('[data-slot="storage-canvas"]')
@@ -333,7 +337,7 @@ const CabinetElement = memo(({
           <div
             key={idx}
             className={cn(
-              "flex-1 flex items-center justify-center border-b last:border-b-0 border-gray-300/40 dark:border-zinc-700/40",
+              "flex-1 flex items-center justify-center border-b last:border-b-0 border-border/40 dark:border-border/40",
               isSelected && "border-cyan-300/30 dark:border-cyan-700/30",
               isConflict && "border-red-300/30 dark:border-red-800/30"
             )}
@@ -341,9 +345,9 @@ const CabinetElement = memo(({
             {/* Skeuomorphic Pull Handle */}
             <div
               className={cn(
-                "w-7 h-1.5 rounded-sm bg-gray-300 dark:bg-[#737373] border border-black/10 dark:border-white/10 shadow-[inset_0_1px_1px_rgba(0,0,0,0.15)]",
-                isSelected && "bg-cyan-400 dark:bg-cyan-800 border-cyan-500/20",
-                isConflict && "bg-red-400 dark:bg-red-800 border-red-500/20"
+                "w-7 h-1.5 rounded-full bg-gray-200 dark:bg-zinc-700 shadow-none",
+                
+                
               )}
             />
           </div>
@@ -444,7 +448,7 @@ const CabinetElement = memo(({
           )}
           onPointerDown={(e) => e.stopPropagation()}
         >
-          <div className="flex items-center gap-1 rounded-full border border-gray-200 bg-white p-1 shadow-xl dark:border-white/10 dark:bg-card dark:shadow-none">
+          <div className="flex items-center gap-1 rounded-full border border-border bg-white p-1 shadow-xl dark:border-border dark:bg-card dark:shadow-none">
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button

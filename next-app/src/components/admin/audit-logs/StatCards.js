@@ -109,11 +109,11 @@ const [kpiOrder, setKpiOrder] = useState(["total", "today", "auth"]);
                         ? (stat.color === "blue" ? "border-blue-500/50 ring-1 ring-blue-500/20" :
                            stat.color === "emerald" ? "border-emerald-500/50 ring-1 ring-emerald-500/20" :
                            "border-amber-500/50 ring-1 ring-amber-500/20")
-                        : "border-gray-100 dark:border-white/5"
+                        : "border-border dark:border-border"
                     )}
                   >
                     <div className="flex justify-between items-start p-4 pb-0">
-                      <span className="text-[13px] font-medium text-gray-500 dark:text-zinc-400 capitalize">
+                      <span className="text-[13px] font-medium text-gray-900 dark:text-zinc-300 capitalize">
                         {stat.label}
                       </span>
                       <div className={cn(
@@ -136,20 +136,20 @@ const [kpiOrder, setKpiOrder] = useState(["total", "today", "auth"]);
                           {stat.sublabel}
                         </span>
                       </div>
-                      <HugeIcon className="ph-bold ph-dots-six-vertical cursor-grab active:cursor-grabbing hover:text-gray-400 dark:hover:text-zinc-500 text-gray-300 dark:text-zinc-700 text-lg mb-0.5" />
+                      <HugeIcon className="ph-bold ph-dots-six-vertical cursor-grab active:cursor-grabbing hover:text-black dark:hover:text-white text-gray-900 dark:text-zinc-300 text-xl mb-0.5" />
                     </div>
                   </div>
 
             {/* Absolute details container */}
             <div className={cn(
-              "absolute top-full left-0 right-0 z-[100] mt-2 rounded-xl border border-gray-200 bg-white p-4 shadow-xl dark:border-white/10 dark:bg-zinc-900 transition-all duration-300 ease-in-out origin-top",
+              "absolute top-full left-0 right-0 z-[100] mt-2 rounded-xl border border-border bg-white p-4 shadow-xl dark:border-border dark:bg-zinc-900 transition-all duration-300 ease-in-out origin-top",
               selectedKpi === stat.key ? "scale-y-100 opacity-100 translate-y-0" : "scale-y-95 opacity-0 -translate-y-2 pointer-events-none"
             )} onClick={(e) => e.stopPropagation()}>
               <div className="space-y-3">
                 {stat.key === "total" && (
                   <>
                     <div className="grid grid-cols-2 gap-2">
-                      <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-gray-100 dark:border-white/5">
+                      <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-border dark:border-border">
                         <span className="block text-[9px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">Total Logs</span>
                         <span className="text-lg font-black text-gray-900 dark:text-zinc-50 font-sans">{Number(logStats?.totalLogs ?? logStats?.totallogs ?? 0).toLocaleString()}</span>
                       </div>
@@ -159,7 +159,7 @@ const [kpiOrder, setKpiOrder] = useState(["total", "today", "auth"]);
                       </div>
                     </div>
 
-                    <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-gray-100 dark:border-white/5 text-xs text-gray-600 dark:text-zinc-300 leading-relaxed">
+                    <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-border dark:border-border text-xs text-gray-600 dark:text-zinc-300 leading-relaxed">
                       Cumulative record count of all CRUD operations, metadata alterations, and developer boots.
                     </div>
                   </>
@@ -168,7 +168,7 @@ const [kpiOrder, setKpiOrder] = useState(["total", "today", "auth"]);
                 {stat.key === "today" && (
                   <>
                     <div className="grid grid-cols-2 gap-2">
-                      <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-gray-100 dark:border-white/5">
+                      <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-border dark:border-border">
                         <span className="block text-[9px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">Today&apos;s Logs</span>
                         <span className="text-lg font-black text-gray-900 dark:text-zinc-50 font-sans">{Number(logStats?.logsToday ?? logStats?.logstoday ?? 0).toLocaleString()}</span>
                       </div>
@@ -178,7 +178,7 @@ const [kpiOrder, setKpiOrder] = useState(["total", "today", "auth"]);
                       </div>
                     </div>
 
-                    <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-gray-100 dark:border-white/5 text-xs text-gray-600 dark:text-zinc-300 leading-relaxed">
+                    <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-border dark:border-border text-xs text-gray-600 dark:text-zinc-300 leading-relaxed">
                       Total system actions monitored inside the active 24-hour cycle.
                     </div>
                   </>
@@ -187,7 +187,7 @@ const [kpiOrder, setKpiOrder] = useState(["total", "today", "auth"]);
                 {stat.key === "auth" && (
                   <>
                     <div className="grid grid-cols-2 gap-2">
-                      <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-gray-100 dark:border-white/5">
+                      <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-border dark:border-border">
                         <span className="block text-[9px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">Auth Events</span>
                         <span className="text-lg font-black text-gray-900 dark:text-zinc-50 font-sans">{Number(logStats?.authEvents ?? logStats?.authevents ?? 0).toLocaleString()}</span>
                       </div>
@@ -197,7 +197,7 @@ const [kpiOrder, setKpiOrder] = useState(["total", "today", "auth"]);
                       </div>
                     </div>
 
-                    <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-gray-100 dark:border-white/5 text-xs text-gray-600 dark:text-zinc-300 leading-relaxed">
+                    <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-border dark:border-border text-xs text-gray-600 dark:text-zinc-300 leading-relaxed">
                       Historical attempts to sign in, refresh token states, or security code verifications.
                     </div>
                   </>

@@ -586,7 +586,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
     <TooltipProvider delay={200}>
       <div className="animate-fade-up font-jakarta flex flex-1 flex-col h-full min-h-0 w-full gap-6">
         {/* ONE Single Card Container encapsulating Header, Metrics, Toolbar, Table & Pagination */}
-        <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none isolate font-jakarta mb-4 min-h-0 flex-1">
+        <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4 min-h-0 flex-1">
           <PageHeader
             icon="ph-shield-check"
             title="Platform Audit Trail"
@@ -594,7 +594,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
             showBorder={false}
             className="p-6"
             titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
-            descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
+            descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
             actions={
               <div className="flex items-center gap-2">
                 <RefreshButton
@@ -614,7 +614,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
                     variant="outline"
                     onClick={handleDownloadCSV}
                     disabled={total === 0 || isExporting || isGeneratingPdf}
-                    className="flex h-10 items-center justify-center rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
+                    className="flex h-10 items-center justify-center rounded-xl! border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
                   >
                     {isExporting ? (
                       <HugeIcon  className="ph-bold ph-spinner animate-spin text-[16px]"></HugeIcon>
@@ -646,14 +646,14 @@ export default function GlobalAuditLogsTab({ showToast }) {
           </div>
 
           {/* Navigation Toolbar */}
-          <div className="border-t border-gray-100 dark:border-white/10 p-5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-gray-50/40 dark:bg-zinc-900/30 flex-wrap">
+          <div className="border-t border-border dark:border-border p-5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-gray-50/40 dark:bg-zinc-900/30 flex-wrap">
             {/* Search Input with Pure Number Count (Left side) */}
             <div className="relative flex-1 sm:w-64 min-w-[200px] max-w-sm group">
               <HugeIcon className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-xs pointer-events-none" />
               <Input
                 type="text"
                 placeholder="Search logs by actor, action, details..."
-                className="h-9 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 pl-8 pr-16 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
+                className="h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 pl-8 pr-16 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
                 value={localSearch}
                 onChange={(e) => setLocalSearch(e.target.value)}
               />
@@ -699,7 +699,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
             </div>
 
             {/* Time Shortcuts */}
-            <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-gray-200/60 dark:border-white/5 shrink-0">
+            <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-border/60 dark:border-border shrink-0">
               {[
                 { key: "today", label: "Today" },
                 { key: "yesterday", label: "Yest." },
@@ -733,14 +733,14 @@ export default function GlobalAuditLogsTab({ showToast }) {
                     <Button
                       variant="outline"
                       className={cn(
-                        "h-9 w-full justify-start rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-left text-xs font-normal shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-white/10 px-2.5",
+                        "h-9 w-full justify-start rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-left text-xs font-normal shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-white/10 px-2.5",
                         !startDate ? "text-gray-400 dark:text-zinc-500" : "text-gray-700 dark:text-zinc-200"
                       )}
                     >
                       {startDate ? format(parseDateLocal(startDate), "MMM d") : "Start"}
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto rounded-2xl border border-gray-200 bg-white p-0 shadow-2xl dark:border-white/10 dark:bg-card" align="start">
+                  <PopoverContent className="w-auto sm:w-auto rounded-2xl border border-border bg-white p-0 shadow-2xl dark:border-border dark:bg-card" align="start">
                     <Calendar
                       mode="single"
                       selected={startDate ? parseDateLocal(startDate) : undefined}
@@ -760,14 +760,14 @@ export default function GlobalAuditLogsTab({ showToast }) {
                     <Button
                       variant="outline"
                       className={cn(
-                        "h-9 w-full justify-start rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-left text-xs font-normal shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-white/10 px-2.5",
+                        "h-9 w-full justify-start rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-left text-xs font-normal shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-white/10 px-2.5",
                         !endDate ? "text-gray-400 dark:text-zinc-500" : "text-gray-700 dark:text-zinc-200"
                       )}
                     >
                       {endDate ? format(parseDateLocal(endDate), "MMM d") : "End"}
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto rounded-2xl border border-gray-200 bg-white p-0 shadow-2xl dark:border-white/10 dark:bg-card" align="start">
+                  <PopoverContent className="w-auto sm:w-auto rounded-2xl border border-border bg-white p-0 shadow-2xl dark:border-border dark:bg-card" align="start">
                     <Calendar
                       mode="single"
                       selected={endDate ? parseDateLocal(endDate) : undefined}
@@ -819,19 +819,19 @@ export default function GlobalAuditLogsTab({ showToast }) {
             onClearAll={() => {
               handleClearFilters()
             }}
-            className="border-t border-gray-100 dark:border-white/10 bg-white dark:bg-card px-6 py-2.5"
+            className="border-t border-border dark:border-border bg-white dark:bg-card px-6 py-2.5"
           />
 
           {/* Content Area inside Single Card */}
           {loading && (!logs || logs.length === 0) ? (
             <AuditLogsTableSkeleton rowCount={8} embedded={true} />
           ) : error ? (
-            <div className="flex min-h-[420px] flex-col items-center justify-center border-t border-gray-100 dark:border-white/10 bg-transparent text-center p-6 rounded-b-2xl">
-              <Empty className="flex flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400">
+            <div className="flex min-h-[420px] flex-col items-center justify-center border-t border-border dark:border-border bg-transparent text-center p-6 rounded-b-2xl">
+              <Empty className="flex flex-col items-center justify-center border-0 text-center text-gray-900 dark:text-zinc-300">
                 <EmptyHeader className="flex flex-col items-center gap-0">
                   <div className="relative mb-6">
                     <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                    <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
+                    <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
                       <HugeIcon  className="ph-duotone ph-warning-circle text-3xl text-red-500 dark:text-red-400" />
                     </EmptyMedia>
                   </div>
@@ -845,19 +845,19 @@ export default function GlobalAuditLogsTab({ showToast }) {
               </Empty>
             </div>
           ) : logs.length === 0 ? (
-            <div className="flex min-h-[420px] flex-col items-center justify-center border-t border-gray-100 dark:border-white/10 bg-transparent text-center p-6 rounded-b-2xl">
+            <div className="flex min-h-[420px] flex-col items-center justify-center border-t border-border dark:border-border bg-transparent text-center p-6 rounded-b-2xl">
               <Empty className="flex flex-col items-center justify-center border-0 bg-transparent text-center">
                 <EmptyHeader className="flex flex-col items-center gap-0">
                   <div className="relative mb-6">
                     <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                    <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
+                    <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
                       <HugeIcon  className="ph-duotone ph-magnifying-glass text-3xl text-gray-400 dark:text-zinc-500"></HugeIcon>
                     </EmptyMedia>
                   </div>
                   <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
                     No Activity Found
                   </EmptyTitle>
-                  <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400 mt-1">
+                  <EmptyDescription className="max-w-xs text-sm font-medium text-gray-900 dark:text-zinc-300 mt-1">
                     Try adjusting your search filters to find what you&apos;re looking for.
                   </EmptyDescription>
                   {hasActiveFilters && (
@@ -865,7 +865,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
                       variant="outline"
                       onClick={handleClearFilters}
                       title="Reset Filters"
-                      className="mt-6 flex h-10 items-center justify-center gap-2 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
+                      className="mt-6 flex h-10 items-center justify-center gap-2 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                     >
                       Reset
                     </Button>
@@ -874,13 +874,13 @@ export default function GlobalAuditLogsTab({ showToast }) {
               </Empty>
             </div>
           ) : (
-            <div className="overflow-hidden rounded-b-2xl border-t border-gray-100 dark:border-white/10 bg-white dark:bg-card flex flex-col flex-1">
+            <div className="overflow-hidden rounded-b-2xl border-t border-border dark:border-border bg-white dark:bg-card flex flex-col flex-1">
               <div className="overflow-x-auto">
-                <table className="min-w-full text-sm">
-              <thead className="sticky top-0 z-10 border-b-[0.5px] border-black/10 dark:border-white/10 bg-white dark:bg-card">
+                <table className="w-full text-sm table-fixed">
+              <thead className="sticky top-0 z-10 border-b-[0.5px] border-black/10 dark:border-border bg-white dark:bg-card">
                 <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500 h-11 select-none">
                   <th className="w-12 p-4 text-center"></th>
-                  <th className="p-4">
+                  <th className="p-4 w-[14%]">
                     <button
                       onClick={() => handleSort("created_at")}
                       className={cn(
@@ -892,7 +892,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
                       <SortIndicator column="created_at" sortBy={sortBy} sortOrder={sortOrder} />
                     </button>
                   </th>
-                  <th className="p-4">
+                  <th className="p-4 w-[10%]">
                     <button
                       onClick={() => handleSort("severity")}
                       className={cn(
@@ -904,7 +904,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
                       <SortIndicator column="severity" sortBy={sortBy} sortOrder={sortOrder} />
                     </button>
                   </th>
-                  <th className="p-4">
+                  <th className="p-4 w-[14%]">
                     <button
                       onClick={() => handleSort("actor")}
                       className={cn(
@@ -916,7 +916,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
                       <SortIndicator column="actor" sortBy={sortBy} sortOrder={sortOrder} />
                     </button>
                   </th>
-                  <th className="p-4">
+                  <th className="p-4 w-[10%]">
                     <button
                       onClick={() => handleSort("office_id")}
                       className={cn(
@@ -928,7 +928,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
                       <SortIndicator column="office_id" sortBy={sortBy} sortOrder={sortOrder} />
                     </button>
                   </th>
-                  <th className="p-4">
+                  <th className="p-4 w-[14%]">
                     <button
                       onClick={() => handleSort("action")}
                       className={cn(
@@ -940,10 +940,10 @@ export default function GlobalAuditLogsTab({ showToast }) {
                       <SortIndicator column="action" sortBy={sortBy} sortOrder={sortOrder} />
                     </button>
                   </th>
-                  <th className="p-4 text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">
+                  <th className="p-4 w-auto text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">
                     Description
                   </th>
-                  <th className="p-4 text-right text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">
+                  <th className="p-4 w-16 text-right text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">
                     Actions
                   </th>
                 </tr>
@@ -978,7 +978,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
                         <tr
                           onClick={() => toggleRow(log.id)}
                           className={cn(
-                            "group h-[52px] border-b-[0.5px] border-gray-100 dark:border-white/10 last:border-b-0 transition-all duration-fast hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none cursor-pointer",
+                            "group h-[52px] border-b-[0.5px] border-border dark:border-border last:border-b-0 transition-all duration-fast hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none cursor-pointer",
                             isSelected && "bg-blue-50/60 dark:bg-blue-950/20",
                             isExpanded && "bg-gray-50 dark:bg-white/8"
                           )}
@@ -988,9 +988,9 @@ export default function GlobalAuditLogsTab({ showToast }) {
                             <button
                               onClick={() => toggleRow(log.id)}
                               title={isExpanded ? "Collapse Details" : "Expand Details"}
-                              className={cn("mx-auto flex h-7 w-7 items-center justify-center bg-transparent border-none text-[#8E8E93] hover:text-[#111111] dark:hover:text-zinc-200 cursor-pointer transition-transform duration-200", isExpanded ? "rotate-180" : "rotate-0")}
+                              className="mx-auto flex h-7 w-7 items-center justify-center bg-transparent border-none text-[#8E8E93] hover:text-[#111111] dark:hover:text-zinc-200 cursor-pointer transition-colors duration-200"
                             >
-                              <HugeIcon  className="ti ti-chevron-down text-[14px]"></HugeIcon>
+                              <HugeIcon className={cn("ph-bold text-[14px]", isExpanded ? "ph-minus" : "ph-plus")}></HugeIcon>
                             </button>
                           </td>
 
@@ -1051,7 +1051,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
                               </TooltipTrigger>
                               <TooltipContent
                                 side="top"
-                                className="max-w-[400px] rounded-xl border-gray-200 bg-white p-3 text-xs font-medium text-gray-700 shadow-2xl backdrop-blur-sm dark:border-white/10 dark:bg-card/95 dark:text-zinc-200"
+                                className="max-w-[400px] rounded-xl border-border bg-white p-3 text-xs font-medium text-gray-700 shadow-2xl backdrop-blur-sm dark:border-border dark:bg-card/95 dark:text-zinc-200"
                               >
                                 {log.details || "—"}
                               </TooltipContent>
@@ -1095,7 +1095,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
           {/* Pagination Toolbar */}
           {total > 0 && (
             <div className="flex items-center justify-between border-t border-[#e5e5ea] dark:border-[#3a3a3c] bg-white dark:bg-[#1c1c1e] p-4 px-6 rounded-b-2xl">
-              <div className="flex items-center gap-6 text-xs text-gray-500 dark:text-zinc-400 select-none">
+              <div className="flex items-center gap-6 text-xs text-gray-900 dark:text-zinc-300 select-none">
                 <span>Showing {logs.length} of {total.toLocaleString()}</span>
                 <div className="flex items-center gap-2">
                   <span>Rows:</span>
@@ -1126,12 +1126,12 @@ export default function GlobalAuditLogsTab({ showToast }) {
                   size="sm"
                   disabled={displayPage <= 1}
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
-                  className="text-xs text-gray-500 dark:text-zinc-400 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
+                  className="text-xs text-gray-900 dark:text-zinc-300 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
                 >
                   Prev
                 </Button>
 
-                <div className="h-8 w-8 rounded-xl border border-[#e5e5ea] dark:border-zinc-800 flex items-center justify-center text-xs font-bold text-gray-800 dark:text-zinc-200 bg-white dark:bg-zinc-900">
+                <div className="h-8 w-8 rounded-xl border border-[#e5e5ea] dark:border-border flex items-center justify-center text-xs font-bold text-gray-800 dark:text-zinc-200 bg-white dark:bg-zinc-900">
                   {displayPage}
                 </div>
 
@@ -1140,7 +1140,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
                   size="sm"
                   disabled={displayPage >= totalPages}
                   onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                  className="text-xs text-gray-500 dark:text-zinc-400 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
+                  className="text-xs text-gray-900 dark:text-zinc-300 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
                 >
                   Next
                 </Button>

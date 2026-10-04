@@ -10,7 +10,7 @@ export function StudentRequestsTableRowsSkeleton({ rowCount = 6 }) {
       {Array.from({ length: rowCount }).map((_, i) => (
         <tr
           key={i}
-          className="h-[52px] border-b-[0.5px] border-gray-100 dark:border-white/10 last:border-b-0"
+          className="h-[52px] border-b-[0.5px] border-border dark:border-border last:border-b-0"
         >
           {/* Ticket # */}
           <td className="py-0 px-4 align-middle">
@@ -60,7 +60,7 @@ export function StudentRequestsTableRowsSkeleton({ rowCount = 6 }) {
 export function StudentRequestsPaginationSkeleton() {
   return (
     <div className="flex items-center justify-between border-t border-[#e5e5ea] dark:border-[#3a3a3c] bg-white dark:bg-[#1c1c1e] p-4 px-6 rounded-b-2xl mt-auto select-none">
-      <div className="flex items-center gap-6 text-xs text-gray-500 dark:text-zinc-400">
+      <div className="flex items-center gap-6 text-xs text-gray-900 dark:text-zinc-300">
         <Skeleton className="h-3.5 w-32 rounded dark:bg-muted" />
         <div className="flex items-center gap-2">
           <Skeleton className="h-3.5 w-10 rounded dark:bg-muted" />
@@ -86,7 +86,7 @@ export default function StudentRequestsTableSkeleton({ rowCount = 6, showForm = 
   return (
     <div className="flex flex-col w-full flex-1 min-h-0 animate-in fade-in duration-200 select-none font-jakarta">
       {/* ONE Single Card Container encapsulating Header, Inline Request Form, Toolbar, Table & Pagination */}
-      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none isolate mb-4 min-h-0 flex-1">
+      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate mb-4 min-h-0 flex-1">
         {/* 1. Page Header Skeleton */}
         <div className="p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
@@ -106,8 +106,8 @@ export default function StudentRequestsTableSkeleton({ rowCount = 6, showForm = 
 
         {/* 2. Inline Non-Modal Request Form Skeleton */}
         {showForm && (
-          <div className="border-t border-gray-100 dark:border-white/10 p-5 sm:p-6 bg-gray-50/40 dark:bg-zinc-900/20">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-gray-100 dark:border-white/10">
+          <div className="border-t border-border dark:border-border p-5 sm:p-6 bg-gray-50/40 dark:bg-zinc-900/20">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border dark:border-border">
               <div className="flex items-center gap-3">
                 <Skeleton className="h-10 w-10 rounded-xl dark:bg-muted" />
                 <div className="space-y-1">
@@ -150,7 +150,7 @@ export default function StudentRequestsTableSkeleton({ rowCount = 6, showForm = 
         )}
 
         {/* 3. Toolbar & Controls Header Skeleton */}
-        <div className="border-t border-gray-100 dark:border-white/10 p-5 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 bg-white dark:bg-card">
+        <div className="border-t border-border dark:border-border p-5 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 bg-white dark:bg-card">
           <div className="flex items-center gap-3">
             <Skeleton className="h-5 w-36 rounded dark:bg-muted" />
             <Skeleton className="h-5 w-20 rounded-full dark:bg-muted" />
@@ -164,7 +164,7 @@ export default function StudentRequestsTableSkeleton({ rowCount = 6, showForm = 
         {/* 4. Main Table Skeleton */}
         <div className="w-full overflow-x-auto">
           <table className="min-w-full text-sm">
-            <thead className="sticky top-0 z-10 border-b border-gray-100 dark:border-white/10 bg-white dark:bg-card">
+            <thead className="sticky top-0 z-10 border-b border-border dark:border-border bg-white dark:bg-card">
               <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500 h-11">
                 <th className="p-4 w-36 min-w-[130px]">
                   <Skeleton className="h-3.5 w-16 rounded dark:bg-muted" />

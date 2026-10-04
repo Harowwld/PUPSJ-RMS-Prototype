@@ -178,7 +178,7 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
   return (
     <div className="animate-fade-up font-jakarta flex flex-1 flex-col h-full min-h-0 w-full gap-6">
       {/* ONE Single Card Container encapsulating Header, Metrics, Toolbar, & Charts */}
-      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none isolate font-jakarta mb-4 min-h-0 flex-1">
+      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4 min-h-0 flex-1">
         <PageHeader
           icon="ph-chart-line-up"
           title="Request Analysis"
@@ -186,7 +186,7 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
           showBorder={false}
           className="p-6"
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
-          descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
+          descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
           actions={
             <div className="flex items-center gap-2">
               <RefreshButton 
@@ -203,7 +203,7 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
                   variant="outline"
                   onClick={handleCsvExport}
                   disabled={loading || !data || isExportingCsv}
-                  className="flex h-10 items-center justify-center rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
+                  className="flex h-10 items-center justify-center rounded-xl! border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
                 >
                   {isExportingCsv ? (
                     <HugeIcon  className="ph-bold ph-spinner animate-spin text-[16px]"></HugeIcon>
@@ -267,7 +267,7 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
             }
           }
           return (
-            <div className="flex-none border-t border-gray-100 dark:border-white/10 bg-white dark:bg-card px-6 py-3 animate-in fade-in slide-in-from-top-1 duration-normal">
+            <div className="flex-none border-t border-border dark:border-border bg-white dark:bg-card px-6 py-3 animate-in fade-in slide-in-from-top-1 duration-normal">
               <div className="flex flex-wrap items-center gap-2">
                 <span className="mr-1 text-[11px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500">Active filters:</span>
                 {(startDate || endDate) && (
@@ -297,13 +297,13 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
           )
         })()}
 
-        <CardContent className="bg-white p-6 dark:bg-card border-t border-gray-100 dark:border-white/10 rounded-b-2xl">
+        <CardContent className="bg-white p-6 dark:bg-card border-t border-border dark:border-border rounded-b-2xl">
           {loading && !data ? (
             <SlaChartsSkeleton />
           ) : error ? (
-            <Empty className="flex h-[400px] flex-col items-center justify-center rounded-2xl border border-gray-200 bg-white text-center text-gray-500 shadow-sm dark:border-white/10 dark:bg-card dark:text-zinc-400 dark:shadow-none">
+            <Empty className="flex h-[400px] flex-col items-center justify-center rounded-2xl border border-border bg-white text-center text-gray-500 shadow-sm dark:border-border dark:bg-card dark:text-zinc-400 dark:shadow-none">
               <EmptyHeader className="flex flex-col items-center gap-0">
-                <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
+                <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none">
                   <HugeIcon  className="ph-duotone ph-warning-circle text-xl text-pup-maroon dark:text-primary" />
                 </EmptyMedia>
                 <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">
@@ -337,7 +337,7 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
       >
         <DialogContent 
           hideClose={true}
-          className="flex h-[90vh] w-[96vw] max-w-[96vw] flex-col overflow-hidden border border-gray-200 bg-gray-100 p-0 shadow-2xl transition-all duration-normal ease-standard font-jakarta xl:max-w-[1400px] rounded-2xl dark:border-white/10 dark:bg-muted"
+          className="flex h-[90vh] w-[96vw] max-w-[96vw] flex-col overflow-hidden border border-border bg-gray-100 p-0 shadow-2xl transition-all duration-normal ease-standard font-jakarta xl:max-w-[1400px] rounded-2xl dark:border-border dark:bg-muted"
         >
           <DialogHeader 
             className="shrink-0 bg-gray-50 dark:bg-white/5"
@@ -419,7 +419,7 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
             )}
           </div>
 
-          <div className="flex shrink-0 items-center bg-white dark:bg-card px-6 py-4 border-t border-gray-100 dark:border-white/10">
+          <div className="flex shrink-0 items-center bg-white dark:bg-card px-6 py-4 border-t border-border dark:border-border">
             <Button
               variant="ghost"
               size="icon"
@@ -433,7 +433,7 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
               <Button
                 variant="outline"
                 onClick={() => setReportOpen(false)}
-                className="flex h-10 items-center justify-center rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-5 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
+                className="flex h-10 items-center justify-center rounded-xl! border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-5 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
               >
                 Close
               </Button>

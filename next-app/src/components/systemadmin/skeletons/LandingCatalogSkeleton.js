@@ -7,7 +7,7 @@ import PageHeader from "@/components/shared/PageHeader"
 export default function LandingCatalogSkeleton() {
   return (
     <div className="flex flex-col gap-6 w-full animate-fade-up font-jakarta">
-      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
+      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none">
         <PageHeader
           icon="ph-bold ph-books"
           title={
@@ -21,7 +21,7 @@ export default function LandingCatalogSkeleton() {
           description="Configure authentic university credentials, filing requirements, client eligibility, and Apple-style carousel cards."
           showBorder={false}
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
-          descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
+          descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
           actions={
             <div className="flex items-center gap-2.5 flex-wrap">
               <Skeleton className="h-10 w-28 rounded-xl dark:bg-muted" />
@@ -32,7 +32,7 @@ export default function LandingCatalogSkeleton() {
         />
 
         {/* Standard Underline Tabs */}
-        <div className="flex items-center gap-6 shrink-0 h-10 px-6 border-b border-gray-100 dark:border-white/10 bg-white dark:bg-card select-none">
+        <div className="flex items-center gap-6 shrink-0 h-10 px-6 border-b border-border dark:border-border bg-white dark:bg-card select-none">
           <div className="relative h-full flex items-center text-[13px] font-semibold text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50">
             Catalog Content
           </div>
@@ -44,7 +44,7 @@ export default function LandingCatalogSkeleton() {
         <CardContent className="p-6">
           <div className="space-y-6">
             {/* Section Header & Subtitle Skeleton */}
-            <div className="p-5 sm:p-6 rounded-2xl border border-gray-200/80 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/30 space-y-4">
+            <div className="p-5 sm:p-6 rounded-2xl border border-border/80 dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 space-y-4">
               <div className="space-y-1">
                 <Skeleton className="h-4 w-48 rounded dark:bg-muted" />
                 <Skeleton className="h-3 w-80 rounded dark:bg-muted" />
@@ -75,7 +75,7 @@ export default function LandingCatalogSkeleton() {
                         6 of 8
                       </span>
                     </div>
-                    <p className="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">
+                    <p className="text-xs text-gray-900 dark:text-zinc-300 mt-0.5">
                       Select a credential to edit or adjust order in the carousel.
                     </p>
                   </div>
@@ -105,7 +105,7 @@ export default function LandingCatalogSkeleton() {
                   {["02", "03", "04"].map((pos) => (
                     <div
                       key={pos}
-                      className="p-3.5 rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-900/50 flex items-center gap-3.5 select-none"
+                      className="p-3.5 rounded-2xl border border-border dark:border-border bg-white dark:bg-zinc-900/50 flex items-center gap-3.5 select-none"
                     >
                       <div className="w-7 h-7 rounded-xl bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-zinc-400 flex items-center justify-center font-mono text-[11px] font-bold shrink-0">
                         {pos}
@@ -124,15 +124,15 @@ export default function LandingCatalogSkeleton() {
                 </div>
 
                 {/* Add Card Dashed Button */}
-                <div className="w-full py-3.5 rounded-xl border-2 border-dashed border-gray-200 dark:border-white/10 flex items-center justify-center">
+                <div className="w-full py-3.5 rounded-xl border-2 border-dashed border-border dark:border-border flex items-center justify-center">
                   <Skeleton className="h-4 w-48 rounded dark:bg-muted" />
                 </div>
               </div>
 
               {/* RIGHT COLUMN: ACTIVE CARD EDITOR */}
               <div className="lg:col-span-7 flex flex-col gap-6">
-                <div className="p-5 rounded-2xl border border-gray-200 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/30 flex flex-col gap-5">
-                  <div className="flex items-center justify-between pb-3 border-b border-gray-200/80 dark:border-white/10">
+                <div className="p-5 rounded-2xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 flex flex-col gap-5">
+                  <div className="flex items-center justify-between pb-3 border-b border-border/80 dark:border-border">
                     <div className="space-y-1">
                       <span className="text-[10px] font-mono uppercase font-bold text-pup-maroon dark:text-red-400 tracking-wider">
                         Document Card Editor

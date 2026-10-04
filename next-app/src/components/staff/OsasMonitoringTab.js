@@ -107,12 +107,12 @@ export function getProposalStatusBadgeClass(status) {
     return "bg-rose-50 text-rose-800 border-rose-200/80 dark:bg-rose-950/30 dark:text-rose-300 dark:border-rose-800/40";
   }
   if (s === "submitted" || s === "pending") {
-    return "bg-slate-100 text-slate-700 border-slate-200 dark:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-700";
+    return "bg-slate-100 text-slate-700 border-slate-200 dark:bg-zinc-800 dark:text-zinc-300 dark:border-border";
   }
   if (s === "archived") {
-    return "bg-zinc-100 text-zinc-700 border-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-700";
+    return "bg-zinc-100 text-zinc-700 border-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:border-border";
   }
-  return "bg-zinc-100 text-zinc-700 border-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-700";
+  return "bg-zinc-100 text-zinc-700 border-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:border-border";
 }
 
 export function getProposalStatusDotClass(status) {
@@ -139,7 +139,7 @@ export function getPostEventStatusBadgeClass(status) {
   if (s === "declined" || s === "rejected") {
     return "bg-rose-50 text-rose-800 border-rose-200/80 dark:bg-rose-950/30 dark:text-rose-300 dark:border-rose-800/40";
   }
-  return "bg-slate-100 text-slate-700 border-slate-200 dark:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-700";
+  return "bg-slate-100 text-slate-700 border-slate-200 dark:bg-zinc-800 dark:text-zinc-300 dark:border-border";
 }
 
 export function getPostEventStatusDotClass(status) {
@@ -230,7 +230,7 @@ function FirstPagePreview({ proposalId, fileUrl, title, onOpenPreview, subtext =
       <div className="space-y-2">
         <div
           ref={containerRef}
-          className="relative flex min-h-[190px] w-full flex-col items-center justify-center rounded-xl border border-dashed border-gray-200 bg-gray-50/80 p-5 text-center dark:border-white/10 dark:bg-zinc-900/60"
+          className="relative flex min-h-[190px] w-full flex-col items-center justify-center rounded-xl border border-dashed border-border bg-gray-50/80 p-5 text-center dark:border-border dark:bg-zinc-900/60"
           aria-label={`Preview fallback for ${title}`}
         >
           <div className="w-10 h-10 rounded-xl bg-red-50 dark:bg-red-950/40 text-pup-maroon dark:text-red-400 flex items-center justify-center text-xl mb-2">
@@ -246,7 +246,7 @@ function FirstPagePreview({ proposalId, fileUrl, title, onOpenPreview, subtext =
             size="sm"
             onClick={onOpenPreview || (() => previewUrl && window.open(previewUrl, "_blank"))}
             title="Preview PDF Document"
-            className="h-8 px-3.5 rounded-lg text-xs font-semibold bg-white dark:bg-zinc-800 border border-gray-200 dark:border-white/10 text-pup-maroon dark:text-red-400 hover:bg-gray-50 shadow-2xs cursor-pointer active:scale-95 transition-all"
+            className="h-8 px-3.5 rounded-lg text-xs font-semibold bg-white dark:bg-zinc-800 border border-border dark:border-border text-pup-maroon dark:text-red-400 hover:bg-gray-50 shadow-2xs cursor-pointer active:scale-95 transition-all"
           >
             Preview
           </Button>
@@ -261,7 +261,7 @@ function FirstPagePreview({ proposalId, fileUrl, title, onOpenPreview, subtext =
         ref={containerRef}
         onClick={onOpenPreview}
         className={cn(
-          "relative flex min-h-[220px] w-full items-center justify-center overflow-hidden rounded-xl border border-gray-200 bg-gray-50/80 p-2 dark:border-white/10 dark:bg-zinc-900/60 transition-all",
+          "relative flex min-h-[220px] w-full items-center justify-center overflow-hidden rounded-xl border border-border bg-gray-50/80 p-2 dark:border-border dark:bg-zinc-900/60 transition-all",
           onOpenPreview && "cursor-pointer hover:border-pup-maroon/40 hover:shadow-xs group"
         )}
         aria-label={`First-page preview of ${title}`}
@@ -977,7 +977,7 @@ export default function OsasMonitoringTab({ showToast }) {
   return (
     <div className="font-jakarta w-full flex flex-1 flex-col h-full min-h-0 gap-6 focus:outline-none animate-fade-up select-none">
       {/* ONE Single Card Container encapsulating Header, Toolbar, Active Filters, Table & Kanban */}
-      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none isolate font-jakarta mb-4 min-h-0 flex-1">
+      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4 min-h-0 flex-1">
         {/* 1. Page Header */}
         <PageHeader
           icon="ph-calendar-check"
@@ -986,12 +986,12 @@ export default function OsasMonitoringTab({ showToast }) {
           showBorder={false}
           className="p-6"
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
-          descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
+          descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
           actions={
             <div className="flex items-center gap-2">
               {/* Segmented View Mode Toggle (Available for proposals & post-events streams) */}
               {(activeStream === "proposals" || activeStream === "post_events") && (
-                <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-gray-200/60 dark:border-white/5 shrink-0">
+                <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-border/60 dark:border-border shrink-0">
                   <button
                     type="button"
                     onClick={() => handleViewModeChange("list")}
@@ -1029,8 +1029,8 @@ export default function OsasMonitoringTab({ showToast }) {
         />
 
         {/* 2. Stream Navigation Switcher */}
-        <div className="px-6 py-3 border-t border-gray-100 dark:border-white/10 bg-gray-50/70 dark:bg-zinc-900/50 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-1.5 p-1 bg-gray-200/60 dark:bg-zinc-800/80 rounded-xl border border-gray-200/80 dark:border-white/10 w-full sm:w-fit overflow-x-auto scrollbar-none">
+        <div className="px-6 py-3 border-t border-border dark:border-border bg-gray-50/70 dark:bg-zinc-900/50 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-1.5 p-1 bg-gray-200/60 dark:bg-zinc-800/80 rounded-xl border border-border/80 dark:border-border w-full sm:w-fit overflow-x-auto scrollbar-none">
             <button
               type="button"
               onClick={() => {
@@ -1092,7 +1092,7 @@ export default function OsasMonitoringTab({ showToast }) {
         </div>
 
         {/* 3. Embedded Filter Toolbar */}
-        <div className="border-t border-gray-100 dark:border-white/10 p-5 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
+        <div className="border-t border-border dark:border-border p-5 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
           {/* Status Filter Tabs */}
           {viewMode === "list" ? (
             <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0 scrollbar-none">
@@ -1113,7 +1113,7 @@ export default function OsasMonitoringTab({ showToast }) {
                       "inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer border shrink-0",
                       isActive
                         ? "bg-pup-maroon text-white border-pup-maroon shadow-xs"
-                        : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50 hover:text-gray-900 dark:bg-zinc-900 dark:text-zinc-400 dark:border-white/10 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
+                        : "bg-white text-gray-600 border-border hover:bg-gray-50 hover:text-gray-900 dark:bg-zinc-900 dark:text-zinc-400 dark:border-border dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
                     )}
                   >
                     <span>{tab.label}</span>
@@ -1132,7 +1132,7 @@ export default function OsasMonitoringTab({ showToast }) {
               })}
             </div>
           ) : (
-            <div className="text-xs text-gray-500 dark:text-zinc-400 flex items-center gap-2">
+            <div className="text-xs text-gray-900 dark:text-zinc-300 flex items-center gap-2">
               <span className="inline-flex items-center gap-1.5 font-medium">
                 <HugeIcon className="ph-bold ph-kanban text-sm text-pup-maroon dark:text-red-400" />
                 <span>
@@ -1160,7 +1160,7 @@ export default function OsasMonitoringTab({ showToast }) {
                   setSearchQuery(e.target.value);
                   setPage(1);
                 }}
-                className="h-9 pl-8 pr-8 text-xs rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
+                className="h-9 pl-8 pr-8 text-xs rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
               />
               {searchQuery && (
                 <button
@@ -1195,7 +1195,7 @@ export default function OsasMonitoringTab({ showToast }) {
         <ActiveFilterChips
           chips={activeChips}
           onClearAll={handleClearFilters}
-          className="border-t border-gray-100 dark:border-white/10 px-6 py-2.5"
+          className="border-t border-border dark:border-border px-6 py-2.5"
         />
 
         {/* 5. Stream Content */}
@@ -1203,10 +1203,10 @@ export default function OsasMonitoringTab({ showToast }) {
         {activeStream === "proposals" && (
           <>
             {viewMode === "list" ? (
-              <div className={cn("w-full flex flex-col flex-1 min-h-0 border-t border-gray-100 dark:border-white/10", filteredRows.length === 0 && "rounded-b-2xl overflow-hidden")}>
+              <div className={cn("w-full flex flex-col flex-1 min-h-0 border-t border-border dark:border-border", filteredRows.length === 0 && "rounded-b-2xl overflow-hidden")}>
                 <div className="overflow-x-auto flex-1">
                   <table className="w-full text-left text-xs">
-                    <thead className="sticky top-0 z-10 border-b border-gray-100 dark:border-white/10 bg-white dark:bg-card">
+                    <thead className="sticky top-0 z-10 border-b border-border dark:border-border bg-white dark:bg-card">
                       <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">
                         <th className="py-3.5 px-6 w-full min-w-[280px]">Event Proposal & Organization</th>
                         <th className="py-3.5 px-6 min-w-[180px] whitespace-nowrap">Proponent</th>
@@ -1215,7 +1215,7 @@ export default function OsasMonitoringTab({ showToast }) {
                         <th className="py-3.5 px-6 text-right w-28 whitespace-nowrap">Action</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-100 dark:divide-white/5 bg-white dark:bg-card">
+                    <tbody className="divide-y divide-border dark:divide-border bg-white dark:bg-card">
                       {paginatedRows.map((item) => (
                         <tr
                           key={item.id}
@@ -1226,7 +1226,7 @@ export default function OsasMonitoringTab({ showToast }) {
                             <div className="font-semibold text-gray-900 dark:text-zinc-100 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors line-clamp-1">
                               {item.title}
                             </div>
-                            <div className="flex items-center gap-1.5 text-[11px] text-gray-500 dark:text-zinc-400 mt-0.5 truncate flex-wrap">
+                            <div className="flex items-center gap-1.5 text-[11px] text-gray-900 dark:text-zinc-300 mt-0.5 truncate flex-wrap">
                               {item.org_acronym && (
                                 <span className="px-1.5 py-0.2 text-[10px] font-bold rounded bg-red-50 text-pup-maroon dark:bg-red-950/40 dark:text-red-400 border border-red-100 dark:border-red-900/30 shrink-0">
                                   {item.org_acronym}
@@ -1276,7 +1276,7 @@ export default function OsasMonitoringTab({ showToast }) {
                               {item.status}
                             </span>
                           </td>
-                          <td className="py-3.5 px-6 whitespace-nowrap hidden sm:table-cell text-gray-500 dark:text-zinc-400 text-[11px]">
+                          <td className="py-3.5 px-6 whitespace-nowrap hidden sm:table-cell text-gray-900 dark:text-zinc-300 text-[11px]">
                             {item.created_at
                               ? new Date(item.created_at).toLocaleDateString(undefined, {
                                   month: "short",
@@ -1307,18 +1307,18 @@ export default function OsasMonitoringTab({ showToast }) {
                       {!filteredRows.length && (
                         <tr className="border-0 hover:bg-transparent">
                           <td colSpan={5} className="py-16 px-6 text-center border-0">
-                            <Empty className="flex h-full flex-col items-center justify-center border-0 bg-transparent text-center text-gray-500 dark:text-zinc-400">
+                            <Empty className="flex h-full flex-col items-center justify-center border-0 bg-transparent text-center text-gray-900 dark:text-zinc-300">
                               <EmptyHeader className="flex flex-col items-center gap-0">
                                 <div className="relative mb-6">
                                   <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card" />
-                                  <EmptyMedia className="relative z-10 flex h-20 w-20 items-center justify-center rounded-2xl border border-gray-100 bg-white shadow-md rotate-2 dark:border-white/10 dark:bg-card dark:shadow-none">
+                                  <EmptyMedia className="relative z-10 flex h-20 w-20 items-center justify-center rounded-2xl border border-border bg-white shadow-md dark:border-border dark:bg-card dark:shadow-none">
                                     <HugeIcon className="ph-duotone ph-calendar-check text-3xl text-pup-maroon dark:text-red-400" />
                                   </EmptyMedia>
                                 </div>
                                 <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">
                                   No Event Proposals Found
                                 </EmptyTitle>
-                                <EmptyDescription className="max-w-xs text-xs font-medium text-gray-500 dark:text-zinc-400 mt-1">
+                                <EmptyDescription className="max-w-xs text-xs font-medium text-gray-900 dark:text-zinc-300 mt-1">
                                   {hasActiveFilters
                                     ? "Try adjusting your search criteria or resetting active filters."
                                     : "Student organizations have not submitted any event proposals yet."}
@@ -1330,7 +1330,7 @@ export default function OsasMonitoringTab({ showToast }) {
                                     size="sm"
                                     onClick={handleClearFilters}
                                     title="Reset Filters"
-                                    className="mt-4 h-9 px-4 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 cursor-pointer active:scale-95 transition-all shadow-xs"
+                                    className="mt-4 h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 cursor-pointer active:scale-95 transition-all shadow-xs"
                                   >
                                     Reset
                                   </Button>
@@ -1345,19 +1345,19 @@ export default function OsasMonitoringTab({ showToast }) {
                 </div>
               </div>
             ) : filteredRows.length === 0 ? (
-              <div className="w-full flex-1 flex items-center justify-center border-t border-gray-100 dark:border-white/10 p-16 bg-gray-50/20 dark:bg-zinc-900/10 min-h-[360px]">
-                <Empty className="flex h-full flex-col items-center justify-center border-0 bg-transparent text-center text-gray-500 dark:text-zinc-400">
+              <div className="w-full flex-1 flex items-center justify-center border-t border-border dark:border-border p-16 bg-gray-50/20 dark:bg-zinc-900/10 min-h-[360px]">
+                <Empty className="flex h-full flex-col items-center justify-center border-0 bg-transparent text-center text-gray-900 dark:text-zinc-300">
                   <EmptyHeader className="flex flex-col items-center gap-0">
                     <div className="relative mb-6">
                       <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card" />
-                      <EmptyMedia className="relative z-10 flex h-20 w-20 items-center justify-center rounded-2xl border border-gray-100 bg-white shadow-md rotate-2 dark:border-white/10 dark:bg-card dark:shadow-none">
+                      <EmptyMedia className="relative z-10 flex h-20 w-20 items-center justify-center rounded-2xl border border-border bg-white shadow-md dark:border-border dark:bg-card dark:shadow-none">
                         <HugeIcon className="ph-duotone ph-kanban text-3xl text-pup-maroon dark:text-red-400" />
                       </EmptyMedia>
                     </div>
                     <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">
                       No Proposals in Pipeline
                     </EmptyTitle>
-                    <EmptyDescription className="max-w-xs text-xs font-medium text-gray-500 dark:text-zinc-400 mt-1">
+                    <EmptyDescription className="max-w-xs text-xs font-medium text-gray-900 dark:text-zinc-300 mt-1">
                       {hasActiveFilters
                         ? "No proposals match your active search terms or filters."
                         : "There are currently no event proposals in the pipeline."}
@@ -1369,7 +1369,7 @@ export default function OsasMonitoringTab({ showToast }) {
                         size="sm"
                         onClick={handleClearFilters}
                         title="Reset Filters"
-                        className="mt-4 h-9 px-4 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 cursor-pointer active:scale-95 transition-all shadow-xs"
+                        className="mt-4 h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 cursor-pointer active:scale-95 transition-all shadow-xs"
                       >
                         Reset
                       </Button>
@@ -1379,7 +1379,7 @@ export default function OsasMonitoringTab({ showToast }) {
               </div>
             ) : (
               /* Kanban Pipeline Board */
-              <div className="w-full flex-1 min-h-0 border-t border-gray-100 dark:border-white/10 p-6 overflow-x-auto bg-gray-50/20 dark:bg-zinc-900/10">
+              <div className="w-full flex-1 min-h-0 border-t border-border dark:border-border p-6 overflow-x-auto bg-gray-50/20 dark:bg-zinc-900/10">
                 <div className="flex gap-4 min-w-max items-start">
                   {KANBAN_COLUMNS.map((col) => {
                     const columnItems = getProposalsForColumn(col.key);
@@ -1406,11 +1406,11 @@ export default function OsasMonitoringTab({ showToast }) {
                         }}
                         onDrop={(e) => handleDrop(e, col.key)}
                         className={cn(
-                          "w-72 sm:w-80 shrink-0 flex flex-col rounded-2xl bg-gray-50/80 dark:bg-zinc-900/50 border border-gray-200/80 dark:border-white/10 p-3.5 shadow-2xs transition-all duration-200",
+                          "w-72 sm:w-80 shrink-0 flex flex-col rounded-2xl bg-gray-50/80 dark:bg-zinc-900/50 border border-border/80 dark:border-border p-3.5 shadow-2xs transition-all duration-200",
                           dragOverColumn === col.key && draggingProposal?.status !== col.key && "ring-2 ring-pup-maroon/60 border-pup-maroon/70 bg-red-50/30 dark:bg-red-950/20 shadow-sm"
                         )}
                       >
-                        <div className="flex items-center justify-between pb-2.5 mb-2.5 border-b border-gray-200/80 dark:border-white/10 select-none">
+                        <div className="flex items-center justify-between pb-2.5 mb-2.5 border-b border-border/80 dark:border-border select-none">
                           <div className="flex items-center gap-2">
                             <span className={cn("w-2 h-2 rounded-full", getProposalStatusDotClass(col.key))} />
                             <h3 className="text-xs font-bold text-gray-900 dark:text-zinc-100">
@@ -1458,7 +1458,7 @@ export default function OsasMonitoringTab({ showToast }) {
                                   select(item);
                                 }}
                                 className={cn(
-                                  "group relative rounded-xl border border-gray-200 bg-white p-3.5 shadow-2xs hover:shadow-md hover:border-pup-maroon/40 dark:border-white/10 dark:bg-card dark:hover:border-red-800/40 transition-all flex flex-col gap-2.5 active:scale-[0.99] select-none",
+                                  "group relative rounded-xl border border-border bg-white p-3.5 shadow-2xs hover:shadow-md hover:border-pup-maroon/40 dark:border-border dark:bg-card dark:hover:border-red-800/40 transition-all flex flex-col gap-2.5 active:scale-[0.99] select-none",
                                   isLocked ? "cursor-pointer" : "cursor-grab active:cursor-grabbing",
                                   draggingProposal?.id === item.id && "opacity-35 scale-[0.97] border-dashed border-pup-maroon/60"
                                 )}
@@ -1487,7 +1487,7 @@ export default function OsasMonitoringTab({ showToast }) {
                                     </Tooltip>
                                   ) : (
                                     <HugeIcon
-                                      className="ph-bold ph-dots-six-vertical text-gray-300 dark:text-zinc-600 group-hover:text-gray-500 dark:group-hover:text-zinc-400 text-sm transition-colors shrink-0"
+                                      className="ph-bold ph-dots-six-vertical text-gray-900 dark:text-zinc-300 group-hover:text-black dark:group-hover:text-zinc-400 text-lg transition-colors shrink-0"
                                       title="Drag to change stage"
                                     />
                                   )}
@@ -1497,14 +1497,14 @@ export default function OsasMonitoringTab({ showToast }) {
                                 {item.title}
                               </h4>
 
-                              <div className="flex items-center gap-1.5 text-[11px] text-gray-500 dark:text-zinc-400">
+                              <div className="flex items-center gap-1.5 text-[11px] text-gray-900 dark:text-zinc-300">
                                 <HugeIcon className="ph-bold ph-user-check text-emerald-600 dark:text-emerald-400 text-xs shrink-0" />
                                 <span className="truncate font-medium text-gray-700 dark:text-zinc-300">
                                   {item.student_name}
                                 </span>
                               </div>
 
-                              <div className="pt-2 border-t border-gray-100 dark:border-white/5 flex items-center justify-between text-[11px] text-gray-500 dark:text-zinc-400">
+                              <div className="pt-2 border-t border-border dark:border-border flex items-center justify-between text-[11px] text-gray-900 dark:text-zinc-300">
                                 <span className="inline-flex items-center gap-1.5 text-[11px] text-gray-400 dark:text-zinc-500 font-normal">
                                   <HugeIcon className="ph ph-clock text-xs text-gray-400 dark:text-zinc-500" />
                                   {item.created_at
@@ -1524,7 +1524,7 @@ export default function OsasMonitoringTab({ showToast }) {
                         })}
 
                           {!columnItems.length && (
-                            <div className="rounded-xl border border-dashed border-gray-200 dark:border-zinc-800 bg-white/40 dark:bg-zinc-900/20 py-8 px-3 text-center flex flex-col items-center justify-center gap-1.5">
+                            <div className="rounded-xl border border-dashed border-border dark:border-border bg-white/40 dark:bg-zinc-900/20 py-8 px-3 text-center flex flex-col items-center justify-center gap-1.5">
                               <HugeIcon className="ph-duotone ph-tray text-xl text-gray-400/80 dark:text-zinc-600" />
                               <p className="text-xs text-gray-400 dark:text-zinc-500 font-medium">
                                 No proposals in this stage
@@ -1548,10 +1548,10 @@ export default function OsasMonitoringTab({ showToast }) {
         {activeStream === "post_events" && (
           <>
             {viewMode === "list" ? (
-              <div className={cn("w-full flex flex-col flex-1 min-h-0 border-t border-gray-100 dark:border-white/10", filteredPostEvents.length === 0 && "rounded-b-2xl overflow-hidden")}>
+              <div className={cn("w-full flex flex-col flex-1 min-h-0 border-t border-border dark:border-border", filteredPostEvents.length === 0 && "rounded-b-2xl overflow-hidden")}>
                 <div className="overflow-x-auto flex-1">
                   <table className="w-full text-left text-xs">
-                    <thead className="sticky top-0 z-10 border-b border-gray-100 dark:border-white/10 bg-white dark:bg-card">
+                    <thead className="sticky top-0 z-10 border-b border-border dark:border-border bg-white dark:bg-card">
                       <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">
                         <th className="py-3.5 px-6 w-full min-w-[280px]">Event Proposal & Organization</th>
                         <th className="py-3.5 px-6 min-w-[170px] whitespace-nowrap">Proponent</th>
@@ -1561,7 +1561,7 @@ export default function OsasMonitoringTab({ showToast }) {
                         <th className="py-3.5 px-6 text-right w-24 whitespace-nowrap">Action</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-100 dark:divide-white/5 bg-white dark:bg-card">
+                    <tbody className="divide-y divide-border dark:divide-border bg-white dark:bg-card">
                       {paginatedPostEvents.map((item) => {
                         const attendees = item.actual_attendance ?? item.total_attendance ?? item.actual_attendees ?? 0;
                         const expenses = Number(item.total_expenses ?? item.actual_expenses ?? 0);
@@ -1575,7 +1575,7 @@ export default function OsasMonitoringTab({ showToast }) {
                               <div className="font-semibold text-gray-900 dark:text-zinc-100 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors line-clamp-1">
                                 {item.event_title}
                               </div>
-                              <div className="flex items-center gap-1.5 text-[11px] text-gray-500 dark:text-zinc-400 mt-0.5 truncate">
+                              <div className="flex items-center gap-1.5 text-[11px] text-gray-900 dark:text-zinc-300 mt-0.5 truncate">
                                 {item.org_acronym && (
                                   <span className="px-1.5 py-0.2 text-[10px] font-bold rounded bg-red-50 text-pup-maroon dark:bg-red-950/40 dark:text-red-400 border border-red-100 dark:border-red-900/30 shrink-0">
                                     {item.org_acronym}
@@ -1611,7 +1611,7 @@ export default function OsasMonitoringTab({ showToast }) {
                                 {item.status}
                               </span>
                             </td>
-                            <td className="py-3.5 px-6 whitespace-nowrap hidden sm:table-cell text-gray-500 dark:text-zinc-400 text-[11px]">
+                            <td className="py-3.5 px-6 whitespace-nowrap hidden sm:table-cell text-gray-900 dark:text-zinc-300 text-[11px]">
                               {item.created_at
                                 ? new Date(item.created_at).toLocaleDateString(undefined, {
                                     month: "short",
@@ -1643,18 +1643,18 @@ export default function OsasMonitoringTab({ showToast }) {
                       {!filteredPostEvents.length && (
                         <tr className="border-0 hover:bg-transparent">
                           <td colSpan={6} className="py-16 px-6 text-center border-0">
-                            <Empty className="flex h-full flex-col items-center justify-center border-0 bg-transparent text-center text-gray-500 dark:text-zinc-400">
+                            <Empty className="flex h-full flex-col items-center justify-center border-0 bg-transparent text-center text-gray-900 dark:text-zinc-300">
                               <EmptyHeader className="flex flex-col items-center gap-0">
                                 <div className="relative mb-6">
                                   <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card" />
-                                  <EmptyMedia className="relative z-10 flex h-20 w-20 items-center justify-center rounded-2xl border border-gray-100 bg-white shadow-md -rotate-2 dark:border-white/10 dark:bg-card dark:shadow-none">
+                                  <EmptyMedia className="relative z-10 flex h-20 w-20 items-center justify-center rounded-2xl border border-border bg-white shadow-md dark:border-border dark:bg-card dark:shadow-none">
                                     <HugeIcon className="ph-duotone ph-clipboard-text text-3xl text-pup-maroon dark:text-red-400" />
                                   </EmptyMedia>
                                 </div>
                                 <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">
                                   No Post-Event Reports Found
                                 </EmptyTitle>
-                                <EmptyDescription className="max-w-xs text-xs font-medium text-gray-500 dark:text-zinc-400 mt-1">
+                                <EmptyDescription className="max-w-xs text-xs font-medium text-gray-900 dark:text-zinc-300 mt-1">
                                   {hasActiveFilters
                                     ? "No reports match your active search or filter criteria."
                                     : "Student organizations will submit narrative and liquidation reports after their approved events conclude."}
@@ -1666,7 +1666,7 @@ export default function OsasMonitoringTab({ showToast }) {
                                     size="sm"
                                     onClick={handleClearFilters}
                                     title="Reset Filters"
-                                    className="mt-4 h-9 px-4 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 cursor-pointer active:scale-95 transition-all shadow-xs"
+                                    className="mt-4 h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 cursor-pointer active:scale-95 transition-all shadow-xs"
                                   >
                                     Reset
                                   </Button>
@@ -1682,21 +1682,21 @@ export default function OsasMonitoringTab({ showToast }) {
               </div>
             ) : (
               /* KANBAN BOARD VIEW FOR POST-EVENTS */
-              <div className="w-full flex-1 min-h-0 border-t border-gray-100 dark:border-white/10 bg-white/50 dark:bg-card/50">
+              <div className="w-full flex-1 min-h-0 border-t border-border dark:border-border bg-white/50 dark:bg-card/50">
                 {filteredPostEvents.length === 0 ? (
                   <div className="py-20 px-6 text-center w-full">
-                    <Empty className="flex h-full flex-col items-center justify-center border-0 bg-transparent text-center text-gray-500 dark:text-zinc-400">
+                    <Empty className="flex h-full flex-col items-center justify-center border-0 bg-transparent text-center text-gray-900 dark:text-zinc-300">
                       <EmptyHeader className="flex flex-col items-center gap-0">
                         <div className="relative mb-6">
                           <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card" />
-                          <EmptyMedia className="relative z-10 flex h-20 w-20 items-center justify-center rounded-2xl border border-gray-100 bg-white shadow-md -rotate-2 dark:border-white/10 dark:bg-card dark:shadow-none">
+                          <EmptyMedia className="relative z-10 flex h-20 w-20 items-center justify-center rounded-2xl border border-border bg-white shadow-md dark:border-border dark:bg-card dark:shadow-none">
                             <HugeIcon className="ph-duotone ph-clipboard-text text-3xl text-pup-maroon dark:text-red-400" />
                           </EmptyMedia>
                         </div>
                         <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">
                           No Post-Event Reports Found
                         </EmptyTitle>
-                        <EmptyDescription className="max-w-xs text-xs font-medium text-gray-500 dark:text-zinc-400 mt-1">
+                        <EmptyDescription className="max-w-xs text-xs font-medium text-gray-900 dark:text-zinc-300 mt-1">
                           {hasActiveFilters
                             ? "No reports match your active search or filter criteria."
                             : "Student organizations will submit narrative and liquidation reports after their approved events conclude."}
@@ -1708,7 +1708,7 @@ export default function OsasMonitoringTab({ showToast }) {
                             size="sm"
                             onClick={handleClearFilters}
                             title="Reset Filters"
-                            className="mt-4 h-9 px-4 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 cursor-pointer active:scale-95 transition-all shadow-xs"
+                            className="mt-4 h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 cursor-pointer active:scale-95 transition-all shadow-xs"
                           >
                             Reset
                           </Button>
@@ -1744,11 +1744,11 @@ export default function OsasMonitoringTab({ showToast }) {
                             }}
                             onDrop={(e) => handlePostEventDrop(e, col.key)}
                             className={cn(
-                              "w-72 sm:w-80 shrink-0 flex flex-col rounded-2xl bg-gray-50/80 dark:bg-zinc-900/50 border border-gray-200/80 dark:border-white/10 p-3.5 shadow-2xs transition-all duration-200",
+                              "w-72 sm:w-80 shrink-0 flex flex-col rounded-2xl bg-gray-50/80 dark:bg-zinc-900/50 border border-border/80 dark:border-border p-3.5 shadow-2xs transition-all duration-200",
                               dragOverPostEventColumn === col.key && draggingPostEvent?.status !== col.key && "ring-2 ring-pup-maroon/60 border-pup-maroon/70 bg-red-50/30 dark:bg-red-950/20 shadow-sm"
                             )}
                           >
-                            <div className="flex items-center justify-between pb-2.5 mb-2.5 border-b border-gray-200/80 dark:border-white/10 select-none">
+                            <div className="flex items-center justify-between pb-2.5 mb-2.5 border-b border-border/80 dark:border-border select-none">
                               <div className="flex items-center gap-2">
                                 <span className={cn("w-2 h-2 rounded-full", getPostEventStatusDotClass(col.key))} />
                                 <h3 className="text-xs font-bold text-gray-900 dark:text-zinc-100">
@@ -1798,7 +1798,7 @@ export default function OsasMonitoringTab({ showToast }) {
                                       selectPostEvent(item);
                                     }}
                                     className={cn(
-                                      "group relative rounded-xl border border-gray-200 bg-white p-3.5 shadow-2xs hover:shadow-md hover:border-pup-maroon/40 dark:border-white/10 dark:bg-card dark:hover:border-red-800/40 transition-all flex flex-col gap-2.5 active:scale-[0.99] select-none",
+                                      "group relative rounded-xl border border-border bg-white p-3.5 shadow-2xs hover:shadow-md hover:border-pup-maroon/40 dark:border-border dark:bg-card dark:hover:border-red-800/40 transition-all flex flex-col gap-2.5 active:scale-[0.99] select-none",
                                       isLocked ? "cursor-pointer" : "cursor-grab active:cursor-grabbing",
                                       draggingPostEvent?.id === item.id && "opacity-35 scale-[0.97] border-dashed border-pup-maroon/60"
                                     )}
@@ -1827,7 +1827,7 @@ export default function OsasMonitoringTab({ showToast }) {
                                         </Tooltip>
                                       ) : (
                                         <HugeIcon
-                                          className="ph-bold ph-dots-six-vertical text-gray-300 dark:text-zinc-600 group-hover:text-gray-500 dark:group-hover:text-zinc-400 text-sm transition-colors shrink-0"
+                                          className="ph-bold ph-dots-six-vertical text-gray-900 dark:text-zinc-300 group-hover:text-black dark:group-hover:text-zinc-400 text-lg transition-colors shrink-0"
                                           title="Drag to change clearance status"
                                         />
                                       )}
@@ -1837,7 +1837,7 @@ export default function OsasMonitoringTab({ showToast }) {
                                       {item.event_title}
                                     </h4>
 
-                                    <div className="flex items-center gap-1.5 text-[11px] text-gray-500 dark:text-zinc-400">
+                                    <div className="flex items-center gap-1.5 text-[11px] text-gray-900 dark:text-zinc-300">
                                       <HugeIcon className="ph-bold ph-user-check text-emerald-600 dark:text-emerald-400 text-xs shrink-0" />
                                       <span className="truncate font-medium text-gray-700 dark:text-zinc-300">
                                         {item.student_name || item.submitted_by_email}
@@ -1846,7 +1846,7 @@ export default function OsasMonitoringTab({ showToast }) {
 
                                     {/* Attendance & Liquidated Spend Pills */}
                                     <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
-                                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-gray-100 dark:bg-zinc-800 text-[10px] font-semibold text-gray-700 dark:text-zinc-300 border border-gray-200/60 dark:border-white/5">
+                                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-gray-100 dark:bg-zinc-800 text-[10px] font-semibold text-gray-700 dark:text-zinc-300 border border-border/60 dark:border-border">
                                         <HugeIcon className="ph-bold ph-users text-[10px] text-gray-400" />
                                         {Number(attendees).toLocaleString()} attendees
                                       </span>
@@ -1857,7 +1857,7 @@ export default function OsasMonitoringTab({ showToast }) {
                                     </div>
 
                                     {/* Compliance PDF Links */}
-                                    <div className="flex items-center gap-2 pt-1 border-t border-gray-100 dark:border-white/5" onClick={(e) => e.stopPropagation()}>
+                                    <div className="flex items-center gap-2 pt-1 border-t border-border dark:border-border" onClick={(e) => e.stopPropagation()}>
                                       {item.narrative_storage_filename && (
                                         <button
                                           type="button"
@@ -1899,7 +1899,7 @@ export default function OsasMonitoringTab({ showToast }) {
                                       )}
                                     </div>
 
-                                    <div className="pt-2 border-t border-gray-100 dark:border-white/5 flex items-center justify-between text-[11px] text-gray-500 dark:text-zinc-400">
+                                    <div className="pt-2 border-t border-border dark:border-border flex items-center justify-between text-[11px] text-gray-900 dark:text-zinc-300">
                                       <span className="inline-flex items-center gap-1.5 text-[11px] text-gray-400 dark:text-zinc-500 font-normal">
                                         <HugeIcon className="ph ph-clock text-xs text-gray-400 dark:text-zinc-500" />
                                         {item.created_at
@@ -1919,7 +1919,7 @@ export default function OsasMonitoringTab({ showToast }) {
                               })}
 
                               {!columnItems.length && (
-                                <div className="rounded-xl border border-dashed border-gray-200 dark:border-zinc-800 bg-white/40 dark:bg-zinc-900/20 py-8 px-3 text-center flex flex-col items-center justify-center gap-1.5">
+                                <div className="rounded-xl border border-dashed border-border dark:border-border bg-white/40 dark:bg-zinc-900/20 py-8 px-3 text-center flex flex-col items-center justify-center gap-1.5">
                                   <HugeIcon className="ph-duotone ph-tray text-xl text-gray-400/80 dark:text-zinc-600" />
                                   <p className="text-xs text-gray-400 dark:text-zinc-500 font-medium">
                                     No reports in this stage
@@ -1944,7 +1944,7 @@ export default function OsasMonitoringTab({ showToast }) {
         {/* 6. Apple HIG Pagination Footer (Unified for all streams) */}
         {viewMode === "list" && activeFilteredList.length > 0 && (
           <div className="flex items-center justify-between border-t border-[#e5e5ea] dark:border-[#3a3a3c] bg-white dark:bg-[#1c1c1e] p-4 px-6 rounded-b-2xl mt-auto select-none">
-            <div className="flex items-center gap-6 text-xs text-gray-500 dark:text-zinc-400 select-none">
+            <div className="flex items-center gap-6 text-xs text-gray-900 dark:text-zinc-300 select-none">
               <span>
                 Showing {Math.min(itemsPerPage, activeFilteredList.length - (safePage - 1) * itemsPerPage)} of {activeFilteredList.length.toLocaleString()}
               </span>
@@ -1977,12 +1977,12 @@ export default function OsasMonitoringTab({ showToast }) {
                 size="sm"
                 disabled={safePage <= 1}
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
-                className="text-xs text-gray-500 dark:text-zinc-400 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
+                className="text-xs text-gray-900 dark:text-zinc-300 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
               >
                 Prev
               </Button>
 
-              <div className="h-8 w-8 rounded-xl border border-[#e5e5ea] dark:border-zinc-800 flex items-center justify-center text-xs font-bold text-gray-800 dark:text-zinc-200 bg-white dark:bg-zinc-900">
+              <div className="h-8 w-8 rounded-xl border border-[#e5e5ea] dark:border-border flex items-center justify-center text-xs font-bold text-gray-800 dark:text-zinc-200 bg-white dark:bg-zinc-900">
                 {safePage}
               </div>
 
@@ -1991,7 +1991,7 @@ export default function OsasMonitoringTab({ showToast }) {
                 size="sm"
                 disabled={safePage >= totalPages}
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                className="text-xs text-gray-500 dark:text-zinc-400 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
+                className="text-xs text-gray-900 dark:text-zinc-300 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
               >
                 Next
               </Button>
@@ -2010,12 +2010,12 @@ export default function OsasMonitoringTab({ showToast }) {
       >
         <SheetContent
           side="right"
-          className="w-full sm:max-w-2xl md:max-w-3xl lg:max-w-4xl data-[side=right]:w-full data-[side=right]:sm:max-w-2xl data-[side=right]:md:max-w-3xl data-[side=right]:lg:max-w-4xl flex flex-col h-full bg-white dark:bg-card border-l border-gray-200 dark:border-white/10 p-0 shadow-2xl font-jakarta overflow-hidden"
+          className="w-full sm:max-w-2xl md:max-w-3xl lg:max-w-4xl data-[side=right]:w-full data-[side=right]:sm:max-w-2xl data-[side=right]:md:max-w-3xl data-[side=right]:lg:max-w-4xl flex flex-col h-full bg-white dark:bg-card border-l border-border dark:border-border p-0 shadow-2xl font-jakarta overflow-hidden"
         >
           {selected && (
             <>
               {/* Sheet Header */}
-              <SheetHeader className="shrink-0 p-6 pb-4 pr-14 border-b border-gray-100 dark:border-white/10 bg-gradient-to-r from-gray-50/90 via-white to-gray-50/50 dark:from-zinc-900/90 dark:via-card dark:to-zinc-900/50">
+              <SheetHeader className="shrink-0 p-6 pb-4 pr-14 border-b border-border dark:border-border bg-gradient-to-r from-gray-50/90 via-white to-gray-50/50 dark:from-zinc-900/90 dark:via-card dark:to-zinc-900/50">
                 <div className="flex items-start gap-3.5">
                   <div className="w-11 h-11 rounded-xl bg-pup-maroon/10 text-pup-maroon dark:bg-red-950/40 dark:text-red-400 flex items-center justify-center text-xl shrink-0 shadow-xs">
                     <HugeIcon  className="ph-bold ph-file-text"></HugeIcon>
@@ -2045,7 +2045,7 @@ export default function OsasMonitoringTab({ showToast }) {
                     <SheetTitle className="text-lg font-bold tracking-tight text-gray-900 dark:text-zinc-50 leading-snug">
                       {selected.title}
                     </SheetTitle>
-                    <SheetDescription className="mt-1 text-xs text-gray-500 dark:text-zinc-400 flex items-center gap-2 flex-wrap">
+                    <SheetDescription className="mt-1 text-xs text-gray-900 dark:text-zinc-300 flex items-center gap-2 flex-wrap">
                       <span>Proponent: <strong className="text-gray-700 dark:text-zinc-300">{selected.student_name}</strong></span>
                       {selected.officer_position && (
                         <span className="px-1.5 py-0.2 rounded bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 text-[10px] font-semibold">
@@ -2063,7 +2063,7 @@ export default function OsasMonitoringTab({ showToast }) {
               <div className="flex-1 overflow-y-auto p-6 space-y-6">
                 {/* Proponent Org Constitution & By-Laws Status */}
                 {selected.bylaws_filename ? (
-                  <div className="flex items-center justify-between rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/60 dark:bg-zinc-900/40 p-3">
+                  <div className="flex items-center justify-between rounded-xl border border-border/80 dark:border-border bg-gray-50/60 dark:bg-zinc-900/40 p-3">
                     <div className="flex items-center gap-2.5">
                       <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400">
                         <HugeIcon className="ph-bold ph-scales text-base" />
@@ -2077,7 +2077,7 @@ export default function OsasMonitoringTab({ showToast }) {
                             Active Charter
                           </span>
                         </div>
-                        <p className="text-[11px] text-gray-500 dark:text-zinc-400 truncate max-w-[240px]">
+                        <p className="text-[11px] text-gray-900 dark:text-zinc-300 truncate max-w-[240px]">
                           {selected.bylaws_original_filename || selected.bylaws_filename}
                         </p>
                       </div>
@@ -2088,7 +2088,7 @@ export default function OsasMonitoringTab({ showToast }) {
                         variant="outline"
                         size="sm"
                         title="Preview Constitution & By-Laws"
-                        className="h-7 px-2.5 text-[11px] font-semibold rounded-lg border-gray-200 dark:border-white/10 hover:bg-gray-100 dark:hover:bg-zinc-800 cursor-pointer"
+                        className="h-7 px-2.5 text-[11px] font-semibold rounded-lg border-border dark:border-border hover:bg-gray-100 dark:hover:bg-zinc-800 cursor-pointer"
                         onClick={() => {
                           setPdfPreviewData({
                             url: `/api/osas/organizations/${selected.organization_id}/bylaws?file=1`,
@@ -2173,7 +2173,7 @@ export default function OsasMonitoringTab({ showToast }) {
 
                 {/* Document Preview Section */}
                 <div className="space-y-2">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-400">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-gray-900 dark:text-zinc-300">
                     Official Proposal Document
                   </h4>
                   <FirstPagePreview
@@ -2184,7 +2184,7 @@ export default function OsasMonitoringTab({ showToast }) {
                 </div>
 
                 {/* Action Form: Update Status & Publish Note */}
-                <div className="rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/30 p-4 space-y-3">
+                <div className="rounded-xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 p-4 space-y-3">
                   <div className="flex items-center justify-between">
                     <label className="text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
                       Evaluation & Status Update
@@ -2215,8 +2215,8 @@ export default function OsasMonitoringTab({ showToast }) {
                       }
                     }}
                     usePortal={false}
-                    className="h-10 text-xs font-semibold rounded-xl bg-white dark:bg-zinc-800 border-gray-200 dark:border-white/10 text-gray-900 dark:text-zinc-100 shadow-none cursor-pointer"
-                    buttonClassName="h-10 text-xs font-semibold rounded-xl bg-white dark:bg-zinc-800 border-gray-200 dark:border-white/10 text-gray-900 dark:text-zinc-100"
+                    className="h-10 text-xs font-semibold rounded-xl bg-white dark:bg-zinc-800 border-border dark:border-border text-gray-900 dark:text-zinc-100 shadow-none cursor-pointer"
+                    buttonClassName="h-10 text-xs font-semibold rounded-xl bg-white dark:bg-zinc-800 border-border dark:border-border text-gray-900 dark:text-zinc-100"
                   >
                     {availableStatusOptions.map((opt) => (
                       <option key={opt} value={opt}>
@@ -2274,7 +2274,7 @@ export default function OsasMonitoringTab({ showToast }) {
                         "min-h-24 w-full rounded-xl border bg-white p-3 text-xs text-gray-900 placeholder:text-gray-400 outline-none transition-colors dark:bg-zinc-900 dark:text-zinc-100",
                         isNoteRequired && note.trim().length < 5
                           ? "border-amber-400 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 dark:border-amber-600"
-                          : "border-gray-200 focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon dark:border-white/10"
+                          : "border-border focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon dark:border-border"
                       )}
                       placeholder={
                         isNoteRequired
@@ -2329,15 +2329,15 @@ export default function OsasMonitoringTab({ showToast }) {
                 {/* Transaction History Timeline */}
                 {selected.updates?.length > 0 && (
                   <div className="space-y-3">
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-400">
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-gray-900 dark:text-zinc-300">
                       Transaction History ({selected.updates.length})
                     </h4>
-                    <ol className="relative border-l border-gray-200 ml-2.5 pl-4 text-xs space-y-4 dark:border-zinc-800">
+                    <ol className="relative border-l border-border ml-2.5 pl-4 text-xs space-y-4 dark:border-border">
                       {selected.updates.map((update) => (
                         <li key={update.id} className="relative">
                           <div
                             className={cn(
-                              "absolute -left-[21px] top-1 w-2.5 h-2.5 rounded-full border-2 border-white dark:border-zinc-900",
+                              "absolute -left-[21px] top-1 w-2.5 h-2.5 rounded-full border-2 border-white dark:border-border",
                               getProposalStatusDotClass(update.status)
                             )}
                           />
@@ -2361,7 +2361,7 @@ export default function OsasMonitoringTab({ showToast }) {
                               </span>
                             )}
                           </div>
-                          <p className="text-xs text-gray-700 dark:text-zinc-300 leading-relaxed bg-white dark:bg-zinc-900/60 p-2.5 rounded-lg border border-gray-100 dark:border-white/5">
+                          <p className="text-xs text-gray-700 dark:text-zinc-300 leading-relaxed bg-white dark:bg-zinc-900/60 p-2.5 rounded-lg border border-border dark:border-border">
                             {update.message}
                           </p>
                         </li>
@@ -2372,11 +2372,11 @@ export default function OsasMonitoringTab({ showToast }) {
               </div>
 
               {/* Sheet Footer */}
-              <SheetFooter className="shrink-0 p-4 border-t border-gray-100 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/30 flex justify-end">
+              <SheetFooter className="shrink-0 p-4 border-t border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 flex justify-end">
                 <Button
                   variant="outline"
                   onClick={() => setSheetOpen(false)}
-                  className="h-9 px-4 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                  className="h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                 >
                   Close
                 </Button>
@@ -2390,12 +2390,12 @@ export default function OsasMonitoringTab({ showToast }) {
       <Sheet open={postEventSheetOpen} onOpenChange={setPostEventSheetOpen}>
         <SheetContent
           side="right"
-          className="w-full sm:max-w-xl md:max-w-2xl p-0 flex flex-col bg-white dark:bg-zinc-950 border-l border-gray-200 dark:border-white/10 z-50 overflow-hidden"
+          className="w-full sm:max-w-xl md:max-w-2xl p-0 flex flex-col bg-white dark:bg-zinc-950 border-l border-border dark:border-border z-50 overflow-hidden"
         >
           {selectedPostEvent && (
             <>
               {/* Sheet Header */}
-              <SheetHeader className="shrink-0 p-6 border-b border-gray-100 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/30">
+              <SheetHeader className="shrink-0 p-6 border-b border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/30">
                 <div className="flex items-start justify-between gap-4">
                   <div className="space-y-1.5 flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
@@ -2414,7 +2414,7 @@ export default function OsasMonitoringTab({ showToast }) {
                     <SheetTitle className="text-lg font-bold tracking-tight text-gray-900 dark:text-zinc-50 leading-snug">
                       {selectedPostEvent.event_title}
                     </SheetTitle>
-                    <SheetDescription className="mt-1 text-xs text-gray-500 dark:text-zinc-400 flex items-center gap-2 flex-wrap">
+                    <SheetDescription className="mt-1 text-xs text-gray-900 dark:text-zinc-300 flex items-center gap-2 flex-wrap">
                       <span>Org: <strong className="text-gray-700 dark:text-zinc-300">{selectedPostEvent.organization_name}</strong></span>
                       {selectedPostEvent.organization_acronym && (
                         <span className="px-1.5 py-0.2 rounded bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-zinc-300 text-[10px] font-semibold">
@@ -2432,19 +2432,19 @@ export default function OsasMonitoringTab({ showToast }) {
               <div className="flex-1 overflow-y-auto p-6 space-y-6">
                 {/* Metrics summary banner */}
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                  <div className="rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/40 p-3">
+                  <div className="rounded-xl border border-border/80 dark:border-border bg-gray-50/50 dark:bg-zinc-900/40 p-3">
                     <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">Actual Attendees</span>
                     <p className="mt-1 text-base font-bold text-gray-900 dark:text-zinc-100 font-mono">
                       {Number(selectedPostEvent.actual_attendance ?? selectedPostEvent.actual_attendees ?? selectedPostEvent.total_attendance ?? 0).toLocaleString()}
                     </p>
                   </div>
-                  <div className="rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/40 p-3">
+                  <div className="rounded-xl border border-border/80 dark:border-border bg-gray-50/50 dark:bg-zinc-900/40 p-3">
                     <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">Total Liquidated</span>
                     <p className="mt-1 text-base font-bold text-gray-900 dark:text-zinc-100 font-mono">
                       ₱{Number(selectedPostEvent.total_expenses ?? selectedPostEvent.actual_expenses ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                     </p>
                   </div>
-                  <div className="col-span-2 sm:col-span-1 rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/40 p-3">
+                  <div className="col-span-2 sm:col-span-1 rounded-xl border border-border/80 dark:border-border bg-gray-50/50 dark:bg-zinc-900/40 p-3">
                     <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">Submission Date</span>
                     <p className="mt-1 text-xs font-semibold text-gray-700 dark:text-zinc-300 font-mono">
                       {selectedPostEvent.created_at ? new Date(selectedPostEvent.created_at).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }) : "N/A"}
@@ -2454,8 +2454,8 @@ export default function OsasMonitoringTab({ showToast }) {
 
                 {/* Narrative Summary card */}
                 {selectedPostEvent.narrative_summary && (
-                  <div className="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-900/50 p-4 space-y-1.5">
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-400">
+                  <div className="rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-900/50 p-4 space-y-1.5">
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-gray-900 dark:text-zinc-300">
                       Executive Accomplishment Summary
                     </h4>
                     <p className="text-xs text-gray-700 dark:text-zinc-300 leading-relaxed whitespace-pre-wrap">
@@ -2466,18 +2466,18 @@ export default function OsasMonitoringTab({ showToast }) {
 
                 {/* Dual Document Cards (Narrative + Liquidation) */}
                 <div className="space-y-3">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-400">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-gray-900 dark:text-zinc-300">
                     Submitted Compliance Documents
                   </h4>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {/* Narrative PDF Card */}
-                    <div className="rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/30 p-3.5 flex flex-col justify-between space-y-3">
+                    <div className="rounded-xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 p-3.5 flex flex-col justify-between space-y-3">
                       <div className="space-y-1">
                         <div className="flex items-center gap-1.5 text-xs font-semibold text-gray-900 dark:text-zinc-100">
                           <HugeIcon className="ph-bold ph-file-text text-base text-pup-maroon dark:text-red-400" />
                           <span>Narrative Report</span>
                         </div>
-                        <p className="text-[11px] text-gray-500 dark:text-zinc-400 truncate">
+                        <p className="text-[11px] text-gray-900 dark:text-zinc-300 truncate">
                           {selectedPostEvent.narrative_original_filename || "Narrative-Report.pdf"}
                         </p>
                       </div>
@@ -2486,7 +2486,7 @@ export default function OsasMonitoringTab({ showToast }) {
                         variant="outline"
                         size="sm"
                         title="Preview Narrative Report"
-                        className="w-full h-8 text-xs font-semibold rounded-lg border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-pup-maroon dark:text-red-400 hover:bg-gray-50 cursor-pointer"
+                        className="w-full h-8 text-xs font-semibold rounded-lg border-border dark:border-border bg-white dark:bg-zinc-800 text-pup-maroon dark:text-red-400 hover:bg-gray-50 cursor-pointer"
                         onClick={() => {
                           handleOpenPdfPreview({
                             url: `/api/osas/post-event-reports/${selectedPostEvent.id}?file=narrative`,
@@ -2502,13 +2502,13 @@ export default function OsasMonitoringTab({ showToast }) {
                     </div>
 
                     {/* Liquidation PDF Card */}
-                    <div className="rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/30 p-3.5 flex flex-col justify-between space-y-3">
+                    <div className="rounded-xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 p-3.5 flex flex-col justify-between space-y-3">
                       <div className="space-y-1">
                         <div className="flex items-center gap-1.5 text-xs font-semibold text-gray-900 dark:text-zinc-100">
                           <HugeIcon className="ph-bold ph-receipt text-base text-emerald-600 dark:text-emerald-400" />
                           <span>Financial Liquidation</span>
                         </div>
-                        <p className="text-[11px] text-gray-500 dark:text-zinc-400 truncate">
+                        <p className="text-[11px] text-gray-900 dark:text-zinc-300 truncate">
                           {selectedPostEvent.liquidation_original_filename || "Liquidation-Report.pdf"}
                         </p>
                       </div>
@@ -2518,7 +2518,7 @@ export default function OsasMonitoringTab({ showToast }) {
                           variant="outline"
                           size="sm"
                           title="Preview Financial Liquidation"
-                          className="w-full h-8 text-xs font-semibold rounded-lg border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-emerald-600 dark:text-emerald-400 hover:bg-gray-50 cursor-pointer"
+                          className="w-full h-8 text-xs font-semibold rounded-lg border-border dark:border-border bg-white dark:bg-zinc-800 text-emerald-600 dark:text-emerald-400 hover:bg-gray-50 cursor-pointer"
                           onClick={() => {
                             handleOpenPdfPreview({
                               url: `/api/osas/post-event-reports/${selectedPostEvent.id}?file=liquidation`,
@@ -2539,7 +2539,7 @@ export default function OsasMonitoringTab({ showToast }) {
                 </div>
 
                 {/* Action Form: Update Status & Clearance Note */}
-                <div className="rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/30 p-4 space-y-3">
+                <div className="rounded-xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 p-4 space-y-3">
                   <div className="flex items-center justify-between">
                     <label className="text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
                       Clearance Evaluation & Action
@@ -2604,8 +2604,8 @@ export default function OsasMonitoringTab({ showToast }) {
                       }
                     }}
                     usePortal={false}
-                    className="h-10 text-xs font-semibold rounded-xl bg-white dark:bg-zinc-800 border-gray-200 dark:border-white/10 text-gray-900 dark:text-zinc-100 shadow-none cursor-pointer"
-                    buttonClassName="h-10 text-xs font-semibold rounded-xl bg-white dark:bg-zinc-800 border-gray-200 dark:border-white/10 text-gray-900 dark:text-zinc-100"
+                    className="h-10 text-xs font-semibold rounded-xl bg-white dark:bg-zinc-800 border-border dark:border-border text-gray-900 dark:text-zinc-100 shadow-none cursor-pointer"
+                    buttonClassName="h-10 text-xs font-semibold rounded-xl bg-white dark:bg-zinc-800 border-border dark:border-border text-gray-900 dark:text-zinc-100"
                   >
                     {availablePostEventStatusOptions.map((opt) => (
                       <option key={opt} value={opt}>
@@ -2616,7 +2616,7 @@ export default function OsasMonitoringTab({ showToast }) {
 
                   <div className="space-y-1">
                     <div className="flex items-center justify-between text-[11px]">
-                      <span className={cn("font-medium", isPostEventNoteRequired ? "text-pup-maroon dark:text-red-400" : "text-gray-500 dark:text-zinc-400")}>
+                      <span className={cn("font-medium", isPostEventNoteRequired ? "text-pup-maroon dark:text-red-400" : "text-gray-900 dark:text-zinc-300")}>
                         Clearance Evaluation Remarks {isPostEventNoteRequired && "(Required, min 5 chars)"}
                       </span>
                       {isPostEventNoteRequired && (
@@ -2630,7 +2630,7 @@ export default function OsasMonitoringTab({ showToast }) {
                         "min-h-24 w-full rounded-xl border bg-white p-3 text-xs text-gray-900 placeholder:text-gray-400 outline-none focus:ring-1 dark:bg-zinc-900 dark:text-zinc-100",
                         isPostEventNoteRequired && !isPostEventNoteValid
                           ? "border-amber-300 focus:border-amber-500 focus:ring-amber-500 dark:border-amber-700"
-                          : "border-gray-200 focus:border-pup-maroon focus:ring-pup-maroon dark:border-white/10"
+                          : "border-border focus:border-pup-maroon focus:ring-pup-maroon dark:border-border"
                       )}
                       placeholder={
                         isPostEventNoteRequired
@@ -2670,7 +2670,7 @@ export default function OsasMonitoringTab({ showToast }) {
 
                 {/* Past Review Remarks if present */}
                 {selectedPostEvent.review_notes && (
-                  <div className="rounded-xl border border-gray-100 dark:border-white/5 bg-white dark:bg-zinc-900/60 p-3.5 space-y-1">
+                  <div className="rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-900/60 p-3.5 space-y-1">
                     <div className="flex items-center justify-between text-[11px] text-gray-400 dark:text-zinc-500">
                       <span>Last Evaluation by: <strong className="text-gray-700 dark:text-zinc-300">{selectedPostEvent.reviewer_name || "OSAS Officer"}</strong></span>
                       {selectedPostEvent.reviewed_at && (
@@ -2685,11 +2685,11 @@ export default function OsasMonitoringTab({ showToast }) {
               </div>
 
               {/* Sheet Footer */}
-              <SheetFooter className="shrink-0 p-4 border-t border-gray-100 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/30 flex justify-end">
+              <SheetFooter className="shrink-0 p-4 border-t border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 flex justify-end">
                 <Button
                   variant="outline"
                   onClick={() => setPostEventSheetOpen(false)}
-                  className="h-9 px-4 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                  className="h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                 >
                   Close
                 </Button>

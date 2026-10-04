@@ -512,21 +512,21 @@ export default function ModuleConfigTab({ showToast }) {
           description="Turn system features on or off for each department."
           showBorder={false}
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
-          descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
+          descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
         />
-        <div className="flex h-[420px] flex-col items-center justify-center rounded-2xl border border-dashed border-gray-200 dark:border-white/10 bg-white/40 dark:bg-zinc-900/20 text-center">
+        <div className="flex h-[420px] flex-col items-center justify-center rounded-2xl border border-dashed border-border dark:border-border bg-white/40 dark:bg-zinc-900/20 text-center">
           <Empty className="flex flex-col items-center justify-center border-0 bg-transparent text-center">
             <EmptyHeader className="flex flex-col items-center gap-0">
               <div className="relative mb-6">
                 <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
+                <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
                   <HugeIcon  className="ph-bold ph-buildings text-3xl text-gray-400 dark:text-zinc-500"></HugeIcon>
                 </EmptyMedia>
               </div>
               <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
                 No Departments Found
               </EmptyTitle>
-              <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400 mt-1">
+              <EmptyDescription className="max-w-xs text-sm font-medium text-gray-900 dark:text-zinc-300 mt-1">
                 There are currently no campus departments or administrative offices configured in the system.
               </EmptyDescription>
               <Button
@@ -546,26 +546,22 @@ export default function ModuleConfigTab({ showToast }) {
   return (
     <div className="flex flex-col gap-6 w-full animate-fade-up font-jakarta">
       {/* Main Card with Header, Toolbar & Active Filter Chips */}
-      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
+      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none">
         <PageHeader
           icon="ph-bold ph-squares-four"
           title={
             <div className="flex items-center gap-[6px]">
               Department Features & Permissions
-              {officeFilter === "Archived" && (
-                <span className="text-[12px] font-normal text-emerald-600 dark:text-emerald-400">
-                  · Restore Mode
-                </span>
-              )}
+              
             </div>
           }
           description="Turn system features on or off for each department."
           showBorder={false}
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
-          descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
+          descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
           actions={
             <div className="flex items-center gap-2">
-              <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-gray-200/60 dark:border-white/5">
+              <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-border/60 dark:border-border">
                 <button
                   type="button"
                   onClick={() => setViewMode("office")}
@@ -606,7 +602,7 @@ export default function ModuleConfigTab({ showToast }) {
         />
 
         {/* Navigation Toolbar */}
-        <div className="border-t border-gray-100 dark:border-white/10 p-5 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
+        <div className="border-t border-border dark:border-border p-5 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
           {/* Left: Active vs Archived Tabs */}
           <div className="flex items-center gap-6 shrink-0 select-none">
             <button
@@ -645,7 +641,7 @@ export default function ModuleConfigTab({ showToast }) {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search features by name, description..."
-                className="h-9 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 pl-8 pr-20 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
+                className="h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 pl-8 pr-20 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
               />
               <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] text-gray-400 dark:text-zinc-500 font-mono">
                 {filteredModules.length}
@@ -680,11 +676,11 @@ export default function ModuleConfigTab({ showToast }) {
           searchQuery={searchQuery}
           onClearSearch={() => setSearchQuery("")}
           onClearAll={handleClearFilters}
-          className="border-t border-gray-100 dark:border-white/10 bg-white dark:bg-card px-6 py-2.5"
+          className="border-t border-border dark:border-border bg-white dark:bg-card px-6 py-2.5"
         />
 
         {/* Content Section: By Office or Matrix inside the single Card */}
-        <div className="overflow-hidden rounded-b-2xl border-t border-gray-100 dark:border-white/10 bg-white dark:bg-card flex flex-col flex-1">
+        <div className="overflow-hidden rounded-b-2xl border-t border-border dark:border-border bg-white dark:bg-card flex flex-col flex-1">
           {/* VIEW 1: BY OFFICE */}
           {viewMode === "office" && (
             <div className="flex flex-col flex-1">
@@ -694,7 +690,7 @@ export default function ModuleConfigTab({ showToast }) {
                 <EmptyHeader className="flex flex-col items-center gap-0">
                   <div className="relative mb-6">
                     <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                    <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
+                    <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
                       <HugeIcon  className={cn(
                         officeFilter === "Archived" ? "ph-archive" : "ph-buildings",
                         "text-3xl text-gray-400 dark:text-zinc-500"
@@ -704,7 +700,7 @@ export default function ModuleConfigTab({ showToast }) {
                   <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
                     {officeFilter === "Archived" ? "No Archived Departments Found" : "No Departments Found"}
                   </EmptyTitle>
-                  <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400 mt-1">
+                  <EmptyDescription className="max-w-xs text-sm font-medium text-gray-900 dark:text-zinc-300 mt-1">
                     {officeFilter === "Archived"
                       ? "There are currently no archived departments in the system."
                       : "No departments matching your current filter were found."}
@@ -714,7 +710,7 @@ export default function ModuleConfigTab({ showToast }) {
                       variant="outline"
                       size="sm"
                       onClick={() => setOfficeFilter("Active")}
-                      className="mt-6 flex h-10 items-center gap-2 rounded-xl border border-gray-300 bg-white px-5 text-xs font-semibold text-gray-700 shadow-xs transition-colors hover:bg-gray-50 dark:bg-zinc-900 dark:border-white/10 dark:text-zinc-300 cursor-pointer"
+                      className="mt-6 flex h-10 items-center gap-2 rounded-xl border border-border bg-white px-5 text-xs font-semibold text-gray-700 shadow-xs transition-colors hover:bg-gray-50 dark:bg-zinc-900 dark:border-border dark:text-zinc-300 cursor-pointer"
                     >
                       <HugeIcon  className="ph-bold ph-arrow-counter-clockwise"></HugeIcon>
                       View
@@ -726,9 +722,9 @@ export default function ModuleConfigTab({ showToast }) {
           ) : (
             <>
               {/* Department Selector Bar */}
-              <div className="p-5 border-b border-gray-100 dark:border-white/10 bg-gray-50/40 dark:bg-zinc-900/30">
+              <div className="p-5 border-b border-border dark:border-border bg-gray-50/40 dark:bg-zinc-900/30">
                 <div className="flex flex-col gap-2.5">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between text-xs font-semibold text-gray-500 dark:text-zinc-400 px-1 gap-1">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between text-xs font-semibold text-gray-900 dark:text-zinc-300 px-1 gap-1">
                     <span>Select Department ({filteredOffices.length}):</span>
                     <span className="text-[11px] font-normal text-gray-400">
                       Click a department to customize the features its staff can use
@@ -751,8 +747,8 @@ export default function ModuleConfigTab({ showToast }) {
                         className={cn(
                           "p-3.5 rounded-xl border text-left transition-all relative flex flex-col justify-between gap-3 cursor-pointer group select-none",
                           isSelected
-                            ? "bg-white dark:bg-zinc-900 shadow-md ring-2 ring-pup-maroon/20 dark:ring-white/20 border-pup-maroon dark:border-white/30"
-                            : "bg-white/60 dark:bg-zinc-900/40 border-gray-200/80 dark:border-white/5 hover:border-gray-300 dark:hover:border-white/10 hover:bg-white dark:hover:bg-zinc-900",
+                            ? "bg-white dark:bg-zinc-900 shadow-md ring-2 ring-pup-maroon/20 dark:ring-white/20 border-pup-maroon dark:border-border"
+                            : "bg-white/60 dark:bg-zinc-900/40 border-border/80 dark:border-border hover:border-border dark:hover:border-white/10 hover:bg-white dark:hover:bg-zinc-900",
                           isOfficeArchived && !isSelected && "opacity-75"
                         )}
                       >
@@ -798,7 +794,7 @@ export default function ModuleConfigTab({ showToast }) {
                           </div>
                         </div>
 
-                        <div className="flex items-center justify-between text-[11px] text-gray-500 dark:text-zinc-400 truncate w-full">
+                        <div className="flex items-center justify-between text-[11px] text-gray-900 dark:text-zinc-300 truncate w-full">
                           <span className="truncate">{o.name || o.short_name}</span>
                           {isOfficeArchived && (
                             <span className="text-[10px] text-gray-400 ml-1 shrink-0 font-medium">
@@ -816,7 +812,7 @@ export default function ModuleConfigTab({ showToast }) {
             {/* Active Office Banner & Module Grid */}
             {currentOffice && (
               <div className="overflow-hidden bg-white dark:bg-card">
-              <div className="p-5 border-b border-gray-100 dark:border-white/5 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-950/20">
+              <div className="p-5 border-b border-border dark:border-border flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-950/20">
                 <div className="flex items-center gap-3.5">
                   <div
                     className="h-11 w-11 rounded-xl flex items-center justify-center text-xl shadow-xs shrink-0"
@@ -834,7 +830,7 @@ export default function ModuleConfigTab({ showToast }) {
                       </h3>
                       <StatusChip status={currentOffice.status} />
                     </div>
-                    <p className="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">
+                    <p className="text-xs text-gray-900 dark:text-zinc-300 mt-0.5">
                       {isCurrentArchived
                         ? `This department is currently archived. Its features cannot be changed while it is inactive.`
                         : `Customize the features and tools available to ${currentOffice.short_name} staff and supervisors.`}
@@ -850,7 +846,7 @@ export default function ModuleConfigTab({ showToast }) {
                     disabled={isCurrentArchived || Boolean(toggling[`${currentOffice.id}-all-batch`])}
                     onClick={() => handleBatchToggle(currentOffice.id, "all", true)}
                     title={isCurrentArchived ? "Archived departments cannot be modified" : "Enable all workspace features"}
-                    className="h-8 text-xs font-semibold rounded-xl border-gray-200 dark:border-white/10 cursor-pointer flex items-center justify-center px-3 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="h-8 text-xs font-semibold rounded-xl border-border dark:border-border cursor-pointer flex items-center justify-center px-3 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     Enable
                   </Button>
@@ -860,7 +856,7 @@ export default function ModuleConfigTab({ showToast }) {
                     disabled={isCurrentArchived || Boolean(toggling[`${currentOffice.id}-all-batch`])}
                     onClick={() => handleBatchToggle(currentOffice.id, "all", false)}
                     title={isCurrentArchived ? "Archived departments cannot be modified" : "Turn off optional features and keep required system tools only"}
-                    className="h-8 text-xs font-semibold rounded-xl border-gray-200 dark:border-white/10 text-gray-600 hover:text-red-600 cursor-pointer flex items-center justify-center px-3 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="h-8 text-xs font-semibold rounded-xl border-border dark:border-border text-gray-600 hover:text-red-600 cursor-pointer flex items-center justify-center px-3 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     Reset
                   </Button>
@@ -891,26 +887,26 @@ export default function ModuleConfigTab({ showToast }) {
               <CardContent className="p-6 space-y-8">
                 {/* Empty State when no modules match filters */}
                 {filteredModules.length === 0 ? (
-                  <div className="flex h-[380px] flex-col items-center justify-center rounded-2xl border border-dashed border-gray-200 dark:border-white/10 bg-white/40 dark:bg-zinc-900/20 text-center my-2">
+                  <div className="flex h-[380px] flex-col items-center justify-center rounded-2xl border border-dashed border-border dark:border-border bg-white/40 dark:bg-zinc-900/20 text-center my-2">
                     <Empty className="flex flex-col items-center justify-center border-0 bg-transparent text-center">
                       <EmptyHeader className="flex flex-col items-center gap-0">
                         <div className="relative mb-6">
                           <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                          <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
+                          <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
                             <HugeIcon  className="ph-bold ph-magnifying-glass text-3xl text-gray-400 dark:text-zinc-500"></HugeIcon>
                           </EmptyMedia>
                         </div>
                         <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
                           No Features Found
                         </EmptyTitle>
-                        <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400 mt-1">
+                        <EmptyDescription className="max-w-xs text-sm font-medium text-gray-900 dark:text-zinc-300 mt-1">
                           We couldn&apos;t find any features matching your search or filter criteria. Try clearing filters or adjusting your keywords.
                         </EmptyDescription>
                         <Button
                           variant="outline"
                           onClick={handleClearFilters}
                           title="Reset Filters"
-                          className="mt-6 flex h-10 items-center justify-center gap-2 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
+                          className="mt-6 flex h-10 items-center justify-center gap-2 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                         >
                           Reset
                         </Button>
@@ -922,7 +918,7 @@ export default function ModuleConfigTab({ showToast }) {
                     {/* ROLE OPERATION GROUP 1: SUPERVISOR & HEAD TOOLS */}
                     {groupedModules.admin.length > 0 && (
                       <div className="space-y-4">
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-2 border-b border-gray-100 dark:border-white/5 gap-2">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-2 border-b border-border dark:border-border gap-2">
                           <div className="flex items-center gap-2.5">
                             <div className="h-7 w-7 rounded-lg bg-red-50 text-pup-maroon dark:bg-red-950/30 dark:text-red-400 flex items-center justify-center text-sm">
                               <HugeIcon  className="ph-bold ph-shield-check"></HugeIcon>
@@ -941,7 +937,7 @@ export default function ModuleConfigTab({ showToast }) {
                                   / {groupedModules.admin.length} active
                                 </span>
                               </div>
-                              <p className="text-[11px] text-gray-500 dark:text-zinc-400">
+                              <p className="text-[11px] text-gray-900 dark:text-zinc-300">
                                 Management dashboards, turnaround reports, compliance tracking, and department settings.
                               </p>
                             </div>
@@ -1003,7 +999,7 @@ export default function ModuleConfigTab({ showToast }) {
                     {/* ROLE OPERATION GROUP 2: STAFF & FRONTLINE TOOLS */}
                     {groupedModules.staff.length > 0 && (
                       <div className="space-y-4">
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-2 border-b border-gray-100 dark:border-white/5 gap-2">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-2 border-b border-border dark:border-border gap-2">
                           <div className="flex items-center gap-2.5">
                             <div className="h-7 w-7 rounded-lg bg-blue-50 text-blue-600 dark:bg-blue-950/30 dark:text-blue-400 flex items-center justify-center text-sm">
                               <HugeIcon  className="ph-bold ph-identification-badge"></HugeIcon>
@@ -1022,7 +1018,7 @@ export default function ModuleConfigTab({ showToast }) {
                                   / {groupedModules.staff.length} active
                                 </span>
                               </div>
-                              <p className="text-[11px] text-gray-500 dark:text-zinc-400">
+                              <p className="text-[11px] text-gray-900 dark:text-zinc-300">
                                 Document scanning, text recognition (OCR), student records search, and request processing.
                               </p>
                             </div>
@@ -1099,7 +1095,7 @@ export default function ModuleConfigTab({ showToast }) {
                 <EmptyHeader className="flex flex-col items-center gap-0">
                   <div className="relative mb-6">
                     <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                    <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
+                    <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
                       <HugeIcon  className={cn(
                         officeFilter === "Archived" ? "ph-archive" : "ph-buildings",
                         "text-3xl text-gray-400 dark:text-zinc-500"
@@ -1109,7 +1105,7 @@ export default function ModuleConfigTab({ showToast }) {
                   <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
                     {officeFilter === "Archived" ? "No Archived Departments Found" : "No Departments Found"}
                   </EmptyTitle>
-                  <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400 mt-1">
+                  <EmptyDescription className="max-w-xs text-sm font-medium text-gray-900 dark:text-zinc-300 mt-1">
                     {officeFilter === "Archived"
                       ? "There are currently no archived departments in the system."
                       : "No departments matching your current filter were found."}
@@ -1119,7 +1115,7 @@ export default function ModuleConfigTab({ showToast }) {
                       variant="outline"
                       size="sm"
                       onClick={() => setOfficeFilter("Active")}
-                      className="mt-6 flex h-10 items-center gap-2 rounded-xl border border-gray-300 bg-white px-5 text-xs font-semibold text-gray-700 shadow-xs transition-colors hover:bg-gray-50 dark:bg-zinc-900 dark:border-white/10 dark:text-zinc-300 cursor-pointer"
+                      className="mt-6 flex h-10 items-center gap-2 rounded-xl border border-border bg-white px-5 text-xs font-semibold text-gray-700 shadow-xs transition-colors hover:bg-gray-50 dark:bg-zinc-900 dark:border-border dark:text-zinc-300 cursor-pointer"
                     >
                       <HugeIcon  className="ph-bold ph-arrow-counter-clockwise"></HugeIcon>
                       View
@@ -1134,21 +1130,21 @@ export default function ModuleConfigTab({ showToast }) {
                 <EmptyHeader className="flex flex-col items-center gap-0">
                   <div className="relative mb-6">
                     <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                    <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
+                    <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
                       <HugeIcon  className="ph-bold ph-magnifying-glass text-3xl text-gray-400 dark:text-zinc-500"></HugeIcon>
                     </EmptyMedia>
                   </div>
                   <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
                     No Features Found
                   </EmptyTitle>
-                  <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400 mt-1">
+                  <EmptyDescription className="max-w-xs text-sm font-medium text-gray-900 dark:text-zinc-300 mt-1">
                     We couldn&apos;t find any features matching your search or filter criteria in the summary table.
                   </EmptyDescription>
                   <Button
                     variant="outline"
                     onClick={handleClearFilters}
                     title="Reset Filters"
-                    className="mt-6 flex h-10 items-center justify-center gap-2 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
+                    className="mt-6 flex h-10 items-center justify-center gap-2 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                   >
                     Reset
                   </Button>
@@ -1158,9 +1154,9 @@ export default function ModuleConfigTab({ showToast }) {
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full border-collapse text-left">
-                <thead className="sticky top-0 z-20 border-b-[0.5px] border-black/10 dark:border-white/10 bg-white dark:bg-card">
+                <thead className="sticky top-0 z-20 border-b-[0.5px] border-black/10 dark:border-border bg-white dark:bg-card">
                   <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500 select-none">
-                    <th className="p-4 min-w-[280px] sticky left-0 bg-white dark:bg-zinc-900 z-30 border-r border-gray-200/80 dark:border-white/10 shadow-[4px_0_8px_-3px_rgba(0,0,0,0.06)]">
+                    <th className="p-4 min-w-[280px] sticky left-0 bg-white dark:bg-zinc-900 z-30 border-r border-border/80 dark:border-border shadow-[4px_0_8px_-3px_rgba(0,0,0,0.06)]">
                       <button
                         onClick={() => handleMatrixSort("name")}
                         className={cn(
@@ -1205,14 +1201,14 @@ export default function ModuleConfigTab({ showToast }) {
                   </tr>
                 </thead>
 
-                <tbody className="divide-y divide-gray-100 dark:divide-white/5">
+                <tbody className="divide-y divide-border dark:divide-border">
                   {/* Head / Admin Group Row */}
                   {groupedModules.admin.length > 0 && (
                     <>
                       <tr className="bg-gray-100/60 dark:bg-zinc-950/40">
                         <td
                           colSpan={filteredOffices.length + 1}
-                          className="px-4 py-2 text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-400 sticky left-0 bg-gray-100/90 dark:bg-zinc-950/80 backdrop-blur-xs"
+                          className="px-4 py-2 text-[10px] font-bold uppercase tracking-wider text-gray-900 dark:text-zinc-300 sticky left-0 bg-gray-100/90 dark:bg-zinc-950/80 backdrop-blur-xs"
                         >
                           Supervisor & Department Head Tools ({groupedModules.admin.length})
                         </td>
@@ -1236,7 +1232,7 @@ export default function ModuleConfigTab({ showToast }) {
                       <tr className="bg-gray-100/60 dark:bg-zinc-950/40">
                         <td
                           colSpan={filteredOffices.length + 1}
-                          className="px-4 py-2 text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-400 sticky left-0 bg-gray-100/90 dark:bg-zinc-950/80 backdrop-blur-xs"
+                          className="px-4 py-2 text-[10px] font-bold uppercase tracking-wider text-gray-900 dark:text-zinc-300 sticky left-0 bg-gray-100/90 dark:bg-zinc-950/80 backdrop-blur-xs"
                         >
                           Staff & Frontline Tools ({groupedModules.staff.length})
                         </td>
@@ -1300,8 +1296,8 @@ function ModuleCard({ m, office, assignments, toggling, onToggle, isOfficeArchiv
       className={cn(
         "p-4 rounded-xl border transition-all flex flex-col justify-between gap-3 select-none",
         isEnabled
-          ? "bg-white dark:bg-zinc-900 border-gray-200 dark:border-white/10 shadow-2xs hover:shadow-sm"
-          : "bg-gray-50/50 dark:bg-zinc-950/40 border-gray-200/60 dark:border-white/5 opacity-70 hover:opacity-100"
+          ? "bg-white dark:bg-zinc-900 border-border dark:border-border shadow-2xs hover:shadow-sm"
+          : "bg-gray-50/50 dark:bg-zinc-950/40 border-border/60 dark:border-border opacity-70 hover:opacity-100"
       )}
     >
       <div>
@@ -1326,7 +1322,7 @@ function ModuleCard({ m, office, assignments, toggling, onToggle, isOfficeArchiv
                   {m.id}
                 </span>
                 <span className="text-gray-300 dark:text-zinc-700 text-[10px]">·</span>
-                <span className="text-[10px] font-medium text-gray-500 dark:text-zinc-400">
+                <span className="text-[10px] font-medium text-gray-900 dark:text-zinc-300">
                   {getModuleTargetText(m)}
                 </span>
               </div>
@@ -1352,12 +1348,12 @@ function ModuleCard({ m, office, assignments, toggling, onToggle, isOfficeArchiv
           )}
         </div>
 
-        <p className="text-[11px] text-gray-500 dark:text-zinc-400 line-clamp-2 leading-relaxed">
+        <p className="text-[11px] text-gray-900 dark:text-zinc-300 line-clamp-2 leading-relaxed">
           {m.description || "Standard system feature."}
         </p>
       </div>
 
-      <div className="pt-3 border-t border-gray-100 dark:border-white/5 flex items-center justify-between">
+      <div className="pt-3 border-t border-border dark:border-border flex items-center justify-between">
         <span className="text-[11px] font-medium text-gray-600 dark:text-zinc-400">
           {isSystem ? "Always Active (Required)" : isOfficeArchived ? "Locked (Archived Department)" : isEnabled ? "Available to Staff" : "Turned Off"}
         </span>
@@ -1381,7 +1377,7 @@ function ModuleCard({ m, office, assignments, toggling, onToggle, isOfficeArchiv
             <div
               className={cn(
                 "w-9 h-5 bg-gray-200 peer-focus:outline-hidden dark:bg-zinc-700 rounded-full peer",
-                "peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:after:bg-zinc-900 dark:after:border-zinc-700",
+                "peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-border after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:after:bg-zinc-900 dark:after:border-zinc-700",
                 isSystem
                   ? "peer-checked:bg-blue-500 cursor-not-allowed"
                   : isOfficeArchived
@@ -1405,9 +1401,9 @@ function MatrixTableRow({ m, offices, assignments, toggling, onToggle }) {
 
   return (
     <tr className="hover:bg-gray-50/40 dark:hover:bg-white/2 transition-colors">
-      <td className="p-4 align-top sticky left-0 bg-white dark:bg-zinc-900 z-10 border-r border-gray-200/80 dark:border-white/10 shadow-[4px_0_8px_-3px_rgba(0,0,0,0.06)]">
+      <td className="p-4 align-top sticky left-0 bg-white dark:bg-zinc-900 z-10 border-r border-border/80 dark:border-border shadow-[4px_0_8px_-3px_rgba(0,0,0,0.06)]">
         <div className="flex items-start gap-3">
-          <div className="mt-0.5 h-7 w-7 rounded-lg bg-gray-100 dark:bg-zinc-800 flex items-center justify-center text-gray-500 dark:text-zinc-400 text-xs shrink-0">
+          <div className="mt-0.5 h-7 w-7 rounded-lg bg-gray-100 dark:bg-zinc-800 flex items-center justify-center text-gray-900 dark:text-zinc-300 text-xs shrink-0">
             <HugeIcon  className={cn(moduleIconClass, "text-sm")}></HugeIcon>
           </div>
           <div>
@@ -1424,7 +1420,7 @@ function MatrixTableRow({ m, offices, assignments, toggling, onToggle }) {
                 ({getModuleTargetText(m)})
               </span>
             </div>
-            <p className="text-[11px] text-gray-500 dark:text-zinc-400 mt-0.5 max-w-md">
+            <p className="text-[11px] text-gray-900 dark:text-zinc-300 mt-0.5 max-w-md">
               {m.description || "Standard system feature."}
             </p>
           </div>
@@ -1460,7 +1456,7 @@ function MatrixTableRow({ m, offices, assignments, toggling, onToggle }) {
                   <div
                     className={cn(
                       "w-8 h-4 bg-gray-200 peer-focus:outline-hidden dark:bg-zinc-700 rounded-full peer",
-                      "peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[1px] after:left-[1px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3.5 after:w-3.5 after:transition-all dark:after:bg-zinc-900 dark:after:border-zinc-700",
+                      "peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[1px] after:left-[1px] after:bg-white after:border-border after:border after:rounded-full after:h-3.5 after:w-3.5 after:transition-all dark:after:bg-zinc-900 dark:after:border-zinc-700",
                       isSystem
                         ? "peer-checked:bg-blue-500 cursor-not-allowed"
                         : isOfficeArchived

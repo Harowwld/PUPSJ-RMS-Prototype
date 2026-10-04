@@ -770,7 +770,7 @@ export default function DigitalRecordsReviewTab({
     <TooltipProvider delayDuration={200}>
       <div className="animate-fade-up font-jakarta flex flex-1 flex-col h-full min-h-0 w-full gap-6">
         {/* ONE Single Card Container encapsulating Header, Metrics, Toolbar, Table & Pagination */}
-        <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none isolate font-jakarta mb-4 min-h-0 flex-1">
+        <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4 min-h-0 flex-1">
           <PageHeader
             icon="ph-seal-check"
             title="Records Review"
@@ -778,7 +778,7 @@ export default function DigitalRecordsReviewTab({
             showBorder={false}
             className="p-6"
             titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
-            descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
+            descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
             actions={
               <div className="flex items-center gap-2">
                 <RefreshButton 
@@ -794,7 +794,7 @@ export default function DigitalRecordsReviewTab({
                     variant="outline"
                     onClick={handleExportCSV}
                     disabled={isLoading || isExporting}
-                    className="flex h-10 items-center justify-center rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
+                    className="flex h-10 items-center justify-center rounded-xl! border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
                   >
                     {isExporting ? (
                       <HugeIcon  className="ph-bold ph-spinner animate-spin text-[16px]"></HugeIcon>
@@ -826,11 +826,11 @@ export default function DigitalRecordsReviewTab({
                     className={cn(
                       "relative overflow-hidden rounded-[18px] border cursor-pointer select-none transition-all shadow-none flex flex-col justify-between min-h-[110px] h-full bg-gray-50 dark:bg-zinc-900",                      selectedKpi === "pending"
                         ? "border-amber-500/50 ring-1 ring-amber-500/20"
-                        : "border-gray-100 dark:border-white/5"
+                        : "border-border dark:border-border"
                     )}
                   >
                     <div className="flex justify-between items-start p-4 pb-0">
-                      <span className="text-[13px] font-medium text-gray-500 dark:text-zinc-400 capitalize">
+                      <span className="text-[13px] font-medium text-gray-900 dark:text-zinc-300 capitalize">
                         Pending Review
                       </span>
                       <div className="w-8 h-8 rounded-[10px] flex items-center justify-center text-white shadow-sm shrink-0 bg-[#f59e0b]">
@@ -847,21 +847,21 @@ export default function DigitalRecordsReviewTab({
                           {stats.pendingToday.toLocaleString()} received today
                         </span>
                       </div>
-                      <HugeIcon className="ph-bold ph-dots-six-vertical cursor-grab active:cursor-grabbing hover:text-gray-400 dark:hover:text-zinc-500 text-gray-300 dark:text-zinc-700 text-lg mb-0.5" />
+                      <HugeIcon className="ph-bold ph-dots-six-vertical cursor-grab active:cursor-grabbing hover:text-black dark:hover:text-white text-gray-900 dark:text-zinc-300 text-xl mb-0.5" />
 
                     </div>
                   </div>
 
                   {/* Absolute details container */}
                   <div className={cn(
-                    "absolute top-full left-0 right-0 z-[100] mt-2 rounded-xl border border-gray-200 bg-white p-4 shadow-xl dark:border-white/10 dark:bg-zinc-900 transition-all duration-300 ease-in-out origin-top",
+                    "absolute top-full left-0 right-0 z-[100] mt-2 rounded-xl border border-border bg-white p-4 shadow-xl dark:border-border dark:bg-zinc-900 transition-all duration-300 ease-in-out origin-top",
                     selectedKpi === "pending" ? "scale-y-100 opacity-100 translate-y-0" : "scale-y-95 opacity-0 -translate-y-2 pointer-events-none"
                   )} onClick={(e) => e.stopPropagation()}>
                     <div className="space-y-3">
                       {activeKpiDetails && (
                         <>
                           <div className="grid grid-cols-2 gap-2">
-                            <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-gray-100 dark:border-white/5">
+                            <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-border dark:border-border">
                               <span className="block text-[9px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">Total Pending</span>
                               <span className="text-lg font-black text-gray-900 dark:text-zinc-50">{stats.pending}</span>
                             </div>
@@ -872,7 +872,7 @@ export default function DigitalRecordsReviewTab({
                           </div>
 
                           {activeKpiDetails.oldestPendingAge > 0 && (
-                            <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-gray-100 dark:border-white/5 flex items-center justify-between text-xs">
+                            <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-border dark:border-border flex items-center justify-between text-xs">
                               <span className="font-medium text-gray-600 dark:text-zinc-400">Oldest pending record</span>
                               <span className="font-bold text-gray-900 dark:text-zinc-50">{activeKpiDetails.oldestPendingAge} hours</span>
                             </div>
@@ -885,7 +885,7 @@ export default function DigitalRecordsReviewTab({
                                 <p className="text-[11px] text-gray-400 dark:text-zinc-500 text-center py-2">No pending records</p>
                               ) : (
                                 activeKpiDetails.pendingBreakdown && activeKpiDetails.pendingBreakdown.map(({ type, count }) => (
-                                  <div key={type} className="flex justify-between items-center text-[11px] py-1 border-b border-gray-100 dark:border-white/5 text-gray-700 dark:text-zinc-300">
+                                  <div key={type} className="flex justify-between items-center text-[11px] py-1 border-b border-border dark:border-border text-gray-700 dark:text-zinc-300">
                                     <span className="truncate max-w-[150px]" title={type}>{type}</span>
                                     <span className="font-bold text-gray-900 dark:text-zinc-50">{count}</span>
                                   </div>
@@ -909,11 +909,11 @@ export default function DigitalRecordsReviewTab({
                     className={cn(
                       "relative overflow-hidden rounded-[18px] border cursor-pointer select-none transition-all shadow-none flex flex-col justify-between min-h-[110px] h-full bg-gray-50 dark:bg-zinc-900",                      selectedKpi === "approved"
                         ? "border-emerald-500/50 ring-1 ring-emerald-500/20"
-                        : "border-gray-100 dark:border-white/5"
+                        : "border-border dark:border-border"
                     )}
                   >
                     <div className="flex justify-between items-start p-4 pb-0">
-                      <span className="text-[13px] font-medium text-gray-500 dark:text-zinc-400 capitalize">
+                      <span className="text-[13px] font-medium text-gray-900 dark:text-zinc-300 capitalize">
                         Approved
                       </span>
                       <div className="w-8 h-8 rounded-[10px] flex items-center justify-center text-white shadow-sm shrink-0 bg-[#22c55e]">
@@ -930,21 +930,21 @@ export default function DigitalRecordsReviewTab({
                           {stats.approvedToday.toLocaleString()} approved today
                         </span>
                       </div>
-                      <HugeIcon className="ph-bold ph-dots-six-vertical cursor-grab active:cursor-grabbing hover:text-gray-400 dark:hover:text-zinc-500 text-gray-300 dark:text-zinc-700 text-lg mb-0.5" />
+                      <HugeIcon className="ph-bold ph-dots-six-vertical cursor-grab active:cursor-grabbing hover:text-black dark:hover:text-white text-gray-900 dark:text-zinc-300 text-xl mb-0.5" />
 
                     </div>
                   </div>
 
                   {/* Absolute details container */}
                   <div className={cn(
-                    "absolute top-full left-0 right-0 z-[100] mt-2 rounded-xl border border-gray-200 bg-white p-4 shadow-xl dark:border-white/10 dark:bg-zinc-900 transition-all duration-300 ease-in-out origin-top",
+                    "absolute top-full left-0 right-0 z-[100] mt-2 rounded-xl border border-border bg-white p-4 shadow-xl dark:border-border dark:bg-zinc-900 transition-all duration-300 ease-in-out origin-top",
                     selectedKpi === "approved" ? "scale-y-100 opacity-100 translate-y-0" : "scale-y-95 opacity-0 -translate-y-2 pointer-events-none"
                   )} onClick={(e) => e.stopPropagation()}>
                     <div className="space-y-3">
                       {activeKpiDetails && (
                         <>
                           <div className="grid grid-cols-2 gap-2">
-                            <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-gray-100 dark:border-white/5">
+                            <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-border dark:border-border">
                               <span className="block text-[9px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">Approved Today</span>
                               <span className="text-lg font-black text-gray-900 dark:text-zinc-50">{stats.approvedToday}</span>
                             </div>
@@ -961,7 +961,7 @@ export default function DigitalRecordsReviewTab({
                                 <p className="text-[11px] text-gray-400 dark:text-zinc-500 text-center py-2">No approved records</p>
                               ) : (
                                 activeKpiDetails.approvedBreakdown && activeKpiDetails.approvedBreakdown.map(({ type, count }) => (
-                                  <div key={type} className="flex justify-between items-center text-[11px] py-1 border-b border-gray-100 dark:border-white/5 text-gray-700 dark:text-zinc-300">
+                                  <div key={type} className="flex justify-between items-center text-[11px] py-1 border-b border-border dark:border-border text-gray-700 dark:text-zinc-300">
                                     <span className="truncate max-w-[150px]" title={type}>{type}</span>
                                     <span className="font-bold text-gray-900 dark:text-zinc-50">{count}</span>
                                   </div>
@@ -985,11 +985,11 @@ export default function DigitalRecordsReviewTab({
                     className={cn(
                       "relative overflow-hidden rounded-[18px] border cursor-pointer select-none transition-all shadow-none flex flex-col justify-between min-h-[110px] h-full bg-gray-50 dark:bg-zinc-900",                      selectedKpi === "declined"
                         ? "border-red-500/50 ring-1 ring-red-500/20"
-                        : "border-gray-100 dark:border-white/5"
+                        : "border-border dark:border-border"
                     )}
                   >
                     <div className="flex justify-between items-start p-4 pb-0">
-                      <span className="text-[13px] font-medium text-gray-500 dark:text-zinc-400 capitalize">
+                      <span className="text-[13px] font-medium text-gray-900 dark:text-zinc-300 capitalize">
                         Declined
                       </span>
                       <div className="w-8 h-8 rounded-[10px] flex items-center justify-center text-white shadow-sm shrink-0 bg-[#ef4444]">
@@ -1006,21 +1006,21 @@ export default function DigitalRecordsReviewTab({
                           {stats.declinedToday.toLocaleString()} returned today
                         </span>
                       </div>
-                      <HugeIcon className="ph-bold ph-dots-six-vertical cursor-grab active:cursor-grabbing hover:text-gray-400 dark:hover:text-zinc-500 text-gray-300 dark:text-zinc-700 text-lg mb-0.5" />
+                      <HugeIcon className="ph-bold ph-dots-six-vertical cursor-grab active:cursor-grabbing hover:text-black dark:hover:text-white text-gray-900 dark:text-zinc-300 text-xl mb-0.5" />
 
                     </div>
                   </div>
 
                   {/* Absolute details container */}
                   <div className={cn(
-                    "absolute top-full left-0 right-0 z-[100] mt-2 rounded-xl border border-gray-200 bg-white p-4 shadow-xl dark:border-white/10 dark:bg-zinc-900 transition-all duration-300 ease-in-out origin-top",
+                    "absolute top-full left-0 right-0 z-[100] mt-2 rounded-xl border border-border bg-white p-4 shadow-xl dark:border-border dark:bg-zinc-900 transition-all duration-300 ease-in-out origin-top",
                     selectedKpi === "declined" ? "scale-y-100 opacity-100 translate-y-0" : "scale-y-95 opacity-0 -translate-y-2 pointer-events-none"
                   )} onClick={(e) => e.stopPropagation()}>
                     <div className="space-y-3">
                       {activeKpiDetails && (
                         <>
                           <div className="grid grid-cols-2 gap-2">
-                            <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-gray-100 dark:border-white/5">
+                            <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-border dark:border-border">
                               <span className="block text-[9px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">Returned Today</span>
                               <span className="text-lg font-black text-gray-900 dark:text-zinc-50">{stats.declinedToday}</span>
                             </div>
@@ -1051,7 +1051,7 @@ export default function DigitalRecordsReviewTab({
                                 <p className="text-[11px] text-gray-400 dark:text-zinc-500 text-center py-2">No returned records</p>
                               ) : (
                                 activeKpiDetails.declinedBreakdown && activeKpiDetails.declinedBreakdown.map(({ type, count }) => (
-                                  <div key={type} className="flex justify-between items-center text-[11px] py-1 border-b border-gray-100 dark:border-white/5 text-gray-700 dark:text-zinc-300">
+                                  <div key={type} className="flex justify-between items-center text-[11px] py-1 border-b border-border dark:border-border text-gray-700 dark:text-zinc-300">
                                     <span className="truncate max-w-[150px]" title={type}>{type}</span>
                                     <span className="font-bold text-gray-900 dark:text-zinc-50">{count}</span>
                                   </div>
@@ -1072,14 +1072,14 @@ export default function DigitalRecordsReviewTab({
           ) : null}
 
         {/* Navigation Toolbar */}
-        <div className="border-t border-gray-100 dark:border-white/10 p-5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-gray-50/40 dark:bg-zinc-900/30">
+        <div className="border-t border-border dark:border-border p-5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-gray-50/40 dark:bg-zinc-900/30">
           {/* Search */}
           <div className="relative flex-1 sm:w-64 min-w-[200px] max-w-sm group">
             <HugeIcon  className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-xs pointer-events-none"></HugeIcon>
             <Input
               type="text"
               placeholder="Search Student"
-              className="pl-8 pr-16 h-9 text-xs w-full bg-white dark:bg-zinc-800 border border-gray-200 dark:border-white/10 rounded-xl text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
+              className="pl-8 pr-16 h-9 text-xs w-full bg-white dark:bg-zinc-800 border border-border dark:border-border rounded-xl text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
               value={localSearch}
               onChange={(e) => setLocalSearch(e.target.value)}
             />
@@ -1098,7 +1098,7 @@ export default function DigitalRecordsReviewTab({
             />
 
             {/* Time Shortcuts */}
-            <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-gray-200/60 dark:border-white/5">
+            <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-border/60 dark:border-border">
               {[
                 { key: "Today", label: "Today" },
                 { key: "Yesterday", label: "Yest." },
@@ -1132,14 +1132,14 @@ export default function DigitalRecordsReviewTab({
                     <Button
                       variant="outline"
                       className={cn(
-                        "h-9 w-full justify-start rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-left text-xs font-normal shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-white/10 px-2.5",
+                        "h-9 w-full justify-start rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-left text-xs font-normal shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-white/10 px-2.5",
                         !dateFrom ? "text-gray-400 dark:text-zinc-500" : "text-gray-700 dark:text-zinc-200"
                       )}
                     >
                       {dateFrom ? format(new Date(dateFrom.includes("T") ? dateFrom : dateFrom + "T00:00:00"), "MMM d") : "Start"}
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto rounded-2xl border border-gray-200 bg-white p-0 shadow-2xl dark:border-white/10 dark:bg-card" align="start">
+                  <PopoverContent className="w-auto sm:w-auto rounded-2xl border border-border bg-white p-0 shadow-2xl dark:border-border dark:bg-card" align="start">
                     <Calendar
                       mode="single"
                       selected={dateFrom ? new Date(dateFrom.includes("T") ? dateFrom : dateFrom + "T00:00:00") : undefined}
@@ -1159,14 +1159,14 @@ export default function DigitalRecordsReviewTab({
                     <Button
                       variant="outline"
                       className={cn(
-                        "h-9 w-full justify-start rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-left text-xs font-normal shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-white/10 px-2.5",
+                        "h-9 w-full justify-start rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-left text-xs font-normal shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-white/10 px-2.5",
                         !dateTo ? "text-gray-400 dark:text-zinc-500" : "text-gray-700 dark:text-zinc-200"
                       )}
                     >
                       {dateTo ? format(new Date(dateTo.includes("T") ? dateTo : dateTo + "T00:00:00"), "MMM d") : "End"}
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto rounded-2xl border border-gray-200 bg-white p-0 shadow-2xl dark:border-white/10 dark:bg-card" align="start">
+                  <PopoverContent className="w-auto sm:w-auto rounded-2xl border border-border bg-white p-0 shadow-2xl dark:border-border dark:bg-card" align="start">
                     <Calendar
                       mode="single"
                       selected={dateTo ? new Date(dateTo.includes("T") ? dateTo : dateTo + "T00:00:00") : undefined}
@@ -1217,7 +1217,7 @@ export default function DigitalRecordsReviewTab({
             }}
             extraChips={extraChips}
             onClearAll={handleClearFilters}
-            className="border-t border-gray-100 dark:border-white/10 bg-white dark:bg-card px-6 py-2.5"
+            className="border-t border-border dark:border-border bg-white dark:bg-card px-6 py-2.5"
           />
         )}
 
@@ -1225,12 +1225,12 @@ export default function DigitalRecordsReviewTab({
         {(isLoading && !isManualLoading) && (!records || records.length === 0) ? (
           <RecordsReviewTableSkeleton rowCount={8} embedded={true} />
         ) : error ? (
-          <div className="flex min-h-[420px] flex-col items-center justify-center border-t border-gray-100 dark:border-white/10 bg-transparent text-center p-6 rounded-b-2xl">
-            <Empty className="flex flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400">
+          <div className="flex min-h-[420px] flex-col items-center justify-center border-t border-border dark:border-border bg-transparent text-center p-6 rounded-b-2xl">
+            <Empty className="flex flex-col items-center justify-center border-0 text-center text-gray-900 dark:text-zinc-300">
               <EmptyHeader className="flex flex-col items-center gap-0">
                 <div className="relative mb-6">
                   <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                  <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
+                  <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
                     <HugeIcon  className="ph-duotone ph-warning-circle text-3xl text-red-500 dark:text-red-400" />
                   </EmptyMedia>
                 </div>
@@ -1244,15 +1244,15 @@ export default function DigitalRecordsReviewTab({
             </Empty>
           </div>
         ) : (
-          <div className="overflow-hidden rounded-b-2xl border-t border-gray-100 dark:border-white/10 bg-white dark:bg-card flex flex-col flex-1">
+          <div className="overflow-hidden rounded-b-2xl border-t border-border dark:border-border bg-white dark:bg-card flex flex-col flex-1">
             <div className="overflow-x-auto">
               <table className="min-w-full text-sm">
-                <thead className="sticky top-0 z-10 border-b border-gray-200 bg-white dark:bg-card dark:border-white/10">
+                <thead className="sticky top-0 z-10 border-b border-border bg-white dark:bg-card dark:border-border">
                   <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">
                     <th className="w-12 p-4 text-center">
                       <input
                         type="checkbox"
-                        className="h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-gray-300 text-pup-maroon dark:text-primary accent-pup-maroon focus:ring-pup-maroon disabled:opacity-20 dark:text-primary dark:border-white/10"
+                        className="h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-border text-pup-maroon dark:text-primary accent-pup-maroon focus:ring-pup-maroon disabled:opacity-20 dark:text-primary dark:border-border"
                         checked={
                           paginatedRecords.length > 0 &&
                           paginatedRecords.filter((r) => r.approval_status === "Pending").length > 0 &&
@@ -1331,14 +1331,14 @@ export default function DigitalRecordsReviewTab({
                           <EmptyHeader className="flex flex-col items-center gap-0">
                             <div className="relative mb-6">
                               <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                              <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
+                              <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
                                 <HugeIcon  className="ph-duotone ph-magnifying-glass text-xl text-gray-300 dark:text-zinc-600"></HugeIcon>
                               </EmptyMedia>
                             </div>
                             <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
                               {hasActiveFilters ? "No Records Found" : "No Records Yet"}
                             </EmptyTitle>
-                            <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400">
+                            <EmptyDescription className="max-w-xs text-sm font-medium text-gray-900 dark:text-zinc-300">
                               {hasActiveFilters
                                 ? "Try adjusting your search filters to find what you're looking for."
                                 : "There are currently no digital records in the system."}
@@ -1348,7 +1348,7 @@ export default function DigitalRecordsReviewTab({
                                 variant="outline"
                                 onClick={handleClearFilters}
                                 title="Reset Filters"
-                                className="mt-6 flex h-10 items-center justify-center rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
+                                className="mt-6 flex h-10 items-center justify-center rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                               >
                                 Reset
                               </Button>
@@ -1365,7 +1365,7 @@ export default function DigitalRecordsReviewTab({
                         <tr
                           key={r.id}
                           className={cn(
-                            "group h-[52px] border-b-[0.5px] border-gray-100 dark:border-white/10 last:border-b-0 transition-all duration-fast hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none cursor-pointer",
+                            "group h-[52px] border-b-[0.5px] border-border dark:border-border last:border-b-0 transition-all duration-fast hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none cursor-pointer",
                             isSelected && "bg-blue-50/60 dark:bg-blue-950/20"
                           )}
                           onClick={(e) => toggleSelectRow(r.id, e)}
@@ -1375,7 +1375,7 @@ export default function DigitalRecordsReviewTab({
                               <input
                                 type="checkbox"
                                 className={cn(
-                                  "h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-gray-300 text-pup-maroon dark:text-primary accent-pup-maroon focus:ring-pup-maroon dark:text-primary dark:border-white/10 transition-opacity",
+                                  "h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-border text-pup-maroon dark:text-primary accent-pup-maroon focus:ring-pup-maroon dark:text-primary dark:border-border transition-opacity",
                                   isSelected ? "opacity-100" : "opacity-50 group-hover:opacity-80"
                                 )}
                                 checked={isSelected}
@@ -1493,7 +1493,7 @@ export default function DigitalRecordsReviewTab({
             {/* Pagination Toolbar */}
             {sortedRecords.length > 0 && (
               <div className="flex items-center justify-between border-t border-[#e5e5ea] dark:border-[#3a3a3c] bg-white dark:bg-[#1c1c1e] p-4 px-6 rounded-b-2xl">
-                <div className="flex items-center gap-6 text-xs text-gray-500 dark:text-zinc-400 select-none">
+                <div className="flex items-center gap-6 text-xs text-gray-900 dark:text-zinc-300 select-none">
                   <span>
                     Showing {paginatedRecords.length} of {sortedRecords.length.toLocaleString()}
                   </span>
@@ -1526,12 +1526,12 @@ export default function DigitalRecordsReviewTab({
                     size="sm"
                     disabled={displayPage <= 1}
                     onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                    className="text-xs text-gray-500 dark:text-zinc-400 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
+                    className="text-xs text-gray-900 dark:text-zinc-300 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
                   >
                     Prev
                   </Button>
 
-                  <div className="h-8 w-8 rounded-xl border border-[#e5e5ea] dark:border-zinc-800 flex items-center justify-center text-xs font-bold text-gray-800 dark:text-zinc-200 bg-white dark:bg-zinc-900">
+                  <div className="h-8 w-8 rounded-xl border border-[#e5e5ea] dark:border-border flex items-center justify-center text-xs font-bold text-gray-800 dark:text-zinc-200 bg-white dark:bg-zinc-900">
                     {displayPage}
                   </div>
 
@@ -1540,7 +1540,7 @@ export default function DigitalRecordsReviewTab({
                     size="sm"
                     disabled={displayPage >= totalPages}
                     onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                    className="text-xs text-gray-500 dark:text-zinc-400 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
+                    className="text-xs text-gray-900 dark:text-zinc-300 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
                   >
                     Next
                   </Button>

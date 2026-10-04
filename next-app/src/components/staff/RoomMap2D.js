@@ -23,6 +23,7 @@ export default function RoomMap2D({
   onDrawerClick,
   onPreviewDocument,
   onUnfocusStudent,
+  isPreview = false,
 }) {
   const theme = FOLDER_COLORS[activeStudentColor] || FOLDER_COLORS["yellow"]
   const trailColor = activeStudent ? theme.frontStart : "#06b6d4"
@@ -297,19 +298,11 @@ export default function RoomMap2D({
   return (
     <div
       ref={containerRef}
-      className="relative h-full w-full overflow-hidden rounded-brand border border-gray-300 dark:border-white/10 bg-[#f8fafc] dark:bg-zinc-600/30 shadow-inner dark:shadow-none transition-all duration-normal"
+      className="relative h-full w-full overflow-hidden rounded-brand border border-border dark:border-border bg-[#f8fafc] dark:bg-zinc-600/30 shadow-inner dark:shadow-none transition-all duration-normal"
     >
-      {/* AutoCAD-inspired precision grid */}
-      <div
-        className="pointer-events-none absolute inset-0 text-slate-400/20 dark:text-[#292929]"
-        style={{
-          backgroundImage: `
-            linear-gradient(to right, currentColor 1px, transparent 1px),
-            linear-gradient(to bottom, currentColor 1px, transparent 1px)
-          `,
-          backgroundSize: "2.5% 4%, 2.5% 4%",
-        }}
-      />
+      {!isPreview && (
+      <div className="pointer-events-none absolute inset-0 text-slate-400/20 dark:text-[#292929]" style={{ backgroundImage: `linear-gradient(to right, currentColor 1px, transparent 1px), linear-gradient(to bottom, currentColor 1px, transparent 1px)`, backgroundSize: "2.5% 4%, 2.5% 4%" }} />
+      )}
 
       {/* Wayfinder Path Trail - Blue */}
       {pathCoordinates.slice(0, drawnLength).map(([r, c], idx) => (
@@ -377,7 +370,7 @@ export default function RoomMap2D({
                 ? "z-10 bg-gray-100 dark:bg-[#949494]"
                 : isSelected
                   ? "z-10 border-cyan-500 bg-cyan-50 dark:border-cyan-300 dark:bg-cyan-950/40"
-                  : "border-gray-300 bg-gray-100 hover:bg-gray-200 dark:border-zinc-600 dark:bg-[#949494] dark:hover:bg-zinc-300"
+                  : "border-border bg-gray-100 hover:bg-gray-200 dark:border-border dark:bg-[#949494] dark:hover:bg-zinc-300"
             )}
             style={{
               left: `${rect.x * 100}%`,
@@ -398,7 +391,7 @@ export default function RoomMap2D({
                 <div
                   key={idx}
                   className={cn(
-                    "flex-1 flex items-center justify-center border-b last:border-b-0 border-gray-300/40 dark:border-zinc-700/40",
+                    "flex-1 flex items-center justify-center border-b last:border-b-0 border-border/40 dark:border-border/40",
                     isSelected && "border-cyan-300/30 dark:border-cyan-700/30"
                   )}
                   style={isTarget ? {
@@ -408,7 +401,7 @@ export default function RoomMap2D({
                   {/* Skeuomorphic Pull Handle */}
                   <div
                     className={cn(
-                      "w-7 h-1.5 rounded-sm bg-gray-300 dark:bg-[#737373] border border-black/10 dark:border-white/10 shadow-[inset_0_1px_1px_rgba(0,0,0,0.15)]",
+                      "w-7 h-1.5 rounded-sm bg-gray-300 dark:bg-[#737373] border border-black/10 dark:border-border shadow-[inset_0_1px_1px_rgba(0,0,0,0.15)]",
                       isSelected && "bg-cyan-400 dark:bg-cyan-800 border-cyan-500/20"
                     )}
                     style={isTarget ? {
@@ -421,7 +414,7 @@ export default function RoomMap2D({
             </div>
 
             {/* Floating Cabinet ID Badge Overlay (Positioned outside depending on constraints and overlaps) */}
-            {(() => {
+            {!isPreview && (() => {
               const otherCabinets = cabinetRects.filter((other) => other.cab !== c.cab)
               
               // Approximate normalized dimensions of the badge

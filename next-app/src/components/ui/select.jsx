@@ -146,12 +146,12 @@ const Select = React.forwardRef(({
         position: "fixed",
         top: coords.top + 4,
         left: coords.left,
-        minWidth: coords.width,
+        minWidth: Math.max(coords.width, 224),
         zIndex: 9999,
       } : undefined}
       className={cn(
-        "transition-[opacity,transform] animate-in fade-in slide-in-from-top-2 duration-200 overflow-hidden rounded-xl border border-gray-200 bg-white p-1 shadow-2xl dark:border-white/10 dark:bg-card",
-        usePortal ? "" : "absolute z-50 top-[calc(100%+4px)] left-0 min-w-[120px] w-full",
+        "transition-[opacity,transform] animate-in fade-in slide-in-from-top-2 duration-200 overflow-hidden rounded-xl border border-border bg-white p-1 shadow-2xl dark:border-border dark:bg-card",
+        usePortal ? "" : "absolute z-50 top-[calc(100%+4px)] left-0 min-w-[200px] w-full",
         menuClassName
       )}
     >
@@ -161,7 +161,7 @@ const Select = React.forwardRef(({
             return (
               <div
                 key={option.key || `header-${idx}`}
-                className="px-3 pt-2.5 pb-1 text-[10px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider select-none border-t first:border-t-0 border-gray-100 dark:border-white/5 first:pt-1.5"
+                className="px-3 pt-2.5 pb-1 text-xs font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider select-none border-t first:border-t-0 border-border dark:border-border first:pt-1.5"
               >
                 {option.label}
               </div>
@@ -176,7 +176,7 @@ const Select = React.forwardRef(({
               disabled={option.disabled}
               onClick={() => handleSelect(option.value)}
               className={cn(
-                "flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-xs font-normal transition-colors min-w-0 cursor-pointer",
+                "flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm font-normal transition-colors min-w-0 cursor-pointer",
                 isSelected
                   ? "bg-pup-maroon/10 text-pup-maroon font-medium dark:bg-red-500/20 dark:text-red-400"
                   : "text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-white/5",
@@ -209,7 +209,7 @@ const Select = React.forwardRef(({
         }}
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
-          "flex h-11 w-full items-center justify-between overflow-hidden rounded-xl border border-gray-200 bg-white px-3 text-xs font-normal text-gray-700 shadow-none outline-none transition-all hover:bg-gray-50 focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 dark:border-white/10 dark:bg-card dark:text-zinc-200 dark:hover:bg-zinc-800 min-w-0 cursor-pointer",
+          "flex h-11 w-full items-center justify-between overflow-hidden rounded-xl border border-border bg-white px-3 text-sm font-normal text-gray-700 shadow-none outline-none transition-all hover:bg-gray-50 focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 dark:border-border dark:bg-card dark:text-zinc-200 dark:hover:bg-zinc-800 min-w-0 cursor-pointer",
           isOpen && "border-pup-maroon ring-1 ring-pup-maroon dark:border-red-500/80 dark:ring-red-500/80",
           buttonClassName,
           className

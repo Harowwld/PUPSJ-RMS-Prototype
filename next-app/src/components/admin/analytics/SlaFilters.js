@@ -97,9 +97,9 @@ export default function SlaFilters({
   }
 
   return (
-    <div className="border-t border-gray-100 dark:border-white/10 p-5 flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3 bg-gray-50/40 dark:bg-zinc-900/30 flex-wrap">
+    <div className="border-t border-border dark:border-border p-5 flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3 bg-gray-50/40 dark:bg-zinc-900/30 flex-wrap">
       {/* Time Shortcuts */}
-      <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-gray-200/60 dark:border-white/5 shrink-0">
+      <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-border/60 dark:border-border shrink-0">
         {[
           { key: "today", label: "Today" },
           { key: "yesterday", label: "Yest." },
@@ -135,14 +135,14 @@ export default function SlaFilters({
                 variant="outline"
                 disabled={isLoading}
                 className={cn(
-                  "h-9 w-full justify-start rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-left text-xs font-normal shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 px-2.5 cursor-pointer",
+                  "h-9 w-full justify-start rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-left text-xs font-normal shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 px-2.5 cursor-pointer",
                   !startDate ? "text-gray-400 dark:text-zinc-500" : "text-gray-700 dark:text-zinc-200"
                 )}
               >
                 {formatButtonDate(startDate, "Start")}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto rounded-2xl border border-gray-200 bg-white p-0 shadow-2xl dark:border-white/10 dark:bg-card" align="start">
+            <PopoverContent className="w-auto sm:w-auto rounded-2xl border border-border bg-white p-0 shadow-2xl dark:border-border dark:bg-card" align="start">
               <Calendar
                 mode="single"
                 selected={startDate ? parseDateLocal(startDate) : undefined}
@@ -163,14 +163,14 @@ export default function SlaFilters({
                 variant="outline"
                 disabled={isLoading}
                 className={cn(
-                  "h-9 w-full justify-start rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-left text-xs font-normal shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 px-2.5 cursor-pointer",
+                  "h-9 w-full justify-start rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-left text-xs font-normal shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 px-2.5 cursor-pointer",
                   !endDate ? "text-gray-400 dark:text-zinc-500" : "text-gray-700 dark:text-zinc-200"
                 )}
               >
                 {formatButtonDate(endDate, "End")}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto rounded-2xl border border-gray-200 bg-white p-0 shadow-2xl dark:border-white/10 dark:bg-card" align="start">
+            <PopoverContent className="w-auto sm:w-auto rounded-2xl border border-border bg-white p-0 shadow-2xl dark:border-border dark:bg-card" align="start">
               <Calendar
                 mode="single"
                 selected={endDate ? parseDateLocal(endDate) : undefined}

@@ -294,15 +294,11 @@ export default function SectionsTab({
           icon="ph-list-numbers"
           showBorder={false}
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
-          descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
+          descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
           title={
             <div className="flex items-center gap-[6px]">
               Course Blocks
-              {showArchived && (
-                <span className="text-[12px] font-normal text-emerald-600 dark:text-emerald-400">
-                  · Restore Mode
-                </span>
-              )}
+              
             </div>
           }
           description="Manage academic cohorts, sections, and organizational blocks."
@@ -310,7 +306,7 @@ export default function SectionsTab({
         />
 
         {/* Navigation Toolbar */}
-        <div className="border-t border-gray-100 dark:border-white/10 p-5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
+        <div className="border-t border-border dark:border-border p-5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
           {/* Active / Archived Tabs */}
           <div className="flex items-center gap-6 shrink-0 select-none">
             <button
@@ -350,7 +346,7 @@ export default function SectionsTab({
             {/* Program Filter Select dropdown */}
             <div className="w-[180px]">
               <Select
-                className="h-10 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-xs font-normal text-gray-700 dark:text-zinc-200 shadow-none px-3 focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 cursor-pointer"
+                className="h-10 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-xs font-normal text-gray-700 dark:text-zinc-200 shadow-none px-3 focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 cursor-pointer"
                 value={selectedCourseFilter}
                 onChange={(e) => {
                   setSelectedCourseFilter(e.target.value)
@@ -373,7 +369,7 @@ export default function SectionsTab({
               <Input
                 type="text"
                 placeholder="Filter block name..."
-                className="h-10 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 pl-9 pr-24 text-xs font-normal placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 text-gray-900 dark:text-zinc-100"
+                className="h-10 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 pl-9 pr-24 text-xs font-normal placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 text-gray-900 dark:text-zinc-100"
                 value={localSearch}
                 onChange={(e) => setLocalSearch(e.target.value)}
               />
@@ -404,7 +400,7 @@ export default function SectionsTab({
               size="sm"
               onClick={onExportClick}
               disabled={isExporting}
-              className="flex h-10 items-center justify-center rounded-xl! border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
+              className="flex h-10 items-center justify-center rounded-xl! border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
             >
               {isExporting ? (
                 <HugeIcon className="ph-bold ph-spinner animate-spin text-sm" />
@@ -446,22 +442,22 @@ export default function SectionsTab({
             setSelectedCourseFilter("")
             setPageSection(1)
           }}
-          className="border-t border-gray-100 dark:border-white/10 bg-white dark:bg-card px-6 py-2.5"
+          className="border-t border-border dark:border-border bg-white dark:bg-card px-6 py-2.5"
         />
 
         {/* Main Table Container (Seamless inside single card) */}
-        <div className={cn("w-full flex flex-col flex-1 min-h-0 border-t border-gray-100 dark:border-white/10 bg-white dark:bg-card", filteredSections.length === 0 && "rounded-b-2xl overflow-hidden")}>
+        <div className={cn("w-full flex flex-col flex-1 min-h-0 border-t border-border dark:border-border bg-white dark:bg-card", filteredSections.length === 0 && "rounded-b-2xl overflow-hidden")}>
           <div className="w-full overflow-x-auto flex-1 select-none">
             {loading && sections.length === 0 ? (
               <TaxonomyTableSkeleton rowCount={6} embedded={true} showSubtext={true} showPagination={false} />
             ) : (
               <table className="min-w-full text-sm">
-                <thead className="sticky top-0 z-10 border-b border-gray-100 dark:border-white/10 bg-white dark:bg-card">
+                <thead className="sticky top-0 z-10 border-b border-border dark:border-border bg-white dark:bg-card">
                     <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">
                       <th className="w-12 p-4 text-center">
                         <input
                           type="checkbox"
-                          className="h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-gray-300 text-pup-maroon dark:text-primary accent-pup-maroon focus:ring-pup-maroon disabled:cursor-not-allowed disabled:opacity-20 dark:text-primary dark:border-white/10"
+                          className="h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-border text-pup-maroon dark:text-primary accent-pup-maroon focus:ring-pup-maroon disabled:cursor-not-allowed disabled:opacity-20 dark:text-primary dark:border-border"
                           checked={
                             filteredSections.length > 0 &&
                             filteredSections.every((s) => selectedSections[s.id])
@@ -496,27 +492,17 @@ export default function SectionsTab({
                       <th className="w-32 p-4 px-6 text-right text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">Actions</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-100 dark:divide-white/5">
+                  <tbody className="divide-y divide-border dark:divide-border">
                     {!showArchived && (
                       <tr className={cn(
-                        "group h-[52px] border-b-[0.5px] border-gray-100 dark:border-white/10 last:border-b-0 transition-all duration-fast hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none cursor-pointer",
+                        "group h-[52px] border-b-[0.5px] border-border dark:border-border last:border-b-0 transition-all duration-fast hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none cursor-pointer",
                         (secCourseCode || newSectionName.trim()) && "bg-amber-50/50 dark:bg-amber-950/10"
                       )}>
-                        <td className="py-0 px-4 align-middle text-center">
-                          <div className={cn(
-                            "flex h-5 w-5 mx-auto items-center justify-center rounded-full border-2 border-dashed transition-colors",
-                            (secCourseCode || newSectionName.trim()) ? "border-orange-400 dark:border-orange-500/50" : "border-gray-300 dark:border-white/10"
-                          )}>
-                            <HugeIcon  className={cn(
-                              "ph-bold text-[10px]",
-                              (secCourseCode || newSectionName.trim()) ? "ph-pencil-simple text-orange-600 animate-bounce dark:text-orange-400" : "ph-plus text-gray-400 dark:text-zinc-500"
-                            )}></HugeIcon>
-                          </div>
-                        </td>
+                        <td className="py-0 px-4 align-middle text-center"></td>
                         <td className="py-0 px-6 align-middle">
                           <Select
                             className={cn(
-                              "h-9 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-3 text-xs font-normal text-gray-700 dark:text-zinc-200 transition-all shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80",
+                              "h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-3 text-xs font-normal text-gray-700 dark:text-zinc-200 transition-all shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80",
                               secCourseCode ? "ring-1 ring-amber-100" : ""
                             )}
                             value={secCourseCode}
@@ -543,7 +529,7 @@ export default function SectionsTab({
                                 }
                               }}
                               className={cn(
-                                "h-9 flex-1 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-xs transition-all focus-visible:ring-pup-maroon",
+                                "h-9 flex-1 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-xs transition-all focus-visible:ring-pup-maroon",
                                 (secCourseCode || newSectionName.trim()) ? "ring-2 ring-amber-100" : ""
                               )}
                             />
@@ -552,19 +538,19 @@ export default function SectionsTab({
                               disabled={!secCourseCode || !newSectionName.trim() || isQuickAddLoading}
                               onClick={() => addSection(null, { courseCode: secCourseCode, name: newSectionName })}
                               title="Add Course Block"
-                              className="h-9 w-9 p-0 flex items-center justify-center rounded-xl text-sm font-semibold text-white shadow-xs active:scale-95 disabled:opacity-50 transition-all btn-brand-orange shrink-0 cursor-pointer"
+                              className="h-10 w-10 p-0 flex items-center justify-center rounded-xl text-[14px] font-semibold text-emerald-600 dark:text-emerald-400 shadow-[0_1px_2px_rgba(0,0,0,0.05)] active:scale-95 disabled:opacity-50 transition-all dark:shadow-none bg-white dark:bg-zinc-900 border-[1.5px] border-emerald-500/40 hover:border-emerald-500 hover:bg-emerald-50 dark:border-emerald-500/40 dark:hover:border-emerald-400 dark:hover:bg-emerald-950/40 shrink-0 cursor-pointer"
                             >
                             {isQuickAddLoading ? (
                               <HugeIcon  className="ph-bold ph-spinner animate-spin"></HugeIcon>
                             ) : (
-                              <HugeIcon  className="ph-bold ph-plus"></HugeIcon>
+                              <HugeIcon  className="ph-bold ph-plus" strokeWidth={2.5}></HugeIcon>
                             )}
                             </Button>
                           </div>
                         </td>
                         <td className="py-0 px-6 align-middle">
                           {(secCourseCode || newSectionName.trim()) ? (
-                            <div className="inline-flex w-fit items-center justify-center rounded-full px-[10px] py-[2.5px] text-[11px] font-medium tracking-[0.04em] bg-orange-100 text-orange-800 dark:bg-orange-950/40 dark:text-orange-400">
+                            <div className="inline-flex w-fit items-center justify-center rounded-full px-[10px] py-[2.5px] text-[11px] font-medium tracking-[0.04em] bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-400">
                               Draft
                             </div>
                           ) : (
@@ -589,7 +575,7 @@ export default function SectionsTab({
                             if (!isDisabled) toggleSectionSelected(sec.id, e);
                           }}
                           className={cn(
-                            "group h-[52px] border-b-[0.5px] border-gray-100 dark:border-white/10 last:border-b-0 transition-all duration-fast hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none cursor-pointer",
+                            "group h-[52px] border-b-[0.5px] border-border dark:border-border last:border-b-0 transition-all duration-fast hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none cursor-pointer",
                             sec.status === "Archived" && "opacity-75",
                             isSelected && "bg-blue-50/60 dark:bg-blue-950/20",
                             isDisabled && "cursor-not-allowed"
@@ -599,7 +585,7 @@ export default function SectionsTab({
                               <input
                               type="checkbox"
                               className={cn(
-                                "h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-gray-300 text-pup-maroon dark:text-primary accent-pup-maroon focus:ring-pup-maroon dark:text-primary dark:border-white/10 transition-opacity",
+                                "h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-border text-pup-maroon dark:text-primary accent-pup-maroon focus:ring-pup-maroon dark:text-primary dark:border-border transition-opacity",
                                 isSelected ? "opacity-100" : "opacity-50 group-hover:opacity-80"
                               )}
                               checked={isSelected}
@@ -735,14 +721,14 @@ export default function SectionsTab({
                               <EmptyHeader className="flex flex-col items-center gap-0">
                                 <div className="relative mb-6">
                                   <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                                  <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
+                                  <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
                                     <HugeIcon  className={showArchived && totalInView === 0 ? "ph-archive" : "ph-magnifying-glass"}></HugeIcon>
                                   </EmptyMedia>
                                 </div>
                                 <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
                                   {totalInView > 0 ? "No matches found" : (showArchived ? "No Archived Course Blocks Found" : "No Course Blocks Found")}
                                 </EmptyTitle>
-                                <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400">
+                                <EmptyDescription className="max-w-xs text-sm font-medium text-gray-900 dark:text-zinc-300">
                                   {totalInView > 0
                                     ? "Try adjusting your search filters or course selection to find what you're looking for."
                                     : showArchived
@@ -758,7 +744,7 @@ export default function SectionsTab({
                                       setSelectedCourseFilter("")
                                     }}
                                     title="Reset Filters"
-                                    className="mt-6 flex h-10 items-center justify-center gap-2 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
+                                    className="mt-6 flex h-10 items-center justify-center gap-2 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                                   >
                                     Reset
                                   </Button>
@@ -781,8 +767,8 @@ export default function SectionsTab({
             </div>
 
         {filteredSectionsFull.length > 0 && (
-          <div className="flex items-center justify-between border-t border-gray-100 dark:border-white/10 bg-white dark:bg-card p-4 px-6 rounded-b-2xl mt-auto select-none">
-            <div className="flex items-center gap-6 text-xs text-gray-500 dark:text-zinc-400 select-none">
+          <div className="flex items-center justify-between border-t border-border dark:border-border bg-white dark:bg-card p-4 px-6 rounded-b-2xl mt-auto select-none">
+            <div className="flex items-center gap-6 text-xs text-gray-900 dark:text-zinc-300 select-none">
               <span>
                 Showing {filteredSections.length} of {filteredSectionsFull.length.toLocaleString()}
               </span>
@@ -812,12 +798,12 @@ export default function SectionsTab({
                 size="sm"
                 disabled={pageSection <= 1}
                 onClick={() => setPageSection((p) => Math.max(1, p - 1))}
-                className="text-xs text-gray-500 dark:text-zinc-400 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
+                className="text-xs text-gray-900 dark:text-zinc-300 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
               >
                 Prev
               </Button>
 
-              <div className="h-8 w-8 rounded-xl border border-gray-200 dark:border-white/10 flex items-center justify-center text-xs font-bold text-gray-800 dark:text-zinc-200 bg-white dark:bg-zinc-900">
+              <div className="h-8 w-8 rounded-xl border border-border dark:border-border flex items-center justify-center text-xs font-bold text-gray-800 dark:text-zinc-200 bg-white dark:bg-zinc-900">
                 {pageSection}
               </div>
 
@@ -826,7 +812,7 @@ export default function SectionsTab({
                 size="sm"
                 disabled={pageSection >= Math.ceil(filteredSectionsFull.length / itemsPerPage)}
                 onClick={() => setPageSection((p) => p + 1)}
-                className="text-xs text-gray-500 dark:text-zinc-400 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
+                className="text-xs text-gray-900 dark:text-zinc-300 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
               >
                 Next
               </Button>
@@ -855,14 +841,14 @@ export default function SectionsTab({
           }
         }}
       >
-        <DialogContent className="overflow-hidden rounded-2xl border border-gray-200 bg-white p-0 shadow-2xl sm:max-w-md dark:border-white/10 dark:bg-card">
+        <DialogContent className="overflow-hidden rounded-2xl border border-border bg-white p-0 shadow-2xl sm:max-w-md dark:border-border dark:bg-card">
           <DialogHeader className="bg-white p-6 pb-0 dark:bg-card border-none">
             <div className="flex items-start gap-4">
               <div className="min-w-0">
                 <DialogTitle className="text-[16px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
                   New Course Block
                 </DialogTitle>
-                <DialogDescription className="mt-1 text-[13px] font-normal text-gray-500 dark:text-zinc-400">
+                <DialogDescription className="mt-1 text-[13px] font-normal text-gray-900 dark:text-zinc-300">
                   Create a new organizational section for degree program management.
                 </DialogDescription>
               </div>
@@ -871,11 +857,11 @@ export default function SectionsTab({
           <form onSubmit={addSection} className="w-full min-w-0 overflow-hidden">
             <div className="p-6 pb-4 flex flex-col gap-4">
               <div className="w-full min-w-0">
-                <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-gray-500 dark:text-zinc-400">
+                <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-gray-900 dark:text-zinc-300">
                   Degree Program <span className="text-[11px] font-normal text-gray-400 dark:text-zinc-500">*</span>
                 </label>
                 <Select
-                  className="h-10 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-3 text-xs font-normal text-gray-900 dark:text-zinc-100 focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 shadow-none min-w-0"
+                  className="h-10 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-3 text-xs font-normal text-gray-900 dark:text-zinc-100 focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 shadow-none min-w-0"
                   value={secCourseCode}
                   onChange={(e) => setSecCourseCode(e.target.value)}
                   required
@@ -889,13 +875,13 @@ export default function SectionsTab({
                 </Select>
               </div>
               <div>
-                <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-gray-500 dark:text-zinc-400">
+                <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-gray-900 dark:text-zinc-300">
                   Block Name <span className="text-[11px] font-normal text-gray-400 dark:text-zinc-500">*</span>
                 </label>
                 <Input
                   type="text"
                   placeholder="e.g. Section 1"
-                  className="h-10 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon shadow-xs min-w-0"
+                  className="h-10 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon shadow-xs min-w-0"
                   value={newSectionName}
                   onChange={(e) => setNewSectionName(e.target.value)}
                   required
@@ -911,7 +897,7 @@ export default function SectionsTab({
                   setNewSectionName("")
                   setSecCourseCode("")
                 }}
-                className="h-10 px-4 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                className="h-10 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
               >
                 Cancel
               </Button>
@@ -933,14 +919,14 @@ export default function SectionsTab({
           if (!open) setEditSection({ id: null, name: "", courseCode: "" })
         }}
       >
-        <DialogContent className="overflow-hidden rounded-2xl border border-gray-200 bg-white p-0 shadow-2xl sm:max-w-md dark:border-white/10 dark:bg-card">
+        <DialogContent className="overflow-hidden rounded-2xl border border-border bg-white p-0 shadow-2xl sm:max-w-md dark:border-border dark:bg-card">
           <DialogHeader className="bg-white p-6 pb-0 dark:bg-card border-none">
             <div className="flex items-start gap-4">
               <div className="min-w-0">
                 <DialogTitle className="text-[16px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
                   Edit Course Block
                 </DialogTitle>
-                <DialogDescription className="mt-1 text-[13px] font-normal text-gray-500 dark:text-zinc-400">
+                <DialogDescription className="mt-1 text-[13px] font-normal text-gray-900 dark:text-zinc-300">
                   Update the block label or program association.
                 </DialogDescription>
               </div>
@@ -949,11 +935,11 @@ export default function SectionsTab({
           <form onSubmit={updSection} className="w-full min-w-0 overflow-hidden">
             <div className="p-6 pb-4 space-y-4">
               <div className="w-full min-w-0">
-                <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-gray-500 dark:text-zinc-400">
+                <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-gray-900 dark:text-zinc-300">
                   Degree Program <span className="text-[11px] font-normal text-gray-400 dark:text-zinc-500">*</span>
                 </label>
                 <Select
-                  className="h-10 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-3 text-xs font-normal text-gray-900 dark:text-zinc-100 focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 shadow-none min-w-0"
+                  className="h-10 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-3 text-xs font-normal text-gray-900 dark:text-zinc-100 focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 shadow-none min-w-0"
                   value={editSection.courseCode}
                   onChange={(e) =>
                     setEditSection((prev) => ({
@@ -972,12 +958,12 @@ export default function SectionsTab({
                 </Select>
               </div>
               <div className="min-w-0">
-                <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-gray-500 dark:text-zinc-400">
+                <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-gray-900 dark:text-zinc-300">
                   Block Name <span className="text-[11px] font-normal text-gray-400 dark:text-zinc-500">*</span>
                 </label>
                 <Input
                   type="text"
-                  className="h-10 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon shadow-xs min-w-0"
+                  className="h-10 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon shadow-xs min-w-0"
                   value={editSection.name}
                   onChange={(e) =>
                     setEditSection((prev) => ({
@@ -997,7 +983,7 @@ export default function SectionsTab({
                   setIsEditSectionOpen(false)
                   setEditSection({ id: null, name: "", courseCode: "" })
                 }}
-                className="h-10 px-4 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                className="h-10 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
               >
                 Cancel
               </Button>

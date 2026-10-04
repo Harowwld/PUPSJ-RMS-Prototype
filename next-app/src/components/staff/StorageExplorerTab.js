@@ -144,7 +144,7 @@ export default function StorageExplorerTab({
       className="animate-fade-up font-jakarta flex h-auto w-full flex-col gap-6"
     >
       {/* ONE Single Card Container encapsulating Header, Breadcrumbs & 2D Storage Explorer */}
-      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none isolate font-jakarta mb-4 min-h-0 flex-1">
+      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4 min-h-0 flex-1">
         <PageHeader
           icon="ph-folder-open"
           title="Storage Explorer"
@@ -156,13 +156,13 @@ export default function StorageExplorerTab({
           showBorder={false}
           className="p-6"
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
-          descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
+          descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
           actions={
             <Button
               variant="outline"
               onClick={() => onSwitchView("search")}
               title="Return to Records & Archive"
-              className="flex h-10 items-center justify-center rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-5 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
+              className="flex h-10 items-center justify-center rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-5 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
             >
               Return
             </Button>
@@ -170,7 +170,7 @@ export default function StorageExplorerTab({
         />
 
         {/* Navigation Toolbar / Location Breadcrumbs */}
-        <div className="border-t border-gray-100 dark:border-white/10 p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
+        <div className="border-t border-border dark:border-border p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
           <div className="flex flex-col gap-2 h-8 justify-center">
             
             <div className="flex items-center gap-1.5 sm:gap-2">
@@ -298,53 +298,66 @@ export default function StorageExplorerTab({
                               }
                             }}
                           >
-                            {/* Target pulsing glow */}
-                            {isTarget && (
-                              <div className="absolute top-4 right-4 flex items-center gap-1.5 bg-white/20 backdrop-blur-md px-2.5 py-0.5 rounded-full text-[10px] font-semibold text-white animate-pulse">
-                                
-                                Target Room
-                              </div>
-                            )}
-                            {/* Non-target status badge */}
-                            {!isTarget && (
-                              <div className="absolute top-4 right-4">
-                                <Badge className={cn("border-0 text-[10px] font-semibold px-2.5 py-0.5 rounded-full shadow-none", statusColor)}>
-                                  {statusLabel}
-                                </Badge>
-                              </div>
-                            )}
+
 
                             <div className="relative z-10 flex flex-col flex-1 w-full">
-                              {/* Room Number */}
-                              <div className="mb-3">
-                                <h5 className={cn(
-                                  "text-[18px] font-bold tracking-tight font-jakarta leading-none",
-                                  isTarget ? "text-white" : "text-gray-900 dark:text-[#f2f2f7]"
-                                )}>
-                                  {r.name || `Room ${r.room}`}
-                                </h5>
-                              </div>
+                              <div className="flex w-full justify-between items-start flex-1 gap-2">
+                                <div className="flex flex-col flex-1 min-w-0">
+                                  {/* Room Number */}
+                                  <div className="mb-3 flex flex-wrap items-center gap-2">
+                                    <h5 className={cn(
+                                      "text-[18px] font-bold tracking-tight font-jakarta leading-none truncate",
+                                      isTarget ? "text-white" : "text-gray-900 dark:text-[#f2f2f7]"
+                                    )}>
+                                      {r.name || `Room ${r.room}`}
+                                    </h5>
+                                    
+                                    {/* Status badge moved inline */}
+                                    {isTarget ? (
+                                      <div className="flex items-center gap-1.5 bg-white/20 backdrop-blur-md px-2.5 py-0.5 rounded-full text-[10px] font-semibold text-white animate-pulse shrink-0">
+                                        Target Room
+                                      </div>
+                                    ) : (
+                                      <Badge className={cn("border-0 text-[10px] font-semibold px-2.5 py-0.5 rounded-full shadow-none shrink-0", statusColor)}>
+                                        {statusLabel}
+                                      </Badge>
+                                    )}
+                                  </div>
 
-                              {/* Stats breakdown */}
-                              <div className="space-y-2 mt-1.5 flex-1">
-                                <div className={cn(
-                                  "flex items-center text-xs font-medium",
-                                  isTarget ? "text-white/80" : "text-gray-550 dark:text-zinc-400"
-                                )}>
-                                  <HugeIcon  className="ph-bold ph-warehouse text-sm mr-2 opacity-80" />
-                                  <span>{r.cabinetsCount} Cabinets installed</span>
+                                  {/* Stats breakdown */}
+                                  <div className="space-y-2 mt-1.5 flex-1">
+                                    <div className={cn(
+                                      "flex items-center text-xs font-medium truncate",
+                                      isTarget ? "text-white/80" : "text-gray-550 dark:text-zinc-400"
+                                    )}>
+                                      <HugeIcon  className="ph-bold ph-warehouse text-sm mr-2 opacity-80 shrink-0" />
+                                      <span className="truncate">{r.cabinetsCount} Cabinets installed</span>
+                                    </div>
+                                    <div className={cn(
+                                      "flex items-center text-xs font-medium truncate",
+                                      isTarget ? "text-white/80" : "text-gray-550 dark:text-zinc-400"
+                                    )}>
+                                      <HugeIcon  className="ph-bold ph-folder-open text-sm mr-2 opacity-80 shrink-0" />
+                                      <span className="truncate">{r.occupiedCount} {isOsas ? "Archived organization folders" : "Archived student folders"}</span>
+                                    </div>
+                                  </div>
                                 </div>
-                                <div className={cn(
-                                  "flex items-center text-xs font-medium",
-                                  isTarget ? "text-white/80" : "text-gray-550 dark:text-zinc-400"
-                                )}>
-                                  <HugeIcon  className="ph-bold ph-folder-open text-sm mr-2 opacity-80" />
-                                  <span>{r.occupiedCount} {isOsas ? "Archived organization folders" : "Archived student folders"}</span>
+
+                                {/* Room Preview Thumbnail */}
+                                <div className="w-[76px] h-[60px] shrink-0 pointer-events-none opacity-90 rounded-md overflow-hidden bg-white dark:bg-zinc-800 border border-border/60 dark:border-border ml-2 relative">
+                                  <div className="absolute inset-[-14px]">
+                                    <RoomMap2D
+                                      kind="cabinets"
+                                      cabinets={r.cabinets}
+                                      roomDoor={r.door}
+                                      isPreview={true}
+                                    />
+                                  </div>
                                 </div>
                               </div>
 
                               {/* Occupancy Rate Progress Bar */}
-                              <div className="mt-4 pt-3 border-t border-gray-100 dark:border-zinc-800">
+                              <div className="mt-4 pt-3 border-t border-border dark:border-border">
                                 <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider mb-1.5">
                                   <span className={isTarget ? "text-white/70" : "text-[#8e8e93] dark:text-[#8e8e93]"}>Occupancy</span>
                                   <span className={isTarget ? "text-white font-bold" : "text-gray-700 dark:text-zinc-300 font-bold"}>{occupancyRate}%</span>
@@ -373,8 +386,8 @@ export default function StorageExplorerTab({
                 </div>
 
                 {(locatorModel?.rooms || []).length > 10 && (
-                  <div className="flex items-center justify-between border-t border-gray-100 bg-white p-4 px-6 dark:border-white/10 dark:bg-card mt-auto select-none">
-                    <div className="flex items-center gap-6 text-xs text-gray-500 dark:text-zinc-400">
+                  <div className="flex items-center justify-between border-t border-border bg-white p-4 px-6 dark:border-border dark:bg-card mt-auto select-none">
+                    <div className="flex items-center gap-6 text-xs text-gray-900 dark:text-zinc-300">
                       <span>
                         Showing {paginatedRooms.length} of {(locatorModel?.rooms || []).length.toLocaleString()}
                       </span>
@@ -409,12 +422,12 @@ export default function StorageExplorerTab({
                         size="sm"
                         disabled={roomsPage <= 1}
                         onClick={() => setRoomsPage((p) => Math.max(1, p - 1))}
-                        className="text-xs text-gray-500 dark:text-zinc-400 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
+                        className="text-xs text-gray-900 dark:text-zinc-300 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
                       >
                         Prev
                       </Button>
 
-                      <div className="h-8 w-8 rounded-xl border border-[#e5e5ea] dark:border-zinc-800 flex items-center justify-center text-xs font-bold text-gray-800 dark:text-zinc-200 bg-white dark:bg-zinc-900">
+                      <div className="h-8 w-8 rounded-xl border border-[#e5e5ea] dark:border-border flex items-center justify-center text-xs font-bold text-gray-800 dark:text-zinc-200 bg-white dark:bg-zinc-900">
                         {roomsPage}
                       </div>
 
@@ -423,7 +436,7 @@ export default function StorageExplorerTab({
                         size="sm"
                         disabled={roomsPage >= totalRoomsPages}
                         onClick={() => setRoomsPage((p) => Math.min(totalRoomsPages, p + 1))}
-                        className="text-xs text-gray-500 dark:text-zinc-400 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
+                        className="text-xs text-gray-900 dark:text-zinc-300 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
                       >
                         Next
                       </Button>
@@ -483,7 +496,7 @@ export default function StorageExplorerTab({
                   </div>
 
                   {selectedCabinet && (
-                    <div className="w-full lg:w-[320px] shrink-0 rounded-xl border border-gray-200 bg-white p-6 dark:border-white/10 dark:bg-zinc-900 flex flex-col min-h-0 overflow-y-auto shadow-md select-none">
+                    <div className="w-full lg:w-[320px] shrink-0 rounded-xl border border-border bg-white p-6 dark:border-border dark:bg-zinc-900 flex flex-col min-h-0 overflow-y-auto shadow-md select-none">
                       {/* Header */}
                       <div className="mb-4 flex items-center justify-between select-none">
                         <h5 
@@ -553,7 +566,7 @@ export default function StorageExplorerTab({
                                       ? "text-white"
                                       : hasOccupants
                                         ? "border-2 border-[#0A84FF] bg-[#0A84FF]/8 text-[#0A84FF] dark:bg-[#0A84FF]/12"
-                                        : "border-[#E5E5EA] bg-[#F5F5F7] hover:bg-[#EAEAEF] text-[#1C1C1E] dark:border-zinc-800 dark:bg-zinc-800/40 dark:text-zinc-300 dark:hover:bg-zinc-800"
+                                        : "border-[#E5E5EA] bg-[#F5F5F7] hover:bg-[#EAEAEF] text-[#1C1C1E] dark:border-border dark:bg-zinc-800/40 dark:text-zinc-300 dark:hover:bg-zinc-800"
                                   )}
                                   style={isDrawerTarget ? {
                                     backgroundColor: theme.frontStart,
@@ -587,14 +600,14 @@ export default function StorageExplorerTab({
 
                                 {/* Expanded Detail Panel */}
                                 {String(expandedDrawer) === String(d.drawer) && (
-                                  <div className="ml-2 pl-3 border-l border-[#E5E5EA] dark:border-white/10 py-1.5 space-y-3 max-h-52 overflow-y-auto">
+                                  <div className="ml-2 pl-3 border-l border-[#E5E5EA] dark:border-border py-1.5 space-y-3 max-h-52 overflow-y-auto">
                                     {hasOccupants && d.students && d.students.length > 0 ? (
                                       d.students.map((student) => {
                                         const isTargetPerson = activeStudent && student.studentNo === activeStudent.studentNo;
                                         return (
                                           <div
                                             key={student.studentNo}
-                                            className="group/item flex flex-col gap-3 rounded-[12px] p-4 bg-[#FAFAFA] border border-[#E5E5EA] dark:bg-zinc-800/60 dark:border-white/10 transition-colors font-sans"
+                                            className="group/item flex flex-col gap-3 rounded-[12px] p-4 bg-[#FAFAFA] border border-[#E5E5EA] dark:bg-zinc-800/60 dark:border-border transition-colors font-sans"
                                           >
                                             <div className="min-w-0 flex-1 flex items-start justify-between gap-1">
                                               <div className="min-w-0 flex-1">
@@ -624,7 +637,7 @@ export default function StorageExplorerTab({
                                                 </div>
                                                 {/* Soft Tag for Student Number / Org Acronym & Category */}
                                                 <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
-                                                  <div className="inline-block bg-[#F5F5F7] border border-[#E5E5EA] rounded-full px-2.5 py-0.5 text-[12px] font-semibold text-[#8E8E93] dark:bg-zinc-850 dark:border-white/5 dark:text-zinc-400">
+                                                  <div className="inline-block bg-[#F5F5F7] border border-[#E5E5EA] rounded-full px-2.5 py-0.5 text-[12px] font-semibold text-[#8E8E93] dark:bg-zinc-850 dark:border-border dark:text-zinc-400">
                                                     {student.studentNo}
                                                   </div>
                                                   {student.category && (
@@ -664,7 +677,7 @@ export default function StorageExplorerTab({
                                                           e.stopPropagation();
                                                           onPreviewDocument?.(doc.docType, student.name, student.studentNo, doc.id, doc.file_url);
                                                         }}
-                                                        className="flex items-center justify-between gap-2 p-2 bg-white hover:bg-gray-50 dark:bg-zinc-900/50 dark:hover:bg-zinc-900 border border-[#E5E5EA] dark:border-white/10 rounded-[8px] cursor-pointer transition-colors group/doc"
+                                                        className="flex items-center justify-between gap-2 p-2 bg-white hover:bg-gray-50 dark:bg-zinc-900/50 dark:hover:bg-zinc-900 border border-[#E5E5EA] dark:border-border rounded-[8px] cursor-pointer transition-colors group/doc"
                                                       >
                                                         <div className="flex items-center gap-1.5 min-w-0">
                                                           <HugeIcon  className="ph-bold ph-file-pdf text-[16px] text-[#FF3B30] group-hover/doc:scale-105 transition-transform"></HugeIcon>
@@ -693,12 +706,12 @@ export default function StorageExplorerTab({
                                         );
                                       })
                                     ) : (
-                                      <div className="flex flex-col items-center justify-center p-4 rounded-[12px] bg-[#F5F5F7] dark:bg-zinc-800/40 border border-dashed border-gray-300 dark:border-zinc-700 text-center select-none">
+                                      <div className="flex flex-col items-center justify-center p-4 rounded-[12px] bg-[#F5F5F7] dark:bg-zinc-800/40 border border-dashed border-border dark:border-border text-center select-none">
                                         <HugeIcon className="ph-duotone ph-folder-dashed text-2xl text-gray-400 dark:text-zinc-500 mb-1" />
                                         <p className="text-xs font-semibold text-gray-700 dark:text-zinc-300">
                                           Empty Drawer Slot
                                         </p>
-                                        <p className="text-[11px] text-gray-500 dark:text-zinc-400 mt-0.5 max-w-[200px]">
+                                        <p className="text-[11px] text-gray-900 dark:text-zinc-300 mt-0.5 max-w-[200px]">
                                           {isOsas
                                             ? "Available physical archive slot for organization records."
                                             : "Available physical archive slot for student records."}

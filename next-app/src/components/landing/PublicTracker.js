@@ -78,7 +78,7 @@ export default function PublicTracker() {
       >
         
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-8 border-b border-gray-100  relative z-10">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-8 border-b border-border  relative z-10">
           <div>
             <span className="text-[11px] font-mono font-semibold uppercase tracking-widest text-[#800000]  block mb-1">
               Public Records Verification
@@ -91,7 +91,7 @@ export default function PublicTracker() {
             </p>
           </div>
 
-          <div className="self-start sm:self-auto text-xs font-mono text-gray-500  bg-gray-50  px-3.5 py-1.5 rounded-full border border-gray-200/70 ">
+          <div className="self-start sm:self-auto text-xs font-mono text-gray-500  bg-gray-50  px-3.5 py-1.5 rounded-full border border-border/70 ">
             Real-Time Query
           </div>
         </div>
@@ -109,7 +109,7 @@ export default function PublicTracker() {
                   setTicketInput(e.target.value);
                   if (error) setError("");
                 }}
-                className="h-13 w-full rounded-2xl bg-gray-50  border border-gray-200  text-sm font-mono placeholder:font-sans placeholder:text-gray-400 px-5 focus:outline-none focus:border-[#800000]/40 focus:ring-4 focus:ring-[#800000]/5 transition-all text-gray-900 "
+                className="h-13 w-full rounded-2xl bg-gray-50  border border-border  text-sm font-mono placeholder:font-sans placeholder:text-gray-400 px-5 focus:outline-none focus:border-[#800000]/40 focus:ring-4 focus:ring-[#800000]/5 transition-all text-gray-900 "
               />
             </div>
             <Button 
@@ -143,9 +143,9 @@ export default function PublicTracker() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-              className="mt-8 p-6 sm:p-8 rounded-3xl bg-gray-50/80  border border-gray-200  relative z-10"
+              className="mt-8 p-6 sm:p-8 rounded-3xl bg-gray-50/80  border border-border  relative z-10"
             >
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-gray-200/80 ">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-border/80 ">
                 <div>
                   <div className="flex flex-wrap items-center gap-2.5">
                     <span className="text-sm font-mono font-bold text-gray-950 ">Ticket #{result.id}</span>
@@ -181,7 +181,7 @@ export default function PublicTracker() {
                         className={`p-4 rounded-2xl border transition-all ${
                           isDone 
                             ? "bg-white  border-black/[0.08] [0.12] shadow-xs" 
-                            : "bg-white/40  border-gray-200/60  opacity-60"
+                            : "bg-white/40  border-border/60  opacity-60"
                         }`}
                       >
                         <div className="flex items-center gap-2 mb-1.5">
@@ -207,7 +207,7 @@ export default function PublicTracker() {
 
               {/* Updates History */}
               {Array.isArray(result.updates) && result.updates.length > 0 && (
-                <div className="mt-6 pt-5 border-t border-gray-200/80 ">
+                <div className="mt-6 pt-5 border-t border-border/80 ">
                   <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-gray-400 block mb-2.5">
                     Official Update Log
                   </span>
@@ -217,7 +217,7 @@ export default function PublicTracker() {
                         idx > 0 && up.status === result.updates[idx - 1].status;
                       const formatStatus = (s) => (s === "InProgress" ? "In Progress" : s === "Ready" ? "Ready to Claim" : s);
                       return (
-                        <div key={up.id || idx} className="p-3 rounded-xl bg-white  border border-gray-200  flex items-start justify-between gap-3 text-xs">
+                        <div key={up.id || idx} className="p-3 rounded-xl bg-white  border border-border  flex items-start justify-between gap-3 text-xs">
                           <div>
                             <span className="font-semibold text-gray-900 mr-2">
                               {isConsecutiveSameStatus ? "Follow-Up Notice:" : `${formatStatus(up.status)}:`}
@@ -234,7 +234,7 @@ export default function PublicTracker() {
                 </div>
               )}
 
-              <div className="mt-6 pt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-gray-500  border-t border-gray-200/60 ">
+              <div className="mt-6 pt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-gray-500  border-t border-border/60 ">
                 <span>Need to view full details or submit supplementary files?</span>
                 <Link href="/login" className="font-semibold text-[#800000]  hover:underline">
                   Log in to Student Portal ➔

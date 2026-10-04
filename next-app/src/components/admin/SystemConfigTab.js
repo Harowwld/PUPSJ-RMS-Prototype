@@ -992,11 +992,11 @@ export default function SystemConfigTab({
   if (activeError) {
     return (
       <div className="animate-fade-up font-jakarta flex w-full flex-col gap-6">
-        <Card className="flex flex-col overflow-hidden rounded-2xl border border-gray-300 bg-white shadow-sm dark:bg-card dark:shadow-none dark:border-white/10">
+        <Card className="flex flex-col overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:bg-card dark:shadow-none dark:border-border">
           <CardContent className="flex flex-col p-6">
-            <Empty className="flex h-[400px] flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400">
+            <Empty className="flex h-[400px] flex-col items-center justify-center border-0 text-center text-gray-900 dark:text-zinc-300">
               <EmptyHeader className="flex flex-col items-center gap-0">
-                <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
+                <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none">
                   <HugeIcon  className="ph-duotone ph-warning-circle text-xl text-pup-maroon dark:text-primary" />
                 </EmptyMedia>
                 <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">
@@ -1023,7 +1023,7 @@ export default function SystemConfigTab({
           className="flex flex-col gap-4 w-full flex-1 min-h-0"
         >
           {/* Top Section Switcher Pill */}
-          <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-gray-100/90 dark:bg-zinc-900/80 border border-gray-200/80 dark:border-white/10 w-fit select-none overflow-x-auto max-w-full scrollbar-hide">
+          <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-gray-100/90 dark:bg-zinc-900/80 border border-border/80 dark:border-border w-fit select-none overflow-x-auto max-w-full scrollbar-hide">
             <button
               type="button"
               onClick={() => setActiveSubTab("document-types")}
@@ -1099,7 +1099,7 @@ export default function SystemConfigTab({
             </button>
           </div>
 
-          <Card className="p-0 gap-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none w-full flex flex-col min-h-0">
+          <Card className="p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none w-full flex flex-col min-h-0">
             <div className="relative flex flex-1 flex-col p-0 w-full min-h-0">
               <TabsContent
                 value="document-types"

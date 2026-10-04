@@ -17,7 +17,7 @@ export default function StaffTopBar({ items, activeKey, onSelect }) {
 
   return (
     <div className="absolute top-4 left-1/2 -translate-x-1/2 z-30 select-none flex justify-center w-max">
-      <nav className="flex items-center gap-2 rounded-full border border-gray-200 bg-white p-2 shadow-md backdrop-blur-md dark:border-white/5 dark:bg-zinc-900/90">
+      <nav className="flex items-center gap-2 rounded-full border border-border bg-white p-2 shadow-md backdrop-blur-md dark:border-border dark:bg-zinc-900/90">
         {navItems.map((item) => {
           const isActive = activeKey === item.key;
           return (

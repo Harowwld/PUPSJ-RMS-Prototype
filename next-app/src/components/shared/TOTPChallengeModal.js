@@ -53,14 +53,14 @@ export function TOTPChallengeModal({
         if (!isOpen) onOpenChange(false)
       }}
     >
-      <DialogContent className="overflow-hidden rounded-2xl border border-gray-200 bg-white p-0 shadow-2xl sm:max-w-md dark:border-white/10 dark:bg-card gap-0">
+      <DialogContent className="overflow-hidden rounded-2xl border border-border bg-white p-0 shadow-2xl sm:max-w-md dark:border-border dark:bg-card gap-0">
         <DialogHeader className="bg-white p-6 pb-0 dark:bg-card border-none text-left">
           <div className="flex items-start gap-4">
             <div className="min-w-0">
               <DialogTitle className="text-[16px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
                 {title}
               </DialogTitle>
-              <DialogDescription className="mt-1 text-[13px] font-normal text-gray-500 dark:text-zinc-400">
+              <DialogDescription className="mt-1 text-[13px] font-normal text-gray-900 dark:text-zinc-300">
                 {description}
               </DialogDescription>
             </div>
@@ -83,7 +83,7 @@ export function TOTPChallengeModal({
               <Input
                 type="text"
                 maxLength={8}
-                className="h-14 rounded-brand border-gray-300 bg-white text-center text-xl font-semibold text-gray-900 shadow-sm focus:ring-pup-maroon dark:border-white/10 dark:bg-card dark:text-zinc-50"
+                className="h-14 rounded-brand border-border bg-white text-center text-xl font-semibold text-gray-900 shadow-sm focus:ring-pup-maroon dark:border-border dark:bg-card dark:text-zinc-50"
                 placeholder="Code or Recovery Code"
                 value={token}
                 onChange={(e) =>
@@ -103,7 +103,7 @@ export function TOTPChallengeModal({
               variant="outline"
               onClick={() => onOpenChange(false)}
               disabled={isLoading}
-              className="h-10 px-4 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+              className="h-10 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
             >
               Cancel
             </Button>

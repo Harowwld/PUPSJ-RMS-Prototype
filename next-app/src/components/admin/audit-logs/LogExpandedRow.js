@@ -29,7 +29,7 @@ export default function LogExpandedRow({ log, handleCopy }) {
             </h5>
           </div>
           <div 
-            className="bg-white dark:bg-card p-[16px] rounded-xl h-full border border-gray-200/60 dark:border-white/10"
+            className="bg-white dark:bg-card p-[16px] rounded-xl h-full border border-border/60 dark:border-border"
           >
             <p className="text-[13px] font-normal text-[#111111] dark:text-zinc-50 leading-[1.5]">
               {formattedDescription}
@@ -46,7 +46,7 @@ export default function LogExpandedRow({ log, handleCopy }) {
             </h5>
           </div>
           <div 
-            className="space-y-[16px] bg-white dark:bg-card p-[16px] rounded-xl border border-gray-200/60 dark:border-white/10"
+            className="space-y-[16px] bg-white dark:bg-card p-[16px] rounded-xl border border-border/60 dark:border-border"
           >
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-semibold uppercase tracking-[0.04em] text-[#8E8E93]">IP Address</span>
@@ -61,7 +61,7 @@ export default function LogExpandedRow({ log, handleCopy }) {
                 </button>
               </div>
             </div>
-            <div className="flex flex-col gap-1.5 border-t border-black/5 pt-[16px] dark:border-white/5">
+            <div className="flex flex-col gap-1.5 border-t border-black/5 pt-[16px] dark:border-border">
               <span className="text-[11px] font-semibold uppercase tracking-[0.04em] text-[#8E8E93]">Browser</span>
               <span className="text-[12px] font-normal text-[#8E8E93] leading-[1.5]">
                 {log.userAgent || log.user_agent}
@@ -79,7 +79,7 @@ export default function LogExpandedRow({ log, handleCopy }) {
             </h5>
           </div>
           <div 
-            className="space-y-[16px] bg-white dark:bg-card p-[16px] rounded-xl border border-gray-200/60 dark:border-white/10"
+            className="space-y-[16px] bg-white dark:bg-card p-[16px] rounded-xl border border-border/60 dark:border-border"
           >
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-semibold uppercase tracking-[0.04em] text-[#8E8E93]">Target</span>
@@ -87,7 +87,7 @@ export default function LogExpandedRow({ log, handleCopy }) {
                 {log.entityType || "N/A"}
               </span>
             </div>
-            <div className="flex items-center justify-between border-t border-black/5 pt-[16px] dark:border-white/5">
+            <div className="flex items-center justify-between border-t border-black/5 pt-[16px] dark:border-border">
               <span className="text-[11px] font-semibold uppercase tracking-[0.04em] text-[#8E8E93]">ID</span>
               <div className="flex items-center gap-[6px]">
                 <span className="text-[13px] font-medium text-[#111111] dark:text-zinc-50">{log.entityId || "N/A"}</span>
@@ -103,7 +103,7 @@ export default function LogExpandedRow({ log, handleCopy }) {
               </div>
             </div>
             {(log.officeName || log.scope) && (
-              <div className="flex items-center justify-between border-t border-black/5 pt-[16px] dark:border-white/5">
+              <div className="flex items-center justify-between border-t border-black/5 pt-[16px] dark:border-border">
                 <span className="text-[11px] font-semibold uppercase tracking-[0.04em] text-[#8E8E93]">Scope</span>
                 <span className="text-[13px] font-medium text-[#111111] dark:text-zinc-50">
                   {log.officeName || log.scope}

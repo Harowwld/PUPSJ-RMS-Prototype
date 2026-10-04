@@ -312,32 +312,48 @@ try {
 // 5. Custom Toaster renderer using CSP-safe classes with Apple liquid glass styling
 const Toaster = () => {
   const { toasts, handlers } = useToaster({ duration: 3000, position: "top-center" });
+  const [expanded, setExpanded] = React.useState(false);
+  
+  const visibleToasts = toasts.filter((t) => t.visible);
 
   useEffect(() => {
     // Limit to 3 active visible toasts
-    const visibleToasts = toasts.filter((t) => t.visible);
     if (visibleToasts.length > 3) {
-      // Dismiss the oldest one (first in the list)
-      hotToast.dismiss(visibleToasts[0].id);
+      // Dismiss the oldest one (at the end of the array)
+      hotToast.dismiss(visibleToasts[visibleToasts.length - 1].id);
     }
   }, [toasts]);
 
   return (
     <div
-      className="rms-toast-viewport"
-      onMouseEnter={handlers.startPause}
-      onMouseLeave={handlers.endPause}
+      className="fixed top-4 left-1/2 -translate-x-1/2 z-[99999] flex flex-col items-center pointer-events-none"
+      onMouseEnter={() => { handlers.startPause(); setExpanded(true); }}
+      onMouseLeave={() => { handlers.endPause(); setExpanded(false); }}
       aria-live="polite"
     >
+      {/* Invisible hover bridge to prevent jitter when moving mouse between expanded toasts */}
+      {expanded && visibleToasts.length > 1 && (
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[350px] h-[300px] pointer-events-auto bg-transparent z-0" />
+      )}
       {toasts.map((toastItem) => {
-        const animationClass = toastItem.visible
-          ? "animate-[apple-toast-slide-down_200ms_cubic-bezier(0.16,1,0.3,1)_forwards]"
-          : "animate-[apple-toast-slide-up_200ms_cubic-bezier(0.16,1,0.3,1)_forwards]";
+        const stackIndex = visibleToasts.findIndex(t => t.id === toastItem.id);
+        const isVisible = toastItem.visible;
+        
+        // react-hot-toast puts newest toasts at index 0 for top-* positions.
+        let effIndex = stackIndex === -1 ? 0 : stackIndex;
 
+        const scale = isVisible ? (expanded ? 1 : 1 - (effIndex * 0.05)) : 0.9;
+        // If expanded, push them down by 70px each so they don't overlap. Otherwise layer them tightly.
+        const translateY = isVisible ? (expanded ? effIndex * 70 : effIndex * 14) : -20;
+        const opacity = isVisible ? (effIndex >= 3 && !expanded ? 0 : 1) : 0;
+        const zIndex = 100 - effIndex;
+
+        // Note: remove animationClass so we don't conflict with inline transforms, 
+        // the wrapper will handle the smooth transition using CSS!
         const content = typeof toastItem.message === "function"
           ? toastItem.message(toastItem)
           : (
-            <div className={`rms-toast flex flex-row flex-nowrap items-center gap-[10px] rounded-full w-max max-w-[min(500px,calc(100vw-32px))] pointer-events-auto ${animationClass}`}>
+            <div className="rms-toast flex flex-row flex-nowrap items-center gap-[10px] rounded-full w-max max-w-[min(500px,calc(100vw-32px))] pointer-events-auto shadow-[0_4px_12px_rgba(0,0,0,0.1)]">
               <div className="relative z-10 flex flex-col justify-center min-w-0 flex-1 py-0.5">
                 <span className="text-[13px] font-semibold text-gray-900 dark:text-zinc-50 tracking-[-0.01em] leading-snug break-words">
                   {typeof toastItem.message === "string" ? toastItem.message : String(toastItem.message || "")}
@@ -349,7 +365,13 @@ const Toaster = () => {
         return (
           <div
             key={toastItem.id}
-            className={toastItem.visible ? "" : "pointer-events-none"}
+            className="absolute top-0 transition-all duration-400 ease-[cubic-bezier(0.16,1,0.3,1)]"
+            style={{
+              opacity: opacity,
+              transform: `translateY(${translateY}px) scale(${scale})`,
+              zIndex: zIndex,
+              pointerEvents: isVisible ? "auto" : "none"
+            }}
           >
             {content}
           </div>

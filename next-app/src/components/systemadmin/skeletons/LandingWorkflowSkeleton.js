@@ -8,7 +8,7 @@ import PageHeader from "@/components/shared/PageHeader"
 export default function LandingWorkflowSkeleton() {
   return (
     <div className="flex flex-col gap-6 w-full animate-fade-up font-jakarta">
-      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
+      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none">
         <PageHeader
           icon="ph-bold ph-git-merge"
           title={
@@ -22,7 +22,7 @@ export default function LandingWorkflowSkeleton() {
           description="Manage public portal process workflow, student application steps, and left-column narrative."
           showBorder={false}
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
-          descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
+          descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
           actions={
             <div className="flex items-center gap-2.5 flex-wrap">
               <Skeleton className="h-10 w-28 rounded-xl dark:bg-muted" />
@@ -33,7 +33,7 @@ export default function LandingWorkflowSkeleton() {
         />
 
         {/* Standard Underline Tabs */}
-        <div className="flex items-center gap-6 shrink-0 h-10 px-6 border-b border-gray-100 dark:border-white/10 bg-white dark:bg-card select-none">
+        <div className="flex items-center gap-6 shrink-0 h-10 px-6 border-b border-border dark:border-border bg-white dark:bg-card select-none">
           <div className="relative h-full flex items-center text-[13px] font-semibold text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50">
             Workflow Content
           </div>
@@ -46,7 +46,7 @@ export default function LandingWorkflowSkeleton() {
         <CardContent className="font-jakarta bg-white p-[24px] dark:bg-card/50 backdrop-blur-md flex flex-col gap-6">
           <div className="space-y-6">
             {/* Section Title & Narrative Copy Skeleton */}
-            <div className="rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/30 p-5 sm:p-6 space-y-5">
+            <div className="rounded-xl border border-border/80 dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 p-5 sm:p-6 space-y-5">
               <div className="space-y-1">
                 <Skeleton className="h-4 w-52 rounded dark:bg-muted" />
                 <Skeleton className="h-3 w-80 rounded dark:bg-muted" />
@@ -70,7 +70,7 @@ export default function LandingWorkflowSkeleton() {
             </div>
 
             {/* Header Bar with Curve Style & Add Step Buttons */}
-            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/30 p-4">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 rounded-xl border border-border/80 dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 p-4">
               <div>
                 <div className="flex items-center gap-2">
                   <span className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">
@@ -80,7 +80,7 @@ export default function LandingWorkflowSkeleton() {
                     5 of 7 Steps
                   </span>
                 </div>
-                <p className="text-[12px] font-normal text-gray-500 dark:text-zinc-400 mt-0.5">
+                <p className="text-[12px] font-normal text-gray-900 dark:text-zinc-300 mt-0.5">
                   Reorder, rename, or customize step requirements. Numbers are assigned automatically in sequential order.
                 </p>
               </div>
@@ -115,7 +115,7 @@ export default function LandingWorkflowSkeleton() {
                   </div>
                 </div>
 
-                <div className="p-5 space-y-4 border-t border-gray-100 dark:border-white/10">
+                <div className="p-5 space-y-4 border-t border-border dark:border-border">
                   <div className="space-y-1.5">
                     <Skeleton className="h-3 w-28 rounded dark:bg-muted" />
                     <Skeleton className="h-10 w-full rounded-xl dark:bg-muted" />
@@ -131,7 +131,7 @@ export default function LandingWorkflowSkeleton() {
               {["02", "03", "04"].map((stepNum) => (
                 <div
                   key={stepNum}
-                  className="rounded-xl border border-gray-200/80 dark:border-white/10 bg-white dark:bg-card shadow-2xs overflow-hidden"
+                  className="rounded-xl border border-border/80 dark:border-border bg-white dark:bg-card shadow-2xs overflow-hidden"
                 >
                   <div className="flex items-center justify-between p-4 bg-gray-50/40 dark:bg-zinc-900/20 rounded-xl">
                     <div className="flex items-center gap-3.5 min-w-0">

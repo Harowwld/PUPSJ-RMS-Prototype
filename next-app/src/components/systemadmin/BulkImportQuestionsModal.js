@@ -332,13 +332,13 @@ export default function BulkImportQuestionsModal({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-xl p-0 overflow-hidden bg-white border border-gray-200 shadow-2xl rounded-2xl dark:bg-card dark:border-white/10 gap-0 font-jakarta">
+      <DialogContent className="sm:max-w-xl p-0 overflow-hidden bg-white border border-border shadow-2xl rounded-2xl dark:bg-card dark:border-border gap-0 font-jakarta">
         {/* Header - Strictly NO ICON */}
         <DialogHeader className="p-6 pb-0 bg-white dark:bg-card border-none min-w-0">
           <DialogTitle className="text-[16px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
             Import Security Questions
           </DialogTitle>
-          <DialogDescription className="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-1">
+          <DialogDescription className="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-1">
             {fileInfo
               ? "Review and double-check questions extracted from your file before importing."
               : "Select a CSV or text file from your device to double-check and import questions."}
@@ -368,14 +368,14 @@ export default function BulkImportQuestionsModal({
                   "rounded-2xl border-2 border-dashed p-8 flex flex-col items-center justify-center text-center transition-all cursor-pointer",
                   isDragActive
                     ? "border-pup-maroon bg-pup-maroon/5 dark:bg-pup-maroon/10"
-                    : "border-gray-200 hover:border-pup-maroon/60 dark:border-white/10 dark:hover:border-pup-maroon/60 bg-gray-50/40 dark:bg-zinc-900/20"
+                    : "border-border hover:border-pup-maroon/60 dark:border-border dark:hover:border-pup-maroon/60 bg-gray-50/40 dark:bg-zinc-900/20"
                 )}
               >
                 <div className="flex flex-col items-center gap-1.5">
                   <p className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
                     Select a CSV or TXT file
                   </p>
-                  <p className="text-[11px] text-gray-500 dark:text-zinc-400 max-w-xs">
+                  <p className="text-[11px] text-gray-900 dark:text-zinc-300 max-w-xs">
                     Drag and drop file here, or click to choose from your device
                   </p>
                 </div>
@@ -388,7 +388,7 @@ export default function BulkImportQuestionsModal({
                       e.stopPropagation();
                       fileInputRef.current?.click();
                     }}
-                    className="h-9 px-4 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                    className="h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                   >
                     Browse
                   </Button>
@@ -396,7 +396,7 @@ export default function BulkImportQuestionsModal({
               </div>
 
               {/* Template Download Option */}
-              <div className="flex items-center justify-between px-1 text-[11px] text-gray-500 dark:text-zinc-400">
+              <div className="flex items-center justify-between px-1 text-[11px] text-gray-900 dark:text-zinc-300">
                 <span>Accepted format: .csv with &apos;question&apos; header or .txt line-by-line</span>
                 <Button
                   type="button"
@@ -412,7 +412,7 @@ export default function BulkImportQuestionsModal({
             /* Double-Check & Review Area */
             <div className="space-y-3">
               {/* File Info & Action Bar */}
-              <div className="flex items-center justify-between p-3 rounded-xl bg-gray-50/80 dark:bg-zinc-900/40 border border-gray-200/60 dark:border-white/5">
+              <div className="flex items-center justify-between p-3 rounded-xl bg-gray-50/80 dark:bg-zinc-900/40 border border-border/60 dark:border-border">
                 <div className="min-w-0 flex-1 pr-3">
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100 truncate">
@@ -422,7 +422,7 @@ export default function BulkImportQuestionsModal({
                       {fileInfo.size}
                     </span>
                   </div>
-                  <p className="text-[11px] text-gray-500 dark:text-zinc-400 mt-0.5">
+                  <p className="text-[11px] text-gray-900 dark:text-zinc-300 mt-0.5">
                     {validRows.length} valid of {rows.length} extracted question{rows.length > 1 ? "s" : ""}
                   </p>
                 </div>
@@ -431,7 +431,7 @@ export default function BulkImportQuestionsModal({
                   type="button"
                   variant="outline"
                   onClick={() => fileInputRef.current?.click()}
-                  className="h-8 px-3 text-[11px] font-semibold rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all shrink-0"
+                  className="h-8 px-3 text-[11px] font-semibold rounded-lg border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all shrink-0"
                 >
                   Change
                 </Button>
@@ -446,11 +446,11 @@ export default function BulkImportQuestionsModal({
                   return (
                     <div
                       key={row.id}
-                      className="rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/30 dark:bg-zinc-900/40 p-3 space-y-2 transition-all"
+                      className="rounded-xl border border-border/80 dark:border-border bg-gray-50/30 dark:bg-zinc-900/40 p-3 space-y-2 transition-all"
                     >
                       <div className="flex items-center gap-2">
                         {/* Index Badge */}
-                        <span className="flex items-center justify-center w-6 h-6 rounded-lg bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 font-semibold font-mono text-xs border border-gray-200 dark:border-white/10 shadow-2xs shrink-0">
+                        <span className="flex items-center justify-center w-6 h-6 rounded-lg bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 font-semibold font-mono text-xs border border-border dark:border-border shadow-2xs shrink-0">
                           {index + 1}
                         </span>
 
@@ -466,7 +466,7 @@ export default function BulkImportQuestionsModal({
                               ? "border-amber-400 dark:border-amber-600 focus-visible:ring-amber-500"
                               : isValid
                               ? "border-emerald-300 dark:border-emerald-700 focus-visible:ring-emerald-500"
-                              : "border-gray-200 dark:border-white/10"
+                              : "border-border dark:border-border"
                           )}
                         />
 
@@ -478,7 +478,7 @@ export default function BulkImportQuestionsModal({
                             "px-2.5 py-1 text-[10px] font-semibold rounded-lg border transition-all cursor-pointer shrink-0 active:scale-95",
                             row.is_required
                               ? "text-pup-maroon dark:text-red-400 bg-red-50 dark:bg-red-950/50 border-red-200 dark:border-red-900/50"
-                              : "text-gray-500 dark:text-zinc-400 bg-white dark:bg-zinc-800 border-gray-200 dark:border-white/10 hover:border-gray-300"
+                              : "text-gray-900 dark:text-zinc-300 bg-white dark:bg-zinc-800 border-border dark:border-border hover:border-border"
                           )}
                         >
                           {row.is_required ? "Required" : "Optional"}
@@ -527,7 +527,7 @@ export default function BulkImportQuestionsModal({
                   type="button"
                   variant="outline"
                   onClick={handleAddRow}
-                  className="w-full h-9 text-xs font-semibold rounded-xl border border-dashed border-gray-200 dark:border-white/15 hover:border-pup-maroon/60 dark:hover:border-pup-maroon/60 bg-gray-50/40 hover:bg-pup-maroon/5 dark:bg-zinc-900/20 dark:hover:bg-pup-maroon/10 text-gray-700 dark:text-zinc-300 hover:text-pup-maroon dark:hover:text-pup-maroon shadow-none cursor-pointer active:scale-95 transition-all"
+                  className="w-full h-9 text-xs font-semibold rounded-xl border border-dashed border-border dark:border-border hover:border-pup-maroon/60 dark:hover:border-pup-maroon/60 bg-gray-50/40 hover:bg-pup-maroon/5 dark:bg-zinc-900/20 dark:hover:bg-pup-maroon/10 text-gray-700 dark:text-zinc-300 hover:text-pup-maroon dark:hover:text-pup-maroon shadow-none cursor-pointer active:scale-95 transition-all"
                 >
                   Add
                 </Button>
@@ -542,7 +542,7 @@ export default function BulkImportQuestionsModal({
             type="button"
             variant="outline"
             onClick={handleCancel}
-            className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+            className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
           >
             Cancel
           </Button>

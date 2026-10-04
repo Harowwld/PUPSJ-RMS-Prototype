@@ -230,7 +230,7 @@ export const DEFAULT_OFFICES = [
     short_name: "Registrar",
     description: "Manages student academic records, transcripts, and enrollment documents",
     icon: "ph-bold ph-certificate",
-    accent_color: "#EA580C",
+    accent_color: "#ff9b11",
   },
   {
     id: "osas",
