@@ -25,6 +25,8 @@
     "db:seed:sample": "node scripts/populate-sample-data.mjs",
     "db:seed:requests": "node scripts/seed-many-requests.mjs",
     "db:seed:students:csv": "node scripts/seed-students-from-csv.mjs",
+    "db:seed:organizations": "node scripts/seed-osas-organizations.mjs",
+    "generate:sample-docs": "node scripts/generate-sample-osas-documents.mjs",
     "test:recognition": "node --test test/recognition.test.mjs",
     "test:ingest-events": "node --test test/ingest-events.test.mjs",
     "test:hot-folder": "node --test test/hot-folder-stability.test.mjs",
