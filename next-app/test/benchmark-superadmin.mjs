@@ -1,6 +1,5 @@
 import dotenv from "dotenv";
-dotenv.config({ path: ".env.local" });
-dotenv.config();
+dotenv.config({ path: ".env" });
 
 async function benchmark() {
   console.log("=== Benchmarking SuperAdmin API Endpoints (Authenticated) ===");

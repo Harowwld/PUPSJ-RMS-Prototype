@@ -2,8 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import dotenv from "dotenv";
 
-dotenv.config({ path: ".env.local" });
-dotenv.config();
+dotenv.config({ path: ".env" });
 
 const { query, queryOne } = await import("../src/lib/postgres.js");
 const { createDocumentRequest, updateDocumentRequest } = await import("../src/lib/documentRequestsRepo.js");
@@ -16,7 +15,7 @@ test("Document Request Status Transition Auto-Logging & Deduplication Suite", as
 
   t.before(async () => {
     testStudentAccount = await queryOne(
-      "SELECT id, student_no, email FROM student_accounts WHERE status = 'Active' LIMIT 1"
+      "SELECT id, student_no FROM student_accounts WHERE status = 'Active' LIMIT 1"
     );
     assert.ok(testStudentAccount, "A test student account must exist in the database");
 

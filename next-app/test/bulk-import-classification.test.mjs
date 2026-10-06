@@ -1,6 +1,5 @@
 import dotenv from "dotenv";
-dotenv.config({ path: ".env.local" });
-dotenv.config();
+dotenv.config({ path: ".env" });
 
 import fs from "node:fs";
 import path from "node:path";
@@ -9,6 +8,7 @@ import assert from "node:assert/strict";
 const { listDocTypes, listAllDocTypes, createDocTypeFull } = await import("../src/lib/docTypesRepo.js");
 
 const BASE_URL = process.env.TEST_BASE_URL || "http://localhost:3000";
+const STAFF_PASSWORD = process.env.DEFAULT_STAFF_PASSWORD || "pupstaff";
 const CSV_PATH = path.resolve(process.cwd(), "../_SAMPLE_DATA/system_data - final.csv");
 
 function extractCookies(res) {
@@ -111,7 +111,7 @@ async function runTests() {
   const adminLoginRes = await fetch(`${BASE_URL}/api/auth/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ username: "admin.registrar@pup.local", password: "pupstaff" }),
+    body: JSON.stringify({ username: "admin.registrar@pup.local", password: STAFF_PASSWORD }),
   });
   assert.equal(adminLoginRes.status, 200, "Admin login must succeed");
   const adminAuth = extractCookies(adminLoginRes);

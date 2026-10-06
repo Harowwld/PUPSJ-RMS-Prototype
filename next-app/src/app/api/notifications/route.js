@@ -64,15 +64,27 @@ export async function POST(req) {
   const officeId = getPrincipalOfficeId(staff);
   if (!officeId) return createAuthErrorResponse("Office scope is required", 403);
 
-  const contentType = String(req.headers.get("content-type") || "").toLowerCase();
-  let action = "markSeen";
+  const body = await req.json().catch(() => null);
+  if (!body || typeof body !== "object" || Array.isArray(body)) {
+    return NextResponse.json({ ok: false, error: "Invalid JSON body" }, { status: 400 });
+  }
+  const action = String(body.action || "");
   let ids = [];
-  if (contentType.includes("application/json")) {
-    const body = await req.json().catch(() => null);
-    if (body && typeof body === "object") {
-      action = String(body.action || "markSeen");
-      ids = Array.isArray(body.ids) ? body.ids : [];
+  if (["markRead", "markUnread", "archive", "unarchive"].includes(action)) {
+    if (!Array.isArray(body.ids) || body.ids.length === 0) {
+      return NextResponse.json({ ok: false, error: "At least one notification ID is required." }, { status: 400 });
     }
+    const normalizedIds = body.ids.map((id) => {
+      if (typeof id !== "number" && typeof id !== "string") return null;
+      const value = String(id).trim();
+      if (!/^\d+$/.test(value)) return null;
+      const numericId = Number(value);
+      return Number.isSafeInteger(numericId) && numericId > 0 ? numericId : null;
+    });
+    if (normalizedIds.some((id) => id === null)) {
+      return NextResponse.json({ ok: false, error: "Notification IDs must be positive integers." }, { status: 400 });
+    }
+    ids = [...new Set(normalizedIds)];
   }
 
   if (action === "markSeen") {
@@ -81,21 +93,13 @@ export async function POST(req) {
   } else if (action === "markAllUnread") {
     await markAllStaffNotificationsReadState(staff.id, officeId, false);
   } else if (action === "markRead") {
-    if (ids.length > 0) {
-      await setNotificationItemState(staff.id, ids, "read", 1, officeId);
-    }
+    await setNotificationItemState(staff.id, ids, "read", 1, officeId);
   } else if (action === "markUnread") {
-    if (ids.length > 0) {
-      await setNotificationItemState(staff.id, ids, "read", 0, officeId);
-    }
+    await setNotificationItemState(staff.id, ids, "read", 0, officeId);
   } else if (action === "archive") {
-    if (ids.length > 0) {
-      await setNotificationItemState(staff.id, ids, "archive", 1, officeId);
-    }
+    await setNotificationItemState(staff.id, ids, "archive", 1, officeId);
   } else if (action === "unarchive") {
-    if (ids.length > 0) {
-      await setNotificationItemState(staff.id, ids, "archive", 0, officeId);
-    }
+    await setNotificationItemState(staff.id, ids, "archive", 0, officeId);
   } else {
     return NextResponse.json({ ok: false, error: "Invalid action" }, { status: 400 });
   }

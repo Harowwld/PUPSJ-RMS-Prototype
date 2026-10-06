@@ -14,7 +14,7 @@ export async function DELETE(req, ctx) {
   const org = await getOrganizationById(id);
   if (!org) return NextResponse.json({ ok: false, error: "Organization not found." }, { status: 404 });
 
-  const removed = await removeOfficer(id, officerId);
+  const removed = await removeOfficer(org.id, officerId);
   if (!removed) {
     return NextResponse.json({ ok: false, error: "Officer record not found." }, { status: 404 });
   }

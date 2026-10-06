@@ -3,8 +3,7 @@ import path from "node:path";
 import dotenv from "dotenv";
 import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
 
-dotenv.config({ path: ".env.local" });
-dotenv.config();
+dotenv.config({ path: ".env" });
 
 const { query, queryOne } = await import("../src/lib/postgres.js");
 const { hashPassword } = await import("../src/lib/passwordHash.js");

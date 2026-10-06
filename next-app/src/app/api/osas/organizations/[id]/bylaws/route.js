@@ -7,6 +7,7 @@ import {
   getOrganizationById,
   listOrganizationBylawsVersions,
   getOrganizationBylawsVersionById,
+  getOrganizationBylawsVersionByStorageFilename,
   reviewOrganizationBylawsVersion,
   archiveOrganizationBylawsDirectly,
   updateOrganizationBylaws,
@@ -95,13 +96,14 @@ export async function GET(req, ctx) {
   if (isFileReq) {
     let targetFilename = org.bylaws_storage_filename;
     let targetOriginalName = org.bylaws_original_filename || `${org.name}-CBL.pdf`;
+    let targetMimeType = org.bylaws_mime_type || "application/pdf";
 
     if (versionId) {
       const ver = await getOrganizationBylawsVersionById(versionId);
-      if (ver && ver.organization_id === org.id) {
-        targetFilename = ver.storage_filename;
-        targetOriginalName = ver.original_filename || targetOriginalName;
-      }
+      if (!ver || ver.organization_id !== org.id) return NextResponse.json({ ok: false, error: "Bylaws version not found for this organization." }, { status: 404 });
+      targetFilename = ver.storage_filename;
+      targetOriginalName = ver.original_filename || targetOriginalName;
+      targetMimeType = ver.mime_type || targetMimeType;
     }
 
     let filePath = resolveBylawsFilePath(targetFilename);
@@ -130,13 +132,13 @@ export async function GET(req, ctx) {
 
     return new NextResponse(bytes, {
       headers: {
-        "Content-Type": org.bylaws_mime_type || "application/pdf",
+        "Content-Type": targetMimeType,
         "Content-Disposition": `inline; filename="${targetOriginalName}"`,
       },
     });
   }
 
-  const versions = await listOrganizationBylawsVersions(id);
+  const versions = await listOrganizationBylawsVersions(org.id);
 
   return NextResponse.json({
     ok: true,
@@ -171,19 +173,27 @@ export async function POST(req, ctx) {
 
   const storageFilename = `${crypto.randomUUID()}-cbl.pdf`;
   const fileBytes = Buffer.from(await file.arrayBuffer());
-  fs.writeFileSync(path.join(bylawsStorageDir(), storageFilename), fileBytes);
-
   const staffId = access.user?.id || access.user?.sub || null;
-  const result = await archiveOrganizationBylawsDirectly(id, {
-    storageFilename,
-    originalFilename: file.name || "Constitution-and-Bylaws.pdf",
-    sizeBytes: file.size,
-    mimeType: file.type,
-    staffId,
-    versionTag: String(versionTag).trim(),
-    amendmentSummary: String(amendmentSummary).trim(),
-    effectiveDate,
-  });
+  const filePath = path.join(bylawsStorageDir(), storageFilename);
+  let result;
+  try {
+    fs.writeFileSync(filePath, fileBytes, { flag: "wx" });
+    result = await archiveOrganizationBylawsDirectly(org.id, {
+      storageFilename,
+      originalFilename: file.name || "Constitution-and-Bylaws.pdf",
+      sizeBytes: fileBytes.length,
+      mimeType: file.type,
+      staffId,
+      versionTag: String(versionTag).trim(),
+      amendmentSummary: String(amendmentSummary).trim(),
+      effectiveDate,
+    });
+  } catch (err) {
+    let persisted = false;
+    try { persisted = Boolean(await getOrganizationBylawsVersionByStorageFilename(storageFilename)); } catch { persisted = true; }
+    if (!persisted) { try { fs.unlinkSync(filePath); } catch {} }
+    return NextResponse.json({ ok: false, error: err.message || "Failed to archive Constitution & By-Laws." }, { status: 500 });
+  }
 
   await writeGlobalAuditLog(req, "Uploaded organization Constitution & By-Laws", {
     officeId: "osas",
@@ -204,19 +214,43 @@ export async function PATCH(req, ctx) {
   const org = await getOrganizationById(id);
   if (!org) return NextResponse.json({ ok: false, error: "Organization not found." }, { status: 404 });
 
-  const body = await req.json().catch(() => ({}));
+  const body = await req.json().catch(() => null);
+  if (!body || typeof body !== "object" || Array.isArray(body)) {
+    return NextResponse.json({ ok: false, error: "Invalid request body." }, { status: 400 });
+  }
+  const unsupportedField = Object.keys(body).find((field) => !["versionId", "status", "reviewNote", "effectiveDate"].includes(field));
+  if (unsupportedField) {
+    return NextResponse.json({ ok: false, error: `Unsupported field: ${unsupportedField}` }, { status: 400 });
+  }
   const { versionId, status, reviewNote, effectiveDate } = body;
 
   if (!versionId) {
     return NextResponse.json({ ok: false, error: "versionId is required." }, { status: 400 });
   }
 
+  const version = await getOrganizationBylawsVersionById(versionId);
+  if (!version || version.organization_id !== org.id) {
+    return NextResponse.json({ ok: false, error: "Bylaws version not found for this organization." }, { status: 404 });
+  }
+
   const allowedStatuses = ["Approved", "Needs Revision", "Declined"];
-  if (!allowedStatuses.includes(status)) {
+  if (typeof status !== "string" || !allowedStatuses.includes(status)) {
     return NextResponse.json(
       { ok: false, error: `Invalid status "${status}". Allowed: ${allowedStatuses.join(", ")}` },
       { status: 400 }
     );
+  }
+
+  if (reviewNote !== undefined && typeof reviewNote !== "string") {
+    return NextResponse.json({ ok: false, error: "Review note must be text." }, { status: 400 });
+  }
+  if (effectiveDate !== undefined && effectiveDate !== null) {
+    const parsedEffectiveDate = new Date(`${effectiveDate}T00:00:00.000Z`);
+    if (typeof effectiveDate !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(effectiveDate)
+      || Number.isNaN(parsedEffectiveDate.getTime())
+      || parsedEffectiveDate.toISOString().slice(0, 10) !== effectiveDate) {
+      return NextResponse.json({ ok: false, error: "Effective date must be a valid YYYY-MM-DD date." }, { status: 400 });
+    }
   }
 
   if ((status === "Needs Revision" || status === "Declined") && (!reviewNote || String(reviewNote).trim().length < 5)) {
@@ -247,4 +281,3 @@ export async function PATCH(req, ctx) {
     return NextResponse.json({ ok: false, error: err.message || "Failed to review CBL version." }, { status: 400 });
   }
 }
-

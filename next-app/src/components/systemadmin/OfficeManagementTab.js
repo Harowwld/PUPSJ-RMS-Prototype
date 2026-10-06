@@ -186,6 +186,27 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
   })
 
   const [submitLoading, setSubmitLoading] = useState(false)
+  const [folderPickerLoading, setFolderPickerLoading] = useState(false)
+
+  const handlePickInboundFolder = async () => {
+    if (!isEditing || !selectedOfficeId) {
+      showToast("Save the office first, then select its inbound folder.", true)
+      return
+    }
+    setFolderPickerLoading(true)
+    try {
+      const response = await fetch(`/api/offices/${selectedOfficeId}/inbound-folder-picker`, { method: "POST" })
+      const result = await response.json()
+      if (!response.ok) throw new Error(result.error || "Folder picker is unavailable")
+      if (!result.cancelled && result.data?.path) {
+        setForm((previous) => ({ ...previous, inbound_path: result.data.path }))
+      }
+    } catch (error) {
+      showToast(error.message || "Could not select an inbound folder", true)
+    } finally {
+      setFolderPickerLoading(false)
+    }
+  }
 
   const fetchOffices = useCallback(async (isSilent = false) => {
     try {
@@ -1484,14 +1505,19 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                       <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
                         Scanner Inbound Watch Path
                       </label>
-                      <Input
-                        value={form.inbound_path}
-                        onChange={(e) => setForm(prev => ({ ...prev, inbound_path: e.target.value }))}
-                        placeholder="Default: .local/hot-folder/INBOUND"
-                        className="h-10 rounded-xl bg-white border border-border text-xs focus-visible:ring-pup-maroon dark:bg-zinc-950 dark:border-border dark:text-white font-mono text-[11px]"
-                      />
+                      <div className="flex gap-2">
+                        <Input
+                          value={form.inbound_path}
+                          onChange={(e) => setForm(prev => ({ ...prev, inbound_path: e.target.value }))}
+                          placeholder="Default: .local/hot-folder/INBOUND"
+                          className="h-10 rounded-xl bg-white border border-border text-xs focus-visible:ring-pup-maroon dark:bg-zinc-950 dark:border-border dark:text-white font-mono text-[11px]"
+                        />
+                        <Button type="button" variant="outline" disabled={folderPickerLoading || !isEditing} onClick={handlePickInboundFolder} className="h-10 shrink-0 rounded-xl px-3 text-xs">
+                          {folderPickerLoading ? "Opening…" : "Browse"}
+                        </Button>
+                      </div>
                       <span className="text-[10px] text-gray-400 mt-1 block">
-                        Folder monitored for automated scanner drops.
+                        Select a folder on the computer running the app and watcher. Saving switches the watcher to this folder.
                       </span>
                     </div>
                   </div>

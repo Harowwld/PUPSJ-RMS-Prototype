@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createStudent, listStudents } from "../../../lib/studentsRepo";
 import { writeAuditLog } from "../../../lib/auditLogRequest";
 import { canonicalizeCabinetId } from "../../../lib/storageLayoutUtils";
+import { getStorageLayout } from "../../../lib/storageLayoutRepo";
 import { isUniqueViolation } from "../../../lib/dbErrors";
 import { requireAdmin, requireStaff, createAuthErrorResponse } from "../../../lib/authHelpers";
 import { isSystemAdminRole, normalizeRole } from "../../../lib/roleUtils";
@@ -51,10 +52,10 @@ export async function GET(req) {
 }
 
 export async function POST(req) {
-  const access = await requireAdmin(req);
-  if (access.error || !access.user) return createAuthErrorResponse(access.error || "Admin access required", access.error?.startsWith("Access denied") ? 403 : 401);
+  const access = await requireStaff(req);
+  if (access.error || !access.user) return createAuthErrorResponse(access.error || "Staff authentication required", access.error?.startsWith("Access denied") ? 403 : 401);
   const body = await req.json().catch(() => null);
-  if (!body || typeof body !== "object") {
+  if (!body || typeof body !== "object" || Array.isArray(body)) {
     return NextResponse.json(
       { ok: false, error: "Invalid JSON body" },
       { status: 400 }
@@ -64,14 +65,11 @@ export async function POST(req) {
   const studentNo = String(body.studentNo || "").trim();
   const name = String(body.name || "").trim().replace(/\s+/g, " ").toUpperCase();
   const courseCode = String(body.courseCode || "").trim().toUpperCase();
-  const yearLevel = parseInt(body.yearLevel);
+  const yearLevel = Number(body.yearLevel);
   const section = String(body.section || "").trim();
-  const room = parseInt(body.room);
+  const room = Number(body.room);
   const cabinet = canonicalizeCabinetId(body.cabinet);
-  const parsedDrawerInt = parseInt(body.drawer);
-  const drawer = Number.isInteger(parsedDrawerInt) && String(parsedDrawerInt) === String(body.drawer).trim()
-    ? parsedDrawerInt
-    : String(body.drawer || "").trim();
+  const drawer = Number(body.drawer);
   const status = String(body.status || "Active").trim() || "Active";
   const officeId = resolveOfficeId(access.user, req, body.officeId || body.office_id);
   if (!officeId) return createAuthErrorResponse("You cannot access that office", 403);
@@ -92,14 +90,14 @@ export async function POST(req) {
     );
   }
 
-  if (!Number.isFinite(yearLevel) || yearLevel < 2000 || yearLevel > 2100) {
+  if (!Number.isInteger(yearLevel) || yearLevel < 2000 || yearLevel > 2100) {
     return NextResponse.json(
       { ok: false, error: "Invalid yearLevel" },
       { status: 400 }
     );
   }
 
-  if (!Number.isFinite(room) || room < 1) {
+  if (!Number.isInteger(room) || room < 1) {
     return NextResponse.json({ ok: false, error: "Invalid room" }, { status: 400 });
   }
 
@@ -110,11 +108,26 @@ export async function POST(req) {
     );
   }
 
-  if (!drawer || (typeof drawer === "number" && drawer < 1)) {
+  if (!Number.isInteger(drawer) || drawer < 1) {
     return NextResponse.json(
       { ok: false, error: "Invalid drawer" },
       { status: 400 }
     );
+  }
+  const layout = await getStorageLayout({ officeId });
+  const roomDef = layout?.rooms?.find((entry) => Number(entry.id) === room);
+  if (!roomDef) {
+    return NextResponse.json({ ok: false, error: `Storage Room ${room} does not exist in the system` }, { status: 400 });
+  }
+  const cabinetDef = roomDef.cabinets?.find((entry) => canonicalizeCabinetId(entry.id) === cabinet);
+  if (!cabinetDef) {
+    return NextResponse.json({ ok: false, error: `Cabinet ${cabinet} does not exist in Room ${room}` }, { status: 400 });
+  }
+  if (!cabinetDef.drawerIds?.some((id) => String(id) === String(drawer))) {
+    return NextResponse.json({ ok: false, error: `Drawer ${drawer} does not exist in Cabinet ${cabinet} (Room ${room})` }, { status: 400 });
+  }
+  if (!["Active", "Inactive", "Archived"].includes(status)) {
+    return NextResponse.json({ ok: false, error: "Invalid status" }, { status: 400 });
   }
 
   try {

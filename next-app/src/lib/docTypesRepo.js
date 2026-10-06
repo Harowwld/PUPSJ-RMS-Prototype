@@ -117,7 +117,7 @@ export async function createDocTypeFull(nameRaw, officeId, { isRequestable = fal
   return created;
 }
 
-export async function updateDocType(id, nameRaw, status = "Active", officeId, { isRequestable, isCompliance, complianceCategory } = {}) {
+export async function updateDocType(id, nameRaw, status, officeId, { isRequestable, isCompliance, complianceCategory } = {}) {
   const scopedOfficeId = requireOfficeId(officeId);
   const name = String(nameRaw || "").trim();
   if (!name) throw new Error("Missing name");
@@ -132,6 +132,7 @@ export async function updateDocType(id, nameRaw, status = "Active", officeId, { 
   const effectiveIsRequestable = isRequestable !== undefined ? Boolean(isRequestable) : Boolean(current.is_requestable);
   const effectiveIsCompliance = isCompliance !== undefined ? Boolean(isCompliance) : Boolean(current.is_compliance);
   const effectiveCategory = complianceCategory !== undefined ? String(complianceCategory).trim() : (current.compliance_category || "General Requirements");
+  const effectiveStatus = status !== undefined ? status : current.status;
 
   await dbRun(
     `UPDATE document_types
@@ -140,7 +141,7 @@ export async function updateDocType(id, nameRaw, status = "Active", officeId, { 
     [
       name,
       nameNorm,
-      status,
+      effectiveStatus,
       effectiveIsRequestable,
       effectiveIsCompliance,
       effectiveCategory,

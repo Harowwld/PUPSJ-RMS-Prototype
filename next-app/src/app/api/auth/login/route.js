@@ -19,6 +19,7 @@ import { setCSRFTokenCookie } from "../../../../lib/csrfProtection";
 import { getSessionVersion, registerSessionToken } from "@/lib/authSessions";
 import { warmRegistrarIngestQueueOnLogin } from "@/lib/ingestEventProcessor";
 import { shouldUseSecureCookie } from "@/lib/cookieSecurity";
+import { isStaffOfficeActive } from "@/lib/officeAccess";
 
 export const runtime = "nodejs";
 
@@ -189,6 +190,20 @@ async function _POST(req) {
       { actor: getStaffDisplayName(staff) || username, role: staff.role || "Staff", officeId: staff.office_id }
     );
     return addSecurityHeaders(NextResponse.json({ ok: false, error: "Invalid credentials" }, { status: 401 }));
+  }
+
+  if (!(await isStaffOfficeActive(staff.office_id, staff.role))) {
+    await audit(
+      req,
+      "Login Attempt",
+      `authentication failure: office '${staff.office_id}' is inactive`,
+      "WARNING",
+      { actor: getStaffDisplayName(staff) || username, role: staff.role || "Staff", officeId: staff.office_id }
+    );
+    return addSecurityHeaders(NextResponse.json(
+      { ok: false, error: "This office is inactive. Please contact a system administrator." },
+      { status: 403 }
+    ));
   }
 
   if (passwordVerification.needsRehash) {

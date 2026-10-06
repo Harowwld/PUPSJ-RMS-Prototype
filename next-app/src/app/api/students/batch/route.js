@@ -42,11 +42,11 @@ function validateStudentPayload(body, layout) {
     .replace(/\s+/g, " ")
     .toUpperCase();
   const courseCode = String(body?.courseCode || "").trim().toUpperCase();
-  const yearLevel = parseInt(body?.yearLevel);
+  const yearLevel = Number(body?.yearLevel);
   const section = String(body?.section || "").trim();
-  const room = parseInt(body?.room);
+  const room = Number(body?.room);
   const cabinet = canonicalizeCabinetId(body?.cabinet);
-  const drawer = parseInt(body?.drawer);
+  const drawer = Number(body?.drawer);
   const status = String(body?.status || "Active").trim() || "Active";
 
   const studentNoPattern = /^[A-Z0-9][A-Z0-9\-_/.]{1,30}$/i;
@@ -59,23 +59,23 @@ function validateStudentPayload(body, layout) {
     return { ok: false, error: "Invalid studentNo format" };
   }
 
-  if (!Number.isFinite(yearLevel) || yearLevel < 2000 || yearLevel > 2100) {
+  if (!Number.isInteger(yearLevel) || yearLevel < 2000 || yearLevel > 2100) {
     return { ok: false, error: "Invalid yearLevel" };
   }
 
   // Storage Location Validation
-  if (!Number.isFinite(room) || room < 1) {
+  if (!Number.isInteger(room) || room < 1) {
     return { ok: false, error: "Invalid room" };
   }
   if (!cabinet) {
     return { ok: false, error: "Invalid cabinet" };
   }
-  const parsedDrawerInt = parseInt(drawer);
-  const normalizedDrawer = Number.isInteger(parsedDrawerInt) && String(parsedDrawerInt) === String(drawer).trim()
-    ? parsedDrawerInt
-    : String(drawer || "").trim();
-  if (!normalizedDrawer || (typeof normalizedDrawer === "number" && normalizedDrawer < 1)) {
+  const normalizedDrawer = drawer;
+  if (!Number.isInteger(normalizedDrawer) || normalizedDrawer < 1) {
     return { ok: false, error: "Invalid drawer" };
+  }
+  if (!["Active", "Inactive", "Archived"].includes(status)) {
+    return { ok: false, error: "Invalid status" };
   }
 
   // Physical Layout Verification
@@ -129,7 +129,12 @@ export async function POST(req) {
   const officeId = resolveOfficeId(access.user, req, body.officeId || body.office_id);
   if (!officeId) return createAuthErrorResponse("You cannot access that office", 403);
 
-  const layout = await getStorageLayout({ officeId }).catch(() => null);
+  let layout;
+  try {
+    layout = await getStorageLayout({ officeId });
+  } catch {
+    return NextResponse.json({ ok: false, error: "Failed to load storage layout" }, { status: 500 });
+  }
 
   const results = [];
   for (let i = 0; i < rows.length; i++) {

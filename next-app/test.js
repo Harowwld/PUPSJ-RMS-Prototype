@@ -1,7 +1,7 @@
 import { Pool } from "pg";
 import { decryptPII } from "./next-app/src/lib/piiEncryption.js";
 import dotenv from 'dotenv';
-dotenv.config({ path: 'next-app/.env.local' });
+dotenv.config({ path: 'next-app/.env' });
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 async function test() {

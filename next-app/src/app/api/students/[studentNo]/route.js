@@ -7,6 +7,7 @@ import {
 } from "../../../../lib/studentsRepo";
 import { writeAuditLog } from "../../../../lib/auditLogRequest";
 import { canonicalizeCabinetId } from "../../../../lib/storageLayoutUtils";
+import { getStorageLayout } from "../../../../lib/storageLayoutRepo";
 import { requireAdmin, requireStaff, createAuthErrorResponse } from "../../../../lib/authHelpers";
 import { isSystemAdminRole } from "../../../../lib/roleUtils";
 import { canAccessResource } from "@/lib/resourceAuthorization";
@@ -68,11 +69,91 @@ export async function PATCH(req, ctx) {
   }
 
   const body = await req.json().catch(() => null);
-  if (!body || typeof body !== "object") {
+  if (!body || typeof body !== "object" || Array.isArray(body)) {
     return NextResponse.json(
       { ok: false, error: "Invalid JSON body" },
       { status: 400 }
     );
+  }
+
+  const allowedFields = new Set([
+    "name",
+    "courseCode",
+    "yearLevel",
+    "section",
+    "room",
+    "cabinet",
+    "drawer",
+    "status",
+  ]);
+  const unsupportedFields = Object.keys(body).filter((field) => !allowedFields.has(field));
+  if (unsupportedFields.length) {
+    return NextResponse.json({ ok: false, error: `Unsupported field: ${unsupportedFields[0]}` }, { status: 400 });
+  }
+  if (Object.keys(body).length === 0) {
+    return NextResponse.json({ ok: false, error: "At least one field is required" }, { status: 400 });
+  }
+
+  const validStatuses = new Set(["Active", "Inactive", "Archived"]);
+  if (body.status !== undefined && !validStatuses.has(String(body.status).trim())) {
+    return NextResponse.json({ ok: false, error: "Invalid status" }, { status: 400 });
+  }
+  if (body.name !== undefined && !String(body.name).trim()) {
+    return NextResponse.json({ ok: false, error: "Name is required" }, { status: 400 });
+  }
+  if (body.courseCode !== undefined && !String(body.courseCode).trim()) {
+    return NextResponse.json({ ok: false, error: "Course code is required" }, { status: 400 });
+  }
+  if (body.section !== undefined && !String(body.section).trim()) {
+    return NextResponse.json({ ok: false, error: "Section is required" }, { status: 400 });
+  }
+  if (body.yearLevel !== undefined) {
+    const yearLevel = Number(body.yearLevel);
+    if (!Number.isInteger(yearLevel) || yearLevel < 2000 || yearLevel > 2100) {
+      return NextResponse.json({ ok: false, error: "Invalid yearLevel" }, { status: 400 });
+    }
+  }
+  if (body.room !== undefined) {
+    const room = Number(body.room);
+    if (!Number.isInteger(room) || room < 1) {
+      return NextResponse.json({ ok: false, error: "Invalid room" }, { status: 400 });
+    }
+  }
+  if (body.cabinet !== undefined && !canonicalizeCabinetId(body.cabinet)) {
+    return NextResponse.json({ ok: false, error: "Invalid cabinet" }, { status: 400 });
+  }
+  if (body.drawer !== undefined) {
+    const drawer = Number(body.drawer);
+    if (!Number.isInteger(drawer) || drawer < 1) {
+      return NextResponse.json({ ok: false, error: "Invalid drawer" }, { status: 400 });
+    }
+  }
+
+  const lifecycleStatus = body.status === "Active" || body.status === "Archived";
+  const hasProfileFields = Object.keys(body).some((field) => field !== "status");
+  if (lifecycleStatus && hasProfileFields) {
+    return NextResponse.json(
+      { ok: false, error: "Archive and restore status changes must be submitted separately" },
+      { status: 400 }
+    );
+  }
+
+  if (body.room !== undefined || body.cabinet !== undefined || body.drawer !== undefined) {
+    const room = Number(body.room ?? existingStudent.room);
+    const cabinet = canonicalizeCabinetId(body.cabinet ?? existingStudent.cabinet);
+    const drawer = Number(body.drawer ?? existingStudent.drawer);
+    const layout = await getStorageLayout({ officeId });
+    const roomDef = layout?.rooms?.find((entry) => Number(entry.id) === room);
+    if (!roomDef) {
+      return NextResponse.json({ ok: false, error: `Storage Room ${room} does not exist in the system` }, { status: 400 });
+    }
+    const cabinetDef = roomDef.cabinets?.find((entry) => canonicalizeCabinetId(entry.id) === cabinet);
+    if (!cabinetDef) {
+      return NextResponse.json({ ok: false, error: `Cabinet ${cabinet} does not exist in Room ${room}` }, { status: 400 });
+    }
+    if (!cabinetDef.drawerIds?.some((id) => String(id) === String(drawer))) {
+      return NextResponse.json({ ok: false, error: `Drawer ${drawer} does not exist in Cabinet ${cabinet} (Room ${room})` }, { status: 400 });
+    }
   }
 
   // Handle explicit status toggle (archiving/restoring)

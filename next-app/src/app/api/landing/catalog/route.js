@@ -1,21 +1,9 @@
 import { NextResponse } from "next/server";
-import { landingContentRepo } from "@/lib/landingContentRepo";
-import { verifySessionToken, getSessionCookieName } from "@/lib/jwt";
-import { isSystemAdminRole } from "@/lib/roleUtils";
+import { landingContentRepo, DEFAULT_CATALOG_CONTENT, validateLandingContentUpdate } from "@/lib/landingContentRepo";
+import { requireSystemAdmin, createAuthErrorResponse } from "@/lib/authHelpers";
 import { writeGlobalAuditLog } from "@/lib/auditLogRequest";
 
 export const runtime = "nodejs";
-
-async function isSuperAdmin(req) {
-  try {
-    const token = req.cookies.get(getSessionCookieName())?.value;
-    if (!token) return false;
-    const payload = await verifySessionToken(token);
-    return isSystemAdminRole(payload?.role);
-  } catch {
-    return false;
-  }
-}
 
 export async function GET() {
   try {
@@ -28,15 +16,12 @@ export async function GET() {
 }
 
 export async function PUT(req) {
-  if (!(await isSuperAdmin(req))) {
-    return NextResponse.json(
-      { ok: false, error: "Unauthorized. SuperAdmin privileges required." },
-      { status: 403 }
-    );
-  }
+  const access = await requireSystemAdmin(req);
+  if (access.error || !access.user) return createAuthErrorResponse(access.error || "System administrator access required", 403);
 
   try {
     const body = await req.json();
+    validateLandingContentUpdate(body, DEFAULT_CATALOG_CONTENT);
 
     let updated;
     if (body?.reset === true) {

@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import { performNativeOcr } from "./appleVisionOcr.js";
-import { createDocument } from "./documentsRepo.js";
+import { createDocument, getDocumentBySourceIngestId } from "./documentsRepo.js";
 import {
   detectDocType,
   detectName,
@@ -33,6 +33,11 @@ function extractNameCandidate(text) {
 }
 
 async function promoteUniqueMatch(item, student, docType, officeId, rotation = 0) {
+  const existing = await getDocumentBySourceIngestId(item.id, { officeId });
+  if (existing) {
+    await markIngestPromoted(item.id, existing.id, null, { officeId });
+    return existing;
+  }
   const sourcePath = getIngestFilePath(item.storage_filename);
   if (!fs.existsSync(sourcePath)) throw new Error("Ingest source file is missing from disk.");
   const sourceBuffer = fs.readFileSync(sourcePath);
@@ -46,6 +51,7 @@ async function promoteUniqueMatch(item, student, docType, officeId, rotation = 0
     mimeType: item.mime_type,
     sizeBytes: buffer.length,
     buffer,
+    sourceIngestId: item.id,
   });
   await markIngestPromoted(item.id, document.id, null, { officeId });
   try { fs.unlinkSync(sourcePath); } catch {}

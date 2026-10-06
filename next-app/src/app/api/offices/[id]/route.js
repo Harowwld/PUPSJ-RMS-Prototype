@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { access, constants, mkdir } from "node:fs/promises";
+import path from "node:path";
 import { getOfficeById, updateOffice, deactivateOffice } from "@/lib/officesRepo";
 import { writeGlobalAuditLog } from "@/lib/auditLogRequest";
 import { requireSystemAdmin, createAuthErrorResponse } from "@/lib/authHelpers";
@@ -32,12 +34,53 @@ export async function PATCH(req, { params }) {
       return NextResponse.json({ ok: false, error: "Office not found" }, { status: 404 });
     }
 
-    const body = await req.json();
+    const body = await req.json().catch(() => null);
+    if (!body || typeof body !== "object" || Array.isArray(body)) {
+      return NextResponse.json({ ok: false, error: "Invalid request body" }, { status: 400 });
+    }
+    const allowedFields = new Set([
+      "id", "name", "short_name", "description", "icon", "accent_color", "status",
+      "station_name", "storage_path", "inbound_path", "ingest_token", "scanner_model", "last_station_ping",
+    ]);
+    const unsupportedField = Object.keys(body).find((field) => !allowedFields.has(field));
+    if (unsupportedField) {
+      return NextResponse.json({ ok: false, error: `Unsupported field: ${unsupportedField}` }, { status: 400 });
+    }
+    if (Object.keys(body).length === 0) {
+      return NextResponse.json({ ok: false, error: "At least one field is required" }, { status: 400 });
+    }
+    if (body.id !== undefined && String(body.id).trim().toLowerCase() !== String(id).trim().toLowerCase()) {
+      return NextResponse.json({ ok: false, error: "Office ID cannot be changed" }, { status: 400 });
+    }
+    if (body.status !== undefined && !["Active", "Inactive"].includes(body.status)) {
+      return NextResponse.json({ ok: false, error: "Invalid office status" }, { status: 400 });
+    }
     if (original.status !== "Active" && body.status !== "Active") {
       return NextResponse.json(
         { ok: false, error: "Archived offices cannot be modified. Please reactivate the office first." },
         { status: 400 }
       );
+    }
+
+    if (body.inbound_path !== undefined) {
+      const inboundPath = String(body.inbound_path || "").trim();
+      if (!inboundPath) return NextResponse.json({ ok: false, error: "Scanner inbound folder is required" }, { status: 400 });
+      const resolvedInboundPath = path.resolve(inboundPath);
+      try {
+        await access(resolvedInboundPath, constants.R_OK | constants.W_OK | constants.X_OK);
+      } catch (accessError) {
+        try {
+          await mkdir(resolvedInboundPath, { recursive: true });
+          await access(resolvedInboundPath, constants.R_OK | constants.W_OK | constants.X_OK);
+        } catch (createError) {
+          const permissionDenied = ["EACCES", "EPERM"].includes(accessError?.code) || ["EACCES", "EPERM"].includes(createError?.code);
+          const message = process.platform === "darwin" && permissionDenied
+            ? "macOS denied folder access to the app process. In System Settings → Privacy & Security → Files & Folders, allow Desktop access for Visual Studio Code, or run pnpm dev from Terminal, then restart the app."
+            : `The selected inbound folder is unavailable or not writable by the application host (${accessError?.code || createError?.code || "access check failed"}).`;
+          return NextResponse.json({ ok: false, error: message }, { status: 400 });
+        }
+      }
+      body.inbound_path = resolvedInboundPath;
     }
 
     const updated = await updateOffice(id, body);

@@ -1,4 +1,5 @@
 import { dbAll, dbGet, dbRun } from "./postgresCompat.js";
+import { transaction } from "./postgres.js";
 
 function requireOfficeId(officeId) {
   const value = String(officeId || "").trim().toLowerCase();
@@ -66,18 +67,32 @@ export async function updateCourse(id, codeRaw, nameRaw, status = "Active", offi
 
 export async function archiveCourse(id, officeId) {
   const scopedOfficeId = requireOfficeId(officeId);
-  const course = await dbGet("SELECT code FROM courses WHERE office_id = ? AND id = ?", [scopedOfficeId, id]);
-  if (course?.code) {
-    await dbRun("UPDATE sections SET status = 'Archived' WHERE office_id = ? AND course_code = ? AND status = 'Active'", [scopedOfficeId, course.code]);
-  }
-  await dbRun("UPDATE courses SET status = 'Archived' WHERE office_id = ? AND id = ?", [scopedOfficeId, id]);
-  return true;
+  return transaction(async ({ query: run, queryOne: runOne }) => {
+    const course = await runOne("SELECT code FROM courses WHERE office_id = $1 AND id = $2 FOR UPDATE", [scopedOfficeId, id]);
+    if (!course) return false;
+    await run(
+      "UPDATE sections SET status = 'Archived', course_archived = TRUE WHERE office_id = $1 AND course_code = $2 AND status = 'Active'",
+      [scopedOfficeId, course.code]
+    );
+    await run("UPDATE courses SET status = 'Archived' WHERE office_id = $1 AND id = $2", [scopedOfficeId, id]);
+    return true;
+  });
 }
 
 export async function restoreCourse(id, officeId) {
   const scopedOfficeId = requireOfficeId(officeId);
-  await dbRun("UPDATE courses SET status = 'Active' WHERE office_id = ? AND id = ?", [scopedOfficeId, id]);
-  return true;
+  return transaction(async ({ query: run, queryOne: runOne }) => {
+    const course = await runOne(
+      "UPDATE courses SET status = 'Active' WHERE office_id = $1 AND id = $2 RETURNING code",
+      [scopedOfficeId, id]
+    );
+    if (!course) return false;
+    await run(
+      "UPDATE sections SET status = 'Active', course_archived = FALSE WHERE office_id = $1 AND course_code = $2 AND course_archived = TRUE",
+      [scopedOfficeId, course.code]
+    );
+    return true;
+  });
 }
 
 export async function deleteCourse(id, officeId) {

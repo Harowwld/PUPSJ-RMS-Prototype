@@ -8,6 +8,18 @@ import { canAccessOffice, isSystemAdminRole } from "../../../../lib/roleUtils";
 
 export const runtime = "nodejs";
 
+function parseImportedBoolean(row, keys) {
+  const key = keys.find((candidate) => row[candidate] !== undefined && row[candidate] !== null);
+  if (!key) return false;
+  const value = row[key];
+  if (typeof value === "boolean") return value;
+  if (value === 1 || value === "1") return true;
+  if (value === 0 || value === "0" || String(value).trim() === "") return false;
+  if (typeof value === "string" && value.trim().toLowerCase() === "true") return true;
+  if (typeof value === "string" && value.trim().toLowerCase() === "false") return false;
+  throw new Error(`${key} must be true or false`);
+}
+
 export async function POST(req) {
   const access = await requireAdmin(req);
   if (access.error || !access.user) return createAuthErrorResponse(access.error || "Admin access required", access.error?.startsWith("Access denied") ? 403 : 401);
@@ -32,8 +44,8 @@ export async function POST(req) {
 
   // Sort rows to ensure dependency order: Courses (degree programs) must be processed first to satisfy foreign keys for Sections (course blocks)
   const sortedRows = [...rows].sort((a, b) => {
-    const catA = String(a.category || "").toLowerCase().trim();
-    const catB = String(b.category || "").toLowerCase().trim();
+    const catA = String(a?.category || "").toLowerCase().trim();
+    const catB = String(b?.category || "").toLowerCase().trim();
     if (catA === "course" && catB !== "course") return -1;
     if (catA !== "course" && catB === "course") return 1;
     if (catA === "section" && catB !== "section" && catB !== "course") return -1;
@@ -42,21 +54,17 @@ export async function POST(req) {
   });
 
   for (const row of sortedRows) {
+    if (!row || typeof row !== "object" || Array.isArray(row)) {
+      failCount++;
+      continue;
+    }
     const { category, name, code } = row;
     const cat = String(category || "").toLowerCase().trim();
     try {
       if (cat === "documenttype" || cat === "document type") {
         if (!name) throw new Error("Missing name");
-        const isCompliance = row.isCompliance !== undefined
-          ? Boolean(row.isCompliance)
-          : (row.is_compliance !== undefined
-            ? Boolean(row.is_compliance)
-            : (String(row.iscompliance).toLowerCase() === "true" || row.iscompliance === "1"));
-        const isRequestable = row.isRequestable !== undefined
-          ? Boolean(row.isRequestable)
-          : (row.is_requestable !== undefined
-            ? Boolean(row.is_requestable)
-            : (String(row.isrequestable).toLowerCase() === "true" || row.isrequestable === "1"));
+        const isCompliance = parseImportedBoolean(row, ["isCompliance", "is_compliance", "iscompliance"]);
+        const isRequestable = parseImportedBoolean(row, ["isRequestable", "is_requestable", "isrequestable"]);
         const complianceCategory = String(
           row.complianceCategory || row.compliance_category || row.compliancecategory || "General Requirements"
         ).trim();

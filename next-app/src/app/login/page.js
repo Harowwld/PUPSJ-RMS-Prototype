@@ -121,6 +121,7 @@ export default function Home() {
   const [passwordFocused, setPasswordFocused] = useState(false);
   const passwordRef = useRef(null);
   const [demoOpen, setDemoOpen] = useState(false);
+  const [demoAccountsEnabled, setDemoAccountsEnabled] = useState(false);
 
   const handleSelectDemoAccount = (acc) => {
     setView("login");
@@ -203,6 +204,19 @@ export default function Home() {
     link.rel = 'shortcut icon';
     link.href = '/assets/branding/black-icon.png';
     document.getElementsByTagName('head')[0].appendChild(link);
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    fetch("/api/auth/login-options", { cache: "no-store" })
+      .then((response) => response.json())
+      .then((result) => {
+        if (active) setDemoAccountsEnabled(result?.data?.showDemoAccounts !== false);
+      })
+      .catch(() => {
+        if (active) setDemoAccountsEnabled(true);
+      });
+    return () => { active = false; };
   }, []);
 
   const resetForgotState = () => {
@@ -1159,7 +1173,7 @@ export default function Home() {
           </div>
 
           {/* Demo Accounts Popover Trigger (Understated & Non-Distracting) */}
-          <div className="mt-3 w-full flex justify-center select-none pb-6">
+          {demoAccountsEnabled && <div className="mt-3 w-full flex justify-center select-none pb-6">
             <Popover open={demoOpen} onOpenChange={setDemoOpen}>
               <PopoverTrigger asChild>
                 <button
@@ -1241,7 +1255,7 @@ export default function Home() {
                 </div>
               </PopoverContent>
             </Popover>
-          </div>
+          </div>}
         </div>
 
         {/* FIXED FOOTER */}

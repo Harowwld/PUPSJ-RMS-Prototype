@@ -3,12 +3,13 @@ import {
   createDocument,
   listDocuments,
 } from "../../../lib/documentsRepo";
-import { createStudent, getStudentByStudentNo } from "../../../lib/studentsRepo";
+import { createStudent, deleteStudent, getStudentByStudentNo } from "../../../lib/studentsRepo";
 import { writeAuditLog } from "../../../lib/auditLogRequest";
 import { requireStaff, createAuthErrorResponse, getPrincipalOfficeId } from "../../../lib/authHelpers";
 import { isUniqueViolation } from "../../../lib/dbErrors";
 import { isSystemAdminRole } from "../../../lib/roleUtils";
 import { canAccessResource } from "../../../lib/resourceAuthorization";
+import { dbGet } from "../../../lib/postgresCompat";
 
 export const runtime = "nodejs";
 
@@ -191,6 +192,21 @@ export async function POST(req) {
     );
   }
 
+  // Validate the document type before creating a new student. This upload
+  // flow creates the student first because documents reference that record;
+  // reject invalid types before any student or membership rows are written.
+  const availableDocType = await dbGet(
+    `SELECT id FROM document_types
+      WHERE office_id = ? AND lower(name) = lower(?) AND status = 'Active'`,
+    [officeId, docType],
+  );
+  if (!availableDocType) {
+    return NextResponse.json(
+      { ok: false, error: "Document type is not available in this office." },
+      { status: 400 },
+    );
+  }
+
   // Server-side safeguard: if studentName is missing, try to look it up from the database.
   if (!studentName && !isNewStudent) {
     const student = await getStudentByStudentNo(studentNo, { officeId });
@@ -199,6 +215,7 @@ export async function POST(req) {
     }
   }
 
+  let createdStudentForUpload = false;
   if (isNewStudent) {
     if (!studentName) {
       return NextResponse.json(
@@ -261,6 +278,7 @@ export async function POST(req) {
         status: "Active",
         officeId,
       });
+      createdStudentForUpload = true;
     } catch (e) {
       const msg = String(e?.message || "");
       if (isUniqueViolation(e)) {
@@ -285,17 +303,29 @@ export async function POST(req) {
 
   const buf = Buffer.from(await file.arrayBuffer());
 
-  const row = await createDocument({
-    officeId,
-    studentNo,
-    studentName,
-    docType,
-    originalFilename: file.name || "document.pdf",
-    mimeType: file.type || "application/pdf",
-    sizeBytes: file.size || buf.length,
-    buffer: buf,
-    uploadedBy: user.id,
-  });
+  let row;
+  try {
+    row = await createDocument({
+      officeId,
+      studentNo,
+      studentName,
+      docType,
+      originalFilename: file.name || "document.pdf",
+      mimeType: file.type || "application/pdf",
+      sizeBytes: file.size || buf.length,
+      buffer: buf,
+      uploadedBy: user.id,
+    });
+  } catch (e) {
+    if (createdStudentForUpload) {
+      try {
+        await deleteStudent(studentNo, { officeId });
+      } catch (cleanupError) {
+        console.error("[Document upload] Failed to roll back newly created student:", cleanupError);
+      }
+    }
+    throw e;
+  }
   if (!row || !canAccessResource(user, "document", row)) {
     return NextResponse.json({ ok: false, error: "Document could not be created" }, { status: 500 });
   }

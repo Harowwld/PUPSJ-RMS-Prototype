@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import fs from "node:fs";
 import { 
   executeBackup, 
   executeSystemBackup,
@@ -7,10 +6,8 @@ import {
   listBackups, 
   syncBackupExternally,
   getBackupById,
-  getBackupsDir,
-  getBackupFilePath,
   getPrincipalOfficeId,
-  deleteBackupRecord
+  deleteBackupAndFile
 } from "../../../../lib/backupsRepo";
 import { writeAuditLog } from "../../../../lib/auditLogRequest";
 import { requireTOTP, extractTOTPToken } from "../../../../lib/totpMiddleware";
@@ -89,8 +86,29 @@ export async function POST(req) {
   const userOffice = getUserOfficeId(user);
 
   // Parse request body for scope/office preferences
-  const body = await req.json().catch(() => ({}));
+  const rawBody = await req.text();
+  let body = {};
+  if (rawBody.trim()) {
+    try {
+      body = JSON.parse(rawBody);
+    } catch {
+      return NextResponse.json({ ok: false, error: "Invalid JSON body" }, { status: 400 });
+    }
+  }
+  if (!body || typeof body !== "object" || Array.isArray(body)) {
+    return NextResponse.json({ ok: false, error: "Invalid request body" }, { status: 400 });
+  }
+  const unsupportedField = Object.keys(body).find((field) => !["scope", "officeId"].includes(field));
+  if (unsupportedField) {
+    return NextResponse.json({ ok: false, error: `Unsupported field: ${unsupportedField}` }, { status: 400 });
+  }
   const requestedScope = body?.scope || (isSuper ? "system" : "office");
+  if (!["system", "office"].includes(requestedScope)) {
+    return NextResponse.json({ ok: false, error: "Scope must be system or office" }, { status: 400 });
+  }
+  if (body.officeId !== undefined && (typeof body.officeId !== "string" || !body.officeId.trim())) {
+    return NextResponse.json({ ok: false, error: "officeId must be a non-empty string" }, { status: 400 });
+  }
 
   if (!isSuper) {
     if (requestedScope === "system") {
@@ -177,12 +195,26 @@ export async function DELETE(req) {
       return createAuthErrorResponse(authError || "Admin access required", 403);
     }
 
-    const body = await req.json();
-    const { ids } = body;
+    const body = await req.json().catch(() => null);
+    if (!body || typeof body !== "object" || Array.isArray(body)) {
+      return NextResponse.json({ ok: false, error: "Invalid JSON body" }, { status: 400 });
+    }
+    const rawIds = body.ids;
 
-    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+    if (!Array.isArray(rawIds) || rawIds.length === 0) {
       return NextResponse.json({ ok: false, error: "No IDs provided" }, { status: 400 });
     }
+    const normalizedIds = rawIds.map((value) => {
+      if (typeof value !== "number" && typeof value !== "string") return null;
+      const rawId = String(value).trim();
+      if (!/^\d+$/.test(rawId)) return null;
+      const id = Number(rawId);
+      return Number.isSafeInteger(id) && id > 0 ? id : null;
+    });
+    if (normalizedIds.some((id) => id === null)) {
+      return NextResponse.json({ ok: false, error: "Backup IDs must be positive integers." }, { status: 400 });
+    }
+    const ids = [...new Set(normalizedIds)];
 
     const isSuper = isSystemAdminRole(user.role);
     const userOffice = getUserOfficeId(user);
@@ -216,19 +248,11 @@ export async function DELETE(req) {
           continue;
         }
 
-        const backupsDir = getBackupsDir();
-        const filePath = getBackupFilePath(backup.filename, backupsDir);
-        
-        if (fs.existsSync(filePath)) {
-          fs.unlinkSync(filePath);
-        }
-
-        const changes = await deleteBackupRecord(id);
-        if (changes >= 0) {
+        const deletion = await deleteBackupAndFile(id, backup);
+        if (deletion?.deleted) {
           deletedFiles.push(backup.filename);
-          if (changes === 0) {
-            console.log(`[BULK DELETE BACKUP] Warning: DB record for ${backup.filename} was already removed.`);
-          }
+        } else {
+          errors.push("Backup no longer exists");
         }
       } catch (err) {
         errors.push("Error deleting backup");

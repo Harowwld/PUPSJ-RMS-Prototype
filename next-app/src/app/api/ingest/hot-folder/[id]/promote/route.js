@@ -1,7 +1,5 @@
-import fs from "node:fs";
-import path from "node:path";
 import { NextResponse } from "next/server";
-import { createDocument, getUploadsDir } from "@/lib/documentsRepo";
+import { createDocument, getDocumentBySourceIngestId } from "@/lib/documentsRepo";
 import { writeAuditLog } from "@/lib/auditLogRequest";
 import { createStudent } from "@/lib/studentsRepo";
 import { requireStaff, createAuthErrorResponse, getPrincipalOfficeId } from "@/lib/authHelpers";
@@ -17,12 +15,6 @@ import { rotateDocumentBuffer } from "@/lib/documentOrientation";
 import { canAccessResource } from "@/lib/resourceAuthorization";
 
 export const runtime = "nodejs";
-
-function sanitizeNameForFs(input) {
-  return String(input || "")
-    .replace(/[^a-zA-Z0-9._-]/g, "_")
-    .slice(0, 140);
-}
 
 export async function POST(req, ctx) {
   const { user, error } = await requireStaff(req);
@@ -41,6 +33,11 @@ export async function POST(req, ctx) {
   const ingest = await getIngestById(id, { officeId: principalOfficeId });
   if (!ingest || !canAccessResource(user, "ingest", ingest)) {
     return NextResponse.json({ ok: false, error: "Ingest item not found" }, { status: 404 });
+  }
+  const existingPromotion = await getDocumentBySourceIngestId(id, { officeId: principalOfficeId });
+  if (existingPromotion) {
+    await markIngestPromoted(id, existingPromotion.id, user.id, { officeId: principalOfficeId });
+    return NextResponse.json({ ok: true, data: { ingestId: id, document: existingPromotion, idempotent: true } });
   }
   if (String(ingest.status) !== "pending") {
     return NextResponse.json({ ok: false, error: "Ingest item already processed" }, { status: 409 });
@@ -106,11 +103,6 @@ export async function POST(req, ctx) {
   const sourceBytes = fs.readFileSync(sourceAbsPath);
   const rotation = Number(ingest.match_evidence?.detectedRotation || 0);
   const bytes = await rotateDocumentBuffer(sourceBytes, ingest.original_filename, rotation);
-  const ext = path.extname(String(ingest.original_filename || "")).toLowerCase();
-  const targetStorageFilename = `${sanitizeNameForFs(studentNo)}_${sanitizeNameForFs(docType)}_${Date.now()}${ext || ".pdf"}`;
-  const targetAbsPath = path.join(getUploadsDir(officeId), targetStorageFilename);
-  fs.writeFileSync(targetAbsPath, bytes);
-
   const doc = await createDocument({
     officeId,
     studentNo,
@@ -119,8 +111,8 @@ export async function POST(req, ctx) {
     originalFilename: String(ingest.original_filename || "scan.bin"),
     mimeType: String(ingest.mime_type || "application/octet-stream"),
     sizeBytes: Number(ingest.size_bytes || bytes.length),
-    storageFilename: targetStorageFilename,
     uploadedBy: user.id,
+    sourceIngestId: id,
   });
   await markIngestPromoted(id, doc.id, null, { officeId: principalOfficeId });
   await writeAuditLog(req, `Promote Ingest`, { 

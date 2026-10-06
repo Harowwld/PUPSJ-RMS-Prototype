@@ -74,23 +74,30 @@ export async function sendAccountCredentialsEmail({
   const mailer = getTransporter();
   const name = String(fullName || "there").trim() || "there";
   const type = String(accountType || "account").trim() || "account";
-  const loginUrl = String(
-    process.env.APP_URL ||
-    process.env.NEXT_PUBLIC_APP_URL ||
-    (process.env.NODE_ENV === "production" ? "" : "http://localhost:3000")
-  ).trim();
-  const signInText = loginUrl ? `Sign in: ${loginUrl}` : "Use your institution's PUPSJ RMS sign-in page.";
+  const configuredLoginUrl = String(process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL || "").trim();
+  let loginUrl = "";
+  try {
+    const parsedLoginUrl = new URL(configuredLoginUrl);
+    if (["http:", "https:"].includes(parsedLoginUrl.protocol) && !["localhost", "127.0.0.1", "::1"].includes(parsedLoginUrl.hostname)) {
+      loginUrl = parsedLoginUrl.toString().replace(/\/$/, "");
+    }
+  } catch {
+    // Do not put an invalid or local-only link in an account email.
+  }
+  const signInText = loginUrl
+    ? `Open the eManage sign-in page: ${loginUrl}`
+    : "Open the eManage sign-in page provided by your institution.";
   const passwordText = password
     ? `Password: ${password}`
     : "Use the password you chose during registration.";
   const securityText = password
     ? "For your security, change this password after signing in and do not share it."
     : "For your security, do not share your password.";
-  const subject = "Your PUPSJ Records Management System account";
+  const subject = "Your eManage account sign-in details";
   const text = [
     `Hello ${name},`,
     "",
-    `Your ${type} has been created. Use this account information to sign in:`,
+    `An ${type} was created for you. Keep these sign-in details private:`,
     ...(requiresActivation ? ["An administrator must activate this account before you can sign in."] : []),
     ...(accountId ? [`Account ID: ${accountId}`] : []),
     `Username: ${username}`,
@@ -106,7 +113,7 @@ export async function sendAccountCredentialsEmail({
     ${accountId ? `<p><strong>Account ID:</strong> ${escapeHtml(accountId)}</p>` : ""}
     <p><strong>Username:</strong> ${escapeHtml(username)}${password ? `<br><strong>Password:</strong> ${escapeHtml(password)}` : ""}</p>
     ${password ? "" : "<p>Use the password you chose during registration.</p>"}
-    ${loginUrl ? `<p><a href="${escapeHtml(loginUrl)}">Sign in to PUPSJ RMS</a></p>` : "<p>Use your institution's PUPSJ RMS sign-in page.</p>"}
+    ${loginUrl ? `<p><a href="${escapeHtml(loginUrl)}">Open the eManage sign-in page</a></p>` : "<p>Open the eManage sign-in page provided by your institution.</p>"}
     <p>${securityText}</p>
   </body></html>`;
 

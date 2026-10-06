@@ -1,10 +1,10 @@
 import dotenv from "dotenv";
-dotenv.config({ path: ".env.local" });
-dotenv.config();
+dotenv.config({ path: ".env" });
 
 import assert from "node:assert/strict";
 
 const BASE_URL = process.env.TEST_BASE_URL || "http://localhost:3000";
+const STAFF_PASSWORD = process.env.DEFAULT_STAFF_PASSWORD || "pupstaff";
 
 function extractCookies(res) {
   const setCookies = res.headers.getSetCookie();
@@ -28,7 +28,7 @@ async function runComplianceTests() {
   const loginOsasRes = await fetch(`${BASE_URL}/api/auth/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ username: "admin.osas@pup.local", password: "pupstaff" }),
+    body: JSON.stringify({ username: "admin.osas@pup.local", password: STAFF_PASSWORD }),
   });
   assert.equal(loginOsasRes.status, 200, "OSAS Admin login status should be 200");
   const loginOsasJson = await loginOsasRes.json();
@@ -107,7 +107,7 @@ async function runComplianceTests() {
   const loginRegRes = await fetch(`${BASE_URL}/api/auth/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ username: "admin.registrar@pup.local", password: "pupstaff" }),
+    body: JSON.stringify({ username: "admin.registrar@pup.local", password: STAFF_PASSWORD }),
   });
   assert.equal(loginRegRes.status, 200, "Registrar login should succeed");
   const regAuth = extractCookies(loginRegRes);

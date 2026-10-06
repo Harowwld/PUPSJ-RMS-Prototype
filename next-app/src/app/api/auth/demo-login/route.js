@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { POST as login } from "../login/route";
 import { isLocalhostRequest } from "@/lib/cookieSecurity";
+import { systemConfigRepo } from "@/lib/systemConfigRepo";
 
 export const runtime = "nodejs";
 
@@ -17,6 +18,11 @@ const DEMO_ACCOUNTS = new Set([
 export async function POST(req) {
   if (process.env.NODE_ENV === "production" && !isLocalhostRequest(req)) {
     return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
+  }
+
+  const demoAccountsEnabled = await systemConfigRepo.getSetting("login_demo_accounts_enabled", "true");
+  if (String(demoAccountsEnabled).toLowerCase() === "false") {
+    return NextResponse.json({ ok: false, error: "Demo sign-in is disabled" }, { status: 404 });
   }
 
   const body = await req.json().catch(() => null);

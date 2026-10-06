@@ -1217,7 +1217,13 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
       const res = await fetch(`/api/staff/${editOriginalId}`, {
         method: "PATCH",
         headers,
-        body: JSON.stringify({ ...editForm, section }),
+        body: JSON.stringify({
+          fname: editForm.fname,
+          lname: editForm.lname,
+          role: editForm.role,
+          section,
+          email: editForm.email,
+        }),
       })
       const json = await res.json()
 
@@ -1260,17 +1266,24 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
     setRestoreOpen(true)
   }
 
-  const confirmRestoreUser = async () => {
+  const confirmRestoreUser = async (token = null) => {
     if (!restoreTarget) return
     const { id, fname, lname } = restoreTarget
     const name = `${fname} ${lname}`
+    const headers = { "Content-Type": "application/json" }
+    if (typeof token === "string") headers["x-totp-token"] = token
     try {
       const res = await fetch(`/api/staff/${id}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({ status: "Active" }),
       })
       const json = await res.json()
+      if (res.status === 403 && json?.requiresTOTP) {
+        if (typeof token === "string") throw new Error(json.error || "Invalid verification code")
+        await executeWithTOTP((verifiedToken) => confirmRestoreUser(verifiedToken), "Restore Staff", true)
+        return
+      }
       if (!res.ok || !json?.ok)
         throw new Error(json?.error || "Failed to restore account")
 
@@ -1282,6 +1295,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
       setSelectedStaffIds(new Set())
       setRestoreOpen(false)
     } catch (err) {
+      if (typeof token === "string") throw err
       showToast({ title: "Account Restoration Failed", description: err.message || "The system was unable to reactivate the personnel account." }, true)
     }
   }
@@ -1351,9 +1365,11 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
     setBulkRestoreOpen(true)
   }
 
-  const confirmBulkRestore = async () => {
+  const confirmBulkRestore = async (token = null) => {
     if (bulkRestoreLoading) return
     setBulkRestoreLoading(true)
+    const headers = { "Content-Type": "application/json" }
+    if (typeof token === "string") headers["x-totp-token"] = token
 
     try {
       let successCount = 0
@@ -1363,10 +1379,17 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
       for (const id of idsToRestore) {
         const res = await fetch(`/api/staff/${id}`, {
           method: "PATCH",
-          headers: { "Content-Type": "application/json" },
+          headers,
           body: JSON.stringify({ status: "Active" }),
         })
         const json = await res.json()
+
+        if (res.status === 403 && json?.requiresTOTP) {
+          if (typeof token === "string") throw new Error(json.error || "Invalid verification code")
+          setBulkRestoreLoading(false)
+          await executeWithTOTP((verifiedToken) => confirmBulkRestore(verifiedToken), "Bulk Restore Staff", true)
+          return
+        }
 
         if (res.ok && json.ok) {
           setStaffData((prev) => prev.map((s) => (s.id === id ? json.data : s)))
@@ -1383,6 +1406,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
       setBulkRestoreOpen(false)
       setSelectedStaffIds(new Set())
     } catch (err) {
+      if (typeof token === "string") throw err
       showToast(
         {
           title: "Bulk Restoration Failed",

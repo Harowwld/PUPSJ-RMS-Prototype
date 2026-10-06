@@ -9,9 +9,8 @@ import { isSystemAdminRole } from "../../../lib/roleUtils";
 import { writeAuditLog } from "../../../lib/auditLogRequest";
 import {
   listStudentLocationUsage,
-  reassignStudentsByLocationMappings,
 } from "../../../lib/studentsRepo";
-import { getStorageLayout, setStorageLayout } from "../../../lib/storageLayoutRepo";
+import { getStorageLayout, setStorageLayoutWithReassignments } from "../../../lib/storageLayoutRepo";
 import { canonicalizeCabinetId } from "../../../lib/storageLayoutUtils";
 import { canAccessResource } from "@/lib/resourceAuthorization";
 
@@ -134,10 +133,8 @@ export async function PUT(req) {
       }
     }
 
-    let movedCount = 0;
-    let movedBreakdown = [];
+    let normalized = [];
     if (reassignments.length > 0) {
-      const normalized = [];
       for (const item of reassignments) {
         const from = parseLocationKey(item?.fromKey);
         const to = parseLocationKey(item?.toKey);
@@ -158,12 +155,12 @@ export async function PUT(req) {
           to: { ...to, cabinet: normalizeCabinetId(to.cabinet) }
         });
       }
-      const moved = await reassignStudentsByLocationMappings(normalized, { officeId });
-      movedCount = Number(moved?.moved || 0);
-      movedBreakdown = Array.isArray(moved?.breakdown) ? moved.breakdown : [];
     }
 
-    const saved = await setStorageLayout(incomingLayout, { officeId });
+    const result = await setStorageLayoutWithReassignments(incomingLayout, normalized, { officeId });
+    const saved = result.layout;
+    const movedCount = Number(result.moved || 0);
+    const movedBreakdown = Array.isArray(result.breakdown) ? result.breakdown : [];
     const roomCount = Array.isArray(incomingLayout?.rooms) ? incomingLayout.rooms.length : 0;
     const cabinetCount = (incomingLayout?.rooms || []).reduce((sum, r) => sum + (r.cabinets?.length || 0), 0);
 

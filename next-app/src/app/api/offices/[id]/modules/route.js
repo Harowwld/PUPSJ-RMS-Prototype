@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { query, queryOne, transaction } from "@/lib/postgres";
+import { query, transaction } from "@/lib/postgres";
 import { requireSuperAdminSession } from "@/lib/moduleAccess";
 import { writeGlobalAuditLog } from "@/lib/auditLogRequest";
 
@@ -36,47 +36,52 @@ export async function PUT(req, { params }) {
 
   const { id } = await params;
   try {
-    const body = await req.json();
+    const body = await req.json().catch(() => null);
     if (!body || !Array.isArray(body.moduleIds)) {
       return NextResponse.json({ ok: false, error: "Missing moduleIds array in body" }, { status: 400 });
     }
-    const office = await queryOne("SELECT id, name, short_name, status FROM offices WHERE id = $1", [id]);
-    if (!office) return NextResponse.json({ ok: false, error: "Office not found" }, { status: 404 });
-    if (office.status === "Inactive" || office.status === "Archived") {
-      return NextResponse.json({ ok: false, error: "Archived offices cannot be modified. Please reactivate the office first." }, { status: 400 });
+    if (Object.keys(body).some((field) => field !== "moduleIds")) {
+      return NextResponse.json({ ok: false, error: "Only moduleIds is supported" }, { status: 400 });
+    }
+    if (body.moduleIds.some((moduleId) => typeof moduleId !== "string" || !moduleId.trim())) {
+      return NextResponse.json({ ok: false, error: "moduleIds must contain module ID strings" }, { status: 400 });
     }
     const requested = new Set(body.moduleIds.map(String));
-    const modules = await query("SELECT id, name, is_system FROM modules ORDER BY sort_order ASC, name ASC");
-
-    // Track previous module states to log exact diff
-    const prevRows = await query(
-      "SELECT module_id, enabled FROM office_modules WHERE office_id = $1",
-      [id]
-    );
-    const prevEnabledMap = new Map((prevRows || []).map((r) => [r.module_id, Boolean(r.enabled)]));
-
-    const newlyEnabled = [];
-    const newlyDisabled = [];
-
-    for (const m of modules) {
-      const isNowEnabled = Boolean(m.is_system || requested.has(m.id));
-      const wasEnabled = prevEnabledMap.has(m.id) ? prevEnabledMap.get(m.id) : false;
-      if (isNowEnabled && !wasEnabled) {
-        newlyEnabled.push(m.name || m.id);
-      } else if (!isNowEnabled && wasEnabled) {
-        newlyDisabled.push(m.name || m.id);
+    const result = await transaction(async ({ query: run, queryOne: runOne }) => {
+      const office = await runOne("SELECT id, name, short_name, status FROM offices WHERE id = $1 FOR UPDATE", [id]);
+      if (!office) return { error: "Office not found", status: 404 };
+      if (office.status === "Inactive" || office.status === "Archived") {
+        return { error: "Archived offices cannot be modified. Please reactivate the office first.", status: 400 };
       }
-    }
-
-    await transaction(async ({ query: run }) => {
-      for (const moduleRow of modules) {
+      const modules = await run("SELECT id, name, is_system FROM modules ORDER BY sort_order ASC, name ASC");
+      const knownIds = new Set(modules.rows.map((moduleRow) => moduleRow.id));
+      const unknownIds = [...requested].filter((moduleId) => !knownIds.has(moduleId));
+      if (unknownIds.length) {
+        return { error: `Unknown module ID(s): ${unknownIds.join(", ")}`, status: 400 };
+      }
+      const prevResult = await run("SELECT module_id, enabled FROM office_modules WHERE office_id = $1", [id]);
+      const prevEnabledMap = new Map(prevResult.rows.map((row) => [row.module_id, Boolean(row.enabled)]));
+      const newlyEnabled = [];
+      const newlyDisabled = [];
+      for (const moduleRow of modules.rows) {
+        const isNowEnabled = Boolean(moduleRow.is_system || requested.has(moduleRow.id));
+        const wasEnabled = prevEnabledMap.get(moduleRow.id) || false;
+        if (isNowEnabled && !wasEnabled) newlyEnabled.push(moduleRow.name || moduleRow.id);
+        else if (!isNowEnabled && wasEnabled) newlyDisabled.push(moduleRow.name || moduleRow.id);
+      }
+      for (const moduleRow of modules.rows) {
         const enabled = moduleRow.is_system || requested.has(moduleRow.id);
         await run(`INSERT INTO office_modules (office_id, module_id, enabled, updated_at)
           VALUES ($1, $2, $3, NOW()) ON CONFLICT (office_id, module_id)
           DO UPDATE SET enabled = EXCLUDED.enabled, updated_at = NOW()`, [id, moduleRow.id, enabled]);
       }
+      const updated = await run("SELECT * FROM office_modules WHERE office_id = $1 ORDER BY module_id", [id]);
+      return { office, modules: modules.rows, newlyEnabled, newlyDisabled, updated: updated.rows };
     });
-    const updated = await query("SELECT * FROM office_modules WHERE office_id = $1 ORDER BY module_id", [id]);
+    if (result.error) {
+      return NextResponse.json({ ok: false, error: result.error }, { status: result.status });
+    }
+    const { office, modules, newlyEnabled, newlyDisabled, updated } = result;
 
     const officeLabel = office.short_name || office.name || id;
     let detailsText = "";

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createStaff, listStaff } from "../../../lib/staffRepo";
+import { createStaff, getStaffById, getStaffByUsername, listStaff } from "../../../lib/staffRepo";
 import { writeAuditLog } from "../../../lib/auditLogRequest";
 import { requireTOTP, extractTOTPToken } from "../../../lib/totpMiddleware";
 import { getPrincipalOfficeId, requireAdmin, requireStaff, createAuthErrorResponse } from "../../../lib/authHelpers";
@@ -89,11 +89,9 @@ export async function POST(req) {
   const section = String(body.section || "").trim();
   const status = "Inactive";
   const email = String(body.email || "").trim();
-  const password =
-    body.password === undefined || body.password === null || String(body.password) === ""
-      ? DEFAULT_PASSWORD
-      : String(body.password);
-  const passwordPolicy = validatePasswordPolicy(password, { allowDefault: process.env.NODE_ENV !== "production" });
+  const usesConfiguredDefault = body.password === undefined || body.password === null || String(body.password) === "";
+  const password = usesConfiguredDefault ? DEFAULT_PASSWORD : String(body.password);
+  const passwordPolicy = validatePasswordPolicy(password, { allowDefault: usesConfiguredDefault });
   const lastActive =
     body.lastActive === undefined ? undefined : String(body.lastActive).trim();
 
@@ -106,8 +104,8 @@ export async function POST(req) {
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return NextResponse.json({ ok: false, error: "A valid email address is required." }, { status: 400 });
   }
-  if (!passwordPolicy.valid || (process.env.NODE_ENV === "production" && body.password === undefined)) {
-    return NextResponse.json({ ok: false, error: "A non-default password is required." }, { status: 400 });
+  if (!passwordPolicy.valid) {
+    return NextResponse.json({ ok: false, error: passwordPolicy.reason || "Invalid password." }, { status: 400 });
   }
 
   if (!canManageStaffRole(user.role, role)) {
@@ -170,8 +168,19 @@ export async function POST(req) {
   } catch (e) {
     const msg = String(e?.message || "");
     if (isUniqueViolation(e)) {
+      const [existingId, existingEmail] = await Promise.all([
+        getStaffById(id).catch(() => null),
+        getStaffByUsername(email).catch(() => null),
+      ]);
+      if (existingId) {
+        return NextResponse.json({ ok: false, error: "Staff ID already exists" }, { status: 409 });
+      }
+      if (existingEmail) {
+        const accountState = existingEmail.status === "Archived" ? "archived" : "existing";
+        return NextResponse.json({ ok: false, error: `This email address is already assigned to an ${accountState} staff account. Restore that account or use a different email address.` }, { status: 409 });
+      }
       return NextResponse.json(
-        { ok: false, error: "Staff ID already exists" },
+        { ok: false, error: "The staff ID or email address is already in use." },
         { status: 409 }
       );
     }

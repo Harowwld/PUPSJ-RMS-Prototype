@@ -7,8 +7,7 @@ import { Pool } from "pg";
 import { waitForStableFile } from "./fileStability.mjs";
 
 const nextAppRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
-dotenv.config({ path: path.join(nextAppRoot, ".env") });
-dotenv.config({ path: path.join(nextAppRoot, ".env.local"), override: true });
+dotenv.config({ path: path.join(nextAppRoot, ".env"), override: true });
 
 const API_URL = String(process.env.HOT_FOLDER_API_URL || "http://localhost:3000/api/ingest/hot-folder").trim();
 const TOKEN = String(process.env.HOT_FOLDER_INGEST_TOKEN || "").trim();
@@ -29,13 +28,14 @@ function ensureHotFolderDirs() {
 }
 
 async function readConfiguredInboundDir() {
-  if (process.env.HOT_FOLDER_ROOT) return DEFAULT_INBOUND_DIR;
   if (!process.env.DATABASE_URL) return DEFAULT_INBOUND_DIR;
   const pool = new Pool({ connectionString: process.env.DATABASE_URL, max: 1, connectionTimeoutMillis: 3000 });
   try {
     const result = await pool.query("SELECT inbound_path FROM offices WHERE id = $1", [OFFICE_ID]);
     const configured = String(result.rows[0]?.inbound_path || "").trim();
-    return configured ? path.resolve(configured) : DEFAULT_INBOUND_DIR;
+    if (!configured) return DEFAULT_INBOUND_DIR;
+    if (path.isAbsolute(configured)) return path.resolve(configured);
+    return path.resolve(process.env.HOT_FOLDER_ROOT ? path.dirname(DEFAULT_INBOUND_DIR) : process.cwd(), configured);
   } catch (error) {
     console.warn(`[hot-folder] Could not read dynamic inbound path: ${error.message}`);
     return DEFAULT_INBOUND_DIR;
@@ -182,6 +182,11 @@ function attachWatcher() {
   watcher.on("change", scheduleProcess);
   watcher.on("error", (err) => {
     console.error("[hot-folder] watcher error:", err?.message || err);
+  });
+  watcher.on("unlinkDir", (removedDir) => {
+    if (path.resolve(removedDir) === path.resolve(INBOUND_DIR)) {
+      console.error(`[hot-folder] Configured inbound folder was removed: ${INBOUND_DIR}`);
+    }
   });
   watcher.on("ready", () => {
     if (generation !== watcherGeneration) return;

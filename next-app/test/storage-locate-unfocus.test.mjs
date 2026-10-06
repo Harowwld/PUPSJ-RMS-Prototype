@@ -2,8 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import dotenv from "dotenv";
 
-dotenv.config({ path: ".env.local" });
-dotenv.config();
+dotenv.config({ path: ".env" });
 
 const { areCabinetsEqual, findMatchingCabinet, canonicalizeCabinetId } =
   await import("../src/lib/storageLayoutUtils.js");

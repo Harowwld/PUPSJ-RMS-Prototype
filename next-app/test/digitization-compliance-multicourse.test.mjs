@@ -1,12 +1,12 @@
 import dotenv from "dotenv";
-dotenv.config({ path: ".env.local" });
-dotenv.config();
+dotenv.config({ path: ".env" });
 
 import assert from "node:assert/strict";
 
 const { getDigitizationComplianceSummary } = await import("../src/lib/digitizationComplianceRepo.js");
 
 const BASE_URL = process.env.TEST_BASE_URL || "http://localhost:3000";
+const STAFF_PASSWORD = process.env.DEFAULT_STAFF_PASSWORD || "pupstaff";
 
 function extractCookies(res) {
   const setCookies = res.headers.getSetCookie();
@@ -87,7 +87,7 @@ async function runTests() {
   const loginRes = await fetch(`${BASE_URL}/api/auth/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ username: "admin.registrar@pup.local", password: "pupstaff" }),
+    body: JSON.stringify({ username: "admin.registrar@pup.local", password: STAFF_PASSWORD }),
   });
   assert.equal(loginRes.status, 200);
   const regAuth = extractCookies(loginRes);

@@ -110,13 +110,13 @@ export async function updateSection(id, nameRaw, courseCodeRaw, status = "Active
 
 export async function archiveSection(id, officeId) {
   const scopedOfficeId = requireOfficeId(officeId);
-  await dbRun("UPDATE sections SET status = 'Archived' WHERE office_id = ? AND id = ?", [scopedOfficeId, id]);
+  await dbRun("UPDATE sections SET status = 'Archived', course_archived = FALSE WHERE office_id = ? AND id = ?", [scopedOfficeId, id]);
   return true;
 }
 
 export async function restoreSection(id, officeId) {
   const scopedOfficeId = requireOfficeId(officeId);
-  await dbRun("UPDATE sections SET status = 'Active' WHERE office_id = ? AND id = ?", [scopedOfficeId, id]);
+  await dbRun("UPDATE sections SET status = 'Active', course_archived = FALSE WHERE office_id = ? AND id = ?", [scopedOfficeId, id]);
   return true;
 }
 

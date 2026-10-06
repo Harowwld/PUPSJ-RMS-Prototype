@@ -19,8 +19,26 @@ export async function POST(req, ctx) {
     if (!existingBatch || (existingBatch.rows || []).some((row) => !canAccessResource(user, "ingest", row))) {
       return NextResponse.json({ ok: false, error: "Batch not found" }, { status: 404 });
     }
-    const body = await req.json().catch(() => ({}));
-    const limit = Math.min(Math.max(Number(body.limit) || 1, 1), 10);
+    const rawBody = await req.text();
+    let body = {};
+    if (rawBody.trim()) {
+      try {
+        body = JSON.parse(rawBody);
+      } catch {
+        return NextResponse.json({ ok: false, error: "Invalid JSON body" }, { status: 400 });
+      }
+    }
+    if (!body || typeof body !== "object" || Array.isArray(body)) {
+      return NextResponse.json({ ok: false, error: "Invalid request body" }, { status: 400 });
+    }
+    const unsupportedField = Object.keys(body).find((field) => field !== "limit");
+    if (unsupportedField) {
+      return NextResponse.json({ ok: false, error: `Unsupported field: ${unsupportedField}` }, { status: 400 });
+    }
+    const limit = body.limit === undefined ? 1 : Number(body.limit);
+    if (!Number.isInteger(limit) || limit < 1 || limit > 10) {
+      return NextResponse.json({ ok: false, error: "limit must be an integer from 1 to 10" }, { status: 400 });
+    }
     const items = [];
     for (let index = 0; index < limit; index += 1) {
       const item = await processNextBatchItem(id, officeId);

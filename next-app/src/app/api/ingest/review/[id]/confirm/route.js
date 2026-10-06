@@ -2,7 +2,7 @@ import fs from "node:fs";
 import { NextResponse } from "next/server";
 import { requireStaff, createAuthErrorResponse, getPrincipalOfficeId } from "../../../../../../lib/authHelpers";
 import { getIngestById, getIngestFilePath, markIngestPromoted } from "../../../../../../lib/ingestQueueRepo";
-import { createDocument, getDocumentById } from "../../../../../../lib/documentsRepo";
+import { createDocument, getDocumentById, getDocumentBySourceIngestId } from "../../../../../../lib/documentsRepo";
 import { queryOne } from "../../../../../../lib/postgres";
 import { writeAuditLog } from "@/lib/auditLogRequest";
 import { rotateDocumentBuffer } from "@/lib/documentOrientation";
@@ -24,7 +24,31 @@ export async function POST(req, ctx) {
     if (!document || !canAccessResource(user, "document", document)) return NextResponse.json({ ok: false, error: "Review item not found" }, { status: 404 });
     return NextResponse.json({ ok: true, data: { ingestId: id, document, idempotent: true } });
   }
-  const body = await req.json().catch(() => ({}));
+  const existingPromotion = await getDocumentBySourceIngestId(id, { officeId });
+  if (existingPromotion) {
+    await markIngestPromoted(id, existingPromotion.id, user.id, { officeId });
+    return NextResponse.json({ ok: true, data: { ingestId: id, document: existingPromotion, idempotent: true } });
+  }
+  if (item.status !== "pending") return NextResponse.json({ ok: false, error: "Only pending review items can be confirmed." }, { status: 409 });
+  const rawBody = await req.text();
+  let body = {};
+  if (rawBody.trim()) {
+    try {
+      body = JSON.parse(rawBody);
+    } catch {
+      return NextResponse.json({ ok: false, error: "Invalid JSON body" }, { status: 400 });
+    }
+  }
+  if (!body || typeof body !== "object" || Array.isArray(body)) {
+    return NextResponse.json({ ok: false, error: "Invalid request body" }, { status: 400 });
+  }
+  const unsupportedField = Object.keys(body).find((field) => !["studentNo", "studentName", "docType"].includes(field));
+  if (unsupportedField) {
+    return NextResponse.json({ ok: false, error: `Unsupported field: ${unsupportedField}` }, { status: 400 });
+  }
+  if (Object.values(body).some((value) => typeof value !== "string")) {
+    return NextResponse.json({ ok: false, error: "Review fields must be text" }, { status: 400 });
+  }
   const studentNo = String(body.studentNo || item.proposed_student_no || "").trim().toUpperCase();
   const studentName = String(body.studentName || item.ocr_name || "").trim();
   const docType = String(body.docType || item.proposed_doc_type || "").trim();
@@ -46,12 +70,21 @@ export async function POST(req, ctx) {
     const sourceBuffer = fs.readFileSync(sourcePath);
     const rotation = Number(item.match_evidence?.detectedRotation || 0);
     const buffer = await rotateDocumentBuffer(sourceBuffer, item.original_filename, rotation);
-    const document = await createDocument({ officeId, studentNo, studentName: studentName || student.name, docType, originalFilename: item.original_filename, mimeType: item.mime_type, sizeBytes: buffer.length, buffer, uploadedBy: user.id });
+    const document = await createDocument({ officeId, studentNo, studentName: studentName || student.name, docType, originalFilename: item.original_filename, mimeType: item.mime_type, sizeBytes: buffer.length, buffer, uploadedBy: user.id, sourceIngestId: id });
     await markIngestPromoted(id, document.id, user.id, { officeId });
     try { fs.unlinkSync(sourcePath); } catch {}
     await writeAuditLog(req, "Batch review item confirmed", { details: `Confirmed ingest item #${id} as document #${document.id}.`, entity_type: "ingest_item", entity_id: id });
     return NextResponse.json({ ok: true, data: { ingestId: id, document } }, { status: 201 });
   } catch (err) {
+    if (String(err?.code) === "23505") {
+      const document = await queryOne("SELECT id FROM documents WHERE source_ingest_id = $1 AND office_id = $2", [id, officeId]);
+      if (document) {
+        await markIngestPromoted(id, document.id, user.id, { officeId });
+        const savedDocument = await getDocumentById(document.id, { officeId });
+        try { fs.unlinkSync(sourcePath); } catch {}
+        return NextResponse.json({ ok: true, data: { ingestId: id, document: savedDocument, idempotent: true } });
+      }
+    }
     return NextResponse.json({ ok: false, error: "Unable to create document" }, { status: 500 });
   }
 }

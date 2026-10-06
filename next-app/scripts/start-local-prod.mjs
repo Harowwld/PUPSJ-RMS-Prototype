@@ -2,8 +2,7 @@ import { spawn, spawnSync } from "node:child_process";
 import process from "node:process";
 import dotenv from "dotenv";
 
-dotenv.config({ path: ".env.local" });
-dotenv.config();
+dotenv.config({ path: ".env" });
 
 const isWindows = process.platform === "win32";
 const pnpmCommand = isWindows ? "pnpm.cmd" : "pnpm";

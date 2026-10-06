@@ -10,10 +10,16 @@ export async function POST(req) {
   if (access.error || !access.user) return createAuthErrorResponse(access.error || "Admin access required", access.error?.startsWith("Access denied") ? 403 : 401);
 
   try {
-    const body = await req.json();
+    const body = await req.json().catch(() => null);
+    if (!body || typeof body !== "object" || Array.isArray(body)) {
+      return NextResponse.json({ ok: false, error: "Invalid request body" }, { status: 400 });
+    }
+    if (Object.keys(body).some((field) => !["endpointType", "identifier"].includes(field))) {
+      return NextResponse.json({ ok: false, error: "Unsupported rate limit field" }, { status: 400 });
+    }
     const { endpointType, identifier } = body;
 
-    if (!endpointType || !identifier) {
+    if (typeof endpointType !== "string" || !endpointType.trim() || typeof identifier !== "string" || !identifier.trim()) {
       return NextResponse.json({ 
         ok: false, 
         error: "Missing required fields: endpointType, identifier" 
@@ -21,14 +27,14 @@ export async function POST(req) {
     }
 
     // Clear the violation
-    const result = await clearRateLimitViolation(endpointType, identifier);
+    const result = await clearRateLimitViolation(endpointType.trim(), identifier.trim());
 
     // Log the admin action
     await writeAuditLog(req, `Security Maintenance`, {
-      details: `manually purged brute-force protection locks for '${identifier}' (Endpoint: ${endpointType}) and restored access permissions`,
+      details: `manually purged brute-force protection locks for '${identifier.trim()}' (Endpoint: ${endpointType.trim()}) and restored access permissions`,
       severity: "WARNING",
       entity_type: "Security",
-      entity_id: identifier
+      entity_id: identifier.trim()
     });
 
     return NextResponse.json({ 

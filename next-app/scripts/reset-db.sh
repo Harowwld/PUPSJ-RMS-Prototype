@@ -4,7 +4,7 @@ set -euo pipefail
 
 BASE_URL="${BASE_URL:-http://localhost:3000}"
 RESET_USERNAME="${RESET_USERNAME:-superadmin@pup.local}"
-RESET_PASSWORD="${RESET_PASSWORD:-$(node --input-type=module -e 'import dotenv from "dotenv"; dotenv.config({ path: ".env.local" }); dotenv.config(); process.stdout.write(process.env.DEFAULT_STAFF_PASSWORD || "pupstaff")')}"
+RESET_PASSWORD="${RESET_PASSWORD:-$(node --input-type=module -e 'import dotenv from "dotenv"; dotenv.config({ path: ".env" }); process.stdout.write(process.env.DEFAULT_STAFF_PASSWORD || "pupstaff")')}"
 
 tmp_dir="$(mktemp -d)"
 chmod 700 "$tmp_dir"

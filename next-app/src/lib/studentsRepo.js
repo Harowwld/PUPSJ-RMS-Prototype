@@ -1,4 +1,5 @@
 import { dbAll, dbGet, dbRun } from "./postgresCompat.js";
+import { transaction } from "./postgres.js";
 import { encryptPII, decryptPII } from "./piiEncryption.js";
 import { decryptStudentRow } from "./studentAuth.js";
 import { canonicalizeCabinetId } from "./storageLayoutUtils.js";
@@ -52,46 +53,6 @@ function normalizeStudentName(name) {
     .toUpperCase();
 }
 
-async function ensureCourseSectionMapping(courseCodeRaw, sectionRaw, officeId) {
-  const courseCode = String(courseCodeRaw || "").trim().toUpperCase();
-  const section = String(sectionRaw || "").trim();
-  const scopedOfficeId = String(officeId || "").trim().toLowerCase();
-  if (!scopedOfficeId) throw new Error("Office scope is required");
-
-  const course = await dbGet("SELECT code FROM courses WHERE office_id = ? AND upper(code) = upper(?)", [
-    scopedOfficeId,
-    courseCode,
-  ]);
-  if (!course) {
-    throw new Error(`Invalid courseCode: ${courseCode}`);
-  }
-
-  // Look up section by BOTH name AND course_code to avoid cross-course confusion
-  const sectionRow = await dbGet(
-    "SELECT id, course_code FROM sections WHERE office_id = ? AND name = ? AND COALESCE(course_code, '') = ?",
-    [scopedOfficeId, section, courseCode]
-  );
-  if (!sectionRow) {
-    throw new Error(`Section ${section} is not defined for course ${courseCode}`);
-  }
-
-  const linkedCourse = String(sectionRow.course_code || "").trim().toUpperCase();
-  if (linkedCourse && linkedCourse !== courseCode) {
-    throw new Error(
-      `Section ${section} is linked to ${linkedCourse}, not ${courseCode}`
-    );
-  }
-
-  // Auto-link legacy section records that don't yet have a course assigned.
-  if (!linkedCourse) {
-    await dbRun("UPDATE sections SET course_code = ? WHERE office_id = ? AND id = ?", [
-      courseCode,
-      scopedOfficeId,
-      sectionRow.id,
-    ]);
-  }
-}
-
 export async function createStudent({
   studentNo,
   name,
@@ -109,63 +70,58 @@ export async function createStudent({
   const normalizedCourseCode = String(courseCode || "").trim().toUpperCase();
   const normalizedName = encryptPII(normalizeStudentName(name));
   const normalizedSection = String(section || "").trim();
-  await ensureCourseSectionMapping(normalizedCourseCode, normalizedSection, normalizedOfficeId);
-
   const academicYear = parseInt(yearLevel);
-
   const hasStorage = await hasPhysicalStorage();
-  if (hasStorage) {
-    const normalizedCabinet = canonicalizeCabinetId(cabinet);
-    await dbRun(
-      `
-      INSERT INTO students (
-        student_no,
-        name,
-        course_code,
-        year_level,
-        section,
-        storage_room,
-        storage_cabinet,
-        storage_drawer,
-        status
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `,
-      [
-        studentNo,
-        normalizedName,
-        normalizedCourseCode,
-        academicYear,
-        normalizedSection,
-        room,
-        normalizedCabinet,
-        drawer,
-        status || "Active",
-      ]
+  await transaction(async ({ query: run, queryOne: runOne }) => {
+    const course = await runOne(
+      "SELECT code FROM courses WHERE office_id = $1 AND upper(code) = upper($2)",
+      [normalizedOfficeId, normalizedCourseCode]
     );
-  } else {
-    await dbRun(
-      `
-      INSERT INTO students (
-        student_no,
-        name,
-        course_code,
-        year_level,
-        section,
-        status
-      ) VALUES (?, ?, ?, ?, ?, ?)
-    `,
-      [
-        studentNo,
-        normalizedName,
-        normalizedCourseCode,
-        academicYear,
-        normalizedSection,
-        status || "Active",
-      ]
-    );
-  }
+    if (!course) throw new Error(`Invalid courseCode: ${normalizedCourseCode}`);
 
-  await ensureStudentOfficeMembership(studentNo, normalizedOfficeId);
+    const sectionRow = await runOne(
+      `SELECT id, course_code FROM sections
+       WHERE office_id = $1 AND name = $2 AND (course_code = $3 OR course_code IS NULL)
+       ORDER BY CASE WHEN course_code = $3 THEN 0 ELSE 1 END
+       LIMIT 1 FOR UPDATE`,
+      [normalizedOfficeId, normalizedSection, normalizedCourseCode]
+    );
+    if (!sectionRow) {
+      throw new Error(`Section ${normalizedSection} is not defined for course ${normalizedCourseCode}`);
+    }
+    if (!sectionRow.course_code) {
+      await run("UPDATE sections SET course_code = $1 WHERE office_id = $2 AND id = $3", [
+        normalizedCourseCode,
+        normalizedOfficeId,
+        sectionRow.id,
+      ]);
+    }
+
+    if (hasStorage) {
+      await run(
+        `INSERT INTO students (
+          student_no, name, course_code, year_level, section,
+          storage_room, storage_cabinet, storage_drawer, status
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+        [studentNo, normalizedName, normalizedCourseCode, academicYear, normalizedSection,
+          room, canonicalizeCabinetId(cabinet), drawer, status || "Active"]
+      );
+    } else {
+      await run(
+        `INSERT INTO students (student_no, name, course_code, year_level, section, status)
+         VALUES ($1, $2, $3, $4, $5, $6)`,
+        [studentNo, normalizedName, normalizedCourseCode, academicYear, normalizedSection, status || "Active"]
+      );
+    }
+
+    await run(
+      `INSERT INTO student_office_memberships (student_no, office_id, status)
+       VALUES ($1, $2, 'Active')
+       ON CONFLICT (student_no, office_id)
+       DO UPDATE SET status = 'Active', updated_at = CURRENT_TIMESTAMP`,
+      [studentNo, normalizedOfficeId]
+    );
+  });
 
   return await getStudentByStudentNo(studentNo, { officeId: normalizedOfficeId });
 }
@@ -305,71 +261,73 @@ export async function getStudentByStudentNo(studentNo, { officeId } = {}) {
 export async function updateStudent(studentNo, patch) {
   const officeId = normalizeOfficeId(patch?.officeId);
   if (!officeId) throw new Error("Office scope is required");
-  const existing = await getStudentByStudentNo(studentNo, { officeId });
-  if (!existing) return null;
-
-  const rawName =
-    patch.name === undefined || patch.name === null
+  const hasStorage = await hasPhysicalStorage();
+  const updated = await transaction(async ({ query: run, queryOne: runOne }) => {
+    const currentRaw = await runOne(
+      `SELECT ${STUDENT_SELECT} FROM students
+       WHERE student_no = $1
+         AND EXISTS (SELECT 1 FROM student_office_memberships som
+                     WHERE som.student_no = students.student_no AND som.office_id = $2 AND som.status = 'Active')
+       FOR UPDATE`,
+      [studentNo, officeId]
+    );
+    if (!currentRaw) return false;
+    const existing = decryptStudentRow(currentRaw);
+    const rawName = patch.name === undefined || patch.name === null
       ? existing.name
       : normalizeStudentName(patch.name);
+    const next = {
+      name: encryptPII(rawName),
+      course_code: String(patch.courseCode ?? existing.course_code).trim().toUpperCase(),
+      year_level: patch.yearLevel === undefined ? existing.year_level : Number(patch.yearLevel),
+      section: String(patch.section ?? existing.section).trim(),
+      status: patch.status ?? existing.status,
+    };
 
-  const next = {
-    name: encryptPII(rawName),
-    course_code: String(patch.courseCode ?? existing.course_code).trim().toUpperCase(),
-    year_level:
-      patch.yearLevel === undefined ? existing.year_level : parseInt(patch.yearLevel),
-    section: String(patch.section ?? existing.section).trim(),
-    status: patch.status ?? existing.status,
-  };
-
-  await ensureCourseSectionMapping(next.course_code, next.section, officeId);
-
-  const hasStorage = await hasPhysicalStorage();
-  if (hasStorage) {
-    const room = patch.room === undefined ? existing.room : parseInt(patch.room);
-    const cabinet = canonicalizeCabinetId(patch.cabinet ?? existing.cabinet);
-    const drawer = patch.drawer === undefined ? existing.drawer : parseInt(patch.drawer);
-
-    await dbRun(
-      `
-      UPDATE students
-      SET name = ?, course_code = ?, year_level = ?, section = ?, storage_room = ?, storage_cabinet = ?, storage_drawer = ?, status = ?
-      WHERE student_no = ?
-        AND EXISTS (SELECT 1 FROM student_office_memberships som WHERE som.student_no = students.student_no AND som.office_id = ? AND som.status = 'Active')
-    `,
-      [
-        next.name,
-        next.course_code,
-        next.year_level,
-        next.section,
-        room,
-        cabinet,
-        drawer,
-        next.status,
-        studentNo,
-        officeId,
-      ]
+    const course = await runOne(
+      "SELECT code FROM courses WHERE office_id = $1 AND upper(code) = upper($2)",
+      [officeId, next.course_code]
     );
-  } else {
-    await dbRun(
-      `
-      UPDATE students
-      SET name = ?, course_code = ?, year_level = ?, section = ?, status = ?
-      WHERE student_no = ?
-        AND EXISTS (SELECT 1 FROM student_office_memberships som WHERE som.student_no = students.student_no AND som.office_id = ? AND som.status = 'Active')
-    `,
-      [
-        next.name,
-        next.course_code,
-        next.year_level,
-        next.section,
-        next.status,
-        studentNo,
-        officeId,
-      ]
+    if (!course) throw new Error(`Invalid courseCode: ${next.course_code}`);
+    const sectionRow = await runOne(
+      `SELECT id, course_code FROM sections
+       WHERE office_id = $1 AND name = $2 AND (course_code = $3 OR course_code IS NULL)
+       ORDER BY CASE WHEN course_code = $3 THEN 0 ELSE 1 END
+       LIMIT 1 FOR UPDATE`,
+      [officeId, next.section, next.course_code]
     );
-  }
+    if (!sectionRow) throw new Error(`Section ${next.section} is not defined for course ${next.course_code}`);
+    if (!sectionRow.course_code) {
+      await run("UPDATE sections SET course_code = $1 WHERE office_id = $2 AND id = $3", [
+        next.course_code, officeId, sectionRow.id,
+      ]);
+    }
 
+    if (hasStorage) {
+      const room = patch.room === undefined ? existing.room : Number(patch.room);
+      const cabinet = canonicalizeCabinetId(patch.cabinet ?? existing.cabinet);
+      const drawer = patch.drawer === undefined ? existing.drawer : Number(patch.drawer);
+      await run(
+        `UPDATE students
+         SET name = $1, course_code = $2, year_level = $3, section = $4,
+             storage_room = $5, storage_cabinet = $6, storage_drawer = $7, status = $8
+         WHERE student_no = $9
+           AND EXISTS (SELECT 1 FROM student_office_memberships som
+                       WHERE som.student_no = students.student_no AND som.office_id = $10 AND som.status = 'Active')`,
+        [next.name, next.course_code, next.year_level, next.section, room, cabinet, drawer, next.status, studentNo, officeId]
+      );
+    } else {
+      await run(
+        `UPDATE students SET name = $1, course_code = $2, year_level = $3, section = $4, status = $5
+         WHERE student_no = $6
+           AND EXISTS (SELECT 1 FROM student_office_memberships som
+                       WHERE som.student_no = students.student_no AND som.office_id = $7 AND som.status = 'Active')`,
+        [next.name, next.course_code, next.year_level, next.section, next.status, studentNo, officeId]
+      );
+    }
+    return true;
+  });
+  if (!updated) return null;
   return await getStudentByStudentNo(studentNo, { officeId });
 }
 
@@ -412,52 +370,4 @@ export async function listStudentLocationUsage({ officeId } = {}) {
     `,
     scope.params,
   );
-}
-
-export async function reassignStudentsByLocationMappings(mappings = [], { officeId } = {}) {
-  if (!Array.isArray(mappings) || mappings.length === 0) {
-    return { moved: 0, breakdown: [] };
-  }
-  const hasStorage = await hasPhysicalStorage();
-  if (!hasStorage) {
-    return { moved: 0, breakdown: [] };
-  }
-
-  let moved = 0;
-  const breakdown = [];
-  const scope = buildOfficeScope(officeId);
-  for (const m of mappings) {
-    const fromRoom = Number(m?.from?.room);
-    const fromCabinet = canonicalizeCabinetId(m?.from?.cabinet);
-    const fromDrawer = Number(m?.from?.drawer);
-    const toRoom = Number(m?.to?.room);
-    const toCabinet = canonicalizeCabinetId(m?.to?.cabinet);
-    const toDrawer = Number(m?.to?.drawer);
-    if (
-      !Number.isFinite(fromRoom) ||
-      !fromCabinet ||
-      !Number.isFinite(fromDrawer) ||
-      !Number.isFinite(toRoom) ||
-      !toCabinet ||
-      !Number.isFinite(toDrawer)
-    ) {
-      continue;
-    }
-    const res = await dbRun(
-      `
-        UPDATE students
-        SET storage_room = ?, storage_cabinet = ?, storage_drawer = ?
-        WHERE storage_room = ? AND storage_cabinet = ? AND storage_drawer = ?${scope.sql ? ` AND ${scope.sql}` : ""}
-      `,
-      [toRoom, toCabinet, toDrawer, fromRoom, fromCabinet, fromDrawer, ...scope.params],
-    );
-    const changed = Number(res?.changes || 0);
-    moved += changed;
-    breakdown.push({
-      from: { room: fromRoom, cabinet: fromCabinet, drawer: fromDrawer },
-      to: { room: toRoom, cabinet: toCabinet, drawer: toDrawer },
-      moved: changed,
-    });
-  }
-  return { moved, breakdown };
 }

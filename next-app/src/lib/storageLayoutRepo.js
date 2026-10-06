@@ -1,4 +1,5 @@
 import { dbAll, dbGet, dbRun } from "./postgresCompat.js";
+import { transaction } from "./postgres.js";
 import {
   buildDefaultStorageLayout,
   buildDefaultOsasStorageLayout,
@@ -195,6 +196,104 @@ export async function setStorageLayout(layout, { officeId } = {}) {
   return normalized;
 }
 
+export async function setStorageLayoutWithReassignments(layout, mappings = [], { officeId } = {}) {
+  const normalizedOfficeId = String(officeId || "").trim().toLowerCase();
+  if (!normalizedOfficeId) throw new Error("Office scope is required");
+  const normalizedLayout = normalizeStorageLayout(layout);
+  if (!normalizedLayout) throw new Error("Invalid storage_layout payload");
+
+  const bySource = new Map();
+  for (const mapping of mappings) {
+    const from = {
+      room: Number(mapping?.from?.room),
+      cabinet: canonicalizeCabinetId(mapping?.from?.cabinet),
+      drawer: String(mapping?.from?.drawer ?? "").trim(),
+    };
+    const to = {
+      room: Number(mapping?.to?.room),
+      cabinet: canonicalizeCabinetId(mapping?.to?.cabinet),
+      drawer: String(mapping?.to?.drawer ?? "").trim(),
+    };
+    if (
+      !Number.isFinite(from.room) || !from.cabinet || !from.drawer ||
+      !Number.isFinite(to.room) || !to.cabinet || !to.drawer
+    ) throw new Error("Invalid reassignment location");
+
+    const key = `${from.room}|${from.cabinet}|${from.drawer}`;
+    const existing = bySource.get(key);
+    if (existing && (existing.to.room !== to.room || existing.to.cabinet !== to.cabinet || existing.to.drawer !== to.drawer)) {
+      throw new Error("A source location cannot be reassigned to multiple targets");
+    }
+    if (!existing) bySource.set(key, { from, to });
+  }
+
+  const entries = [...bySource.values()];
+  const settingsKey = scopedSettingsKey(STORAGE_LAYOUT_KEY, normalizedOfficeId);
+  return transaction(async ({ query: run, queryOne: runOne }) => {
+    let moved = 0;
+    let breakdown = [];
+    if (entries.length) {
+      const values = [];
+      const rows = entries.map(({ from, to }, index) => {
+        const start = index * 6;
+        values.push(from.room, from.cabinet, from.drawer, to.room, to.cabinet, to.drawer);
+        return `($${start + 1}::integer, $${start + 2}::text, $${start + 3}::text, $${start + 4}::integer, $${start + 5}::text, $${start + 6}::text)`;
+      });
+      const mappingsSql = `VALUES ${rows.join(", ")}`;
+      const counts = await run(
+        `WITH mappings(from_room, from_cabinet, from_drawer, to_room, to_cabinet, to_drawer) AS (${mappingsSql})
+         SELECT m.from_room, m.from_cabinet, m.from_drawer, m.to_room, m.to_cabinet, m.to_drawer,
+                COUNT(s.student_no)::int AS count
+         FROM mappings m
+         LEFT JOIN students s
+           ON s.storage_room = m.from_room
+          AND s.storage_cabinet = m.from_cabinet
+          AND s.storage_drawer = m.from_drawer
+          AND s.status = 'Active'
+          AND EXISTS (SELECT 1 FROM student_office_memberships som
+                       WHERE som.student_no = s.student_no
+                         AND som.office_id = $${values.length + 1}
+                         AND som.status = 'Active')
+         GROUP BY m.from_room, m.from_cabinet, m.from_drawer, m.to_room, m.to_cabinet, m.to_drawer
+         ORDER BY m.from_room, m.from_cabinet, m.from_drawer`,
+        [...values, normalizedOfficeId],
+      );
+      breakdown = counts.rows.map((row) => ({
+        from: { room: row.from_room, cabinet: row.from_cabinet, drawer: row.from_drawer },
+        to: { room: row.to_room, cabinet: row.to_cabinet, drawer: row.to_drawer },
+        moved: Number(row.count || 0),
+      }));
+      moved = breakdown.reduce((total, item) => total + item.moved, 0);
+
+      await run(
+        `WITH mappings(from_room, from_cabinet, from_drawer, to_room, to_cabinet, to_drawer) AS (${mappingsSql})
+         UPDATE students s
+            SET storage_room = m.to_room,
+                storage_cabinet = m.to_cabinet,
+                storage_drawer = m.to_drawer
+           FROM mappings m
+          WHERE s.storage_room = m.from_room
+            AND s.storage_cabinet = m.from_cabinet
+            AND s.storage_drawer = m.from_drawer
+            AND s.status = 'Active'
+            AND EXISTS (SELECT 1 FROM student_office_memberships som
+                         WHERE som.student_no = s.student_no
+                           AND som.office_id = $${values.length + 1}
+                           AND som.status = 'Active')`,
+        [...values, normalizedOfficeId],
+      );
+    }
+
+    await run(
+      `INSERT INTO settings (key, value) VALUES ($1, $2)
+       ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = CURRENT_TIMESTAMP`,
+      [settingsKey, JSON.stringify(normalizedLayout)],
+    );
+    const saved = await runOne("SELECT value FROM settings WHERE key = $1", [settingsKey]);
+    return { layout: saved?.value ? normalizeStorageLayout(JSON.parse(saved.value)) : normalizedLayout, moved, breakdown };
+  });
+}
+
 export async function exportStorageLayoutForDiagnostics({ officeId } = {}) {
   const key = scopedSettingsKey(STORAGE_LAYOUT_KEY, officeId);
   const row = await dbGet(
@@ -233,12 +332,54 @@ export async function setStorageTemplates(templates, { officeId } = {}) {
   if (!Array.isArray(templates)) {
     throw new Error("Invalid storage_templates payload");
   }
+  const seenIds = new Set();
+  const normalizedTemplates = templates.map((template, templateIndex) => {
+    const id = String(template?.id || "").trim();
+    const name = String(template?.name || "").trim();
+    if (!id || id.length > 80 || !name || name.length > 120 || !Array.isArray(template?.cabinets)) {
+      throw new Error(`Template ${templateIndex + 1} must have a valid id, name, and cabinets array`);
+    }
+    if (seenIds.has(id)) throw new Error(`Template id '${id}' is duplicated`);
+    seenIds.add(id);
+
+    const cabinetIds = new Set();
+    const cabinets = template.cabinets.map((cabinet, cabinetIndex) => {
+      const cabinetId = normalizeCabinetId(cabinet?.id);
+      const rect = normalizeRect(cabinet?.rect);
+      const drawerIds = normalizeDrawerIds(cabinet?.drawerIds);
+      const rawRotation = cabinet?.rotation === undefined ? 0 : Number(cabinet.rotation);
+      const rotation = normalizeRotation(rawRotation);
+      if (!cabinetId || !rect || !drawerIds || ![0, 90, 180, 270].includes(rawRotation)) {
+        throw new Error(`Template '${name}' cabinet ${cabinetIndex + 1} is invalid`);
+      }
+      if (cabinetIds.has(cabinetId)) throw new Error(`Template '${name}' has duplicate cabinet '${cabinetId}'`);
+      cabinetIds.add(cabinetId);
+      return { id: cabinetId, rect, rotation, drawerIds };
+    });
+
+    let door;
+    if (template.door !== undefined && template.door !== null) {
+      const x = coerceFiniteNumber(template.door.x);
+      const y = coerceFiniteNumber(template.door.y);
+      const w = coerceFiniteNumber(template.door.w);
+      const h = coerceFiniteNumber(template.door.h);
+      const rawRotation = template.door.rotation === undefined ? 0 : Number(template.door.rotation);
+      const rotation = normalizeRotation(rawRotation);
+      if ([x, y, w, h].some((value) => value === null || value < 0 || value > 1) || w <= 0 || h <= 0 ||
+          x + w > 1 || y + h > 1 || ![0, 90, 180, 270].includes(rawRotation)) {
+        throw new Error(`Template '${name}' door is invalid`);
+      }
+      door = { x, y, w, h, rotation };
+    }
+
+    return { id, name, cabinets, ...(door ? { door } : {}) };
+  });
   await dbRun(
     `INSERT INTO settings (key, value) VALUES (?, ?)
      ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = CURRENT_TIMESTAMP`,
-    [key, JSON.stringify(templates)]
+    [key, JSON.stringify(normalizedTemplates)]
   );
-  return templates;
+  return normalizedTemplates;
 }
 
 export async function restoreDefaultStorageTemplates({ officeId } = {}) {

@@ -2,21 +2,16 @@ import { dbAll, dbGet, dbRun } from "./postgresCompat.js";
 
 export const systemConfigRepo = {
   getSettings: async () => {
-    try {
-      const rows = await dbAll("SELECT key, value FROM settings");
-      const settings = {};
-      if (rows && Array.isArray(rows)) {
-        rows.forEach((row) => {
-          if (row && typeof row === "object" && "key" in row) {
-            settings[row.key] = row.value;
-          }
-        });
-      }
-      return settings;
-    } catch (e) {
-      console.error("[systemConfigRepo] getSettings failed:", e);
-      return {};
+    const rows = await dbAll("SELECT key, value FROM settings");
+    const settings = {};
+    if (rows && Array.isArray(rows)) {
+      rows.forEach((row) => {
+        if (row && typeof row === "object" && "key" in row) {
+          settings[row.key] = row.value;
+        }
+      });
     }
+    return settings;
   },
 
   getSetting: async (key, defaultValue = null) => {
@@ -39,5 +34,10 @@ export const systemConfigRepo = {
       console.error(`[systemConfigRepo] setSetting for ${key} failed:`, e);
       throw e;
     }
+  },
+
+  deleteSetting: async (key) => {
+    const result = await dbRun("DELETE FROM settings WHERE key = ?", [key]);
+    return Number(result?.rowCount ?? result?.changes ?? 0) > 0;
   },
 };

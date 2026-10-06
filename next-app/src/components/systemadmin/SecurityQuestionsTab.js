@@ -5,6 +5,7 @@ import React, { useState, useEffect, useCallback } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Switch } from "@/components/ui/switch"
 import { Skeleton } from "@/components/ui/skeleton"
 import PageHeader from "@/components/shared/PageHeader"
 import { RefreshButton } from "@/components/shared/RefreshButton"
@@ -27,6 +28,41 @@ export default function SecurityQuestionsTab({ showToast }) {
   const [totpModalOpen, setTotpModalOpen] = useState(false)
   const [totpLoading, setTotpLoading] = useState(false)
   const [bulkModalOpen, setBulkModalOpen] = useState(false)
+  const [demoAccountsEnabled, setDemoAccountsEnabled] = useState(true)
+  const [demoSettingLoading, setDemoSettingLoading] = useState(true)
+  const [demoSettingSaving, setDemoSettingSaving] = useState(false)
+
+  const loadDemoAccountSetting = useCallback(async () => {
+    try {
+      const response = await fetch("/api/system/settings", { cache: "no-store" })
+      const result = await response.json()
+      if (!response.ok || !result?.ok) throw new Error(result?.error || "Failed to load login settings")
+      setDemoAccountsEnabled(String(result.data?.login_demo_accounts_enabled ?? "true").toLowerCase() !== "false")
+    } catch (error) {
+      showToast?.({ title: "Load Failed", description: error.message || "Could not load demo account visibility." }, true)
+    } finally {
+      setDemoSettingLoading(false)
+    }
+  }, [showToast])
+
+  const handleDemoAccountsToggle = async (enabled) => {
+    setDemoSettingSaving(true)
+    try {
+      const response = await fetch("/api/system/settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key: "login_demo_accounts_enabled", value: String(enabled) }),
+      })
+      const result = await response.json()
+      if (!response.ok || !result?.ok) throw new Error(result?.error || "Failed to save login setting")
+      setDemoAccountsEnabled(enabled)
+      showToast?.({ title: "Saved", description: `Demo Accounts button ${enabled ? "shown" : "hidden"} on the login page.` })
+    } catch (error) {
+      showToast?.({ title: "Save Failed", description: error.message || "Could not update demo account visibility." }, true)
+    } finally {
+      setDemoSettingSaving(false)
+    }
+  }
 
   const loadQuestions = useCallback(async (isManual = false) => {
     if (isManual) setLoading(true)
@@ -72,6 +108,10 @@ export default function SecurityQuestionsTab({ showToast }) {
   useEffect(() => {
     queueMicrotask(loadQuestions)
   }, [loadQuestions])
+
+  useEffect(() => {
+    queueMicrotask(loadDemoAccountSetting)
+  }, [loadDemoAccountSetting])
 
   const handleAddQuestion = () => {
     setQuestions((prev) => [
@@ -274,6 +314,19 @@ export default function SecurityQuestionsTab({ showToast }) {
             </div>
           }
         />
+
+        <div className="mx-6 flex items-center justify-between gap-4 border-b border-border py-4 dark:border-border">
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-gray-900 dark:text-zinc-100">Demo Accounts button</p>
+            <p className="mt-1 text-xs text-gray-500 dark:text-zinc-400">Show or hide the demo account picker on the public login page. Turning it off also disables demo sign-in.</p>
+          </div>
+          <Switch
+            checked={demoAccountsEnabled}
+            onCheckedChange={handleDemoAccountsToggle}
+            disabled={demoSettingLoading || demoSettingSaving}
+            aria-label="Show Demo Accounts button on login page"
+          />
+        </div>
 
         {/* Questions Form Area */}
         <div className="p-6">

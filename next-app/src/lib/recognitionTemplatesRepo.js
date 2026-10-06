@@ -105,14 +105,28 @@ export async function createRecognitionTemplate({ officeId, documentTypeId, name
 
 export async function updateRecognitionTemplate(id, { name, version, pageIndex, rotation, regions, actorId, officeId }) {
   if (!officeId) throw new Error("Office scope is required");
-  validateRecognitionRegions(regions);
+  const existing = await getRecognitionTemplateById(id, officeId);
+  if (!existing) return null;
+
+  const nextName = name === undefined ? existing.name : String(name).trim();
+  const nextVersion = version === undefined ? Number(existing.version) : Number(version);
+  const nextPageIndex = pageIndex === undefined ? Number(existing.page_index) : Number(pageIndex);
+  const nextRotation = rotation === undefined ? Number(existing.rotation) : Number(rotation);
+  const nextRegions = regions === undefined ? existing.regions : regions;
+
+  if (!nextName) throw new Error("Template name is required");
+  if (!Number.isInteger(nextVersion) || nextVersion < 1) throw new Error("Template version must be a positive integer");
+  if (!Number.isInteger(nextPageIndex) || nextPageIndex < 0) throw new Error("Page index must be a non-negative integer");
+  if (![0, 90, 180, 270].includes(nextRotation)) throw new Error("Rotation must be 0, 90, 180, or 270 degrees");
+  validateRecognitionRegions(nextRegions);
+
   return queryOne(
     `UPDATE recognition_templates
      SET name = $2, version = $3, page_index = $4, rotation = $5, regions = $6::jsonb,
          updated_by = $7, updated_at = NOW()
      WHERE id = $1 AND office_id = $8
      RETURNING *`,
-    [id, String(name || "PSA template").trim(), Number(version), Number(pageIndex), Number(rotation), JSON.stringify(regions), actorId || null, String(officeId).trim().toLowerCase()]
+    [id, nextName, nextVersion, nextPageIndex, nextRotation, JSON.stringify(nextRegions), actorId || null, String(officeId).trim().toLowerCase()]
   );
 }
 
@@ -143,4 +157,3 @@ export async function deleteRecognitionTemplate(id, officeId) {
     [id, String(officeId).trim().toLowerCase()]
   );
 }
-

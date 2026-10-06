@@ -4,8 +4,7 @@ import path from "node:path";
 import { NextResponse } from "next/server";
 import { requireStudent, createAuthErrorResponse } from "@/lib/authHelpers";
 import { canAccessResource } from "@/lib/resourceAuthorization";
-import { query, queryOne } from "@/lib/postgres";
-import { addRequestAttachment } from "@/lib/documentRequestsRepo";
+import { queryOne, transaction } from "@/lib/postgres";
 import { writeGlobalAuditLog } from "@/lib/auditLogRequest";
 
 export const runtime = "nodejs";
@@ -66,36 +65,57 @@ export async function POST(req, ctx) {
   const filePath = path.join(directory, storageFilename);
   await fs.mkdir(directory, { recursive: true });
 
+  let persisted = false;
   try {
     await fs.writeFile(filePath, Buffer.from(await file.arrayBuffer()), { flag: "wx" });
-    const attachment = await addRequestAttachment({
-      documentRequestId: requestId,
-      originalFilename,
-      storageFilename,
-      mimeType,
-      sizeBytes: file.size,
-      attachmentType: "receipt",
-      uploadedBy: access.user.id,
+    const result = await transaction(async ({ query: run, queryOne: runOne }) => {
+      const current = await runOne(
+        "SELECT status FROM document_requests WHERE id = $1 AND office_id = 'registrar' FOR UPDATE",
+        [requestId]
+      );
+      if (!current) return { error: "Document request not found.", status: 404 };
+      if (current.status !== "PendingPayment") {
+        return { error: "Payment proof can only be uploaded while this request is pending payment.", status: 409 };
+      }
+      const attachment = await runOne(
+        `INSERT INTO document_request_attachments (
+           document_request_id, original_filename, storage_filename, mime_type,
+           size_bytes, attachment_type, uploaded_by
+         ) VALUES ($1, $2, $3, $4, $5, 'receipt', $6)
+         RETURNING *`,
+        [requestId, originalFilename, storageFilename, mimeType, file.size, access.user.id]
+      );
+      await run(
+        `INSERT INTO transaction_updates (document_request_id, status, message)
+         VALUES ($1, 'PendingPayment', $2)`,
+        [requestId, "Student uploaded payment proof: " + originalFilename]
+      );
+      return { attachment };
     });
-    await query(
-      "INSERT INTO transaction_updates (document_request_id, status, message) VALUES ($1, $2, $3)",
-      [requestId, "PendingPayment", "Student uploaded payment proof: " + originalFilename]
-    );
-    await writeGlobalAuditLog(req, "Payment proof uploaded", {
-      officeId: "registrar",
-      details: `Student uploaded payment proof for document request ${requestId}.`,
-      entity_type: "document_request",
-      entity_id: String(requestId),
-    });
+    if (result.error) {
+      await fs.unlink(filePath).catch(() => {});
+      return NextResponse.json({ ok: false, error: result.error }, { status: result.status });
+    }
+    persisted = true;
+    try {
+      await writeGlobalAuditLog(req, "Payment proof uploaded", {
+        officeId: "registrar",
+        details: `Student uploaded payment proof for document request ${requestId}.`,
+        entity_type: "document_request",
+        entity_id: String(requestId),
+      });
+    } catch (auditError) {
+      console.error("Payment proof audit log failed:", auditError);
+    }
     return NextResponse.json({
       ok: true,
       data: {
-        ...attachment,
-        url: `/api/document-requests/${requestId}/attachments/${attachment.id}`,
+        ...result.attachment,
+        url: `/api/document-requests/${requestId}/attachments/${result.attachment.id}`,
       },
     }, { status: 201 });
   } catch (error) {
-    await fs.unlink(filePath).catch(() => {});
+    if (!persisted) await fs.unlink(filePath).catch(() => {});
     console.error("Payment proof upload failed:", error);
     return NextResponse.json({ ok: false, error: "Unable to save payment proof." }, { status: 500 });
   }

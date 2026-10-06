@@ -1,6 +1,5 @@
 import dotenv from "dotenv";
-dotenv.config({ path: ".env.local" });
-dotenv.config();
+dotenv.config({ path: ".env" });
 
 import assert from "node:assert/strict";
 

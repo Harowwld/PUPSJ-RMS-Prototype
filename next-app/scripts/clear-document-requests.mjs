@@ -3,11 +3,10 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { Client } from "pg";
 
-dotenv.config({ path: ".env.local" });
-dotenv.config();
+dotenv.config({ path: ".env" });
 
 if (!process.env.DATABASE_URL) {
-  throw new Error("DATABASE_URL is required. Configure next-app/.env.local first.");
+  throw new Error("DATABASE_URL is required. Configure next-app/.env first.");
 }
 
 const confirmed = process.argv.includes("--confirm");

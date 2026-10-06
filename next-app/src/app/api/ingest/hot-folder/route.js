@@ -79,15 +79,25 @@ export async function POST(req) {
   fs.writeFileSync(absPath, bytes);
   const contentSha256 = crypto.createHash("sha256").update(bytes).digest("hex");
 
-  const row = await createIngestItem({
-    officeId: approvedOfficeId,
-    originalFilename: file.name || "scan.bin",
-    storageFilename,
-    mimeType: typeCheck.mimeType,
-    sizeBytes: bytes.length,
-    sourceStation: sourceStation || null,
-    contentSha256,
-  });
+  let row;
+  try {
+    row = await createIngestItem({
+      officeId: approvedOfficeId,
+      originalFilename: file.name || "scan.bin",
+      storageFilename,
+      mimeType: typeCheck.mimeType,
+      sizeBytes: bytes.length,
+      sourceStation: sourceStation || null,
+      contentSha256,
+    });
+  } catch (error) {
+    try {
+      fs.unlinkSync(absPath);
+    } catch {
+      // Preserve the database error; an orphaned scan can be removed separately.
+    }
+    throw error;
+  }
 
   await publishIngestEvent({ type: "ingest_created", officeId: approvedOfficeId, id: row.id });
   await triggerIngestProcessing(approvedOfficeId, `ingest #${row.id}`);

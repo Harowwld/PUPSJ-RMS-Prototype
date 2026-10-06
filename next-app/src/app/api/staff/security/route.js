@@ -1,12 +1,29 @@
 import { NextResponse } from "next/server";
-import { dbGet as sysDbGet, dbRun as sysDbRun, dbAll as sysDbAll } from "@/lib/postgresCompat";
+import { dbGet as sysDbGet, dbAll as sysDbAll } from "@/lib/postgresCompat";
 import { writeAuditLog } from "@/lib/auditLogRequest";
 import { hasAllSecurityAnswers } from "@/lib/staffRepo";
 import { hashPassword } from "@/lib/passwordHash";
 import { requireAuth, createAuthErrorResponse } from "@/lib/authHelpers";
 import { requireTOTP, extractTOTPToken } from "@/lib/totpMiddleware";
+import { transaction } from "@/lib/postgres";
 
 export const runtime = "nodejs";
+
+async function saveSecurityAnswers(answers, applyChanges) {
+  return transaction(async ({ query: run }) => {
+    const ids = answers.map((answer) => answer.questionId);
+    const result = await run(
+      "SELECT id, is_required FROM security_questions WHERE id = ANY($1::bigint[])",
+      [ids]
+    );
+    const questions = new Map(result.rows.map((row) => [Number(row.id), row]));
+    if (questions.size !== ids.length) {
+      return { error: "One or more security questions no longer exist. Refresh and try again." };
+    }
+    await applyChanges(run, questions);
+    return { ok: true };
+  });
+}
 
 export async function GET(req) {
   try {
@@ -70,9 +87,24 @@ export async function PUT(req) {
       }
     }
 
-    const { answers } = await req.json();
+    const body = await req.json().catch(() => null);
+    const { answers } = body || {};
     if (!answers || !Array.isArray(answers)) {
       return NextResponse.json({ ok: false, error: "Answers array is required" }, { status: 400 });
+    }
+
+    const normalizedAnswers = [];
+    const seenQuestionIds = new Set();
+    for (const answer of answers) {
+      const questionId = Number(answer?.questionId);
+      if (!Number.isSafeInteger(questionId) || questionId < 1) {
+        return NextResponse.json({ ok: false, error: "Each answer must include a valid questionId" }, { status: 400 });
+      }
+      if (seenQuestionIds.has(questionId)) {
+        return NextResponse.json({ ok: false, error: "Each question can only be submitted once" }, { status: 400 });
+      }
+      seenQuestionIds.add(questionId);
+      normalizedAnswers.push({ questionId, answer: String(answer?.answer ?? "").trim() });
     }
 
     if (isStudent) {
@@ -81,30 +113,27 @@ export async function PUT(req) {
         return NextResponse.json({ ok: false, error: "Student account not found" }, { status: 404 });
       }
 
-      for (const ans of answers) {
-        if (!ans.questionId) continue;
-
-        const qRow = await sysDbGet("SELECT id, is_required FROM security_questions WHERE id = ?", [ans.questionId]);
-        if (!qRow) continue;
-
-        const answerRaw = String(ans.answer || "").trim();
-        if (answerRaw === "") {
-          if (qRow.is_required) continue;
-          await sysDbRun("DELETE FROM student_security_answers WHERE student_account_id = ? AND question_id = ?", [studentAccountId, qRow.id]);
-          continue;
+      const result = await saveSecurityAnswers(normalizedAnswers, async (run, questionRows) => {
+        for (const answer of normalizedAnswers) {
+          const question = questionRows.get(answer.questionId);
+          if (!answer.answer) {
+            if (question.is_required) continue;
+            await run(
+              "DELETE FROM student_security_answers WHERE student_account_id = $1 AND question_id = $2",
+              [studentAccountId, answer.questionId]
+            );
+            continue;
+          }
+          await run(
+            `INSERT INTO student_security_answers (student_account_id, question_id, answer_hash, updated_at)
+             VALUES ($1, $2, $3, NOW())
+             ON CONFLICT (student_account_id, question_id) DO UPDATE SET
+               answer_hash = EXCLUDED.answer_hash, updated_at = EXCLUDED.updated_at`,
+            [studentAccountId, answer.questionId, hashPassword(answer.answer.toLowerCase())]
+          );
         }
-
-        const answerNormalized = answerRaw.toLowerCase();
-        const answerHash = hashPassword(answerNormalized);
-
-        await sysDbRun(`
-          INSERT INTO student_security_answers (student_account_id, question_id, answer_hash, updated_at)
-          VALUES (?, ?, ?, datetime('now'))
-          ON CONFLICT (student_account_id, question_id) DO UPDATE SET
-            answer_hash = EXCLUDED.answer_hash,
-            updated_at = EXCLUDED.updated_at
-        `, [studentAccountId, qRow.id, answerHash]);
-      }
+      });
+      if (result.error) return NextResponse.json({ ok: false, error: result.error }, { status: 400 });
 
       await writeAuditLog(req, "Updated Security Question", {
         role: "Student"
@@ -116,36 +145,24 @@ export async function PUT(req) {
     // Staff path
     const uid = user.sub || user.id;
 
-    for (const ans of answers) {
-      if (!ans.questionId) continue;
-
-      // Verify the question exists
-      const qRow = await sysDbGet("SELECT id, is_required FROM security_questions WHERE id = ?", [ans.questionId]);
-      if (!qRow) continue;
-
-      const answerRaw = String(ans.answer || "").trim();
-      
-      if (answerRaw === "") {
-        // If it's a required question, we shouldn't allow deleting it
-        if (qRow.is_required) continue;
-
-        // Otherwise, delete the answer if it exists
-        await sysDbRun("DELETE FROM staff_security_answers WHERE staff_id = ? AND question_id = ?", [uid, qRow.id]);
-        continue;
+    const result = await saveSecurityAnswers(normalizedAnswers, async (run, questionRows) => {
+      for (const answer of normalizedAnswers) {
+        const question = questionRows.get(answer.questionId);
+        if (!answer.answer) {
+          if (question.is_required) continue;
+          await run("DELETE FROM staff_security_answers WHERE staff_id = $1 AND question_id = $2", [uid, answer.questionId]);
+          continue;
+        }
+        await run(
+          `INSERT INTO staff_security_answers (staff_id, question_id, answer_hash, updated_at)
+           VALUES ($1, $2, $3, NOW())
+           ON CONFLICT (staff_id, question_id) DO UPDATE SET
+             answer_hash = EXCLUDED.answer_hash, updated_at = EXCLUDED.updated_at`,
+          [uid, answer.questionId, hashPassword(answer.answer.toLowerCase())]
+        );
       }
-
-      const answerNormalized = answerRaw.toLowerCase();
-      const answerHash = hashPassword(answerNormalized);
-
-      // PostgreSQL upsert for the composite staff/question key.
-      await sysDbRun(`
-        INSERT INTO staff_security_answers (staff_id, question_id, answer_hash, updated_at)
-        VALUES (?, ?, ?, datetime('now'))
-        ON CONFLICT (staff_id, question_id) DO UPDATE SET
-          answer_hash = EXCLUDED.answer_hash,
-          updated_at = EXCLUDED.updated_at
-      `, [uid, qRow.id, answerHash]);
-    }
+    });
+    if (result.error) return NextResponse.json({ ok: false, error: result.error }, { status: 400 });
 
     await writeAuditLog(req, "Updated Security Question", {
       role: user.role

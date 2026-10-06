@@ -1,9 +1,16 @@
 import { NextResponse } from "next/server";
-import { getStaffById, updateStaffPreferences } from "@/lib/staffRepo";
+import { getStaffById, parseStaffPreferences, updateStaffPreferences } from "@/lib/staffRepo";
 import { writeAuditLog } from "@/lib/auditLogRequest";
 import { requireAuth, createAuthErrorResponse } from "@/lib/authHelpers";
 
 export const runtime = "nodejs";
+
+const PREFERENCE_VALIDATORS = {
+  theme: (value) => ["light", "dark", "system"].includes(value),
+  navigation_layout: (value) => ["sidebar", "topbar"].includes(value),
+  skip_registration_confirmation: (value) => typeof value === "boolean",
+  high_contrast: (value) => typeof value === "boolean",
+};
 
 export async function GET(req) {
   try {
@@ -20,15 +27,10 @@ export async function GET(req) {
       high_contrast: false
     };
 
-    let preferences = {};
-    try {
-      preferences = {
-        ...defaultPreferences,
-        ...JSON.parse(staff?.preferences || "{}")
-      };
-    } catch (e) {
-      preferences = defaultPreferences;
-    }
+    const preferences = {
+      ...defaultPreferences,
+      ...parseStaffPreferences(staff?.preferences),
+    };
 
     return NextResponse.json({ ok: true, data: preferences });
   } catch (error) {
@@ -46,8 +48,16 @@ export async function POST(req) {
     const body = await req.json().catch(() => null) || {};
     const { preferences } = body;
 
-    if (!preferences || typeof preferences !== "object") {
+    if (!preferences || typeof preferences !== "object" || Array.isArray(preferences)) {
       return NextResponse.json({ ok: false, error: "Preferences object is required" }, { status: 400 });
+    }
+    const entries = Object.entries(preferences);
+    if (entries.length === 0) {
+      return NextResponse.json({ ok: false, error: "At least one preference is required" }, { status: 400 });
+    }
+    const invalidKey = entries.find(([key, value]) => !PREFERENCE_VALIDATORS[key]?.(value));
+    if (invalidKey) {
+      return NextResponse.json({ ok: false, error: `Invalid value for preference '${invalidKey[0]}'.` }, { status: 400 });
     }
 
     const updatedPrefs = await updateStaffPreferences(userId, preferences);

@@ -1,11 +1,11 @@
 import dotenv from "dotenv";
-dotenv.config({ path: ".env.local" });
-dotenv.config();
+dotenv.config({ path: ".env" });
 
 import assert from "node:assert/strict";
 import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
 
 const BASE_URL = process.env.TEST_BASE_URL || "http://localhost:3000";
+const STAFF_PASSWORD = process.env.DEFAULT_STAFF_PASSWORD || "pupstaff";
 
 function extractCookies(res) {
   const setCookies = res.headers.getSetCookie();
@@ -37,7 +37,7 @@ async function runOsasTests() {
   const loginRes = await fetch(`${BASE_URL}/api/auth/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ username: "admin.osas@pup.local", password: "pupstaff" }),
+    body: JSON.stringify({ username: "admin.osas@pup.local", password: STAFF_PASSWORD }),
   });
   assert.equal(loginRes.status, 200, "OSAS Admin login HTTP status should be 200");
   const loginJson = await loginRes.json();

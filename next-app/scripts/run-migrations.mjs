@@ -3,15 +3,14 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-dotenv.config({ path: ".env.local" });
-dotenv.config();
+dotenv.config({ path: ".env" });
 const { pool } = await import("../src/lib/postgres.js");
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const migrationsDir = path.join(here, "..", "migrations");
 
 if (!process.env.DATABASE_URL) {
-  throw new Error("DATABASE_URL is required. Copy .env.example to .env.local and start Docker PostgreSQL first.");
+  throw new Error("DATABASE_URL is required. Copy .env.example to .env and start Docker PostgreSQL first.");
 }
 
 const client = await pool.connect();

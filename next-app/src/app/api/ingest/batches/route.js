@@ -12,7 +12,25 @@ export async function POST(req) {
   const officeId = getPrincipalOfficeId(user);
   if (!officeId) return createAuthErrorResponse("Office scope is required", 403);
   try {
-    const body = await req.json().catch(() => ({}));
+    const rawBody = await req.text();
+    let body = {};
+    if (rawBody.trim()) {
+      try {
+        body = JSON.parse(rawBody);
+      } catch {
+        return NextResponse.json({ ok: false, error: "Invalid JSON body" }, { status: 400 });
+      }
+    }
+    if (!body || typeof body !== "object" || Array.isArray(body)) {
+      return NextResponse.json({ ok: false, error: "Invalid request body" }, { status: 400 });
+    }
+    const unsupportedField = Object.keys(body).find((field) => field !== "sourceStation");
+    if (unsupportedField) {
+      return NextResponse.json({ ok: false, error: `Unsupported field: ${unsupportedField}` }, { status: 400 });
+    }
+    if (body.sourceStation !== undefined && typeof body.sourceStation !== "string") {
+      return NextResponse.json({ ok: false, error: "sourceStation must be text" }, { status: 400 });
+    }
     const data = await createBatch({ officeId, sourceStation: body.sourceStation || null });
     if (!data || (data.rows || []).some((row) => !canAccessResource(user, "ingest", row))) {
       return NextResponse.json({ ok: false, error: "Batch not found" }, { status: 404 });

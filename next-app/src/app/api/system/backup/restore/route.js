@@ -37,7 +37,16 @@ export async function POST(req) {
       mode = formData.get("mode") || "merge";
       action = formData.get("action") || "restore";
       const idParam = formData.get("backupId");
-      if (idParam) backupId = Number(idParam);
+      if (idParam) {
+        backupId = Number(idParam);
+        if (!Number.isSafeInteger(backupId) || backupId < 1) {
+          return NextResponse.json({ ok: false, error: "Invalid backup ID" }, { status: 400 });
+        }
+      }
+      const unsupportedField = [...formData.keys()].find((field) => !["file", "mode", "action", "backupId"].includes(field));
+      if (unsupportedField) {
+        return NextResponse.json({ ok: false, error: `Unsupported field: ${unsupportedField}` }, { status: 400 });
+      }
 
       if (file && typeof file !== "string") {
         fileBuffer = Buffer.from(await file.arrayBuffer());
@@ -48,15 +57,32 @@ export async function POST(req) {
         fileName = item.backup.filename;
       }
     } else {
-      const body = await req.json().catch(() => ({}));
+      const body = await req.json().catch(() => null);
+      if (!body || typeof body !== "object" || Array.isArray(body)) {
+        return NextResponse.json({ ok: false, error: "Invalid request body" }, { status: 400 });
+      }
+      const unsupportedField = Object.keys(body).find((field) => !["mode", "action", "backupId"].includes(field));
+      if (unsupportedField) {
+        return NextResponse.json({ ok: false, error: `Unsupported field: ${unsupportedField}` }, { status: 400 });
+      }
       mode = body.mode || "merge";
       action = body.action || "restore";
       if (body.backupId) {
         backupId = Number(body.backupId);
+        if (!Number.isSafeInteger(backupId) || backupId < 1) {
+          return NextResponse.json({ ok: false, error: "Invalid backup ID" }, { status: 400 });
+        }
         const item = await getBackupBufferById(backupId);
         fileBuffer = item.buffer;
         fileName = item.backup.filename;
       }
+    }
+
+    if (!["merge", "overwrite"].includes(mode)) {
+      return NextResponse.json({ ok: false, error: "Mode must be merge or overwrite." }, { status: 400 });
+    }
+    if (!["restore", "preview"].includes(action)) {
+      return NextResponse.json({ ok: false, error: "Action must be restore or preview." }, { status: 400 });
     }
 
     if (!fileBuffer) {

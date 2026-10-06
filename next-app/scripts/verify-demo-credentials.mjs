@@ -1,6 +1,5 @@
 import dotenv from "dotenv";
-dotenv.config({ path: ".env.local" });
-dotenv.config();
+dotenv.config({ path: ".env" });
 
 const { query, queryOne } = await import("../src/lib/postgres.js");
 const { getStaffByUsername, hasAllSecurityAnswers, verifyPasswordHash } = await import("../src/lib/staffRepo.js");

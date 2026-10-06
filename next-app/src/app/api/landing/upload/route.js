@@ -2,8 +2,8 @@ import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
 import { NextResponse } from "next/server";
-import { verifySessionToken, getSessionCookieName } from "@/lib/jwt";
-import { isSystemAdminRole } from "@/lib/roleUtils";
+import { requireSystemAdmin, createAuthErrorResponse } from "@/lib/authHelpers";
+import { queryOne } from "@/lib/postgres";
 import { writeGlobalAuditLog } from "@/lib/auditLogRequest";
 
 export const runtime = "nodejs";
@@ -24,24 +24,31 @@ const EXTENSION_MAP = {
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
-async function isSuperAdmin(req) {
-  try {
-    const token = req.cookies.get(getSessionCookieName())?.value;
-    if (!token) return false;
-    const payload = await verifySessionToken(token);
-    return isSystemAdminRole(payload?.role);
-  } catch {
-    return false;
+function hasMatchingImageSignature(buffer, mimeType) {
+  if (mimeType === "image/jpeg") {
+    return buffer.length >= 3 && buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff;
   }
+  if (mimeType === "image/png") {
+    return buffer.length >= 8 && buffer.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]));
+  }
+  if (mimeType === "image/webp") {
+    return buffer.length >= 12 && buffer.toString("ascii", 0, 4) === "RIFF" && buffer.toString("ascii", 8, 12) === "WEBP";
+  }
+  if (mimeType === "image/avif") {
+    if (buffer.length < 16 || buffer.toString("ascii", 4, 8) !== "ftyp") return false;
+    const boxSize = buffer.readUInt32BE(0);
+    const end = Math.min(boxSize || buffer.length, buffer.length);
+    for (let offset = 8; offset + 4 <= end; offset += 4) {
+      const brand = buffer.toString("ascii", offset, offset + 4);
+      if (brand === "avif" || brand === "avis") return true;
+    }
+  }
+  return false;
 }
 
 export async function POST(req) {
-  if (!(await isSuperAdmin(req))) {
-    return NextResponse.json(
-      { ok: false, error: "Unauthorized. SuperAdmin privileges required." },
-      { status: 403 }
-    );
-  }
+  const access = await requireSystemAdmin(req);
+  if (access.error || !access.user) return createAuthErrorResponse(access.error || "System administrator access required", 403);
 
   try {
     const formData = await req.formData();
@@ -71,6 +78,12 @@ export async function POST(req) {
       );
     }
 
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    if (!hasMatchingImageSignature(buffer, file.type)) {
+      return NextResponse.json({ ok: false, error: "Image data does not match the declared file type." }, { status: 400 });
+    }
+
     const uploadDir = path.join(process.cwd(), "public", "assets", "landing");
     fs.mkdirSync(uploadDir, { recursive: true });
 
@@ -79,8 +92,6 @@ export async function POST(req) {
     const filename = `hero-${Date.now()}-${uniqueId}.${ext}`;
     const targetPath = path.join(uploadDir, filename);
 
-    const arrayBuffer = await file.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
     fs.writeFileSync(targetPath, buffer);
 
     const publicUrl = `/assets/landing/${filename}`;
@@ -107,5 +118,51 @@ export async function POST(req) {
       { ok: false, error: err.message || "Failed to upload image." },
       { status: 500 }
     );
+  }
+}
+
+export async function DELETE(req) {
+  const access = await requireSystemAdmin(req);
+  if (access.error || !access.user) return createAuthErrorResponse(access.error || "System administrator access required", 403);
+
+  const filename = new URL(req.url).searchParams.get("filename")?.trim() || "";
+  if (
+    !filename ||
+    path.basename(filename) !== filename ||
+    !/^hero-\d+-[a-f0-9]{12}\.(?:jpg|png|webp|avif)$/i.test(filename)
+  ) {
+    return NextResponse.json({ ok: false, error: "Invalid landing media filename." }, { status: 400 });
+  }
+
+  let reference;
+  try {
+    reference = await queryOne(
+      "SELECT key FROM settings WHERE value LIKE $1 LIMIT 1",
+      [`%/assets/landing/${filename}%`],
+    );
+  } catch (err) {
+    console.error("[api/landing/upload] Reference check failed:", err);
+    return NextResponse.json({ ok: false, error: "Unable to verify whether this image is in use." }, { status: 500 });
+  }
+  if (reference) {
+    return NextResponse.json({ ok: false, error: "Remove this image from the hero slides before deleting it." }, { status: 409 });
+  }
+
+  const filePath = path.join(process.cwd(), "public", "assets", "landing", filename);
+  if (!fs.existsSync(filePath) || !fs.statSync(filePath).isFile()) {
+    return NextResponse.json({ ok: false, error: "Landing media file not found." }, { status: 404 });
+  }
+
+  try {
+    fs.unlinkSync(filePath);
+    await writeGlobalAuditLog(req, "Delete Landing Page Media", {
+      entity_type: "LandingMedia",
+      entity_id: filename,
+      details: `Deleted unreferenced landing media file '${filename}'.`,
+    });
+    return NextResponse.json({ ok: true });
+  } catch (err) {
+    console.error("[api/landing/upload] DELETE error:", err);
+    return NextResponse.json({ ok: false, error: "Failed to delete landing media." }, { status: 500 });
   }
 }

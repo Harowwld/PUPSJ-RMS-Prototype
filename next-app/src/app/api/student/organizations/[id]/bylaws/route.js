@@ -8,6 +8,7 @@ import {
   isStudentOfficerForOrg,
   listOrganizationBylawsVersions,
   getOrganizationBylawsVersionById,
+  getOrganizationBylawsVersionByStorageFilename,
   createOrganizationBylawsSubmission,
 } from "@/lib/organizationsRepo";
 import { writeGlobalAuditLog } from "@/lib/auditLogRequest";
@@ -66,13 +67,16 @@ export async function GET(req, ctx) {
   if (isFileReq) {
     let targetFilename = org.bylaws_storage_filename;
     let targetOriginalName = org.bylaws_original_filename || `${org.name}-CBL.pdf`;
+    let targetMimeType = org.bylaws_mime_type || "application/pdf";
 
     if (versionId) {
       const ver = await getOrganizationBylawsVersionById(versionId);
-      if (ver && ver.organization_id === org.id) {
-        targetFilename = ver.storage_filename;
-        targetOriginalName = ver.original_filename || targetOriginalName;
+      if (!ver || ver.organization_id !== org.id) {
+        return NextResponse.json({ ok: false, error: "Bylaws version not found for this organization." }, { status: 404 });
       }
+      targetFilename = ver.storage_filename;
+      targetOriginalName = ver.original_filename || targetOriginalName;
+      targetMimeType = ver.mime_type || targetMimeType;
     }
 
     if (!targetFilename) {
@@ -87,7 +91,7 @@ export async function GET(req, ctx) {
     const bytes = fs.readFileSync(/*turbopackIgnore: true*/ filePath);
     return new NextResponse(bytes, {
       headers: {
-        "Content-Type": org.bylaws_mime_type || "application/pdf",
+        "Content-Type": targetMimeType,
         "Content-Disposition": `inline; filename="${targetOriginalName}"`,
       },
     });
@@ -158,27 +162,34 @@ export async function POST(req, ctx) {
 
   const storageFilename = `${crypto.randomUUID()}-cbl.pdf`;
   const fileBytes = Buffer.from(await file.arrayBuffer());
-  fs.writeFileSync(path.join(bylawsStorageDir(), storageFilename), fileBytes);
+  const filePath = path.join(bylawsStorageDir(), storageFilename);
 
+  let submission;
   try {
-    const submission = await createOrganizationBylawsSubmission({
+    fs.writeFileSync(filePath, fileBytes, { flag: "wx" });
+    submission = await createOrganizationBylawsSubmission({
       organizationId: org.id,
       versionTag: cleanVersionTag,
       storageFilename,
       originalFilename: file.name || "Constitution-and-Bylaws.pdf",
       amendmentSummary: cleanSummary,
       submittedByEmail: studentEmail,
+      sizeBytes: file.size,
+      mimeType: file.type,
     });
 
-    await writeGlobalAuditLog(req, "Submitted Constitution & By-Laws for OSAS review", {
-      officeId: "osas",
-      details: `Student officer ${access.user.username || studentEmail} (${officer.position}) submitted CBL amendment "${cleanVersionTag}" for ${org.name}.`,
-      entity_type: "student_organization",
-      entity_id: org.id,
-    });
-
-    return NextResponse.json({ ok: true, data: submission });
   } catch (err) {
+    let persisted = false;
+    try { persisted = Boolean(await getOrganizationBylawsVersionByStorageFilename(storageFilename)); } catch { persisted = true; }
+    if (!persisted) { try { fs.unlinkSync(filePath); } catch {} }
     return NextResponse.json({ ok: false, error: err.message || "Failed to record submission." }, { status: 500 });
   }
+
+  await writeGlobalAuditLog(req, "Submitted Constitution & By-Laws for OSAS review", {
+    officeId: "osas",
+    details: `Student officer ${access.user.username || studentEmail} (${officer.position}) submitted CBL amendment "${cleanVersionTag}" for ${org.name}.`,
+    entity_type: "student_organization",
+    entity_id: org.id,
+  });
+  return NextResponse.json({ ok: true, data: submission });
 }

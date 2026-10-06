@@ -3,8 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 
-dotenv.config({ path: ".env.local" });
-dotenv.config();
+dotenv.config({ path: ".env" });
 
 if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL is required.");
 

@@ -33,7 +33,21 @@ export async function PATCH(req, ctx) {
   if (!existing) return NextResponse.json({ ok: false, error: "Organization not found." }, { status: 404 });
 
   const body = await req.json().catch(() => null);
-  if (!body) return NextResponse.json({ ok: false, error: "Invalid request body." }, { status: 400 });
+  if (!body || typeof body !== "object" || Array.isArray(body)) {
+    return NextResponse.json({ ok: false, error: "Invalid request body." }, { status: 400 });
+  }
+  const allowedFields = new Set([
+    "name", "acronym", "category", "status", "adviserName", "adviser_name",
+    "adviserEmail", "adviser_email", "description", "storageRoom", "storage_room",
+    "storageCabinet", "storage_cabinet", "storageDrawer", "storage_drawer",
+  ]);
+  const unsupportedField = Object.keys(body).find((field) => !allowedFields.has(field));
+  if (unsupportedField) {
+    return NextResponse.json({ ok: false, error: `Unsupported field: ${unsupportedField}` }, { status: 400 });
+  }
+  if (Object.keys(body).length === 0) {
+    return NextResponse.json({ ok: false, error: "At least one field is required." }, { status: 400 });
+  }
 
   try {
     const updated = await updateOrganization(id, body);

@@ -1,6 +1,5 @@
 import dotenv from "dotenv";
-dotenv.config({ path: ".env.local" });
-dotenv.config();
+dotenv.config({ path: ".env" });
 
 const BASE_URL = "http://localhost:3000";
 

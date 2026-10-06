@@ -21,6 +21,17 @@ function resolveOfficeId(user, req, requestedOfficeId) {
   return ownOffice || null;
 }
 
+function parseOptionalBoolean(value) {
+  if (value === undefined) return { valid: true, value: undefined };
+  if (typeof value === "boolean") return { valid: true, value };
+  if (value === 0 || value === 1) return { valid: true, value: value === 1 };
+  if (value === "true") return { valid: true, value: true };
+  if (value === "false") return { valid: true, value: false };
+  if (value === "1") return { valid: true, value: true };
+  if (value === "0") return { valid: true, value: false };
+  return { valid: false, value: undefined };
+}
+
 async function getTargetName(id, officeId) {
   try {
     const rows = await listAllDocTypes({ includeArchived: true, officeId });
@@ -30,6 +41,11 @@ async function getTargetName(id, officeId) {
   } catch {
     return id;
   }
+}
+
+async function hasTarget(id, officeId) {
+  const rows = await listAllDocTypes({ includeArchived: true, officeId });
+  return Array.isArray(rows) && rows.some((row) => String(row?.id) === String(id));
 }
 
 export async function GET(req) {
@@ -68,14 +84,14 @@ export async function POST(req) {
   const isAdmin = searchParams.get("admin") === "true";
 
   const body = await req.json().catch(() => null);
-  if (!body || typeof body !== "object") {
+  if (!body || typeof body !== "object" || Array.isArray(body)) {
     return NextResponse.json(
       { ok: false, error: "Invalid JSON body" },
       { status: 400 }
     );
   }
 
-  const name = String(body.name || "").trim();
+  const name = typeof body.name === "string" ? body.name.trim() : "";
   const officeId = resolveOfficeId(access.user, req, body.officeId || body.office_id);
   if (!officeId) return createAuthErrorResponse("You cannot access that office", 403);
   if (!name) {
@@ -85,8 +101,13 @@ export async function POST(req) {
     );
   }
 
-  const isRequestable = body.isRequestable !== undefined ? Boolean(body.isRequestable) : (body.is_requestable !== undefined ? Boolean(body.is_requestable) : false);
-  const isCompliance = body.isCompliance !== undefined ? Boolean(body.isCompliance) : (body.is_compliance !== undefined ? Boolean(body.is_compliance) : false);
+  const isRequestableResult = parseOptionalBoolean(body.isRequestable !== undefined ? body.isRequestable : body.is_requestable);
+  const isComplianceResult = parseOptionalBoolean(body.isCompliance !== undefined ? body.isCompliance : body.is_compliance);
+  if (!isRequestableResult.valid || !isComplianceResult.valid) {
+    return NextResponse.json({ ok: false, error: "Requestable and compliance values must be booleans." }, { status: 400 });
+  }
+  const isRequestable = isRequestableResult.value ?? false;
+  const isCompliance = isComplianceResult.value ?? false;
   const complianceCategory = String(body.complianceCategory || body.compliance_category || "General Requirements").trim();
 
   try {
@@ -124,20 +145,30 @@ export async function PUT(req) {
   try {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
-    if (!id) throw new Error("Missing document type ID");
+    if (!id || !/^\d+$/.test(id)) throw new Error("Invalid document type ID");
 
-    const body = await req.json().catch(() => ({}));
+    const body = await req.json().catch(() => null);
+    if (!body || typeof body !== "object" || Array.isArray(body)) {
+      return NextResponse.json({ ok: false, error: "Invalid JSON body" }, { status: 400 });
+    }
     const { name } = body;
     const officeId = resolveOfficeId(access.user, req, body.officeId || body.office_id);
     if (!officeId) return createAuthErrorResponse("You cannot access that office", 403);
 
-    if (!name) throw new Error("Document name is required");
+    if (typeof name !== "string" || !name.trim()) throw new Error("Document name is required");
 
-    const isRequestable = body.isRequestable !== undefined ? Boolean(body.isRequestable) : (body.is_requestable !== undefined ? Boolean(body.is_requestable) : undefined);
-    const isCompliance = body.isCompliance !== undefined ? Boolean(body.isCompliance) : (body.is_compliance !== undefined ? Boolean(body.is_compliance) : undefined);
+    const isRequestableInput = body.isRequestable !== undefined ? body.isRequestable : body.is_requestable;
+    const isComplianceInput = body.isCompliance !== undefined ? body.isCompliance : body.is_compliance;
+    const isRequestableResult = parseOptionalBoolean(isRequestableInput);
+    const isComplianceResult = parseOptionalBoolean(isComplianceInput);
+    if (!isRequestableResult.valid || !isComplianceResult.valid) {
+      return NextResponse.json({ ok: false, error: "Requestable and compliance values must be booleans." }, { status: 400 });
+    }
+    const isRequestable = isRequestableResult.value;
+    const isCompliance = isComplianceResult.value;
     const complianceCategory = body.complianceCategory !== undefined ? String(body.complianceCategory).trim() : (body.compliance_category !== undefined ? String(body.compliance_category).trim() : undefined);
 
-    const updated = await updateDocType(id, name, "Active", officeId, { isRequestable, isCompliance, complianceCategory });
+    const updated = await updateDocType(id, name, undefined, officeId, { isRequestable, isCompliance, complianceCategory });
     await writeAuditLog(req, `Update Document Type`, {
         details: `updated configuration for document type identifier '${updated?.name || name}'`,
         entity_type: "DocumentType",
@@ -145,6 +176,9 @@ export async function PUT(req) {
     });
     return NextResponse.json({ ok: true, data: updated });
   } catch (err) {
+    if (String(err?.message || "").toLowerCase().includes("not found")) {
+      return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
+    }
     return NextResponse.json(
       { ok: false, error: "Request could not be completed" },
       { status: 400 }
@@ -158,12 +192,22 @@ export async function PATCH(req) {
   try {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
+    if (!id || !/^\d+$/.test(id)) throw new Error("Invalid document type ID");
     const officeId = resolveOfficeId(access.user, req);
     if (!officeId) return createAuthErrorResponse("Office scope is required", 403);
     if (!id) throw new Error("Missing document type ID");
 
-    const body = await req.json().catch(() => ({}));
+    const body = await req.json().catch(() => null);
+    if (!body || typeof body !== "object" || Array.isArray(body)) {
+      return NextResponse.json({ ok: false, error: "Invalid JSON body" }, { status: 400 });
+    }
     const { status } = body;
+    if (Object.keys(body).length !== 1 || !["Active", "Archived"].includes(status)) {
+      return NextResponse.json({ ok: false, error: "Status must be Active or Archived" }, { status: 400 });
+    }
+    if (!(await hasTarget(id, officeId))) {
+      return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
+    }
     const name = await getTargetName(id, officeId);
 
     if (status === "Active") {
@@ -200,10 +244,14 @@ export async function DELETE(req) {
   try {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
+    if (!id || !/^\d+$/.test(id)) throw new Error("Invalid document type ID");
     const officeId = resolveOfficeId(access.user, req);
     if (!officeId) return createAuthErrorResponse("Office scope is required", 403);
     if (!id) throw new Error("Missing document type ID");
 
+    if (!(await hasTarget(id, officeId))) {
+      return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
+    }
     const name = await getTargetName(id, officeId);
     await archiveDocType(id, officeId);
     await writeAuditLog(req, `Archive Document Type`, {

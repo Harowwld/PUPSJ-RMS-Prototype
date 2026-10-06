@@ -14,7 +14,7 @@ export async function GET(req, ctx) {
   const org = await getOrganizationById(id);
   if (!org) return NextResponse.json({ ok: false, error: "Organization not found." }, { status: 404 });
 
-  const officers = await getOfficersByOrganizationId(id);
+  const officers = await getOfficersByOrganizationId(org.id);
   return NextResponse.json({ ok: true, data: officers });
 }
 
@@ -38,7 +38,7 @@ export async function POST(req, ctx) {
   }
 
   try {
-    const officer = await addOfficer(id, {
+    const officer = await addOfficer(org.id, {
       email,
       position,
       studentName,

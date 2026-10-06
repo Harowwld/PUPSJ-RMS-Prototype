@@ -14,6 +14,13 @@ import { canAccessResource } from "../../../../lib/resourceAuthorization";
 
 export const runtime = "nodejs";
 
+function parseRequestId(rawId) {
+  const value = String(rawId ?? "");
+  if (!/^\d+$/.test(value)) return null;
+  const id = Number(value);
+  return Number.isSafeInteger(id) && id > 0 ? id : null;
+}
+
 export async function GET(req, ctx) {
   const access = await requireStaff(req);
   if (access.error || !access.user) return createAuthErrorResponse(access.error || "Staff authentication required", access.error?.startsWith("Access denied") ? 403 : 401);
@@ -22,8 +29,8 @@ export async function GET(req, ctx) {
   if (!isSystemAdminRole(staff.role) && !officeId) return NextResponse.json({ ok: false, error: "Forbidden" }, { status: 403 });
 
   const params = await ctx.params;
-  const id = parseInt(String(params?.id || ""), 10);
-  if (!Number.isFinite(id)) {
+  const id = parseRequestId(params?.id);
+  if (id === null) {
     return NextResponse.json({ ok: false, error: "Invalid id" }, { status: 400 });
   }
 
@@ -49,8 +56,8 @@ export async function PATCH(req, ctx) {
   if (!isSystemAdminRole(staff.role) && !officeId) return NextResponse.json({ ok: false, error: "Forbidden" }, { status: 403 });
 
   const params = await ctx.params;
-  const id = parseInt(String(params?.id || ""), 10);
-  if (!Number.isFinite(id)) {
+  const id = parseRequestId(params?.id);
+  if (id === null) {
     return NextResponse.json({ ok: false, error: "Invalid id" }, { status: 400 });
   }
 
@@ -60,11 +67,15 @@ export async function PATCH(req, ctx) {
   }
 
   const body = await req.json().catch(() => null);
-  if (!body || typeof body !== "object") {
+  if (!body || typeof body !== "object" || Array.isArray(body)) {
     return NextResponse.json(
       { ok: false, error: "Invalid JSON body" },
       { status: 400 }
     );
+  }
+
+  if (body.spaVerified !== undefined && typeof body.spaVerified !== "boolean") {
+    return NextResponse.json({ ok: false, error: "spaVerified must be a boolean." }, { status: 400 });
   }
 
   const patch = { updatedBy: staff.id, officeId };
@@ -134,7 +145,7 @@ export async function PATCH(req, ctx) {
   }
 
   if (body.spaVerified !== undefined) {
-    patch.spaVerified = Boolean(body.spaVerified);
+    patch.spaVerified = body.spaVerified;
     patch.spaVerifiedBy = staff.id;
     if (!patch.message) {
       patch.message = patch.spaVerified

@@ -331,12 +331,7 @@ export async function updateStaffPreferences(staffId, prefs) {
     high_contrast: false
   };
 
-  let currentPrefs = {};
-  try {
-    currentPrefs = JSON.parse(staff.preferences || "{}");
-  } catch (e) {
-    currentPrefs = {};
-  }
+  const currentPrefs = parseStaffPreferences(staff.preferences);
 
   const nextPrefs = { ...defaultPreferences, ...currentPrefs, ...prefs };
   

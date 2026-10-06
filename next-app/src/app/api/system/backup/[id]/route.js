@@ -1,10 +1,7 @@
 import { NextResponse } from "next/server";
-import fs from "node:fs";
 import {
   getBackupById,
-  getBackupsDir,
-  getBackupFilePath,
-  deleteBackupRecord,
+  deleteBackupAndFile,
 } from "../../../../../lib/backupsRepo";
 import { writeAuditLog } from "../../../../../lib/auditLogRequest";
 import { requireAdmin, createAuthErrorResponse } from "../../../../../lib/authHelpers";
@@ -36,29 +33,24 @@ export async function DELETE(req, { params }) {
     }
 
     const { id: idStr } = await params;
-    const id = Number(idStr);
+    const rawId = String(idStr ?? "");
+    const id = /^\d+$/.test(rawId) ? Number(rawId) : NaN;
     console.log(`[DELETE BACKUP] Attempting to delete backup with ID: ${id} by user ${user.id}`);
 
-    if (isNaN(id)) return NextResponse.json({ ok: false, error: "Invalid ID" }, { status: 400 });
+    if (!Number.isSafeInteger(id) || id < 1) return NextResponse.json({ ok: false, error: "Invalid ID" }, { status: 400 });
 
     const backup = await getBackupById(id);
     if (!backup || !canAccessResource(user, "backup", backup)) {
       return NextResponse.json({ ok: false, error: "Backup record not found" }, { status: 404 });
     }
 
-    const backupsDir = getBackupsDir();
-    const filePath = getBackupFilePath(backup.filename, backupsDir);
-
-    // Strict deletion: if any existing file cannot be removed, fail and keep DB record.
-    if (fs.existsSync(filePath)) {
-      fs.unlinkSync(filePath);
-    }
-
     // NOTE: External backups are intentionally left untouched (Immutable Archive approach).
     // The web application does not have the authority to delete synced files from the external drive.
 
-    // Delete record from database
-    const changes = await deleteBackupRecord(id);
+    const deletion = await deleteBackupAndFile(id, backup);
+    if (!deletion?.deleted) {
+      return NextResponse.json({ ok: false, error: "Backup record not found" }, { status: 404 });
+    }
     await writeAuditLog(req, `Delete Backup`, { 
       details: `permanently deleted local backup package '${backup.filename}' (ID: ${id}) from primary storage`,
       severity: "WARNING",
@@ -68,7 +60,9 @@ export async function DELETE(req, { params }) {
 
     return NextResponse.json({
       ok: true,
-      message: "Backup deleted successfully"
+      message: deletion.cleanupPending
+        ? "Backup deleted. Its staged archive file could not be removed automatically."
+        : "Backup deleted successfully"
     });
   } catch (error) {
     console.error("[DELETE BACKUP] Error:", error);

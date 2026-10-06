@@ -16,6 +16,14 @@ import { canAccessResource } from "../../../../lib/resourceAuthorization";
 
 export const runtime = "nodejs";
 
+function parseOptionalBoolean(value) {
+  if (value === undefined || value === null) return { valid: true, value: undefined };
+  if (typeof value === "boolean") return { valid: true, value };
+  if (value === "true") return { valid: true, value: true };
+  if (value === "false") return { valid: true, value: false };
+  return { valid: false, value: undefined };
+}
+
 function canAccessDocument(user, row) {
   return canAccessResource(user, "document", row);
 }
@@ -26,7 +34,7 @@ async function requireDocumentAccess(req, rawId) {
     return { response: createAuthErrorResponse(error || "Authentication required", 401) };
   }
   const id = Number(rawId);
-  if (!Number.isInteger(id) || id < 1) {
+  if (!Number.isSafeInteger(id) || id < 1) {
     return {
       response: NextResponse.json(
         { ok: false, error: `Invalid id: ${rawId}` },
@@ -102,6 +110,7 @@ export async function PATCH(req, ctx) {
   let reviewNote;
 
   let isPreviewed;
+  let replacementBuffer = null;
 
   if (contentType.includes("multipart/form-data")) {
     const form = await req.formData().catch(() => null);
@@ -118,10 +127,15 @@ export async function PATCH(req, ctx) {
     docType = String(form.get("docType") || "").trim() || undefined;
     approvalStatus = String(form.get("approvalStatus") || "").trim() || undefined;
     reviewNote = String(form.get("reviewNote") || "").trim() || undefined;
-    isPreviewed = form.get("isPreviewed") !== null ? (form.get("isPreviewed") === "true") : undefined;
+    const previewedResult = parseOptionalBoolean(form.get("isPreviewed"));
+    if (!previewedResult.valid) {
+      return NextResponse.json({ ok: false, error: "isPreviewed must be true or false." }, { status: 400 });
+    }
+    isPreviewed = previewedResult.value;
+    if (replacementFile) replacementBuffer = Buffer.from(await replacementFile.arrayBuffer());
   } else {
     body = await req.json().catch(() => null);
-    if (!body || typeof body !== "object") {
+    if (!body || typeof body !== "object" || Array.isArray(body)) {
       return NextResponse.json(
         { ok: false, error: "Invalid JSON body" },
         { status: 400 }
@@ -136,10 +150,19 @@ export async function PATCH(req, ctx) {
       body.approvalStatus === undefined ? undefined : String(body.approvalStatus).trim();
     reviewNote =
       body.reviewNote === undefined ? undefined : String(body.reviewNote).trim();
-    isPreviewed = body.isPreviewed === undefined ? undefined : !!body.isPreviewed;
+    const previewedResult = parseOptionalBoolean(body.isPreviewed);
+    if (!previewedResult.valid) {
+      return NextResponse.json({ ok: false, error: "isPreviewed must be a boolean." }, { status: 400 });
+    }
+    isPreviewed = previewedResult.value;
     if (body.file && typeof body.file !== "string") {
       replacementFile = body.file;
+      if (typeof body.file.arrayBuffer === "function") replacementBuffer = Buffer.from(await body.file.arrayBuffer());
     }
+  }
+
+  if (replacementFile && replacementFile.type !== "application/pdf") {
+    return NextResponse.json({ ok: false, error: "Only PDF files are allowed" }, { status: 400 });
   }
 
   if (approvalStatus !== undefined) {
@@ -193,39 +216,37 @@ export async function PATCH(req, ctx) {
     return NextResponse.json({ ok: true, data: row });
   }
 
+  if (replacementFile && !replacementBuffer) {
+    return NextResponse.json({ ok: false, error: "Invalid replacement file" }, { status: 400 });
+  }
+
   let row;
-  try {
-    row = await updateDocumentMetadata(
-      id,
-      { studentNo, studentName, docType, isPreviewed },
-      { officeId: accessRow.office_id },
-    );
-  } catch (err) {
-    return NextResponse.json({ ok: false, error: err.message || "Failed to update document" }, { status: 400 });
-  }
-  if (!row) {
-    return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
-  }
   let replaced = false;
   if (replacementFile) {
-    if (replacementFile.type !== "application/pdf") {
-      return NextResponse.json(
-        { ok: false, error: "Only PDF files are allowed" },
-        { status: 400 }
-      );
-    }
-    const buf = Buffer.from(await replacementFile.arrayBuffer());
     try {
       row = await replaceDocumentFile(id, {
         originalFilename: replacementFile.name || "document.pdf",
         mimeType: replacementFile.type || "application/pdf",
-        sizeBytes: replacementFile.size || buf.length,
-        buffer: buf,
+        sizeBytes: replacementFile.size || replacementBuffer.length,
+        buffer: replacementBuffer,
+        studentNo,
+        studentName,
+        docType,
+        isPreviewed,
       }, { officeId: accessRow.office_id });
     } catch (err) {
       return NextResponse.json({ ok: false, error: err.message || "Failed to replace file" }, { status: 400 });
     }
     replaced = true;
+  } else {
+    try {
+      row = await updateDocumentMetadata(id, { studentNo, studentName, docType, isPreviewed }, { officeId: accessRow.office_id });
+    } catch (err) {
+      return NextResponse.json({ ok: false, error: err.message || "Failed to update document" }, { status: 400 });
+    }
+  }
+  if (!row) {
+    return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
   }
   await writeAuditLog(req, replaced ? `Replace Document File` : `Update Document`, {
     details: replaced 

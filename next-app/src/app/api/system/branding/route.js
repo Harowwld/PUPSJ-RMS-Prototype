@@ -159,9 +159,26 @@ export async function PUT(req) {
       );
     }
 
-    const body = await req.json();
+    const body = await req.json().catch(() => null);
+    if (!body || typeof body !== "object" || Array.isArray(body)) {
+      return NextResponse.json({ ok: false, error: "Invalid request body" }, { status: 400 });
+    }
+    const allowedFields = new Set([...Object.keys(DEFAULT_BRANDING), "reset"]);
+    const unsupportedField = Object.keys(body).find((field) => !allowedFields.has(field));
+    if (unsupportedField) {
+      return NextResponse.json({ ok: false, error: `Unsupported field: ${unsupportedField}` }, { status: 400 });
+    }
+    if (Object.keys(body).length === 0) {
+      return NextResponse.json({ ok: false, error: "At least one branding field is required" }, { status: 400 });
+    }
+    if (body.reset !== undefined && typeof body.reset !== "boolean") {
+      return NextResponse.json({ ok: false, error: "reset must be a boolean" }, { status: 400 });
+    }
 
     if (body.reset) {
+      if (Object.keys(body).length !== 1) {
+        return NextResponse.json({ ok: false, error: "Reset cannot be combined with branding changes" }, { status: 400 });
+      }
       await systemConfigRepo.setSetting(BRANDING_SETTING_KEY, JSON.stringify(DEFAULT_BRANDING));
       await writeAuditLog(req, "Reset Institutional Branding", {
         details: "Reverted institutional branding configuration to defaults.",

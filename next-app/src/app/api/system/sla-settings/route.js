@@ -29,8 +29,25 @@ export async function PUT(req) {
       );
     }
 
-    const body = await req.json().catch(() => ({}));
+    const body = await req.json().catch(() => null);
+    if (!body || typeof body !== "object" || Array.isArray(body)) {
+      return NextResponse.json({ ok: false, error: "Invalid request body." }, { status: 400 });
+    }
+    const allowedFields = new Set([
+      "reset", "frameworkName", "frameworkType", "simpleDays", "complexDays",
+      "highlyTechnicalDays", "workingDaysOnly",
+    ]);
+    const unsupportedField = Object.keys(body).find((field) => !allowedFields.has(field));
+    if (unsupportedField) {
+      return NextResponse.json({ ok: false, error: `Unsupported field: ${unsupportedField}` }, { status: 400 });
+    }
+    if (body.reset !== undefined && typeof body.reset !== "boolean") {
+      return NextResponse.json({ ok: false, error: "Reset must be a boolean." }, { status: 400 });
+    }
     if (body.reset) {
+      if (Object.keys(body).length !== 1) {
+        return NextResponse.json({ ok: false, error: "Reset cannot be combined with other settings." }, { status: 400 });
+      }
       const resetStandards = await slaStandardsRepo.resetToDefault();
       await writeAuditLog(req, "Reset Service Standards", {
         details: "Reset SLA turnaround standards to ARTA RA 11032 statutory default (3-7-20).",
@@ -42,11 +59,14 @@ export async function PUT(req) {
 
     const { frameworkName, frameworkType, simpleDays, complexDays, highlyTechnicalDays, workingDaysOnly } = body;
 
-    const sDays = parseInt(simpleDays, 10);
-    const cDays = parseInt(complexDays, 10);
-    const hDays = parseInt(highlyTechnicalDays, 10);
+    if (workingDaysOnly !== undefined && typeof workingDaysOnly !== "boolean") {
+      return NextResponse.json({ ok: false, error: "workingDaysOnly must be a boolean." }, { status: 400 });
+    }
+    const sDays = Number(simpleDays);
+    const cDays = Number(complexDays);
+    const hDays = Number(highlyTechnicalDays);
 
-    if (isNaN(sDays) || isNaN(cDays) || isNaN(hDays) || sDays <= 0 || cDays <= 0 || hDays <= 0) {
+    if (![sDays, cDays, hDays].every(Number.isInteger) || sDays <= 0 || cDays <= 0 || hDays <= 0) {
       return NextResponse.json(
         { ok: false, error: "Turnaround days must be positive integers." },
         { status: 400 }

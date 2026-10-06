@@ -63,26 +63,37 @@ export async function POST(req) {
   if (access.error || !access.user) return createAuthErrorResponse(access.error || "Admin access required", access.error?.startsWith("Access denied") ? 403 : 401);
 
   try {
-    const body = await req.json();
+    const body = await req.json().catch(() => null);
+    if (!body || typeof body !== "object" || Array.isArray(body)) {
+      return NextResponse.json({ ok: false, error: "Invalid request body" }, { status: 400 });
+    }
+    if (Object.keys(body).some((field) => !["endpointType", "identifier", "windowSeconds", "maxRequests"].includes(field))) {
+      return NextResponse.json({ ok: false, error: "Unsupported rate limit field" }, { status: 400 });
+    }
     const { endpointType, identifier, windowSeconds, maxRequests } = body;
 
-    if (!endpointType || !identifier || !windowSeconds || !maxRequests) {
+    if (typeof endpointType !== "string" || !endpointType.trim()
+      || typeof identifier !== "string" || !identifier.trim()
+      || windowSeconds === undefined || maxRequests === undefined) {
       return NextResponse.json({ 
         ok: false, 
         error: "Missing required fields: endpointType, identifier, windowSeconds, maxRequests" 
       }, { status: 400 });
     }
 
-    if (windowSeconds < 1 || maxRequests < 1) {
+    const normalizedWindow = Number(windowSeconds);
+    const normalizedMaxRequests = Number(maxRequests);
+    if (!Number.isSafeInteger(normalizedWindow) || normalizedWindow < 1
+      || !Number.isSafeInteger(normalizedMaxRequests) || normalizedMaxRequests < 1) {
       return NextResponse.json({ 
         ok: false, 
         error: "windowSeconds and maxRequests must be positive integers" 
       }, { status: 400 });
     }
 
-    const result = await createRateLimitConfig(endpointType, identifier, windowSeconds, maxRequests);
+    const result = await createRateLimitConfig(endpointType.trim(), identifier.trim(), normalizedWindow, normalizedMaxRequests);
     await writeAuditLog(req, "Create Rate Limit Configuration", {
-      details: `${endpointType}/${identifier}: ${maxRequests} requests per ${windowSeconds} seconds.`,
+      details: `${endpointType.trim()}/${identifier.trim()}: ${normalizedMaxRequests} requests per ${normalizedWindow} seconds.`,
       entity_type: "rate_limit_config",
       entity_id: `${endpointType}:${identifier}`,
     });

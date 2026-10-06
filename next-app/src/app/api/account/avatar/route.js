@@ -22,6 +22,24 @@ function getAvatarsDir() {
   return dir;
 }
 
+function getAvatarPath(filename) {
+  const safeFilename = String(filename || "");
+  if (!safeFilename || path.basename(safeFilename) !== safeFilename) {
+    throw new Error("Invalid avatar filename");
+  }
+  return path.join(getAvatarsDir(), safeFilename);
+}
+
+function removeAvatarFile(filename) {
+  if (!filename) return;
+  try {
+    const filePath = getAvatarPath(filename);
+    if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+  } catch (error) {
+    console.error("Failed to delete avatar file:", error);
+  }
+}
+
 function getSessionUser(principal) {
   if (!principal) return null;
   const isStudent = principal.principalType === "student";
@@ -61,7 +79,7 @@ export async function GET(req) {
       return NextResponse.json({ ok: false, error: "No avatar uploaded" }, { status: 404 });
     }
 
-    const filePath = path.join(getAvatarsDir(), avatarFilename);
+    const filePath = getAvatarPath(avatarFilename);
     if (!fs.existsSync(filePath)) {
       return NextResponse.json({ ok: false, error: "Avatar file not found on server" }, { status: 404 });
     }
@@ -130,19 +148,7 @@ export async function POST(req) {
               : mime === "image/svg+xml" ? ".svg"
               : path.extname(file.name || "").toLowerCase() || ".png";
 
-    // Delete old avatar if any exists
-    if (sessionUser.avatar_filename) {
-      const prevPath = path.join(getAvatarsDir(), sessionUser.avatar_filename);
-      try {
-        if (fs.existsSync(prevPath)) {
-          fs.unlinkSync(prevPath);
-        }
-      } catch (err) {
-        console.error("Failed to delete previous avatar file:", err);
-      }
-    }
-
-    // Save new avatar
+    // Save the replacement first; keep the current avatar until its DB reference changes.
     const uuid = crypto.randomUUID().replace(/-/g, "").substring(0, 16);
     const identifier = sessionUser.type === "student" ? `STUDENT_${sessionUser.account_id}` : sessionUser.id;
     const safeId = String(identifier).trim().toUpperCase().replace(/[^A-Z0-9-]/g, "_");
@@ -150,18 +156,30 @@ export async function POST(req) {
     const absPath = path.join(getAvatarsDir(), filename);
 
     const buf = Buffer.from(await file.arrayBuffer());
-    fs.writeFileSync(absPath, buf);
+    fs.writeFileSync(absPath, buf, { flag: "wx" });
 
-    // Update DB
+    try {
+      if (sessionUser.type === "student") {
+        const rows = await query("UPDATE student_accounts SET avatar_filename = $1 WHERE id = $2 RETURNING id", [filename, sessionUser.account_id]);
+        if (!rows.length) throw new Error("Student account no longer exists");
+      } else {
+        const updated = await updateStaff(sessionUser.id, { avatar_filename: filename });
+        if (!updated) throw new Error("Staff account no longer exists");
+      }
+    } catch (error) {
+      try { fs.unlinkSync(absPath); } catch {}
+      throw error;
+    }
+
+    removeAvatarFile(sessionUser.avatar_filename);
+
     if (sessionUser.type === "student") {
-      await query("UPDATE student_accounts SET avatar_filename = $1 WHERE id = $2", [filename, sessionUser.account_id]);
       await writeAuditLog(req, "Upload Avatar", {
         details: `uploaded custom profile avatar icon for student account`,
         entity_type: "Student",
         entity_id: String(sessionUser.account_id),
       });
     } else {
-      await updateStaff(sessionUser.id, { avatar_filename: filename });
       await writeAuditLog(req, "Upload Avatar", {
         details: `uploaded custom profile avatar icon for account`,
         entity_type: "Staff",
@@ -190,26 +208,25 @@ export async function DELETE(req) {
       return NextResponse.json({ ok: false, error: "Avatar not found" }, { status: 404 });
     }
 
-    if (sessionUser.avatar_filename) {
-      const prevPath = path.join(getAvatarsDir(), sessionUser.avatar_filename);
-      try {
-        if (fs.existsSync(prevPath)) {
-          fs.unlinkSync(prevPath);
-        }
-      } catch (err) {
-        console.error("Failed to delete avatar file:", err);
-      }
+    let updated;
+    if (sessionUser.type === "student") {
+      const rows = await query("UPDATE student_accounts SET avatar_filename = NULL WHERE id = $1 RETURNING id", [sessionUser.account_id]);
+      updated = rows.length > 0;
+      if (!updated) return NextResponse.json({ ok: false, error: "Account not found" }, { status: 404 });
+    } else {
+      updated = await updateStaff(sessionUser.id, { avatar_filename: null });
+      if (!updated) return NextResponse.json({ ok: false, error: "Account not found" }, { status: 404 });
     }
 
+    removeAvatarFile(sessionUser.avatar_filename);
+
     if (sessionUser.type === "student") {
-      await query("UPDATE student_accounts SET avatar_filename = NULL WHERE id = $1", [sessionUser.account_id]);
       await writeAuditLog(req, "Delete Avatar", {
         details: `removed custom profile avatar for student account`,
         entity_type: "Student",
         entity_id: String(sessionUser.account_id),
       });
     } else {
-      await updateStaff(sessionUser.id, { avatar_filename: null });
       await writeAuditLog(req, "Delete Avatar", {
         details: `removed custom profile avatar, reverting to system default`,
         entity_type: "Staff",

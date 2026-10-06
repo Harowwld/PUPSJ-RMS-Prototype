@@ -262,7 +262,12 @@ export default function GlobalStaffTab({ authUser, showToast }) {
 
       const json = await res.json()
       if (res.ok && json.ok) {
-        showToast(isEditing ? "Personnel updated successfully" : "Personnel account created")
+        showToast(isEditing
+          ? "Personnel updated successfully"
+          : json.credentialEmail?.sent
+            ? "Personnel account created. Credentials were emailed to the new user."
+            : "Personnel account created, but the credential email was not sent. Check SMTP settings.",
+          !isEditing && !json.credentialEmail?.sent)
         setFormOpen(false)
         invalidateDataCache("systemadmin_staff")
         invalidateDataCache("systemadmin_offices_stats")

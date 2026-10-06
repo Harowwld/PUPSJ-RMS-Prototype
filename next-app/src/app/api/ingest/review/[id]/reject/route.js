@@ -11,11 +11,35 @@ export async function POST(req, ctx) {
   if (error || !user) return createAuthErrorResponse(error || "Authentication required");
   const officeId = getPrincipalOfficeId(user);
   if (!officeId) return createAuthErrorResponse("Office scope is required", 403);
-  const id = Number((await ctx.params).id);
+  const rawId = (await ctx.params).id;
+  const id = Number(rawId);
+  if (!/^\d+$/.test(String(rawId || "")) || !Number.isSafeInteger(id) || id < 1) {
+    return NextResponse.json({ ok: false, error: "Invalid id" }, { status: 400 });
+  }
   const item = await getIngestById(id, { officeId });
   if (!item || !canAccessResource(user, "ingest", item)) return NextResponse.json({ ok: false, error: "Review item not found" }, { status: 404 });
-  const body = await req.json().catch(() => ({}));
+  if (item.status === "promoted") return NextResponse.json({ ok: false, error: "Promoted items cannot be rejected." }, { status: 409 });
+  const rawBody = await req.text();
+  let body = {};
+  if (rawBody.trim()) {
+    try {
+      body = JSON.parse(rawBody);
+    } catch {
+      return NextResponse.json({ ok: false, error: "Invalid JSON body" }, { status: 400 });
+    }
+  }
+  if (!body || typeof body !== "object" || Array.isArray(body)) {
+    return NextResponse.json({ ok: false, error: "Invalid request body" }, { status: 400 });
+  }
+  if (Object.keys(body).some((field) => field !== "reason")) {
+    return NextResponse.json({ ok: false, error: "Only reason is supported" }, { status: 400 });
+  }
+  if (body.reason !== undefined && typeof body.reason !== "string") {
+    return NextResponse.json({ ok: false, error: "Reason must be text" }, { status: 400 });
+  }
+  if (item.status === "rejected") return NextResponse.json({ ok: true, data: item, idempotent: true });
   const data = await rejectIngest(id, body.reason, user.id, { officeId });
+  if (!data) return NextResponse.json({ ok: false, error: "Review item is no longer available for rejection." }, { status: 409 });
   await writeAuditLog(req, "Batch review item rejected", { details: `Rejected ingest item #${id}.`, entity_type: "ingest_item", entity_id: id });
   return NextResponse.json({ ok: true, data });
 }

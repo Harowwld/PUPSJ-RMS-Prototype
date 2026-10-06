@@ -72,6 +72,25 @@ function sanitizeHeroContent(raw) {
   };
 }
 
+export function validateLandingContentUpdate(body, defaults) {
+  if (!body || typeof body !== "object" || Array.isArray(body)) {
+    throw new Error("Invalid content body.");
+  }
+  if (body.reset !== undefined && typeof body.reset !== "boolean") {
+    throw new Error("reset must be a boolean.");
+  }
+  const supportedFields = new Set([...Object.keys(defaults), "reset"]);
+  const unsupportedField = Object.keys(body).find((field) => !supportedFields.has(field));
+  if (unsupportedField) throw new Error(`Unsupported field: ${unsupportedField}`);
+  if (Object.keys(body).length === 0) throw new Error("At least one content field is required.");
+  if (body.reset !== true && !Object.keys(body).some((field) => field !== "reset")) {
+    throw new Error("At least one content field is required.");
+  }
+  if (body.reset === true && Object.keys(body).length !== 1) {
+    throw new Error("Reset cannot be combined with content changes.");
+  }
+}
+
 const BENTO_SETTINGS_KEY = "landing_bento_content";
 
 export const DEFAULT_BENTO_CONTENT = {
@@ -1071,6 +1090,4 @@ function sanitizeFooterContent(raw) {
     copyrightText,
   };
 }
-
-
 

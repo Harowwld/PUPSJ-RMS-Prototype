@@ -14,9 +14,11 @@ export async function POST(req, ctx) {
   const officeId = getPrincipalOfficeId(user);
   if (!officeId) return createAuthErrorResponse("Office scope is required", 403);
   const id = Number((await ctx.params).id);
+  if (!Number.isInteger(id) || id < 1) return NextResponse.json({ ok: false, error: "Invalid id" }, { status: 400 });
   const item = await getIngestById(id, { officeId });
   if (!item || !canAccessResource(user, "ingest", item)) return NextResponse.json({ ok: false, error: "Review item not found" }, { status: 404 });
   const data = await resetForRetry(id, { officeId });
+  if (!data) return NextResponse.json({ ok: false, error: "Only failed or rejected items can be retried." }, { status: 409 });
   await publishIngestEvent({
     type: "ocr_retry_requested",
     officeId,

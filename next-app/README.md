@@ -116,6 +116,8 @@ pnpm dev
 
 This starts PostgreSQL, waits for it to become healthy, runs migrations, and starts Next.js. The hot-folder watcher starts only when `HOT_FOLDER_INGEST_TOKEN` is set. If Docker is not running, start Docker Desktop (or verify Docker daemon) and run the command again.
 
+In System Admin → Office Management → Edit Office Details → Scanning Workstation, use **Browse** beside **Scanner Inbound Watch Path** to choose a folder on the computer running `pnpm dev`. The native folder picker supports macOS, Windows, and Linux desktops; the selected path is checked for read/write access, saved, and the watcher switches to it automatically. On a headless Linux host, install `zenity` and run the app in a graphical session. A folder on a different computer must be mounted or shared on the watcher host first. Docker deployments need the selected host folder mounted into the app container at the same path.
+
 For Next.js without Docker startup or the hot-folder watcher:
 
 ```bash

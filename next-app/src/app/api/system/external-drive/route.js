@@ -35,9 +35,17 @@ export async function POST(req) {
   if (access.error || !access.user) return requireAccessError(access);
 
   try {
-    const body = await req.json().catch(() => ({}));
+    const body = await req.json().catch(() => null);
+    if (!body || typeof body !== "object" || Array.isArray(body)) {
+      return NextResponse.json({ ok: false, error: "Invalid JSON body" }, { status: 400 });
+    }
+    let simulate;
     if (body.simulate !== undefined) {
-      setSimulationMode(Boolean(body.simulate));
+      if (typeof body.simulate === "boolean") simulate = body.simulate;
+      else if (body.simulate === "true") simulate = true;
+      else if (body.simulate === "false") simulate = false;
+      else return NextResponse.json({ ok: false, error: "simulate must be a boolean." }, { status: 400 });
+      setSimulationMode(simulate);
     } else {
       setSimulationMode(!isSimulationMode());
     }

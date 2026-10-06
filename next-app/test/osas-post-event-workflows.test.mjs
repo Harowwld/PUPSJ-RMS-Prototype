@@ -1,13 +1,16 @@
 import dotenv from "dotenv";
-dotenv.config({ path: ".env.local" });
-dotenv.config();
+dotenv.config({ path: ".env" });
 
 import assert from "node:assert/strict";
+import fs from "node:fs";
+import path from "node:path";
 import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
-import { query } from "../src/lib/postgres.js";
-import { sysDbRun } from "../src/lib/systemDb.js";
+
+const { query } = await import("../src/lib/postgres.js");
+const { sysDbRun } = await import("../src/lib/systemDb.js");
 
 const BASE_URL = process.env.TEST_BASE_URL || "http://localhost:3000";
+const STAFF_PASSWORD = process.env.DEFAULT_STAFF_PASSWORD || "pupstaff";
 
 function extractCookies(res) {
   const setCookies = res.headers.getSetCookie();
@@ -53,7 +56,7 @@ async function runTests() {
     const osasLoginRes = await fetch(`${BASE_URL}/api/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username: "admin.osas@pup.local", password: "pupstaff" }),
+      body: JSON.stringify({ username: "admin.osas@pup.local", password: STAFF_PASSWORD }),
     });
     assert.equal(osasLoginRes.status, 200, "OSAS Admin login status should be 200");
     const osasAuth = extractCookies(osasLoginRes);
@@ -271,12 +274,28 @@ async function runTests() {
   } finally {
     // Cleanup test records
     console.log("\n[Cleanup] Cleaning up test records from database...");
+    const localDir = process.env.LOCAL_DATA_DIR || path.join(process.cwd(), ".local");
     if (testReportId) {
-      await query("DELETE FROM osas_post_event_reports WHERE id = $1", [testReportId]);
+      const [report] = await query(
+        "DELETE FROM osas_post_event_reports WHERE id = $1 RETURNING narrative_storage_filename, liquidation_storage_filename",
+        [testReportId]
+      );
+      for (const filename of [report?.narrative_storage_filename, report?.liquidation_storage_filename]) {
+        if (!filename) continue;
+        const filePath = path.join(localDir, "storage", "osas", "uploads", filename);
+        if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+      }
     }
     if (testProposalId) {
       await query("DELETE FROM transaction_updates WHERE event_proposal_id = $1", [testProposalId]);
-      await query("DELETE FROM event_proposals WHERE id = $1", [testProposalId]);
+      const [proposal] = await query(
+        "DELETE FROM event_proposals WHERE id = $1 RETURNING storage_filename",
+        [testProposalId]
+      );
+      if (proposal?.storage_filename) {
+        const filePath = path.join(localDir, "storage", "osas", "uploads", proposal.storage_filename);
+        if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+      }
     }
     console.log("✓ Test records cleaned up successfully.");
   }

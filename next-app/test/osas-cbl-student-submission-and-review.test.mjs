@@ -1,12 +1,16 @@
 import dotenv from "dotenv";
-dotenv.config({ path: ".env.local" });
-dotenv.config();
+dotenv.config({ path: ".env" });
 
 import assert from "node:assert/strict";
+import fs from "node:fs";
+import path from "node:path";
 import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
-import { query, queryOne } from "../src/lib/postgres.js";
+
+const { query } = await import("../src/lib/postgres.js");
+const { getOrganizationById } = await import("../src/lib/organizationsRepo.js");
 
 const BASE_URL = process.env.TEST_BASE_URL || "http://localhost:3000";
+const STAFF_PASSWORD = process.env.DEFAULT_STAFF_PASSWORD || "pupstaff";
 
 function extractCookies(res) {
   const setCookies = res.headers.getSetCookie();
@@ -34,6 +38,9 @@ async function runCblStudentSubmissionAndReviewTestSuite() {
   console.log("=== STARTING OSAS CBL STUDENT SUBMISSION & STAFF REVIEW TEST SUITE ===");
 
   const createdVersionIds = [];
+  const originalVersionStatuses = await query(
+    "SELECT id, status FROM organization_bylaws_versions WHERE organization_id = 'helping-hands'"
+  );
 
   try {
     // 1. Authenticate OSAS Admin
@@ -41,7 +48,7 @@ async function runCblStudentSubmissionAndReviewTestSuite() {
     const osasLoginRes = await fetch(`${BASE_URL}/api/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username: "admin.osas@pup.local", password: "pupstaff" }),
+      body: JSON.stringify({ username: "admin.osas@pup.local", password: STAFF_PASSWORD }),
     });
     assert.equal(osasLoginRes.status, 200, "OSAS Admin login failed");
     const osasAuth = extractCookies(osasLoginRes);
@@ -198,7 +205,7 @@ async function runCblStudentSubmissionAndReviewTestSuite() {
 
     // 10. Verify older approved versions became 'Superseded' and student_organizations updated
     console.log("\n[Step 10] Verifying superseding of old versions and org profile sync...");
-    const dbOrg = await queryOne(`SELECT * FROM student_organizations WHERE id = 'helping-hands'`);
+    const dbOrg = await getOrganizationById("helping-hands");
     assert.equal(dbOrg.bylaws_original_filename, "cbl-2026-final.pdf", "Org active original filename not synced");
     assert.equal(dbOrg.bylaws_storage_filename, submitJson2.data.storage_filename, "Org active storage filename not synced");
 
@@ -215,7 +222,22 @@ async function runCblStudentSubmissionAndReviewTestSuite() {
     // Cleanup created test versions
     if (createdVersionIds.length > 0) {
       console.log(`\n[Cleanup] Removing ${createdVersionIds.length} test version records...`);
-      await query(`DELETE FROM organization_bylaws_versions WHERE id = ANY($1::bigint[])`, [createdVersionIds]);
+      const removedVersions = await query(
+        `DELETE FROM organization_bylaws_versions WHERE id = ANY($1::bigint[]) RETURNING storage_filename`,
+        [createdVersionIds]
+      );
+      const localDir = process.env.LOCAL_DATA_DIR || path.join(process.cwd(), ".local");
+      for (const version of removedVersions) {
+        if (!version.storage_filename) continue;
+        const filePath = path.join(localDir, "storage", "osas", "bylaws", version.storage_filename);
+        if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+      }
+      for (const version of originalVersionStatuses) {
+        await query(
+          "UPDATE organization_bylaws_versions SET status = $1 WHERE id = $2 AND organization_id = 'helping-hands'",
+          [version.status, version.id]
+        );
+      }
       console.log("  ✓ Test versions deleted");
     }
   }

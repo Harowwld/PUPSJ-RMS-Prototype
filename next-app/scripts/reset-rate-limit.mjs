@@ -1,7 +1,6 @@
 import dotenv from "dotenv";
 
-dotenv.config({ path: ".env.local" });
-dotenv.config();
+dotenv.config({ path: ".env" });
 
 const { pool, transaction } = await import("../src/lib/postgres.js");
 

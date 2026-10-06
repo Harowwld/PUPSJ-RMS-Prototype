@@ -72,6 +72,7 @@ export async function createDocument({
   buffer,
   storageFilename: providedStorageFilename,
   uploadedBy,
+  sourceIngestId = null,
 }) {
   await ensureReviewColumns();
   if (!officeId) throw new Error("Document office scope is required.");
@@ -159,12 +160,15 @@ export async function createDocument({
     throw new Error("Invalid document storage filename.");
   }
   const absPath = path.join(getUploadsDir(officeId), storageFilename);
+  const fileAlreadyExisted = fs.existsSync(absPath);
   if (buffer) {
     fs.writeFileSync(absPath, buffer);
   }
 
-  const res = await dbRun(
-    `
+  let res;
+  try {
+    res = await dbRun(
+      `
     INSERT INTO documents (
       office_id,
       student_no,
@@ -173,26 +177,38 @@ export async function createDocument({
       doc_type,
       original_filename,
       storage_filename,
+      source_ingest_id,
       mime_type,
       size_bytes,
       approval_status,
       uploaded_by
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `,
-    [
-      officeId,
-      verifiedStudentNo,
-      effectiveStudentName || null,
-      effectiveOrgId || null,
-      docType,
-      originalFilename,
-      storageFilename,
-      mimeType,
-      sizeBytes,
-      "Pending",
-      uploadedBy || null,
-    ]
-  );
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `,
+      [
+        officeId,
+        verifiedStudentNo,
+        effectiveStudentName || null,
+        effectiveOrgId || null,
+        docType,
+        originalFilename,
+        storageFilename,
+        sourceIngestId,
+        mimeType,
+        sizeBytes,
+        "Pending",
+        uploadedBy || null,
+      ],
+    );
+  } catch (error) {
+    if (buffer && !fileAlreadyExisted && fs.existsSync(absPath)) {
+      try {
+        fs.unlinkSync(absPath);
+      } catch {
+        // Preserve the database error; a failed cleanup can be retried separately.
+      }
+    }
+    throw error;
+  }
 
   return await getDocumentById(res.lastInsertRowid, { officeId });
 }
@@ -285,6 +301,18 @@ export async function getDocumentById(id, { officeId } = {}) {
   return decryptDocumentRow(row) || null;
 }
 
+export async function getDocumentBySourceIngestId(sourceIngestId, { officeId } = {}) {
+  const scopedOfficeId = requireOfficeId(officeId);
+  const row = await dbGet(
+    `SELECT d.*, so.acronym AS org_acronym, so.name AS organization_name
+       FROM documents d
+       LEFT JOIN student_organizations so ON so.id = d.organization_id
+      WHERE d.source_ingest_id = ? AND d.office_id = ?`,
+    [sourceIngestId, scopedOfficeId],
+  );
+  return decryptDocumentRow(row) || null;
+}
+
 export async function updateDocumentMetadata(id, { studentNo, studentName, organizationId, docType, isPreviewed }, { officeId } = {}) {
   await ensureReviewColumns();
   const scopedOfficeId = requireOfficeId(officeId);
@@ -351,7 +379,7 @@ export async function updateDocumentMetadata(id, { studentNo, studentName, organ
 
 export async function replaceDocumentFile(
   id,
-  { originalFilename, mimeType, sizeBytes, buffer },
+  { originalFilename, mimeType, sizeBytes, buffer, studentNo, studentName, docType, isPreviewed },
   { officeId } = {},
 ) {
   await ensureReviewColumns();
@@ -359,33 +387,62 @@ export async function replaceDocumentFile(
   const existing = await getDocumentById(id, { officeId: scopedOfficeId });
   if (!existing) return null;
 
-  const cleanStudentNo = String(existing.student_no || "UNKNOWN").trim().toUpperCase().replace(/[^A-Z0-9-]/g, "_");
-  const cleanDocType = String(existing.doc_type || "DOCUMENT").trim().toUpperCase().replace(/[^A-Z0-9-]/g, "_");
+  const nextStudentNo = studentNo ?? existing.student_no;
+  const nextStudentName = studentName ?? existing.student_name;
+  const nextDocType = docType ?? existing.doc_type;
+  const nextIsPreviewed = isPreviewed !== undefined ? Boolean(isPreviewed) : Boolean(existing.is_previewed);
+  const nextOrgId = existing.organization_id;
+  if (scopedOfficeId === "osas") {
+    if (nextOrgId) {
+      const org = await dbGet("SELECT id FROM student_organizations WHERE lower(id) = lower(?) OR lower(coalesce(acronym, '')) = lower(?)", [nextOrgId, nextOrgId]);
+      if (!org) throw new Error("Student organization is not recognized by OSAS.");
+    }
+  } else {
+    const student = await dbGet(
+      `SELECT s.student_no FROM students s WHERE s.student_no = ? AND EXISTS (
+        SELECT 1 FROM student_office_memberships som WHERE som.student_no = s.student_no AND som.office_id = ? AND som.status = 'Active'
+      )`,
+      [nextStudentNo, scopedOfficeId],
+    );
+    if (!student) throw new Error("Student is not assigned to this office.");
+  }
+  const documentType = await dbGet("SELECT id FROM document_types WHERE office_id = ? AND lower(name) = lower(?) AND status = 'Active'", [scopedOfficeId, nextDocType]);
+  if (!documentType) throw new Error("Document type is not available in this office.");
+  const verifiedStudentNo = nextStudentNo ? await dbGet("SELECT student_no FROM students WHERE student_no = ?", [nextStudentNo]) : null;
+  const cleanStudentNo = String(nextStudentNo || "UNKNOWN").trim().toUpperCase().replace(/[^A-Z0-9-]/g, "_");
+  const cleanDocType = String(nextDocType || "DOCUMENT").trim().toUpperCase().replace(/[^A-Z0-9-]/g, "_");
   const ext = path.extname(originalFilename || "").toLowerCase() || ".pdf";
   const storageFilename = `${cleanStudentNo}_${cleanDocType}_${Date.now()}${ext}`;
   const absPath = path.join(getUploadsDir(existing.office_id), storageFilename);
   fs.writeFileSync(absPath, buffer);
-
-  const prevAbsPath = path.join(getUploadsDir(existing.office_id), existing.storage_filename);
   try {
-    fs.unlinkSync(prevAbsPath);
-  } catch {
-    // ignore missing file
+    await dbRun(
+      `UPDATE documents
+       SET original_filename = ?,
+           storage_filename = ?,
+           student_no = ?,
+           student_name = ?,
+           organization_id = ?,
+           doc_type = ?,
+           is_previewed = ?,
+           mime_type = ?,
+           size_bytes = ?,
+           approval_status = 'Pending',
+           reviewed_by = NULL,
+           reviewed_at = NULL,
+           review_note = NULL
+       WHERE id = ? AND office_id = ?`,
+      [originalFilename, storageFilename, verifiedStudentNo?.student_no || null, nextStudentName || null, nextOrgId || null, nextDocType, nextIsPreviewed, mimeType, sizeBytes, id, scopedOfficeId]
+    );
+  } catch (error) {
+    try { fs.unlinkSync(absPath); } catch {}
+    throw error;
   }
 
-  await dbRun(
-    `UPDATE documents
-     SET original_filename = ?,
-         storage_filename = ?,
-         mime_type = ?,
-         size_bytes = ?,
-         approval_status = 'Pending',
-         reviewed_by = NULL,
-         reviewed_at = NULL,
-         review_note = NULL
-     WHERE id = ? AND office_id = ?`,
-    [originalFilename, storageFilename, mimeType, sizeBytes, id, scopedOfficeId]
-  );
+  const prevAbsPath = getDocumentFilePath(existing);
+  if (prevAbsPath && prevAbsPath !== absPath) {
+    try { fs.unlinkSync(prevAbsPath); } catch {}
+  }
 
   return await getDocumentById(id, { officeId: scopedOfficeId });
 }

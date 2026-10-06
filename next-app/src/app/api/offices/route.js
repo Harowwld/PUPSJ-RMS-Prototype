@@ -28,7 +28,21 @@ export async function POST(req) {
   if (access.error || !access.user) return createAuthErrorResponse(access.error || "System administrator access required", access.error?.startsWith("Access denied") ? 403 : 401);
 
   try {
-    const body = await req.json();
+    const body = await req.json().catch(() => null);
+    if (!body || typeof body !== "object" || Array.isArray(body)) {
+      return NextResponse.json({ ok: false, error: "Invalid request body" }, { status: 400 });
+    }
+    const allowedFields = new Set([
+      "id", "name", "short_name", "description", "icon", "accent_color", "station_name",
+      "storage_path", "ingest_token", "scanner_model", "inbound_path", "adminEmail", "moduleIds",
+    ]);
+    const unsupportedField = Object.keys(body).find((field) => !allowedFields.has(field));
+    if (unsupportedField) {
+      return NextResponse.json({ ok: false, error: `Unsupported field: ${unsupportedField}` }, { status: 400 });
+    }
+    if (body.moduleIds !== undefined && (!Array.isArray(body.moduleIds) || body.moduleIds.some((id) => typeof id !== "string" || !id.trim()))) {
+      return NextResponse.json({ ok: false, error: "moduleIds must be an array of module ID strings" }, { status: 400 });
+    }
     const office = await createOffice(body);
     let credentialEmail = null;
 

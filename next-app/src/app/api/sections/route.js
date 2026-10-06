@@ -47,19 +47,22 @@ export async function POST(req) {
   const access = await requireAdmin(req);
   if (access.error || !access.user) return createAuthErrorResponse(access.error || "Admin access required", access.error?.startsWith("Access denied") ? 403 : 401);
   try {
-    const body = await req.json().catch(() => ({}));
+    const body = await req.json().catch(() => null);
+    if (!body || typeof body !== "object" || Array.isArray(body)) {
+      return NextResponse.json({ ok: false, error: "Invalid JSON body" }, { status: 400 });
+    }
     const { name, courseCode } = body;
     const officeId = resolveOfficeId(access.user, req, body.officeId || body.office_id);
     if (!officeId) return createAuthErrorResponse("You cannot access that office", 403);
 
-    if (!name || !courseCode) {
+    if (typeof name !== "string" || !name.trim() || typeof courseCode !== "string" || !courseCode.trim()) {
       return NextResponse.json(
         { ok: false, error: "Missing name or courseCode" },
         { status: 400 }
       );
     }
 
-    const newSection = await createSection(name, courseCode, officeId);
+    const newSection = await createSection(name.trim(), courseCode.trim(), officeId);
     
     // Defensive property access for audit logging
     const safeId = newSection && typeof newSection === 'object' ? newSection.id : "NEW";
@@ -88,16 +91,25 @@ export async function PUT(req) {
     const id = searchParams.get("id");
     if (!id) throw new Error("Missing section ID");
 
-    const body = await req.json().catch(() => ({}));
+    const body = await req.json().catch(() => null);
+    if (!body || typeof body !== "object" || Array.isArray(body)) {
+      return NextResponse.json({ ok: false, error: "Invalid JSON body" }, { status: 400 });
+    }
     const { name, courseCode, status } = body;
     const officeId = resolveOfficeId(access.user, req, body.officeId || body.office_id);
     if (!officeId) return createAuthErrorResponse("You cannot access that office", 403);
 
-    if (!name || !courseCode) {
+    if (!id || !/^\d+$/.test(id)) {
+      return NextResponse.json({ ok: false, error: "Invalid section ID" }, { status: 400 });
+    }
+    if (typeof name !== "string" || !name.trim() || typeof courseCode !== "string" || !courseCode.trim()) {
       return NextResponse.json(
         { ok: false, error: "Missing name or courseCode" },
         { status: 400 }
       );
+    }
+    if (status !== undefined && !["Active", "Archived"].includes(status)) {
+      return NextResponse.json({ ok: false, error: "Invalid status" }, { status: 400 });
     }
 
     const updated = await updateSection(id, name, courseCode, status, officeId);
@@ -131,6 +143,9 @@ export async function DELETE(req) {
   try {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
+    if (id && !/^\d+$/.test(id)) {
+      return NextResponse.json({ ok: false, error: "Invalid section ID" }, { status: 400 });
+    }
     const restore = searchParams.get("restore") === "true";
     const officeId = resolveOfficeId(access.user, req);
     if (!officeId) return createAuthErrorResponse("Office scope is required", 403);

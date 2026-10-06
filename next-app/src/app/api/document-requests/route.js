@@ -194,5 +194,5 @@ export async function POST(req) {
     entity_id: row.id
   });
 
-  return NextResponse.json({ ok: true, data: row });
+  return NextResponse.json({ ok: true, data: row }, { status: 201 });
 }

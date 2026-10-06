@@ -124,8 +124,23 @@ export async function POST(req) {
     );
   }
 
-  const body = await req.json().catch(() => ({}));
+  const body = await req.json().catch(() => null);
+  if (!body || typeof body !== "object" || Array.isArray(body)) {
+    return NextResponse.json({ ok: false, error: "Invalid request body" }, { status: 400 });
+  }
+  const allowedFields = new Set(["enabled", "frequency", "time", "dayOfWeek", "scope", "officeId"]);
+  const unsupportedField = Object.keys(body).find((field) => !allowedFields.has(field));
+  if (unsupportedField) {
+    return NextResponse.json({ ok: false, error: `Unsupported field: ${unsupportedField}` }, { status: 400 });
+  }
+  if (!["enabled", "frequency", "time", "dayOfWeek"].some((field) => body[field] !== undefined)) {
+    return NextResponse.json({ ok: false, error: "At least one schedule field is required" }, { status: 400 });
+  }
   const { enabled, frequency, time, dayOfWeek, scope: reqScope, officeId: reqOfficeId } = body;
+
+  if (enabled !== undefined && typeof enabled !== "boolean") {
+    return NextResponse.json({ ok: false, error: "enabled must be a boolean" }, { status: 400 });
+  }
 
   // Validate frequency
   if (frequency !== undefined && !VALID_FREQUENCIES.includes(frequency)) {
@@ -141,7 +156,7 @@ export async function POST(req) {
   // Validate time format (HH:mm)
   if (time !== undefined) {
     const timeRegex = /^([01]?\d|2[0-3]):([0-5]\d)$/;
-    if (!timeRegex.test(time)) {
+    if (typeof time !== "string" || !timeRegex.test(time)) {
       return NextResponse.json(
         { ok: false, error: "Invalid time format. Must be HH:mm (e.g., 02:00)" },
         { status: 400 }
@@ -152,7 +167,7 @@ export async function POST(req) {
   // Validate dayOfWeek
   if (dayOfWeek !== undefined) {
     const day = Number(dayOfWeek);
-    if (isNaN(day) || day < 0 || day > 6) {
+    if (!Number.isInteger(day) || day < 0 || day > 6) {
       return NextResponse.json(
         { ok: false, error: "Invalid day of week. Must be 0 (Sunday) through 6 (Saturday)" },
         { status: 400 }

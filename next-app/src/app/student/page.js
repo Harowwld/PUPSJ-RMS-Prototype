@@ -933,6 +933,13 @@ export default function StudentDashboard() {
       if (!postEventForm.narrativeFile) {
         throw new Error("Please upload the Post-Event Narrative Report PDF.");
       }
+      const maxPostEventPdfBytes = 25 * 1024 * 1024;
+      if (!postEventForm.narrativeFile.size || postEventForm.narrativeFile.size > maxPostEventPdfBytes) {
+        throw new Error("Narrative report must be between 1 byte and 25 MB.");
+      }
+      if (postEventForm.liquidationFile && (!postEventForm.liquidationFile.size || postEventForm.liquidationFile.size > maxPostEventPdfBytes)) {
+        throw new Error("Liquidation report must be between 1 byte and 25 MB.");
+      }
       const form = new FormData();
       form.set("eventProposalId", postEventForm.eventProposalId);
       form.set("organizationId", selectedOrg.organization_id);

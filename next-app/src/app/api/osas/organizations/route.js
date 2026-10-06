@@ -34,9 +34,13 @@ export async function POST(req) {
   if (!access) return NextResponse.json({ ok: false, error: "Forbidden" }, { status: 403 });
 
   const body = await req.json().catch(() => null);
-  const name = String(body?.name || "").trim();
+  if (!body || typeof body !== "object" || Array.isArray(body)) {
+    return NextResponse.json({ ok: false, error: "Invalid request body." }, { status: 400 });
+  }
+  const name = typeof body.name === "string" ? body.name.trim() : "";
   const acronym = String(body?.acronym || "").trim();
   const category = String(body?.category || "Academic").trim();
+  const status = String(body?.status || "Active").trim();
   const adviserName = String(body?.adviserName || "").trim();
   const adviserEmail = String(body?.adviserEmail || "").trim();
   const description = String(body?.description || "").trim();
@@ -47,12 +51,16 @@ export async function POST(req) {
   if (!name) {
     return NextResponse.json({ ok: false, error: "Organization name is required." }, { status: 400 });
   }
+  if (!["Active", "Inactive", "Archived"].includes(status)) {
+    return NextResponse.json({ ok: false, error: "Invalid organization status." }, { status: 400 });
+  }
 
   try {
     const org = await createOrganization({
       name,
       acronym,
       category,
+      status,
       adviserName,
       adviserEmail,
       description,

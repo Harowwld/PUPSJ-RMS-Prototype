@@ -80,11 +80,21 @@ export async function PATCH(req, ctx) {
   // No-op if status is unchanged
   if (status === currentStatus) {
     if (note) {
-      const updated = await updatePostEventReportStatus(id, {
-        status: currentStatus,
-        note,
-        staffId: access.userId,
-      });
+      let updated;
+      try {
+        updated = await updatePostEventReportStatus(id, {
+          status: currentStatus,
+          note,
+          staffId: access.userId,
+          expectedStatus: currentStatus,
+        });
+      } catch (error) {
+        if (error?.code === "POST_EVENT_STATUS_CONFLICT") {
+          return NextResponse.json({ ok: false, error: error.message }, { status: 409 });
+        }
+        throw error;
+      }
+      if (!updated) return NextResponse.json({ ok: false, error: "Report not found" }, { status: 404 });
       await writeGlobalAuditLog(req, "Added note to OSAS post-event report", {
         officeId: "osas",
         details: `Added note to post-event report #${id}: ${note}`,
@@ -141,11 +151,20 @@ export async function PATCH(req, ctx) {
     );
   }
 
-  const updated = await updatePostEventReportStatus(id, {
-    status,
-    note,
-    staffId: access.userId,
-  });
+  let updated;
+  try {
+    updated = await updatePostEventReportStatus(id, {
+      status,
+      note,
+      staffId: access.userId,
+      expectedStatus: currentStatus,
+    });
+  } catch (error) {
+    if (error?.code === "POST_EVENT_STATUS_CONFLICT") {
+      return NextResponse.json({ ok: false, error: error.message }, { status: 409 });
+    }
+    throw error;
+  }
 
   if (!updated) {
     return NextResponse.json({ ok: false, error: "Report not found" }, { status: 404 });

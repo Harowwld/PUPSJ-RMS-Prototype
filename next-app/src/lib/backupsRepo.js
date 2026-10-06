@@ -42,6 +42,18 @@ export function getBackupFilePath(filename, baseDir = getBackupsDir()) {
   return candidate;
 }
 
+export function createBackupFilename({ scope = "office", officeId, timestamp = new Date(), nonce = crypto.randomBytes(8).toString("hex") } = {}) {
+  const dateStr = timestamp.toISOString().split("T")[0];
+  const timeStr = timestamp.toTimeString().split(" ")[0].replace(/:/g, "");
+  const uniqueSuffix = String(nonce).replace(/[^a-zA-Z0-9]/g, "");
+  if (scope === "system") {
+    return `PUP-SYSTEM-GOVERNANCE-BACKUP-${dateStr}-${timeStr}-${uniqueSuffix}.zip.enc`;
+  }
+  const officeUpper = String(officeId || "").trim().toUpperCase();
+  if (!officeUpper) throw new Error("Office scope is required to create an office backup.");
+  return `PUP-${officeUpper}-BACKUP-${dateStr}-${timeStr}-${uniqueSuffix}.zip.enc`;
+}
+
 export function getPrincipalOfficeId(user) {
   const officeId = user?.officeId ?? user?.office_id;
   if (officeId) return String(officeId).trim().toLowerCase();
@@ -128,6 +140,32 @@ export async function createBackupRecord({
   return await getBackupById(res.lastInsertRowid);
 }
 
+async function persistBackupArchive({ backupPath, filename, encryptedBuffer, ...recordFields }) {
+  try {
+    fs.writeFileSync(backupPath, encryptedBuffer);
+    const stats = fs.statSync(backupPath);
+    if (stats.size === 0) {
+      throw new Error("Backup archive file is empty.");
+    }
+
+    const fileBuffer = fs.readFileSync(backupPath);
+    const checksum = crypto.createHash("sha256").update(fileBuffer).digest("hex");
+    return await createBackupRecord({
+      filename,
+      sizeBytes: fileBuffer.length,
+      checksum,
+      ...recordFields,
+    });
+  } catch (error) {
+    try {
+      if (fs.existsSync(backupPath)) fs.unlinkSync(backupPath);
+    } catch (cleanupError) {
+      console.error(`[BACKUP] Failed to remove incomplete archive ${backupPath}:`, cleanupError);
+    }
+    throw error;
+  }
+}
+
 export async function listBackups(filters = {}) {
   const { search, startDate, endDate, scope, officeId } = filters;
   let sql = `SELECT * FROM backups`;
@@ -196,6 +234,45 @@ export async function updateBackupStatus(id, field, status) {
 export async function deleteBackupRecord(id) {
   const result = await dbRun(`DELETE FROM backups WHERE id = ?`, [id]);
   return result.changes;
+}
+
+export async function deleteBackupAndFile(id, backupRecord) {
+  const backup = backupRecord || await getBackupById(id);
+  if (!backup) return null;
+
+  const filePath = getBackupFilePath(backup.filename, getBackupsDir());
+  const stagedPath = `${filePath}.deleting-${crypto.randomUUID()}`;
+  let fileStaged = false;
+  if (fs.existsSync(filePath)) {
+    fs.renameSync(filePath, stagedPath);
+    fileStaged = true;
+  }
+
+  let changes;
+  try {
+    changes = await deleteBackupRecord(id);
+  } catch (error) {
+    if (fileStaged) {
+      try {
+        fs.renameSync(stagedPath, filePath);
+      } catch (restoreError) {
+        throw new AggregateError([error, restoreError], `Backup deletion failed and the staged archive could not be restored: ${stagedPath}`);
+      }
+    }
+    throw error;
+  }
+
+  let cleanupPending = false;
+  if (fileStaged) {
+    try {
+      fs.unlinkSync(stagedPath);
+    } catch (error) {
+      cleanupPending = true;
+      console.error(`Deleted backup ${id}, but could not remove staged archive ${stagedPath}:`, error);
+    }
+  }
+
+  return { backup, deleted: changes > 0, cleanupPending };
 }
 
 export async function syncBackupExternally(id) {
@@ -302,10 +379,7 @@ function dumpPostgresTables(tables, targetSqlPath) {
 }
 
 export async function executeSystemBackup({ actorId = null } = {}) {
-  const timestamp = new Date();
-  const dateStr = timestamp.toISOString().split("T")[0]; // YYYY-MM-DD
-  const timeStr = timestamp.toTimeString().split(" ")[0].replace(/:/g, "").slice(0, 4); // HHMM
-  const backupFilename = `PUP-SYSTEM-GOVERNANCE-BACKUP-${dateStr}-${timeStr}.zip.enc`;
+  const backupFilename = createBackupFilename({ scope: "system" });
 
   const backupsDir = getBackupsDir();
   const backupPath = getBackupFilePath(backupFilename, backupsDir);
@@ -346,29 +420,15 @@ export async function executeSystemBackup({ actorId = null } = {}) {
   // Encrypt with AES-256-GCM
   const zipBuffer = zip.toBuffer();
   const encryptedBuffer = encryptBackupBuffer(zipBuffer);
-  fs.writeFileSync(backupPath, encryptedBuffer);
-
-  if (!fs.existsSync(backupPath) || fs.statSync(backupPath).size === 0) {
-    throw new Error("Failed to write system backup ZIP file to disk or file is empty.");
-  }
-
-  const fileBuffer = fs.readFileSync(backupPath);
-  const hashSum = crypto.createHash("sha256");
-  hashSum.update(fileBuffer);
-  const checksum = hashSum.digest("hex");
-  const sizeBytes = fileBuffer.length;
-
-  const record = await createBackupRecord({
+  return await persistBackupArchive({
+    backupPath,
     filename: backupFilename,
-    sizeBytes,
-    checksum,
+    encryptedBuffer,
     scope: "system",
     officeId: null,
     backupType: "Governance",
     createdBy: actorId,
   });
-
-  return record;
 }
 
 export async function executeOfficeBackup({ officeId, actorId = null } = {}) {
@@ -376,11 +436,7 @@ export async function executeOfficeBackup({ officeId, actorId = null } = {}) {
   if (!normOffice) {
     throw new Error("Office scope is required to create an office backup.");
   }
-  const officeUpper = normOffice.toUpperCase();
-  const timestamp = new Date();
-  const dateStr = timestamp.toISOString().split("T")[0]; // YYYY-MM-DD
-  const timeStr = timestamp.toTimeString().split(" ")[0].replace(/:/g, "").slice(0, 4); // HHMM
-  const backupFilename = `PUP-${officeUpper}-BACKUP-${dateStr}-${timeStr}.zip.enc`;
+  const backupFilename = createBackupFilename({ scope: "office", officeId: normOffice });
 
   const backupsDir = getBackupsDir();
   const backupPath = getBackupFilePath(backupFilename, backupsDir);
@@ -458,29 +514,15 @@ export async function executeOfficeBackup({ officeId, actorId = null } = {}) {
   // Encrypt with AES-256-GCM
   const zipBuffer = zip.toBuffer();
   const encryptedBuffer = encryptBackupBuffer(zipBuffer);
-  fs.writeFileSync(backupPath, encryptedBuffer);
-
-  if (!fs.existsSync(backupPath) || fs.statSync(backupPath).size === 0) {
-    throw new Error(`Failed to write office backup ZIP file to disk or file is empty.`);
-  }
-
-  const fileBuffer = fs.readFileSync(backupPath);
-  const hashSum = crypto.createHash("sha256");
-  hashSum.update(fileBuffer);
-  const checksum = hashSum.digest("hex");
-  const sizeBytes = fileBuffer.length;
-
-  const record = await createBackupRecord({
+  return await persistBackupArchive({
+    backupPath,
     filename: backupFilename,
-    sizeBytes,
-    checksum,
+    encryptedBuffer,
     scope: "office",
     officeId: normOffice,
     backupType: "Full",
     createdBy: actorId,
   });
-
-  return record;
 }
 
 export async function executeBackup(options = {}) {
@@ -787,6 +829,9 @@ export async function executeRestoreBackup(
   if (!fileBuffer || !Buffer.isBuffer(fileBuffer)) {
     throw new Error("Backup restoration requires a valid file buffer.");
   }
+  if (!["merge", "overwrite"].includes(mode)) {
+    throw new Error("Restore mode must be 'merge' or 'overwrite'.");
+  }
 
   // 1. Decrypt if encrypted with AES-256-GCM (PUPSBK1 magic)
   const plainZipBuffer = decryptBackupBuffer(fileBuffer);
@@ -884,8 +929,10 @@ export async function executeRestoreBackup(
     if (entryName === "db.sql" || entryName.endsWith("/db.sql")) continue;
 
     // Security check: ensure path traversal is not possible
-    const safeDestPath = path.resolve(/*turbopackIgnore: true*/ localDir, entryName);
-    if (!safeDestPath.startsWith(path.resolve(/*turbopackIgnore: true*/ localDir))) {
+    const resolvedRoot = path.resolve(/*turbopackIgnore: true*/ localDir);
+    const safeDestPath = path.resolve(/*turbopackIgnore: true*/ resolvedRoot, entryName);
+    const relativeDestPath = path.relative(resolvedRoot, safeDestPath);
+    if (!relativeDestPath || relativeDestPath === ".." || relativeDestPath.startsWith(`..${path.sep}`) || path.isAbsolute(relativeDestPath)) {
       throw new Error(`Potentially malicious file path in backup archive: ${entryName}`);
     }
 

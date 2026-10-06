@@ -27,25 +27,24 @@ export async function markStaffReviewNotificationsSeen(staffId) {
 export async function setNotificationItemState(staffId, notificationIds, field, value, officeId) {
   if (!staffId || !notificationIds || !officeId) return;
   const ids = Array.isArray(notificationIds) ? notificationIds : [notificationIds];
+  if (ids.length === 0) return;
   const columnName = field === "read" ? "is_read" : "is_archived";
   const booleanValue = Boolean(value);
-  
-  for (const id of ids) {
-    await dbRun(
-      `
-        INSERT INTO staff_notification_item_states (staff_id, notification_id, ${columnName})
-        SELECT ?, d.id, ?
-        FROM documents d
-        WHERE d.id = ?
-          AND d.office_id = ?
-          AND d.reviewed_at IS NOT NULL
-          AND d.approval_status IN ('Approved', 'Declined')
-        ON CONFLICT(staff_id, notification_id) DO UPDATE SET
-          ${columnName} = ?
-      `,
-      [staffId, booleanValue, id, officeId, booleanValue]
-    );
-  }
+
+  await dbRun(
+    `
+      INSERT INTO staff_notification_item_states (staff_id, notification_id, ${columnName})
+      SELECT ?, d.id, ?
+      FROM documents d
+      WHERE d.id = ANY(?::bigint[])
+        AND d.office_id = ?
+        AND d.reviewed_at IS NOT NULL
+        AND d.approval_status IN ('Approved', 'Declined')
+      ON CONFLICT(staff_id, notification_id) DO UPDATE SET
+        ${columnName} = EXCLUDED.${columnName}
+    `,
+    [staffId, booleanValue, ids, officeId]
+  );
 }
 
 export async function markAllStaffNotificationsReadState(staffId, officeId, isRead) {

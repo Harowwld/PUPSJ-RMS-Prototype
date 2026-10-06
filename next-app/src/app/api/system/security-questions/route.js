@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { query } from "@/lib/postgres";
+import { transaction } from "@/lib/postgres";
 import { dbAll } from "@/lib/postgresCompat";
 import { writeAuditLog } from "@/lib/auditLogRequest";
 import { requireTOTP, extractTOTPToken } from "@/lib/totpMiddleware";
@@ -48,12 +48,16 @@ export async function PUT(req) {
       );
     }
 
-    const body = await req.json().catch(() => ({}));
+    const body = await req.json().catch(() => null);
+    if (!body || typeof body !== "object" || Array.isArray(body)) {
+      return NextResponse.json({ ok: false, error: "Invalid data format" }, { status: 400 });
+    }
     const rawQuestions = body.questions;
     if (!Array.isArray(rawQuestions)) {
       return NextResponse.json({ ok: false, error: "Invalid data format" }, { status: 400 });
     }
 
+    let invalidRequiredFlag = false;
     const parsedQuestions = rawQuestions.map((item, idx) => {
       if (typeof item === "string") {
         return {
@@ -62,14 +66,33 @@ export async function PUT(req) {
           is_required: idx < 2,
         };
       }
+      if (!item || typeof item !== "object" || Array.isArray(item)) {
+        invalidRequiredFlag = true;
+        return { id: null, question: "", is_required: true };
+      }
+      const requiredInput = item.is_required === undefined ? true : item.is_required;
+      let isRequired;
+      if (typeof requiredInput === "boolean") isRequired = requiredInput;
+      else if (requiredInput === "true") isRequired = true;
+      else if (requiredInput === "false") isRequired = false;
+      else invalidRequiredFlag = true;
       return {
         id: item?.id ? Number(item.id) : null,
         question: String(item?.question || "").trim(),
-        is_required: item?.is_required !== undefined ? Boolean(item.is_required) : true,
+        is_required: isRequired ?? true,
       };
     });
 
+    if (invalidRequiredFlag) {
+      return NextResponse.json({ ok: false, error: "Each question must be an object with a boolean is_required value." }, { status: 400 });
+    }
+
     const nonEmpty = parsedQuestions.filter((q) => q.question.length > 0);
+
+    const submittedIds = nonEmpty.map((question) => question.id).filter((id) => Number.isInteger(id) && id > 0);
+    if (new Set(submittedIds).size !== submittedIds.length) {
+      return NextResponse.json({ ok: false, error: "Each security question must have a unique ID." }, { status: 400 });
+    }
 
     if (nonEmpty.length === 0) {
       return NextResponse.json({ 
@@ -105,46 +128,33 @@ export async function PUT(req) {
     }
 
     // Preserve existing IDs or allocate sequential IDs
-    const existingRows = await dbAll("SELECT id FROM security_questions ORDER BY id ASC");
-    const existingIdSet = new Set((existingRows || []).map((r) => r.id));
+    const saved = await transaction(async ({ query: run }) => {
+      const existingRows = (await run("SELECT id FROM security_questions ORDER BY id ASC")).rows;
+      const existingIdSet = new Set(existingRows.map((row) => Number(row.id)));
+      let nextAvailableId = 1;
+      const findNextId = () => {
+        while (existingIdSet.has(nextAvailableId)) nextAvailableId++;
+        existingIdSet.add(nextAvailableId);
+        return nextAvailableId;
+      };
 
-    let nextAvailableId = 1;
-    const findNextId = () => {
-      while (existingIdSet.has(nextAvailableId)) {
-        nextAvailableId++;
+      const keepIds = [];
+      const result = [];
+      for (const item of nonEmpty) {
+        const targetId = Number.isInteger(item.id) && item.id > 0 ? item.id : findNextId();
+        keepIds.push(targetId);
+        await run(
+          `INSERT INTO security_questions (id, question, is_required)
+           VALUES ($1, $2, $3)
+           ON CONFLICT (id) DO UPDATE SET question = EXCLUDED.question, is_required = EXCLUDED.is_required`,
+          [targetId, item.question, item.is_required]
+        );
+        result.push({ id: targetId, question: item.question, is_required: item.is_required });
       }
-      existingIdSet.add(nextAvailableId);
-      return nextAvailableId;
-    };
 
-    const keepIds = [];
-    const saved = [];
-
-    for (let i = 0; i < nonEmpty.length; i++) {
-      const item = nonEmpty[i];
-      let targetId = item.id;
-      if (!targetId || !Number.isInteger(targetId) || targetId <= 0) {
-        targetId = findNextId();
-      }
-      keepIds.push(targetId);
-
-      await query(
-        `INSERT INTO security_questions (id, question, is_required)
-         VALUES ($1, $2, $3)
-         ON CONFLICT (id) DO UPDATE SET question = EXCLUDED.question, is_required = EXCLUDED.is_required`,
-        [targetId, item.question, item.is_required]
-      );
-
-      saved.push({
-        id: targetId,
-        question: item.question,
-        is_required: item.is_required,
-      });
-    }
-
-    if (keepIds.length > 0) {
-      await query("DELETE FROM security_questions WHERE NOT (id = ANY($1::int[]))", [keepIds]);
-    }
+      await run("DELETE FROM security_questions WHERE NOT (id = ANY($1::int[]))", [keepIds]);
+      return result;
+    });
 
     const reqCount = saved.filter((q) => q.is_required).length;
     const optCount = saved.length - reqCount;

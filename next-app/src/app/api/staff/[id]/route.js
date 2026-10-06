@@ -82,11 +82,19 @@ export async function PATCH(req, ctx) {
   const isAdmin = normalizeRole(currentUser.role) === "Admin";
 
   const body = await req.json().catch(() => null);
-  if (!body || typeof body !== "object") {
+  if (!body || typeof body !== "object" || Array.isArray(body)) {
     return NextResponse.json(
       { ok: false, error: "Invalid JSON body" },
       { status: 400 }
     );
+  }
+
+  const allowedFields = new Set([
+    "id", "fname", "lname", "role", "officeId", "office_id", "section", "email", "lastActive", "status",
+  ]);
+  const unknownFields = Object.keys(body).filter((field) => !allowedFields.has(field));
+  if (unknownFields.length) {
+    return NextResponse.json({ ok: false, error: `Unsupported field(s): ${unknownFields.join(", ")}` }, { status: 400 });
   }
 
   // Permission Check
@@ -105,6 +113,12 @@ export async function PATCH(req, ctx) {
 
   // Handle explicit status toggle (archiving/restoring)
   const isStatusToggle = body.status !== undefined && Object.keys(body).length === 1;
+  if (body.status !== undefined && !isStatusToggle && body.status !== targetStaff.status) {
+    return NextResponse.json({ ok: false, error: "Update status separately from profile changes." }, { status: 400 });
+  }
+  if (isStatusToggle && !["Active", "Inactive", "Archived"].includes(body.status)) {
+    return NextResponse.json({ ok: false, error: "Invalid staff status." }, { status: 400 });
+  }
   if (isStatusToggle) {
     try {
       const totpToken = extractTOTPToken(req.headers);
@@ -162,6 +176,10 @@ export async function PATCH(req, ctx) {
     lastActive: body.lastActive === undefined ? undefined : String(body.lastActive).trim(),
   };
 
+  if (!Object.values(patch).some((value) => value !== undefined)) {
+    return NextResponse.json({ ok: false, error: "At least one supported profile field is required." }, { status: 400 });
+  }
+
   if (patch.role !== undefined && !canManageStaffRole(currentUser.role, patch.role)) {
     return NextResponse.json({ ok: false, error: "You are not authorized to assign that role." }, { status: 403 });
   }
@@ -183,11 +201,9 @@ export async function PATCH(req, ctx) {
       { status: 400 }
     );
   }
-  if (
-    patch.officeId !== undefined &&
-    !isSystemAdminRole(targetStaff.role) &&
-    !patch.officeId
-  ) {
+  const resultingRole = patch.role ?? targetStaff.role;
+  const resultingOfficeId = patch.officeId === undefined ? targetStaff.office_id : patch.officeId;
+  if (!isSystemAdminRole(resultingRole) && !String(resultingOfficeId || "").trim()) {
     return NextResponse.json(
       { ok: false, error: "Non-System Admin personnel must have an assigned office." },
       { status: 400 }

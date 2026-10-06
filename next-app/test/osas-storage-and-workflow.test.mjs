@@ -2,8 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import dotenv from "dotenv";
 
-dotenv.config({ path: ".env.local" });
-dotenv.config();
+dotenv.config({ path: ".env" });
 
 const { query, queryOne } = await import("../src/lib/postgres.js");
 const { getStorageLayout, setStorageLayout } = await import("../src/lib/storageLayoutRepo.js");
@@ -42,8 +41,8 @@ test("OSAS Storage Suite & Workflow Specialization", async (t) => {
     assert.ok(room.cabinets.length >= 2, "Must have cabinets installed");
 
     for (const cab of room.cabinets) {
-      assert.equal(cab.rect.w, 0.075, `Cabinet ${cab.id} width must match Registrar 0.075`);
-      assert.equal(cab.rect.h, 0.12, `Cabinet ${cab.id} height must match Registrar 0.12`);
+      assert.ok(Math.abs(cab.rect.w - 0.075) < 1e-9, `Cabinet ${cab.id} width must match Registrar 0.075`);
+      assert.ok(Math.abs(cab.rect.h - 0.12) < 1e-9, `Cabinet ${cab.id} height must match Registrar 0.12`);
       assert.ok(Array.isArray(cab.drawerIds), `Cabinet ${cab.id} must have drawerIds`);
     }
   });
