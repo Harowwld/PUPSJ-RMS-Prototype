@@ -1,4 +1,7 @@
-const icons = require('hugeicons-react');
+const fs = require('fs');
+const path = require('path');
+const appRoot = path.resolve(__dirname, '../../next-app');
+const icons = require(path.join(appRoot, 'node_modules/hugeicons-react'));
 const iconKeys = Object.keys(icons);
 
 const lucideToHuge = {
@@ -169,7 +172,7 @@ function findClosest(lucideName) {
   return 'StarIcon'; // fallback
 }
 
-const currentMappingText = fs.readFileSync('current-mapping.txt', 'utf8');
+const currentMappingText = fs.readFileSync(path.join(__dirname, 'current-mapping.txt'), 'utf8');
 const lines = currentMappingText.split('\n');
 const result = {};
 
@@ -239,5 +242,5 @@ export default function LucideIcon({ className, size = "1em", ...props }) {
 }
 `;
 
-fs.writeFileSync('next-app/src/components/shared/LucideIcon.js', code);
+fs.writeFileSync(path.join(appRoot, 'src/components/shared/LucideIcon.js'), code);
 console.log("Rewrote LucideIcon.js to use hugeicons-react!");

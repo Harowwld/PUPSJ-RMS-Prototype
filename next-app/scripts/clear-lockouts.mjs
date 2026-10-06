@@ -1,4 +1,4 @@
-import { sysDbRun } from './next-app/src/lib/systemDb.js';
+import { sysDbRun } from '../src/lib/systemDb.js';
 
 async function clear() {
   await sysDbRun("DELETE FROM rate_limit_violations");

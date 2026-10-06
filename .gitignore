@@ -37,3 +37,6 @@ next-env.d.ts
 # "hot" folders (temporary/hot-reload artifacts)
 hot/
 **/hot/
+
+# Local personal vault shortcut
+/obsidian
